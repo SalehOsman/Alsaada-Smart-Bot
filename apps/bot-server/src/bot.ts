@@ -2,8 +2,16 @@ import { Bot } from 'grammy';
 import { MyContext } from './types/context.js';
 import { config } from './config/env.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
-import { handleStart } from './handlers/start.handler.js';
+import { handleStart, renderRoleHome } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
+import {
+  handleSettings,
+  handleGhostModeMenu,
+  handleImpersonateRole,
+  handleExitImpersonate,
+  handleExitGhostCommand,
+} from './handlers/settings.handler.js';
+import { handleMenuPlaceholder } from './handlers/placeholder.handler.js';
 
 export function createBot(): Bot<MyContext> {
   const token = config.botToken;
@@ -24,6 +32,28 @@ export function createBot(): Bot<MyContext> {
   // 3. Base Commands
   bot.command('start', handleStart);
   bot.command(['ping', 'health', 'speed'], handlePing);
+  bot.command(['settings', 'admin'], handleSettings);
+  bot.command(['exit_ghost', 'exit_impersonate', 'exit_simulation'], handleExitGhostCommand);
+
+  // 4. Navigation & Settings Callbacks
+  bot.callbackQuery('action:main_menu', async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await renderRoleHome(ctx, true);
+  });
+  bot.callbackQuery('menu:super_admin_settings', handleSettings);
+  bot.callbackQuery('action:settings:ghost_mode', handleGhostModeMenu);
+  bot.callbackQuery('action:settings:ping', handlePing);
+  bot.callbackQuery('action:exit_impersonate', handleExitImpersonate);
+
+  // 5. Dynamic Impersonation Callbacks (Regex)
+  bot.callbackQuery(/^action:impersonate:(.+)$/, async (ctx) => {
+    const role = ctx.match[1];
+    await handleImpersonateRole(ctx, role);
+  });
+
+  // 6. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
+  bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);
 
   return bot;
 }
+

@@ -2,6 +2,7 @@ import { NextFunction } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
+import { getImpersonatedRole } from '../redis.js';
 
 export async function authMiddleware(ctx: MyContext, next: NextFunction): Promise<void> {
   const from = ctx.from;
@@ -11,6 +12,7 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
 
   const telegramId = BigInt(from.id);
   const isSuperAdminEnv = config.superAdminTelegramId > 0n && telegramId === config.superAdminTelegramId;
+  ctx.isRealSuperAdmin = isSuperAdminEnv;
 
   try {
     let user = await prisma.user.findUnique({
@@ -38,9 +40,27 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
     }
 
     ctx.dbUser = user;
+
+    // Check for active impersonation mode if user is Super Admin
+    if (isSuperAdminEnv) {
+      const impRole = await getImpersonatedRole(telegramId);
+      if (impRole) {
+        ctx.effectiveRole = impRole;
+        ctx.isImpersonating = true;
+      } else {
+        ctx.effectiveRole = 'SUPER_ADMIN';
+        ctx.isImpersonating = false;
+      }
+    } else {
+      ctx.effectiveRole = user.role || 'GUEST';
+      ctx.isImpersonating = false;
+    }
   } catch (error) {
     console.error('❌ [AUTH ERROR] Failed to authenticate user in database:', error);
+    ctx.effectiveRole = isSuperAdminEnv ? 'SUPER_ADMIN' : 'GUEST';
+    ctx.isImpersonating = false;
   }
 
   return next();
 }
+
