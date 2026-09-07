@@ -103,6 +103,8 @@ export async function handleSettingsSubIdentity(ctx: MyContext): Promise<void> {
   const keyboard = new InlineKeyboard()
     .text('👤 ملفي الشخصي (حساب المدير العام)', 'action:settings:admin_profile')
     .row()
+    .text('👥 تعيين وتوزيع مدراء المواقع', 'action:settings:admin_assignments')
+    .row()
     .text('🎭 محاكاة وتقمص الأدوار (Ghost Mode)', 'action:settings:ghost_mode')
     .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')

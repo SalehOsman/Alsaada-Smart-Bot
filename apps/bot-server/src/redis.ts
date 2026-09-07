@@ -143,7 +143,14 @@ export async function clearPendingAdminEdit(telegramId: bigint): Promise<void> {
 const PENDING_SITE_ACTION_PREFIX = 'pending:site_action:user:';
 
 export interface PendingSiteAction {
-  action: 'add_name' | 'add_code' | 'add_gov' | 'edit_name';
+  action:
+    | 'add_name'
+    | 'add_code'
+    | 'add_gov'
+    | 'edit_name'
+    | 'edit_gov'
+    | 'edit_location'
+    | 'edit_geofence';
   siteCode?: string;
   draft?: {
     name?: string;

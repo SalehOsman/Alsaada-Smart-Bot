@@ -1,4 +1,4 @@
-import { Bot } from 'grammy';
+﻿import { Bot } from 'grammy';
 import { MyContext } from './types/context.js';
 import { config } from './config/env.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
@@ -31,7 +31,17 @@ import {
   handleToggleSiteStatus,
   handleStartAddSite,
   handleSiteTextInput,
+  handleSiteLocationInput,
+  handleStartEditSiteField,
+  handleSetSiteGeofence,
+  handleConfirmSiteCode,
+  handleSelectSiteGov,
 } from './handlers/sites-hub.handler.js';
+import {
+  renderAdminAssignmentsHub,
+  renderUserAssignmentCard,
+  handleSetUserSiteAssignment,
+} from './handlers/admin-assignment.handler.js';
 
 export function createBot(): Bot<MyContext> {
   const token = config.botToken;
@@ -49,7 +59,12 @@ export function createBot(): Bot<MyContext> {
   // 2. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
 
-  // 3. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard)
+  // 3. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location)
+  bot.on('message:location', async (ctx, next) => {
+    if (await handleSiteLocationInput(ctx)) return;
+    return next();
+  });
+
   bot.on('message:text', async (ctx, next) => {
     if (await handleCompanyFieldTextInput(ctx)) return;
     if (await handleAdminFieldTextInput(ctx)) return;
@@ -106,6 +121,25 @@ export function createBot(): Bot<MyContext> {
     await handleToggleSiteStatus(ctx, siteCode);
   });
   bot.callbackQuery('action:site:add_new', handleStartAddSite);
+  bot.callbackQuery(/^action:site:edit:(.+):(.+)$/, async (ctx) => {
+    const fieldKey = ctx.match[1];
+    const siteCode = ctx.match[2];
+    await handleStartEditSiteField(ctx, fieldKey, siteCode);
+  });
+  bot.callbackQuery(/^action:site:set_geo(?:fence)?:(.+):(\d+)$/, async (ctx) => {
+    const siteCode = ctx.match[1];
+    const radius = parseInt(ctx.match[2], 10);
+    await handleSetSiteGeofence(ctx, siteCode, radius);
+  });
+  bot.callbackQuery(/^action:site:confirm_code:(.+)$/, async (ctx) => {
+    const confirmedCode = ctx.match[1];
+    await handleConfirmSiteCode(ctx, confirmedCode);
+  });
+  bot.callbackQuery(/^action:site:set_gov:(.+):(.+)$/, async (ctx) => {
+    const siteCode = ctx.match[1];
+    const govName = ctx.match[2];
+    await handleSelectSiteGov(ctx, siteCode, govName);
+  });
 
   // 9. Admin Personal Profile Callbacks
   bot.callbackQuery('action:settings:admin_profile', async (ctx) => {
@@ -116,22 +150,33 @@ export function createBot(): Bot<MyContext> {
     await handleStartEditAdminField(ctx, fieldKey);
   });
 
-  // 10. System Health & Ghost Mode Callbacks
+  // 10. Admin Site Assignments & Scoping Callbacks
+  bot.callbackQuery('action:settings:admin_assignments', async (ctx) => {
+    await renderAdminAssignmentsHub(ctx, true);
+  });
+  bot.callbackQuery(/^action:admin_assign:user:(\d+)$/, async (ctx) => {
+    const targetTelegramId = BigInt(ctx.match[1]);
+    await renderUserAssignmentCard(ctx, targetTelegramId, true);
+  });
+  bot.callbackQuery(/^action:admin_assign:set:(\d+):(.+)$/, async (ctx) => {
+    const targetTelegramId = BigInt(ctx.match[1]);
+    const siteIdOrGlobal = ctx.match[2];
+    await handleSetUserSiteAssignment(ctx, targetTelegramId, siteIdOrGlobal);
+  });
+
+  // 11. System Health & Ghost Mode Callbacks
   bot.callbackQuery('action:settings:ghost_mode', handleGhostModeMenu);
   bot.callbackQuery('action:settings:ping', handlePing);
   bot.callbackQuery('action:exit_impersonate', handleExitImpersonate);
 
-  // 11. Dynamic Impersonation Callbacks (Regex)
+  // 12. Dynamic Impersonation Callbacks (Regex)
   bot.callbackQuery(/^action:impersonate:(.+)$/, async (ctx) => {
     const role = ctx.match[1];
     await handleImpersonateRole(ctx, role);
   });
 
-  // 12. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
+  // 13. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);
 
   return bot;
 }
-
-
-
