@@ -1,6 +1,25 @@
+import dns from 'node:dns';
+
+// Fix for Egyptian ISP IPv6 routing blackhole: prioritize IPv4 to eliminate 1.5s - 3s DNS timeouts
+dns.setDefaultResultOrder('ipv4first');
+
+import { Agent as UndiciAgent, setGlobalDispatcher } from 'undici';
 import { Bot } from 'grammy';
 import { MyContext } from './types/context.js';
 import { config } from './config/env.js';
+
+// High-Performance TCP/TLS Connection Pool for Telegram Bot API (Reuses TLS connections for sub-second responses)
+export const undiciDispatcher = new UndiciAgent({
+  keepAliveTimeout: 60000,
+  keepAliveMaxTimeout: 600000,
+  connections: 50,
+  pipelining: 1,
+  connect: {
+    timeout: 10000,
+    keepAlive: true,
+  },
+});
+setGlobalDispatcher(undiciDispatcher);
 import { authMiddleware } from './middlewares/auth.middleware.js';
 import { handleStart, renderRoleHome } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
@@ -49,7 +68,14 @@ export function createBot(): Bot<MyContext> {
     throw new Error('❌ [BOT FATAL] BOT_TOKEN is not set in .env. Please configure your bot token.');
   }
 
-  const bot = new Bot<MyContext>(token);
+  const bot = new Bot<MyContext>(token, {
+    client: {
+      baseFetchConfig: {
+        compress: true,
+        dispatcher: undiciDispatcher,
+      } as any,
+    },
+  });
 
   // 1. Error boundary
   bot.catch((err) => {

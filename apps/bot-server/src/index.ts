@@ -1,3 +1,8 @@
+import dns from 'node:dns';
+
+// Fix for Egyptian ISP IPv6 routing blackhole: prioritize IPv4 to eliminate 1.5s - 3s DNS timeouts
+dns.setDefaultResultOrder('ipv4first');
+
 import { run } from '@grammyjs/runner';
 import { connectDatabase, disconnectDatabase } from './db.js';
 import { createBot } from './bot.js';
