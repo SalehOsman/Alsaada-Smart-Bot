@@ -25,7 +25,7 @@ export async function handlePing(ctx: MyContext): Promise<void> {
     `⏱️ *سرعة استجابة المحرك:* ${totalLatency}ms\n` +
     `💾 *استهلاك الذاكرة:* ${memoryUsageMb} MB\n` +
     `⏳ *مدة التشغيل (Uptime):* ${uptimeSeconds} ثانية\n` +
-    `🛡️ *الحاوية:* alsaada_enterprise_bot\n\n` +
+    `🛡️ *الحاوية:* \`alsaada_enterprise_bot\`\n\n` +
     `✅ *كافة المحركات وقواعد البيانات تعمل بكفاءة تامة.*`;
 
   await ctx.reply(responseText, { parse_mode: 'Markdown' });
