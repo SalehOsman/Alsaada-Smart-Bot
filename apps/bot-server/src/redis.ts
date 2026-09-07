@@ -190,4 +190,71 @@ export async function clearPendingSiteAction(telegramId: bigint): Promise<void> 
   }
 }
 
+const PENDING_JOB_MATRIX_ACTION_PREFIX = 'pending:job_matrix_action:user:';
+
+export interface PendingJobMatrixAction {
+  action:
+    | 'upload_excel'
+    | 'add_dept_name'
+    | 'add_dept_code'
+    | 'edit_dept_name'
+    | 'add_job_name'
+    | 'add_job_code'
+    | 'add_job_base_salary'
+    | 'add_job_additional_salary'
+    | 'add_job_work_days'
+    | 'add_job_rest_days'
+    | 'add_job_min_headcount'
+    | 'edit_job_name'
+    | 'edit_job_base_salary'
+    | 'edit_job_additional_salary'
+    | 'edit_job_work_days'
+    | 'edit_job_rest_days'
+    | 'edit_job_min_headcount';
+  deptCode?: string;
+  jobCode?: string;
+  draft?: {
+    deptCode?: string;
+    deptName?: string;
+    jobCode?: string;
+    jobTitle?: string;
+    baseSalary?: number;
+    additionalSalary?: number;
+    workDays?: number;
+    restDays?: number;
+    minHeadcount?: number;
+  };
+  messageId?: number;
+}
+
+export async function setPendingJobMatrixAction(
+  telegramId: bigint,
+  data: PendingJobMatrixAction
+): Promise<void> {
+  try {
+    await redis.set(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting pending job matrix action:', error);
+  }
+}
+
+export async function getPendingJobMatrixAction(telegramId: bigint): Promise<PendingJobMatrixAction | null> {
+  try {
+    const raw = await redis.get(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as PendingJobMatrixAction) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting pending job matrix action:', error);
+    return null;
+  }
+}
+
+export async function clearPendingJobMatrixAction(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing pending job matrix action:', error);
+  }
+}
+
+
 

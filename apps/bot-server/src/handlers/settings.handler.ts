@@ -71,6 +71,8 @@ export async function handleSettingsSubCorporate(ctx: MyContext): Promise<void> 
     .row()
     .text('🏗️ مصفوفة المشاريع والمواقع الميدانية', 'action:settings:sites_hub')
     .row()
+    .text('💼 الأقسام الوظيفية ومصفوفة المهن', 'action:settings:job_matrix')
+    .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -83,7 +85,7 @@ export async function handleSettingsSubCorporate(ctx: MyContext): Promise<void> 
   const text =
     `🏢 *إعدادات الكيان المؤسسي والمشاريع والمواقع*\n` +
     `────────────────────────────\n` +
-    `إدارة بيانات شركة السعادة الرسمية، السجل التجاري، ومصفوفة الفروع والمواقع والمناجم الميدانية.\n\n` +
+    `إدارة بيانات شركة السعادة الرسمية، السجل التجاري، مصفوفة الفروع والمواقع، والهيكل الوظيفي ومصفوفة المهن والورديات.\n\n` +
     `اختر الإجراء المطلوب:`;
 
   if (ctx.callbackQuery) {

@@ -111,6 +111,97 @@ export class SystemDataService {
   }
 
   /**
+   * جلب قائمة كافة الأقسام مع عدد الوظائف التابعة لها (L1 RAM < 0.1ms)
+   */
+  async getDepartments() {
+    return fastCache.rememberSWR('departments:all', 600, async () => {
+      if (!prisma?.department?.findMany) return [];
+      return prisma.department.findMany({
+        where: { isActive: true },
+        include: {
+          jobs: {
+            where: { isActive: true },
+            orderBy: [{ order: 'asc' }, { name: 'asc' }],
+          },
+        },
+        orderBy: [{ order: 'asc' }, { name: 'asc' }],
+      });
+    });
+  }
+
+  /**
+   * جلب تفاصيل قسم محدد بالكود مع كافة وظائفه (L1 RAM < 0.1ms)
+   */
+  async getDepartmentByCode(code: string) {
+    return fastCache.rememberSWR(`department:code:${code}`, 600, async () => {
+      return prisma.department.findUnique({
+        where: { code },
+        include: {
+          jobs: {
+            where: { isActive: true },
+            orderBy: [{ order: 'asc' }, { name: 'asc' }],
+          },
+        },
+      });
+    });
+  }
+
+  /**
+   * جلب تفاصيل وظيفة محددة بالمعرف (L1 RAM < 0.1ms)
+   */
+  async getJobById(jobId: string) {
+    return fastCache.rememberSWR(`job:id:${jobId}`, 600, async () => {
+      return prisma.jobTitle.findUnique({
+        where: { id: jobId },
+        include: { department: true },
+      });
+    });
+  }
+
+  /**
+   * جلب تفاصيل وظيفة بكود القسم وكود الوظيفة (L1 RAM < 0.1ms)
+   */
+  async getJobByDeptAndCode(deptCode: string, jobCode: string) {
+    return fastCache.rememberSWR(`job:code:${deptCode}:${jobCode}`, 600, async () => {
+      const dept = await prisma.department.findUnique({ where: { code: deptCode } });
+      if (!dept) return null;
+      return prisma.jobTitle.findUnique({
+        where: {
+          departmentId_code: {
+            departmentId: dept.id,
+            code: jobCode,
+          },
+        },
+        include: { department: true },
+      });
+    });
+  }
+
+  /**
+   * جلب كافة الوظائف النشطة في المنظومة (L1 RAM < 0.1ms)
+   */
+  async getAllJobs() {
+    return fastCache.rememberSWR('jobs:all', 600, async () => {
+      if (!prisma?.jobTitle?.findMany) return [];
+      return prisma.jobTitle.findMany({
+        where: { isActive: true },
+        include: { department: true },
+        orderBy: [{ order: 'asc' }, { name: 'asc' }],
+      });
+    });
+  }
+
+  /**
+   * تطهير فوري لكاش الأقسام والوظائف من L1 و L2
+   */
+  async invalidateDepartmentsAndJobs() {
+    await fastCache.invalidatePattern('department*');
+    await fastCache.invalidatePattern('job*');
+    await fastCache.invalidate('departments:all');
+    await fastCache.invalidate('jobs:all');
+  }
+
+  /**
    * تطهير فوري لكاش المواقع والمشاريع من L1 و L2
    */
   async invalidateSites() {
@@ -146,6 +237,8 @@ export class SystemDataService {
         this.getSites(),
         this.getActiveProjects(),
         this.getCompanyProfile(),
+        this.getDepartments(),
+        this.getAllJobs(),
       ]);
       console.log('✅ [SystemDataService] L1 Cache primed successfully (Sub-millisecond ready).');
     } catch (err) {

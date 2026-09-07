@@ -64,6 +64,22 @@ import {
   renderUserAssignmentCard,
   handleSetUserSiteAssignment,
 } from './handlers/admin-assignment.handler.js';
+import {
+  renderDepartmentsHub,
+  renderDepartmentDetail,
+  renderJobDetail,
+  handleJobHeadcountDelta,
+  handleJobToggleCycle,
+  handleDownloadJobMatrixTemplate,
+  handleStartUploadExcel,
+  handleJobMatrixDocumentInput,
+  handleStartAddDepartment,
+  handleStartAddJob,
+  handleStartEditJobSalary,
+  handleStartEditJobTitle,
+  handleStartEditDeptName,
+  handleJobMatrixTextInput,
+} from './handlers/job-matrix.handler.js';
 
 export function createBot(): Bot<MyContext> {
   const token = config.botToken;
@@ -101,13 +117,19 @@ export function createBot(): Bot<MyContext> {
   // 4. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
 
-  // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location)
+  // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location, Excel Uploads)
+  bot.on('message:document', async (ctx, next) => {
+    if (await handleJobMatrixDocumentInput(ctx)) return;
+    return next();
+  });
+
   bot.on('message:location', async (ctx, next) => {
     if (await handleSiteLocationInput(ctx)) return;
     return next();
   });
 
   bot.on('message:text', async (ctx, next) => {
+    if (await handleJobMatrixTextInput(ctx)) return;
     if (await handleCompanyFieldTextInput(ctx)) return;
     if (await handleAdminFieldTextInput(ctx)) return;
     if (await handleSiteTextInput(ctx)) return;
@@ -126,6 +148,9 @@ export function createBot(): Bot<MyContext> {
   });
   bot.command(['sites', 'projects'], async (ctx) => {
     await renderSitesHub(ctx, false);
+  });
+  bot.command(['jobs', 'departments', 'matrix'], async (ctx) => {
+    await renderDepartmentsHub(ctx, false);
   });
   bot.command(['exit_ghost', 'exit_impersonate', 'exit_simulation'], handleExitGhostCommand);
 
@@ -231,7 +256,39 @@ export function createBot(): Bot<MyContext> {
     await handleImpersonateRole(ctx, role);
   });
 
-  // 13. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
+  // 13. Job Matrix & Functional Departments Callbacks
+  bot.callbackQuery('action:settings:job_matrix', async (ctx) => {
+    await renderDepartmentsHub(ctx, true);
+  });
+  bot.callbackQuery('action:dept:download_excel', handleDownloadJobMatrixTemplate);
+  bot.callbackQuery('action:dept:upload_excel', handleStartUploadExcel);
+  bot.callbackQuery('action:dept:add', handleStartAddDepartment);
+  bot.callbackQuery(/^action:dept:view:(.+)$/, async (ctx) => {
+    await renderDepartmentDetail(ctx, ctx.match[1], true);
+  });
+  bot.callbackQuery(/^action:dept:edit_name:(.+)$/, async (ctx) => {
+    await handleStartEditDeptName(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:job:add:(.+)$/, async (ctx) => {
+    await handleStartAddJob(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:job:view:(.+):(.+)$/, async (ctx) => {
+    await renderJobDetail(ctx, ctx.match[1], ctx.match[2], true);
+  });
+  bot.callbackQuery(/^action:job:headcount:(.+):(.+):(inc|dec)$/, async (ctx) => {
+    await handleJobHeadcountDelta(ctx, ctx.match[1], ctx.match[2], ctx.match[3] as 'inc' | 'dec');
+  });
+  bot.callbackQuery(/^action:job:toggle_cycle:(.+):(.+)$/, async (ctx) => {
+    await handleJobToggleCycle(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:edit_salary:(.+):(.+)$/, async (ctx) => {
+    await handleStartEditJobSalary(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:edit_title:(.+):(.+)$/, async (ctx) => {
+    await handleStartEditJobTitle(ctx, ctx.match[1], ctx.match[2]);
+  });
+
+  // 14. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);
 
   return bot;

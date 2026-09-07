@@ -176,13 +176,15 @@ model CompanyDocument {
 // -------------------------------------------------------------
 
 model Department {
-  id        String   @id @default(uuid())
-  tenantId  String?
-  code      String   @unique // e.g. OP, FL, MN, AD
-  name      String   // e.g. التشغيل والعمليات
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  tenantId    String?
+  code        String   @unique // e.g. OP, FL, MNT, SEC, ADM
+  name        String   // e.g. إدارة التشغيل والمعدات
+  order       Int      @default(99)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   tenant  Tenant?    @relation(fields: [tenantId], references: [id])
   jobs    JobTitle[]
@@ -194,9 +196,18 @@ model Department {
 model JobTitle {
   id                String   @id @default(uuid())
   departmentId      String
-  code              String   // e.g. DRV, HLP, TEC
+  code              String   // e.g. DRV, HLP, TEC, OPR, ENG
   name              String   // e.g. سائق لودر
+  baseSalary        Decimal  @default(0) @db.Decimal(12, 2)
+  additionalSalary  Decimal  @default(0) @db.Decimal(12, 2)
   baseWageGuideline Decimal? @db.Decimal(12, 2)
+  workDays          Int      @default(20)
+  restDays          Int      @default(10)
+  totalCycleDays    Int      @default(30)
+  shiftNature       String   @default("دورة قياسية (20+10)")
+  minHeadcount      Int      @default(1)
+  order             Int      @default(99)
+  notes             String?
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
