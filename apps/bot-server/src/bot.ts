@@ -1,4 +1,4 @@
-﻿import { Bot } from 'grammy';
+import { Bot } from 'grammy';
 import { MyContext } from './types/context.js';
 import { config } from './config/env.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
@@ -59,7 +59,14 @@ export function createBot(): Bot<MyContext> {
   // 2. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
 
-  // 3. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location)
+  // 3. Ultra-Fast Non-Blocking Callback Query Acknowledgment
+  bot.on('callback_query', async (ctx, next) => {
+    // Immediately acknowledge callback query in background to remove button spinner without blocking
+    void ctx.answerCallbackQuery().catch(() => {});
+    return next();
+  });
+
+  // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location)
   bot.on('message:location', async (ctx, next) => {
     if (await handleSiteLocationInput(ctx)) return;
     return next();

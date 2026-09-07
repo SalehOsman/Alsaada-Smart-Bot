@@ -1,4 +1,13 @@
-﻿import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../src/redis.js', () => ({
+  redis: {
+    on: vi.fn(),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+  },
+}));
 
 vi.mock('../src/db.js', () => ({
   prisma: {

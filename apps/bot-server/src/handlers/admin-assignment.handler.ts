@@ -1,6 +1,7 @@
-﻿import { InlineKeyboard } from 'grammy';
+import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
+import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 
 /**
  * Lists all staff/admins and their current site assignments
@@ -192,6 +193,8 @@ export async function handleSetUserSiteAssignment(
     data: { assignedSiteId },
     include: { assignedSite: true },
   });
+
+  await invalidateUserCache(targetTelegramId);
 
   const siteLabel = updatedUser.assignedSite
     ? `موقع ${updatedUser.assignedSite.name}`

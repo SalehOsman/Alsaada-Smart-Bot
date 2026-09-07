@@ -1,8 +1,16 @@
-import { NextFunction } from 'grammy';
+﻿import { NextFunction } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
-import { getImpersonatedRole } from '../redis.js';
+import { redis, getImpersonatedRole } from '../redis.js';
+
+export const USER_CACHE_PREFIX = 'cache:user:';
+
+export async function invalidateUserCache(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${USER_CACHE_PREFIX}${telegramId}`);
+  } catch {}
+}
 
 export async function authMiddleware(ctx: MyContext, next: NextFunction): Promise<void> {
   const from = ctx.from;
@@ -15,28 +23,56 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
   ctx.isRealSuperAdmin = isSuperAdminEnv;
 
   try {
-    let user = await prisma.user.findUnique({
-      where: { telegramId },
-    });
+    const cacheKey = `${USER_CACHE_PREFIX}${telegramId}`;
+    let user: any = null;
+
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        user = {
+          ...parsed,
+          telegramId: BigInt(parsed.telegramId),
+          createdAt: new Date(parsed.createdAt),
+          updatedAt: new Date(parsed.updatedAt),
+        };
+      }
+    } catch {}
 
     if (!user) {
-      // Auto-provision Super Admin if ID matches SUPER_ADMIN_TELEGRAM_ID
-      const initialRole = isSuperAdminEnv ? 'SUPER_ADMIN' : 'GUEST';
-      user = await prisma.user.create({
-        data: {
-          telegramId,
-          username: from.username || null,
-          fullName: [from.first_name, from.last_name].filter(Boolean).join(' ') || 'مستخدم جديد',
-          role: initialRole,
-          isActive: isSuperAdminEnv ? true : false,
-        },
-      });
-      console.log(`👤 [AUTH] New user provisioned: ${user.fullName} (${user.telegramId}) as ${user.role}`);
-    } else if (isSuperAdminEnv && user.role !== 'SUPER_ADMIN') {
-      user = await prisma.user.update({
+      user = await prisma.user.findUnique({
         where: { telegramId },
-        data: { role: 'SUPER_ADMIN', isActive: true },
       });
+
+      if (!user) {
+        // Auto-provision Super Admin if ID matches SUPER_ADMIN_TELEGRAM_ID
+        const initialRole = isSuperAdminEnv ? 'SUPER_ADMIN' : 'GUEST';
+        user = await prisma.user.create({
+          data: {
+            telegramId,
+            username: from.username || null,
+            fullName: [from.first_name, from.last_name].filter(Boolean).join(' ') || 'مستخدم جديد',
+            role: initialRole,
+            isActive: isSuperAdminEnv ? true : false,
+          },
+        });
+        console.log(`👤 [AUTH] New user provisioned: ${user.fullName} (${user.telegramId}) as ${user.role}`);
+      } else if (isSuperAdminEnv && user.role !== 'SUPER_ADMIN') {
+        user = await prisma.user.update({
+          where: { telegramId },
+          data: { role: 'SUPER_ADMIN', isActive: true },
+        });
+      }
+
+      if (user) {
+        try {
+          const serializable = {
+            ...user,
+            telegramId: user.telegramId.toString(),
+          };
+          await redis.set(cacheKey, JSON.stringify(serializable), 'EX', 300);
+        } catch {}
+      }
     }
 
     ctx.dbUser = user;
@@ -52,7 +88,7 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
         ctx.isImpersonating = false;
       }
     } else {
-      ctx.effectiveRole = user.role || 'GUEST';
+      ctx.effectiveRole = user?.role || 'GUEST';
       ctx.isImpersonating = false;
     }
   } catch (error) {
@@ -63,4 +99,3 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
 
   return next();
 }
-

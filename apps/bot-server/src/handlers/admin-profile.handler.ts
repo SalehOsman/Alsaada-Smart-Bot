@@ -8,6 +8,7 @@ import {
   getPendingAdminEdit,
   clearPendingAdminEdit,
 } from '../redis.js';
+import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 
 export const ADMIN_FIELD_LABELS: Record<string, string> = {
   fullName: 'الاسم الرسمي',
@@ -199,6 +200,7 @@ export async function handleAdminFieldTextInput(ctx: MyContext): Promise<boolean
   }
 
   await clearPendingAdminEdit(telegramId);
+  await invalidateUserCache(telegramId);
   await ctx.deleteMessage().catch(() => {});
 
   const notice = `تم تحديث ${ADMIN_FIELD_LABELS[fieldKey] || fieldKey} بنجاح وحفظه في النظام.`;

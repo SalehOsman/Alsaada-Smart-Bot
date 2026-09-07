@@ -1,4 +1,4 @@
-﻿import { InlineKeyboard } from 'grammy';
+import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import {
@@ -622,7 +622,7 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
 
   // 4. Edit Location (Coordinates / Google Maps link)
   if (pending.action === 'edit_location' && pending.siteCode) {
-    const coords = parseCoordinates(textVal);
+    const coords = await parseCoordinates(textVal);
     if (!coords) {
       await ctx.reply(
         '⚠️ تعذر استخراج الإحداثيات من النص المدخل.\nيرجى إرسال إحداثيات صحيحة (مثال: `25.4412, 30.5512`) أو رابط خرائط Google، أو استخدام مشبك المرفقات 📎 لمشاركة الموقع مباشرة.'
