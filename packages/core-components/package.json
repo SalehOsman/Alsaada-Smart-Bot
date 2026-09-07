@@ -1,0 +1,22 @@
+{
+  "name": "@alsaada/core-components",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alsaada/national-id-engine": "workspace:*",
+    "@alsaada/regional-engine": "workspace:*",
+    "grammy": "^1.35.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.9.3",
+    "vitest": "^3.0.8"
+  }
+}
