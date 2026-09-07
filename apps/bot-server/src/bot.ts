@@ -25,21 +25,5 @@ export function createBot(): Bot<MyContext> {
   bot.command('start', handleStart);
   bot.command(['ping', 'health', 'speed'], handlePing);
 
-  // 4. Callback Query Handlers
-  bot.callbackQuery('action:system_ping', async (ctx) => {
-    await ctx.answerCallbackQuery();
-    await handlePing(ctx);
-  });
-
-  bot.callbackQuery('action:refresh_status', async (ctx) => {
-    await ctx.answerCallbackQuery({ text: 'جاري تحديث الحالة...' });
-    await handleStart(ctx);
-  });
-
-  bot.callbackQuery('action:admin_dashboard', async (ctx) => {
-    await ctx.answerCallbackQuery();
-    await ctx.reply('📊 *لوحة القيادة التنفيذية:*\n\nالنظام في طور الترقية ونقل الموديولات.', { parse_mode: 'Markdown' });
-  });
-
   return bot;
 }

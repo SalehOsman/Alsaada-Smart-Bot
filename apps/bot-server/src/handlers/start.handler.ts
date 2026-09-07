@@ -22,24 +22,10 @@ export async function handleStart(ctx: MyContext): Promise<void> {
     `🔹 *الصلاحية المعتمدة:* ${roleLabel}\n` +
     `🔹 *حالة الحساب:* ${user?.isActive ? '🟢 نشط ومعتمد' : '⏳ قيد المراجعة والتوثيق'}\n` +
     `🔹 *محرك البيانات:* PostgreSQL 16 (مشفر وموثق جنائياً)\n\n` +
-    (role === 'SUPER_ADMIN' 
-      ? `✅ *حسابك مفعل بصلاحيات الإدارة العليا الكاملة.*\nيمكنك فحص حالة النظام عبر الأمر: /ping`
-      : `⚠️ *حسابك مسجل حالياً برتبة زائر.*\nيرجى التواصل مع الإدارة لاعتماد صلاحيتك على المنظومة.`);
-
-  const keyboard = new InlineKeyboard();
-  if (role === 'SUPER_ADMIN') {
-    keyboard
-      .text('📊 لوحة القيادة', 'action:admin_dashboard')
-      .text('⚡ فحص النظام', 'action:system_ping')
-      .row()
-      .text('👥 إدارة المستخدمين', 'action:manage_users')
-      .text('👷 سجل العمالة 360', 'action:workers_hub');
-  } else {
-    keyboard.text('🔄 تحديث الحالة', 'action:refresh_status');
-  }
+    `⚙️ *حالة المنظومة الحالية:* جاهزة لبدء بناء وبرمجة التدفقات التشغيلية من الصفر وفق المعايير المعتمدة.\n` +
+    `فحص كفاءة النظام: /ping`;
 
   await ctx.reply(welcomeText, {
     parse_mode: 'Markdown',
-    reply_markup: keyboard,
   });
 }
