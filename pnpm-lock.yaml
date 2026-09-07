@@ -24,6 +24,43 @@ importers:
         specifier: ^3.0.8
         version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(tsx@4.23.13)
 
+  apps/bot-server:
+    dependencies:
+      '@alsaada/core-components':
+        specifier: workspace:*
+        version: link:../../packages/core-components
+      '@alsaada/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@alsaada/national-id-engine':
+        specifier: workspace:*
+        version: link:../../packages/national-id-engine
+      '@alsaada/regional-engine':
+        specifier: workspace:*
+        version: link:../../packages/regional-engine
+      '@grammyjs/runner':
+        specifier: ^2.0.3
+        version: 2.0.3(grammy@1.46.0)
+      '@prisma/client':
+        specifier: ^6.4.1
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+      grammy:
+        specifier: ^1.35.0
+        version: 1.46.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.9
+        version: 22.20.1
+      tsx:
+        specifier: ^4.19.3
+        version: 4.23.13
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/core-components:
     dependencies:
       '@alsaada/national-id-engine':
@@ -257,6 +294,12 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@grammyjs/runner@2.0.3':
+    resolution: {integrity: sha512-nckmTs1dPWfVQteK9cxqxzE+0m1VRvluLWB8UgFzsjg62w3qthPJt0TYtJBEdG7OedvfQq4vnFAyE6iaMkR42A==}
+    engines: {node: '>=12.20.0 || >=14.13.1'}
+    peerDependencies:
+      grammy: ^1.13.1
 
   '@grammyjs/types@5.0.0':
     resolution: {integrity: sha512-iq1Qrq1iPKkB8yAa0qSuIURMZOCuqTY5pWy5gHpCeL1oQ+GPadGhw/cDTVE8waJwuCzacUzuIjRv1sESvk7u7A==}
@@ -937,6 +980,11 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@grammyjs/runner@2.0.3(grammy@1.46.0)':
+    dependencies:
+      abort-controller: 3.0.0
+      grammy: 1.46.0
 
   '@grammyjs/types@5.0.0': {}
 
