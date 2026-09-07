@@ -28,7 +28,27 @@ services:
       start_period: 10s
 
   # -------------------------------------------------------------
-  # 2. Alsaada Enterprise Bot Service (New System)
+  # 2. Redis Cache Service (Isolated Enterprise Cache)
+  # -------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: alsaada_enterprise_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:-alsaada_redis_secure_2026}
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - alsaada-enterprise-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-alsaada_redis_secure_2026}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # 3. Alsaada Enterprise Bot Service (New System)
   # -------------------------------------------------------------
   bot:
     container_name: alsaada_enterprise_bot
@@ -41,10 +61,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${PORT:-3000}
       DATABASE_URL: postgresql://${DB_USER:-alsaada_admin}:${DB_PASSWORD:-alsaada_secure_pass_2026}@postgres:5432/${DB_NAME:-alsaada_db}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD:-alsaada_redis_secure_2026}@redis:6379
       BOT_TOKEN: ${BOT_TOKEN}
       SUPER_ADMIN_TELEGRAM_ID: ${SUPER_ADMIN_TELEGRAM_ID}
       DATABASE_ENCRYPTION_KEY: ${DATABASE_ENCRYPTION_KEY}
@@ -56,6 +79,8 @@ services:
 volumes:
   postgres_data:
     name: alsaada_enterprise_postgres_data
+  redis_data:
+    name: alsaada_enterprise_redis_data
 
 networks:
   # Internal network for database and bot service communication
