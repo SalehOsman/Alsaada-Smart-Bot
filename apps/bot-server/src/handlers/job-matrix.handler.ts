@@ -41,8 +41,9 @@ export async function renderDepartmentsHub(
 
   // عرض كل قسم كزر تفاعلي
   departments.forEach((dept) => {
+    const statusBadge = dept.isActive ? '' : ' [⏸️ موقوف]';
     keyboard
-      .text(`🏢 ${dept.name} (${dept.code}) — 💼 ${dept.jobs.length} وظيفة`, `action:dept:view:${dept.code}`)
+      .text(`🏢 ${dept.name} (${dept.code})${statusBadge} — 💼 ${dept.jobs.length} وظيفة`, `action:dept:view:${dept.code}`)
       .row();
   });
 
@@ -114,17 +115,27 @@ export async function renderDepartmentDetail(
 
   // عرض وظائف القسم كأزرار
   dept.jobs.forEach((job) => {
+    const jobStatusBadge = job.isActive ? '' : ' [⏸️ موقوف]';
     keyboard
       .text(
-        `💼 ${job.name} (${job.code}) — ⏱️ ${job.workDays}/${job.restDays} | 🛡️ ${job.minHeadcount}`,
+        `💼 ${job.name} (${job.code})${jobStatusBadge} — ⏱️ ${job.workDays}/${job.restDays} | 🛡️ ${job.minHeadcount}`,
         `action:job:view:${dept.code}:${job.code}`
       )
       .row();
   });
 
+  // أزرار إدارة وتعديل القسم والوظائف
   keyboard
     .text('➕ إضافة وظيفة لهذا القسم', `action:job:add:${dept.code}`)
+    .row()
     .text('✏️ تعديل اسم القسم', `action:dept:edit_name:${dept.code}`)
+    .text('🏷️ تعديل كود القسم', `action:dept:edit_code:${dept.code}`)
+    .row()
+    .text(
+      dept.isActive ? '⏸️ إيقاف القسم مؤقتاً' : '▶️ إعادة تنشيط القسم',
+      `action:dept:toggle_active:${dept.code}`
+    )
+    .text('🗑️ حذف القسم', `action:dept:delete_prompt:${dept.code}`)
     .row()
     .text('◀️ رجوع لقائمة الأقسام', 'action:settings:job_matrix')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -140,15 +151,17 @@ export async function renderDepartmentDetail(
     banner = `✨ *${noticeText}*\n────────────────────────────\n\n`;
   }
 
+  const deptStatusBadge = dept.isActive ? '🟢 نشط ومفعل' : '⏸️ موقوف مؤقتاً';
   const text =
     `${banner}` +
     `🏢 *بطاقة القسم الوظيفي: ${dept.name}*\n` +
     `────────────────────────────\n` +
     `🏷️ *كود القسم المعتمد:* \`${dept.code}\`\n` +
+    `🚦 *الحالة التشغيلية:* *${deptStatusBadge}*\n` +
     `💼 *إجمالي الوظائف المسجلة بالقسم:* ${dept.jobs.length} وظيفة\n` +
     `${dept.description ? `📝 *الوصف:* ${dept.description}\n` : ''}` +
     `────────────────────────────\n` +
-    `👇 *اختر الوظيفة المطلوبة لاستعراض بطاقتها وتعديل إعداداتها:*`;
+    `👇 *اختر الوظيفة المطلوبة لاستعراض بطاقتها أو استخدم خيارات إدارة القسم أدناه:*`;
 
   if (inPlace && ctx.callbackQuery) {
     try {
@@ -229,10 +242,18 @@ export async function renderJobDetail(
     .text('✏️ تخصيص أيام الدورة', `action:job:edit_cycle:${deptCode}:${jobCode}`)
     .row();
 
-  // 3. أزرار تعديل البيانات والرواتب
+  // 3. أزرار تعديل البيانات والرواتب وإدارة الوظيفة
   keyboard
     .text('💰 تعديل الراتب الاسترشادي', `action:job:edit_salary:${deptCode}:${jobCode}`)
     .text('✏️ تعديل المسمى الوظيفي', `action:job:edit_title:${deptCode}:${jobCode}`)
+    .row()
+    .text('🏷️ تعديل كود الوظيفة', `action:job:edit_code:${deptCode}:${jobCode}`)
+    .text(
+      job.isActive ? '⏸️ إيقاف الوظيفة' : '▶️ إعادة تنشيط الوظيفة',
+      `action:job:toggle_active:${deptCode}:${jobCode}`
+    )
+    .row()
+    .text('🗑️ حذف الوظيفة', `action:job:delete_prompt:${deptCode}:${jobCode}`)
     .row()
     .text(`◀️ رجوع للقسم (${deptCode})`, `action:dept:view:${deptCode}`)
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -248,12 +269,14 @@ export async function renderJobDetail(
     banner = `✨ *${noticeText}*\n────────────────────────────\n\n`;
   }
 
+  const jobStatusBadge = job.isActive ? '🟢 نشطة ومفعلة' : '⏸️ موقوفة مؤقتاً';
   const text =
     `${banner}` +
     `💼 *بطاقة الوظيفة: ${job.name}*\n` +
     `────────────────────────────\n` +
     `🏢 *القسم التابع له:* ${job.department.name} (\`${job.department.code}\`)\n` +
-    `🏷️ *كود الوظيفة المعتمد:* \`${job.code}\`\n\n` +
+    `🏷️ *كود الوظيفة المعتمد:* \`${job.code}\`\n` +
+    `🚦 *الحالة التشغيلية:* *${jobStatusBadge}*\n\n` +
     `⏱️ *دورة العمل والإجازات الميدانية:*\n` +
     `• أيام العمل بالموقع (W): *${job.workDays} يوماً*\n` +
     `• أيام الراحة والإجازة (R): *${job.restDays} أيام*\n` +
@@ -1068,6 +1091,359 @@ export async function handleStartEditDeptName(ctx: MyContext, deptCode: string):
 }
 
 /**
+ * 🏷️ بدء معالج تعديل كود القسم
+ */
+export async function handleStartEditDeptCode(ctx: MyContext, deptCode: string): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const messageId = ctx.callbackQuery?.message?.message_id || 0;
+
+  await setPendingJobMatrixAction(telegramId, {
+    action: 'edit_dept_code',
+    deptCode,
+    messageId,
+  });
+
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const cancelKeyboard = new InlineKeyboard()
+    .text(`◀️ رجوع لبطاقة القسم`, `action:dept:view:${deptCode}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `🏷️ *تعديل كود القسم الوظيفي (${deptCode})*\n` +
+    `────────────────────────────\n` +
+    `أدخل *الكود المختصر الجديد* بالأحرف الإنجليزية الكبيرة (2 إلى 6 أحرف):\n` +
+    `(مثال: \`OP\`، \`MNT\`، \`ADM\`، \`STR\`، \`LOG\`)`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: cancelKeyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: cancelKeyboard });
+}
+
+/**
+ * ⏸️ / ▶️ إيقاف أو تنشيط القسم الوظيفي لحظياً
+ */
+export async function handleToggleDeptActive(ctx: MyContext, deptCode: string): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+
+  const dept = await prisma.department.findUnique({ where: { code: deptCode } });
+  if (!dept) return;
+
+  const newStatus = !dept.isActive;
+  await prisma.department.update({
+    where: { id: dept.id },
+    data: { isActive: newStatus },
+  });
+
+  await systemDataService.invalidateDepartmentsAndJobs();
+
+  const actionText = newStatus ? 'تنشيط' : 'إيقاف';
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({
+      text: `تم ${actionText} قسم (${dept.name}) بنجاح.`,
+    });
+  }
+
+  await renderDepartmentDetail(ctx, deptCode, true, `تم ${actionText} القسم الوظيفي بنجاح.`);
+}
+
+/**
+ * 🗑️ طلب حذف القسم الوظيفي والتحقق من الموانع
+ */
+export async function handlePromptDeleteDept(ctx: MyContext, deptCode: string): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+
+  const dept = await prisma.department.findUnique({
+    where: { code: deptCode },
+    include: {
+      jobs: true,
+      workers: { select: { id: true } },
+    },
+  });
+
+  if (!dept) return;
+
+  // فحص موانع الحذف (وجود وظائف أو عمالة)
+  const jobsCount = dept.jobs?.length || 0;
+  const workersCount = (dept as any).workers?.length || 0;
+  if (jobsCount > 0 || workersCount > 0) {
+    const errorKeyboard = new InlineKeyboard()
+      .text(
+        dept.isActive ? '⏸️ إيقاف القسم بدلاً من حذفه' : '▶️ إعادة تنشيط القسم',
+        `action:dept:toggle_active:${deptCode}`
+      )
+      .row()
+      .text(`◀️ عودة لبطاقة القسم (${deptCode})`, `action:dept:view:${deptCode}`)
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    const warningText =
+      `⚠️ *تعذر حذف القسم الوظيفي (${dept.name})*\n` +
+      `────────────────────────────\n` +
+      `لا يمكن حذف هذا القسم من قاعدة البيانات لاحتوائه على سجلات مرتبطة به:\n` +
+      `• عدد الوظائف المسجلة بالقسم: *${jobsCount} وظيفة*\n` +
+      `• عدد العمال المسندين للقسم: *${workersCount} عامل*\n\n` +
+      `🛡️ *لحماية البيانات وعدم فقدان السجلات:*\n` +
+      `يمكنك إيقاف القسم مؤقتاً عبر الزر أدناه ليختفي من خيارات التشغيل الجديدة، أو حذف/نقل وظائفه وعمالته أولاً.`;
+
+    if (ctx.callbackQuery) {
+      try {
+        await ctx.editMessageText(warningText, { parse_mode: 'Markdown', reply_markup: errorKeyboard });
+        return;
+      } catch {}
+    }
+    await ctx.reply(warningText, { parse_mode: 'Markdown', reply_markup: errorKeyboard });
+    return;
+  }
+
+  // إذا كان القسم فارغاً تماماً من الوظائف والعمالة
+  const confirmKeyboard = new InlineKeyboard()
+    .text('🗑️ نعم، تأكيد الحذف النهائي', `action:dept:delete_confirm:${deptCode}`)
+    .row()
+    .text(`◀️ إلغاء والعودة للقسم`, `action:dept:view:${deptCode}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `⚠️ *تأكيد الحذف النهائي للقسم الوظيفي*\n` +
+    `────────────────────────────\n` +
+    `🏢 *اسم القسم:* *${dept.name}*\n` +
+    `🏷️ *كود القسم:* \`${dept.code}\`\n\n` +
+    `هل أنت متأكد من حذف هذا القسم نهائياً من النظام؟\n` +
+    `(لا يمكن التراجع عن هذا الإجراء)`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: confirmKeyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: confirmKeyboard });
+}
+
+/**
+ * 🗑️ تأكيد الحذف النهائي للقسم الوظيفي الفارغ
+ */
+export async function handleConfirmDeleteDept(ctx: MyContext, deptCode: string): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+
+  const dept = await prisma.department.findUnique({
+    where: { code: deptCode },
+    include: { jobs: true, workers: true },
+  });
+
+  if (!dept) return;
+
+  const jobsCount = dept.jobs?.length || 0;
+  const workersCount = (dept as any).workers?.length || 0;
+  if (jobsCount > 0 || workersCount > 0) {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({
+        text: '⚠️ تعذر الحذف لوجود وظائف أو عمالة مرتبطة بهذا القسم.',
+        show_alert: true,
+      });
+    }
+    return;
+  }
+
+  await prisma.department.delete({ where: { id: dept.id } });
+  await systemDataService.invalidateDepartmentsAndJobs();
+
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({ text: `تم حذف قسم (${dept.name}) نهائياً.` });
+  }
+
+  await renderDepartmentsHub(ctx, true, `تم حذف قسم (${dept.name}) نهائياً بنجاح.`);
+}
+
+/**
+ * 🏷️ بدء معالج تعديل كود الوظيفة
+ */
+export async function handleStartEditJobCode(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const messageId = ctx.callbackQuery?.message?.message_id || 0;
+
+  await setPendingJobMatrixAction(telegramId, {
+    action: 'edit_job_code',
+    deptCode,
+    jobCode,
+    messageId,
+  });
+
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const cancelKeyboard = new InlineKeyboard()
+    .text(`◀️ رجوع لبطاقة الوظيفة`, `action:job:view:${deptCode}:${jobCode}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `🏷️ *تعديل كود الوظيفة (${jobCode})*\n` +
+    `────────────────────────────\n` +
+    `أدخل *كود الوظيفة الجديد* بالأحرف الإنجليزية الكبيرة (2 إلى 6 أحرف):\n` +
+    `(مثال: \`DRV\`، \`TEC\`، \`STR\`، \`SEC\`)`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: cancelKeyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: cancelKeyboard });
+}
+
+/**
+ * ⏸️ / ▶️ إيقاف أو تنشيط الوظيفة لحظياً
+ */
+export async function handleToggleJobActive(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+
+  const job = await systemDataService.getJobByDeptAndCode(deptCode, jobCode);
+  if (!job) return;
+
+  const newStatus = !job.isActive;
+  await prisma.jobTitle.update({
+    where: { id: job.id },
+    data: { isActive: newStatus },
+  });
+
+  await systemDataService.invalidateDepartmentsAndJobs();
+
+  const actionText = newStatus ? 'تنشيط' : 'إيقاف';
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({
+      text: `تم ${actionText} وظيفة (${job.name}) بنجاح.`,
+    });
+  }
+
+  await renderJobDetail(ctx, deptCode, jobCode, true, `تم ${actionText} الوظيفة بنجاح.`);
+}
+
+/**
+ * 🗑️ طلب حذف الوظيفة والتحقق من العمالة
+ */
+export async function handlePromptDeleteJob(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+
+  const job = await systemDataService.getJobByDeptAndCode(deptCode, jobCode);
+  if (!job) return;
+
+  const workersCount = await prisma.worker.count({
+    where: { jobTitleId: job.id },
+  });
+
+  if (workersCount > 0) {
+    const errorKeyboard = new InlineKeyboard()
+      .text(
+        job.isActive ? '⏸️ إيقاف الوظيفة بدلاً من حذفها' : '▶️ إعادة تنشيط الوظيفة',
+        `action:job:toggle_active:${deptCode}:${jobCode}`
+      )
+      .row()
+      .text(`◀️ عودة لبطاقة الوظيفة`, `action:job:view:${deptCode}:${jobCode}`)
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    const warningText =
+      `⚠️ *تعذر حذف الوظيفة (${job.name})*\n` +
+      `────────────────────────────\n` +
+      `لا يمكن حذف هذه المهنة لأنها مسندة لـ *${workersCount} عامل* مسجل بالشركة.\n\n` +
+      `🛡️ *لحماية البيانات الميدانية والمالية:*\n` +
+      `يمكنك إيقاف الوظيفة مؤقتاً عبر الزر أدناه لتمنع تعيين عمال جدد عليها، أو تغيير وظيفة العمال المسندين لها أولاً.`;
+
+    if (ctx.callbackQuery) {
+      try {
+        await ctx.editMessageText(warningText, { parse_mode: 'Markdown', reply_markup: errorKeyboard });
+        return;
+      } catch {}
+    }
+    await ctx.reply(warningText, { parse_mode: 'Markdown', reply_markup: errorKeyboard });
+    return;
+  }
+
+  const confirmKeyboard = new InlineKeyboard()
+    .text('🗑️ نعم، تأكيد حذف الوظيفة نهائياً', `action:job:delete_confirm:${deptCode}:${jobCode}`)
+    .row()
+    .text(`◀️ إلغاء والعودة للوظيفة`, `action:job:view:${deptCode}:${jobCode}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `⚠️ *تأكيد الحذف النهائي للوظيفة*\n` +
+    `────────────────────────────\n` +
+    `💼 *المسمى الوظيفي:* *${job.name}*\n` +
+    `🏷️ *الكود المعتمد:* \`${job.code}\`\n` +
+    `🏢 *القسم:* \`${deptCode}\`\n\n` +
+    `هل أنت متأكد من حذف هذه الوظيفة نهائياً من قاعدة البيانات؟\n` +
+    `(لا يمكن التراجع عن هذا الإجراء)`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: confirmKeyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: confirmKeyboard });
+}
+
+/**
+ * 🗑️ تأكيد الحذف النهائي للوظيفة
+ */
+export async function handleConfirmDeleteJob(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+
+  const job = await systemDataService.getJobByDeptAndCode(deptCode, jobCode);
+  if (!job) return;
+
+  const workersCount = await prisma.worker.count({
+    where: { jobTitleId: job.id },
+  });
+
+  if (workersCount > 0) {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({
+        text: '⚠️ تعذر الحذف لوجود عمالة مسجلة على هذه الوظيفة.',
+        show_alert: true,
+      });
+    }
+    return;
+  }
+
+  await prisma.jobTitle.delete({ where: { id: job.id } });
+  await systemDataService.invalidateDepartmentsAndJobs();
+
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({ text: `تم حذف وظيفة (${job.name}) نهائياً.` });
+  }
+
+  await renderDepartmentDetail(ctx, deptCode, true, `تم حذف وظيفة (${job.name}) نهائياً بنجاح.`);
+}
+
+/**
  * 📝 معالجة الرسائل النصية في معالجات الأقسام والوظائف
  */
 export async function handleJobMatrixTextInput(ctx: MyContext): Promise<boolean> {
@@ -1172,6 +1548,37 @@ export async function handleJobMatrixTextInput(ctx: MyContext): Promise<boolean>
     await ctx.deleteMessage().catch(() => {});
 
     await renderDepartmentDetail(ctx, pending.deptCode, false, `تم تعديل اسم القسم إلى (${textVal}) بنجاح.`);
+    return true;
+  }
+
+  // 3.1 تعديل كود القسم
+  if (pending.action === 'edit_dept_code' && pending.deptCode) {
+    const codeClean = textVal.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    if (!codeClean || codeClean.length < 2 || codeClean.length > 6) {
+      await ctx.reply('⚠️ كود القسم غير صالح. يرجى إدخال كود لاتيني مختصر (2-6 أحرف).');
+      return true;
+    }
+
+    if (codeClean !== pending.deptCode) {
+      const existing = await prisma.department.findUnique({ where: { code: codeClean } });
+      if (existing) {
+        await ctx.reply(`⚠️ كود القسم (\`${codeClean}\`) مسجل مسبقاً باسم (${existing.name}).`, {
+          parse_mode: 'Markdown',
+        });
+        return true;
+      }
+
+      await prisma.department.update({
+        where: { code: pending.deptCode },
+        data: { code: codeClean },
+      });
+    }
+
+    await clearPendingJobMatrixAction(telegramId);
+    await systemDataService.invalidateDepartmentsAndJobs();
+    await ctx.deleteMessage().catch(() => {});
+
+    await renderDepartmentDetail(ctx, codeClean, false, `تم تعديل كود القسم إلى (\`${codeClean}\`) بنجاح.`);
     return true;
   }
 
@@ -1405,6 +1812,59 @@ export async function handleJobMatrixTextInput(ctx: MyContext): Promise<boolean>
     await ctx.deleteMessage().catch(() => {});
 
     await renderJobDetail(ctx, pending.deptCode, pending.jobCode, false, `تم تعديل مسمى الوظيفة إلى (${textVal}) بنجاح.`);
+    return true;
+  }
+
+  // 10.1 تعديل كود الوظيفة
+  if (pending.action === 'edit_job_code' && pending.deptCode && pending.jobCode) {
+    const jobCodeClean = textVal.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    if (!jobCodeClean || jobCodeClean.length < 2 || jobCodeClean.length > 6) {
+      await ctx.reply('⚠️ كود الوظيفة غير صالح. يرجى إدخال كود لاتيني مختصر (2-6 أحرف).');
+      return true;
+    }
+
+    const dept = await prisma.department.findUnique({ where: { code: pending.deptCode } });
+    if (!dept) return false;
+
+    if (jobCodeClean !== pending.jobCode) {
+      const existing = await prisma.jobTitle.findUnique({
+        where: {
+          departmentId_code: {
+            departmentId: dept.id,
+            code: jobCodeClean,
+          },
+        },
+      });
+
+      if (existing) {
+        await ctx.reply(`⚠️ كود الوظيفة (\`${jobCodeClean}\`) مسجل مسبقاً بهذا القسم باسم (${existing.name}).`, {
+          parse_mode: 'Markdown',
+        });
+        return true;
+      }
+
+      const job = await prisma.jobTitle.findUnique({
+        where: {
+          departmentId_code: {
+            departmentId: dept.id,
+            code: pending.jobCode,
+          },
+        },
+      });
+
+      if (job) {
+        await prisma.jobTitle.update({
+          where: { id: job.id },
+          data: { code: jobCodeClean },
+        });
+      }
+    }
+
+    await clearPendingJobMatrixAction(telegramId);
+    await systemDataService.invalidateDepartmentsAndJobs();
+    await ctx.deleteMessage().catch(() => {});
+
+    await renderJobDetail(ctx, pending.deptCode, jobCodeClean, false, `تم تعديل كود الوظيفة إلى (\`${jobCodeClean}\`) بنجاح.`);
     return true;
   }
 

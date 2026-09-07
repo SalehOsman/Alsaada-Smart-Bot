@@ -23,6 +23,7 @@ const { mockDepartments } = vi.hoisted(() => {
       description: 'تشغيل أسطول المعدات الثقيلة والكسارات بالمواقع والمناجم',
       isActive: true,
       order: 1,
+      workers: [],
       jobs: [
         {
           id: 'job-1',
@@ -85,6 +86,7 @@ vi.mock('../src/db.js', () => {
         }),
         create: vi.fn().mockResolvedValue(mockDepartments[0]),
         update: vi.fn().mockResolvedValue(mockDepartments[0]),
+        delete: vi.fn().mockResolvedValue(mockDepartments[0]),
       },
       jobTitle: {
         findMany: vi.fn().mockResolvedValue(mockDepartments[0].jobs),
@@ -111,6 +113,10 @@ vi.mock('../src/db.js', () => {
             department: mockDepartments[0],
           })
         ),
+        delete: vi.fn().mockResolvedValue(mockDepartments[0].jobs[0]),
+      },
+      worker: {
+        count: vi.fn().mockResolvedValue(0),
       },
       cycleTransitionHistory: {
         create: vi.fn().mockImplementation(({ data }) =>
@@ -140,6 +146,15 @@ import {
   handleJobHeadcountDelta,
   handleJobToggleCycle,
   handleQuickPresetCycle,
+  handleStartEditDeptName,
+  handleStartEditDeptCode,
+  handleToggleDeptActive,
+  handlePromptDeleteDept,
+  handleConfirmDeleteDept,
+  handleStartEditJobCode,
+  handleToggleJobActive,
+  handlePromptDeleteJob,
+  handleConfirmDeleteJob,
   handleStartEditJobCycle,
   handleSetWorkDays,
   handleSetRestDays,
@@ -151,6 +166,7 @@ import { cycleTransitionService } from '../src/services/cycle-transition.service
 import { MyContext } from '../src/types/context.js';
 import { fastCache } from '../src/services/fast-cache.service.js';
 import * as redisModule from '../src/redis.js';
+import { prisma } from '../src/db.js';
 
 describe('💼 Job Matrix & Functional Departments Suite', () => {
   beforeEach(() => {
@@ -670,6 +686,446 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
       expect(result.periods[1].daysCount).toBe(15);
       expect(result.periods[1].earnedRestDays).toBe(3.75);
       expect(result.summaryArabic).toContain('11.25 يوم راحة');
+    });
+  });
+
+  describe('5. Department & Job Title Full Lifecycle Management (Codes, Activation, Safe Deletion)', () => {
+    it('should initiate department code edit and save state in Redis', async () => {
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:dept:edit_code:OP',
+          message: { message_id: 99 },
+        },
+        editMessageText: mockEditMessageText,
+        answerCallbackQuery: vi.fn(),
+      } as unknown as MyContext;
+
+      await handleStartEditDeptCode(mockCtx, 'OP');
+
+      expect(redisModule.setPendingJobMatrixAction).toHaveBeenCalledWith(
+        123456n,
+        expect.objectContaining({
+          action: 'edit_dept_code',
+          deptCode: 'OP',
+          messageId: 99,
+        })
+      );
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تعديل كود القسم الوظيفي'),
+        expect.objectContaining({ parse_mode: 'Markdown' })
+      );
+    });
+
+    it('should toggle department active status and invalidate caches', async () => {
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:dept:toggle_active:OP',
+        },
+        answerCallbackQuery: mockAnswerCallbackQuery,
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      await handleToggleDeptActive(mockCtx, 'OP');
+
+      expect(prisma.department.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { isActive: false },
+        })
+      );
+      expect(mockAnswerCallbackQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: expect.stringContaining('تم إيقاف قسم'),
+        })
+      );
+    });
+
+    it('should block department deletion and present safety explanation when jobs exist', async () => {
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:dept:delete_prompt:OP',
+        },
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      // mockDepartments[0] has 1 job (DRV)
+      await handlePromptDeleteDept(mockCtx, 'OP');
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تعذر حذف القسم الوظيفي'),
+        expect.objectContaining({
+          reply_markup: expect.objectContaining({
+            inline_keyboard: expect.arrayContaining([
+              expect.arrayContaining([
+                expect.objectContaining({
+                  callback_data: 'action:dept:toggle_active:OP',
+                }),
+              ]),
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should permit department deletion confirmation prompt when department has zero jobs and zero workers', async () => {
+      vi.mocked(prisma.department.findUnique).mockResolvedValueOnce({
+        id: 'dept-empty',
+        code: 'EMPTY',
+        name: 'قسم فارغ',
+        description: null,
+        isActive: true,
+        order: 99,
+        jobs: [],
+        workers: [],
+      } as any);
+
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:dept:delete_prompt:EMPTY',
+        },
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      await handlePromptDeleteDept(mockCtx, 'EMPTY');
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تأكيد الحذف النهائي للقسم الوظيفي'),
+        expect.objectContaining({
+          reply_markup: expect.objectContaining({
+            inline_keyboard: expect.arrayContaining([
+              expect.arrayContaining([
+                expect.objectContaining({
+                  callback_data: 'action:dept:delete_confirm:EMPTY',
+                }),
+              ]),
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should delete empty department on confirm and refresh hub', async () => {
+      vi.mocked(prisma.department.findUnique).mockResolvedValueOnce({
+        id: 'dept-empty',
+        code: 'EMPTY',
+        name: 'قسم فارغ',
+        description: null,
+        isActive: true,
+        order: 99,
+        jobs: [],
+        workers: [],
+      } as any);
+
+      const mockAnswer = vi.fn();
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:dept:delete_confirm:EMPTY',
+        },
+        answerCallbackQuery: mockAnswer,
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      await handleConfirmDeleteDept(mockCtx, 'EMPTY');
+
+      expect(prisma.department.delete).toHaveBeenCalledWith({
+        where: { id: 'dept-empty' },
+      });
+      expect(mockAnswer).toHaveBeenCalledWith({
+        text: expect.stringContaining('تم حذف قسم'),
+      });
+    });
+
+    it('should initiate job code edit and save state in Redis', async () => {
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:job:edit_code:OP:DRV',
+          message: { message_id: 101 },
+        },
+        editMessageText: mockEditMessageText,
+        answerCallbackQuery: vi.fn(),
+      } as unknown as MyContext;
+
+      await handleStartEditJobCode(mockCtx, 'OP', 'DRV');
+
+      expect(redisModule.setPendingJobMatrixAction).toHaveBeenCalledWith(
+        123456n,
+        expect.objectContaining({
+          action: 'edit_job_code',
+          deptCode: 'OP',
+          jobCode: 'DRV',
+          messageId: 101,
+        })
+      );
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تعديل كود الوظيفة'),
+        expect.objectContaining({ parse_mode: 'Markdown' })
+      );
+    });
+
+    it('should toggle job active status and invalidate caches', async () => {
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:job:toggle_active:OP:DRV',
+        },
+        answerCallbackQuery: mockAnswerCallbackQuery,
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      await handleToggleJobActive(mockCtx, 'OP', 'DRV');
+
+      expect(prisma.jobTitle.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { isActive: false },
+        })
+      );
+      expect(mockAnswerCallbackQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: expect.stringContaining('تم إيقاف وظيفة'),
+        })
+      );
+    });
+
+    it('should block job deletion when workers are assigned to it', async () => {
+      vi.mocked(prisma.worker.count).mockResolvedValueOnce(5);
+
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:job:delete_prompt:OP:DRV',
+        },
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      await handlePromptDeleteJob(mockCtx, 'OP', 'DRV');
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تعذر حذف الوظيفة'),
+        expect.objectContaining({
+          reply_markup: expect.objectContaining({
+            inline_keyboard: expect.arrayContaining([
+              expect.arrayContaining([
+                expect.objectContaining({
+                  callback_data: 'action:job:toggle_active:OP:DRV',
+                }),
+              ]),
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should permit job deletion confirmation when 0 workers are assigned', async () => {
+      vi.mocked(prisma.worker.count).mockResolvedValueOnce(0);
+
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: {
+          data: 'action:job:delete_prompt:OP:DRV',
+        },
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      await handlePromptDeleteJob(mockCtx, 'OP', 'DRV');
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تأكيد الحذف النهائي للوظيفة'),
+        expect.objectContaining({
+          reply_markup: expect.objectContaining({
+            inline_keyboard: expect.arrayContaining([
+              expect.arrayContaining([
+                expect.objectContaining({
+                  callback_data: 'action:job:delete_confirm:OP:DRV',
+                }),
+              ]),
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('should handle text input for edit_dept_code with validation and collision checks', async () => {
+      // 1. Invalid code (too short)
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_dept_code',
+        deptCode: 'OP',
+      });
+      const mockReply1 = vi.fn();
+      const mockCtx1 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: 'X' },
+        reply: mockReply1,
+      } as unknown as MyContext;
+
+      const handled1 = await handleJobMatrixTextInput(mockCtx1);
+      expect(handled1).toBe(true);
+      expect(mockReply1).toHaveBeenCalledWith(expect.stringContaining('كود القسم غير صالح'));
+
+      // 2. Collision with existing dept
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_dept_code',
+        deptCode: 'OP',
+      });
+      vi.mocked(prisma.department.findUnique).mockResolvedValueOnce({
+        id: 'dept-mnt',
+        code: 'MNT',
+        name: 'إدارة الصيانة',
+      } as any);
+      const mockReply2 = vi.fn();
+      const mockCtx2 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: 'MNT' },
+        reply: mockReply2,
+      } as unknown as MyContext;
+
+      const handled2 = await handleJobMatrixTextInput(mockCtx2);
+      expect(handled2).toBe(true);
+      expect(mockReply2).toHaveBeenCalledWith(
+        expect.stringContaining('مسجل مسبقاً'),
+        expect.anything()
+      );
+
+      // 3. Valid unique new code
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_dept_code',
+        deptCode: 'OP',
+      });
+      vi.mocked(prisma.department.findUnique).mockResolvedValueOnce(null);
+      const mockReply3 = vi.fn();
+      const mockDelete3 = vi.fn().mockResolvedValue(true);
+      const mockCtx3 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: 'OPS' },
+        reply: mockReply3,
+        deleteMessage: mockDelete3,
+      } as unknown as MyContext;
+
+      const handled3 = await handleJobMatrixTextInput(mockCtx3);
+      expect(handled3).toBe(true);
+      expect(prisma.department.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { code: 'OP' },
+          data: { code: 'OPS' },
+        })
+      );
+    });
+
+    it('should handle text input for edit_job_code with validation and collision checks', async () => {
+      // 1. Invalid code (too short)
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_code',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+      });
+      const mockReply1 = vi.fn();
+      const mockCtx1 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: 'A' },
+        reply: mockReply1,
+      } as unknown as MyContext;
+
+      const handled1 = await handleJobMatrixTextInput(mockCtx1);
+      expect(handled1).toBe(true);
+      expect(mockReply1).toHaveBeenCalledWith(expect.stringContaining('كود الوظيفة غير صالح'));
+
+      // 2. Collision with existing job in same dept
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_code',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+      });
+      vi.mocked(prisma.department.findUnique).mockResolvedValueOnce({
+        id: 'dept-1',
+        code: 'OP',
+        name: 'التشغيل',
+      } as any);
+      vi.mocked(prisma.jobTitle.findUnique).mockResolvedValueOnce({
+        id: 'job-other',
+        name: 'مهندس موقع',
+        code: 'ENG',
+      } as any);
+
+      const mockReply2 = vi.fn();
+      const mockCtx2 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: 'ENG' },
+        reply: mockReply2,
+      } as unknown as MyContext;
+
+      const handled2 = await handleJobMatrixTextInput(mockCtx2);
+      expect(handled2).toBe(true);
+      expect(mockReply2).toHaveBeenCalledWith(
+        expect.stringContaining('مسجل مسبقاً بهذا القسم'),
+        expect.anything()
+      );
+
+      // 3. Valid unique new job code
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_code',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+      });
+      vi.mocked(prisma.department.findUnique).mockResolvedValueOnce({
+        id: 'dept-1',
+        code: 'OP',
+        name: 'التشغيل',
+      } as any);
+      vi.mocked(prisma.jobTitle.findUnique)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: 'job-1',
+          code: 'DRV',
+          name: 'سائق',
+        } as any);
+
+      const mockReply3 = vi.fn();
+      const mockDelete3 = vi.fn().mockResolvedValue(true);
+      const mockCtx3 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: 'DRVR' },
+        reply: mockReply3,
+        deleteMessage: mockDelete3,
+      } as unknown as MyContext;
+
+      const handled3 = await handleJobMatrixTextInput(mockCtx3);
+      expect(handled3).toBe(true);
+      expect(prisma.jobTitle.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'job-1' },
+          data: { code: 'DRVR' },
+        })
+      );
     });
   });
 });

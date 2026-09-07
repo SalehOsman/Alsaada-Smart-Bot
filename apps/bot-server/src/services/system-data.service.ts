@@ -113,14 +113,15 @@ export class SystemDataService {
   /**
    * جلب قائمة كافة الأقسام مع عدد الوظائف التابعة لها (L1 RAM < 0.1ms)
    */
-  async getDepartments() {
-    return fastCache.rememberSWR('departments:all', 600, async () => {
+  async getDepartments(includeInactive = true) {
+    const cacheKey = includeInactive ? 'departments:all:all_status' : 'departments:all:active';
+    return fastCache.rememberSWR(cacheKey, 600, async () => {
       if (!prisma?.department?.findMany) return [];
       return prisma.department.findMany({
-        where: { isActive: true },
+        where: includeInactive ? undefined : { isActive: true },
         include: {
           jobs: {
-            where: { isActive: true },
+            where: includeInactive ? undefined : { isActive: true },
             orderBy: [{ order: 'asc' }, { name: 'asc' }],
           },
         },
@@ -132,13 +133,14 @@ export class SystemDataService {
   /**
    * جلب تفاصيل قسم محدد بالكود مع كافة وظائفه (L1 RAM < 0.1ms)
    */
-  async getDepartmentByCode(code: string) {
-    return fastCache.rememberSWR(`department:code:${code}`, 600, async () => {
+  async getDepartmentByCode(code: string, includeInactive = true) {
+    const cacheKey = includeInactive ? `department:code:${code}:all` : `department:code:${code}:active`;
+    return fastCache.rememberSWR(cacheKey, 600, async () => {
       return prisma.department.findUnique({
         where: { code },
         include: {
           jobs: {
-            where: { isActive: true },
+            where: includeInactive ? undefined : { isActive: true },
             orderBy: [{ order: 'asc' }, { name: 'asc' }],
           },
         },

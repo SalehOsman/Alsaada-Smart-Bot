@@ -77,7 +77,15 @@ import {
   handleStartAddJob,
   handleStartEditJobSalary,
   handleStartEditJobTitle,
+  handleStartEditJobCode,
+  handleToggleJobActive,
+  handlePromptDeleteJob,
+  handleConfirmDeleteJob,
   handleStartEditDeptName,
+  handleStartEditDeptCode,
+  handleToggleDeptActive,
+  handlePromptDeleteDept,
+  handleConfirmDeleteDept,
   handleStartEditJobCycle,
   handleQuickPresetCycle,
   handleSetWorkDays,
@@ -275,8 +283,32 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery(/^action:dept:edit_name:(.+)$/, async (ctx) => {
     await handleStartEditDeptName(ctx, ctx.match[1]);
   });
+  bot.callbackQuery(/^action:dept:edit_code:(.+)$/, async (ctx) => {
+    await handleStartEditDeptCode(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:dept:toggle_active:(.+)$/, async (ctx) => {
+    await handleToggleDeptActive(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:dept:delete_prompt:(.+)$/, async (ctx) => {
+    await handlePromptDeleteDept(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:dept:delete_confirm:(.+)$/, async (ctx) => {
+    await handleConfirmDeleteDept(ctx, ctx.match[1]);
+  });
   bot.callbackQuery(/^action:job:add:(.+)$/, async (ctx) => {
     await handleStartAddJob(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:job:edit_code:(.+):(.+)$/, async (ctx) => {
+    await handleStartEditJobCode(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:toggle_active:(.+):(.+)$/, async (ctx) => {
+    await handleToggleJobActive(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:delete_prompt:(.+):(.+)$/, async (ctx) => {
+    await handlePromptDeleteJob(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:delete_confirm:(.+):(.+)$/, async (ctx) => {
+    await handleConfirmDeleteJob(ctx, ctx.match[1], ctx.match[2]);
   });
   bot.callbackQuery(/^action:job:view:(.+):(.+)$/, async (ctx) => {
     await renderJobDetail(ctx, ctx.match[1], ctx.match[2], true);
