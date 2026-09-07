@@ -31,6 +31,7 @@ export async function purgeTestData(confirm: boolean = false): Promise<void> {
     const tablesToPurge = [
       'outbox_events',
       'audit_logs',
+      'worker_expense_claims',
       'financial_ledgers',
       'advance_installments',
       'advance_requests',
