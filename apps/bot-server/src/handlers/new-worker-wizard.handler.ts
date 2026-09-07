@@ -1692,17 +1692,10 @@ async function handleWorkerFinalSave(
     await clearPendingWorkerWizard(telegramId);
 
     // لوحة أزرار إتمام العمليات الموحدة
-    const workerPhone = (d.phone || '').replace(/\D/g, '');
-    const waPhone = workerPhone.startsWith('0') ? '20' + workerPhone.substring(1) : workerPhone;
-    const waText = encodeURIComponent(
-      `مرحباً بك يا ${result.worker.name} بشركة السعادة للمقاولات العامة والتعدين.\n` +
-      `تم قيدكم رسمياً بكود وظيفي: [ ${result.worker.code} ] - وظيفة: ${result.worker.jobTitle}.\n` +
-      `نتمنى لكم التوفيق والنجاح.`
-    );
-    const waUrl = `https://wa.me/${waPhone}?text=${waText}`;
+    const waUrl = result.welcomeWhatsAppUrl;
 
     const completionKeyboard = new InlineKeyboard()
-      .url('📲 إرسال إشعار التعيين للعامل عبر واتساب', waUrl)
+      .url('📲 إرسال إشعار ودعوة التعيين للعامل عبر واتساب', waUrl)
       .row()
       .text('➕ تسجيل عامل آخر', 'action:worker:add')
       .row()

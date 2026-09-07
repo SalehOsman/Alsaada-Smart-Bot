@@ -100,6 +100,10 @@ describe('Worker Full 19-Step Wizard & Compound Nickname Engine', () => {
       expect(worker.aliases).toContain('عبد الرحمن علي');
       expect(worker.aliases).toContain('106');
       expect(welcomeWhatsAppUrl).toBeDefined();
+      const decodedUrl = decodeURIComponent(welcomeWhatsAppUrl);
+      expect(decodedUrl).toContain(`start=join_${worker.code}`);
+      expect(decodedUrl).toContain('قسيمة راتبك');
+      expect(decodedUrl).toContain('تأكيد وربط حسابي');
     });
   });
 });

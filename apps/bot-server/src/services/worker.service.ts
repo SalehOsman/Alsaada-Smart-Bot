@@ -332,12 +332,17 @@ export class WorkerService {
     await fastCache.invalidate('workers:all:active');
     await fastCache.invalidate('workers:summary:count');
 
-    // 7. إنشاء رابط الترحيب عبر واتساب
+    // 7. إنشاء رابط الترحيب الرسمي عبر واتساب متضمناً رابط الانضمام للبوت
     const welcomeWhatsAppUrl = this.buildWorkerWelcomeWhatsAppUrl({
       name: worker.name,
       code: worker.code,
       jobTitle: worker.jobTitle,
-      siteName: worker.site?.name,
+      siteName: worker.site?.name || input.siteName,
+      hireDate: worker.hireDate,
+      shiftSystem: worker.shiftSystem,
+      payoutMethod: input.paymentMethod,
+      walletType: input.walletType,
+      accountNumber: input.accountNumber,
       phone: cleanPhone,
     });
 
@@ -345,28 +350,70 @@ export class WorkerService {
   }
 
   /**
-   * إنشاء رابط دعوة ترحيبي رسمي للعامل عبر واتساب
+   * إنشاء رابط دعوة ترحيبي رسمي للعامل عبر واتساب متضمناً رابط الانضمام للبوت والمميزات
    */
   buildWorkerWelcomeWhatsAppUrl(data: {
     name: string;
     code: string;
     jobTitle: string;
     siteName?: string;
+    hireDate?: Date | string;
+    shiftSystem?: string;
+    payoutMethod?: string;
+    walletType?: string;
+    accountNumber?: string;
     phone: string;
+    botUsername?: string;
   }): string {
     const intlPhone = normalizeEgyptianPhone(data.phone) || data.phone.replace(/\D/g, '');
-    const siteLine = data.siteName ? `• *الموقع المخصص:* ${data.siteName}` : '';
+    const cleanBotUsername = (data.botUsername || config.botUsername || 'Alsaada_HRtest_Bot').replace(/^@/, '').trim();
+    const botLink = `https://t.me/${cleanBotUsername}?start=join_${data.code}`;
+
+    const hireDateFormatted = data.hireDate
+      ? (data.hireDate instanceof Date ? formatDate(data.hireDate) : data.hireDate)
+      : undefined;
+
+    const siteLine = data.siteName ? `📍 *الموقع الميداني:* ${data.siteName}` : '📍 *الموقع الميداني:* الموقع العام للعمليات';
+    const hireDateLine = hireDateFormatted ? `📅 *تاريخ مباشرة العمل:* ${hireDateFormatted}` : '';
+    const shiftLine = data.shiftSystem ? `🔄 *نظام الدوام:* ${data.shiftSystem}` : '';
+    const payoutLine = data.payoutMethod
+      ? `💳 *وسيلة الصرف:* ${data.payoutMethod}${data.accountNumber && data.accountNumber !== '-' ? ` (رقم: ${data.accountNumber})` : ''}`
+      : '';
+
+    const details = [
+      `👤 *الاسم الكامل:* ${data.name}`,
+      `🆔 *كودك الوظيفي المعتمد:* \`#${data.code}\``,
+      `💼 *المسمى الوظيفي:* ${data.jobTitle}`,
+      siteLine,
+      hireDateLine,
+      shiftLine,
+      payoutLine,
+    ].filter(Boolean).join('\n');
+
     const text =
       `*شركة السعادة للمقاولات العامة والتعدين*\n` +
-      `*إشعار تسجيل وتعيين عامل جديد*\n` +
+      `*دعوة الانضمام لبوابة الموارد البشرية والخدمات الذاتية*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `أهلاً بك زميلنا العزيز/ *${data.name}*\n` +
-      `🔖 *كودك الوظيفي المعتمد:* \`${data.code}\`\n` +
-      `💼 *الوظيفة:* ${data.jobTitle}\n` +
-      (siteLine ? `${siteLine}\n` : '') +
+      `أهلاً وسهلاً بك زميلنا العزيز/ *${data.name}*\n` +
+      `يسر إدارة الموارد البشرية تهنئتكم بالانضمام لفريق العمل، وتم قيد بياناتكم رسمياً في المنظومة الذكية للشركة:\n\n` +
+      `${details}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `تم قيد بياناتك بنجاح في المنظومة الذكية للشركة.\n` +
-      `نتمنى لك دوام التوفيق والنجاح والسلامة في مواقع العمل.`;
+      `🔗 *رابط الانضمام والتفعيل المباشر بالبوت:*\n` +
+      `${botLink}\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `✨ *أبرز خدمات ومميزات البوت للعامل:*\n` +
+      `• 🔔 إشعارات لحظية بكل حركة مالية (سلف، مسحوبات، حوافز، مكافآت).\n` +
+      `• 💵 استعراض مفردات وقسيمة راتبك الشهري فور اعتمادها.\n` +
+      `• 🌴 تقديم طلبات الإجازات ومتابعة رصيدك واستحقاقاتك.\n` +
+      `• 📝 تقديم طلبات السلف وتحديث بيانات المحفظة الإلكترونية.\n` +
+      `• 🛡️ متابعة مهمات الوقاية الشخصية (PPE) والتظلمات الميدانية.\n` +
+      `• 🪪 بطاقة الهوية الرقمية وكارت العمل الميداني المعتمد.\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚡ *خطوات التفعيل السريعة:*\n` +
+      `1️⃣ اضغط على الرابط أعلاه ثم اضغط على زر *Start (ابدأ)*.\n` +
+      `2️⃣ اضغط زر *(⚡ تأكيد وربط حسابي فوراً)* لتفعيل خدماتك مباشرة دون كتابة أي بيانات.\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `_مع تمنياتنا لك بدوام التوفيق والنجاح والسلامة في مواقع شركة السعادة._`;
 
     const encoded = encodeURIComponent(text);
     return intlPhone

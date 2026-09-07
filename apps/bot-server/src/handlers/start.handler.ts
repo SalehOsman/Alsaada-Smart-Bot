@@ -1,5 +1,9 @@
+import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { config } from '../config/env.js';
+import { prisma } from '../db.js';
+import { formatDate } from '@alsaada/regional-engine';
+import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 import { buildMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 import { syncUserCommandsScope } from '../services/command-scope.service.js';
@@ -134,8 +138,80 @@ export async function renderRoleHome(ctx: MyContext, inPlace = false): Promise<v
 }
 
 export async function handleStart(ctx: MyContext): Promise<void> {
+  const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
+
+  // 1. فحص رابط الدعوة الذكي (Deep Link: /start join_CODE or /start worker_CODE)
+  const startPayload = (ctx.match || '').toString().trim();
+  if (startPayload.startsWith('join_') || startPayload.startsWith('worker_')) {
+    const workerCode = startPayload.replace(/^(join_|worker_)/, '').trim();
+    const worker = await prisma.worker.findFirst({
+      where: {
+        OR: [
+          { code: workerCode },
+          { legacyCode: workerCode },
+          { aliases: { has: workerCode } },
+        ],
+        isDeleted: false,
+      },
+      include: { site: true, department: true },
+    });
+
+    if (worker) {
+      // إذا كان العامل مرتبطاً بالفعل بهذا الحساب
+      if (worker.telegramId && worker.telegramId === telegramId) {
+        await ctx.reply(
+          `👋 *أهلاً بك مجدداً يا ${worker.name}!*\n` +
+          `🏢 *شركة السعادة للمقاولات العامة والتعدين*\n` +
+          `━━━━━━━━━━━━━━━━━━━━━\n` +
+          `🆔 *كودك الوظيفي المعتمد:* \`#${worker.code}\`\n` +
+          `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'الموقع العام'}\n` +
+          `━━━━━━━━━━━━━━━━━━━━━\n` +
+          `✅ حسابك مفعل ومربوط بنجاح بالبوابة الرقمية للعاملين.`,
+          { parse_mode: 'Markdown' }
+        );
+        if (telegramId > 0n) {
+          await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
+        }
+        await renderRoleHome(ctx, false);
+        return;
+      }
+
+      // إذا كان العامل غير مرتبط أو قيد التفعيل
+      const siteLine = worker.site?.name ? `📍 *الموقع الميداني المخصص:* ${worker.site.name}\n` : '';
+      const hireDateLine = `📅 *تاريخ مباشرة العمل:* *${formatDate(worker.hireDate)}*\n`;
+      const shiftLine = worker.shiftSystem ? `🔄 *نظام الدوام:* ${worker.shiftSystem}\n` : '';
+
+      const welcomeCard =
+        `👋 *أهلاً وسهلاً بك زميلنا العزيز/ ${worker.name}*\n` +
+        `🏢 *شركة السعادة للمقاولات العامة والتعدين — البوابة الرقمية للعاملين*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `🆔 *كودك الوظيفي المعتمد:* \`#${worker.code}\`\n` +
+        `💼 *المسمى الوظيفي:* ${worker.jobTitle}\n` +
+        siteLine +
+        hireDateLine +
+        shiftLine +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `🌟 *لقد فتحت البوت عبر رابط دعوتك الرسمي المباشر!*\n\n` +
+        `✨ *المميزات المتاحة فور تفعيل حسابك:*\n` +
+        `• 🔔 إشعارات لحظية بالسلف والمسحوبات والإجازات.\n` +
+        `• 💵 استعراض مفردات وقسيمة راتبك الشهري فور اعتمادها.\n` +
+        `• 🌴 تقديم طلبات الإجازات ومتابعة رصيدك وأيام عملك.\n` +
+        `• 📝 تقديم طلبات السلف وتحديث بيانات المحفظة الإلكترونية.\n` +
+        `• 🛡️ متابعة مهمات الوقاية (PPE) والتظلمات الميدانية.\n\n` +
+        `اضغط على الزر أدناه لتأكيد هويتك وتفعيل خدماتك الذاتية فوراً:`;
+
+      const kb = new InlineKeyboard()
+        .text('⚡ تأكيد وربط حسابي فوراً', `action:claim_worker:${worker.code}`)
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+      await ctx.reply(welcomeCard, { parse_mode: 'Markdown', reply_markup: kb });
+      return;
+    }
+  }
+
+  // التدفق الاعتيادي لبدء البوت
   if (ctx.from) {
-    const telegramId = BigInt(ctx.from.id);
     await syncUserCommandsScope(
       ctx.api,
       telegramId,
@@ -150,5 +226,106 @@ export async function handleStart(ctx: MyContext): Promise<void> {
   });
 
   await renderRoleHome(ctx, false);
+}
+
+/**
+ * ⚡ معالجة زر ربط وتفعيل حساب العامل المباشر من رابط الدعوة
+ */
+export async function handleClaimWorker(ctx: MyContext): Promise<void> {
+  if (!ctx.callbackQuery || !ctx.from) return;
+  await ctx.answerCallbackQuery().catch(() => {});
+
+  const data = ctx.callbackQuery.data || '';
+  const workerCode = data.replace('action:claim_worker:', '').trim();
+  const telegramId = BigInt(ctx.from.id);
+
+  const worker = await prisma.worker.findFirst({
+    where: {
+      OR: [
+        { code: workerCode },
+        { legacyCode: workerCode },
+        { aliases: { has: workerCode } },
+      ],
+      isDeleted: false,
+    },
+    include: { site: true },
+  });
+
+  if (!worker) {
+    await ctx.reply('❌ تعذر العثور على سجل العامل المطلوب.', {
+      reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+    });
+    return;
+  }
+
+  if (worker.telegramId && worker.telegramId !== telegramId) {
+    await ctx.reply(
+      '⚠️ *تنبيه أمني:* هذا السجل الوظيفي مرتبط بالفعل بحساب تليجرام آخر.\nيرجى مراجعة إدارة الموارد البشرية لنقل أو تحديث الربط.',
+      {
+        parse_mode: 'Markdown',
+        reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+      }
+    );
+    return;
+  }
+
+  // ربط العامل وتحديث حسابه في قاعدة البيانات
+  await prisma.worker.update({
+    where: { id: worker.id },
+    data: { telegramId },
+  });
+
+  await prisma.user.upsert({
+    where: { telegramId },
+    update: {
+      role: 'WORKER',
+      workerId: worker.id,
+      isActive: true,
+    },
+    create: {
+      telegramId,
+      username: ctx.from.username || null,
+      fullName: worker.name,
+      role: 'WORKER',
+      workerId: worker.id,
+      isActive: true,
+    },
+  });
+
+  await invalidateUserCache(telegramId);
+  await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
+
+  const successText =
+    `🎉 *تهانينا يا ${worker.name}! تم تفعيل وربط حسابك بنجاح 100%!*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `أصبحت الآن متصلاً رسمياً ببوابة الخدمة الذاتية للعاملين بشركة السعادة.\n\n` +
+    `🆔 *كودك الوظيفي:* \`#${worker.code}\`\n` +
+    `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'الموقع العام'}\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `يمكنك الآن متابعة كافة مستحقاتك، طلبات الإجازات، والسلف المالية مباشرة.`;
+
+  const replyKeyboard = buildPersistentReplyKeyboard(ctx);
+  await ctx.reply('⚡ تم تفعيل شريط الخدمات الذاتية للعاملين بنجاح.', {
+    reply_markup: replyKeyboard,
+  });
+
+  ctx.effectiveRole = 'WORKER';
+  if (ctx.dbUser) {
+    ctx.dbUser.role = 'WORKER';
+    ctx.dbUser.workerId = worker.id;
+    ctx.dbUser.isActive = true;
+  }
+
+  try {
+    await ctx.editMessageText(successText, {
+      parse_mode: 'Markdown',
+      reply_markup: new InlineKeyboard().text('🏠 الانتقال للخدمة الذاتية', 'action:main_menu'),
+    });
+  } catch {
+    await ctx.reply(successText, {
+      parse_mode: 'Markdown',
+      reply_markup: new InlineKeyboard().text('🏠 الانتقال للخدمة الذاتية', 'action:main_menu'),
+    });
+  }
 }
 

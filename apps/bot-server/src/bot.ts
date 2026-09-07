@@ -23,7 +23,7 @@ export const undiciDispatcher = new UndiciAgent({
 setGlobalDispatcher(undiciDispatcher);
 import { clearAllPendingUserActions } from './redis.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
-import { handleStart, renderRoleHome } from './handlers/start.handler.js';
+import { handleStart, renderRoleHome, handleClaimWorker } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
 import {
   handleSettings,
@@ -290,6 +290,7 @@ export function createBot(): Bot<MyContext> {
     await ctx.answerCallbackQuery();
     await renderRoleHome(ctx, true);
   });
+  bot.callbackQuery(/^action:claim_worker:(.+)$/, handleClaimWorker);
   bot.callbackQuery('menu:super_admin_settings', handleSettings);
 
   // 6. Settings Sub-Category Callbacks

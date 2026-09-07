@@ -9,6 +9,7 @@ export interface AppConfig {
   nodeEnv: string;
   port: number;
   botToken: string;
+  botUsername: string;
   superAdminTelegramId: bigint;
   databaseUrl: string;
   redisUrl: string;
@@ -25,6 +26,7 @@ export function loadConfig(): AppConfig {
   const nodeEnv = process.env.NODE_ENV || 'development';
   const port = parseInt(process.env.PORT || '3000', 10);
   const botToken = process.env.BOT_TOKEN || '';
+  const botUsername = (process.env.BOT_USERNAME || 'Alsaada_HRtest_Bot').replace(/^@/, '').trim();
   const superAdminTelegramIdRaw = process.env.SUPER_ADMIN_TELEGRAM_ID || '0';
   const databaseUrl = process.env.DATABASE_URL || '';
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
@@ -44,6 +46,7 @@ export function loadConfig(): AppConfig {
     nodeEnv,
     port,
     botToken,
+    botUsername,
     superAdminTelegramId: BigInt(superAdminTelegramIdRaw === 'YOUR_TELEGRAM_ID_HERE' ? '0' : superAdminTelegramIdRaw),
     databaseUrl,
     redisUrl,
