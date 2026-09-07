@@ -21,9 +21,9 @@
 ## 📊 إحصائيات الترحيل والمطابقة الشاملة (Migration Health Dashboard)
 
 * **إجمالي الوظائف الموروثة من المشروع السابق (`F:\HR`):** 113 تدفقاً تفصيلياً (ضمن 126 إجراء ومعالج معتمد).
-* **إجمالي الوظائف المستحدثة في المشروع الجديد:** 5 وظائف مؤسسية جديدة.
-* **الوظائف المكتملة والموثقة حتى الآن:** 1 / 118 (نموذج مطالبات مصروفات العاملين الخاصة).
-* **نسبة التغطية الحالية:** `1%` (المرحلة الحالية: `v2.0.0-alpha.1`).
+* **إجمالي الوظائف المستحدثة في المشروع الجديد:** 11 وظيفة مؤسسية جديدة (NEW-01 إلى NEW-11).
+* **الوظائف المكتملة والموثقة حتى الآن:** 7 وظائف مؤسسية جديدة مكتملة ومختبرة وموثقة بنسبة 100%.
+* **نسبة التغطية الحالية:** `v2.0.0-alpha.1` (اكتمال مركز إعدادات النظام والتحكم السيادي ومصفوفة الوظائف والأقسام بالكامل).
 
 ---
 
@@ -197,6 +197,8 @@
 | **`NEW-07`** | **إدارة وتعديل الملف التعريفي وبيانات الشركة الرسمية لحظياً من البوت** (`Corporate Profile Manager`) وتحديث PostgreSQL وحذف المدخلات بصمت | إدارة النظام والتنفيذي | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/handlers/company-profile.handler.ts`<br>`apps/bot-server/src/redis.ts`<br>`packages/database/prisma/seed-data/` | `2026-09-07` (`1f35caf`) |
 | **`NEW-08`** | **مصفوفة المشاريع والفروع والمواقع الميدانية** (`Sites & Projects Hub`) استعراض، تبديل الحالة نشط/متوقف، وإضافة موقع جديد | إدارة النظام والمشاريع | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/handlers/sites-hub.handler.ts`<br>`apps/bot-server/src/redis.ts`<br>`apps/bot-server/tests/sites-hub.spec.ts` | `2026-09-07` |
 | **`NEW-09`** | **استعراض وتعديل الملف الشخصي للمدير العام** (`Super Admin Profile`) تعديل الاسم الرسمي ورقم الهاتف المشفر بـ AES-256 | إدارة النظام والتحكم السيادي | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/handlers/admin-profile.handler.ts`<br>`apps/bot-server/src/redis.ts`<br>`apps/bot-server/tests/admin-profile.spec.ts` | `2026-09-07` |
+| **`NEW-10`** | **تعيين وتوزيع مدراء المواقع والفروع وحصر الصلاحيات جغرافياً** (`Admin Site Scoping`) عزل النطاق التشغيلي والميداني للبيانات | إدارة النظام والتحكم السيادي | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/handlers/admin-assignment.handler.ts`<br>`apps/bot-server/tests/admin-assignment.spec.ts` | `2026-09-07` (`c658624`) |
+| **`NEW-11`** | **الهيكل الوظيفي ومصفوفة المهن والأقسام وإدارة دورات العمل والبدلات وسياسات السريان وإكسيل** (`Job Matrix & Functional Departments Hub`) تعديل الأكواد والمسميات، التجميد والحذف الآمن، التبديل السريع 30/10 و 40/10 و 26/4، ومحرك التجزئة التناسبية Proration | إدارة النظام والموارد البشرية | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/handlers/job-matrix.handler.ts`<br>`apps/bot-server/src/services/job-matrix-excel.service.ts`<br>`apps/bot-server/src/services/cycle-transition.service.ts`<br>`apps/bot-server/tests/job-matrix.spec.ts` | `2026-09-07` (`977a29a`) |
 
 
 
