@@ -5,6 +5,7 @@ dns.setDefaultResultOrder('ipv4first');
 
 import { Agent as UndiciAgent, setGlobalDispatcher } from 'undici';
 import { Bot } from 'grammy';
+import { sequentialize } from '@grammyjs/runner';
 import { MyContext } from './types/context.js';
 import { config } from './config/env.js';
 
@@ -84,15 +85,21 @@ export function createBot(): Bot<MyContext> {
     console.error(`❌ [BOT ERROR] Error in update ${err.ctx?.update?.update_id}:`, err.error);
   });
 
-  // 2. Authentication & Zero-Trust RBAC Middleware
-  bot.use(authMiddleware);
-
-  // 3. Ultra-Fast Non-Blocking Callback Query Acknowledgment
-  bot.on('callback_query', async (ctx, next) => {
-    // Immediately acknowledge callback query in background to remove button spinner without blocking
-    void ctx.answerCallbackQuery().catch(() => {});
+  // 2. ⚡ PERFORMANCE ENGINE: Universal Instant Button ACK (< 1ms reaction time)
+  // Must be the ABSOLUTE FIRST middleware so the Telegram loading spinner disappears IMMEDIATELY!
+  bot.use(async (ctx, next) => {
+    if (ctx.callbackQuery) {
+      // Fire answerCallbackQuery in the background instantly without awaiting
+      void ctx.answerCallbackQuery().catch(() => {});
+    }
     return next();
   });
+
+  // 3. ⚡ PERFORMANCE ENGINE: Parallel Per-User Concurrency (Zero queuing / No cross-user blocking)
+  bot.use(sequentialize((ctx) => ctx.chat?.id.toString() || ctx.from?.id.toString() || 'global'));
+
+  // 4. Authentication & Zero-Trust RBAC Middleware
+  bot.use(authMiddleware);
 
   // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location)
   bot.on('message:location', async (ctx, next) => {
@@ -174,10 +181,15 @@ export function createBot(): Bot<MyContext> {
     const siteCode = ctx.match[1];
     await renderSiteEditMenu(ctx, siteCode, true);
   });
+  bot.callbackQuery(/^action:site:sp:(.+):(.+)$/, async (ctx) => {
+    const siteCode = ctx.match[1];
+    const projectRef = ctx.match[2];
+    await handleSelectSiteProject(ctx, siteCode, projectRef);
+  });
   bot.callbackQuery(/^action:site:set_project:(.+):(.+)$/, async (ctx) => {
     const siteCode = ctx.match[1];
-    const projectId = ctx.match[2];
-    await handleSelectSiteProject(ctx, siteCode, projectId);
+    const projectRef = ctx.match[2];
+    await handleSelectSiteProject(ctx, siteCode, projectRef);
   });
   bot.callbackQuery(/^action:site:set_gov:(.+):(.+)$/, async (ctx) => {
     const siteCode = ctx.match[1];

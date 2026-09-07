@@ -171,7 +171,7 @@ describe('Sites & Projects Hub Handler', () => {
   });
 
   it('should update site project via handleSelectSiteProject', async () => {
-    vi.mocked(prisma.project.findUnique).mockResolvedValueOnce({
+    vi.mocked(prisma.project.findFirst).mockResolvedValueOnce({
       id: 'prj-phosphate',
       name: 'مشروع مجمع فوسفات أبو طرطور',
     } as any);
@@ -179,7 +179,7 @@ describe('Sites & Projects Hub Handler', () => {
     const mockCtx = {
       isRealSuperAdmin: true,
       from: { id: 7594239391 },
-      callbackQuery: { data: 'action:site:set_project:STE-01:prj-phosphate' },
+      callbackQuery: { data: 'action:site:sp:STE-01:prj-phosphate' },
       answerCallbackQuery: vi.fn().mockResolvedValue(true),
       editMessageText: vi.fn().mockResolvedValue(true),
       reply: vi.fn().mockResolvedValue(true),

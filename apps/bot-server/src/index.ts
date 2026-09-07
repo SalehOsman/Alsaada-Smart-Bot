@@ -43,7 +43,14 @@ async function bootstrap() {
   // 3. Initialize & Start Telegram Bot
   try {
     const bot = createBot();
-    const runner = run(bot);
+    const runner = run(bot, {
+      runner: {
+        fetch: {
+          allowed_updates: ['message', 'callback_query'],
+          timeout: 30,
+        },
+      },
+    });
 
     console.log('🤖 [TELEGRAM] Bot runner started successfully with Long Polling.');
     console.log(`👑 [AUTH] Designated Super Admin ID: ${config.superAdminTelegramId}`);

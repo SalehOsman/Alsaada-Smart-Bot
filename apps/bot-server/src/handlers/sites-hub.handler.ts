@@ -58,10 +58,6 @@ export async function renderSitesHub(
     return;
   }
 
-  if (ctx.callbackQuery) {
-    await ctx.answerCallbackQuery().catch(() => {});
-  }
-
   await clearPendingSiteAction(BigInt(ctx.from.id));
 
   // Fetch all sites with project and worker counts
@@ -145,10 +141,6 @@ export async function renderSiteDetail(
       });
     }
     return;
-  }
-
-  if (ctx.callbackQuery) {
-    await ctx.answerCallbackQuery().catch(() => {});
   }
 
   await clearPendingSiteAction(BigInt(ctx.from.id));
@@ -247,10 +239,6 @@ export async function renderSiteEditMenu(
       });
     }
     return;
-  }
-
-  if (ctx.callbackQuery) {
-    await ctx.answerCallbackQuery().catch(() => {});
   }
 
   await clearPendingSiteAction(BigInt(ctx.from.id));
@@ -386,7 +374,6 @@ export async function handleStartEditSiteField(
 ): Promise<void> {
   if (!ctx.isRealSuperAdmin || !ctx.from || !ctx.callbackQuery) return;
 
-  await ctx.answerCallbackQuery();
   const messageId = ctx.callbackQuery.message?.message_id;
   if (!messageId) return;
 
@@ -471,8 +458,9 @@ export async function handleStartEditSiteField(
     const keyboard = new InlineKeyboard();
     projects.forEach((p) => {
       const isCurrent = p.id === site.projectId ? ' (الحالي) ✅' : '';
+      const projRef = p.code || p.id.slice(0, 8);
       keyboard
-        .text(`🏢 ${p.name}${isCurrent}`, `action:site:set_project:${siteCode}:${p.id}`)
+        .text(`🏢 ${p.name}${isCurrent}`, `action:site:sp:${siteCode}:${projRef}`)
         .row();
     });
 
@@ -493,7 +481,9 @@ export async function handleStartEditSiteField(
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-    } catch {}
+    } catch (err) {
+      console.error('Failed to edit message in handleStartEditSiteField (project):', err);
+    }
     return;
   }
 
@@ -521,7 +511,9 @@ export async function handleStartEditSiteField(
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-    } catch {}
+    } catch (err) {
+      console.error('Failed to edit message in handleStartEditSiteField (proj_txt):', err);
+    }
     return;
   }
 
@@ -549,33 +541,43 @@ export async function handleStartEditSiteField(
       parse_mode: 'Markdown',
       reply_markup: keyboard,
     });
-  } catch {}
+  } catch (err) {
+    console.error(`Failed to edit message in handleStartEditSiteField (${fieldKey}):`, err);
+  }
 }
 
 /**
- * Associates a site with a specific project by ID
+ * Associates a site with a specific project by code, id or prefix
  */
 export async function handleSelectSiteProject(
   ctx: MyContext,
   siteCode: string,
-  projectId: string
+  projectRef: string
 ): Promise<void> {
   if (!ctx.isRealSuperAdmin || !ctx.from) return;
 
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findFirst({
+    where: {
+      OR: [
+        { code: projectRef },
+        { id: projectRef },
+        { id: { startsWith: projectRef } },
+      ],
+    },
+  });
   if (!project) return;
 
   await prisma.site.update({
     where: { code: siteCode },
-    data: { projectId },
+    data: { projectId: project.id },
   });
 
   await clearPendingSiteAction(BigInt(ctx.from.id));
 
   if (ctx.callbackQuery) {
-    await ctx.answerCallbackQuery({
+    void ctx.answerCallbackQuery({
       text: `تم ربط الموقع بمشروع: ${project.name}`,
-    });
+    }).catch(() => {});
   }
 
   const notice = `تم تحديث المشروع التابع له إلى (${project.name}) بنجاح.`;
