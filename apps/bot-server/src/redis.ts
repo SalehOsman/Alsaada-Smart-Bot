@@ -102,3 +102,84 @@ export async function clearPendingCompanyEdit(telegramId: bigint): Promise<void>
   }
 }
 
+const PENDING_ADMIN_EDIT_PREFIX = 'pending:admin_edit:user:';
+
+export interface PendingAdminEdit {
+  fieldKey: string;
+  messageId: number;
+}
+
+export async function setPendingAdminEdit(
+  telegramId: bigint,
+  fieldKey: string,
+  messageId: number
+): Promise<void> {
+  try {
+    const data: PendingAdminEdit = { fieldKey, messageId };
+    await redis.set(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting pending admin edit:', error);
+  }
+}
+
+export async function getPendingAdminEdit(telegramId: bigint): Promise<PendingAdminEdit | null> {
+  try {
+    const raw = await redis.get(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as PendingAdminEdit) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting pending admin edit:', error);
+    return null;
+  }
+}
+
+export async function clearPendingAdminEdit(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing pending admin edit:', error);
+  }
+}
+
+const PENDING_SITE_ACTION_PREFIX = 'pending:site_action:user:';
+
+export interface PendingSiteAction {
+  action: 'add_name' | 'add_code' | 'add_gov' | 'edit_name';
+  siteCode?: string;
+  draft?: {
+    name?: string;
+    code?: string;
+    governorateCode?: string;
+  };
+  messageId: number;
+}
+
+export async function setPendingSiteAction(
+  telegramId: bigint,
+  data: PendingSiteAction
+): Promise<void> {
+  try {
+    await redis.set(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting pending site action:', error);
+  }
+}
+
+export async function getPendingSiteAction(telegramId: bigint): Promise<PendingSiteAction | null> {
+  try {
+    const raw = await redis.get(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as PendingSiteAction) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting pending site action:', error);
+    return null;
+  }
+}
+
+export async function clearPendingSiteAction(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing pending site action:', error);
+  }
+}
+
+

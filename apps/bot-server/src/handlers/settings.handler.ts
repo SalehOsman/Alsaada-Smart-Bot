@@ -4,7 +4,7 @@ import { setImpersonatedRole, clearImpersonatedRole } from '../redis.js';
 import { renderRoleHome } from './start.handler.js';
 
 /**
- * Super Admin Settings Hub Handler
+ * Super Admin Settings Hub Handler (Main Categorized Hub)
  */
 export async function handleSettings(ctx: MyContext): Promise<void> {
   if (!ctx.isRealSuperAdmin) {
@@ -20,19 +20,24 @@ export async function handleSettings(ctx: MyContext): Promise<void> {
   }
 
   const keyboard = new InlineKeyboard()
-    .text('🏢 الملف التعريفي وبيانات الشركة', 'action:settings:company_profile')
+    .text('🏢 الكيان المؤسسي والمشاريع', 'action:settings_sub:corporate')
     .row()
-    .text('🎭 محاكاة وتقمص الأدوار (Ghost Mode)', 'action:settings:ghost_mode')
+    .text('👤 الحساب والأمان والمحاكاة', 'action:settings_sub:identity')
     .row()
-    .text('⚡ فحص كفاءة النظام واستجابة الشبكة', 'action:settings:ping')
+    .text('⚡ أداء وتشغيل المنظومة', 'action:settings_sub:system')
     .row()
     .text('🏠 العودة للقائمة الرئيسية', 'action:main_menu');
 
+  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    keyboard
+      .row()
+      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
+  }
 
   const text =
-    `⚙️ *لوحة إعدادات المدير العام (Super Admin Control Panel)*\n\n` +
-    `مرحباً بك في لوحة الإعدادات المركزية. من هنا يمكنك تجربة واجهات الأدوار المختلفة ميدانياً، فحص كفاءة النظام، وإدارة التكوينات.\n\n` +
-    `اختر الإجراء المطلوب:`;
+    `⚙️ *مركز إعدادات النظام والتحكم السيادي (Settings Hub)*\n\n` +
+    `مرحباً بك في مركز الإعدادات المركزي للمدير العام. تم تنظيم الوظائف في تصنيفات فرعية لتسهيل التحكم:\n\n` +
+    `👇 *يرجى اختيار القسم الإداري المطلوب:*`;
 
   if (ctx.callbackQuery) {
     try {
@@ -42,7 +47,7 @@ export async function handleSettings(ctx: MyContext): Promise<void> {
       });
       return;
     } catch {
-      // fallback to reply
+      // fallback
     }
   }
 
@@ -51,6 +56,113 @@ export async function handleSettings(ctx: MyContext): Promise<void> {
     reply_markup: keyboard,
   });
 }
+
+/**
+ * 1. Corporate & Sites Sub-Category
+ */
+export async function handleSettingsSubCorporate(ctx: MyContext): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const keyboard = new InlineKeyboard()
+    .text('🏢 الملف التعريفي وبيانات الشركة', 'action:settings:company_profile')
+    .row()
+    .text('🏗️ مصفوفة المشاريع والمواقع الميدانية', 'action:settings:sites_hub')
+    .row()
+    .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    keyboard
+      .row()
+      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
+  }
+
+  const text =
+    `🏢 *إعدادات الكيان المؤسسي والمشاريع والمواقع*\n` +
+    `────────────────────────────\n` +
+    `إدارة بيانات شركة السعادة الرسمية، السجل التجاري، ومصفوفة الفروع والمواقع والمناجم الميدانية.\n\n` +
+    `اختر الإجراء المطلوب:`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * 2. Identity, Profile & Ghost Mode Sub-Category
+ */
+export async function handleSettingsSubIdentity(ctx: MyContext): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const keyboard = new InlineKeyboard()
+    .text('👤 ملفي الشخصي (حساب المدير العام)', 'action:settings:admin_profile')
+    .row()
+    .text('🎭 محاكاة وتقمص الأدوار (Ghost Mode)', 'action:settings:ghost_mode')
+    .row()
+    .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    keyboard
+      .row()
+      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
+  }
+
+  const text =
+    `👤 *إعدادات الحساب الشخصي والأمان والمحاكاة*\n` +
+    `────────────────────────────\n` +
+    `تعديل بيانات حسابك الشخصي كمدير عام، أو تقمص واجهات الأدوار الأخرى لاختبار النظام ميدانياً.\n\n` +
+    `اختر الإجراء المطلوب:`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * 3. System Health & Performance Sub-Category
+ */
+export async function handleSettingsSubSystem(ctx: MyContext): Promise<void> {
+  if (!ctx.isRealSuperAdmin) return;
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const keyboard = new InlineKeyboard()
+    .text('⚡ فحص كفاءة واستجابة النظام /ping', 'action:settings:ping')
+    .row()
+    .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    keyboard
+      .row()
+      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
+  }
+
+  const text =
+    `⚡ *أداء وتشغيل المنظومة والمحركات*\n` +
+    `────────────────────────────\n` +
+    `فحص سرعة استجابة قاعدة البيانات PostgreSQL وكاش Redis وسرعة المحرك المركزي.\n\n` +
+    `اختر الإجراء المطلوب:`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
 
 /**
  * Ghost Mode Role Impersonation Menu Handler
