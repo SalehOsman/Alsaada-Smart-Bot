@@ -91,4 +91,5 @@ F:\Alsaada-Smart-Bot/
 * [15. الدستور المعياري لبناء الموديولات والتدفقات الوظيفية](./docs/15-universal-module-and-flow-standard.md)
 * [16. ميثاق أمان قواعد البيانات وحوكمة القيود الجنائية والتشفير](./docs/16-database-security-and-tamper-proof-ledger.md)
 * [17. الدليل المعياري لتكويد العمال وهيكل الأقسام والربط الصامت بالأكواد القديمة](./docs/17-worker-coding-and-silent-alias-resolution.md)
+* [18. المعمارية الهندسية الشاملة لقاعدة بيانات PostgreSQL ونموذج الكيانات والعلاقات](./docs/18-enterprise-schema-and-entity-relationship-model.md)
 

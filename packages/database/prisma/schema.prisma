@@ -1,5 +1,6 @@
 // ==============================================================================
-// Al-Saada Smart Bot Enterprise Database Schema (PostgreSQL)
+// Al-Saada Smart Bot Enterprise Database Schema (PostgreSQL 16)
+// Complete 12-Domain Enterprise Relational Architecture (Replacing 66 Sheets)
 // ==============================================================================
 
 generator client {
@@ -12,8 +13,9 @@ datasource db {
 }
 
 // -------------------------------------------------------------
-// 1. Tenant & Organization Core
+// 1. Tenant, Corporate Profile & Projects Master Data
 // -------------------------------------------------------------
+
 model Tenant {
   id        String   @id @default(uuid())
   code      String   @unique
@@ -22,47 +24,165 @@ model Tenant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users   User[]
-  workers Worker[]
+  profiles    CompanyProfile[]
+  projects    Project[]
+  departments Department[]
+  users       User[]
+  workers     Worker[]
+  treasuries  CompanyTreasury[]
+  suppliers   Supplier[]
+  equipments  Equipment[]
+  payrollRuns PayrollRun[]
+  documents   CompanyDocument[]
 
   @@map("tenants")
 }
 
-// -------------------------------------------------------------
-// 2. RBAC & Identity (Zero-Trust Telegram ID)
-// -------------------------------------------------------------
-model User {
+model CompanyProfile {
+  id                           String   @id @default(uuid())
+  tenantId                     String
+  legalName                    String
+  tradeName                    String
+  taxRegistrationNumber        String?
+  commercialRegistrationNumber String?
+  headquartersAddress          String?
+  primaryPhone                 String?
+  officialEmail                String?
+  baseCurrency                 String   @default("EGP")
+  settings                     Json?
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("company_profiles")
+}
+
+model Project {
   id              String    @id @default(uuid())
-  tenantId        String?
-  telegramId      BigInt    @unique
-  username        String?
-  fullName        String
-  role            String    // SUPER_ADMIN, EXECUTIVE, FIELD_ADMIN, ACCOUNTANT, SITE_ENGINEER, WORKER, GUEST
-  phoneEncrypted  String?
-  phoneBlindIndex String?
-  isActive        Boolean   @default(true)
-  isDeleted       Boolean   @default(false)
-  deletedAt       DateTime?
+  tenantId        String
+  code            String    @unique // e.g. PRJ-PHOS-01
+  name            String
+  clientName      String?
+  startDate       DateTime?
+  endDate         DateTime?
+  estimatedBudget Decimal?  @db.Decimal(14, 2)
+  status          String    @default("ACTIVE") // PLANNING, ACTIVE, SUSPENDED, COMPLETED
+  description     String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  sites             Site[]
+  phosphateExtracts PhosphateExtract[]
 
-  @@index([phoneBlindIndex])
-  @@index([role])
-  @@map("users")
+  @@map("projects")
+}
+
+model Site {
+  id                   String    @id @default(uuid())
+  projectId            String
+  code                 String    @unique // e.g. STE-KHA, STE-ASW
+  name                 String
+  governorateCode      String?
+  latitude             Decimal?  @db.Decimal(10, 7)
+  longitude            Decimal?  @db.Decimal(10, 7)
+  geofenceRadiusMeters Int?      @default(1000)
+  status               String    @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  project          Project                  @relation(fields: [projectId], references: [id])
+  workers          Worker[]
+  accommodations   SiteAccommodation[]
+  custodies        FinancialCustody[]
+  equipments       Equipment[]
+  fuelTanks        FuelTank[]
+  canteenItems     CanteenItem[]
+  campFoodItems    CampFoodItem[]
+  foodShipments    FoodInboundShipment[]
+  kitchenDispenses KitchenMealDispense[]
+  foodWasteLogs    FoodWasteLog[]
+  mealSurveys      MealSurvey[]
+  phosphateSlips   PhosphateProductionSlip[]
+  leaves           Leave[]
+  dutyRosters      DutyRoster[]
+  tasks            SiteTask[]
+  hospitality      HospitalityExpense[]
+  supplierInvoices SupplierInvoice[]
+  users            User[]
+
+  @@map("sites")
+}
+
+model SiteAccommodation {
+  id               String   @id @default(uuid())
+  siteId           String
+  unitNumber       String   // e.g. CRV-04
+  unitType         String   @default("WORKER_BARRACKS") // ENGINEER_CABIN, WORKER_BARRACKS, VIP_GUEST
+  capacity         Int      @default(4)
+  currentOccupancy Int      @default(0)
+  supervisorName   String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  site        Site                          @relation(fields: [siteId], references: [id])
+  assignments SiteAccommodationAssignment[]
+
+  @@map("site_accommodations")
+}
+
+model SiteAccommodationAssignment {
+  id              String    @id @default(uuid())
+  accommodationId String
+  workerId        String
+  bedNumber       String?
+  checkInDate     DateTime  @default(now())
+  checkOutDate    DateTime?
+  status          String    @default("ACTIVE") // ACTIVE, CHECKED_OUT
+  notes           String?
+
+  accommodation SiteAccommodation @relation(fields: [accommodationId], references: [id])
+  worker        Worker            @relation(fields: [workerId], references: [id])
+
+  @@map("site_accommodation_assignments")
+}
+
+model CompanyDocument {
+  id                    String    @id @default(uuid())
+  tenantId              String
+  docNumber             String
+  title                 String
+  category              String    // LEGAL_REGISTRATION, QUARRY_LICENSE, EQUIPMENT_TITLE, LEASE_CONTRACT, TAX_RECORD
+  issueDate             DateTime?
+  expiryDate            DateTime?
+  fileUri               String
+  sha256Checksum        String?
+  fileSizeBytes         BigInt?
+  alertDaysBeforeExpiry Int       @default(30)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("company_documents")
 }
 
 // -------------------------------------------------------------
-// 3. Organizational Master Data (Departments & Jobs)
+// 2. Organizational Hierarchy & Workforce 360 Registry
 // -------------------------------------------------------------
+
 model Department {
   id        String   @id @default(uuid())
+  tenantId  String?
   code      String   @unique // e.g. OP, FL, MN, AD
   name      String   // e.g. التشغيل والعمليات
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  tenant  Tenant?    @relation(fields: [tenantId], references: [id])
   jobs    JobTitle[]
   workers Worker[]
 
@@ -70,12 +190,14 @@ model Department {
 }
 
 model JobTitle {
-  id           String   @id @default(uuid())
-  departmentId String
-  code         String   // e.g. DRV, HLP, TEC
-  name         String   // e.g. سائق لودر
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  id                String   @id @default(uuid())
+  departmentId      String
+  code              String   // e.g. DRV, HLP, TEC
+  name              String   // e.g. سائق لودر
+  baseWageGuideline Decimal? @db.Decimal(12, 2)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   department Department @relation(fields: [departmentId], references: [id])
   workers    Worker[]
@@ -84,61 +206,445 @@ model JobTitle {
   @@map("job_titles")
 }
 
-// -------------------------------------------------------------
-// 4. Workforce & Labor 360 Registry
-// -------------------------------------------------------------
 model Worker {
-  id                   String    @id @default(uuid())
-  tenantId             String?
-  code                 String    @unique // Active structured code (e.g. OP-DRV-0042)
-  aliases              String[]  // Historical & legacy codes (e.g. ["101", "OP-HLP-0015"])
-  name                 String
-  nationalIdEncrypted  String
-  nationalIdBlindIndex String    @unique
-  birthDate            DateTime
-  gender               String    // MALE, FEMALE
-  governorateCode      String
-  jobTitle             String
-  departmentId         String?
-  jobTitleId           String?
-  dailyWage            Decimal   @db.Decimal(12, 2)
-  siteLocation         String?
-  phoneEncrypted       String?
-  phoneBlindIndex      String?
-  telegramId           BigInt?   @unique
-  isDeleted            Boolean   @default(false)
-  deletedAt            DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                     String    @id @default(uuid())
+  tenantId               String?
+  code                   String    @unique // Active structured code (e.g. OP-DRV-0042)
+  aliases                String[]  // Historical & legacy codes (e.g. ["106", "101", "OP-HLP-0015"])
+  name                   String
+  nationalIdEncrypted    String
+  nationalIdBlindIndex   String    @unique
+  birthDate              DateTime
+  gender                 String    // MALE, FEMALE
+  governorateCode        String
+  jobTitle               String
+  departmentId           String?
+  jobTitleId             String?
+  siteId                 String?
+  hireDate               DateTime  @default(now())
+  contractType           String    @default("DAILY_LABOR") // DAILY_LABOR, SEASONAL, PERMANENT
+  shiftSystem            String    @default("24_WORK_6_REST")
+  dailyWage              Decimal   @db.Decimal(12, 2)
+  basicSalary            Decimal   @default(0) @db.Decimal(12, 2)
+  fixedAllowances        Decimal   @default(0) @db.Decimal(12, 2)
+  paymentMethod          String    @default("CASH_SITE") // CASH_SITE, VODAFONE_CASH, INSTAPAY, BANK_TRANSFER
+  accountNumberEncrypted String?
+  canteenCigarettePolicy String    @default("ONE_PACK_DAILY") // ONE_PACK_DAILY, FULL_COVERAGE, NONE, CUSTOM
+  phoneEncrypted         String?
+  phoneBlindIndex        String?
+  emergencyContactName   String?
+  emergencyPhoneEncrypted String?
+  bloodType              String?
+  telegramId             BigInt?   @unique
+  status                 String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RESIGNED
+  terminationDate        DateTime?
+  terminationReason      String?
+  isDeleted              Boolean   @default(false)
+  deletedAt              DateTime?
+  deletedBy              BigInt?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  tenant     Tenant?           @relation(fields: [tenantId], references: [id])
-  department Department?       @relation(fields: [departmentId], references: [id])
-  jobRef     JobTitle?         @relation(fields: [jobTitleId], references: [id])
-  ledgers    FinancialLedger[]
+  tenant                 Tenant?                      @relation(fields: [tenantId], references: [id])
+  department             Department?                  @relation(fields: [departmentId], references: [id])
+  jobRef                 JobTitle?                    @relation(fields: [jobTitleId], references: [id])
+  site                   Site?                        @relation(fields: [siteId], references: [id])
+  user                   User?
+  salaryHistories        SalaryHistory[]
+  customAllowances       WorkerCustomAllowance[]
+  ppeAssets              PPEAsset[]
+  disciplinaryAndBonuses DisciplinaryAndBonus[]
+  clearance              WorkerClearance?
+  balanceSnapshot        WorkerBalanceSnapshot?
+  leaves                 Leave[]
+  leaveAllowances        LeaveAllowance[]
+  dutyRosters            DutyRoster[]
+  assignedTasks          SiteTask[]
+  managedCustodies       FinancialCustody[]
+  ledgers                FinancialLedger[]
+  advanceRequests        AdvanceRequest[]
+  advanceInstallments    AdvanceInstallment[]
+  accommodations         SiteAccommodationAssignment[]
+  payrollRecords         PayrollRecord[]
+  mealSurveys            MealSurvey[]
+  fuelLogs               FuelDispenseLog[]
+  operatedEquipments     Equipment[]
+  fuelTanksSupervised    FuelTank[]
+  hospitalityDisbursed   HospitalityExpense[]
+  kitchenDispenses       KitchenMealDispense[]
+  foodShipmentsReceived  FoodInboundShipment[]
 
   @@index([phoneBlindIndex])
-  @@index([siteLocation])
+  @@index([status])
+  @@index([isDeleted])
   @@map("workers")
 }
 
+model SalaryHistory {
+  id              String   @id @default(uuid())
+  workerId        String
+  previousWage    Decimal  @db.Decimal(12, 2)
+  newWage         Decimal  @db.Decimal(12, 2)
+  effectiveDate   DateTime
+  reason          String
+  approvedByUserId BigInt?
+  createdAt       DateTime @default(now())
+
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("salary_histories")
+}
+
+model WorkerCustomAllowance {
+  id            String    @id @default(uuid())
+  workerId      String
+  allowanceType String    // HARDSHIP_ALLOWANCE, RISK_ALLOWANCE, NIGHT_SHIFT, HOUSING_STIPEND
+  amount        Decimal   @db.Decimal(12, 2)
+  isRecurring   Boolean   @default(true)
+  startDate     DateTime
+  endDate       DateTime?
+  isActive      Boolean   @default(true)
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("worker_custom_allowances")
+}
+
+model PPEAsset {
+  id                       String    @id @default(uuid())
+  voucherId                String    @unique // e.g. #PPE-YYYY-XXX
+  workerId                 String
+  assetType                String    // SAFETY_HELMET, SAFETY_SHOES, HI_VIS_VEST, SAFETY_GOGGLES, HARNESS
+  brandModel               String?
+  issueDate                DateTime  @default(now())
+  scheduledReplacementDate DateTime?
+  costPrice                Decimal   @db.Decimal(10, 2)
+  condition                String    @default("NEW") // NEW, GOOD, DAMAGED_NATURAL, LOST_NEGLIGENT
+  returnDate               DateTime?
+  isDeductedFromWorker     Boolean   @default(false)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("ppe_assets")
+}
+
+model DisciplinaryAndBonus {
+  id              String   @id @default(uuid())
+  recordNumber    String   @unique // e.g. #DISC-YYYY-XXX or #BON-YYYY-XXX
+  workerId        String
+  type            String   // BONUS_CASH, BONUS_DAYS, PENALTY_CASH, PENALTY_DAYS
+  amount          Decimal? @db.Decimal(12, 2)
+  daysEquivalent  Decimal? @db.Decimal(6, 2)
+  reason          String
+  decisionDate    DateTime @default(now())
+  appliedToMonth  String?  // YYYY-MM
+  approvedByUserId BigInt?
+  createdAt       DateTime @default(now())
+
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("disciplinary_and_bonuses")
+}
+
+model WorkerClearance {
+  id                        String    @id @default(uuid())
+  clearanceNumber           String    @unique // e.g. #CLR-YYYY-XXX
+  workerId                  String    @unique
+  terminationDate           DateTime
+  serviceDurationDays       Int
+  accruedLeaveDays          Decimal   @default(0) @db.Decimal(6, 2)
+  endOfServiceGratuity      Decimal   @default(0) @db.Decimal(12, 2)
+  totalUnpaidSalaries       Decimal   @default(0) @db.Decimal(12, 2)
+  totalOutstandingAdvances  Decimal   @default(0) @db.Decimal(12, 2)
+  custodiesReturned         Boolean   @default(true)
+  ppeReturned               Boolean   @default(true)
+  netSettlementAmount       Decimal   @db.Decimal(12, 2)
+  paymentVoucherNumber      String?
+  receiptPhotoUri           String?
+  sha256Checksum            String?
+  status                    String    @default("APPROVED") // DRAFT, AUDITED, APPROVED, EXECUTED
+  settledAt                 DateTime  @default(now())
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("worker_clearances")
+}
+
+model WorkerBalanceSnapshot {
+  id                       String   @id @default(uuid())
+  workerId                 String   @unique
+  totalEarnedAllTime       Decimal  @default(0) @db.Decimal(14, 2)
+  totalPaidAllTime         Decimal  @default(0) @db.Decimal(14, 2)
+  currentMonthAdvances     Decimal  @default(0) @db.Decimal(12, 2)
+  outstandingLoansBalance  Decimal  @default(0) @db.Decimal(12, 2)
+  lastUpdatedLedgerHash    String?
+  updatedAt                DateTime @updatedAt
+
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("worker_balance_snapshots")
+}
+
 // -------------------------------------------------------------
-// 4. Closed-Loop Cryptographic Financial Ledger
+// 3. Leaves & Field Operations
 // -------------------------------------------------------------
+
+model Leave {
+  id                    String    @id @default(uuid())
+  leaveNumber           String    @unique // e.g. #LV-YYYY-XXXX
+  workerId              String
+  siteId                String
+  leaveType             String    @default("ANNUAL") // ANNUAL, CASUAL, MISSION, SICK, UNPAID
+  requestDate           DateTime  @default(now())
+  departureDate         DateTime
+  expectedReturnDate    DateTime
+  actualReturnDate      DateTime?
+  status                String    @default("PENDING") // PENDING, APPROVED, REJECTED, ACTIVE_ON_LEAVE, RESUMED, OVERDUE
+  overdueDays           Int       @default(0)
+  penaltyDaysCalculated Decimal   @default(0) @db.Decimal(6, 2)
+  deductionAmount       Decimal   @default(0) @db.Decimal(12, 2)
+  isOverstayPardoned    Boolean   @default(false)
+  overstayPardonReason  String?
+  supervisorNotes       String?
+  approvedByUserId      BigInt?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  worker     Worker           @relation(fields: [workerId], references: [id])
+  site       Site             @relation(fields: [siteId], references: [id])
+  allowances LeaveAllowance[]
+
+  @@map("leaves")
+}
+
+model LeaveAllowance {
+  id                     String            @id @default(uuid())
+  leaveId                String
+  workerId               String
+  travelStipend          Decimal           @db.Decimal(10, 2)
+  disbursedFromCustodyId String?
+  disbursementDate       DateTime          @default(now())
+  voucherNumber          String?
+  createdAt              DateTime          @default(now())
+
+  leave   Leave             @relation(fields: [leaveId], references: [id])
+  worker  Worker            @relation(fields: [workerId], references: [id])
+  custody FinancialCustody? @relation(fields: [disbursedFromCustodyId], references: [id])
+
+  @@map("leave_allowances")
+}
+
+model DutyRoster {
+  id               String   @id @default(uuid())
+  dutyDate         DateTime
+  siteId           String
+  workerId         String
+  equipmentId      String?
+  shiftType        String   @default("DAY_SHIFT") // DAY_SHIFT, NIGHT_SHIFT
+  hoursWorked      Decimal  @default(10) @db.Decimal(5, 2)
+  status           String   @default("PRESENT") // PRESENT, ABSENT_UNEXCUSED, REST_DAY, ON_DUTY_MISSION
+  latitude         Decimal? @db.Decimal(10, 7)
+  longitude        Decimal? @db.Decimal(10, 7)
+  recordedByUserId BigInt?
+  createdAt        DateTime @default(now())
+
+  site      Site       @relation(fields: [siteId], references: [id])
+  worker    Worker     @relation(fields: [workerId], references: [id])
+  equipment Equipment? @relation(fields: [equipmentId], references: [id])
+
+  @@unique([dutyDate, workerId])
+  @@map("duty_rosters")
+}
+
+model SiteTask {
+  id                 String    @id @default(uuid())
+  taskNumber         String    @unique // e.g. #TSK-YYYY-XXX
+  siteId             String
+  title              String
+  description        String?
+  assignedToWorkerId String?
+  priority           String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT_SAFETY
+  status             String    @default("OPEN") // OPEN, IN_PROGRESS, COMPLETED, CANCELLED
+  dueDate            DateTime?
+  completedAt        DateTime?
+  attachmentUri      String?
+  sha256Checksum     String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  site   Site    @relation(fields: [siteId], references: [id])
+  worker Worker? @relation(fields: [assignedToWorkerId], references: [id])
+
+  @@map("site_tasks")
+}
+
+// -------------------------------------------------------------
+// 4. Treasury, Custodies & Site Expenses
+// -------------------------------------------------------------
+
+model CompanyTreasury {
+  id             String   @id @default(uuid())
+  tenantId       String
+  name           String
+  accountType    String   @default("MAIN_CASH_VAULT") // MAIN_CASH_VAULT, BANK_ACCOUNT, VODAFONE_CASH_WALLET, INSTAPAY_WALLET
+  bankName       String?
+  accountNumber  String?
+  currentBalance Decimal  @default(0) @db.Decimal(14, 2)
+  version        Int      @default(1) // Optimistic locking
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  fundedCustodies  FinancialCustody[]
+  supplierPayments SupplierPayment[]
+
+  @@map("company_treasuries")
+}
+
+model FinancialCustody {
+  id                          String    @id @default(uuid())
+  custodyNumber               String    @unique // e.g. #FC-YYYY-XXX or #EX-YYYY-XXX
+  siteId                      String
+  custodianWorkerId           String
+  initialAmount               Decimal   @db.Decimal(14, 2)
+  currentBalance              Decimal   @db.Decimal(14, 2)
+  totalLiquidatedExpenses     Decimal   @default(0) @db.Decimal(14, 2)
+  totalCashAdvancesDisbursed  Decimal   @default(0) @db.Decimal(14, 2)
+  purpose                     String
+  status                      String    @default("ACTIVE") // ACTIVE, SETTLEMENT_PENDING, CLOSED
+  disbursedAt                 DateTime  @default(now())
+  closedAt                    DateTime?
+  disbursedFromTreasuryId     String?
+  version                     Int       @default(1) // Optimistic locking
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  site                Site                 @relation(fields: [siteId], references: [id])
+  custodian           Worker               @relation(fields: [custodianWorkerId], references: [id])
+  treasury            CompanyTreasury?     @relation(fields: [disbursedFromTreasuryId], references: [id])
+  expenseItems        CustodyExpenseItem[]
+  settlements         CustodySettlement[]
+  ledgers             FinancialLedger[]
+  leaveAllowances     LeaveAllowance[]
+  hospitalityExpenses HospitalityExpense[]
+  supplierPayments    SupplierPayment[]
+
+  @@map("financial_custodies")
+}
+
+model CustodyExpenseItem {
+  id              String   @id @default(uuid())
+  custodyId       String
+  itemSequence    Int
+  expenseCategory String
+  amount          Decimal  @db.Decimal(12, 2)
+  vendorName      String?
+  receiptDate     DateTime
+  description     String
+  receiptImageUri String?
+  sha256Checksum  String?
+  ocrExtractedData Json?
+  isApproved      Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  custody FinancialCustody @relation(fields: [custodyId], references: [id])
+
+  @@map("custody_expense_items")
+}
+
+model CustodySettlement {
+  id                     String    @id @default(uuid())
+  settlementNumber       String    @unique // e.g. #SET-YYYY-XXX
+  custodyId              String
+  closingTotalInvoices   Decimal   @db.Decimal(14, 2)
+  closingTotalAdvances   Decimal   @db.Decimal(14, 2)
+  remainingCashReturned  Decimal   @db.Decimal(14, 2)
+  settlementDisposition String    @default("REFUND_TO_TREASURY") // REFUND_TO_TREASURY, ROLLOVER_NEW_CUSTODY, DEDUCT_AS_ADVANCE_ON_CUSTODIAN
+  settlementSheetPhotoUri String?
+  status                 String    @default("PENDING_AUDIT") // PENDING_AUDIT, APPROVED, REJECTED
+  auditedByUserId        BigInt?
+  settledAt              DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  custody FinancialCustody @relation(fields: [custodyId], references: [id])
+
+  @@map("custody_settlements")
+}
+
+model HospitalityExpense {
+  id                 String   @id @default(uuid())
+  voucherId          String   @unique // e.g. #HOSP-YYYY-XXX
+  siteId             String
+  amount             Decimal  @db.Decimal(10, 2)
+  guestNameOrEntity  String
+  occasion           String
+  sourceCustodyId    String?
+  disbursedByWorkerId String?
+  receiptPhotoUri    String?
+  sha256Checksum     String?
+  createdAt          DateTime @default(now())
+
+  site    Site              @relation(fields: [siteId], references: [id])
+  custody FinancialCustody? @relation(fields: [sourceCustodyId], references: [id])
+  worker  Worker?           @relation(fields: [disbursedByWorkerId], references: [id])
+
+  @@map("hospitality_expenses")
+}
+
+// -------------------------------------------------------------
+// 5. Closed-Loop Cryptographic Financial Ledger (SHA-256 Chained)
+// -------------------------------------------------------------
+
+model AdvanceRequest {
+  id                String   @id @default(uuid())
+  requestNumber     String   @unique // e.g. #ARQ-YYYY-XXXX
+  workerId          String
+  amountRequested   Decimal  @db.Decimal(12, 2)
+  purpose           String
+  installmentMonths Int      @default(1)
+  status            String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason   String?
+  approvedAmount    Decimal? @db.Decimal(12, 2)
+  approvedByUserId  BigInt?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("advance_requests")
+}
+
 model FinancialLedger {
   id                 String    @id @default(uuid())
-  voucherNumber      String    @unique
+  voucherNumber      String    @unique // e.g. #ADV-YYYY-XXXX, #PAY-YYYY-XXXX
   previousHash       String
   recordHash         String
-  transactionType    String    // ADVANCE, EXPENSE_CANTEEN, EXPENSE_FUEL, INTERNAL_TRANSFER, OWNER_WITHDRAWAL, etc.
+  transactionType    String    // ADVANCE_CASH, WITHDRAWAL_CIGARETTES, WITHDRAWAL_PURCHASES, SALARY_PAYOUT, SUPPLIER_PAYMENT, CUSTODY_DISBURSEMENT, CUSTODY_REFUND, GENERAL_EXPENSE
   amount             Decimal   @db.Decimal(14, 2)
   currency           String    @default("EGP")
   sourceAccount      String
   destinationAccount String
-  sourceCustodyId    String?   // Populated when cash disbursement originates from a site custody
-  inKindDetails      Json?     // Stores items, quantities, unit prices for in-kind withdrawals
-  description        String?
-  actorTelegramId    BigInt
+  sourceCustodyId    String?   // Populated for cash advances disbursed from a site custody
   workerId           String?
+  supplierId         String?
+  canteenItemId      String?
+  inKindDetails      Json?     // In-kind purchase/cigarette item breakdown
+  description        String?
+  accountingMonth    String?   // YYYY-MM
+  isReversal         Boolean   @default(false)
+  reversalOfVoucherId String?
+  actorTelegramId    BigInt
+  receiptPhotoUri    String?
+  sha256Checksum     String?
   isDeleted          Boolean   @default(false)
   deletedAt          DateTime?
   deletedBy          BigInt?
@@ -147,7 +653,11 @@ model FinancialLedger {
   syncedToSheets     Boolean   @default(false)
   syncedAt           DateTime?
 
-  worker Worker? @relation(fields: [workerId], references: [id])
+  worker        Worker?             @relation(fields: [workerId], references: [id])
+  sourceCustody FinancialCustody?   @relation(fields: [sourceCustodyId], references: [id])
+  supplier      Supplier?           @relation(fields: [supplierId], references: [id])
+  canteenItem   CanteenItem?        @relation(fields: [canteenItemId], references: [id])
+  installments  AdvanceInstallment[]
 
   @@index([transactionType])
   @@index([sourceAccount])
@@ -157,14 +667,639 @@ model FinancialLedger {
   @@map("financial_ledgers")
 }
 
+model AdvanceInstallment {
+  id                    String      @id @default(uuid())
+  workerId              String
+  originalVoucherNumber String
+  installmentSequence   Int
+  dueMonth              String      // YYYY-MM
+  installmentAmount     Decimal     @db.Decimal(12, 2)
+  status                String      @default("PENDING") // PENDING, DEDUCTED_FROM_PAYROLL, WAIVED_BY_ADMIN
+  deductedInPayrollRunId String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  worker     Worker          @relation(fields: [workerId], references: [id])
+  ledger     FinancialLedger @relation(fields: [originalVoucherNumber], references: [voucherNumber])
+  payrollRun PayrollRun?     @relation(fields: [deductedInPayrollRunId], references: [id])
+
+  @@map("advance_installments")
+}
+
 // -------------------------------------------------------------
-// 5. Transactional Outbox (Reliable Hybrid Google Sheets Sync)
+// 6. Suppliers, Procurement & Work Orders
 // -------------------------------------------------------------
+
+model Supplier {
+  id             String   @id @default(uuid())
+  tenantId       String
+  code           String   @unique // e.g. #VND-XXX or #EX-VND-XXX
+  name           String
+  category       String   // WORKSHOPS_MACHINING, SPARE_PARTS, FOOD_CATERING, FUEL_OILS, EQUIPMENT_RENTAL, GENERAL_SUPPLIES
+  phoneEncrypted String?
+  phoneBlindIndex String?
+  taxNumber      String?
+  openingBalance Decimal  @default(0) @db.Decimal(14, 2)
+  totalInvoiced  Decimal  @default(0) @db.Decimal(14, 2)
+  totalPaid      Decimal  @default(0) @db.Decimal(14, 2)
+  currentBalance Decimal  @default(0) @db.Decimal(14, 2)
+  scope          String   @default("FIELD") // FIELD, EXECUTIVE
+  siteId         String?
+  telegramId     BigInt?  @unique
+  status         String   @default("ACTIVE") // ACTIVE, SUSPENDED
+  version        Int      @default(1) // Optimistic locking
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant        Tenant                 @relation(fields: [tenantId], references: [id])
+  user          User?
+  invoices      SupplierInvoice[]
+  payments      SupplierPayment[]
+  foodShipments FoodInboundShipment[]
+  maintenances  EquipmentMaintenance[]
+  ledgers       FinancialLedger[]
+
+  @@index([phoneBlindIndex])
+  @@map("suppliers")
+}
+
+model SupplierInvoice {
+  id               String   @id @default(uuid())
+  invoiceNumber    String   @unique // e.g. #WO-YYYY-XXXX
+  supplierId       String
+  siteId           String
+  equipmentId      String?
+  invoiceDate      DateTime
+  subtotalAmount   Decimal  @db.Decimal(14, 2)
+  taxAmount        Decimal  @default(0) @db.Decimal(12, 2)
+  totalAmount      Decimal  @db.Decimal(14, 2)
+  paidAmount       Decimal  @default(0) @db.Decimal(14, 2)
+  remainingBalance Decimal  @db.Decimal(14, 2)
+  paymentStatus    String   @default("UNPAID") // UNPAID, PARTIALLY_PAID, PAID_FULL
+  description      String?
+  invoicePhotoUri  String?
+  sha256Checksum   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  supplier           Supplier              @relation(fields: [supplierId], references: [id])
+  site               Site                  @relation(fields: [siteId], references: [id])
+  equipment          Equipment?            @relation(fields: [equipmentId], references: [id])
+  items              SupplierInvoiceItem[]
+  payments           SupplierPayment[]
+  sparePartsRequests SparePartsRequest[]
+
+  @@map("supplier_invoices")
+}
+
+model SupplierInvoiceItem {
+  id              String   @id @default(uuid())
+  invoiceId       String
+  itemSequence    Int
+  itemDescription String
+  quantity        Decimal  @db.Decimal(10, 2)
+  unit            String   @default("UNIT")
+  unitPrice       Decimal  @db.Decimal(12, 2)
+  totalPrice      Decimal  @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+
+  invoice SupplierInvoice @relation(fields: [invoiceId], references: [id])
+
+  @@map("supplier_invoice_items")
+}
+
+model SupplierPayment {
+  id                     String    @id @default(uuid())
+  paymentNumber          String    @unique // e.g. #SPAY-YYYY-XXXX
+  supplierId             String
+  invoiceId              String?
+  amount                 Decimal   @db.Decimal(14, 2)
+  paymentMethod          String    @default("CASH_CUSTODY") // CASH_CUSTODY, BANK_TRANSFER, CHEQUE, TREASURY_CASH
+  disbursedFromTreasuryId String?
+  disbursedFromCustodyId String?
+  transactionReference   String?
+  receiptPhotoUri        String?
+  sha256Checksum         String?
+  paymentDate            DateTime  @default(now())
+  createdAt              DateTime  @default(now())
+
+  supplier  Supplier          @relation(fields: [supplierId], references: [id])
+  invoice   SupplierInvoice?  @relation(fields: [invoiceId], references: [id])
+  treasury  CompanyTreasury?  @relation(fields: [disbursedFromTreasuryId], references: [id])
+  custody   FinancialCustody? @relation(fields: [disbursedFromCustodyId], references: [id])
+
+  @@map("supplier_payments")
+}
+
+// -------------------------------------------------------------
+// 7. Fleet, Equipment & Fuel Management
+// -------------------------------------------------------------
+
+model Equipment {
+  id                             String    @id @default(uuid())
+  tenantId                       String
+  code                           String    @unique // e.g. EQ-01
+  name                           String
+  type                           String    // LOADER, EXCAVATOR, DUMP_TRUCK, BULLDOZER, GENERATOR, WATER_TANKER, PICKUP_TRUCK
+  brand                          String?
+  modelYear                      Int?
+  plateNumber                    String?
+  chassisNumber                  String?
+  siteId                         String
+  assignedWorkerId               String?
+  meterType                      String    @default("HOURS") // HOURS, KILOMETERS
+  currentMeterReading            Decimal   @default(0) @db.Decimal(10, 2)
+  currentFuelLevelPercentage     Decimal?  @db.Decimal(5, 2)
+  technicalStatus                String    @default("OPERATIONAL") // OPERATIONAL, NEEDS_MAINTENANCE, BROKEN_DOWN_STOPPED
+  lastMaintenanceDate            DateTime?
+  nextScheduledMaintenanceMeter  Decimal?  @db.Decimal(10, 2)
+  createdAt                      DateTime  @default(now())
+  updatedAt                      DateTime  @updatedAt
+
+  tenant             Tenant                 @relation(fields: [tenantId], references: [id])
+  site               Site                   @relation(fields: [siteId], references: [id])
+  assignedWorker     Worker?                @relation(fields: [assignedWorkerId], references: [id])
+  dutyRosters        DutyRoster[]
+  fuelLogs           FuelDispenseLog[]
+  maintenances       EquipmentMaintenance[]
+  sparePartsRequests SparePartsRequest[]
+  supplierInvoices   SupplierInvoice[]
+
+  @@map("equipments")
+}
+
+model FuelTank {
+  id                       String   @id @default(uuid())
+  siteId                   String
+  code                     String   @unique // e.g. TNK-01
+  name                     String
+  fuelType                 String   @default("DIESEL_SOLAR") // DIESEL_SOLAR, GASOLINE_80, GASOLINE_92
+  totalCapacityLiters      Decimal  @db.Decimal(10, 2)
+  currentStockLiters       Decimal  @db.Decimal(10, 2)
+  minSafetyThresholdLiters Decimal  @db.Decimal(10, 2)
+  supervisorWorkerId       String?
+  status                   String   @default("ACTIVE") // ACTIVE, MAINTENANCE, DECOMMISSIONED
+  version                  Int      @default(1) // Optimistic locking
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  site         Site              @relation(fields: [siteId], references: [id])
+  supervisor   Worker?           @relation(fields: [supervisorWorkerId], references: [id])
+  dispenseLogs FuelDispenseLog[]
+
+  @@map("fuel_tanks")
+}
+
+model FuelDispenseLog {
+  id                     String   @id @default(uuid())
+  dispenseNumber         String   @unique // e.g. #FL-YYYY-XXXX
+  tankId                 String
+  equipmentId            String
+  operatorWorkerId       String
+  litersDispensed        Decimal  @db.Decimal(10, 2)
+  meterReadingAtDispense Decimal  @db.Decimal(10, 2)
+  unitCostPerLiter       Decimal  @db.Decimal(8, 2)
+  totalCost              Decimal  @db.Decimal(12, 2)
+  latitude               Decimal? @db.Decimal(10, 7)
+  longitude              Decimal? @db.Decimal(10, 7)
+  dispensedByUserId      BigInt?
+  timestamp              DateTime @default(now())
+  createdAt              DateTime @default(now())
+
+  tank      FuelTank  @relation(fields: [tankId], references: [id])
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+  operator  Worker    @relation(fields: [operatorWorkerId], references: [id])
+
+  @@map("fuel_dispense_logs")
+}
+
+model EquipmentMaintenance {
+  id                  String    @id @default(uuid())
+  maintenanceNumber   String    @unique // e.g. #MNT-YYYY-XXXX
+  equipmentId         String
+  maintenanceType     String    // OIL_AND_FILTER_CHANGE, HYDRAULIC_SYSTEM, TIRES_AND_TRACKS, ENGINE_OVERHAUL, ELECTRICAL_SYSTEM, PREVENTIVE_PERIODIC
+  meterReading        Decimal   @db.Decimal(10, 2)
+  supplierId          String?
+  totalCost           Decimal   @db.Decimal(12, 2)
+  description         String
+  nextDueMeterReading Decimal?  @db.Decimal(10, 2)
+  performedAt         DateTime  @default(now())
+  approvedByUserId    BigInt?
+  createdAt           DateTime  @default(now())
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+  supplier  Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@map("equipment_maintenances")
+}
+
+model SparePartsRequest {
+  id            String    @id @default(uuid())
+  requestNumber String    @unique // e.g. #SPR-YYYY-XXX
+  equipmentId   String
+  partName      String
+  quantity      Int       @default(1)
+  urgency       String    @default("ROUTINE") // ROUTINE, URGENT_MACHINE_DOWN
+  estimatedCost Decimal?  @db.Decimal(12, 2)
+  status        String    @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED, PURCHASED, INSTALLED_ON_MACHINE, REJECTED
+  invoiceId     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  equipment Equipment        @relation(fields: [equipmentId], references: [id])
+  invoice   SupplierInvoice? @relation(fields: [invoiceId], references: [id])
+
+  @@map("spare_parts_requests")
+}
+
+// -------------------------------------------------------------
+// 8. Camp, Catering & Canteen
+// -------------------------------------------------------------
+
+model CanteenItem {
+  id               String   @id @default(uuid())
+  siteId           String
+  code             String   @unique // e.g. CAN-CIG-01
+  name             String
+  category         String   // CIGARETTES, SNACKS_AND_FOOD, BEVERAGES, PERSONAL_CARE
+  costPrice        Decimal  @db.Decimal(10, 2)
+  sellingPrice     Decimal  @db.Decimal(10, 2)
+  currentStock     Decimal  @default(0) @db.Decimal(10, 2)
+  reorderThreshold Decimal  @default(5) @db.Decimal(10, 2)
+  isActive         Boolean  @default(true)
+  version          Int      @default(1) // Optimistic locking
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  site    Site              @relation(fields: [siteId], references: [id])
+  ledgers FinancialLedger[]
+
+  @@map("canteen_items")
+}
+
+model CampFoodItem {
+  id                   String   @id @default(uuid())
+  siteId               String
+  code                 String   @unique // e.g. FOD-RICE
+  name                 String
+  unit                 String   @default("KG") // KG, LITER, CARTON, BAG
+  currentStock         Decimal  @default(0) @db.Decimal(10, 2)
+  weightedAverageCost  Decimal  @default(0) @db.Decimal(10, 2)
+  reorderThreshold     Decimal  @default(20) @db.Decimal(10, 2)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  site Site @relation(fields: [siteId], references: [id])
+
+  @@map("camp_food_items")
+}
+
+model FoodInboundShipment {
+  id                       String   @id @default(uuid())
+  shipmentNumber           String   @unique // e.g. #FSH-YYYY-XXX
+  siteId                   String
+  supplierId               String
+  deliveryDate             DateTime @default(now())
+  totalInvoiceAmount       Decimal  @db.Decimal(12, 2)
+  qualityInspectionStatus  String   @default("ACCEPTED_FULL") // ACCEPTED_FULL, PARTIAL_REJECTION, REJECTED
+  receivedByWorkerId       String?
+  createdAt                DateTime @default(now())
+
+  site       Site     @relation(fields: [siteId], references: [id])
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  receivedBy Worker?  @relation(fields: [receivedByWorkerId], references: [id])
+
+  @@map("food_inbound_shipments")
+}
+
+model Recipe {
+  id                  String   @id @default(uuid())
+  name                String
+  mealCategory        String   // BREAKFAST, LUNCH, DINNER, NIGHT_SHIFT_MEAL
+  standardPortionGrams Int     @default(400)
+  ingredientsBreakdown Json
+  targetCostPerMeal   Decimal  @db.Decimal(8, 2)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  dispenses KitchenMealDispense[]
+
+  @@map("recipes")
+}
+
+model KitchenMealDispense {
+  id                   String   @id @default(uuid())
+  dispenseDate         DateTime
+  siteId               String
+  recipeId             String
+  mealType             String   // BREAKFAST, LUNCH, DINNER
+  servingsCount        Int
+  totalIngredientsCost Decimal  @db.Decimal(12, 2)
+  actualCostPerServing Decimal  @db.Decimal(8, 2)
+  chefWorkerId         String?
+  createdAt            DateTime @default(now())
+
+  site   Site    @relation(fields: [siteId], references: [id])
+  recipe Recipe  @relation(fields: [recipeId], references: [id])
+  chef   Worker? @relation(fields: [chefWorkerId], references: [id])
+
+  @@map("kitchen_meal_dispenses")
+}
+
+model FoodWasteLog {
+  id                String   @id @default(uuid())
+  siteId            String
+  logDate           DateTime @default(now())
+  foodItemCode      String
+  wasteQuantityKg   Decimal  @db.Decimal(8, 2)
+  wasteReason       String   // EXPIRED_SPOILAGE, PREPARATION_WASTE, LEFTOVER_DISPOSAL, STORAGE_FAILURE
+  estimatedLossCost Decimal  @db.Decimal(10, 2)
+  supervisorNotes   String?
+  createdAt         DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id])
+
+  @@map("food_waste_logs")
+}
+
+model MealSurvey {
+  id         String   @id @default(uuid())
+  siteId     String
+  workerId   String
+  surveyDate DateTime @default(now())
+  rating     Int      // 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  site   Site   @relation(fields: [siteId], references: [id])
+  worker Worker @relation(fields: [workerId], references: [id])
+
+  @@map("meal_surveys")
+}
+
+model MarketPriceBenchmark {
+  id             String   @id @default(uuid())
+  itemName       String
+  unit           String
+  benchmarkPrice Decimal  @db.Decimal(10, 2)
+  surveyDate     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@map("market_price_benchmarks")
+}
+
+// -------------------------------------------------------------
+// 9. Phosphate Operations & Commercial Extracts
+// -------------------------------------------------------------
+
+model PhosphateProductionSlip {
+  id               String   @id @default(uuid())
+  slipNumber       String   @unique // e.g. #SLP-YYYY-XXXX
+  siteId           String
+  truckPlateNumber String
+  driverName       String
+  transportCompany String?
+  oreGrade         String   @default("GRADE_A_CONCENTRATE") // GRADE_A_CONCENTRATE, GRADE_B, RUN_OF_MINE
+  grossWeightTons  Decimal  @db.Decimal(10, 3)
+  tareWeightTons   Decimal  @db.Decimal(10, 3)
+  netWeightTons    Decimal  @db.Decimal(10, 3)
+  destination      String?
+  slipPhotoUri     String?
+  sha256Checksum   String?
+  loadingTimestamp DateTime @default(now())
+  recordedByUserId BigInt?
+  createdAt        DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id])
+
+  @@map("phosphate_production_slips")
+}
+
+model PhosphateExtract {
+  id                      String    @id @default(uuid())
+  extractNumber           String    @unique // e.g. #EXT-YYYY-XXX
+  projectId               String
+  clientEntityName        String
+  periodStartDate         DateTime
+  periodEndDate           DateTime
+  totalTonnageDelivered   Decimal   @db.Decimal(12, 3)
+  contractRatePerTon      Decimal   @db.Decimal(10, 2)
+  grossExtractValue       Decimal   @db.Decimal(14, 2)
+  deductionsAndRetentions Decimal   @default(0) @db.Decimal(12, 2)
+  netPayableAmount        Decimal   @db.Decimal(14, 2)
+  paymentStatus           String    @default("SUBMITTED") // SUBMITTED, UNDER_REVIEW, APPROVED_BY_CLIENT, COLLECTED_FULL
+  collectionDate          DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@map("phosphate_extracts")
+}
+
+// -------------------------------------------------------------
+// 10. Payroll & Financial Settlements
+// -------------------------------------------------------------
+
+model PayrollRun {
+  id                      String    @id @default(uuid())
+  tenantId                String
+  runNumber               String    @unique // e.g. #PAYROLL-YYYY-MM
+  year                    Int
+  month                   Int
+  siteId                  String?
+  totalContractedPayroll  Decimal   @default(0) @db.Decimal(14, 2)
+  totalGrossEarnings      Decimal   @default(0) @db.Decimal(14, 2)
+  totalDeductions         Decimal   @default(0) @db.Decimal(14, 2)
+  totalNetSalariesPayable Decimal   @default(0) @db.Decimal(14, 2)
+  status                  String    @default("DRAFT_CALCULATING") // DRAFT_CALCULATING, AUDITED_BY_HR, APPROVED_BY_EXECUTIVE, DISBURSED_CLOSED
+  approvedByUserId        BigInt?
+  disbursedAt             DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  tenant               Tenant               @relation(fields: [tenantId], references: [id])
+  records              PayrollRecord[]
+  deductedInstallments AdvanceInstallment[]
+
+  @@unique([tenantId, year, month, siteId])
+  @@map("payroll_runs")
+}
+
+model PayrollRecord {
+  id                           String    @id @default(uuid())
+  payrollRunId                 String
+  workerId                     String
+  daysWorked                   Decimal   @db.Decimal(5, 2)
+  daysAbsent                   Decimal   @default(0) @db.Decimal(5, 2)
+  daysOnLeave                  Decimal   @default(0) @db.Decimal(5, 2)
+  baseDailyWage                Decimal   @db.Decimal(12, 2)
+  earnedBasicSalary            Decimal   @db.Decimal(12, 2)
+  overtimeAmount               Decimal   @default(0) @db.Decimal(12, 2)
+  bonusesAmount                Decimal   @default(0) @db.Decimal(12, 2)
+  customAllowancesAmount       Decimal   @default(0) @db.Decimal(12, 2)
+  grossEarnings                Decimal   @db.Decimal(14, 2)
+  cashAdvancesDeduction        Decimal   @default(0) @db.Decimal(12, 2)
+  cigaretteWithdrawalsDeduction Decimal  @default(0) @db.Decimal(12, 2)
+  purchaseWithdrawalsDeduction Decimal   @default(0) @db.Decimal(12, 2)
+  penaltiesDeduction           Decimal   @default(0) @db.Decimal(12, 2)
+  loanInstallmentDeduction     Decimal   @default(0) @db.Decimal(12, 2)
+  otherDeductions              Decimal   @default(0) @db.Decimal(12, 2)
+  totalDeductions              Decimal   @db.Decimal(14, 2)
+  netSalaryPayable             Decimal   @db.Decimal(14, 2)
+  paymentStatus                String    @default("PENDING") // PENDING, DISBURSED, HELD_DISPUTED
+  payoutMethod                 String    @default("CASH_ENVELOPE") // CASH_ENVELOPE, VODAFONE_CASH, INSTAPAY, BANK_DEPOSIT
+  payoutReference              String?
+  disbursedAt                  DateTime?
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id])
+  worker     Worker     @relation(fields: [workerId], references: [id])
+
+  @@unique([payrollRunId, workerId])
+  @@map("payroll_records")
+}
+
+// -------------------------------------------------------------
+// 11. RBAC, Identity, Audit, APM & Drafts
+// -------------------------------------------------------------
+
+model User {
+  id                     String    @id @default(uuid())
+  tenantId               String?
+  telegramId             BigInt    @unique
+  username               String?
+  fullName               String
+  role                   String    // SUPER_ADMIN, EXECUTIVE, FIELD_ADMIN, ACCOUNTANT, SITE_ENGINEER, WORKER, SUPPLIER, GUEST
+  workerId               String?   @unique
+  supplierId             String?   @unique
+  assignedSiteId         String?
+  phoneEncrypted         String?
+  phoneBlindIndex        String?
+  isActive               Boolean   @default(true)
+  isBanned               Boolean   @default(false)
+  approvedBySuperAdminId BigInt?
+  isDeleted              Boolean   @default(false)
+  deletedAt              DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  tenant        Tenant?             @relation(fields: [tenantId], references: [id])
+  worker        Worker?             @relation(fields: [workerId], references: [id])
+  supplier      Supplier?           @relation(fields: [supplierId], references: [id])
+  assignedSite  Site?               @relation(fields: [assignedSiteId], references: [id])
+  notifications NotificationQueue[]
+
+  @@index([phoneBlindIndex])
+  @@index([role])
+  @@map("users")
+}
+
+model BotMenuPermission {
+  id           String   @id @default(uuid())
+  role         String
+  featureKey   String
+  isEnabled    Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([role, featureKey])
+  @@map("bot_menu_permissions")
+}
+
+model AuditLog {
+  id              String   @id @default(uuid())
+  actorTelegramId BigInt
+  action          String
+  entityType      String
+  entityId        String
+  beforePayload   Json?
+  afterPayload    Json?
+  ipAddress       String?
+  timestamp       DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorTelegramId, timestamp])
+  @@map("audit_logs")
+}
+
+model BotPerformanceLog {
+  id                      String   @id @default(uuid())
+  actorTelegramId         BigInt
+  callbackQueryOrCommand  String
+  executionTimeMs         Int
+  dbQueryCount            Int      @default(0)
+  performanceTier         String   @default("GREEN_FAST") // GREEN_FAST, YELLOW_ACCEPTABLE, RED_SLOW
+  memoryUsageMb           Decimal? @db.Decimal(8, 2)
+  errorMessage            String?
+  timestamp               DateTime @default(now())
+
+  @@index([performanceTier, timestamp])
+  @@map("bot_performance_logs")
+}
+
+model ApprovalTicket {
+  id                    String    @id @default(uuid())
+  ticketNumber          String    @unique // e.g. #TCK-YYYY-XXXX
+  ticketType            String    // LEAVE_REQUEST, ADVANCE_REQUEST, TRANSACTION_MODIFICATION, WORKER_EDIT, PPE_REPLACEMENT, SPARE_PARTS_PURCHASE, CUSTODY_LIQUIDATION, END_OF_SERVICE_CLEARANCE
+  entityId              String
+  requestedByTelegramId BigInt
+  status                String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewDecisionNotes   String?
+  reviewedByTelegramId  BigInt?
+  reviewedAt            DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([status, ticketType])
+  @@map("approval_tickets")
+}
+
+model UserWizardDraft {
+  id          String   @id @default(uuid())
+  telegramId  BigInt   @unique
+  wizardName  String
+  currentStep String
+  draftData   Json
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_wizard_drafts")
+}
+
+model NotificationQueue {
+  id                  String    @id @default(uuid())
+  recipientTelegramId BigInt
+  userId              String?
+  priority            String    @default("GENERAL_ALERT") // CRITICAL_SECURITY, FINANCIAL_RECEIPT, GENERAL_ALERT
+  messageText         String
+  inlineKeyboard      Json?
+  status              String    @default("PENDING") // PENDING, DISPATCHING, DELIVERED, FAILED_RETRYING, EXHAUSTED
+  retryCount          Int       @default(0)
+  scheduledFor        DateTime  @default(now())
+  deliveredAt         DateTime?
+  errorMessage        String?
+  createdAt           DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([status, scheduledFor, priority])
+  @@map("notification_dispatch_queues")
+}
+
+// -------------------------------------------------------------
+// 12. Transactional Outbox (Reliable Hybrid Sync)
+// -------------------------------------------------------------
+
 model OutboxEvent {
   id           String    @id @default(uuid())
   eventType    String
+  aggregateId  String?
   payload      Json
-  status       String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  status       String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED_RETRY
   retryCount   Int       @default(0)
   errorMessage String?
   createdAt    DateTime  @default(now())
