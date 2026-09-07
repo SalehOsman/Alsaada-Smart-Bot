@@ -76,6 +76,26 @@ services:
       - alsaada-enterprise-internal
       - alsaada-enterprise-public
 
+  # -------------------------------------------------------------
+  # 4. Prisma Studio Web UI (Visual Database Management)
+  # -------------------------------------------------------------
+  studio:
+    container_name: alsaada_enterprise_studio
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    command: ["pnpm", "--filter", "@alsaada/database", "run", "db:studio"]
+    ports:
+      - "127.0.0.1:5555:5555"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-alsaada_admin}:${DB_PASSWORD:-alsaada_secure_pass_2026}@postgres:5432/${DB_NAME}?schema=public
+    networks:
+      - alsaada-enterprise-internal
+
 volumes:
   postgres_data:
     name: alsaada_enterprise_postgres_data

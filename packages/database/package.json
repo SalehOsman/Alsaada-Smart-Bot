@@ -10,7 +10,8 @@
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate deploy"
+    "db:migrate": "prisma migrate deploy",
+    "db:studio": "prisma studio --port 5555 --browser none --hostname 0.0.0.0"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1"
