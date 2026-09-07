@@ -15,6 +15,9 @@ export interface AppConfig {
   databaseEncryptionKey: string;
   blindIndexSalt: string;
   geminiApiKey: string;
+  googleDriveFolderId: string;
+  googleServiceAccountEmail: string;
+  googlePrivateKey: string;
 }
 
 export function loadConfig(): AppConfig {
@@ -28,6 +31,9 @@ export function loadConfig(): AppConfig {
   const databaseEncryptionKey = process.env.DATABASE_ENCRYPTION_KEY || '';
   const blindIndexSalt = process.env.BLIND_INDEX_SALT || '';
   const geminiApiKey = process.env.GEMINI_API_KEY || '';
+  const googleDriveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+  const googleServiceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
+  const googlePrivateKey = (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
 
   if (!botToken || botToken === 'YOUR_NEW_BOT_TOKEN_HERE') {
     console.warn('⚠️ [CONFIG WARNING] BOT_TOKEN is not configured or using placeholder in .env');
@@ -44,6 +50,9 @@ export function loadConfig(): AppConfig {
     databaseEncryptionKey,
     blindIndexSalt,
     geminiApiKey,
+    googleDriveFolderId,
+    googleServiceAccountEmail,
+    googlePrivateKey,
   };
 }
 

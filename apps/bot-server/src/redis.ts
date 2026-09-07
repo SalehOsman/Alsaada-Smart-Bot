@@ -304,6 +304,9 @@ export interface PendingWorkerWizardState {
     generatedCode?: string;
     baseSalary?: number;
     additionalSalary?: number;
+    frontFileId?: string;
+    backFileId?: string;
+    jobPage?: number;
   };
 }
 

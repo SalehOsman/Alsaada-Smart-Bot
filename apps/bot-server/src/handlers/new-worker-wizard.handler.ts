@@ -3,6 +3,7 @@ import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { workerService } from '../services/worker.service.js';
 import { aiVisionIdService } from '../services/ai-vision-id.service.js';
+import { googleDriveService } from '../services/google-drive.service.js';
 import {
   setPendingWorkerWizard,
   getPendingWorkerWizard,
@@ -99,7 +100,7 @@ function getJobEmoji(jobTitle: string): string {
 }
 
 /**
- * 🚀 بدء معالج تسجيل وتعيين عامل جديد (المرحلة 1: نوع وثيقة الهوية والمسح الذكي)
+ * 🚀 بدء معالج تسجيل وتعيين عامل جديد
  */
 export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
   if (ctx.callbackQuery) {
@@ -125,11 +126,12 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
       idCardFrontPath: '-',
       idCardBackPath: '-',
       isManualFallback: false,
+      jobPage: 1,
     },
   };
 
   const keyboard = new InlineKeyboard()
-    .text('🇪🇬 بطاقة رقم قومي مصري (مسح ذكي بالذكاء الاصطناعي)', 'action:worker_doc:national_id')
+    .text('🇪🇬 بطاقة رقم قومي مصري (مسح ذكي فائق)', 'action:worker_doc:national_id')
     .row()
     .text('🌐 جواز سفر لوافد / أجنبي', 'action:worker_doc:passport')
     .row()
@@ -143,8 +145,9 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
     '👤 *تسجيل وتعيين عامل جديد [1/18]*\n' +
     '━━━━━━━━━━━━━━━━━━━━━\n' +
     'اختر نوع وثيقة إثبات الهوية للبدء:\n\n' +
-    '💡 *المسح الذكي الفوري (AI Vision):*\n' +
-    'يقوم البوت بقراءة وتدقيق الرقم القومي والاسم الكامل من وجه البطاقة، وتاريخ الانتهاء من ظهرها تلقائياً لتفادي أخطاء الإدخال وتسريع التعيين.';
+    '💡 *المسح الذكي فائق السرعة (AI Vision):*\n' +
+    '• يتيح لك النظام تصوير وجه وظهر البطاقة أولاً.\n' +
+    '• تتم قراءة وتدقيق الرقم القومي والاسم الكامل وتاريخ الانتهاء معاً بالذكاء الاصطناعي في ثوانٍ معدودة دون تعليق.';
 
   let promptMsgId = 0;
   if (ctx.callbackQuery) {
@@ -168,7 +171,7 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
 }
 
 /**
- * 📸 معالجة إرفاق صور البطاقة / الوثيقة بالذكاء الاصطناعي (AI Vision)
+ * 📸 معالجة إرفاق صور البطاقة بالتدفق فائق السرعة (استلام الوجه ثم الظهر ثم التحليل المتزامن)
  */
 export async function handleWorkerWizardPhotoInput(ctx: MyContext): Promise<boolean> {
   if (!ctx.from) return false;
@@ -186,175 +189,209 @@ export async function handleWorkerWizardPhotoInput(ctx: MyContext): Promise<bool
   if (!fileId) return false;
   await ctx.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id).catch(() => {});
 
-  // 1. تصوير وجه البطاقة أو صفحة جواز السفر بالذكاء الاصطناعي
+  // 1. المرحلة الأولى: استلام صورة وجه البطاقة (تخزين فوري لحظي والانتقال للظهر)
   if (wizard.step === WorkerWizardStep.PHOTO_FRONT) {
-    const statusMsg = await ctx.reply('⏳ *جاري فحص المستند بالذكاء الاصطناعي وتدقيق البيانات الرسمية...*', {
-      parse_mode: 'Markdown',
-    });
+    wizard.data.frontFileId = fileId;
+    wizard.data.idCardFrontPath = fileId;
 
-    try {
-      const file = await ctx.api.getFile(fileId);
-      if (!file.file_path) throw new Error('Telegram file_path not found');
+    if (wizard.data.idType === 'PASSPORT') {
+      // لجواز السفر: صفحة البيانات تكفي، فنبدأ التحليل مباشرة
+      return analyzePhotosDirectly(ctx, wizard, telegramId, fileId, undefined);
+    }
 
-      const downloadUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`;
-      const res = await fetch(downloadUrl);
-      if (!res.ok) throw new Error(`Failed to download image: ${res.statusText}`);
+    // لبطاقة الرقم القومي: ننتقل فوراً لطلب الظهر دون أي انتظار أو تعليق
+    wizard.step = WorkerWizardStep.PHOTO_BACK;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return true;
+  }
 
-      const buffer = Buffer.from(await res.arrayBuffer());
-      const mimeType = ctx.message?.photo ? 'image/jpeg' : (ctx.message?.document?.mime_type || 'image/jpeg');
+  // 2. المرحلة الثانية: استلام صورة ظهر البطاقة -> الآن يتم التحليل المتزامن فائق السرعة للوجه والظهر معاً!
+  if (wizard.step === WorkerWizardStep.PHOTO_BACK) {
+    wizard.data.backFileId = fileId;
+    wizard.data.idCardBackPath = fileId;
+    return analyzePhotosDirectly(ctx, wizard, telegramId, wizard.data.frontFileId, fileId);
+  }
 
-      const expectedDocType = wizard.data.idType === 'PASSPORT' ? 'PASSPORT' : 'NATIONAL_ID_FRONT';
-      const scanResult = await aiVisionIdService.scanDocument(buffer, mimeType, expectedDocType);
+  return false;
+}
 
-      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
+/**
+ * ⚡ تحليل متزامن فائق السرعة للوجه والظهر معاً بنموذج Gemini Vision المتوازي
+ */
+async function analyzePhotosDirectly(
+  ctx: MyContext,
+  wizard: PendingWorkerWizardState,
+  telegramId: bigint,
+  frontFileId?: string,
+  backFileId?: string
+): Promise<boolean> {
+  const isNid = wizard.data.idType === 'NATIONAL_ID';
 
-      if (!scanResult.isValid) {
-        const errorKb = new InlineKeyboard()
-          .text('🔄 إعادة التقاط الصورة', 'action:worker_photo:retry_front')
-          .row()
-          .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
-          .row()
-          .text('◀️ السابق', 'action:worker_step:back')
-          .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+  const statusMsg = await ctx.reply(
+    '⏳ *جاري الفحص الذكي الفائق للبطاقة واستخراج البيانات الرسمية بالذكاء الاصطناعي...*',
+    { parse_mode: 'Markdown' }
+  );
 
-        const errMsg =
-          scanResult.userErrorMessage ||
-          '❌ *الصورة المرفقة ليست لرقم قومي او باسبور يرجى ارفاق صورة بطاقة رقم قومي او باسبور على حسب حالة الاختيار*';
+  try {
+    // 1. تحميل ملفات الصور من تليجرام بالتوازي
+    const downloadPromises: Promise<Buffer>[] = [];
 
-        await ctx.reply(errMsg, { parse_mode: 'Markdown', reply_markup: errorKb });
-        return true;
-      }
+    if (frontFileId) {
+      downloadPromises.push(
+        (async () => {
+          const f = await ctx.api.getFile(frontFileId);
+          if (!f.file_path) throw new Error('Front file path not found');
+          const res = await fetch(`https://api.telegram.org/file/bot${ctx.api.token}/${f.file_path}`);
+          if (!res.ok) throw new Error(`Failed to download front: ${res.statusText}`);
+          return Buffer.from(await res.arrayBuffer());
+        })()
+      );
+    }
 
-      // حفظ معطيات الوجه
-      wizard.data.idCardFrontPath = fileId;
-      if (scanResult.fullName) {
-        wizard.data.fullName = scanResult.fullName;
-      }
+    if (backFileId) {
+      downloadPromises.push(
+        (async () => {
+          const b = await ctx.api.getFile(backFileId);
+          if (!b.file_path) throw new Error('Back file path not found');
+          const res = await fetch(`https://api.telegram.org/file/bot${ctx.api.token}/${b.file_path}`);
+          if (!res.ok) throw new Error(`Failed to download back: ${res.statusText}`);
+          return Buffer.from(await res.arrayBuffer());
+        })()
+      );
+    }
 
-      if (wizard.data.idType === 'NATIONAL_ID') {
-        const rawNid = scanResult.nationalIdNumber!;
-        wizard.data.idNumber = rawNid;
-        wizard.data.birthDateStr = scanResult.birthDate ? formatDate(scanResult.birthDate) : '-';
-        wizard.data.gender = scanResult.gender;
-        wizard.data.governorateNameAr = scanResult.governorateNameAr;
-        if (scanResult.birthDate) {
-          wizard.data.age = Math.floor(
-            (new Date().getTime() - scanResult.birthDate.getTime()) / (365.25 * 24 * 3600 * 1000)
-          );
-        }
+    const downloadedBuffers = await Promise.all(downloadPromises);
+    const frontBuffer = downloadedBuffers[0];
+    const backBuffer = backFileId ? downloadedBuffers[1] : undefined;
 
-        // فحص الازدواجية فوراً للرقم القومي
-        const dup = await workerService.checkDuplicate('NATIONAL_ID', rawNid);
-        if (dup.isDuplicate && dup.existingWorker) {
-          const dupKb = new InlineKeyboard()
-            .text('🔄 إرفاق بطاقة أخرى', 'action:worker_photo:retry_front')
-            .row()
-            .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-          await ctx.reply(
-            `⚠️ *تنبيه تعارض: الرقم القومي مسجل مسبقاً!*\n` +
-            `• الرقم القومي: \`${rawNid}\`\n` +
-            `• كود العامل: \`${dup.existingWorker.code}\`\n` +
-            `• الاسم: *${dup.existingWorker.name}*\n` +
-            `• الوظيفة: ${dup.existingWorker.jobTitle}`,
-            { parse_mode: 'Markdown', reply_markup: dupKb }
-          );
-          return true;
-        }
+    if (!frontBuffer) {
+      throw new Error('Front buffer missing');
+    }
 
-        // الانتقال لظهر البطاقة لاستخراج تاريخ الانتهاء
-        wizard.step = WorkerWizardStep.PHOTO_BACK;
-        await setPendingWorkerWizard(telegramId, wizard);
-        await renderWizardStep(ctx, wizard);
-        return true;
-      } else {
-        // جواز سفر
-        wizard.data.idNumber = scanResult.passportNumber || '-';
-        if (scanResult.expiryDateStr) {
-          wizard.data.idCardExpiryDateStr = scanResult.expiryDateStr;
-        }
+    // 2. تحليل الوجه والظهر معاً بالتوازي (Parallel Execution) لتقليل وقت الانتظار إلى أقل من النصف!
+    const scanPromises: [Promise<any>, Promise<any>] = [
+      aiVisionIdService.scanDocument(
+        frontBuffer,
+        'image/jpeg',
+        isNid ? 'NATIONAL_ID_FRONT' : 'PASSPORT'
+      ),
+      backBuffer && isNid
+        ? aiVisionIdService.scanDocument(backBuffer, 'image/jpeg', 'NATIONAL_ID_BACK')
+        : Promise.resolve({ isValid: true, expiryDateStr: undefined }),
+    ];
 
-        const dup = await workerService.checkDuplicate('PASSPORT', wizard.data.idNumber);
-        if (dup.isDuplicate && dup.existingWorker) {
-          const dupKb = new InlineKeyboard()
-            .text('🔄 إرفاق جواز آخر', 'action:worker_photo:retry_front')
-            .row()
-            .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-          await ctx.reply(
-            `⚠️ *تنبيه تعارض: رقم الجواز مسجل مسبقاً!*\n` +
-            `• رقم الجواز: \`${wizard.data.idNumber}\`\n` +
-            `• كود العامل: \`${dup.existingWorker.code}\`\n` +
-            `• الاسم: *${dup.existingWorker.name}*`,
-            { parse_mode: 'Markdown', reply_markup: dupKb }
-          );
-          return true;
-        }
+    const [frontScan, backScan] = await Promise.all(scanPromises);
 
-        // للجواز ننتقل لتحديد الجنسية والبيانات المكملة
-        wizard.step = WorkerWizardStep.PASSPORT_NATIONALITY;
-        await setPendingWorkerWizard(telegramId, wizard);
-        await renderWizardStep(ctx, wizard);
-        return true;
-      }
-    } catch (error: any) {
-      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
-      console.error('⚠️ [AI-VISION-WIZARD] Front photo processing error:', error);
-      const errKb = new InlineKeyboard()
-        .text('🔄 إعادة المحاولة', 'action:worker_photo:retry_front')
+    await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
+
+    // فحص صلاحية الوجه
+    if (!frontScan.isValid) {
+      const errorKb = new InlineKeyboard()
+        .text('🔄 إعادة التقاط الصور', 'action:worker_photo:retry_front')
         .row()
         .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
         .row()
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      await ctx.reply(
-        '⚠️ تعذر فحص الصورة بالذكاء الاصطناعي حالياً. يمكنك إعادة التقاط الصورة بوضوح أو استخدام الإدخال اليدوي.',
-        { reply_markup: errKb }
-      );
+
+      const errMsg =
+        frontScan.userErrorMessage ||
+        '❌ *الصورة المرفقة ليست لرقم قومي او باسبور يرجى ارفاق صورة بطاقة رقم قومي او باسبور على حسب حالة الاختيار*';
+
+      await ctx.reply(errMsg, { parse_mode: 'Markdown', reply_markup: errorKb });
       return true;
     }
-  }
 
-  // 2. تصوير ظهر البطاقة لاستخراج تاريخ الانتهاء
-  if (wizard.step === WorkerWizardStep.PHOTO_BACK) {
-    const statusMsg = await ctx.reply('⏳ *جاري فحص ظهر البطاقة واستخراج تاريخ انتهاء السريان...*', {
-      parse_mode: 'Markdown',
-    });
+    // استخراج بيانات الوجه بنجاح
+    if (frontScan.fullName) {
+      wizard.data.fullName = frontScan.fullName;
+    }
 
-    try {
-      const file = await ctx.api.getFile(fileId);
-      if (!file.file_path) throw new Error('Telegram file_path not found');
-
-      const downloadUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`;
-      const res = await fetch(downloadUrl);
-      if (!res.ok) throw new Error(`Failed to download image: ${res.statusText}`);
-
-      const buffer = Buffer.from(await res.arrayBuffer());
-      const mimeType = ctx.message?.photo ? 'image/jpeg' : (ctx.message?.document?.mime_type || 'image/jpeg');
-
-      const scanResult = await aiVisionIdService.scanDocument(buffer, mimeType, 'NATIONAL_ID_BACK');
-      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
-
-      wizard.data.idCardBackPath = fileId;
-      if (scanResult.isValid && scanResult.expiryDateStr) {
-        wizard.data.idCardExpiryDateStr = scanResult.expiryDateStr;
+    if (isNid) {
+      const rawNid = frontScan.nationalIdNumber!;
+      wizard.data.idNumber = rawNid;
+      wizard.data.birthDateStr = frontScan.birthDate ? formatDate(frontScan.birthDate) : '-';
+      wizard.data.gender = frontScan.gender;
+      wizard.data.governorateNameAr = frontScan.governorateNameAr;
+      if (frontScan.birthDate) {
+        wizard.data.age = Math.floor(
+          (new Date().getTime() - frontScan.birthDate.getTime()) / (365.25 * 24 * 3600 * 1000)
+        );
       }
 
-      // الانتقال لبطاقة التأكيد الموحدة للبيانات المستخرجة
+      // فحص تاريخ الانتهاء من الظهر
+      if (backScan && backScan.isValid && backScan.expiryDateStr) {
+        wizard.data.idCardExpiryDateStr = backScan.expiryDateStr;
+      }
+
+      // فحص الازدواجية فورياً
+      const dup = await workerService.checkDuplicate('NATIONAL_ID', rawNid);
+      if (dup.isDuplicate && dup.existingWorker) {
+        const dupKb = new InlineKeyboard()
+          .text('🔄 إرفاق بطاقة أخرى', 'action:worker_photo:retry_front')
+          .row()
+          .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+        await ctx.reply(
+          `⚠️ *تنبيه تعارض: الرقم القومي مسجل مسبقاً!*\n` +
+          `• الرقم القومي: \`${rawNid}\`\n` +
+          `• كود العامل: \`${dup.existingWorker.code}\`\n` +
+          `• الاسم: *${dup.existingWorker.name}*\n` +
+          `• الوظيفة: ${dup.existingWorker.jobTitle}`,
+          { parse_mode: 'Markdown', reply_markup: dupKb }
+        );
+        return true;
+      }
+
+      // الانتقال مباشرة لبطاقة التأكيد الموحدة
       wizard.step = WorkerWizardStep.AI_CONFIRMATION;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
       return true;
-    } catch (error: any) {
-      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
-      console.error('⚠️ [AI-VISION-WIZARD] Back photo processing error:', error);
-      wizard.data.idCardBackPath = fileId;
-      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+    } else {
+      // جواز سفر
+      const passportNo = frontScan.passportNumber || '-';
+      wizard.data.idNumber = passportNo;
+      if (frontScan.expiryDateStr) {
+        wizard.data.idCardExpiryDateStr = frontScan.expiryDateStr;
+      }
+
+      const dup = await workerService.checkDuplicate('PASSPORT', passportNo);
+      if (dup.isDuplicate && dup.existingWorker) {
+        const dupKb = new InlineKeyboard()
+          .text('🔄 إرفاق جواز آخر', 'action:worker_photo:retry_front')
+          .row()
+          .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+        await ctx.reply(
+          `⚠️ *تنبيه تعارض: رقم الجواز مسجل مسبقاً!*\n` +
+          `• رقم الجواز: \`${wizard.data.idNumber}\`\n` +
+          `• كود العامل: \`${dup.existingWorker.code}\`\n` +
+          `• الاسم: *${dup.existingWorker.name}*`,
+          { parse_mode: 'Markdown', reply_markup: dupKb }
+        );
+        return true;
+      }
+
+      wizard.step = WorkerWizardStep.PASSPORT_NATIONALITY;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
       return true;
     }
+  } catch (error: any) {
+    await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
+    console.error('⚠️ [AI-VISION-DIRECT] Error analyzing photos:', error);
+    const errKb = new InlineKeyboard()
+      .text('🔄 إعادة المحاولة', 'action:worker_photo:retry_front')
+      .row()
+      .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
+      .row()
+      .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+    await ctx.reply(
+      '⚠️ تعذر فحص الصور بالذكاء الاصطناعي حالياً. يمكنك إعادة المحاولة أو المتابعة بالإدخال اليدوي.',
+      { reply_markup: errKb }
+    );
+    return true;
   }
-
-  return false;
 }
 
 /**
@@ -591,6 +628,10 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
   const wizard = await getPendingWorkerWizard(telegramId);
   const data = ctx.callbackQuery.data || '';
 
+  if (data === 'action:worker_noop') {
+    return; // مجرد ملصق للصفحة
+  }
+
   if (data === 'action:cancel_worker_op') {
     await clearPendingWorkerWizard(telegramId);
     await clearPendingWorkerExcelUpload(telegramId);
@@ -644,23 +685,23 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
 
   // إعادة التقاط الصور
   if (data === 'action:worker_photo:retry_front') {
+    wizard.data.frontFileId = undefined;
+    wizard.data.backFileId = undefined;
     wizard.step = WorkerWizardStep.PHOTO_FRONT;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
-  if (data === 'action:worker_photo:retry_back') {
-    wizard.step = WorkerWizardStep.PHOTO_BACK;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return;
-  }
-
+  // تخطي ظهر البطاقة والتحليل بالوجه فقط
   if (data === 'action:worker_photo:skip_back') {
-    wizard.step = WorkerWizardStep.AI_CONFIRMATION;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
+    if (wizard.data.frontFileId) {
+      await analyzePhotosDirectly(ctx, wizard, telegramId, wizard.data.frontFileId, undefined);
+    } else {
+      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+    }
     return;
   }
 
@@ -757,6 +798,17 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     wizard.step = WorkerWizardStep.AI_CONFIRMATION;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  // تقليب صفحات الوظائف (Job Titles Pagination)
+  if (data.startsWith('action:worker_job_p:')) {
+    const pageNum = parseInt(data.replace('action:worker_job_p:', ''), 10);
+    if (!isNaN(pageNum) && pageNum >= 1) {
+      wizard.data.jobPage = pageNum;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+    }
     return;
   }
 
@@ -1003,7 +1055,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         '• غير مغطاة بأصابع اليد أو بأي جسم خارجي يغطي الأرقام أو البيانات.\n' +
         '• بجودة عالية وإضاءة جيدة بدون فلاش يعكس الأرقام.\n' +
         `• في حالة إرفاق صورة ليست لـ ${isNid ? 'رقم قومي' : 'جواز سفر'}، سيتم رفضها تلقائياً.\n\n` +
-        '💡 _إذا تعطل الذكاء الاصطناعي أو كان الإنترنت ضعيفاً، يمكنك الضغط على المتابعة بالإدخال اليدوي._';
+        '💡 _المسار فائق السرعة: سيتم استلام صورة الوجه فوراً ثم يطلب البوت صورة الظهر ليتم استخراج كافة البيانات معاً بنقرة واحدة._';
 
       keyboard
         .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
@@ -1017,18 +1069,19 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
       text =
         '📸 *[2/2] تصوير ظهر بطاقة الرقم القومي (تاريخ الانتهاء) [3/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'يرجى إرسال صورة *ظهر بطاقة الرقم القومي* الآن:\n\n' +
+        '✅ *تم حفظ صورة الوجه بنجاح.*\n\n' +
+        'يرجى الآن إرسال صورة *ظهر بطاقة الرقم القومي* لاستخراج تاريخ انتهاء السريان:\n\n' +
         '📌 *تعليمات التصوير:*\n' +
-        '• لاستخراج تاريخ انتهاء سريان البطاقة "سارية حتى" تلقائياً.\n' +
-        '• تأكد من وضوح شريط البيانات والباركود وعدم التغطية بالأصابع.\n\n' +
-        '💡 _يمكنك التخطي أو إدخال تاريخ الانتهاء يدوياً._';
+        '• تأكد من وضوح شريط تاريخ السريان "سارية حتى" والباركود.\n' +
+        '• سيتم تحليل الوجه والظهر معاً بالذكاء الاصطناعي فور إرسال هذه الصورة.\n\n' +
+        '💡 _يمكنك التخطي الآن ليتم فحص الوجه فقط، أو إدخال التاريخ يدوياً._';
 
       keyboard
-        .text('⏭️ تخطي ظهر البطاقة', 'action:worker_photo:skip_back')
+        .text('⏭️ تخطي ظهر البطاقة والتحليل الآن', 'action:worker_photo:skip_back')
         .row()
         .text('✍️ إدخال تاريخ الانتهاء يدوياً', 'action:worker_photo:manual_expiry')
         .row()
-        .text('◀️ السابق', 'action:worker_step:back')
+        .text('◀️ إعادة تصوير الوجه', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
@@ -1055,7 +1108,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         .row()
         .text('✏️ تصحيح تاريخ الانتهاء', 'action:worker_ai_edit:expiry')
         .row()
-        .text('◀️ إعادة التقاط الصورة', 'action:worker_step:back')
+        .text('◀️ إعادة التقاط الصور', 'action:worker_photo:retry_front')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
@@ -1240,21 +1293,26 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
     }
 
     case WorkerWizardStep.JOB_CHOICE: {
-      const jobs = await prisma.jobTitle.findMany({
+      const allJobs = await prisma.jobTitle.findMany({
         where: { isActive: true },
         include: { department: true },
-        take: 10,
-        orderBy: { code: 'asc' },
+        orderBy: [{ department: { code: 'asc' } }, { code: 'asc' }],
       });
+
+      const pageSize = 8;
+      const totalPages = Math.max(1, Math.ceil(allJobs.length / pageSize));
+      const currentPage = Math.min(Math.max(1, wizard.data.jobPage || 1), totalPages);
+      const startIndex = (currentPage - 1) * pageSize;
+      const pagedJobs = allJobs.slice(startIndex, startIndex + pageSize);
 
       text =
         '💼 *تحديد المسمى الوظيفي والمهنة [9/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'اختر المسمى الوظيفي المعتمد للعامل:';
+        `اختر المسمى الوظيفي المعتمد للعامل (إجمالي المهن: ${allJobs.length}):`;
 
-      for (let i = 0; i < jobs.length; i += 2) {
-        const j1 = jobs[i];
-        const j2 = jobs[i + 1];
+      for (let i = 0; i < pagedJobs.length; i += 2) {
+        const j1 = pagedJobs[i];
+        const j2 = pagedJobs[i + 1];
         const icon1 = getJobEmoji(j1.name);
         if (j2) {
           const icon2 = getJobEmoji(j2.name);
@@ -1264,6 +1322,27 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
             .row();
         } else {
           keyboard.text(`${icon1} ${j1.name}`, `action:worker_job:${j1.id}`).row();
+        }
+      }
+
+      // أزرار تقليب الصفحات التفاعلية (Pagination Bar)
+      if (totalPages > 1) {
+        if (currentPage > 1 && currentPage < totalPages) {
+          keyboard
+            .text('◀️ الصفحة السابقة', `action:worker_job_p:${currentPage - 1}`)
+            .text(`📄 [ ${currentPage} / ${totalPages} ]`, 'action:worker_noop')
+            .text('الصفحة التالية ▶️', `action:worker_job_p:${currentPage + 1}`)
+            .row();
+        } else if (currentPage === 1) {
+          keyboard
+            .text(`📄 [ 1 / ${totalPages} ]`, 'action:worker_noop')
+            .text('الصفحة التالية ▶️', `action:worker_job_p:2`)
+            .row();
+        } else if (currentPage === totalPages) {
+          keyboard
+            .text('◀️ الصفحة السابقة', `action:worker_job_p:${currentPage - 1}`)
+            .text(`📄 [ ${currentPage} / ${totalPages} ]`, 'action:worker_noop')
+            .row();
         }
       }
 
@@ -1289,7 +1368,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
     case WorkerWizardStep.SITE_CHOICE: {
       const sites = await prisma.site.findMany({
         where: { status: 'ACTIVE' },
-        take: 8,
+        take: 12,
         orderBy: { code: 'asc' },
       });
 
@@ -1447,7 +1526,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
       const photoStatus =
         wizard.data.idCardFrontPath !== '-' && wizard.data.idCardBackPath !== '-'
-          ? '✅ تم فحص وتوثيق الوجه والظهر'
+          ? '✅ تم فحص وتوثيق الوجه والظهر (جاهز للأرشفة الميدانية)'
           : wizard.data.idCardFrontPath !== '-'
           ? '🟡 تم توثيق الوجه فقط'
           : '⚪ لم تُرفق صور (ملف يدوي قيد الاستيفاء)';
@@ -1475,7 +1554,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         `💍 *الحالة الاجتماعية:* ${wizard.data.maritalStatus || '-'}\n` +
         `📂 *موقف الوثائق الذكية:* ${photoStatus}\n` +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        '_⚡ سيتم قيد العامل تلقائياً بهيكل الشركة وتحديث القوائم الميدانية اللحظية._';
+        '_⚡ سيتم حفظ صور البطاقة في مجلد المرفقات المحلي باسم الكود ورفعها إلى Google Drive تلقائياً._';
 
       keyboard
         .text('✅ تأكيد وحفظ التعيين الرسمي', 'action:worker_step:confirm')
@@ -1503,7 +1582,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 }
 
 /**
- * 💾 الحفظ النهائي والتسجيل الرسمي للعامل بقاعدة البيانات
+ * 💾 الحفظ النهائي والتسجيل الرسمي للعامل بقاعدة البيانات وحفظ الصور محلياً وعلى Google Drive
  */
 async function handleWorkerFinalSave(
   ctx: MyContext,
@@ -1562,9 +1641,57 @@ async function handleWorkerFinalSave(
       idCardBackPath: d.idCardBackPath !== '-' ? d.idCardBackPath : undefined,
     });
 
+    const workerCode = result.worker.code;
+
+    // 📂 تحميل وحفظ صور البطاقة محلياً بمسمى كود العامل (مثل: OP-DRV-001_front.jpg) ورفعها إلى Google Drive
+    let frontBuffer: Buffer | undefined = undefined;
+    let backBuffer: Buffer | undefined = undefined;
+
+    if (d.frontFileId && d.frontFileId !== '-') {
+      try {
+        const f = await ctx.api.getFile(d.frontFileId);
+        if (f.file_path) {
+          const res = await fetch(`https://api.telegram.org/file/bot${ctx.api.token}/${f.file_path}`);
+          if (res.ok) frontBuffer = Buffer.from(await res.arrayBuffer());
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch front photo for local archiving:', e);
+      }
+    }
+
+    if (d.backFileId && d.backFileId !== '-') {
+      try {
+        const b = await ctx.api.getFile(d.backFileId);
+        if (b.file_path) {
+          const res = await fetch(`https://api.telegram.org/file/bot${ctx.api.token}/${b.file_path}`);
+          if (res.ok) backBuffer = Buffer.from(await res.arrayBuffer());
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch back photo for local archiving:', e);
+      }
+    }
+
+    // حفظ محلي في attachments/worker-ids/ ورفع اختياري لـ Google Drive
+    const archiveResult = await googleDriveService.processAndArchiveWorkerId(
+      workerCode,
+      frontBuffer,
+      backBuffer
+    );
+
+    // تحديث مسار الصور في قاعدة البيانات بالمسار المحلي الرسمي
+    if (archiveResult.localFrontPath || archiveResult.localBackPath) {
+      await prisma.worker.update({
+        where: { id: result.worker.id },
+        data: {
+          idCardFrontPath: archiveResult.localFrontPath || d.idCardFrontPath,
+          idCardBackPath: archiveResult.localBackPath || d.idCardBackPath,
+        },
+      });
+    }
+
     await clearPendingWorkerWizard(telegramId);
 
-    // لوحة أزرار إتمام العمليات الموحدة (Universal Post-Action Completion Keyboard)
+    // لوحة أزرار إتمام العمليات الموحدة
     const workerPhone = (d.phone || '').replace(/\D/g, '');
     const waPhone = workerPhone.startsWith('0') ? '20' + workerPhone.substring(1) : workerPhone;
     const waText = encodeURIComponent(
@@ -1583,6 +1710,13 @@ async function handleWorkerFinalSave(
       .row()
       .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
+    const archiveNote = archiveResult.localFrontPath
+      ? `\n📁 *المرفقات المحلية:* \`${archiveResult.localFrontPath}\``
+      : '';
+    const driveNote = archiveResult.driveFrontId
+      ? '\n☁️ *Google Drive:* تم رفع الوثائق إلى مجلد الشركة السحابي بنجاح.'
+      : '';
+
     const successText =
       '🎉 *تم تسجيل وتعيين العامل الجديد بنجاح!*\n' +
       '━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -1593,7 +1727,9 @@ async function handleWorkerFinalSave(
       `💼 *الوظيفة:* ${result.worker.jobTitle} | 📍 *الموقع:* ${d.siteName || '-'}\n` +
       `📅 *تاريخ التعيين:* *${formatDate(hireDateObj)}*\n` +
       `📱 *الهاتف:* \`${d.phone}\` | 💳 *المستحقات:* \`${d.walletNumber}\` (${d.walletType})\n` +
-      '━━━━━━━━━━━━━━━━━━━━━\n' +
+      archiveNote +
+      driveNote +
+      '\n━━━━━━━━━━━━━━━━━━━━━\n' +
       '✅ تم حفظ ملف العامل في قاعدة البيانات وتحديث كاش القوائم اللحظية بنجاح.';
 
     if (wizard.messageId && ctx.chat) {
