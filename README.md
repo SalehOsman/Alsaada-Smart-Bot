@@ -89,3 +89,5 @@ F:\Alsaada-Smart-Bot/
 * [13. المنظومة المالية المحاسبية المغلقة وقائمة الدخل والأرباح](./docs/13-closed-loop-financial-and-pnl-engine.md)
 * [14. ميثاق حوكمة وكلاء الذكاء الاصطناعي وقواعد التعامل مع الملفات البرمجية](./docs/14-ai-agent-governance-and-file-rules.md)
 * [15. الدستور المعياري لبناء الموديولات والتدفقات الوظيفية](./docs/15-universal-module-and-flow-standard.md)
+* [16. ميثاق أمان قواعد البيانات وحوكمة القيود الجنائية والتشفير](./docs/16-database-security-and-tamper-proof-ledger.md)
+

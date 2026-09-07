@@ -1,0 +1,136 @@
+// ==============================================================================
+// Al-Saada Smart Bot Enterprise Database Schema (PostgreSQL)
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// 1. Tenant & Organization Core
+// -------------------------------------------------------------
+model Tenant {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users   User[]
+  workers Worker[]
+
+  @@map("tenants")
+}
+
+// -------------------------------------------------------------
+// 2. RBAC & Identity (Zero-Trust Telegram ID)
+// -------------------------------------------------------------
+model User {
+  id              String    @id @default(uuid())
+  tenantId        String?
+  telegramId      BigInt    @unique
+  username        String?
+  fullName        String
+  role            String    // SUPER_ADMIN, EXECUTIVE, FIELD_ADMIN, ACCOUNTANT, SITE_ENGINEER, WORKER, GUEST
+  phoneEncrypted  String?
+  phoneBlindIndex String?
+  isActive        Boolean   @default(true)
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@index([phoneBlindIndex])
+  @@index([role])
+  @@map("users")
+}
+
+// -------------------------------------------------------------
+// 3. Workforce & Labor 360 Registry
+// -------------------------------------------------------------
+model Worker {
+  id                   String    @id @default(uuid())
+  tenantId             String?
+  code                 String    @unique
+  name                 String
+  nationalIdEncrypted  String
+  nationalIdBlindIndex String    @unique
+  birthDate            DateTime
+  gender               String    // MALE, FEMALE
+  governorateCode      String
+  jobTitle             String
+  dailyWage            Decimal   @db.Decimal(12, 2)
+  siteLocation         String?
+  phoneEncrypted       String?
+  phoneBlindIndex      String?
+  telegramId           BigInt?   @unique
+  isDeleted            Boolean   @default(false)
+  deletedAt            DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  tenant  Tenant?           @relation(fields: [tenantId], references: [id])
+  ledgers FinancialLedger[]
+
+  @@index([phoneBlindIndex])
+  @@index([siteLocation])
+  @@map("workers")
+}
+
+// -------------------------------------------------------------
+// 4. Closed-Loop Cryptographic Financial Ledger
+// -------------------------------------------------------------
+model FinancialLedger {
+  id                 String    @id @default(uuid())
+  voucherNumber      String    @unique
+  previousHash       String
+  recordHash         String
+  transactionType    String    // ADVANCE, EXPENSE_CANTEEN, EXPENSE_FUEL, INTERNAL_TRANSFER, OWNER_WITHDRAWAL, etc.
+  amount             Decimal   @db.Decimal(14, 2)
+  currency           String    @default("EGP")
+  sourceAccount      String
+  destinationAccount String
+  description        String?
+  actorTelegramId    BigInt
+  workerId           String?
+  isDeleted          Boolean   @default(false)
+  deletedAt          DateTime?
+  deletedBy          BigInt?
+  deletionReason     String?
+  createdAt          DateTime  @default(now())
+  syncedToSheets     Boolean   @default(false)
+  syncedAt           DateTime?
+
+  worker Worker? @relation(fields: [workerId], references: [id])
+
+  @@index([transactionType])
+  @@index([sourceAccount])
+  @@index([destinationAccount])
+  @@index([syncedToSheets])
+  @@map("financial_ledgers")
+}
+
+// -------------------------------------------------------------
+// 5. Transactional Outbox (Reliable Hybrid Google Sheets Sync)
+// -------------------------------------------------------------
+model OutboxEvent {
+  id           String    @id @default(uuid())
+  eventType    String
+  payload      Json
+  status       String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  retryCount   Int       @default(0)
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  processedAt  DateTime?
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
+}

@@ -1,0 +1,33 @@
+/**
+ * Egyptian National ID Governorates Code Map
+ */
+export const EGYPTIAN_GOVERNORATES: Record<string, { nameAr: string; nameEn: string }> = {
+  '01': { nameAr: 'القاهرة', nameEn: 'Cairo' },
+  '02': { nameAr: 'الإسكندرية', nameEn: 'Alexandria' },
+  '03': { nameAr: 'بورسعيد', nameEn: 'Port Said' },
+  '04': { nameAr: 'السويس', nameEn: 'Suez' },
+  '11': { nameAr: 'دمياط', nameEn: 'Damietta' },
+  '12': { nameAr: 'الدقهلية', nameEn: 'Dakahlia' },
+  '13': { nameAr: 'الشرقية', nameEn: 'Sharkia' },
+  '14': { nameAr: 'القليوبية', nameEn: 'Qalyubia' },
+  '15': { nameAr: 'كفر الشيخ', nameEn: 'Kafr El Sheikh' },
+  '16': { nameAr: 'الغربية', nameEn: 'Gharbia' },
+  '17': { nameAr: 'المنوفية', nameEn: 'Monufia' },
+  '18': { nameAr: 'البحيرة', nameEn: 'Beheira' },
+  '19': { nameAr: 'الإسماعيلية', nameEn: 'Ismailia' },
+  '21': { nameAr: 'الجيزة', nameEn: 'Giza' },
+  '22': { nameAr: 'بني سويف', nameEn: 'Beni Suef' },
+  '23': { nameAr: 'الفيوم', nameEn: 'Fayoum' },
+  '24': { nameAr: 'المنيا', nameEn: 'Minya' },
+  '25': { nameAr: 'أسيوط', nameEn: 'Asyut' },
+  '26': { nameAr: 'سوهاج', nameEn: 'Sohag' },
+  '27': { nameAr: 'قنا', nameEn: 'Qena' },
+  '28': { nameAr: 'أسوان', nameEn: 'Aswan' },
+  '29': { nameAr: 'الأقصر', nameEn: 'Luxor' },
+  '31': { nameAr: 'البحر الأحمر', nameEn: 'Red Sea' },
+  '32': { nameAr: 'الوادي الجديد', nameEn: 'New Valley' },
+  '33': { nameAr: 'مطروح', nameEn: 'Matrouh' },
+  '34': { nameAr: 'شمال سيناء', nameEn: 'North Sinai' },
+  '35': { nameAr: 'جنوب سيناء', nameEn: 'South Sinai' },
+  '88': { nameAr: 'خارج الجمهورية (مواليد الخارج)', nameEn: 'Born Abroad' },
+};

@@ -1,0 +1,64 @@
+services:
+  # -------------------------------------------------------------
+  # 1. PostgreSQL Database Service (Isolated Internal Network)
+  # -------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: alsaada-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-alsaada_db}
+      POSTGRES_USER: ${DB_USER:-alsaada_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-alsaada_secure_pass_2026}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-scripts:/docker-entrypoint-initdb.d:ro
+    ports:
+      # Bound strictly to localhost (127.0.0.1) for local inspection; never 0.0.0.0
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    networks:
+      - alsaada-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-alsaada_admin} -d ${DB_NAME:-alsaada_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # -------------------------------------------------------------
+  # 2. Alsaada Smart Bot Service (App Server)
+  # -------------------------------------------------------------
+  alsaada-smart-bot:
+    container_name: alsaada-smart-bot
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3000}
+      DATABASE_URL: postgresql://${DB_USER:-alsaada_admin}:${DB_PASSWORD:-alsaada_secure_pass_2026}@postgres:5432/${DB_NAME:-alsaada_db}?schema=public
+      BOT_TOKEN: ${BOT_TOKEN}
+      SUPER_ADMIN_TELEGRAM_ID: ${SUPER_ADMIN_TELEGRAM_ID}
+      DATABASE_ENCRYPTION_KEY: ${DATABASE_ENCRYPTION_KEY}
+      BLIND_INDEX_SALT: ${BLIND_INDEX_SALT}
+    networks:
+      - alsaada-internal
+      - alsaada-public
+
+volumes:
+  postgres_data:
+    name: alsaada_postgres_data
+
+networks:
+  # Internal isolated network: No external routing to DB
+  alsaada-internal:
+    name: alsaada_internal_network
+    internal: true
+  # Public/Outbound network: For Telegram Bot API & Google Sheets API calls
+  alsaada-public:
+    name: alsaada_public_network
