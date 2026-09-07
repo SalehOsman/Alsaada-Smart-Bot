@@ -260,5 +260,14 @@ export async function clearPendingJobMatrixAction(telegramId: bigint): Promise<v
   }
 }
 
-
-
+/**
+ * Clean up all pending text wizard and input actions across all domains for a user
+ */
+export async function clearAllPendingUserActions(telegramId: bigint): Promise<void> {
+  await Promise.all([
+    clearPendingCompanyEdit(telegramId),
+    clearPendingAdminEdit(telegramId),
+    clearPendingSiteAction(telegramId),
+    clearPendingJobMatrixAction(telegramId),
+  ]);
+}

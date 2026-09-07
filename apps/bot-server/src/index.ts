@@ -46,6 +46,25 @@ async function bootstrap() {
   // 3. Initialize & Start Telegram Bot
   try {
     const bot = createBot();
+
+    // ⚡ Register sovereign commands in the Telegram Side Menu (Menu Button)
+    bot.api
+      .setMyCommands([
+        { command: 'start', description: '🏠 القائمة الرئيسية واللوحة التشغيلية' },
+        { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
+        { command: 'settings', description: '⚙️ مركز إعدادات النظام والتحكم' },
+        { command: 'jobs', description: '💼 الهيكل الوظيفي ومصفوفة المهن' },
+        { command: 'sites', description: '🏗️ مصفوفة المشاريع والمواقع الميدانية' },
+        { command: 'profile', description: '👤 الملف الشخصي وتعديل البيانات' },
+        { command: 'ping', description: '⚡ فحص كفاءة واستجابة السيرفر' },
+      ])
+      .then(() => {
+        console.log('📋 [TELEGRAM] Bot side menu commands registered successfully.');
+      })
+      .catch((err) => {
+        console.warn('⚠️ [TELEGRAM] Could not set side menu commands:', err.message);
+      });
+
     const runner = run(bot, {
       runner: {
         fetch: {

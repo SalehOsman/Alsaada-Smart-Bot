@@ -4,7 +4,7 @@ import dns from 'node:dns';
 dns.setDefaultResultOrder('ipv4first');
 
 import { Agent as UndiciAgent, setGlobalDispatcher } from 'undici';
-import { Bot } from 'grammy';
+import { Bot, InlineKeyboard } from 'grammy';
 import { sequentialize } from '@grammyjs/runner';
 import { MyContext } from './types/context.js';
 import { config } from './config/env.js';
@@ -21,6 +21,7 @@ export const undiciDispatcher = new UndiciAgent({
   },
 });
 setGlobalDispatcher(undiciDispatcher);
+import { clearAllPendingUserActions } from './redis.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
 import { handleStart, renderRoleHome } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
@@ -143,6 +144,10 @@ export function createBot(): Bot<MyContext> {
   });
 
   bot.on('message:text', async (ctx, next) => {
+    // If the message is a slash command (e.g. /cancel, /start), do not intercept as raw text input
+    if (ctx.message.text.startsWith('/')) {
+      return next();
+    }
     if (await handleJobMatrixTextInput(ctx)) return;
     if (await handleCompanyFieldTextInput(ctx)) return;
     if (await handleAdminFieldTextInput(ctx)) return;
@@ -152,6 +157,19 @@ export function createBot(): Bot<MyContext> {
 
   // 4. Base Commands
   bot.command('start', handleStart);
+  bot.command(['cancel', 'abort', 'clear'], async (ctx) => {
+    if (!ctx.from) return;
+    const telegramId = BigInt(ctx.from.id);
+    await clearAllPendingUserActions(telegramId);
+    const keyboard = new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu');
+    await ctx.reply(
+      '❌ *تم إلغاء المعاملة الحالية والتراجع بنجاح.*\nتم إفراغ كافة البيانات المؤقتة، ويمكنك بدء إجراء جديد من القائمة الرئيسية أو الأوامر الجانبية.',
+      {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      }
+    );
+  });
   bot.command(['ping', 'health', 'speed'], handlePing);
   bot.command(['settings', 'admin'], handleSettings);
   bot.command(['company', 'org'], async (ctx) => {
