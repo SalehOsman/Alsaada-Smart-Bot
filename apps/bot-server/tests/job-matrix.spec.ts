@@ -128,6 +128,9 @@ import {
   renderJobDetail,
   handleJobHeadcountDelta,
   handleJobToggleCycle,
+  handleStartEditJobCycle,
+  handleSetWorkDays,
+  handleSetRestDays,
   handleJobMatrixTextInput,
 } from '../src/handlers/job-matrix.handler.js';
 import { MyContext } from '../src/types/context.js';
@@ -337,6 +340,122 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
         expect.stringContaining('تعديل الراتب الإضافي والبدلات'),
         expect.anything()
       );
+    });
+
+    it('should initiate custom work/rest cycle wizard and prompt for work days', async () => {
+      const mockEditMessageText = vi.fn();
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: { data: 'action:job:edit_cycle:OP:DRV' },
+        editMessageText: mockEditMessageText,
+        answerCallbackQuery: mockAnswerCallbackQuery,
+      } as unknown as MyContext;
+
+      await handleStartEditJobCycle(mockCtx, 'OP', 'DRV');
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('أيام العمل بالموقع'),
+        expect.objectContaining({
+          parse_mode: 'Markdown',
+          reply_markup: expect.anything(),
+        })
+      );
+    });
+
+    it('should save custom work days and prompt for rest days in step 2', async () => {
+      const mockEditMessageText = vi.fn();
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: { data: 'action:job:set_wd:OP:DRV:26' },
+        editMessageText: mockEditMessageText,
+        answerCallbackQuery: mockAnswerCallbackQuery,
+      } as unknown as MyContext;
+
+      await handleSetWorkDays(mockCtx, 'OP', 'DRV', 26);
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('26 يوماً'),
+        expect.objectContaining({
+          parse_mode: 'Markdown',
+          reply_markup: expect.anything(),
+        })
+      );
+    });
+
+    it('should save custom rest days, calculate total cycle days and update job', async () => {
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_rest_days',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+        draft: { workDays: 26 },
+      });
+
+      const mockEditMessageText = vi.fn();
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: { data: 'action:job:set_rd:OP:DRV:4' },
+        editMessageText: mockEditMessageText,
+        answerCallbackQuery: mockAnswerCallbackQuery,
+      } as unknown as MyContext;
+
+      await handleSetRestDays(mockCtx, 'OP', 'DRV', 4);
+
+      expect(mockAnswerCallbackQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('26 عمل / 4 راحة') })
+      );
+    });
+
+    it('should process custom work and rest days from direct text messages', async () => {
+      // Step 1: Work days text input
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_work_days',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+      });
+
+      const mockReply1 = vi.fn();
+      const mockDelete1 = vi.fn().mockResolvedValue(true);
+      const mockCtx1 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: '26' },
+        reply: mockReply1,
+        deleteMessage: mockDelete1,
+      } as unknown as MyContext;
+
+      const handled1 = await handleJobMatrixTextInput(mockCtx1);
+      expect(handled1).toBe(true);
+      expect(mockReply1).toHaveBeenCalledWith(
+        expect.stringContaining('أيام الراحة والإجازة'),
+        expect.anything()
+      );
+
+      // Step 2: Rest days text input
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_rest_days',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+        draft: { workDays: 26 },
+      });
+
+      const mockReply2 = vi.fn();
+      const mockDelete2 = vi.fn().mockResolvedValue(true);
+      const mockCtx2 = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: '4' },
+        reply: mockReply2,
+        deleteMessage: mockDelete2,
+      } as unknown as MyContext;
+
+      const handled2 = await handleJobMatrixTextInput(mockCtx2);
+      expect(handled2).toBe(true);
     });
   });
 });

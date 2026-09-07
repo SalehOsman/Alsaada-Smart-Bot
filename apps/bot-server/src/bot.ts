@@ -78,6 +78,9 @@ import {
   handleStartEditJobSalary,
   handleStartEditJobTitle,
   handleStartEditDeptName,
+  handleStartEditJobCycle,
+  handleSetWorkDays,
+  handleSetRestDays,
   handleJobMatrixTextInput,
 } from './handlers/job-matrix.handler.js';
 
@@ -286,6 +289,15 @@ export function createBot(): Bot<MyContext> {
   });
   bot.callbackQuery(/^action:job:edit_title:(.+):(.+)$/, async (ctx) => {
     await handleStartEditJobTitle(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:edit_cycle:(.+):(.+)$/, async (ctx) => {
+    await handleStartEditJobCycle(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:set_wd:(.+):(.+):(\d+)$/, async (ctx) => {
+    await handleSetWorkDays(ctx, ctx.match[1], ctx.match[2], parseInt(ctx.match[3], 10));
+  });
+  bot.callbackQuery(/^action:job:set_rd:(.+):(.+):(\d+)$/, async (ctx) => {
+    await handleSetRestDays(ctx, ctx.match[1], ctx.match[2], parseInt(ctx.match[3], 10));
   });
 
   // 14. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)

@@ -195,14 +195,15 @@ export async function renderJobDetail(
     .text('➕ (+1)', `action:job:headcount:${deptCode}:${jobCode}:inc`)
     .row();
 
-  // 2. زر التبديل السريع لدورة العمل الميدانية
+  // 2. أزرار دورة العمل الميدانية
   const nextWorkDays = job.workDays === 20 ? 24 : 20;
   const nextRestDays = job.workDays === 20 ? 6 : 10;
   keyboard
     .text(
-      `⏱️ تبديل الدورة إلى (${nextWorkDays} عمل / ${nextRestDays} راحة)`,
+      `⏱️ تبديل سريع (${nextWorkDays}/${nextRestDays})`,
       `action:job:toggle_cycle:${deptCode}:${jobCode}`
     )
+    .text('✏️ تخصيص أيام الدورة', `action:job:edit_cycle:${deptCode}:${jobCode}`)
     .row();
 
   // 3. أزرار تعديل البيانات والرواتب
@@ -328,6 +329,158 @@ export async function handleJobToggleCycle(
   }
 
   await renderJobDetail(ctx, deptCode, jobCode, true);
+}
+
+/**
+ * ⏱️ بدء معالج تخصيص دورة العمل والإجازات (الخطوة 1: أيام العمل)
+ */
+export async function handleStartEditJobCycle(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const messageId = ctx.callbackQuery?.message?.message_id || 0;
+
+  await setPendingJobMatrixAction(telegramId, {
+    action: 'edit_job_work_days',
+    deptCode,
+    jobCode,
+    messageId,
+  });
+
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const keyboard = new InlineKeyboard()
+    .text('20 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:20`)
+    .text('24 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:24`)
+    .text('26 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:26`)
+    .text('6 أيام', `action:job:set_wd:${deptCode}:${jobCode}:6`)
+    .row()
+    .text('◀️ إلغاء والعودة لبطاقة الوظيفة', `action:job:view:${deptCode}:${jobCode}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `⏱️ *تخصيص دورة العمل والإجازات — الخطوة 1 من 2*\n` +
+    `────────────────────────────\n` +
+    `🏢 *القسم:* \`${deptCode}\` | 💼 *الوظيفة:* \`${jobCode}\`\n\n` +
+    `أدخل عدد *أيام العمل بالموقع (W)* الآن في المحادثة:\n` +
+    `(أو اختر مباشرة أحد الخيارات الشائعة أدناه):`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * ⏱️ تسجيل أيام العمل والانتقال للخطوة 2 (أيام الراحة)
+ */
+export async function handleSetWorkDays(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string,
+  workDays: number
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const messageId = ctx.callbackQuery?.message?.message_id || 0;
+
+  await setPendingJobMatrixAction(telegramId, {
+    action: 'edit_job_rest_days',
+    deptCode,
+    jobCode,
+    draft: { workDays },
+    messageId,
+  });
+
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const keyboard = new InlineKeyboard()
+    .text('10 أيام', `action:job:set_rd:${deptCode}:${jobCode}:10`)
+    .text('6 أيام', `action:job:set_rd:${deptCode}:${jobCode}:6`)
+    .text('4 أيام', `action:job:set_rd:${deptCode}:${jobCode}:4`)
+    .text('1 يوم', `action:job:set_rd:${deptCode}:${jobCode}:1`)
+    .row()
+    .text('◀️ رجوع لأيام العمل', `action:job:edit_cycle:${deptCode}:${jobCode}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `⏱️ *تخصيص دورة العمل والإجازات — الخطوة 2 من 2*\n` +
+    `────────────────────────────\n` +
+    `🏢 *القسم:* \`${deptCode}\` | 💼 *الوظيفة:* \`${jobCode}\`\n` +
+    `📅 *أيام العمل المحددة بالموقع:* *${workDays} يوماً*\n\n` +
+    `أدخل عدد *أيام الراحة والإجازة (R)* الآن في المحادثة:\n` +
+    `(أو اختر مباشرة أحد الخيارات الشائعة أدناه):`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * ⏱️ حفظ دورة العمل والإجازات النهائية للوظيفة
+ */
+export async function handleSetRestDays(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string,
+  restDays: number
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const pending = await getPendingJobMatrixAction(telegramId);
+  const workDays = pending?.draft?.workDays ?? 20;
+
+  const job = await systemDataService.getJobByDeptAndCode(deptCode, jobCode);
+  if (!job) return;
+
+  const totalCycleDays = workDays + restDays;
+  let shiftNature = `دورة مخصصة (${workDays}+${restDays})`;
+  if (workDays === 20 && restDays === 10) shiftNature = 'دورة قياسية (20+10)';
+  else if (workDays === 24 && restDays === 6) shiftNature = 'دورة ممتدة (24+6)';
+  else if (workDays === 26 && restDays === 4) shiftNature = 'دورة مكثفة (26+4)';
+  else if (workDays === 6 && restDays === 1) shiftNature = 'دورة أسبوعية (6+1)';
+
+  await prisma.jobTitle.update({
+    where: { id: job.id },
+    data: {
+      workDays,
+      restDays,
+      totalCycleDays,
+      shiftNature,
+    },
+  });
+
+  await clearPendingJobMatrixAction(telegramId);
+  await systemDataService.invalidateDepartmentsAndJobs();
+
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({
+      text: `تم حفظ الدورة بنجاح: ${workDays} عمل / ${restDays} راحة`,
+    });
+  }
+
+  await renderJobDetail(
+    ctx,
+    deptCode,
+    jobCode,
+    true,
+    `تم تحديث دورة العمل بنجاح (${workDays} يوم عمل / ${restDays} يوم راحة — إجمالي ${totalCycleDays} يوماً).`
+  );
 }
 
 /**
@@ -1063,6 +1216,32 @@ export async function handleJobMatrixTextInput(ctx: MyContext): Promise<boolean>
     await ctx.deleteMessage().catch(() => {});
 
     await renderJobDetail(ctx, pending.deptCode, pending.jobCode, false, `تم تعديل مسمى الوظيفة إلى (${textVal}) بنجاح.`);
+    return true;
+  }
+
+  // 11. تعديل أيام العمل بالموقع (نصياً)
+  if (pending.action === 'edit_job_work_days' && pending.deptCode && pending.jobCode) {
+    const wdNum = parseInt(textVal.replace(/[^0-9]/g, ''), 10);
+    if (!wdNum || wdNum < 1 || wdNum > 365) {
+      await ctx.reply('⚠️ يرجى إدخال عدد أيام عمل صحيح (رقم بين 1 و 365).');
+      return true;
+    }
+
+    await ctx.deleteMessage().catch(() => {});
+    await handleSetWorkDays(ctx, pending.deptCode, pending.jobCode, wdNum);
+    return true;
+  }
+
+  // 12. تعديل أيام الراحة والإجازة وحفظ الدورة (نصياً)
+  if (pending.action === 'edit_job_rest_days' && pending.deptCode && pending.jobCode) {
+    const rdNum = parseInt(textVal.replace(/[^0-9]/g, ''), 10);
+    if (isNaN(rdNum) || rdNum < 0 || rdNum > 365) {
+      await ctx.reply('⚠️ يرجى إدخال عدد أيام راحة صحيح (رقم 0 أو أكبر).');
+      return true;
+    }
+
+    await ctx.deleteMessage().catch(() => {});
+    await handleSetRestDays(ctx, pending.deptCode, pending.jobCode, rdNum);
     return true;
   }
 
