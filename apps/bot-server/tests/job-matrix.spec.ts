@@ -136,8 +136,10 @@ import {
   renderDepartmentsHub,
   renderDepartmentDetail,
   renderJobDetail,
+  getNextQuickCycle,
   handleJobHeadcountDelta,
   handleJobToggleCycle,
+  handleQuickPresetCycle,
   handleStartEditJobCycle,
   handleSetWorkDays,
   handleSetRestDays,
@@ -311,7 +313,13 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
       );
     });
 
-    it('should toggle job work and leave cycle between standard (20+10) and extended (24+6)', async () => {
+    it('should cycle between 30/10, 40/10, and 26/4 and prompt for transition policy', async () => {
+      // 1. Verify rotation math
+      expect(getNextQuickCycle(20, 10)).toEqual({ workDays: 30, restDays: 10 });
+      expect(getNextQuickCycle(30, 10)).toEqual({ workDays: 40, restDays: 10 });
+      expect(getNextQuickCycle(40, 10)).toEqual({ workDays: 26, restDays: 4 });
+      expect(getNextQuickCycle(26, 4)).toEqual({ workDays: 30, restDays: 10 });
+
       const mockAnswerCallbackQuery = vi.fn();
       const mockEditMessageText = vi.fn();
       const mockCtx = {
@@ -324,8 +332,47 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
 
       await handleJobToggleCycle(mockCtx, 'OP', 'DRV');
 
-      expect(mockAnswerCallbackQuery).toHaveBeenCalledWith(
-        expect.objectContaining({ text: expect.stringContaining('تم تعديل الدورة إلى') })
+      // 2. Verifies that it prompts for transition policy instead of saving silently
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('اختيار سياسة ومنهجية السريان'),
+        expect.objectContaining({
+          parse_mode: 'Markdown',
+          reply_markup: expect.anything(),
+        })
+      );
+      expect(redisModule.setPendingJobMatrixAction).toHaveBeenCalledWith(
+        123456n,
+        expect.objectContaining({
+          action: 'edit_job_cycle_policy',
+          deptCode: 'OP',
+          jobCode: 'DRV',
+          draft: { workDays: 30, restDays: 10 },
+        })
+      );
+    });
+
+    it('should handle quick preset callback for direct cycle selection', async () => {
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: { data: 'action:job:quick_preset:OP:DRV:40:10' },
+        answerCallbackQuery: mockAnswerCallbackQuery,
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      await handleQuickPresetCycle(mockCtx, 'OP', 'DRV', 40, 10);
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('40/10'),
+        expect.anything()
+      );
+      expect(redisModule.setPendingJobMatrixAction).toHaveBeenCalledWith(
+        123456n,
+        expect.objectContaining({
+          draft: { workDays: 40, restDays: 10 },
+        })
       );
     });
 

@@ -167,6 +167,26 @@ export async function renderDepartmentDetail(
 }
 
 /**
+ * 🔄 تحديد الدورة التالية في التبديل السريع (30/10 -> 40/10 -> 26/4 -> 30/10)
+ */
+export function getNextQuickCycle(
+  currentWork: number,
+  currentRest: number
+): { workDays: number; restDays: number } {
+  if (currentWork === 30 && currentRest === 10) {
+    return { workDays: 40, restDays: 10 };
+  }
+  if (currentWork === 40 && currentRest === 10) {
+    return { workDays: 26, restDays: 4 };
+  }
+  if (currentWork === 26 && currentRest === 4) {
+    return { workDays: 30, restDays: 10 };
+  }
+  // أي دورة أخرى (مثل 20/10 أو مخصصة)، الانتقال التالي يكون إلى 30/10
+  return { workDays: 30, restDays: 10 };
+}
+
+/**
  * 💼 بطاقة الوظيفة والمحددات المالية ودورات العمل والراحة
  */
 export async function renderJobDetail(
@@ -199,12 +219,11 @@ export async function renderJobDetail(
     .text('➕ (+1)', `action:job:headcount:${deptCode}:${jobCode}:inc`)
     .row();
 
-  // 2. أزرار دورة العمل الميدانية
-  const nextWorkDays = job.workDays === 20 ? 24 : 20;
-  const nextRestDays = job.workDays === 20 ? 6 : 10;
+  // 2. أزرار دورة العمل الميدانية (تبديل سريع بين 30/10 و 40/10 و 26/4)
+  const nextQuick = getNextQuickCycle(job.workDays, job.restDays);
   keyboard
     .text(
-      `⏱️ تبديل سريع (${nextWorkDays}/${nextRestDays})`,
+      `⏱️ تبديل سريع (${nextQuick.workDays}/${nextQuick.restDays})`,
       `action:job:toggle_cycle:${deptCode}:${jobCode}`
     )
     .text('✏️ تخصيص أيام الدورة', `action:job:edit_cycle:${deptCode}:${jobCode}`)
@@ -299,7 +318,71 @@ export async function handleJobHeadcountDelta(
 }
 
 /**
- * ⚡ تبديل دورة العمل والإجازة للوظيفة لحظياً (20/10 <-> 24/6)
+ * ⏱️ تحديد دورة عمل مسبقة والانتقال فورياً لاختيار سياسة ومنهجية السريان
+ */
+export async function handleQuickPresetCycle(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string,
+  workDays: number,
+  restDays: number
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const job = await systemDataService.getJobByDeptAndCode(deptCode, jobCode);
+  if (!job) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const messageId = ctx.callbackQuery?.message?.message_id || 0;
+
+  await setPendingJobMatrixAction(telegramId, {
+    action: 'edit_job_cycle_policy',
+    deptCode,
+    jobCode,
+    draft: { workDays, restDays },
+    messageId,
+  });
+
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const keyboard = new InlineKeyboard()
+    .text('⚡ تجزئة زمنية فورية (من اليوم)', `action:job:apply_policy:${deptCode}:${jobCode}:IMMEDIATE_PRORATED`)
+    .row()
+    .text('🔄 بدءاً من الدورة القادمة (بعد التسوية)', `action:job:apply_policy:${deptCode}:${jobCode}:NEXT_CYCLE`)
+    .row()
+    .text('👥 افتراضي للتعيينات الجديدة فقط', `action:job:apply_policy:${deptCode}:${jobCode}:NEW_HIRES_ONLY`)
+    .row()
+    .text('📅 تحديد تاريخ سريان مخصص', `action:job:prompt_custom_date:${deptCode}:${jobCode}`)
+    .row()
+    .text('◀️ إلغاء والعودة لبطاقة الوظيفة', `action:job:view:${deptCode}:${jobCode}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const totalCycleDays = workDays + restDays;
+  const currentRatio = (job.restDays / (job.workDays || 20)).toFixed(3);
+  const newRatio = (restDays / (workDays || 20)).toFixed(3);
+
+  const text =
+    `⏱️ *تبديل دورة العمل (${workDays}/${restDays}) — اختيار سياسة ومنهجية السريان*\n` +
+    `────────────────────────────\n` +
+    `🏢 *القسم:* \`${deptCode}\` | 💼 *الوظيفة:* \`${job.name}\`\n\n` +
+    `• الدورة الحالية: *${job.workDays} عمل / ${job.restDays} راحة* (معدل: ${currentRatio})\n` +
+    `• الدورة المقترحة: *${workDays} عمل / ${restDays} راحة* (معدل: ${newRatio} | إجمالي ${totalCycleDays} يوماً)\n\n` +
+    `⚠️ *تنبيه مالي وإداري:*\n` +
+    `تغيير دورة العمل يترتب عليه تعديل في استحقاقات بدل الإجازات.\n` +
+    `👇 *اختر سياسة ومنهجية سريان هذا التعديل لضمان التوثيق المالي العادل:*`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * ⚡ تبديل دورة العمل للوظيفة (تتبدل بالتتابع بين 30/10 ⬅️ 40/10 ⬅️ 26/4) مع إلزام اختيار منهجية السريان
  */
 export async function handleJobToggleCycle(
   ctx: MyContext,
@@ -311,32 +394,12 @@ export async function handleJobToggleCycle(
   const job = await systemDataService.getJobByDeptAndCode(deptCode, jobCode);
   if (!job) return;
 
-  const newWork = job.workDays === 20 ? 24 : 20;
-  const newRest = job.workDays === 20 ? 6 : 10;
-  const newNature = newWork === 20 ? 'دورة قياسية (20+10)' : 'دورة ممتدة (24+6)';
-
-  await prisma.jobTitle.update({
-    where: { id: job.id },
-    data: {
-      workDays: newWork,
-      restDays: newRest,
-      totalCycleDays: newWork + newRest,
-      shiftNature: newNature,
-    },
-  });
-  await systemDataService.invalidateDepartmentsAndJobs();
-
-  if (ctx.callbackQuery) {
-    await ctx.answerCallbackQuery({
-      text: `تم تعديل الدورة إلى: ${newWork} عمل / ${newRest} راحة`,
-    });
-  }
-
-  await renderJobDetail(ctx, deptCode, jobCode, true);
+  const nextCycle = getNextQuickCycle(job.workDays, job.restDays);
+  await handleQuickPresetCycle(ctx, deptCode, jobCode, nextCycle.workDays, nextCycle.restDays);
 }
 
 /**
- * ⏱️ بدء معالج تخصيص دورة العمل والإجازات (الخطوة 1: أيام العمل)
+ * ⏱️ بدء معالج تخصيص دورة العمل والإجازات (الخطوة 1: أيام العمل أو اختيار دورة جاهزة)
  */
 export async function handleStartEditJobCycle(
   ctx: MyContext,
@@ -358,10 +421,16 @@ export async function handleStartEditJobCycle(
   if (ctx.callbackQuery) await ctx.answerCallbackQuery();
 
   const keyboard = new InlineKeyboard()
-    .text('20 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:20`)
-    .text('24 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:24`)
+    .text('⚡ 30 عمل / 10 راحة', `action:job:quick_preset:${deptCode}:${jobCode}:30:10`)
+    .text('⚡ 40 عمل / 10 راحة', `action:job:quick_preset:${deptCode}:${jobCode}:40:10`)
+    .row()
+    .text('⚡ 26 عمل / 4 راحة', `action:job:quick_preset:${deptCode}:${jobCode}:26:4`)
+    .text('⚡ 20 عمل / 10 راحة', `action:job:quick_preset:${deptCode}:${jobCode}:20:10`)
+    .row()
+    .text('30 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:30`)
+    .text('40 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:40`)
     .text('26 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:26`)
-    .text('6 أيام', `action:job:set_wd:${deptCode}:${jobCode}:6`)
+    .text('20 يوماً', `action:job:set_wd:${deptCode}:${jobCode}:20`)
     .row()
     .text('◀️ إلغاء والعودة لبطاقة الوظيفة', `action:job:view:${deptCode}:${jobCode}`)
     .row()
@@ -371,8 +440,8 @@ export async function handleStartEditJobCycle(
     `⏱️ *تخصيص دورة العمل والإجازات — الخطوة 1 من 2*\n` +
     `────────────────────────────\n` +
     `🏢 *القسم:* \`${deptCode}\` | 💼 *الوظيفة:* \`${jobCode}\`\n\n` +
-    `أدخل عدد *أيام العمل بالموقع (W)* الآن في المحادثة:\n` +
-    `(أو اختر مباشرة أحد الخيارات الشائعة أدناه):`;
+    `⚡ *دورات العمل الميدانية المعتمدة (تحديد فوري):*\n` +
+    `يمكنك الضغط على إحدى الدورات الجاهزة أعلاه، أو إدخال عدد *أيام العمل بالموقع (W)* نصياً في المحادثة:`;
 
   if (ctx.callbackQuery) {
     try {
@@ -409,8 +478,8 @@ export async function handleSetWorkDays(
 
   const keyboard = new InlineKeyboard()
     .text('10 أيام', `action:job:set_rd:${deptCode}:${jobCode}:10`)
-    .text('6 أيام', `action:job:set_rd:${deptCode}:${jobCode}:6`)
     .text('4 أيام', `action:job:set_rd:${deptCode}:${jobCode}:4`)
+    .text('6 أيام', `action:job:set_rd:${deptCode}:${jobCode}:6`)
     .text('1 يوم', `action:job:set_rd:${deptCode}:${jobCode}:1`)
     .row()
     .text('◀️ رجوع لأيام العمل', `action:job:edit_cycle:${deptCode}:${jobCode}`)

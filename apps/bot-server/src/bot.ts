@@ -79,6 +79,7 @@ import {
   handleStartEditJobTitle,
   handleStartEditDeptName,
   handleStartEditJobCycle,
+  handleQuickPresetCycle,
   handleSetWorkDays,
   handleSetRestDays,
   handleApplyCyclePolicy,
@@ -294,6 +295,15 @@ export function createBot(): Bot<MyContext> {
   });
   bot.callbackQuery(/^action:job:edit_cycle:(.+):(.+)$/, async (ctx) => {
     await handleStartEditJobCycle(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:job:quick_preset:(.+):(.+):(\d+):(\d+)$/, async (ctx) => {
+    await handleQuickPresetCycle(
+      ctx,
+      ctx.match[1],
+      ctx.match[2],
+      parseInt(ctx.match[3], 10),
+      parseInt(ctx.match[4], 10)
+    );
   });
   bot.callbackQuery(/^action:job:set_wd:(.+):(.+):(\d+)$/, async (ctx) => {
     await handleSetWorkDays(ctx, ctx.match[1], ctx.match[2], parseInt(ctx.match[3], 10));
