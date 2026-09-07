@@ -293,6 +293,7 @@ model Worker {
   idCardExpiryDate       DateTime? // تاريخ انتهاء سريان البطاقة (مستخرج بالذكاء الاصطناعي من ظهر البطاقة)
   idCardExpiryAlertSentAt DateTime? // تاريخ إرسال إشعار التنبيه قبل الانتهاء بشهر
   bloodType              String?
+  address                String?   // محل الإقامة / العنوان المستخرج بالذكاء الاصطناعي أو المسجل يدوياً
   telegramId             BigInt?   @unique
   status                 String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RESIGNED
   terminationDate        DateTime?
@@ -333,6 +334,7 @@ model Worker {
   foodShipmentsReceived  FoodInboundShipment[]
   expenseClaims          WorkerExpenseClaim[]
   editRequests           WorkerEditRequest[]
+  documents              WorkerDocument[]
 
   @@index([phoneBlindIndex])
   @@index([status])
@@ -340,6 +342,26 @@ model Worker {
   @@index([legacyCode])
   @@index([idCardExpiryDate])
   @@map("workers")
+}
+
+model WorkerDocument {
+  id             String   @id @default(uuid())
+  workerId       String
+  title          String   // e.g. "عقد عمل", "شهادة صحية", "فيش وتشبيه", "مؤهل دراسي"
+  category       String   @default("OTHER") // NATIONAL_ID, CONTRACT, HEALTH_CERTIFICATE, CRIMINAL_RECORD, DRIVING_LICENSE, EDUCATION, OTHER
+  fileName       String
+  fileType       String   // "image/jpeg", "application/pdf", etc.
+  fileUri        String   // المسار المحلي: attachments/workers/OP-DRV-001/filename.pdf
+  driveFileId    String?  // معرف الملف على Google Drive إن وُجد
+  fileSizeBytes  BigInt?
+  uploadedBy     BigInt?  // Telegram ID لمن قام برفع المستند
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  worker         Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([workerId])
+  @@map("worker_documents")
 }
 
 model WorkerEditRequest {

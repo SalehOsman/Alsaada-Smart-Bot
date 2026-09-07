@@ -1,9 +1,12 @@
-import { InlineKeyboard } from 'grammy';
+import fs from 'node:fs';
+import path from 'node:path';
+import { InlineKeyboard, InputFile } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
 import { workerService } from '../services/worker.service.js';
 import { workerEditService } from '../services/worker-edit.service.js';
+import { googleDriveService } from '../services/google-drive.service.js';
 import {
   setPendingWorkerEdit,
   getPendingWorkerEdit,
@@ -21,6 +24,7 @@ const FIELD_LABELS: Record<string, string> = {
   emergencyPhone: 'هاتف الطوارئ',
   walletNumber: 'رقم المحفظة / الحساب البنكي',
   idCardExpiryDate: 'تاريخ انتهاء سريان البطاقة',
+  address: 'محل الإقامة / العنوان',
   drivingLicense: 'رخصة القيادة',
   militaryStatus: 'الموقف التجنيدي',
   maritalStatus: 'الحالة الاجتماعية',
@@ -138,6 +142,7 @@ export async function renderWorkerEditMenu(
   }
 
   const expiryFormatted = worker.idCardExpiryDate ? formatDate(worker.idCardExpiryDate) : 'غير مسجل';
+  const addressFormatted = worker.address || 'غير مسجل';
 
   const keyboard = new InlineKeyboard()
     .text(`🏷️ كود العامل القديم (${worker.legacyCode || 'غير مسجل'})`, `action:worker_edit:field:${worker.id}:legacyCode`)
@@ -150,9 +155,14 @@ export async function renderWorkerEditMenu(
     .row()
     .text(`💳 رقم المحفظة (${cleanWallet})`, `action:worker_edit:field:${worker.id}:walletNumber`)
     .row()
+    .text(`🏠 العنوان (${addressFormatted.length > 20 ? addressFormatted.substring(0, 18) + '...' : addressFormatted})`, `action:worker_edit:field:${worker.id}:address`)
+    .row()
     .text(`⏳ انتهاء البطاقة (${expiryFormatted})`, `action:worker_edit:field:${worker.id}:idCardExpiryDate`)
     .row()
     .text('🚨 هاتف الطوارئ', `action:worker_edit:field:${worker.id}:emergencyPhone`)
+    .row()
+    .text('📁 إضافة مرفق للعامل (صور / PDF)', `action:worker_edit:add_doc:${worker.id}`)
+    .text('📂 استعراض المرفقات', `action:worker_edit:list_docs:${worker.id}`)
     .row()
     .text('◀️ رجوع لقائمة العمال', 'action:worker_edit:pick')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -167,10 +177,11 @@ export async function renderWorkerEditMenu(
     `👤 *العامل:* *${worker.name}* (كود رسمي: \`${worker.code}\`)\n` +
     `🏷️ *الكود القديم الأرشيفي:* *${worker.legacyCode || 'غير مسجل'}*\n` +
     `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'غير محدد'}\n` +
+    `🏠 *العنوان ومحل الإقامة:* *${addressFormatted}*\n` +
     `📱 *الهاتف:* \`${cleanPhone}\` | 💳 *المحفظة:* \`${cleanWallet}\`\n` +
     `⏳ *تاريخ انتهاء البطاقة:* *${expiryFormatted}*\n` +
     '━━━━━━━━━━━━━━━━━━━━━\n' +
-    'اختر البيان المراد تعديله من القائمة أدناه:';
+    'اختر البيان المراد تعديله أو أضف وثائق ومرفقات للعامل:';
 
   if (inPlace && ctx.callbackQuery) {
     try {
@@ -217,6 +228,7 @@ export async function handleStartEditWorkerField(
   if (fieldKey === 'legacyCode') currentVal = worker.legacyCode || '-';
   else if (fieldKey === 'name') currentVal = worker.name;
   else if (fieldKey === 'nickname') currentVal = worker.nickname || '-';
+  else if (fieldKey === 'address') currentVal = worker.address || '-';
   else if (fieldKey === 'idCardExpiryDate')
     currentVal = worker.idCardExpiryDate ? formatDate(worker.idCardExpiryDate) : '-';
 
@@ -235,6 +247,8 @@ export async function handleStartEditWorkerField(
       ? 'يرجى إدخال تاريخ انتهاء البطاقة الجديد بصيغة: *YYYY-MM-DD* (مثال: 2029-10-15):'
       : fieldKey === 'legacyCode'
       ? 'يرجى إدخال كود العامل القديم / الأرشيفي (أرقام أو حروف إنجليزية):'
+      : fieldKey === 'address'
+      ? 'يرجى إدخال العنوان ومحل الإقامة الجديد بالتفصيل (المحافظة، المركز/القسم، القرية أو الشارع):'
       : `يرجى إدخال القيمة الجديدة لـ *${fieldName}* الآن:`);
 
   let promptMsgId = 0;
@@ -300,6 +314,11 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
   } else if (editState.fieldKey === 'legacyCode') {
     if (inputRaw.length < 1 || inputRaw === '-') {
       await ctx.reply('⚠️ كود العامل القديم غير صالح.');
+      return true;
+    }
+  } else if (editState.fieldKey === 'address') {
+    if (inputRaw.length < 3) {
+      await ctx.reply('⚠️ يرجى إدخال عنوان واضح ومفصل (المحافظة، المركز/القسم، القرية أو الشارع).');
       return true;
     }
   }
@@ -599,5 +618,331 @@ export async function handleViewPendingEditRequests(ctx: MyContext): Promise<voi
     await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
   } else {
     await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+  }
+}
+
+/**
+ * 📁 بدء رفع مستند أو مرفق إضافي للعامل (صور / PDF)
+ */
+export async function handleStartAddWorkerDoc(ctx: MyContext, workerId: string): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+  if (!ctx.from) return;
+
+  const worker = await prisma.worker.findUnique({ where: { id: workerId } });
+  if (!worker) {
+    await ctx.reply('⚠️ لم يتم العثور على سجل العامل.');
+    return;
+  }
+
+  const keyboard = new InlineKeyboard()
+    .text('◀️ إلغاء والعودة لبيانات العامل', `action:worker_edit:menu:${worker.id}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    '📁 *إضافة مرفق أو مستند لملف العامل*\n' +
+    '━━━━━━━━━━━━━━━━━━━━━\n' +
+    `👤 *العامل:* *${worker.name}* (\`${worker.code}\`)\n` +
+    `🗂️ *المجلد المخصص للعامل:* \`attachments/workers/${worker.code}/\`\n\n` +
+    'يرجى إرسال المستند الآن كـ *ملف (Document)* أو *صورة (Photo)*:\n\n' +
+    '📌 *المستندات المقبولة:*\n' +
+    '• ملفات PDF (عقود، شهادات صحية، فيش وتشبيه، إقرارات، إلخ)\n' +
+    '• صور مستندات ورخص وشهادات (JPG, PNG)\n' +
+    '• سيتم حفظ المرفق تلقائياً في مجلد العامل الخاص ومزامنته سحابياً مع Google Drive.';
+
+  let promptMsgId = 0;
+  if (ctx.callbackQuery) {
+    try {
+      const msg = await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      promptMsgId = typeof msg === 'object' ? msg.message_id : 0;
+    } catch {
+      const sent = await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      promptMsgId = sent.message_id;
+    }
+  } else {
+    const sent = await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+    promptMsgId = sent.message_id;
+  }
+
+  const telegramId = BigInt(ctx.from.id);
+  const editState: PendingWorkerEditState = {
+    workerId: worker.id,
+    workerCode: worker.code,
+    workerName: worker.name,
+    promptMsgId,
+    isDocUpload: true,
+  };
+
+  await setPendingWorkerEdit(telegramId, editState);
+}
+
+/**
+ * 📥 استقبال ومعالجة المرفق المرفوع لملف العامل (صورة أو PDF)
+ */
+export async function handleWorkerEditDocumentInput(ctx: MyContext): Promise<boolean> {
+  if (!ctx.from) return false;
+  const telegramId = BigInt(ctx.from.id);
+  const editState = await getPendingWorkerEdit(telegramId);
+  if (!editState || !editState.isDocUpload) return false;
+
+  let fileId = '';
+  let originalFileName = '';
+  let mimeType = 'application/octet-stream';
+
+  if (ctx.message?.photo && ctx.message.photo.length > 0) {
+    const photo = ctx.message.photo[ctx.message.photo.length - 1];
+    fileId = photo.file_id;
+    originalFileName = `photo_${Date.now()}.jpg`;
+    mimeType = 'image/jpeg';
+  } else if (ctx.message?.document) {
+    const doc = ctx.message.document;
+    fileId = doc.file_id;
+    originalFileName = doc.file_name || `doc_${Date.now()}.pdf`;
+    mimeType = doc.mime_type || 'application/pdf';
+  } else {
+    return false;
+  }
+
+  const waitMsg = await ctx.reply('⏳ جاري استلام وحفظ المرفق في مجلد العامل والمزامنة مع Google Drive...');
+
+  try {
+    const file = await ctx.api.getFile(fileId);
+    if (!file.file_path) {
+      throw new Error('تعذر تنزيل الملف من خوادم تليجرام.');
+    }
+
+    const downloadUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`;
+    const res = await fetch(downloadUrl);
+    if (!res.ok) {
+      throw new Error(`فشل تنزيل الملف من تليجرام (HTTP ${res.status})`);
+    }
+
+    const fileBuffer = Buffer.from(await res.arrayBuffer());
+
+    // حفظ في مجلد العامل المخصص ورفع لـ Google Drive
+    const archiveResult = await googleDriveService.processAndArchiveWorkerAttachment(
+      editState.workerCode,
+      originalFileName,
+      fileBuffer,
+      mimeType
+    );
+
+    // تسجيل المستند في Prisma WorkerDocument
+    await prisma.workerDocument.create({
+      data: {
+        workerId: editState.workerId,
+        title: originalFileName,
+        category: 'OTHER',
+        fileName: archiveResult.fileName,
+        fileType: mimeType,
+        fileUri: archiveResult.localPath,
+        driveFileId: archiveResult.driveFileId,
+        fileSizeBytes: BigInt(fileBuffer.length),
+        uploadedBy: telegramId,
+      },
+    });
+
+    await clearPendingWorkerEdit(telegramId);
+    await ctx.api.deleteMessage(ctx.chat!.id, waitMsg.message_id).catch(() => {});
+
+    const completionKeyboard = new InlineKeyboard()
+      .text('📁 إضافة مرفق آخر لنفس العامل', `action:worker_edit:add_doc:${editState.workerId}`)
+      .row()
+      .text('📂 استعراض كافة مرفقات العامل', `action:worker_edit:list_docs:${editState.workerId}`)
+      .row()
+      .text('👤 العودة لبيانات العامل', `action:worker_edit:menu:${editState.workerId}`)
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    const driveNote = archiveResult.driveFileId
+      ? '\n☁️ *Google Drive:* تم رفع ومزامنة المستند سحابياً بنجاح.'
+      : '';
+
+    const successText =
+      '🎉 *تم حفظ وأرشفة مستند العامل بنجاح!*\n' +
+      '━━━━━━━━━━━━━━━━━━━━━\n' +
+      `👤 *العامل:* *${editState.workerName}* (\`${editState.workerCode}\`)\n` +
+      `📄 *اسم المستند:* \`${originalFileName}\`\n` +
+      `📁 *المسار المحلي:* \`${archiveResult.localPath}\`\n` +
+      `📊 *الحجم:* ${(fileBuffer.length / 1024).toFixed(1)} KB` +
+      driveNote +
+      '\n━━━━━━━━━━━━━━━━━━━━━\n' +
+      '✅ تم تسجيل المستند وربطه بملف العامل في قاعدة البيانات بنجاح.';
+
+    await ctx.reply(successText, {
+      parse_mode: 'Markdown',
+      reply_markup: completionKeyboard,
+    });
+    return true;
+  } catch (err: any) {
+    console.error('Error saving worker attachment:', err);
+    await ctx.api.deleteMessage(ctx.chat!.id, waitMsg.message_id).catch(() => {});
+    await ctx.reply(`❌ تعذر حفظ المرفق: ${err?.message || 'خطأ غير معروف'}`);
+    return true;
+  }
+}
+
+/**
+ * 📂 استعراض كافة مرفقات ومستندات العامل
+ */
+export async function handleListWorkerDocs(ctx: MyContext, workerId: string): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+
+  const worker = await prisma.worker.findUnique({
+    where: { id: workerId },
+    include: { documents: { orderBy: { createdAt: 'desc' } } },
+  });
+
+  if (!worker) {
+    await ctx.reply('⚠️ لم يتم العثور على سجل العامل.');
+    return;
+  }
+
+  const keyboard = new InlineKeyboard();
+
+  let text =
+    '📂 *سجل مرفقات ومستندات العامل*\n' +
+    '━━━━━━━━━━━━━━━━━━━━━\n' +
+    `👤 *العامل:* *${worker.name}* (\`${worker.code}\`)\n` +
+    `🗂️ *مجلد المرفقات المخصص:* \`attachments/workers/${worker.code}/\`\n\n` +
+    '🪪 *وثائق الهوية الرسمية:*\n';
+
+  if (worker.idCardFrontPath) {
+    text += `• وجه البطاقة: \`${worker.idCardFrontPath}\`\n`;
+    keyboard.text('👁️ عرض وجه البطاقة', `action:worker_doc:send_id:${worker.id}:front`).row();
+  } else {
+    text += '• وجه البطاقة: غير متوفر\n';
+  }
+
+  if (worker.idCardBackPath) {
+    text += `• ظهر البطاقة: \`${worker.idCardBackPath}\`\n`;
+    keyboard.text('👁️ عرض ظهر البطاقة', `action:worker_doc:send_id:${worker.id}:back`).row();
+  } else {
+    text += '• ظهر البطاقة: غير متوفر\n';
+  }
+
+  text += `\n📑 *المستندات والملحقات الإضافية (${worker.documents.length}):*\n`;
+
+  if (worker.documents.length === 0) {
+    text += 'لا توجد مرفقات إضافية مسجلة حالياً.\n';
+  } else {
+    worker.documents.forEach((doc, idx) => {
+      const sizeKb = doc.fileSizeBytes ? `(${(Number(doc.fileSizeBytes) / 1024).toFixed(0)} KB)` : '';
+      text += `${idx + 1}. *${doc.title}* ${sizeKb}\n   📁 \`${doc.fileUri}\`\n`;
+      keyboard.text(`📥 تحميل [${doc.title.substring(0, 18)}]`, `action:worker_doc:send:${doc.id}`).row();
+    });
+  }
+
+  keyboard
+    .text('📁 إضافة مرفق جديد', `action:worker_edit:add_doc:${worker.id}`)
+    .row()
+    .text('👤 العودة لبيانات العامل', `action:worker_edit:menu:${worker.id}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {
+      // fallback
+    }
+  }
+
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * 📥 إرسال مستند العامل مباشرة في تليجرام للمعاينة أو التنزيل
+ */
+export async function handleSendWorkerDoc(ctx: MyContext, docId: string): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({ text: 'جاري إرسال المستند...' }).catch(() => {});
+  }
+
+  const doc = await prisma.workerDocument.findUnique({
+    where: { id: docId },
+    include: { worker: true },
+  });
+
+  if (!doc) {
+    await ctx.reply('⚠️ لم يتم العثور على سجل المستند.');
+    return;
+  }
+
+  const fullPath = path.isAbsolute(doc.fileUri) ? doc.fileUri : path.join(process.cwd(), doc.fileUri);
+  if (!fs.existsSync(fullPath)) {
+    await ctx.reply(
+      `⚠️ لم يتم العثور على الملف محلياً في المسار: \`${doc.fileUri}\`\n${
+        doc.driveFileId ? `☁️ معرف Google Drive: \`${doc.driveFileId}\`` : ''
+      }`
+    );
+    return;
+  }
+
+  try {
+    const isImage = doc.fileType.startsWith('image/');
+    if (isImage) {
+      await ctx.replyWithPhoto(new InputFile(fullPath, doc.fileName), {
+        caption: `📄 *${doc.title}*\n👤 العامل: *${doc.worker.name}* (\`${doc.worker.code}\`)`,
+        parse_mode: 'Markdown',
+      });
+    } else {
+      await ctx.replyWithDocument(new InputFile(fullPath, doc.fileName), {
+        caption: `📄 *${doc.title}*\n👤 العامل: *${doc.worker.name}* (\`${doc.worker.code}\`)`,
+        parse_mode: 'Markdown',
+      });
+    }
+  } catch (err: any) {
+    console.error('Error sending worker doc:', err);
+    await ctx.reply(`❌ تعذر إرسال المستند: ${err?.message || 'خطأ غير متوقع'}`);
+  }
+}
+
+/**
+ * 🪪 إرسال صورة بطاقة العامل (وجه أو ظهر)
+ */
+export async function handleSendWorkerIdPhoto(
+  ctx: MyContext,
+  workerId: string,
+  side: 'front' | 'back'
+): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({ text: 'جاري إرسال الصورة...' }).catch(() => {});
+  }
+
+  const worker = await prisma.worker.findUnique({ where: { id: workerId } });
+  if (!worker) {
+    await ctx.reply('⚠️ لم يتم العثور على سجل العامل.');
+    return;
+  }
+
+  const relPath = side === 'front' ? worker.idCardFrontPath : worker.idCardBackPath;
+  if (!relPath) {
+    await ctx.reply(`⚠️ صورة ${side === 'front' ? 'وجه' : 'ظهر'} البطاقة غير مسجلة.`);
+    return;
+  }
+
+  const fullPath = path.isAbsolute(relPath) ? relPath : path.join(process.cwd(), relPath);
+  if (!fs.existsSync(fullPath)) {
+    await ctx.reply(`⚠️ تعذر العثور على الصورة محلياً في المسار: \`${relPath}\``);
+    return;
+  }
+
+  try {
+    await ctx.replyWithPhoto(new InputFile(fullPath), {
+      caption: `🪪 *صورة ${side === 'front' ? 'وجه' : 'ظهر'} البطاقة*\n👤 العامل: *${worker.name}* (\`${worker.code}\`)`,
+      parse_mode: 'Markdown',
+    });
+  } catch (err: any) {
+    console.error('Error sending worker ID photo:', err);
+    await ctx.reply(`❌ تعذر إرسال الصورة: ${err?.message || 'خطأ غير متوقع'}`);
   }
 }

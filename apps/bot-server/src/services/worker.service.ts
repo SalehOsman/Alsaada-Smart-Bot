@@ -39,6 +39,7 @@ export interface CreateWorkerInput {
   idCardFrontPath?: string;
   idCardBackPath?: string;
   idCardExpiryDate?: Date;
+  address?: string;
   notes?: string;
 }
 
@@ -315,6 +316,7 @@ export class WorkerService {
         idCardFrontPath: input.idCardFrontPath,
         idCardBackPath: input.idCardBackPath,
         idCardExpiryDate: input.idCardExpiryDate || null,
+        address: input.address?.trim() || null,
         phoneEncrypted,
         phoneBlindIndex,
         emergencyContactName: input.emergencyContactName,

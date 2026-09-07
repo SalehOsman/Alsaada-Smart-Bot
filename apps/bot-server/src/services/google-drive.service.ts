@@ -11,10 +11,10 @@ export interface SaveWorkerIdPhotosResult {
 }
 
 export class GoogleDriveService {
-  private baseDir = path.resolve(process.cwd(), 'attachments/worker-ids');
+  private baseDir = path.resolve(process.cwd(), 'attachments/workers');
 
   constructor() {
-    // التأكد من وجود مجلد المرفقات المحلي
+    // التأكد من وجود مجلد المرفقات المحلي الرئيسي
     try {
       if (!fs.existsSync(this.baseDir)) {
         fs.mkdirSync(this.baseDir, { recursive: true });
@@ -25,8 +25,21 @@ export class GoogleDriveService {
   }
 
   /**
-   * 💾 حفظ صور بطاقة العامل في مجلد المرفقات المحلي بمسمى كود العامل
-   * مثال: attachments/worker-ids/OP-DRV-001_front.jpg
+   * 📁 جلب أو إنشاء المجلد الخاص بالعامل باسم كوده الوظيفي
+   * مثال: attachments/workers/OP-DRV-001/
+   */
+  getWorkerDir(workerCode: string): string {
+    const sanitizedCode = workerCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const workerDir = path.join(this.baseDir, sanitizedCode);
+    if (!fs.existsSync(workerDir)) {
+      fs.mkdirSync(workerDir, { recursive: true });
+    }
+    return workerDir;
+  }
+
+  /**
+   * 💾 حفظ صور بطاقة العامل في مجلد العامل الخاص بمسمى كود العامل
+   * مثال: attachments/workers/OP-DRV-001/OP-DRV-001_front.jpg
    */
   saveWorkerIdLocally(
     workerCode: string,
@@ -37,30 +50,51 @@ export class GoogleDriveService {
     const result: { localFrontPath?: string; localBackPath?: string } = {};
 
     try {
-      if (!fs.existsSync(this.baseDir)) {
-        fs.mkdirSync(this.baseDir, { recursive: true });
-      }
+      const workerDir = this.getWorkerDir(sanitizedCode);
 
       if (frontBuffer && frontBuffer.length > 0) {
         const frontFilename = `${sanitizedCode}_front.jpg`;
-        const frontFullPath = path.join(this.baseDir, frontFilename);
+        const frontFullPath = path.join(workerDir, frontFilename);
         fs.writeFileSync(frontFullPath, frontBuffer);
-        result.localFrontPath = `attachments/worker-ids/${frontFilename}`;
-        console.log(`✅ [STORAGE] Saved front ID locally: ${result.localFrontPath}`);
+        result.localFrontPath = `attachments/workers/${sanitizedCode}/${frontFilename}`;
+        console.log(`✅ [STORAGE] Saved front ID locally in worker folder: ${result.localFrontPath}`);
       }
 
       if (backBuffer && backBuffer.length > 0) {
         const backFilename = `${sanitizedCode}_back.jpg`;
-        const backFullPath = path.join(this.baseDir, backFilename);
+        const backFullPath = path.join(workerDir, backFilename);
         fs.writeFileSync(backFullPath, backBuffer);
-        result.localBackPath = `attachments/worker-ids/${backFilename}`;
-        console.log(`✅ [STORAGE] Saved back ID locally: ${result.localBackPath}`);
+        result.localBackPath = `attachments/workers/${sanitizedCode}/${backFilename}`;
+        console.log(`✅ [STORAGE] Saved back ID locally in worker folder: ${result.localBackPath}`);
       }
     } catch (err) {
       console.error('❌ [STORAGE] Error saving worker ID photos locally:', err);
     }
 
     return result;
+  }
+
+  /**
+   * 📎 حفظ مستند أو مرفق إضافي في مجلد العامل (صورة أو PDF)
+   */
+  saveWorkerAttachmentLocally(
+    workerCode: string,
+    originalFileName: string,
+    fileBuffer: Buffer
+  ): { localPath: string; fileName: string } {
+    const sanitizedCode = workerCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const workerDir = this.getWorkerDir(sanitizedCode);
+
+    const ext = path.extname(originalFileName) || '.jpg';
+    const baseName = path.basename(originalFileName, ext).replace(/[^a-zA-Z0-9_\u0600-\u06FF-]/g, '_');
+    const safeFileName = `${Date.now()}_${baseName}${ext}`;
+    const fullPath = path.join(workerDir, safeFileName);
+
+    fs.writeFileSync(fullPath, fileBuffer);
+    const localPath = `attachments/workers/${sanitizedCode}/${safeFileName}`;
+    console.log(`✅ [STORAGE] Saved worker attachment: ${localPath}`);
+
+    return { localPath, fileName: safeFileName };
   }
 
   /**
@@ -219,6 +253,30 @@ export class GoogleDriveService {
       localBackPath: local.localBackPath,
       driveFrontId,
       driveBackId,
+    };
+  }
+
+  /**
+   * 🚀 معالجة حفظ مستند إضافي للعامل محلياً ورفعه إلى Google Drive ذرياً
+   */
+  async processAndArchiveWorkerAttachment(
+    workerCode: string,
+    originalFileName: string,
+    fileBuffer: Buffer,
+    mimeType = 'application/pdf'
+  ): Promise<{ localPath: string; fileName: string; driveFileId?: string }> {
+    const saved = this.saveWorkerAttachmentLocally(workerCode, originalFileName, fileBuffer);
+    let driveFileId: string | undefined = undefined;
+
+    const sanitizedCode = workerCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const driveName = `[${sanitizedCode}]_${saved.fileName}`;
+    const dId = await this.uploadFileToDrive(driveName, fileBuffer, mimeType);
+    if (dId) driveFileId = dId;
+
+    return {
+      localPath: saved.localPath,
+      fileName: saved.fileName,
+      driveFileId,
     };
   }
 }

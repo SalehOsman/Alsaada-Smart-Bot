@@ -12,6 +12,7 @@ export interface AiVisionScanResult {
   passportNumber?: string;
   expiryDateStr?: string; // YYYY-MM-DD
   fullName?: string;
+  address?: string; // محل الإقامة / العنوان الكامل
   birthDate?: Date;
   gender?: 'MALE' | 'FEMALE';
   governorateNameAr?: string;
@@ -80,6 +81,7 @@ export class AiVisionIdService {
    - passportNumber: رقم جواز السفر.
    - expiryDate: تاريخ انتهاء سريان البطاقة أو الجواز بصيغة "YYYY-MM-DD". في ظهر البطاقة المصرية ابحث عن عبارة "سارية حتى" أو تاريخ الانتهاء.
    - fullName: اسم الشخص الكامل المدون على البطاقة/الجواز.
+   - address: العنوان الكامل ومحل الإقامة المدون على البطاقة (سواء في الوجه أو الظهر) أو جواز السفر (مثل: المحافظة، المركز/القسم، القرية/الشارع).
 
 أرجع النتيجة حصراً بصيغة JSON التالية دون أي نصوص إضافية:
 {
@@ -90,6 +92,7 @@ export class AiVisionIdService {
   "passportNumber": "string or null",
   "expiryDate": "YYYY-MM-DD or null",
   "fullName": "string or null",
+  "address": "string or null",
   "notes": "string"
 }`;
 
@@ -223,6 +226,7 @@ export class AiVisionIdService {
         isQualityAcceptable: true,
         nationalIdNumber: rawNid,
         fullName: parsedJson.fullName || undefined,
+        address: parsedJson.address ? String(parsedJson.address).trim() : undefined,
         birthDate: parsedNid.info.birthDate,
         gender: parsedNid.info.gender,
         governorateNameAr: parsedNid.info.governorateNameAr,
@@ -245,6 +249,7 @@ export class AiVisionIdService {
         detectedDocType: detectedType,
         isQualityAcceptable: true,
         expiryDateStr: expiryDate,
+        address: parsedJson.address ? String(parsedJson.address).trim() : undefined,
         rawJson: parsedJson,
       };
     }
@@ -257,6 +262,7 @@ export class AiVisionIdService {
       isQualityAcceptable: true,
       passportNumber: rawPass || undefined,
       fullName: parsedJson.fullName || undefined,
+      address: parsedJson.address ? String(parsedJson.address).trim() : undefined,
       expiryDateStr: parsedJson.expiryDate || undefined,
       rawJson: parsedJson,
     };

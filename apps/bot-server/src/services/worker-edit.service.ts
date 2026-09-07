@@ -118,6 +118,8 @@ export class WorkerEditService {
       dataToUpdate.jobTitle = cleanValue;
     } else if (fieldKey === 'siteId') {
       dataToUpdate.siteId = cleanValue;
+    } else if (fieldKey === 'address') {
+      dataToUpdate.address = cleanValue;
     }
 
     const updated = await prisma.worker.update({

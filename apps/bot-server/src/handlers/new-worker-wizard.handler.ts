@@ -26,6 +26,7 @@ export enum WorkerWizardStep {
   AI_EDIT_NAME = 'AI_EDIT_NAME',
   AI_EDIT_ID = 'AI_EDIT_ID',
   AI_EDIT_EXPIRY = 'AI_EDIT_EXPIRY',
+  AI_EDIT_ADDRESS = 'AI_EDIT_ADDRESS',
   FULL_NAME = 'FULL_NAME',
   ID_NUMBER = 'ID_NUMBER',
   PASSPORT_NATIONALITY = 'PASSPORT_NATIONALITY',
@@ -320,9 +321,17 @@ async function analyzePhotosDirectly(
         );
       }
 
-      // فحص تاريخ الانتهاء من الظهر
-      if (backScan && backScan.isValid && backScan.expiryDateStr) {
-        wizard.data.idCardExpiryDateStr = backScan.expiryDateStr;
+      // فحص تاريخ الانتهاء والعنوان من ظهر ووجه البطاقة
+      if (backScan && backScan.isValid) {
+        if (backScan.expiryDateStr) {
+          wizard.data.idCardExpiryDateStr = backScan.expiryDateStr;
+        }
+        if (backScan.address) {
+          wizard.data.address = backScan.address;
+        }
+      }
+      if (!wizard.data.address && frontScan.address) {
+        wizard.data.address = frontScan.address;
       }
 
       // فحص الازدواجية فورياً
@@ -354,6 +363,9 @@ async function analyzePhotosDirectly(
       wizard.data.idNumber = passportNo;
       if (frontScan.expiryDateStr) {
         wizard.data.idCardExpiryDateStr = frontScan.expiryDateStr;
+      }
+      if (frontScan.address) {
+        wizard.data.address = frontScan.address;
       }
 
       const dup = await workerService.checkDuplicate('PASSPORT', passportNo);
@@ -515,6 +527,18 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
       }
       wizard.data.idCardExpiryDateStr = cleanExpiry;
       wizard.step = wizard.data.isManualFallback ? WorkerWizardStep.NICKNAME : WorkerWizardStep.AI_CONFIRMATION;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    }
+
+    case WorkerWizardStep.AI_EDIT_ADDRESS: {
+      if (inputRaw.length < 3) {
+        await ctx.reply('⚠️ يرجى كتابة عنوان واضح ومفصل (المحافظة، المركز/القسم، الشارع أو القرية).');
+        return true;
+      }
+      wizard.data.address = inputRaw;
+      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
       return true;
@@ -743,6 +767,13 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
+  if (data === 'action:worker_ai_edit:address') {
+    wizard.step = WorkerWizardStep.AI_EDIT_ADDRESS;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
   // اسم الشهرة
   if (data === 'action:worker_step:nick_auto') {
     const autoNick = extractFirstTwoNames(wizard.data.fullName || '');
@@ -941,6 +972,7 @@ async function handleStepBack(
     case WorkerWizardStep.AI_EDIT_NAME:
     case WorkerWizardStep.AI_EDIT_ID:
     case WorkerWizardStep.AI_EDIT_EXPIRY:
+    case WorkerWizardStep.AI_EDIT_ADDRESS:
       wizard.step = WorkerWizardStep.AI_CONFIRMATION;
       break;
     case WorkerWizardStep.FULL_NAME:
@@ -1096,6 +1128,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         `🔢 *رقم الإثبات:* \`${wizard.data.idNumber || '-'}\` (${isNid ? 'رقم قومي مصري' : `جواز سفر - ${wizard.data.nationality}`})\n` +
         (isNid ? `📅 *تاريخ الميلاد والسن:* ${wizard.data.birthDateStr || '-'} (${wizard.data.age || '-'} سنة)\n` : '') +
         (wizard.data.governorateNameAr ? `📍 *المحافظة:* ${wizard.data.governorateNameAr}\n` : '') +
+        (wizard.data.address ? `🏠 *العنوان ومحل الإقامة:* *${wizard.data.address}*\n` : '') +
         `⏳ *تاريخ انتهاء البطاقة:* *${wizard.data.idCardExpiryDateStr || 'غير محدد / قيد الاستيفاء'}*\n` +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'هل هذه البيانات صحيحة للمتابعة؟ يمكنك اعتمادها فوراً أو تصحيح أي بيان.';
@@ -1106,9 +1139,22 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         .text('✏️ تصحيح الاسم', 'action:worker_ai_edit:name')
         .text('✏️ تصحيح الرقم', 'action:worker_ai_edit:id')
         .row()
+        .text('✏️ تصحيح العنوان', 'action:worker_ai_edit:address')
         .text('✏️ تصحيح تاريخ الانتهاء', 'action:worker_ai_edit:expiry')
         .row()
         .text('◀️ إعادة التقاط الصور', 'action:worker_photo:retry_front')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.AI_EDIT_ADDRESS: {
+      text =
+        '🏠 *تصحيح العنوان ومحل الإقامة*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `العنوان الحالي: *${wizard.data.address || 'غير محدد'}*\n\n` +
+        'يرجى إدخال العنوان ومحل الإقامة بالتفصيل (المحافظة، المركز/القسم، القرية أو الشارع):';
+      keyboard
+        .text('◀️ تراجع', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
@@ -1540,6 +1586,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         `🔢 *رقم الإثبات:* \`${wizard.data.idNumber}\` (${wizard.data.idType === 'NATIONAL_ID' ? 'رقم قومي مصري' : `جواز سفر - ${wizard.data.nationality}`})\n` +
         `🎂 *تاريخ الميلاد والسن:* ${wizard.data.birthDateStr || '-'} (${wizard.data.age || '-'} سنة)\n` +
         (wizard.data.governorateNameAr ? `📍 *المحافظة:* ${wizard.data.governorateNameAr}\n` : '') +
+        (wizard.data.address ? `🏠 *العنوان ومحل الإقامة:* *${wizard.data.address}*\n` : '') +
         (wizard.data.idCardExpiryDateStr ? `⏳ *تاريخ انتهاء البطاقة:* *${wizard.data.idCardExpiryDateStr}*\n` : '') +
         `${jobIcon} *الوظيفة:* ${wizard.data.jobTitleName} | 📍 *الموقع:* ${wizard.data.siteName}\n` +
         `💰 *الراتب المعتمد:* *${formatCurrency(totalSalary)}* (أساسي: ${formatCurrency(wizard.data.baseSalary || 0)} + حافز: ${formatCurrency(wizard.data.additionalSalary || 0)})\n` +
@@ -1618,6 +1665,7 @@ async function handleWorkerFinalSave(
       nationality: d.nationality || 'مصر',
       birthDate: birthDateObj,
       gender: d.gender || 'MALE',
+      address: d.address,
       phone: d.phone || '01000000000',
       jobTitleId: d.jobTitleId,
       jobTitleName: d.jobTitleName || 'عامل',
@@ -1716,6 +1764,7 @@ async function handleWorkerFinalSave(
       `🆔 *كود العامل الرسمي:* \`${result.worker.code}\`\n` +
       `👤 *الاسم:* *${result.worker.name}* (الشهرة: *${result.worker.nickname || '-'}*)\n` +
       `🔢 *رقم الإثبات:* \`${d.idNumber}\`\n` +
+      (d.address ? `🏠 *العنوان:* ${d.address}\n` : '') +
       (d.idCardExpiryDateStr ? `⏳ *انتهاء البطاقة:* *${d.idCardExpiryDateStr}*\n` : '') +
       `💼 *الوظيفة:* ${result.worker.jobTitle} | 📍 *الموقع:* ${d.siteName || '-'}\n` +
       `📅 *تاريخ التعيين:* *${formatDate(hireDateObj)}*\n` +

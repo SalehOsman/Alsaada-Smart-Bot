@@ -122,6 +122,11 @@ import {
   handleApproveEditRequest,
   handleRejectEditRequest,
   handleViewPendingEditRequests,
+  handleStartAddWorkerDoc,
+  handleWorkerEditDocumentInput,
+  handleListWorkerDocs,
+  handleSendWorkerDoc,
+  handleSendWorkerIdPhoto,
 } from './handlers/worker-edit.handler.js';
 import { workerExpiryAlertService } from './services/worker-expiry-alert.service.js';
 import { prisma } from './db.js';
@@ -165,6 +170,7 @@ export function createBot(): Bot<MyContext> {
   // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location, Excel Uploads, Wizard Photos)
   bot.on(['message:photo', 'message:document'], async (ctx, next) => {
     if (await handleWorkerWizardPhotoInput(ctx)) return;
+    if (await handleWorkerEditDocumentInput(ctx)) return;
     if (ctx.message?.document) {
       if (await handleJobMatrixDocumentInput(ctx)) return;
       if (await handleWorkerExcelDocumentUpload(ctx)) return;
@@ -493,6 +499,18 @@ export function createBot(): Bot<MyContext> {
   });
   bot.callbackQuery(/^action:worker_edit:field:(.+):(.+)$/, async (ctx) => {
     await handleStartEditWorkerField(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:worker_edit:add_doc:(.+)$/, async (ctx) => {
+    await handleStartAddWorkerDoc(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:worker_edit:list_docs:(.+)$/, async (ctx) => {
+    await handleListWorkerDocs(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:worker_doc:send:(.+)$/, async (ctx) => {
+    await handleSendWorkerDoc(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:worker_doc:send_id:(.+):(front|back)$/, async (ctx) => {
+    await handleSendWorkerIdPhoto(ctx, ctx.match[1], ctx.match[2] as 'front' | 'back');
   });
   bot.callbackQuery(/^action:worker_req:approve:(.+)$/, async (ctx) => {
     await handleApproveEditRequest(ctx, ctx.match[1]);

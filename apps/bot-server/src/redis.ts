@@ -307,6 +307,7 @@ export interface PendingWorkerWizardState {
     frontFileId?: string;
     backFileId?: string;
     jobPage?: number;
+    address?: string;
   };
 }
 
@@ -378,6 +379,9 @@ export interface PendingWorkerEditState {
   fieldName?: string;
   oldValue?: string;
   promptMsgId: number;
+  isDocUpload?: boolean;
+  docTitle?: string;
+  docCategory?: string;
 }
 
 export async function setPendingWorkerEdit(telegramId: bigint, state: PendingWorkerEditState): Promise<void> {
