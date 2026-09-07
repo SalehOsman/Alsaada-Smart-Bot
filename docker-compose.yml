@@ -63,6 +63,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${PORT:-3000}
@@ -72,6 +74,7 @@ services:
       SUPER_ADMIN_TELEGRAM_ID: ${SUPER_ADMIN_TELEGRAM_ID}
       DATABASE_ENCRYPTION_KEY: ${DATABASE_ENCRYPTION_KEY}
       BLIND_INDEX_SALT: ${BLIND_INDEX_SALT}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     networks:
       - alsaada-enterprise-internal
       - alsaada-enterprise-public
