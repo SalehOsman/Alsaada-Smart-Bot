@@ -193,5 +193,7 @@
 | **`NEW-03`** | **إيصال السند المالي الرقمي المشفر بـ QR Code** وتوثيق HMAC-SHA256 | الرقابة والشفافية | ⏳ بانتظار بناء المولد | `packages/core-components/` | — |
 | **`NEW-04`** | **رادار المخاطر والإنذار المبكر للإدارة العليا** (`Automated Risk Radar`) | التحليلات التنفيذية | ⏳ بانتظار خدمة الرصد | `apps/bot-server/src/services/` | — |
 | **`NEW-05`** | **سقف العهد وقفل الخزينة اللحظي الصارم** (`Hard-Limit Cash Custody Control`) | الرقابة المالية | ⏳ بانتظار تفعيل التدفق | `packages/database/` + `bot-server` | — |
-| **`NEW-06`** | **محاكاة وتقمص الأدوار للمدير العام (Ghost Mode Engine)** مع زر الهروب السيادي الدائم وتوليد القوائم الرئيسية لكافة الأدوار الستة | إدارة النظام والتحكم السيادي | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/keyboards/main-menu.keyboard.ts`<br>`apps/bot-server/src/handlers/settings.handler.ts`<br>`apps/bot-server/src/redis.ts` | `2026-09-07` |
+| **`NEW-06`** | **محاكاة وتقمص الأدوار للمدير العام (Ghost Mode Engine)** مع زر الهروب السيادي الدائم وتوليد القوائم الرئيسية لكافة الأدوار الستة | إدارة النظام والتحكم السيادي | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/keyboards/main-menu.keyboard.ts`<br>`apps/bot-server/src/handlers/settings.handler.ts`<br>`apps/bot-server/src/redis.ts` | `2026-09-07` (`a0bece6`) |
+| **`NEW-07`** | **إدارة وتعديل الملف التعريفي وبيانات الشركة الرسمية لحظياً من البوت** (`Corporate Profile Manager`) وتحديث PostgreSQL وحذف المدخلات بصمت | إدارة النظام والتنفيذي | 🟢 **مكتمل ومختبر وموثق 100%** | `apps/bot-server/src/handlers/company-profile.handler.ts`<br>`apps/bot-server/src/redis.ts`<br>`packages/database/prisma/seed-data/` | `2026-09-07` |
+
 

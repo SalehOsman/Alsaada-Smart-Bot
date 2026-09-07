@@ -12,6 +12,11 @@ import {
   handleExitGhostCommand,
 } from './handlers/settings.handler.js';
 import { handleMenuPlaceholder } from './handlers/placeholder.handler.js';
+import {
+  renderCompanyProfileCard,
+  handleStartEditCompanyField,
+  handleCompanyFieldTextInput,
+} from './handlers/company-profile.handler.js';
 
 export function createBot(): Bot<MyContext> {
   const token = config.botToken;
@@ -29,31 +34,50 @@ export function createBot(): Bot<MyContext> {
   // 2. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
 
-  // 3. Base Commands
+  // 3. Pending Input Interceptors (e.g. Editing Company Profile Fields)
+  bot.on('message:text', async (ctx, next) => {
+    const handled = await handleCompanyFieldTextInput(ctx);
+    if (!handled) {
+      return next();
+    }
+  });
+
+  // 4. Base Commands
   bot.command('start', handleStart);
   bot.command(['ping', 'health', 'speed'], handlePing);
   bot.command(['settings', 'admin'], handleSettings);
+  bot.command(['company', 'profile'], async (ctx) => {
+    await renderCompanyProfileCard(ctx, false);
+  });
   bot.command(['exit_ghost', 'exit_impersonate', 'exit_simulation'], handleExitGhostCommand);
 
-  // 4. Navigation & Settings Callbacks
+  // 5. Navigation & Settings Callbacks
   bot.callbackQuery('action:main_menu', async (ctx) => {
     await ctx.answerCallbackQuery();
     await renderRoleHome(ctx, true);
   });
   bot.callbackQuery('menu:super_admin_settings', handleSettings);
+  bot.callbackQuery('action:settings:company_profile', async (ctx) => {
+    await renderCompanyProfileCard(ctx, true);
+  });
+  bot.callbackQuery(/^action:edit_comp:(.+)$/, async (ctx) => {
+    const fieldKey = ctx.match[1];
+    await handleStartEditCompanyField(ctx, fieldKey);
+  });
   bot.callbackQuery('action:settings:ghost_mode', handleGhostModeMenu);
   bot.callbackQuery('action:settings:ping', handlePing);
   bot.callbackQuery('action:exit_impersonate', handleExitImpersonate);
 
-  // 5. Dynamic Impersonation Callbacks (Regex)
+  // 6. Dynamic Impersonation Callbacks (Regex)
   bot.callbackQuery(/^action:impersonate:(.+)$/, async (ctx) => {
     const role = ctx.match[1];
     await handleImpersonateRole(ctx, role);
   });
 
-  // 6. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
+  // 7. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);
 
   return bot;
 }
+
 

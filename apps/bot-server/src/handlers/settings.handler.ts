@@ -20,11 +20,14 @@ export async function handleSettings(ctx: MyContext): Promise<void> {
   }
 
   const keyboard = new InlineKeyboard()
+    .text('🏢 الملف التعريفي وبيانات الشركة', 'action:settings:company_profile')
+    .row()
     .text('🎭 محاكاة وتقمص الأدوار (Ghost Mode)', 'action:settings:ghost_mode')
     .row()
     .text('⚡ فحص كفاءة النظام واستجابة الشبكة', 'action:settings:ping')
     .row()
     .text('🏠 العودة للقائمة الرئيسية', 'action:main_menu');
+
 
   const text =
     `⚙️ *لوحة إعدادات المدير العام (Super Admin Control Panel)*\n\n` +

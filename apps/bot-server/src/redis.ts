@@ -54,3 +54,51 @@ export async function clearImpersonatedRole(telegramId: bigint): Promise<void> {
     console.error('⚠️ [REDIS] Error clearing impersonated role:', error);
   }
 }
+
+const PENDING_EDIT_PREFIX = 'pending:company_edit:user:';
+
+export interface PendingCompanyEdit {
+  fieldKey: string;
+  messageId: number;
+}
+
+/**
+ * Set a pending company profile edit state for a user
+ */
+export async function setPendingCompanyEdit(
+  telegramId: bigint,
+  fieldKey: string,
+  messageId: number
+): Promise<void> {
+  try {
+    const data: PendingCompanyEdit = { fieldKey, messageId };
+    await redis.set(`${PENDING_EDIT_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting pending company edit:', error);
+  }
+}
+
+/**
+ * Get the pending company profile edit state for a user
+ */
+export async function getPendingCompanyEdit(telegramId: bigint): Promise<PendingCompanyEdit | null> {
+  try {
+    const raw = await redis.get(`${PENDING_EDIT_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as PendingCompanyEdit) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting pending company edit:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear the pending company profile edit state
+ */
+export async function clearPendingCompanyEdit(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_EDIT_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing pending company edit:', error);
+  }
+}
+
