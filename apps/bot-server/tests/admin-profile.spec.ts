@@ -48,4 +48,28 @@ describe('Admin Personal Profile Handler', () => {
     const handled = await handleAdminFieldTextInput(mockCtx);
     expect(handled).toBe(false);
   });
+
+  it('should render username with underscores inside backticks for Super Admin', async () => {
+    const editMessageTextMock = vi.fn().mockResolvedValue(true);
+    const mockCtx = {
+      isRealSuperAdmin: true,
+      from: { id: 7594239391 },
+      callbackQuery: { data: 'action:settings:admin_profile', message: { message_id: 123 } },
+      answerCallbackQuery: vi.fn().mockResolvedValue(true),
+      editMessageText: editMessageTextMock,
+      reply: vi.fn().mockResolvedValue(true),
+    } as unknown as MyContext;
+
+    await renderAdminProfileCard(mockCtx, true);
+
+    expect(editMessageTextMock).toHaveBeenCalled();
+    const renderedText = editMessageTextMock.mock.calls[0][0] as string;
+    // Verify that username is wrapped in code backticks
+    expect(renderedText).toMatch(/`@?[^`]+`/);
+    // Ensure no unescaped @ followed by underscores outside backticks
+    const lines = renderedText.split('\n');
+    const usernameLine = lines.find((l) => l.includes('اسم المستخدم:'));
+    expect(usernameLine).toBeDefined();
+    expect(usernameLine).toContain('`');
+  });
 });

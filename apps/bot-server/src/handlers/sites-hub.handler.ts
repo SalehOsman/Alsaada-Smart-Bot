@@ -145,7 +145,7 @@ export async function renderSiteDetail(
     `🏗️ *اسم الموقع:* ${site.name}\n` +
     `🔹 *الكود الهيكلي:* \`${site.code}\`\n` +
     `🏢 *المشروع التابع له:* ${site.project?.name || 'مشروع عام'}\n` +
-    `🗺️ *المحافظة / الإقليم:* ${site.governorateCode}\n` +
+    `🗺️ *المحافظة / الإقليم:* \`${site.governorateCode || 'عام'}\`\n` +
     `📶 *الحالة التشغيلية:* ${isActive ? '🟢 نشط ومفعل ميدانياً' : '🔴 متوقف ومجمد مؤقتاً'}\n` +
     `👥 *العمالة المسكنة:* ${site.workers.length} عامل\n` +
     `📐 *السياج الجغرافي:* ${site.geofenceRadiusMeters || 1000} متر\n` +
