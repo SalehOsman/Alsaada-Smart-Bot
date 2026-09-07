@@ -1,6 +1,8 @@
 import { MyContext } from '../types/context.js';
 import { config } from '../config/env.js';
 import { buildMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
+import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
+import { syncUserCommandsScope } from '../services/command-scope.service.js';
 
 export function getRoleTitle(role: string): string {
   switch (role) {
@@ -66,8 +68,10 @@ export function buildWelcomeMessage(ctx: MyContext): string {
         `🛡️ *بوابة المشرف الميداني وإدارة المواقع*\n` +
         `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
-        `هنا يمكنك تسجيل السلف والمسحوبات اليومية، الإجازات، بوالص الفوسفات، والتمام الميداني.\n\n` +
-        `اختر الإجراء الميداني المطلوب من القائمة أدناه:`
+        `🔹 *المعرف الرقمي:* \`${ctx.from?.id}\`\n` +
+        `🔹 *الصلاحية المعتمدة:* ${roleTitle}\n` +
+        `🔹 *حالة الحساب:* 🟢 نشط ومعتمد ميدانياً\n\n` +
+        `اختر القسم التشغيلي المطلوب من لوحة التحكم أدناه:`
       );
 
     case 'WORKER':
@@ -130,5 +134,21 @@ export async function renderRoleHome(ctx: MyContext, inPlace = false): Promise<v
 }
 
 export async function handleStart(ctx: MyContext): Promise<void> {
+  if (ctx.from) {
+    const telegramId = BigInt(ctx.from.id);
+    await syncUserCommandsScope(
+      ctx.api,
+      telegramId,
+      ctx.effectiveRole || 'GUEST',
+      !!ctx.isDualWorkerMode
+    );
+  }
+
+  const replyKeyboard = buildPersistentReplyKeyboard(ctx);
+  await ctx.reply('⚡ تم تحديث شريط التنقل السريع وقائمة الأوامر المعتمدة.', {
+    reply_markup: replyKeyboard,
+  });
+
   await renderRoleHome(ctx, false);
 }
+

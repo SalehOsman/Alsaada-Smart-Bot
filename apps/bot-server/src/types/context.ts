@@ -6,4 +6,5 @@ export interface MyContext extends Context {
   effectiveRole?: string;
   isRealSuperAdmin?: boolean;
   isImpersonating?: boolean;
+  isDualWorkerMode?: boolean;
 }

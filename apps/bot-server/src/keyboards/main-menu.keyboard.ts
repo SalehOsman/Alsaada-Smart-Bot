@@ -35,14 +35,14 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
 
     case 'FIELD_ADMIN':
       keyboard
-        .text('💵 تسجيل سلفة / مسحوبات', 'menu:field:advance')
-        .text('🏖️ تسجيل إجازة / عودة', 'menu:field:leave')
+        .text('👥 الموارد البشرية والعمال', 'menu:domain:hr')
+        .text('💰 المالية والعهد الميدانية', 'menu:domain:finance')
         .row()
-        .text('🚜 تشغيل وبوالص الفوسفات', 'menu:field:phosphate')
-        .text('⛽ سجل السولار والمعدات', 'menu:field:fuel')
+        .text('🚜 تشغيل المواقع والإنتاج', 'menu:domain:operations')
+        .text('⛽ التعيينات والمخازن', 'menu:domain:logistics')
         .row()
-        .text('📋 التمام واليوميات', 'menu:field:attendance')
-        .text('💼 عهدتي الميدانية', 'menu:field:custody');
+        .text('🏛️ السلامة وإدارة المخاطر', 'menu:domain:governance')
+        .text('⚙️ إعداداتي وملفي الشخصي', 'menu:field_admin_settings');
       break;
 
     case 'WORKER':
@@ -55,6 +55,12 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
         .row()
         .text('🦺 عهدي ومهماتي', 'menu:worker:ppe')
         .text('💬 استفسار / تظلم', 'menu:worker:ticket');
+
+      if (ctx.isDualWorkerMode) {
+        keyboard
+          .row()
+          .text('🛡️ العودة لبوابة الإشراف الميداني', 'action:switch_identity:field_admin');
+      }
       break;
 
     case 'SUPPLIER':

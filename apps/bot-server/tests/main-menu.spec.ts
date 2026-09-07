@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildMainMenuKeyboard } from '../src/keyboards/main-menu.keyboard.js';
+import { buildPersistentReplyKeyboard } from '../src/keyboards/reply-bar.keyboard.js';
+import { getCommandsForRole } from '../src/services/command-scope.service.js';
 import { getRoleTitle, buildWelcomeMessage } from '../src/handlers/start.handler.js';
 import { MyContext } from '../src/types/context.js';
 
@@ -39,7 +41,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
 
-  it('should render field admin buttons for FIELD_ADMIN role', () => {
+  it('should render field admin 6 macro domain buttons for FIELD_ADMIN role', () => {
     const mockCtx = {
       effectiveRole: 'FIELD_ADMIN',
       isRealSuperAdmin: false,
@@ -49,9 +51,28 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     const keyboard = buildMainMenuKeyboard(mockCtx);
     const buttons = keyboard.inline_keyboard.flat();
 
-    expect(buttons.some(b => b.callback_data === 'menu:field:advance')).toBe(true);
-    expect(buttons.some(b => b.callback_data === 'menu:field:phosphate')).toBe(true);
+    expect(buttons.length).toBe(6);
+    expect(buttons.some(b => b.callback_data === 'menu:domain:hr')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'menu:domain:finance')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'menu:domain:operations')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'menu:domain:logistics')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'menu:domain:governance')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'menu:field_admin_settings')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
+  });
+
+  it('should render dual identity return button for WORKER role when isDualWorkerMode is true', () => {
+    const mockCtx = {
+      effectiveRole: 'WORKER',
+      isRealSuperAdmin: false,
+      isImpersonating: false,
+      isDualWorkerMode: true,
+    } as unknown as MyContext;
+
+    const keyboard = buildMainMenuKeyboard(mockCtx);
+    const buttons = keyboard.inline_keyboard.flat();
+
+    expect(buttons.some(b => b.callback_data === 'action:switch_identity:field_admin')).toBe(true);
   });
 
   it('should render worker self-service buttons for WORKER role', () => {
@@ -165,3 +186,79 @@ describe('Start Handler & Welcome Messages', () => {
     expect(msg).not.toContain('GHOST MODE');
   });
 });
+
+describe('Persistent Bottom Reply Keyboard', () => {
+  it('should build persistent reply keyboard for SUPER_ADMIN with system settings and profile', () => {
+    const mockCtx = { effectiveRole: 'SUPER_ADMIN' } as MyContext;
+    const kb = buildPersistentReplyKeyboard(mockCtx);
+    const buttons = kb.keyboard.flat();
+    expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
+    expect(buttons.some(b => b.text === '⚙️ إعدادات النظام')).toBe(true);
+    expect(buttons.some(b => b.text === '👤 ملفي الشخصي')).toBe(true);
+  });
+
+  it('should build persistent reply keyboard for FIELD_ADMIN with worker switch button', () => {
+    const mockCtx = { effectiveRole: 'FIELD_ADMIN' } as MyContext;
+    const kb = buildPersistentReplyKeyboard(mockCtx);
+    const buttons = kb.keyboard.flat();
+    expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
+    expect(buttons.some(b => b.text === '👷 التبديل لحسابي كعامل')).toBe(true);
+    expect(buttons.some(b => b.text === '👤 ملفي وإعداداتي')).toBe(true);
+  });
+
+  it('should build persistent reply keyboard for WORKER in dual mode with supervisor return button', () => {
+    const mockCtx = { effectiveRole: 'WORKER', isDualWorkerMode: true } as MyContext;
+    const kb = buildPersistentReplyKeyboard(mockCtx);
+    const buttons = kb.keyboard.flat();
+    expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
+    expect(buttons.some(b => b.text === '🛡️ العودة لبوابة الإشراف')).toBe(true);
+  });
+
+  it('should build persistent reply keyboard for regular WORKER with statement and payslip', () => {
+    const mockCtx = { effectiveRole: 'WORKER', isDualWorkerMode: false } as MyContext;
+    const kb = buildPersistentReplyKeyboard(mockCtx);
+    const buttons = kb.keyboard.flat();
+    expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
+    expect(buttons.some(b => b.text === '📊 كشف حسابي')).toBe(true);
+    expect(buttons.some(b => b.text === '🧾 قسيمة راتبي')).toBe(true);
+  });
+
+  it('should NOT include /cancel button on persistent reply keyboard', () => {
+    const mockCtx = { effectiveRole: 'SUPER_ADMIN' } as MyContext;
+    const kb = buildPersistentReplyKeyboard(mockCtx);
+    const buttons = kb.keyboard.flat();
+    expect(buttons.some(b => b.text.includes('إلغاء') || b.text.includes('cancel'))).toBe(false);
+  });
+});
+
+describe('Dynamic Scoped Bot Commands', () => {
+  it('should return Super Admin commands including /settings, /jobs, /sites', () => {
+    const cmds = getCommandsForRole('SUPER_ADMIN');
+    expect(cmds.some(c => c.command === 'settings')).toBe(true);
+    expect(cmds.some(c => c.command === 'jobs')).toBe(true);
+    expect(cmds.some(c => c.command === 'sites')).toBe(true);
+    expect(cmds.some(c => c.command === 'cancel')).toBe(true);
+  });
+
+  it('should mask administrative commands for FIELD_ADMIN and include /switch_role', () => {
+    const cmds = getCommandsForRole('FIELD_ADMIN');
+    expect(cmds.some(c => c.command === 'settings')).toBe(false);
+    expect(cmds.some(c => c.command === 'jobs')).toBe(false);
+    expect(cmds.some(c => c.command === 'sites')).toBe(false);
+    expect(cmds.some(c => c.command === 'switch_role')).toBe(true);
+    expect(cmds.some(c => c.command === 'cancel')).toBe(true);
+  });
+
+  it('should mask administrative commands for WORKER and GUEST', () => {
+    const workerCmds = getCommandsForRole('WORKER');
+    expect(workerCmds.some(c => c.command === 'settings')).toBe(false);
+    expect(workerCmds.some(c => c.command === 'jobs')).toBe(false);
+    expect(workerCmds.some(c => c.command === 'cancel')).toBe(true);
+
+    const guestCmds = getCommandsForRole('GUEST');
+    expect(guestCmds.some(c => c.command === 'settings')).toBe(false);
+    expect(guestCmds.some(c => c.command === 'my_id')).toBe(true);
+    expect(guestCmds.some(c => c.command === 'cancel')).toBe(true);
+  });
+});
+

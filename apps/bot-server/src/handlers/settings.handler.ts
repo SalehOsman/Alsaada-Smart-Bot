@@ -1,8 +1,10 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
-import { setImpersonatedRole, clearImpersonatedRole } from '../redis.js';
+import { setImpersonatedRole, clearImpersonatedRole, setAdminDualMode } from '../redis.js';
 import { invalidateUserCache } from '../middlewares/auth.middleware.js';
-import { renderRoleHome } from './start.handler.js';
+import { renderRoleHome, getRoleTitle } from './start.handler.js';
+import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
+import { syncUserCommandsScope } from '../services/command-scope.service.js';
 
 /**
  * Super Admin Settings Hub Handler (Main Categorized Hub)
@@ -237,16 +239,32 @@ export async function handleImpersonateRole(ctx: MyContext, targetRole: string):
 
   const telegramId = BigInt(ctx.from.id);
   await setImpersonatedRole(telegramId, targetRole);
+  await setAdminDualMode(telegramId, false);
   await invalidateUserCache(telegramId);
 
   ctx.effectiveRole = targetRole;
   ctx.isImpersonating = true;
+  ctx.isDualWorkerMode = false;
 
-  await ctx.answerCallbackQuery({
-    text: `🎭 تم تفعيل محاكاة دور: ${targetRole}`,
-  });
+  await syncUserCommandsScope(ctx.api, telegramId, targetRole, false);
+  const replyKeyboard = buildPersistentReplyKeyboard(ctx);
 
-  await renderRoleHome(ctx, true);
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({
+      text: `🎭 تم تفعيل محاكاة دور: ${targetRole}`,
+    });
+  }
+
+  await ctx.reply(
+    `🎭 *تم تفعيل وضع المحاكاة (Ghost Mode): ${getRoleTitle(targetRole)}*\n` +
+    `تم تحديث شريط التنقل السفلي وقائمة الأوامر الجانبية لتعكس تجربة هذا الدور بالكامل.`,
+    {
+      parse_mode: 'Markdown',
+      reply_markup: replyKeyboard,
+    }
+  );
+
+  await renderRoleHome(ctx, false);
 }
 
 /**
@@ -263,10 +281,15 @@ export async function handleExitImpersonate(ctx: MyContext): Promise<void> {
 
   const telegramId = BigInt(ctx.from.id);
   await clearImpersonatedRole(telegramId);
+  await setAdminDualMode(telegramId, false);
   await invalidateUserCache(telegramId);
 
   ctx.effectiveRole = 'SUPER_ADMIN';
   ctx.isImpersonating = false;
+  ctx.isDualWorkerMode = false;
+
+  await syncUserCommandsScope(ctx.api, telegramId, 'SUPER_ADMIN', false);
+  const replyKeyboard = buildPersistentReplyKeyboard(ctx);
 
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery({
@@ -274,7 +297,16 @@ export async function handleExitImpersonate(ctx: MyContext): Promise<void> {
     });
   }
 
-  await renderRoleHome(ctx, true);
+  await ctx.reply(
+    '👑 *تم إنهاء وضع المحاكاة بنجاح والعودة لصلاحيات المدير العام السيادية.*\n' +
+    'تم استعادة شريط التنقل وقائمة الأوامر السيادية بالكامل.',
+    {
+      parse_mode: 'Markdown',
+      reply_markup: replyKeyboard,
+    }
+  );
+
+  await renderRoleHome(ctx, false);
 }
 
 /**
@@ -288,14 +320,25 @@ export async function handleExitGhostCommand(ctx: MyContext): Promise<void> {
 
   const telegramId = BigInt(ctx.from.id);
   await clearImpersonatedRole(telegramId);
+  await setAdminDualMode(telegramId, false);
   await invalidateUserCache(telegramId);
 
   ctx.effectiveRole = 'SUPER_ADMIN';
   ctx.isImpersonating = false;
+  ctx.isDualWorkerMode = false;
 
-  await ctx.reply('👑 *تم إنهاء وضع المحاكاة بنجاح والعودة لهوية المدير العام السيادية.*', {
-    parse_mode: 'Markdown',
-  });
+  await syncUserCommandsScope(ctx.api, telegramId, 'SUPER_ADMIN', false);
+  const replyKeyboard = buildPersistentReplyKeyboard(ctx);
+
+  await ctx.reply(
+    '👑 *تم إنهاء وضع المحاكاة بنجاح والعودة لهوية المدير العام السيادية.*\n' +
+    'تم استعادة شريط التنقل وقائمة الأوامر السيادية بالكامل.',
+    {
+      parse_mode: 'Markdown',
+      reply_markup: replyKeyboard,
+    }
+  );
 
   await renderRoleHome(ctx, false);
 }
+

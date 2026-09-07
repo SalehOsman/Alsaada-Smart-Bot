@@ -43,8 +43,12 @@ import {
 } from './handlers/company-profile.handler.js';
 import {
   renderAdminProfileCard,
+  renderFieldAdminProfileCard,
   handleStartEditAdminField,
   handleAdminFieldTextInput,
+  handleSwitchToWorker,
+  handleSwitchToFieldAdmin,
+  handleSwitchRoleCommand,
 } from './handlers/admin-profile.handler.js';
 import {
   renderSitesHub,
@@ -148,6 +152,29 @@ export function createBot(): Bot<MyContext> {
     if (ctx.message.text.startsWith('/')) {
       return next();
     }
+
+    // If message is a persistent keyboard navigation button, bypass text wizards cleanly
+    const navButtons = [
+      '🏠 القائمة الرئيسية',
+      '⚙️ إعدادات النظام',
+      '👤 ملفي الشخصي',
+      '👤 ملفي وإعداداتي',
+      '⚡ فحص الكفاءة',
+      '👷 التبديل لحسابي كعامل',
+      '🛡️ العودة لبوابة الإشراف',
+      '🆔 بطاقة معرفي',
+      '🧾 قسيمة راتبي',
+      '📊 كشف حسابي',
+      '📊 لوحة المؤشرات',
+      '🧾 فواتيري ومستخلصاتي',
+    ];
+    if (navButtons.includes(ctx.message.text)) {
+      if (ctx.from) {
+        await clearAllPendingUserActions(BigInt(ctx.from.id));
+      }
+      return next();
+    }
+
     if (await handleJobMatrixTextInput(ctx)) return;
     if (await handleCompanyFieldTextInput(ctx)) return;
     if (await handleAdminFieldTextInput(ctx)) return;
@@ -172,6 +199,7 @@ export function createBot(): Bot<MyContext> {
   });
   bot.command(['ping', 'health', 'speed'], handlePing);
   bot.command(['settings', 'admin'], handleSettings);
+  bot.command(['switch_role', 'switch_mode'], handleSwitchRoleCommand);
   bot.command(['company', 'org'], async (ctx) => {
     await renderCompanyProfileCard(ctx, false);
   });
@@ -185,6 +213,45 @@ export function createBot(): Bot<MyContext> {
     await renderDepartmentsHub(ctx, false);
   });
   bot.command(['exit_ghost', 'exit_impersonate', 'exit_simulation'], handleExitGhostCommand);
+
+  // 4.5. Persistent Bottom Reply Keyboard Button Handlers
+  bot.hears('🏠 القائمة الرئيسية', async (ctx) => {
+    if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
+    await renderRoleHome(ctx, false);
+  });
+  bot.hears('⚙️ إعدادات النظام', handleSettings);
+  bot.hears(['👤 ملفي الشخصي', '👤 ملفي وإعداداتي'], async (ctx) => {
+    if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
+    await renderAdminProfileCard(ctx, false);
+  });
+  bot.hears('⚡ فحص الكفاءة', handlePing);
+  bot.hears('👷 التبديل لحسابي كعامل', handleSwitchToWorker);
+  bot.hears('🛡️ العودة لبوابة الإشراف', handleSwitchToFieldAdmin);
+  bot.hears('🆔 بطاقة معرفي', async (ctx) => {
+    if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
+    await ctx.reply(
+      `🆔 *بطاقة المعرف الرقمي الخاصة بك*\n` +
+      `────────────────────────────\n` +
+      `🔹 المعرف: \`${ctx.from?.id}\`\n` +
+      `🔹 الاسم: *${ctx.from?.first_name || ''} ${ctx.from?.last_name || ''}*\n` +
+      `🔹 الصفة: *${ctx.effectiveRole || 'GUEST'}*\n\n` +
+      `يرجى تزويد إدارة المنظومة بهذا المعرف عند طلب اعتماد الصلاحيات.`,
+      { parse_mode: 'Markdown' }
+    );
+  });
+  bot.hears('🧾 قسيمة راتبي', async (ctx) => {
+    await ctx.reply('🧾 *خدمة قسائم الرواتب (تحت التجهيز)*\nسيتم عرض مفردات الراتب والبدلات فور ربط محرك الرواتب المالي.', { parse_mode: 'Markdown' });
+  });
+  bot.hears('📊 كشف حسابي', async (ctx) => {
+    await ctx.reply('📊 *خدمة كشف الحساب والمسحوبات (تحت التجهيز)*\nسيتم استعراض السلف والمسحوبات فور اعتماد الربط المحاسبي.', { parse_mode: 'Markdown' });
+  });
+  bot.hears('📊 لوحة المؤشرات', async (ctx) => {
+    await ctx.reply('📊 *لوحة المؤشرات التنفيذية*\nمؤشرات السيولة والإنتاجية تحت التجهيز.', { parse_mode: 'Markdown' });
+  });
+  bot.hears('🧾 فواتيري ومستخلصاتي', async (ctx) => {
+    await ctx.reply('🧾 *بوابة مستخلصات الموردين*\nعرض الفواتير المعتمدة تحت التجهيز.', { parse_mode: 'Markdown' });
+  });
+
 
   // 5. Navigation & Main Settings Callbacks
   bot.callbackQuery('action:main_menu', async (ctx) => {
@@ -258,10 +325,16 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery('action:settings:admin_profile', async (ctx) => {
     await renderAdminProfileCard(ctx, true);
   });
+  bot.callbackQuery('menu:field_admin_settings', async (ctx) => {
+    await renderFieldAdminProfileCard(ctx, true);
+  });
+  bot.callbackQuery('action:switch_identity:worker', handleSwitchToWorker);
+  bot.callbackQuery('action:switch_identity:field_admin', handleSwitchToFieldAdmin);
   bot.callbackQuery(/^action:edit_admin:(.+)$/, async (ctx) => {
     const fieldKey = ctx.match[1];
     await handleStartEditAdminField(ctx, fieldKey);
   });
+
 
   // 10. Admin Site Assignments & Scoping Callbacks
   bot.callbackQuery('action:settings:admin_assignments', async (ctx) => {

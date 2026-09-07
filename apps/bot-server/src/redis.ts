@@ -271,3 +271,34 @@ export async function clearAllPendingUserActions(telegramId: bigint): Promise<vo
     clearPendingJobMatrixAction(telegramId),
   ]);
 }
+
+const DUAL_MODE_PREFIX = 'dual_mode:user:';
+
+/**
+ * Get whether an admin has toggled their personal worker identity active
+ */
+export async function getAdminDualMode(telegramId: bigint): Promise<boolean> {
+  try {
+    const val = await redis.get(`${DUAL_MODE_PREFIX}${telegramId}`);
+    return val === 'true';
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting admin dual mode:', error);
+    return false;
+  }
+}
+
+/**
+ * Set or clear the admin personal worker identity mode
+ */
+export async function setAdminDualMode(telegramId: bigint, active: boolean): Promise<void> {
+  try {
+    if (active) {
+      await redis.set(`${DUAL_MODE_PREFIX}${telegramId}`, 'true', 'EX', 86400);
+    } else {
+      await redis.del(`${DUAL_MODE_PREFIX}${telegramId}`);
+    }
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting admin dual mode:', error);
+  }
+}
+

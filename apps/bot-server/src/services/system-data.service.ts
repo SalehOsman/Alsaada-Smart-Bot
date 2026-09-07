@@ -94,6 +94,7 @@ export class SystemDataService {
     return fastCache.rememberSWR(`admin_profile:${telegramId}`, 300, async () => {
       return prisma.user.findUnique({
         where: { telegramId },
+        include: { assignedSite: true },
       });
     });
   }

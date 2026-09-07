@@ -2,7 +2,7 @@ import { NextFunction } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
-import { redis, getImpersonatedRole } from '../redis.js';
+import { redis, getImpersonatedRole, getAdminDualMode } from '../redis.js';
 import { fastCache } from '../services/fast-cache.service.js';
 
 export const USER_CACHE_PREFIX = 'cache:user:';
@@ -11,6 +11,7 @@ export async function invalidateUserCache(telegramId: bigint): Promise<void> {
   try {
     await fastCache.invalidate(`auth:user:${telegramId}`);
     await fastCache.invalidate(`auth:imp:${telegramId}`);
+    await fastCache.invalidate(`auth:dual:${telegramId}`);
     await redis.del(`${USER_CACHE_PREFIX}${telegramId}`);
   } catch {}
 }
@@ -73,10 +74,26 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
       ctx.effectiveRole = user?.role || 'GUEST';
       ctx.isImpersonating = false;
     }
+
+    // Check for active dual mode if user is FIELD_ADMIN (or impersonating FIELD_ADMIN)
+    if (ctx.effectiveRole === 'FIELD_ADMIN') {
+      const isDual = await fastCache.rememberSWR(`auth:dual:${telegramId}`, 120, async () => {
+        return getAdminDualMode(telegramId);
+      });
+      if (isDual) {
+        ctx.effectiveRole = 'WORKER';
+        ctx.isDualWorkerMode = true;
+      } else {
+        ctx.isDualWorkerMode = false;
+      }
+    } else {
+      ctx.isDualWorkerMode = false;
+    }
   } catch (error) {
     console.error('❌ [AUTH ERROR] Failed to authenticate user in database:', error);
     ctx.effectiveRole = isSuperAdminEnv ? 'SUPER_ADMIN' : 'GUEST';
     ctx.isImpersonating = false;
+    ctx.isDualWorkerMode = false;
   }
 
   return next();
