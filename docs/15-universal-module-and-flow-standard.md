@@ -99,13 +99,20 @@ modules/canteen/
 
 ---
 
-### 7️⃣ استدعاء المكونات المشتركة ومنع إعادة اختراع العجلة (Component Reuse)
-يُحظر على أي مبرمج أو وكيل ذكاء اصطناعي إعادة كتابة كود لاختيار عامل أو إدخال مبلغ أو معالجة مرفق؛ بل يلتزم باستدعاء المكونات المجهزة مسبقاً في `packages/core-components`:
-* عند اختيار عامل ⬅️ استدعاء `WorkerPicker` (بحث ذكي + تقسيم صفحات).
-* عند إدخال مبلغ مالي ⬅️ استدعاء `CurrencyAmountPicker` (أزرار سريعة + آلة حاسبة).
-* عند قراءة فاتورة أو إيصال ⬅️ استدعاء `UniversalDocumentVisionEngine` (صور و PDF).
-* عند إرسال بطاقة اعتماد إدارية ⬅️ استدعاء `UniversalApprovalCard`.
-* عند رسم لوحة الأزرار الختامية ⬅️ استدعاء `PostActionKeyboard`.
+### 7️⃣ استدعاء المكونات المشتركة وحظر إعادة كتابة الأكواد نهائياً (Mandatory Shared Component Reuse)
+* **القاعدة الصارمة غير القابلة للاستثناء:** يُحظر تماماً على أي مطور أو أداة ذكاء اصطناعي (AI Agent) إعادة كتابة أي منطق واجهة، أو تصفية عمال، أو تدقيق مبالغ، أو صياغة بطاقات داخل أي موديول (`modules/*`).
+* **خريطة الاستيراد الإلزامية من الحزم المعتمدة (`packages/*`):**
+  * **اختيار العمال والبحث والتصفية:** استيراد `UniversalWorkerPicker` و `filterWorkers` من `@alsaada/core-components`. يُمنع منعاً باتاً كتابة أزرار اختيار عمال مخصصة يدوياً داخل الموديول.
+  * **المدخلات المالية ورادار التكرار:** استيراد `UniversalAmountPicker` و `validateAmount` و `checkDuplicatePaymentRisk` من `@alsaada/core-components`.
+  * **الكميات ووحدات القياس:** استيراد `UniversalQuantityPicker` و `validateQuantity` من `@alsaada/core-components`.
+  * **التواريخ والفترات الميدانية:** استيراد `UniversalDatePicker` و `parseRegionalDate` و `calculateDateRange` من `@alsaada/core-components`.
+  * **بطاقات المراجعة والتأكيد قبل الحفظ:** استيراد `formatConfirmationCard` و `buildConfirmationKeyboard` من `@alsaada/core-components`.
+  * **لوحة أزرار ما بعد الإنجاز (Section 5.2):** استيراد `buildCompletionKeyboard` و `buildWhatsAppLink` من `@alsaada/core-components`.
+  * **توجيه الإشعارات لتوبيكات الجروب الفائق:** استيراد `resolveTopicId` من `@alsaada/core-components`.
+  * **التحقق من الهوية المصرية:** استيراد `parseEgyptianNationalId` من `@alsaada/national-id-engine`.
+  * **التوقيت والعملات والأرقام المشرقية:** استيراد `normalizeDigits`, `formatCurrency`, `formatDateTime` من `@alsaada/regional-engine`.
+  * **أمان قاعدة البيانات والهاش الجنائي:** استيراد التشفير وسلسلة الهاش التراكمية من `@alsaada/database`.
+* **معيار بوابة الجودة (DoD Gate):** أي كود يتضمن تكراراً لمنطق متاح مسبقاً في النواة المشتركة يُرفض فوراً (`FAIL - Duplicate Code Anti-Pattern`).
 
 ---
 

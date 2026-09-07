@@ -37,6 +37,20 @@
      - الاختبارات الشاملة: توضع داخل `tests/e2e/`.
      - التجارب والسكريبتات المؤقتة الخاصة بالوكيل: تُحفظ حصراً في مجلد الـ scratch المخصص المؤقت خارج الكود المصدري.
    - التحقق الدائم من خلو جذر المشروع عبر `git status -s`، وأي ملف عشوائي في الجذر يُعد خرقاً جسيماً لمعايير الجودة.
+5. **قاعدة الإلزام الحتمي بالنواة المشتركة وحظر إعادة كتابة الأكواد (Zero Code Duplication & Mandatory Shared Kernel Usage):**
+   - **المبدأ الأساسي:** لا يُسمح لأي أداة ذكاء اصطناعي (AI Agent) أو مطور بإعادة اختراع العجلة أو كتابة منطق مكرر داخل موديولات الأعمال (`modules/*`).
+   - **الالتزام الإلزامي الصارم باستيراد حزم النواة المجهزة مسبقاً (`packages/*`):**
+     * **اختيار وتصفية العمال والبحث:** يُحظر تماماً كتابة أزرار اختيار العمال أو منطق التصفية يدوياً؛ يجب استيراد واستخدام `UniversalWorkerPicker` و `filterWorkers` من `@alsaada/core-components`.
+     * **المبالغ المالية والمدخلات ورادار التكرار:** يجب استيراد `UniversalAmountPicker` و `validateAmount` و `checkDuplicatePaymentRisk` من `@alsaada/core-components`.
+     * **الكميات ووحدات القياس:** يجب استيراد `UniversalQuantityPicker` و `validateQuantity` من `@alsaada/core-components`.
+     * **التواريخ والمدد والفترات:** يجب استيراد `UniversalDatePicker` و `parseRegionalDate` و `calculateDateRange` من `@alsaada/core-components`.
+     * **بطاقات المراجعة والتأكيد:** يجب استيراد `formatConfirmationCard` و `buildConfirmationKeyboard` من `@alsaada/core-components`.
+     * **لوحة أزرار ما بعد الإنجاز (Section 5.2):** يجب استيراد `buildCompletionKeyboard` و `buildWhatsAppLink` من `@alsaada/core-components`. يُحظر تماماً بناء لوحة أزرار ختامية يدوية.
+     * **توجيه الإشعارات للتوبيكات:** يجب استيراد `resolveTopicId` من `@alsaada/core-components`.
+     * **الرقم القومي المصري:** يجب استيراد `parseEgyptianNationalId` من `@alsaada/national-id-engine`.
+     * **الأرقام المشرقية والعملة والتوقيت:** يجب استيراد `normalizeDigits`, `formatCurrency`, `formatDateTime` من `@alsaada/regional-engine`.
+     * **أمان البيانات والهاش الجنائي:** يجب استيراد أدوات التشفير والهاش التراكمي من `@alsaada/database`.
+   - **معيار الرفض الفوري (Automatic Rejection Gate):** أي مساهمة كودية تحتوي على كتابة يدوية لمنطق متوفر في الحزم المشتركة تُصنف كـ **عيب برمجي جسيم (Anti-pattern / Code Duplication)** وتُرفض تلقائياً.
 
 ---
 

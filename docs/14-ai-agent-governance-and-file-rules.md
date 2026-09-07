@@ -57,6 +57,21 @@ flowchart TD
   - سكريبتات التجارب والتصحيح المؤقتة الخاصة بالوكيل: تُحفظ حصراً خارج الكود المصدري في مجلد الـ scratch المؤقت.
 * التحقق الدوري من نظافة المستودع بنسبة 100% عبر `git status -s`، ويُعتبر وجود أي ملف مهمل أو غير متبع في جذر المشروع خرقاً هندسياً يمنع اعتماد المهمة.
 
+### 5️⃣ قاعدة الإلزام الحتمي باستيراد الحزم المشتركة وحظر إعادة كتابة الأكواد (Mandatory Shared Component Reuse):
+* **المبدأ الإلزامي:** يُحظر تماماً على أي أداة ذكاء اصطناعي إعادة بناء أو تكرار منطق برمجي متاح بالفعل في حزم النواة (`packages/*`).
+* **خريطة الاستيراد الإلزامية لكل موديول وتدفق:**
+  1. **اختيار العمال والبحث والتصفية:** استيراد `UniversalWorkerPicker` و `filterWorkers` من `@alsaada/core-components`. يُحظر كتابة أزرار اختيار عمال مخصصة.
+  2. **المدخلات المالية والمبالغ:** استيراد `UniversalAmountPicker` و `validateAmount` و `checkDuplicatePaymentRisk` من `@alsaada/core-components`.
+  3. **الكميات ووحدات القياس:** استيراد `UniversalQuantityPicker` و `validateQuantity` من `@alsaada/core-components`.
+  4. **التواريخ والفترات الميدانية:** استيراد `UniversalDatePicker` و `parseRegionalDate` و `calculateDateRange` من `@alsaada/core-components`.
+  5. **بطاقات المراجعة والتأكيد المالي:** استيراد `formatConfirmationCard` و `buildConfirmationKeyboard` من `@alsaada/core-components`.
+  6. **لوحة أزرار ما بعد الإنجاز (Section 5.2):** استيراد `buildCompletionKeyboard` و `buildWhatsAppLink` من `@alsaada/core-components`. يُمنع كتابة أزرار إنهاء يدوية تخالف الترتيب الرباعي.
+  7. **توجيه الإشعارات للتوبيكات:** استيراد `resolveTopicId` من `@alsaada/core-components`.
+  8. **الهوية الوطنية المصرية:** استيراد `parseEgyptianNationalId` من `@alsaada/national-id-engine`.
+  9. **التوقيت والعملات والأرقام المشرقية:** استيراد `normalizeDigits`, `formatCurrency`, `formatDateTime` من `@alsaada/regional-engine`.
+  10. **الأمان والتشفير وقاعدة البيانات:** استيراد عميل قاعدة البيانات وأدوات التشفير والهاش التراكمي من `@alsaada/database`.
+* **العقوبة الهندسية عند المخالفة:** أي كود يتضمن تكراراً لمنطق متاح بالنواة المشتركة يُرفض فوراً كعيب برمجي جسيم (`Anti-Pattern / Code Duplication FAIL`).
+
 ---
 
 ## ⚖️ 3. معايير الجودة ومكافحة التراجع (Zero-Regression Protocol)
