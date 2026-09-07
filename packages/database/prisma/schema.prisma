@@ -98,6 +98,8 @@ model FinancialLedger {
   currency           String    @default("EGP")
   sourceAccount      String
   destinationAccount String
+  sourceCustodyId    String?   // Populated when cash disbursement originates from a site custody
+  inKindDetails      Json?     // Stores items, quantities, unit prices for in-kind withdrawals
   description        String?
   actorTelegramId    BigInt
   workerId           String?
@@ -113,6 +115,7 @@ model FinancialLedger {
 
   @@index([transactionType])
   @@index([sourceAccount])
+  @@index([sourceCustodyId])
   @@index([destinationAccount])
   @@index([syncedToSheets])
   @@map("financial_ledgers")

@@ -12,3 +12,8 @@ export * from './confirmation-card/keyboard.js';
 export * from './completion-card/whatsapp.js';
 export * from './completion-card/keyboard.js';
 export * from './multi-channel/topic-router.js';
+export * from './source-picker/types.js';
+export * from './source-picker/validator.js';
+export * from './source-picker/keyboard.js';
+export * from './purchase-picker/suggestions.js';
+
