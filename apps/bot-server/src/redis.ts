@@ -210,6 +210,8 @@ export interface PendingJobMatrixAction {
     | 'edit_job_additional_salary'
     | 'edit_job_work_days'
     | 'edit_job_rest_days'
+    | 'edit_job_cycle_policy'
+    | 'edit_job_cycle_custom_date'
     | 'edit_job_min_headcount';
   deptCode?: string;
   jobCode?: string;

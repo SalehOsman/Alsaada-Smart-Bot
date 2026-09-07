@@ -112,6 +112,16 @@ vi.mock('../src/db.js', () => {
           })
         ),
       },
+      cycleTransitionHistory: {
+        create: vi.fn().mockImplementation(({ data }) =>
+          Promise.resolve({
+            id: 'trans-hist-uuid-1',
+            ...data,
+            createdAt: new Date(),
+          })
+        ),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
       $transaction: vi.fn().mockImplementation((cb) => cb(txMock)),
     },
   };
@@ -131,8 +141,11 @@ import {
   handleStartEditJobCycle,
   handleSetWorkDays,
   handleSetRestDays,
+  handleApplyCyclePolicy,
+  handlePromptCustomDate,
   handleJobMatrixTextInput,
 } from '../src/handlers/job-matrix.handler.js';
+import { cycleTransitionService } from '../src/services/cycle-transition.service.js';
 import { MyContext } from '../src/types/context.js';
 import { fastCache } from '../src/services/fast-cache.service.js';
 import * as redisModule from '../src/redis.js';
@@ -386,7 +399,7 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
       );
     });
 
-    it('should save custom rest days, calculate total cycle days and update job', async () => {
+    it('should prompt for transition policy selection in step 3 when rest days are chosen', async () => {
       vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
         action: 'edit_job_rest_days',
         deptCode: 'OP',
@@ -406,9 +419,110 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
 
       await handleSetRestDays(mockCtx, 'OP', 'DRV', 4);
 
-      expect(mockAnswerCallbackQuery).toHaveBeenCalledWith(
-        expect.objectContaining({ text: expect.stringContaining('26 عمل / 4 راحة') })
+      expect(mockAnswerCallbackQuery).toHaveBeenCalled();
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('الخطوة 3 من 3 (سياسة السريان)'),
+        expect.objectContaining({
+          parse_mode: 'Markdown',
+          reply_markup: expect.anything(),
+        })
       );
+      expect(redisModule.setPendingJobMatrixAction).toHaveBeenCalledWith(
+        123456n,
+        expect.objectContaining({
+          action: 'edit_job_cycle_policy',
+          deptCode: 'OP',
+          jobCode: 'DRV',
+          draft: { workDays: 26, restDays: 4 },
+        })
+      );
+    });
+
+    it('should apply transition policy (IMMEDIATE_PRORATED), record history audit and update job card', async () => {
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_cycle_policy',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+        draft: { workDays: 26, restDays: 4 },
+      });
+
+      const mockEditMessageText = vi.fn();
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: { data: 'action:job:apply_policy:OP:DRV:IMMEDIATE_PRORATED' },
+        editMessageText: mockEditMessageText,
+        answerCallbackQuery: mockAnswerCallbackQuery,
+      } as unknown as MyContext;
+
+      await handleApplyCyclePolicy(mockCtx, 'OP', 'DRV', 'IMMEDIATE_PRORATED');
+
+      expect(mockAnswerCallbackQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('26/4') })
+      );
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تم اعتماد وتوثيق دورة العمل بنجاح!'),
+        expect.anything()
+      );
+      expect(redisModule.clearPendingJobMatrixAction).toHaveBeenCalledWith(123456n);
+    });
+
+    it('should prompt for custom date when user selects custom date policy', async () => {
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_cycle_policy',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+        draft: { workDays: 24, restDays: 6 },
+      });
+
+      const mockEditMessageText = vi.fn();
+      const mockAnswerCallbackQuery = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        callbackQuery: { data: 'action:job:prompt_custom_date:OP:DRV' },
+        editMessageText: mockEditMessageText,
+        answerCallbackQuery: mockAnswerCallbackQuery,
+      } as unknown as MyContext;
+
+      await handlePromptCustomDate(mockCtx, 'OP', 'DRV');
+
+      expect(mockEditMessageText).toHaveBeenCalledWith(
+        expect.stringContaining('تحديد تاريخ سريان مخصص لدورة العمل'),
+        expect.anything()
+      );
+      expect(redisModule.setPendingJobMatrixAction).toHaveBeenCalledWith(
+        123456n,
+        expect.objectContaining({
+          action: 'edit_job_cycle_custom_date',
+        })
+      );
+    });
+
+    it('should accept custom date text format (YYYY-MM-DD) and apply custom date policy', async () => {
+      vi.mocked(redisModule.getPendingJobMatrixAction).mockResolvedValueOnce({
+        action: 'edit_job_cycle_custom_date',
+        deptCode: 'OP',
+        jobCode: 'DRV',
+        draft: { workDays: 24, restDays: 6 },
+      });
+
+      const mockReply = vi.fn();
+      const mockDelete = vi.fn().mockResolvedValue(true);
+      const mockEditMessageText = vi.fn();
+      const mockCtx = {
+        isRealSuperAdmin: true,
+        from: { id: 123456 },
+        message: { text: '2026-10-01' },
+        reply: mockReply,
+        deleteMessage: mockDelete,
+        editMessageText: mockEditMessageText,
+      } as unknown as MyContext;
+
+      const handled = await handleJobMatrixTextInput(mockCtx);
+      expect(handled).toBe(true);
+      expect(mockDelete).toHaveBeenCalled();
     });
 
     it('should process custom work and rest days from direct text messages', async () => {
@@ -456,6 +570,59 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
 
       const handled2 = await handleJobMatrixTextInput(mockCtx2);
       expect(handled2).toBe(true);
+    });
+  });
+
+  describe('4. CycleTransitionService — Proration Math Engine & Multi-Period Splitting', () => {
+    it('should calculate simple accrual when no transition occurred in period', () => {
+      const result = cycleTransitionService.calculateProratedAccrual({
+        periodStartDate: '2026-09-01',
+        periodEndDate: '2026-09-30',
+        transitions: [],
+        fallbackWorkDays: 20,
+        fallbackRestDays: 10,
+      });
+
+      expect(result.totalPresenceDays).toBe(30);
+      // 30 * (10 / 20) = 15 days
+      expect(result.totalEarnedRestDays).toBe(15);
+      expect(result.integerLeaveDays).toBe(15);
+      expect(result.fractionalDay).toBe(0);
+      expect(result.periods).toHaveLength(1);
+    });
+
+    it('should split period and compute accurate proration when cycle changed mid-month', () => {
+      // Worker on-site from 2026-09-01 to 2026-09-30 (30 days)
+      // Cycle changed on 2026-09-16 from 20/10 (ratio 0.5) to 24/6 (ratio 0.25)
+      // Period 1: Sept 1 to Sept 15 (15 days) @ 20/10 => 15 * 0.5 = 7.5 days
+      // Period 2: Sept 16 to Sept 30 (15 days) @ 24/6 => 15 * 0.25 = 3.75 days
+      // Total earned: 7.5 + 3.75 = 11.25 days
+      const result = cycleTransitionService.calculateProratedAccrual({
+        periodStartDate: '2026-09-01',
+        periodEndDate: '2026-09-30',
+        transitions: [
+          {
+            effectiveDate: '2026-09-16',
+            previousWorkDays: 20,
+            previousRestDays: 10,
+            newWorkDays: 24,
+            newRestDays: 6,
+          },
+        ],
+        fallbackWorkDays: 20,
+        fallbackRestDays: 10,
+      });
+
+      expect(result.totalPresenceDays).toBe(30);
+      expect(result.totalEarnedRestDays).toBe(11.25);
+      expect(result.integerLeaveDays).toBe(11);
+      expect(result.fractionalDay).toBe(0.25);
+      expect(result.periods).toHaveLength(2);
+      expect(result.periods[0].daysCount).toBe(15);
+      expect(result.periods[0].earnedRestDays).toBe(7.5);
+      expect(result.periods[1].daysCount).toBe(15);
+      expect(result.periods[1].earnedRestDays).toBe(3.75);
+      expect(result.summaryArabic).toContain('11.25 يوم راحة');
     });
   });
 });

@@ -8,6 +8,10 @@ import {
   getPendingJobMatrixAction,
   clearPendingJobMatrixAction,
 } from '../redis.js';
+import {
+  cycleTransitionService,
+  TransitionPolicy,
+} from '../services/cycle-transition.service.js';
 
 /**
  * 🏢 الشاشة الرئيسية لمصفوفة الأقسام والوظائف
@@ -431,7 +435,7 @@ export async function handleSetWorkDays(
 }
 
 /**
- * ⏱️ حفظ دورة العمل والإجازات النهائية للوظيفة
+ * ⏱️ الخطوة 2: تسجيل أيام الراحة والانتقال لاختيار سياسة السريان (الخطوة 3)
  */
 export async function handleSetRestDays(
   ctx: MyContext,
@@ -445,42 +449,158 @@ export async function handleSetRestDays(
   const pending = await getPendingJobMatrixAction(telegramId);
   const workDays = pending?.draft?.workDays ?? 20;
 
+  await setPendingJobMatrixAction(telegramId, {
+    action: 'edit_job_cycle_policy',
+    deptCode,
+    jobCode,
+    draft: { workDays, restDays },
+    messageId: pending?.messageId,
+  });
+
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const keyboard = new InlineKeyboard()
+    .text('⚡ تجزئة زمنية فورية (من اليوم)', `action:job:apply_policy:${deptCode}:${jobCode}:IMMEDIATE_PRORATED`)
+    .row()
+    .text('🔄 بدءاً من الدورة القادمة (بعد التسوية)', `action:job:apply_policy:${deptCode}:${jobCode}:NEXT_CYCLE`)
+    .row()
+    .text('👥 افتراضي للتعيينات الجديدة فقط', `action:job:apply_policy:${deptCode}:${jobCode}:NEW_HIRES_ONLY`)
+    .row()
+    .text('📅 تحديد تاريخ سريان مخصص', `action:job:prompt_custom_date:${deptCode}:${jobCode}`)
+    .row()
+    .text('◀️ رجوع لأيام الراحة', `action:job:set_wd:${deptCode}:${jobCode}:${workDays}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const totalCycleDays = workDays + restDays;
+  const newRatio = (restDays / (workDays || 20)).toFixed(3);
+
+  const text =
+    `⏱️ *تخصيص دورة العمل والإجازات — الخطوة 3 من 3 (سياسة السريان)*\n` +
+    `────────────────────────────\n` +
+    `🏢 *القسم:* \`${deptCode}\` | 💼 *الوظيفة:* \`${jobCode}\`\n` +
+    `📅 *الدورة المحددة:* *${workDays} يوم عمل / ${restDays} يوم راحة* (إجمالي ${totalCycleDays} يوماً)\n` +
+    `📊 *معدل توليد الراحة اليومي:* *${newRatio} يوم راحة لكل يوم عمل*\n\n` +
+    `👇 *اختر سياسة وتاريخ سريان هذا التعديل المالي:*`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * ⏱️ تطبيق سياسة السريان وتسجيل حركة الانتقال في السجل التاريخي
+ */
+export async function handleApplyCyclePolicy(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string,
+  policy: TransitionPolicy,
+  customDateStr?: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const pending = await getPendingJobMatrixAction(telegramId);
+  const workDays = pending?.draft?.workDays ?? 20;
+  const restDays = pending?.draft?.restDays ?? 10;
+
   const job = await systemDataService.getJobByDeptAndCode(deptCode, jobCode);
   if (!job) return;
 
-  const totalCycleDays = workDays + restDays;
-  let shiftNature = `دورة مخصصة (${workDays}+${restDays})`;
-  if (workDays === 20 && restDays === 10) shiftNature = 'دورة قياسية (20+10)';
-  else if (workDays === 24 && restDays === 6) shiftNature = 'دورة ممتدة (24+6)';
-  else if (workDays === 26 && restDays === 4) shiftNature = 'دورة مكثفة (26+4)';
-  else if (workDays === 6 && restDays === 1) shiftNature = 'دورة أسبوعية (6+1)';
+  let effectiveDate = new Date();
+  if (customDateStr) {
+    const parsed = new Date(customDateStr + 'T00:00:00Z');
+    if (!isNaN(parsed.getTime())) {
+      effectiveDate = parsed;
+    }
+  }
 
-  await prisma.jobTitle.update({
-    where: { id: job.id },
-    data: {
-      workDays,
-      restDays,
-      totalCycleDays,
-      shiftNature,
-    },
+  const result = await cycleTransitionService.recordJobCycleTransition({
+    jobId: job.id,
+    deptCode,
+    jobCode,
+    jobTitleName: job.name,
+    previousWorkDays: job.workDays,
+    previousRestDays: job.restDays,
+    newWorkDays: workDays,
+    newRestDays: restDays,
+    policy,
+    effectiveDate,
+    appliedByAdminId: telegramId,
+    notes: `تم التعديل بواسطة المدير العام عبر معالج البوت (${policy})`,
   });
 
   await clearPendingJobMatrixAction(telegramId);
-  await systemDataService.invalidateDepartmentsAndJobs();
+
+  const policyLabels: Record<TransitionPolicy, string> = {
+    IMMEDIATE_PRORATED: '⚡ تجزئة زمنية فورية (من تاريخ اليوم)',
+    NEXT_CYCLE: '🔄 سريان مع الدورة القادمة',
+    NEW_HIRES_ONLY: '👥 افتراضي للتعيينات الجديدة فقط',
+    CUSTOM_DATE: `📅 سريان مخصص (${effectiveDate.toISOString().substring(0, 10)})`,
+  };
 
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery({
-      text: `تم حفظ الدورة بنجاح: ${workDays} عمل / ${restDays} راحة`,
+      text: `تم اعتماد الدورة (${workDays}/${restDays}) وسياسة السريان بنجاح!`,
     });
   }
 
-  await renderJobDetail(
-    ctx,
+  const successText =
+    `✨ *تم اعتماد وتوثيق دورة العمل بنجاح!*\n` +
+    `• الدورة الجديدة: *${workDays} عمل / ${restDays} راحة* (${result.shiftNature})\n` +
+    `• سياسة السريان: *${policyLabels[policy]}*\n` +
+    `• معدل التوليد: كان *${result.prevRatio.toFixed(3)}* ⬅️ أصبح *${result.newRatio.toFixed(3)}*\n` +
+    `• رقم القيد بالسجل التاريخي: \`${result.historyRecord.id.substring(0, 8)}\``;
+
+  await renderJobDetail(ctx, deptCode, jobCode, true, successText);
+}
+
+/**
+ * 📅 طلب إدخال تاريخ سريان مخصص لدورة العمل
+ */
+export async function handlePromptCustomDate(
+  ctx: MyContext,
+  deptCode: string,
+  jobCode: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const telegramId = BigInt(ctx.from.id);
+  const pending = await getPendingJobMatrixAction(telegramId);
+
+  await setPendingJobMatrixAction(telegramId, {
+    action: 'edit_job_cycle_custom_date',
     deptCode,
     jobCode,
-    true,
-    `تم تحديث دورة العمل بنجاح (${workDays} يوم عمل / ${restDays} يوم راحة — إجمالي ${totalCycleDays} يوماً).`
-  );
+    draft: pending?.draft,
+    messageId: pending?.messageId,
+  });
+
+  if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+
+  const cancelKeyboard = new InlineKeyboard()
+    .text('◀️ رجوع لسياسات السريان', `action:job:set_rd:${deptCode}:${jobCode}:${pending?.draft?.restDays ?? 10}`)
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `📅 *تحديد تاريخ سريان مخصص لدورة العمل*\n` +
+    `────────────────────────────\n` +
+    `أدخل تاريخ بدء سريان الدورة الجديدة بالصيغة: \`YYYY-MM-DD\`\n` +
+    `(مثال: \`2026-10-01\` لبدء السريان مع أول الشهر القادم):`;
+
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: cancelKeyboard });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: cancelKeyboard });
 }
 
 /**
@@ -1242,6 +1362,19 @@ export async function handleJobMatrixTextInput(ctx: MyContext): Promise<boolean>
 
     await ctx.deleteMessage().catch(() => {});
     await handleSetRestDays(ctx, pending.deptCode, pending.jobCode, rdNum);
+    return true;
+  }
+
+  // 13. إدخال تاريخ سريان مخصص لدورة العمل (نصياً)
+  if (pending.action === 'edit_job_cycle_custom_date' && pending.deptCode && pending.jobCode) {
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!datePattern.test(textVal)) {
+      await ctx.reply('⚠️ صيغة التاريخ غير صالحة. يرجى إدخال التاريخ بالصيغة: YYYY-MM-DD (مثال: 2026-10-01).');
+      return true;
+    }
+
+    await ctx.deleteMessage().catch(() => {});
+    await handleApplyCyclePolicy(ctx, pending.deptCode, pending.jobCode, 'CUSTOM_DATE', textVal);
     return true;
   }
 

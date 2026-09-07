@@ -219,6 +219,36 @@ model JobTitle {
   @@map("job_titles")
 }
 
+model CycleTransitionHistory {
+  id               String   @id @default(uuid())
+  targetType       String   // "JOB_TITLE" | "SITE" | "WORKER"
+  targetId         String   // ID of JobTitle or Site or Worker
+  targetCode       String?  // Code e.g. DRV, STE-01, OP-DRV-0042
+  targetName       String?  // Name e.g. سائق لودر
+  
+  // Previous cycle
+  previousWorkDays Int
+  previousRestDays Int
+  previousRatio    Decimal  @db.Decimal(6, 4) // e.g. 0.5000
+  
+  // New cycle
+  newWorkDays      Int
+  newRestDays      Int
+  newRatio         Decimal  @db.Decimal(6, 4) // e.g. 0.2500
+  
+  // Transition policy & Effective date
+  transitionPolicy String   @default("IMMEDIATE_PRORATED") // "IMMEDIATE_PRORATED" | "NEXT_CYCLE" | "NEW_HIRES_ONLY" | "CUSTOM_DATE"
+  effectiveDate    DateTime @default(now())
+  appliedByAdminId BigInt?
+  notes            String?
+  
+  createdAt        DateTime @default(now())
+
+  @@index([targetType, targetId, effectiveDate])
+  @@index([effectiveDate])
+  @@map("cycle_transition_history")
+}
+
 model Worker {
   id                     String    @id @default(uuid())
   tenantId               String?

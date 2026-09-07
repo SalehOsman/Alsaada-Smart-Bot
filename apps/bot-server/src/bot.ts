@@ -81,6 +81,8 @@ import {
   handleStartEditJobCycle,
   handleSetWorkDays,
   handleSetRestDays,
+  handleApplyCyclePolicy,
+  handlePromptCustomDate,
   handleJobMatrixTextInput,
 } from './handlers/job-matrix.handler.js';
 
@@ -298,6 +300,12 @@ export function createBot(): Bot<MyContext> {
   });
   bot.callbackQuery(/^action:job:set_rd:(.+):(.+):(\d+)$/, async (ctx) => {
     await handleSetRestDays(ctx, ctx.match[1], ctx.match[2], parseInt(ctx.match[3], 10));
+  });
+  bot.callbackQuery(/^action:job:apply_policy:(.+):(.+):(.+)$/, async (ctx) => {
+    await handleApplyCyclePolicy(ctx, ctx.match[1], ctx.match[2], ctx.match[3] as any);
+  });
+  bot.callbackQuery(/^action:job:prompt_custom_date:(.+):(.+)$/, async (ctx) => {
+    await handlePromptCustomDate(ctx, ctx.match[1], ctx.match[2]);
   });
 
   // 14. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
