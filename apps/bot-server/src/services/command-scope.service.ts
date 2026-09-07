@@ -13,7 +13,6 @@ export const SUPER_ADMIN_COMMANDS: BotCommand[] = [
   { command: 'jobs', description: '💼 الهيكل الوظيفي ومصفوفة المهن' },
   { command: 'sites', description: '🏗️ مصفوفة المشاريع والمواقع الميدانية' },
   { command: 'profile', description: '👤 الملف الشخصي وتعديل البيانات' },
-  { command: 'ping', description: '⚡ فحص كفاءة واستجابة السيرفر' },
 ];
 
 export const FIELD_ADMIN_COMMANDS: BotCommand[] = [
@@ -21,7 +20,6 @@ export const FIELD_ADMIN_COMMANDS: BotCommand[] = [
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
   { command: 'switch_role', description: '👷 التبديل لحسابي كعامل (بوابة ذاتية)' },
   { command: 'profile', description: '👤 ملفي وإعداداتي الشخصية' },
-  { command: 'ping', description: '⚡ فحص كفاءة واستجابة السيرفر' },
 ];
 
 export const DUAL_WORKER_COMMANDS: BotCommand[] = [
@@ -43,8 +41,8 @@ export const EXECUTIVE_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية والمؤشرات' },
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
   { command: 'profile', description: '👤 ملفي الشخصي' },
-  { command: 'ping', description: '⚡ فحص كفاءة السيرفر' },
 ];
+
 
 export const SUPPLIER_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية وبوابة المورد' },

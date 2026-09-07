@@ -18,8 +18,7 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
         .text('🚜 تشغيل المواقع والإنتاج', 'menu:domain:operations')
         .text('⛽ التعيينات والمخازن', 'menu:domain:logistics')
         .row()
-        .text('🏛️ الحوكمة وإدارة المخاطر', 'menu:domain:governance')
-        .text('⚙️ إعدادات النظام', 'menu:super_admin_settings');
+        .text('🏛️ الحوكمة وإدارة المخاطر', 'menu:domain:governance');
       break;
 
     case 'EXECUTIVE':
@@ -41,9 +40,9 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
         .text('🚜 تشغيل المواقع والإنتاج', 'menu:domain:operations')
         .text('⛽ التعيينات والمخازن', 'menu:domain:logistics')
         .row()
-        .text('🏛️ السلامة وإدارة المخاطر', 'menu:domain:governance')
-        .text('⚙️ إعداداتي وملفي الشخصي', 'menu:field_admin_settings');
+        .text('🏛️ السلامة وإدارة المخاطر', 'menu:domain:governance');
       break;
+
 
     case 'WORKER':
       keyboard

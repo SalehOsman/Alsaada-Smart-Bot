@@ -13,52 +13,49 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
   if (role === 'SUPER_ADMIN') {
     keyboard
       .text('🏠 القائمة الرئيسية')
-      .text('⚙️ إعدادات النظام')
-      .row()
-      .text('👤 ملفي الشخصي')
-      .text('⚡ فحص الكفاءة');
+      .text('⚙️ إعدادات النظام');
   } else if (role === 'FIELD_ADMIN') {
     keyboard
       .text('🏠 القائمة الرئيسية')
-      .text('👷 التبديل لحسابي كعامل')
       .row()
-      .text('👤 ملفي وإعداداتي')
-      .text('⚡ فحص الكفاءة');
+      .text('👷 التبديل لحسابي كعامل')
+      .text('👤 ملفي وإعداداتي');
   } else if (role === 'WORKER') {
     if (ctx.isDualWorkerMode) {
       keyboard
         .text('🏠 القائمة الرئيسية')
-        .text('🛡️ العودة لبوابة الإشراف')
         .row()
-        .text('🧾 قسيمة راتبي')
+        .text('🛡️ العودة لبوابة الإشراف')
         .text('👤 ملفي الشخصي');
     } else {
       keyboard
         .text('🏠 القائمة الرئيسية')
-        .text('📊 كشف حسابي')
         .row()
+        .text('📊 كشف حسابي')
         .text('🧾 قسيمة راتبي')
+        .row()
         .text('👤 ملفي الشخصي');
     }
   } else if (role === 'EXECUTIVE') {
     keyboard
       .text('🏠 القائمة الرئيسية')
-      .text('📊 لوحة المؤشرات')
       .row()
-      .text('👤 ملفي الشخصي')
-      .text('⚡ فحص الكفاءة');
+      .text('📊 لوحة المؤشرات')
+      .text('👤 ملفي الشخصي');
   } else if (role === 'SUPPLIER') {
     keyboard
       .text('🏠 القائمة الرئيسية')
-      .text('🧾 فواتيري ومستخلصاتي')
       .row()
+      .text('🧾 فواتيري ومستخلصاتي')
       .text('👤 ملفي الشخصي');
   } else {
     // GUEST
     keyboard
       .text('🏠 القائمة الرئيسية')
+      .row()
       .text('🆔 بطاقة معرفي');
   }
+
 
   return keyboard.resized().persistent();
 }

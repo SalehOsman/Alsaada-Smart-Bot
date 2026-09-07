@@ -6,7 +6,7 @@ import { getRoleTitle, buildWelcomeMessage } from '../src/handlers/start.handler
 import { MyContext } from '../src/types/context.js';
 
 describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
-  it('should render 6 domain & settings buttons for SUPER_ADMIN without impersonation escape hatch', () => {
+  it('should render 5 macro domain buttons for SUPER_ADMIN without system settings or impersonation escape hatch', () => {
     const mockCtx = {
       effectiveRole: 'SUPER_ADMIN',
       isRealSuperAdmin: true,
@@ -16,13 +16,13 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     const keyboard = buildMainMenuKeyboard(mockCtx);
     const buttons = keyboard.inline_keyboard.flat();
 
-    expect(buttons.length).toBe(6);
+    expect(buttons.length).toBe(5);
     expect(buttons.some(b => b.callback_data === 'menu:domain:hr')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:finance')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:operations')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:logistics')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:governance')).toBe(true);
-    expect(buttons.some(b => b.callback_data === 'menu:super_admin_settings')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'menu:super_admin_settings')).toBe(false);
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
 
@@ -41,7 +41,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
 
-  it('should render field admin 6 macro domain buttons for FIELD_ADMIN role', () => {
+  it('should render field admin 5 macro domain buttons for FIELD_ADMIN role', () => {
     const mockCtx = {
       effectiveRole: 'FIELD_ADMIN',
       isRealSuperAdmin: false,
@@ -51,15 +51,16 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     const keyboard = buildMainMenuKeyboard(mockCtx);
     const buttons = keyboard.inline_keyboard.flat();
 
-    expect(buttons.length).toBe(6);
+    expect(buttons.length).toBe(5);
     expect(buttons.some(b => b.callback_data === 'menu:domain:hr')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:finance')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:operations')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:logistics')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:domain:governance')).toBe(true);
-    expect(buttons.some(b => b.callback_data === 'menu:field_admin_settings')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'menu:field_admin_settings')).toBe(false);
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
+
 
   it('should render dual identity return button for WORKER role when isDualWorkerMode is true', () => {
     const mockCtx = {
@@ -188,14 +189,17 @@ describe('Start Handler & Welcome Messages', () => {
 });
 
 describe('Persistent Bottom Reply Keyboard', () => {
-  it('should build persistent reply keyboard for SUPER_ADMIN with system settings and profile', () => {
+  it('should build persistent reply keyboard for SUPER_ADMIN with home and system settings only', () => {
     const mockCtx = { effectiveRole: 'SUPER_ADMIN' } as MyContext;
     const kb = buildPersistentReplyKeyboard(mockCtx);
     const buttons = kb.keyboard.flat();
+    expect(buttons.length).toBe(2);
     expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
     expect(buttons.some(b => b.text === '⚙️ إعدادات النظام')).toBe(true);
-    expect(buttons.some(b => b.text === '👤 ملفي الشخصي')).toBe(true);
+    expect(buttons.some(b => b.text === '👤 ملفي الشخصي')).toBe(false);
+    expect(buttons.some(b => b.text === '⚡ فحص الكفاءة')).toBe(false);
   });
+
 
   it('should build persistent reply keyboard for FIELD_ADMIN with worker switch button', () => {
     const mockCtx = { effectiveRole: 'FIELD_ADMIN' } as MyContext;
