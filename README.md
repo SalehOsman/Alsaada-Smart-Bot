@@ -92,4 +92,5 @@ F:\Alsaada-Smart-Bot/
 * [16. ميثاق أمان قواعد البيانات وحوكمة القيود الجنائية والتشفير](./docs/16-database-security-and-tamper-proof-ledger.md)
 * [17. الدليل المعياري لتكويد العمال وهيكل الأقسام والربط الصامت بالأكواد القديمة](./docs/17-worker-coding-and-silent-alias-resolution.md)
 * [18. المعمارية الهندسية الشاملة لقاعدة بيانات PostgreSQL ونموذج الكيانات والعلاقات](./docs/18-enterprise-schema-and-entity-relationship-model.md)
+* [19. السجل المرجعي الشامل لحصر وترحيل وظائف المنظومة والوظائف المستحدثة](./docs/19-legacy-to-enterprise-master-feature-migration-registry.md)
 
