@@ -298,6 +298,9 @@ export interface PendingWorkerWizardState {
     maritalStatus?: string;
     idCardFrontPath?: string;
     idCardBackPath?: string;
+    idCardExpiryDateStr?: string;
+    legacyCode?: string;
+    isManualFallback?: boolean;
     generatedCode?: string;
     baseSalary?: number;
     additionalSalary?: number;
@@ -361,6 +364,45 @@ export async function clearPendingWorkerExcelUpload(telegramId: bigint): Promise
   }
 }
 
+const PENDING_WORKER_EDIT_PREFIX = 'pending:worker_edit:user:';
+
+export interface PendingWorkerEditState {
+  workerId: string;
+  workerCode: string;
+  workerName: string;
+  category?: string;
+  fieldKey?: string;
+  fieldName?: string;
+  oldValue?: string;
+  promptMsgId: number;
+}
+
+export async function setPendingWorkerEdit(telegramId: bigint, state: PendingWorkerEditState): Promise<void> {
+  try {
+    await redis.set(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`, JSON.stringify(state), 'EX', 600);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting pending worker edit:', error);
+  }
+}
+
+export async function getPendingWorkerEdit(telegramId: bigint): Promise<PendingWorkerEditState | null> {
+  try {
+    const raw = await redis.get(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as PendingWorkerEditState) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting pending worker edit:', error);
+    return null;
+  }
+}
+
+export async function clearPendingWorkerEdit(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing pending worker edit:', error);
+  }
+}
+
 /**
  * Clean up all pending text wizard and input actions across all domains for a user
  */
@@ -372,6 +414,7 @@ export async function clearAllPendingUserActions(telegramId: bigint): Promise<vo
     clearPendingJobMatrixAction(telegramId),
     clearPendingWorkerWizard(telegramId),
     clearPendingWorkerExcelUpload(telegramId),
+    clearPendingWorkerEdit(telegramId),
   ]);
 }
 

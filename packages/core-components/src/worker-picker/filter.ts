@@ -40,11 +40,12 @@ export function filterWorkers(workers: WorkerItem[], options: WorkerFilterOption
       const nameMatch = normalizeArabicText(w.name).includes(normalizedQuery);
       const nickMatch = w.nickname ? normalizeArabicText(w.nickname).includes(normalizedQuery) : false;
       const codeMatch = normalizeDigits(w.code).toLowerCase().includes(normalizedQuery);
+      const legacyMatch = w.legacyCode ? normalizeDigits(w.legacyCode).toLowerCase().includes(normalizedQuery) : false;
       // Silent Alias Resolution: match against previous codes or legacy code
       const aliasMatch = w.aliases?.some((alias) =>
         normalizeDigits(alias).toLowerCase().includes(normalizedQuery)
       );
-      return nameMatch || nickMatch || codeMatch || Boolean(aliasMatch);
+      return nameMatch || nickMatch || codeMatch || legacyMatch || Boolean(aliasMatch);
     });
   }
 

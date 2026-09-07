@@ -2,6 +2,7 @@ import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { workerService } from '../services/worker.service.js';
+import { aiVisionIdService } from '../services/ai-vision-id.service.js';
 import {
   setPendingWorkerWizard,
   getPendingWorkerWizard,
@@ -17,17 +18,24 @@ import {
 } from '@alsaada/regional-engine';
 
 export enum WorkerWizardStep {
+  DOC_TYPE = 'DOC_TYPE',
+  PHOTO_FRONT = 'PHOTO_FRONT',
+  PHOTO_BACK = 'PHOTO_BACK',
+  AI_CONFIRMATION = 'AI_CONFIRMATION',
+  AI_EDIT_NAME = 'AI_EDIT_NAME',
+  AI_EDIT_ID = 'AI_EDIT_ID',
+  AI_EDIT_EXPIRY = 'AI_EDIT_EXPIRY',
   FULL_NAME = 'FULL_NAME',
+  ID_NUMBER = 'ID_NUMBER',
+  PASSPORT_NATIONALITY = 'PASSPORT_NATIONALITY',
+  PASSPORT_BIRTHDATE = 'PASSPORT_BIRTHDATE',
+  PASSPORT_GENDER = 'PASSPORT_GENDER',
+  MANUAL_EXPIRY = 'MANUAL_EXPIRY',
   NICKNAME = 'NICKNAME',
   PHONE = 'PHONE',
   PAYOUT_TRANSFER_CHOICE = 'PAYOUT_TRANSFER_CHOICE',
   CUSTOM_WALLET_INPUT = 'CUSTOM_WALLET_INPUT',
   PAYOUT_METHOD_CHOICE = 'PAYOUT_METHOD_CHOICE',
-  ID_TYPE = 'ID_TYPE',
-  ID_NUMBER = 'ID_NUMBER',
-  PASSPORT_NATIONALITY = 'PASSPORT_NATIONALITY',
-  PASSPORT_BIRTHDATE = 'PASSPORT_BIRTHDATE',
-  PASSPORT_GENDER = 'PASSPORT_GENDER',
   JOB_CHOICE = 'JOB_CHOICE',
   CUSTOM_JOB_INPUT = 'CUSTOM_JOB_INPUT',
   SITE_CHOICE = 'SITE_CHOICE',
@@ -38,8 +46,6 @@ export enum WorkerWizardStep {
   EMERGENCY_PHONE = 'EMERGENCY_PHONE',
   INSURANCE_STATUS = 'INSURANCE_STATUS',
   MARITAL_STATUS = 'MARITAL_STATUS',
-  ID_PHOTO_FRONT = 'ID_PHOTO_FRONT',
-  ID_PHOTO_BACK = 'ID_PHOTO_BACK',
   CONFIRMATION = 'CONFIRMATION',
 }
 
@@ -93,7 +99,7 @@ function getJobEmoji(jobTitle: string): string {
 }
 
 /**
- * 🚀 بدء معالج تسجيل عامل جديد (المرحلة 1: الاسم الرباعي)
+ * 🚀 بدء معالج تسجيل وتعيين عامل جديد (المرحلة 1: نوع وثيقة الهوية والمسح الذكي)
  */
 export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
   if (ctx.callbackQuery) {
@@ -103,7 +109,7 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
 
   const telegramId = BigInt(ctx.from.id);
   const initialState: PendingWorkerWizardState = {
-    step: WorkerWizardStep.FULL_NAME,
+    step: WorkerWizardStep.DOC_TYPE,
     messageId: 0,
     data: {
       idType: 'NATIONAL_ID',
@@ -118,19 +124,27 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
       maritalStatus: 'أعزب',
       idCardFrontPath: '-',
       idCardBackPath: '-',
+      isManualFallback: false,
     },
   };
 
   const keyboard = new InlineKeyboard()
+    .text('🇪🇬 بطاقة رقم قومي مصري (مسح ذكي بالذكاء الاصطناعي)', 'action:worker_doc:national_id')
+    .row()
+    .text('🌐 جواز سفر لوافد / أجنبي', 'action:worker_doc:passport')
+    .row()
+    .text('✍️ إدخال يدوي مباشر (تجاوز الفحص الذكي)', 'action:worker_step:manual_fallback')
+    .row()
     .text('❌ إلغاء العملية', 'action:cancel_worker_op')
     .row()
     .text('🔙 العودة لقسم الموارد البشرية', 'menu:domain:hr');
 
   const text =
-    '👤 *تسجيل وتعيين عامل جديد [1/19]*\n' +
+    '👤 *تسجيل وتعيين عامل جديد [1/18]*\n' +
     '━━━━━━━━━━━━━━━━━━━━━\n' +
-    'يرجى إدخال *الاسم الرباعي* للعامل الجديد:\n\n' +
-    '💡 _تلميح: سيتم اقتراح اسم الشهرة تلقائياً في الخطوة التالية مع مراعاة الأسماء المركبة._';
+    'اختر نوع وثيقة إثبات الهوية للبدء:\n\n' +
+    '💡 *المسح الذكي الفوري (AI Vision):*\n' +
+    'يقوم البوت بقراءة وتدقيق الرقم القومي والاسم الكامل من وجه البطاقة، وتاريخ الانتهاء من ظهرها تلقائياً لتفادي أخطاء الإدخال وتسريع التعيين.';
 
   let promptMsgId = 0;
   if (ctx.callbackQuery) {
@@ -154,6 +168,196 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
 }
 
 /**
+ * 📸 معالجة إرفاق صور البطاقة / الوثيقة بالذكاء الاصطناعي (AI Vision)
+ */
+export async function handleWorkerWizardPhotoInput(ctx: MyContext): Promise<boolean> {
+  if (!ctx.from) return false;
+  const telegramId = BigInt(ctx.from.id);
+  const wizard = await getPendingWorkerWizard(telegramId);
+  if (!wizard) return false;
+
+  let fileId = '';
+  if (ctx.message?.photo && ctx.message.photo.length > 0) {
+    fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+  } else if (ctx.message?.document?.file_id) {
+    fileId = ctx.message.document.file_id;
+  }
+
+  if (!fileId) return false;
+  await ctx.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id).catch(() => {});
+
+  // 1. تصوير وجه البطاقة أو صفحة جواز السفر بالذكاء الاصطناعي
+  if (wizard.step === WorkerWizardStep.PHOTO_FRONT) {
+    const statusMsg = await ctx.reply('⏳ *جاري فحص المستند بالذكاء الاصطناعي وتدقيق البيانات الرسمية...*', {
+      parse_mode: 'Markdown',
+    });
+
+    try {
+      const file = await ctx.api.getFile(fileId);
+      if (!file.file_path) throw new Error('Telegram file_path not found');
+
+      const downloadUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`;
+      const res = await fetch(downloadUrl);
+      if (!res.ok) throw new Error(`Failed to download image: ${res.statusText}`);
+
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const mimeType = ctx.message?.photo ? 'image/jpeg' : (ctx.message?.document?.mime_type || 'image/jpeg');
+
+      const expectedDocType = wizard.data.idType === 'PASSPORT' ? 'PASSPORT' : 'NATIONAL_ID_FRONT';
+      const scanResult = await aiVisionIdService.scanDocument(buffer, mimeType, expectedDocType);
+
+      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
+
+      if (!scanResult.isValid) {
+        const errorKb = new InlineKeyboard()
+          .text('🔄 إعادة التقاط الصورة', 'action:worker_photo:retry_front')
+          .row()
+          .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
+          .row()
+          .text('◀️ السابق', 'action:worker_step:back')
+          .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+
+        const errMsg =
+          scanResult.userErrorMessage ||
+          '❌ *الصورة المرفقة ليست لرقم قومي او باسبور يرجى ارفاق صورة بطاقة رقم قومي او باسبور على حسب حالة الاختيار*';
+
+        await ctx.reply(errMsg, { parse_mode: 'Markdown', reply_markup: errorKb });
+        return true;
+      }
+
+      // حفظ معطيات الوجه
+      wizard.data.idCardFrontPath = fileId;
+      if (scanResult.fullName) {
+        wizard.data.fullName = scanResult.fullName;
+      }
+
+      if (wizard.data.idType === 'NATIONAL_ID') {
+        const rawNid = scanResult.nationalIdNumber!;
+        wizard.data.idNumber = rawNid;
+        wizard.data.birthDateStr = scanResult.birthDate ? formatDate(scanResult.birthDate) : '-';
+        wizard.data.gender = scanResult.gender;
+        wizard.data.governorateNameAr = scanResult.governorateNameAr;
+        if (scanResult.birthDate) {
+          wizard.data.age = Math.floor(
+            (new Date().getTime() - scanResult.birthDate.getTime()) / (365.25 * 24 * 3600 * 1000)
+          );
+        }
+
+        // فحص الازدواجية فوراً للرقم القومي
+        const dup = await workerService.checkDuplicate('NATIONAL_ID', rawNid);
+        if (dup.isDuplicate && dup.existingWorker) {
+          const dupKb = new InlineKeyboard()
+            .text('🔄 إرفاق بطاقة أخرى', 'action:worker_photo:retry_front')
+            .row()
+            .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+          await ctx.reply(
+            `⚠️ *تنبيه تعارض: الرقم القومي مسجل مسبقاً!*\n` +
+            `• الرقم القومي: \`${rawNid}\`\n` +
+            `• كود العامل: \`${dup.existingWorker.code}\`\n` +
+            `• الاسم: *${dup.existingWorker.name}*\n` +
+            `• الوظيفة: ${dup.existingWorker.jobTitle}`,
+            { parse_mode: 'Markdown', reply_markup: dupKb }
+          );
+          return true;
+        }
+
+        // الانتقال لظهر البطاقة لاستخراج تاريخ الانتهاء
+        wizard.step = WorkerWizardStep.PHOTO_BACK;
+        await setPendingWorkerWizard(telegramId, wizard);
+        await renderWizardStep(ctx, wizard);
+        return true;
+      } else {
+        // جواز سفر
+        wizard.data.idNumber = scanResult.passportNumber || '-';
+        if (scanResult.expiryDateStr) {
+          wizard.data.idCardExpiryDateStr = scanResult.expiryDateStr;
+        }
+
+        const dup = await workerService.checkDuplicate('PASSPORT', wizard.data.idNumber);
+        if (dup.isDuplicate && dup.existingWorker) {
+          const dupKb = new InlineKeyboard()
+            .text('🔄 إرفاق جواز آخر', 'action:worker_photo:retry_front')
+            .row()
+            .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+          await ctx.reply(
+            `⚠️ *تنبيه تعارض: رقم الجواز مسجل مسبقاً!*\n` +
+            `• رقم الجواز: \`${wizard.data.idNumber}\`\n` +
+            `• كود العامل: \`${dup.existingWorker.code}\`\n` +
+            `• الاسم: *${dup.existingWorker.name}*`,
+            { parse_mode: 'Markdown', reply_markup: dupKb }
+          );
+          return true;
+        }
+
+        // للجواز ننتقل لتحديد الجنسية والبيانات المكملة
+        wizard.step = WorkerWizardStep.PASSPORT_NATIONALITY;
+        await setPendingWorkerWizard(telegramId, wizard);
+        await renderWizardStep(ctx, wizard);
+        return true;
+      }
+    } catch (error: any) {
+      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
+      console.error('⚠️ [AI-VISION-WIZARD] Front photo processing error:', error);
+      const errKb = new InlineKeyboard()
+        .text('🔄 إعادة المحاولة', 'action:worker_photo:retry_front')
+        .row()
+        .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
+        .row()
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      await ctx.reply(
+        '⚠️ تعذر فحص الصورة بالذكاء الاصطناعي حالياً. يمكنك إعادة التقاط الصورة بوضوح أو استخدام الإدخال اليدوي.',
+        { reply_markup: errKb }
+      );
+      return true;
+    }
+  }
+
+  // 2. تصوير ظهر البطاقة لاستخراج تاريخ الانتهاء
+  if (wizard.step === WorkerWizardStep.PHOTO_BACK) {
+    const statusMsg = await ctx.reply('⏳ *جاري فحص ظهر البطاقة واستخراج تاريخ انتهاء السريان...*', {
+      parse_mode: 'Markdown',
+    });
+
+    try {
+      const file = await ctx.api.getFile(fileId);
+      if (!file.file_path) throw new Error('Telegram file_path not found');
+
+      const downloadUrl = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`;
+      const res = await fetch(downloadUrl);
+      if (!res.ok) throw new Error(`Failed to download image: ${res.statusText}`);
+
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const mimeType = ctx.message?.photo ? 'image/jpeg' : (ctx.message?.document?.mime_type || 'image/jpeg');
+
+      const scanResult = await aiVisionIdService.scanDocument(buffer, mimeType, 'NATIONAL_ID_BACK');
+      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
+
+      wizard.data.idCardBackPath = fileId;
+      if (scanResult.isValid && scanResult.expiryDateStr) {
+        wizard.data.idCardExpiryDateStr = scanResult.expiryDateStr;
+      }
+
+      // الانتقال لبطاقة التأكيد الموحدة للبيانات المستخرجة
+      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    } catch (error: any) {
+      await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
+      console.error('⚠️ [AI-VISION-WIZARD] Back photo processing error:', error);
+      wizard.data.idCardBackPath = fileId;
+      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * 🔄 معالجة المدخلات النصية لمعالج تسجيل العامل
  */
 export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boolean> {
@@ -167,58 +371,25 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
   await ctx.api.deleteMessage(ctx.chat!.id, ctx.message.message_id).catch(() => {});
 
   switch (wizard.step) {
-    case WorkerWizardStep.FULL_NAME: {
+    case WorkerWizardStep.FULL_NAME:
+    case WorkerWizardStep.AI_EDIT_NAME: {
       if (inputRaw.length < 5) {
         await ctx.reply('⚠️ الاسم قصير جداً. يرجى إدخال الاسم الرباعي كاملاً (5 أحرف على الأقل).');
         return true;
       }
       wizard.data.fullName = inputRaw;
-      wizard.data.nickname = extractFirstTwoNames(inputRaw);
-
-      wizard.step = WorkerWizardStep.NICKNAME;
-      await setPendingWorkerWizard(telegramId, wizard);
-      await renderWizardStep(ctx, wizard);
-      return true;
-    }
-
-    case WorkerWizardStep.NICKNAME: {
-      const autoNick = extractFirstTwoNames(wizard.data.fullName || '');
-      wizard.data.nickname = (inputRaw && inputRaw !== '-' && inputRaw !== 'تخطي') ? inputRaw : autoNick;
-      wizard.step = WorkerWizardStep.PHONE;
-      await setPendingWorkerWizard(telegramId, wizard);
-      await renderWizardStep(ctx, wizard);
-      return true;
-    }
-
-    case WorkerWizardStep.PHONE: {
-      const rawPhone = normalizeDigits(inputRaw.replace(/[\s-]/g, ''));
-      if (rawPhone.length !== 11 || !rawPhone.startsWith('01')) {
-        await ctx.reply('⚠️ يرجى إدخال رقم هاتف مصري صحيح مكون من 11 رقماً يبدأ بـ 01.');
-        return true;
-      }
-      wizard.data.phone = rawPhone;
-      wizard.step = WorkerWizardStep.PAYOUT_TRANSFER_CHOICE;
-      await setPendingWorkerWizard(telegramId, wizard);
-      await renderWizardStep(ctx, wizard);
-      return true;
-    }
-
-    case WorkerWizardStep.CUSTOM_WALLET_INPUT: {
-      const rawWallet = normalizeDigits(inputRaw.replace(/[\s-]/g, ''));
-      wizard.data.walletNumber = (rawWallet && rawWallet !== '-' && rawWallet !== 'تخطي') ? rawWallet : '-';
-      if (wizard.data.walletNumber === '-') {
-        wizard.data.walletType = 'نقدي / كاش';
-        wizard.data.payoutMethod = 'استلام نقدي بالخزينة / الموقع';
-        wizard.step = WorkerWizardStep.ID_TYPE;
+      if (wizard.step === WorkerWizardStep.AI_EDIT_NAME) {
+        wizard.step = WorkerWizardStep.AI_CONFIRMATION;
       } else {
-        wizard.step = WorkerWizardStep.PAYOUT_METHOD_CHOICE;
+        wizard.step = WorkerWizardStep.ID_NUMBER;
       }
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
       return true;
     }
 
-    case WorkerWizardStep.ID_NUMBER: {
+    case WorkerWizardStep.ID_NUMBER:
+    case WorkerWizardStep.AI_EDIT_ID: {
       const idType = wizard.data.idType || 'NATIONAL_ID';
 
       if (idType === 'NATIONAL_ID') {
@@ -249,42 +420,71 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
           return true;
         }
 
-        wizard.data.idNumber = normalizeDigits(inputRaw.replace(/[\s-]/g, ''));
-        wizard.data.birthDateStr = val.birthDate.toISOString().substring(0, 10);
-        wizard.data.age = val.age;
+        wizard.data.idNumber = inputRaw;
+        wizard.data.birthDateStr = formatDate(val.birthDate);
+        wizard.data.age = Math.floor(
+          (new Date().getTime() - val.birthDate.getTime()) / (365.25 * 24 * 3600 * 1000)
+        );
         wizard.data.gender = val.gender;
-        wizard.data.governorateCode = val.governorateCode;
         wizard.data.governorateNameAr = val.governorateNameAr;
 
-        wizard.step = WorkerWizardStep.JOB_CHOICE;
+        if (wizard.step === WorkerWizardStep.AI_EDIT_ID) {
+          wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+        } else {
+          wizard.step = WorkerWizardStep.MANUAL_EXPIRY;
+        }
         await setPendingWorkerWizard(telegramId, wizard);
         await renderWizardStep(ctx, wizard);
         return true;
       } else {
-        const cleanPassport = normalizeDigits(inputRaw.trim().toUpperCase().replace(/[\s-]/g, ''));
-        if (cleanPassport.length < 5 || cleanPassport.length > 20) {
-          await ctx.reply('⚠️ رقم جواز السفر غير صحيح (يجب أن يتراوح بين 5 و 20 حرفاً ورقماً).');
+        // جواز سفر
+        if (inputRaw.length < 5) {
+          await ctx.reply('⚠️ رقم جواز السفر قصير جداً (5 خانات على الأقل).');
           return true;
         }
 
-        const dup = await workerService.checkDuplicate('PASSPORT', cleanPassport);
+        const dup = await workerService.checkDuplicate('PASSPORT', inputRaw);
         if (dup.isDuplicate && dup.existingWorker) {
+          const dupKb = new InlineKeyboard()
+            .text('◀️ إدخال رقم آخر', 'action:worker_step:back')
+            .text('❌ إلغاء العملية', 'action:cancel_worker_op');
           await ctx.reply(
-            `⚠️ *تنبيه تعارض:* رقم جواز السفر مسجل مسبقاً للعامل (${dup.existingWorker.name}) بكود (\`${dup.existingWorker.code}\`).`
+            `⚠️ *تنبيه تعارض: رقم الجواز مسجل مسبقاً!*\n` +
+            `• كود العامل: \`${dup.existingWorker.code}\`\n` +
+            `• الاسم: *${dup.existingWorker.name}*`,
+            { parse_mode: 'Markdown', reply_markup: dupKb }
           );
           return true;
         }
 
-        wizard.data.idNumber = cleanPassport;
-        wizard.step = WorkerWizardStep.PASSPORT_NATIONALITY;
+        wizard.data.idNumber = inputRaw.toUpperCase();
+        if (wizard.step === WorkerWizardStep.AI_EDIT_ID) {
+          wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+        } else {
+          wizard.step = WorkerWizardStep.PASSPORT_NATIONALITY;
+        }
         await setPendingWorkerWizard(telegramId, wizard);
         await renderWizardStep(ctx, wizard);
         return true;
       }
     }
 
+    case WorkerWizardStep.MANUAL_EXPIRY:
+    case WorkerWizardStep.AI_EDIT_EXPIRY: {
+      let cleanExpiry = normalizeDigits(inputRaw.replace(/[\/.]/g, '-'));
+      if (!cleanExpiry.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        await ctx.reply('⚠️ صيغة التاريخ غير صحيحة. يرجى إدخال تاريخ انتهاء البطاقة بصيغة: YYYY-MM-DD (مثال: 2029-08-15) أو اضغط تخطي.');
+        return true;
+      }
+      wizard.data.idCardExpiryDateStr = cleanExpiry;
+      wizard.step = wizard.data.isManualFallback ? WorkerWizardStep.NICKNAME : WorkerWizardStep.AI_CONFIRMATION;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    }
+
     case WorkerWizardStep.PASSPORT_NATIONALITY: {
-      wizard.data.nationality = inputRaw;
+      wizard.data.nationality = inputRaw || 'غير محدد';
       wizard.step = WorkerWizardStep.PASSPORT_BIRTHDATE;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
@@ -292,28 +492,54 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
     }
 
     case WorkerWizardStep.PASSPORT_BIRTHDATE: {
-      const cleanDate = normalizeDigits(inputRaw.replace(/[\s\/.]/g, '-'));
-      const parsed = new Date(cleanDate);
-      if (isNaN(parsed.getTime()) || !cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        await ctx.reply('⚠️ صيغة التاريخ غير صحيحة. يرجى إدخال التاريخ بصيغة: `YYYY-MM-DD` (مثال: `1995-06-25`).', {
-          parse_mode: 'Markdown',
-        });
+      let cleanDate = normalizeDigits(inputRaw.replace(/[\/.]/g, '-'));
+      if (!cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        await ctx.reply('⚠️ يرجى إدخال تاريخ الميلاد بصيغة: YYYY-MM-DD (مثال: 1994-05-12).');
         return true;
       }
-
-      const today = new Date();
-      let age = today.getFullYear() - parsed.getFullYear();
-      if (today.getMonth() < parsed.getMonth() || (today.getMonth() === parsed.getMonth() && today.getDate() < parsed.getDate())) {
-        age--;
-      }
-      if (age < 16 || age > 75) {
-        await ctx.reply('⚠️ عمر العامل يجب أن يكون بين 16 و 75 عاماً.');
-        return true;
-      }
-
+      const bDate = new Date(cleanDate);
       wizard.data.birthDateStr = cleanDate;
-      wizard.data.age = age;
+      wizard.data.age = Math.floor(
+        (new Date().getTime() - bDate.getTime()) / (365.25 * 24 * 3600 * 1000)
+      );
       wizard.step = WorkerWizardStep.PASSPORT_GENDER;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    }
+
+    case WorkerWizardStep.NICKNAME: {
+      const autoNick = extractFirstTwoNames(wizard.data.fullName || '');
+      wizard.data.nickname = inputRaw && inputRaw !== '-' && inputRaw !== 'تخطي' ? inputRaw : autoNick;
+      wizard.step = WorkerWizardStep.PHONE;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    }
+
+    case WorkerWizardStep.PHONE: {
+      const rawPhone = normalizeDigits(inputRaw.replace(/[\s-]/g, ''));
+      if (rawPhone.length !== 11 || !rawPhone.startsWith('01')) {
+        await ctx.reply('⚠️ يرجى إدخال رقم هاتف مصري صحيح مكون من 11 رقماً يبدأ بـ 01.');
+        return true;
+      }
+      wizard.data.phone = rawPhone;
+      wizard.step = WorkerWizardStep.PAYOUT_TRANSFER_CHOICE;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    }
+
+    case WorkerWizardStep.CUSTOM_WALLET_INPUT: {
+      const rawWallet = normalizeDigits(inputRaw.replace(/[\s-]/g, ''));
+      wizard.data.walletNumber = rawWallet && rawWallet !== '-' && rawWallet !== 'تخطي' ? rawWallet : '-';
+      if (wizard.data.walletNumber === '-') {
+        wizard.data.walletType = 'نقدي / كاش';
+        wizard.data.payoutMethod = 'استلام نقدي بالخزينة / الموقع';
+        wizard.step = WorkerWizardStep.JOB_CHOICE;
+      } else {
+        wizard.step = WorkerWizardStep.PAYOUT_METHOD_CHOICE;
+      }
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
       return true;
@@ -321,6 +547,7 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
 
     case WorkerWizardStep.CUSTOM_JOB_INPUT: {
       wizard.data.jobTitleName = inputRaw;
+      wizard.data.jobCode = 'GEN';
       wizard.step = WorkerWizardStep.SITE_CHOICE;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
@@ -328,12 +555,9 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
     }
 
     case WorkerWizardStep.CUSTOM_START_DATE_INPUT: {
-      const cleanDate = normalizeDigits(inputRaw.replace(/[\s\/.]/g, '-'));
-      const parsed = new Date(cleanDate);
-      if (isNaN(parsed.getTime()) || !cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        await ctx.reply('⚠️ صيغة التاريخ غير صحيحة. يرجى إدخال تاريخ بصيغة `YYYY-MM-DD` (مثال: `2026-09-01`).', {
-          parse_mode: 'Markdown',
-        });
+      let cleanDate = normalizeDigits(inputRaw.replace(/[\/.]/g, '-'));
+      if (!cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        await ctx.reply('⚠️ يرجى إدخال تاريخ التعيين بصيغة: YYYY-MM-DD (مثال: 2026-03-01).');
         return true;
       }
       wizard.data.hireDateStr = cleanDate;
@@ -354,44 +578,6 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
     default:
       return false;
   }
-}
-
-/**
- * 📸 معالجة إرفاق صور البطاقة / الوثيقة
- */
-export async function handleWorkerWizardPhotoInput(ctx: MyContext): Promise<boolean> {
-  if (!ctx.from) return false;
-  const telegramId = BigInt(ctx.from.id);
-  const wizard = await getPendingWorkerWizard(telegramId);
-  if (!wizard) return false;
-
-  let fileId = '';
-  if (ctx.message?.photo && ctx.message.photo.length > 0) {
-    fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-  } else if (ctx.message?.document?.file_id) {
-    fileId = ctx.message.document.file_id;
-  }
-
-  if (!fileId) return false;
-  await ctx.api.deleteMessage(ctx.chat!.id, ctx.message!.message_id).catch(() => {});
-
-  if (wizard.step === WorkerWizardStep.ID_PHOTO_FRONT) {
-    wizard.data.idCardFrontPath = fileId;
-    wizard.step = WorkerWizardStep.ID_PHOTO_BACK;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return true;
-  }
-
-  if (wizard.step === WorkerWizardStep.ID_PHOTO_BACK) {
-    wizard.data.idCardBackPath = fileId;
-    wizard.step = WorkerWizardStep.CONFIRMATION;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return true;
-  }
-
-  return false;
 }
 
 /**
@@ -430,6 +616,93 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
+  // اختيار نوع الوثيقة
+  if (data === 'action:worker_doc:national_id') {
+    wizard.data.idType = 'NATIONAL_ID';
+    wizard.data.nationality = 'مصر';
+    wizard.step = WorkerWizardStep.PHOTO_FRONT;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_doc:passport') {
+    wizard.data.idType = 'PASSPORT';
+    wizard.step = WorkerWizardStep.PHOTO_FRONT;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_step:manual_fallback') {
+    wizard.data.isManualFallback = true;
+    wizard.step = WorkerWizardStep.FULL_NAME;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  // إعادة التقاط الصور
+  if (data === 'action:worker_photo:retry_front') {
+    wizard.step = WorkerWizardStep.PHOTO_FRONT;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_photo:retry_back') {
+    wizard.step = WorkerWizardStep.PHOTO_BACK;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_photo:skip_back') {
+    wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_photo:manual_expiry') {
+    wizard.step = WorkerWizardStep.MANUAL_EXPIRY;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  // تأكيد بيانات الذكاء الاصطناعي
+  if (data === 'action:worker_ai_confirm:ok') {
+    const autoNick = extractFirstTwoNames(wizard.data.fullName || '');
+    wizard.data.nickname = autoNick;
+    wizard.step = WorkerWizardStep.NICKNAME;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_ai_edit:name') {
+    wizard.step = WorkerWizardStep.AI_EDIT_NAME;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_ai_edit:id') {
+    wizard.step = WorkerWizardStep.AI_EDIT_ID;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data === 'action:worker_ai_edit:expiry') {
+    wizard.step = WorkerWizardStep.AI_EDIT_EXPIRY;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  // اسم الشهرة
   if (data === 'action:worker_step:nick_auto') {
     const autoNick = extractFirstTwoNames(wizard.data.fullName || '');
     wizard.data.nickname = autoNick;
@@ -439,6 +712,7 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
+  // تحويل المستحقات
   if (data.startsWith('action:worker_tr:')) {
     const choice = data.replace('action:worker_tr:', '');
     if (choice === 'same') {
@@ -450,83 +724,61 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
       wizard.data.walletNumber = '-';
       wizard.data.walletType = 'نقدي / كاش';
       wizard.data.payoutMethod = 'استلام نقدي بالخزينة / الموقع';
-      wizard.step = WorkerWizardStep.ID_TYPE;
+      wizard.step = WorkerWizardStep.JOB_CHOICE;
     }
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
-  if (data.startsWith('action:worker_trm:')) {
-    const trm = data.replace('action:worker_trm:', '');
-    if (trm === 'wallet') {
-      wizard.data.walletType = 'محفظة إلكترونية';
-      wizard.data.payoutMethod = 'محفظة فودافون كاش';
-    } else if (trm === 'insta') {
-      wizard.data.walletType = 'تحويل بنكي / إنستاباي';
-      wizard.data.payoutMethod = 'إنستاباي (InstaPay) / تحويل بنكي';
-    } else {
-      wizard.data.walletType = 'نقدي / كاش';
-      wizard.data.payoutMethod = 'استلام نقدي بالخزينة / الموقع';
-    }
-    wizard.step = WorkerWizardStep.ID_TYPE;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return;
-  }
-
-  if (data.startsWith('action:worker_id_type:')) {
-    const type = data.replace('action:worker_id_type:', '') as 'NATIONAL_ID' | 'PASSPORT';
-    wizard.data.idType = type;
-    wizard.step = WorkerWizardStep.ID_NUMBER;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return;
-  }
-
-  if (data.startsWith('action:worker_nat:')) {
-    const nat = data.replace('action:worker_nat:', '');
-    if (nat === 'custom') {
-      await ctx.editMessageText('🌍 *أدخل جنسية العامل كتابةً:*', {
-        parse_mode: 'Markdown',
-        reply_markup: new InlineKeyboard().text('◀️ السابق', 'action:worker_step:back'),
-      });
-      return;
-    }
-    wizard.data.nationality = nat;
-    wizard.step = WorkerWizardStep.PASSPORT_BIRTHDATE;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return;
-  }
-
-  if (data.startsWith('action:worker_gender:')) {
-    const g = data.replace('action:worker_gender:', '') as 'MALE' | 'FEMALE';
-    wizard.data.gender = g;
+  // نوع المحفظة
+  if (data.startsWith('action:worker_wallet_type:')) {
+    const wType = data.replace('action:worker_wallet_type:', '');
+    wizard.data.walletType =
+      wType === 'vodafone'
+        ? 'فودافون كاش'
+        : wType === 'instapay'
+        ? 'إنستاباي / بنكي'
+        : wType === 'etisalat'
+        ? 'اتصالات كاش'
+        : wType === 'orange'
+        ? 'أورنج كاش'
+        : 'أخرى';
+    wizard.data.payoutMethod = 'تحويل محفظة إلكترونية';
     wizard.step = WorkerWizardStep.JOB_CHOICE;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
+  // جنس الوافد
+  if (data.startsWith('action:worker_gender:')) {
+    wizard.data.gender = data.replace('action:worker_gender:', '') as 'MALE' | 'FEMALE';
+    wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  // المسمى الوظيفي
   if (data.startsWith('action:worker_job:')) {
-    const jobId = data.replace('action:worker_job:', '');
-    if (jobId === 'custom') {
+    const jobChoice = data.replace('action:worker_job:', '');
+    if (jobChoice === 'custom') {
       wizard.step = WorkerWizardStep.CUSTOM_JOB_INPUT;
     } else {
       const job = await prisma.jobTitle.findUnique({
-        where: { id: jobId },
+        where: { id: jobChoice },
         include: { department: true },
       });
       if (job) {
         wizard.data.jobTitleId = job.id;
         wizard.data.jobTitleName = job.name;
+        wizard.data.jobCode = job.code;
         wizard.data.departmentId = job.departmentId;
         wizard.data.departmentCode = job.department.code;
-        wizard.data.jobCode = job.code;
-        wizard.data.baseSalary = Number(job.baseSalary);
-        wizard.data.additionalSalary = Number(job.additionalSalary);
-        wizard.data.shiftSystem = `${job.workDays} يوم عمل / ${job.restDays} راحة`;
+        wizard.data.baseSalary = Number(job.baseSalary) || 0;
+        wizard.data.additionalSalary = Number(job.additionalSalary) || 0;
+        wizard.data.shiftSystem = `${job.workDays || 20} يوم عمل / ${job.restDays || 10} راحة`;
       }
       wizard.step = WorkerWizardStep.SITE_CHOICE;
     }
@@ -535,6 +787,7 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
+  // موقع العمل
   if (data.startsWith('action:worker_site:')) {
     const siteId = data.replace('action:worker_site:', '');
     const site = await prisma.site.findUnique({ where: { id: siteId } });
@@ -548,37 +801,41 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
-  if (data.startsWith('action:worker_sdate:')) {
-    const sDate = data.replace('action:worker_sdate:', '');
-    if (sDate === 'custom') {
-      wizard.step = WorkerWizardStep.CUSTOM_START_DATE_INPUT;
-    } else {
-      wizard.data.hireDateStr = sDate;
+  // تاريخ المباشرة
+  if (data.startsWith('action:worker_hire:')) {
+    const hireChoice = data.replace('action:worker_hire:', '');
+    if (hireChoice === 'today') {
+      wizard.data.hireDateStr = formatDate(new Date());
       wizard.step = WorkerWizardStep.DRIVING_LICENSE;
+    } else {
+      wizard.step = WorkerWizardStep.CUSTOM_START_DATE_INPUT;
     }
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
+  // رخصة القيادة
   if (data.startsWith('action:worker_lic:')) {
-    const licKey = data.replace('action:worker_lic:', '');
-    wizard.data.drivingLicense = LICENSE_MAP[licKey] || 'لا توجد رخصة';
+    const lic = data.replace('action:worker_lic:', '');
+    wizard.data.drivingLicense = LICENSE_MAP[lic] || 'لا توجد رخصة';
     wizard.step = WorkerWizardStep.MILITARY_STATUS;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
+  // الموقف التجنيدي
   if (data.startsWith('action:worker_mil:')) {
-    const milKey = data.replace('action:worker_mil:', '');
-    wizard.data.militaryStatus = MIL_MAP[milKey] || 'أدى الخدمة العسكرية (قدوة حسنة)';
+    const mil = data.replace('action:worker_mil:', '');
+    wizard.data.militaryStatus = MIL_MAP[mil] || 'غير محدد';
     wizard.step = WorkerWizardStep.EMERGENCY_PHONE;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
+  // تخطي هاتف الطوارئ
   if (data === 'action:worker_step:skip_emergency') {
     wizard.data.emergencyPhone = '-';
     wizard.step = WorkerWizardStep.INSURANCE_STATUS;
@@ -587,41 +844,27 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
+  // التأمين
   if (data.startsWith('action:worker_ins:')) {
-    const insKey = data.replace('action:worker_ins:', '');
-    wizard.data.previousInsuranceStatus = INS_MAP[insKey] || 'غير مؤمن عليه بجهة أخرى';
+    const ins = data.replace('action:worker_ins:', '');
+    wizard.data.previousInsuranceStatus = INS_MAP[ins] || 'غير مؤمن عليه بجهة أخرى';
     wizard.step = WorkerWizardStep.MARITAL_STATUS;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
+  // الحالة الاجتماعية
   if (data.startsWith('action:worker_mar:')) {
-    const marKey = data.replace('action:worker_mar:', '');
-    wizard.data.maritalStatus = MARITAL_MAP[marKey] || 'أعزب';
-    wizard.step = WorkerWizardStep.ID_PHOTO_FRONT;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return;
-  }
-
-  if (data === 'action:worker_photo:skip_front') {
-    wizard.data.idCardFrontPath = '-';
-    wizard.data.idCardBackPath = '-';
+    const mar = data.replace('action:worker_mar:', '');
+    wizard.data.maritalStatus = MARITAL_MAP[mar] || 'أعزب';
     wizard.step = WorkerWizardStep.CONFIRMATION;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
   }
 
-  if (data === 'action:worker_photo:skip_back') {
-    wizard.data.idCardBackPath = '-';
-    wizard.step = WorkerWizardStep.CONFIRMATION;
-    await setPendingWorkerWizard(telegramId, wizard);
-    await renderWizardStep(ctx, wizard);
-    return;
-  }
-
+  // التأكيد والحفظ النهائي
   if (data === 'action:worker_step:confirm') {
     await handleWorkerFinalSave(ctx, wizard, telegramId);
     return;
@@ -634,8 +877,42 @@ async function handleStepBack(
   telegramId: bigint
 ): Promise<void> {
   switch (wizard.step) {
-    case WorkerWizardStep.NICKNAME:
+    case WorkerWizardStep.PHOTO_FRONT:
+      wizard.step = WorkerWizardStep.DOC_TYPE;
+      break;
+    case WorkerWizardStep.PHOTO_BACK:
+      wizard.step = WorkerWizardStep.PHOTO_FRONT;
+      break;
+    case WorkerWizardStep.AI_CONFIRMATION:
+      wizard.step = wizard.data.idType === 'NATIONAL_ID' ? WorkerWizardStep.PHOTO_BACK : WorkerWizardStep.PHOTO_FRONT;
+      break;
+    case WorkerWizardStep.AI_EDIT_NAME:
+    case WorkerWizardStep.AI_EDIT_ID:
+    case WorkerWizardStep.AI_EDIT_EXPIRY:
+      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+      break;
+    case WorkerWizardStep.FULL_NAME:
+      wizard.step = WorkerWizardStep.DOC_TYPE;
+      break;
+    case WorkerWizardStep.ID_NUMBER:
       wizard.step = WorkerWizardStep.FULL_NAME;
+      break;
+    case WorkerWizardStep.PASSPORT_NATIONALITY:
+      wizard.step = wizard.data.isManualFallback ? WorkerWizardStep.ID_NUMBER : WorkerWizardStep.PHOTO_FRONT;
+      break;
+    case WorkerWizardStep.PASSPORT_BIRTHDATE:
+      wizard.step = WorkerWizardStep.PASSPORT_NATIONALITY;
+      break;
+    case WorkerWizardStep.PASSPORT_GENDER:
+      wizard.step = WorkerWizardStep.PASSPORT_BIRTHDATE;
+      break;
+    case WorkerWizardStep.MANUAL_EXPIRY:
+      wizard.step = WorkerWizardStep.ID_NUMBER;
+      break;
+    case WorkerWizardStep.NICKNAME:
+      wizard.step = wizard.data.isManualFallback
+        ? (wizard.data.idType === 'PASSPORT' ? WorkerWizardStep.PASSPORT_GENDER : WorkerWizardStep.MANUAL_EXPIRY)
+        : WorkerWizardStep.AI_CONFIRMATION;
       break;
     case WorkerWizardStep.PHONE:
       wizard.step = WorkerWizardStep.NICKNAME;
@@ -649,23 +926,8 @@ async function handleStepBack(
     case WorkerWizardStep.PAYOUT_METHOD_CHOICE:
       wizard.step = WorkerWizardStep.CUSTOM_WALLET_INPUT;
       break;
-    case WorkerWizardStep.ID_TYPE:
-      wizard.step = WorkerWizardStep.PAYOUT_TRANSFER_CHOICE;
-      break;
-    case WorkerWizardStep.ID_NUMBER:
-      wizard.step = WorkerWizardStep.ID_TYPE;
-      break;
-    case WorkerWizardStep.PASSPORT_NATIONALITY:
-      wizard.step = WorkerWizardStep.ID_NUMBER;
-      break;
-    case WorkerWizardStep.PASSPORT_BIRTHDATE:
-      wizard.step = WorkerWizardStep.PASSPORT_NATIONALITY;
-      break;
-    case WorkerWizardStep.PASSPORT_GENDER:
-      wizard.step = WorkerWizardStep.PASSPORT_BIRTHDATE;
-      break;
     case WorkerWizardStep.JOB_CHOICE:
-      wizard.step = wizard.data.idType === 'PASSPORT' ? WorkerWizardStep.PASSPORT_GENDER : WorkerWizardStep.ID_NUMBER;
+      wizard.step = WorkerWizardStep.PAYOUT_TRANSFER_CHOICE;
       break;
     case WorkerWizardStep.CUSTOM_JOB_INPUT:
       wizard.step = WorkerWizardStep.JOB_CHOICE;
@@ -694,17 +956,11 @@ async function handleStepBack(
     case WorkerWizardStep.MARITAL_STATUS:
       wizard.step = WorkerWizardStep.INSURANCE_STATUS;
       break;
-    case WorkerWizardStep.ID_PHOTO_FRONT:
+    case WorkerWizardStep.CONFIRMATION:
       wizard.step = WorkerWizardStep.MARITAL_STATUS;
       break;
-    case WorkerWizardStep.ID_PHOTO_BACK:
-      wizard.step = WorkerWizardStep.ID_PHOTO_FRONT;
-      break;
-    case WorkerWizardStep.CONFIRMATION:
-      wizard.step = wizard.data.idCardFrontPath !== '-' ? WorkerWizardStep.ID_PHOTO_BACK : WorkerWizardStep.ID_PHOTO_FRONT;
-      break;
     default:
-      wizard.step = WorkerWizardStep.FULL_NAME;
+      wizard.step = WorkerWizardStep.DOC_TYPE;
   }
 
   await setPendingWorkerWizard(telegramId, wizard);
@@ -716,20 +972,202 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
   let text = '';
 
   switch (wizard.step) {
+    case WorkerWizardStep.DOC_TYPE: {
+      text =
+        '👤 *تسجيل وتعيين عامل جديد [1/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'اختر نوع وثيقة إثبات الهوية للبدء:\n\n' +
+        '💡 *المسح الذكي الفوري (AI Vision):*\n' +
+        'يقوم البوت بقراءة وتدقيق الرقم القومي والاسم الكامل وتاريخ سريان البطاقة تلقائياً.';
+      keyboard
+        .text('🇪🇬 بطاقة رقم قومي مصري (مسح ذكي)', 'action:worker_doc:national_id')
+        .row()
+        .text('🌐 جواز سفر لوافد / أجنبي', 'action:worker_doc:passport')
+        .row()
+        .text('✍️ إدخال يدوي مباشر', 'action:worker_step:manual_fallback')
+        .row()
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op')
+        .row()
+        .text('🔙 العودة للموارد البشرية', 'menu:domain:hr');
+      break;
+    }
+
+    case WorkerWizardStep.PHOTO_FRONT: {
+      const isNid = wizard.data.idType === 'NATIONAL_ID';
+      text =
+        `📸 *[1/2] تصوير وجه ${isNid ? 'بطاقة الرقم القومي' : 'جواز السفر'} [2/18]*\n` +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `يرجى إرسال صورة *وجه ${isNid ? 'بطاقة الرقم القومي' : 'صفحة البيانات في جواز السفر'}* الآن:\n\n` +
+        '📌 *تعليمات التصوير الإلزامية:*\n' +
+        '• يجب أن تكون البطاقة واضحة وكاملة داخل الإطار دون اقتطاع أركانها.\n' +
+        '• غير مغطاة بأصابع اليد أو بأي جسم خارجي يغطي الأرقام أو البيانات.\n' +
+        '• بجودة عالية وإضاءة جيدة بدون فلاش يعكس الأرقام.\n' +
+        `• في حالة إرفاق صورة ليست لـ ${isNid ? 'رقم قومي' : 'جواز سفر'}، سيتم رفضها تلقائياً.\n\n` +
+        '💡 _إذا تعطل الذكاء الاصطناعي أو كان الإنترنت ضعيفاً، يمكنك الضغط على المتابعة بالإدخال اليدوي._';
+
+      keyboard
+        .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
+        .row()
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.PHOTO_BACK: {
+      text =
+        '📸 *[2/2] تصوير ظهر بطاقة الرقم القومي (تاريخ الانتهاء) [3/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'يرجى إرسال صورة *ظهر بطاقة الرقم القومي* الآن:\n\n' +
+        '📌 *تعليمات التصوير:*\n' +
+        '• لاستخراج تاريخ انتهاء سريان البطاقة "سارية حتى" تلقائياً.\n' +
+        '• تأكد من وضوح شريط البيانات والباركود وعدم التغطية بالأصابع.\n\n' +
+        '💡 _يمكنك التخطي أو إدخال تاريخ الانتهاء يدوياً._';
+
+      keyboard
+        .text('⏭️ تخطي ظهر البطاقة', 'action:worker_photo:skip_back')
+        .row()
+        .text('✍️ إدخال تاريخ الانتهاء يدوياً', 'action:worker_photo:manual_expiry')
+        .row()
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.AI_CONFIRMATION: {
+      const isNid = wizard.data.idType === 'NATIONAL_ID';
+      text =
+        '📋 *تأكيد بيانات الهوية المستخرجة بالذكاء الاصطناعي [4/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'تم تدقيق وثيقة الهوية واستخراج البيانات التالية:\n\n' +
+        `👤 *الاسم الرباعي:* *${wizard.data.fullName || 'قيد الاستيفاء'}*\n` +
+        `🔢 *رقم الإثبات:* \`${wizard.data.idNumber || '-'}\` (${isNid ? 'رقم قومي مصري' : `جواز سفر - ${wizard.data.nationality}`})\n` +
+        (isNid ? `📅 *تاريخ الميلاد والسن:* ${wizard.data.birthDateStr || '-'} (${wizard.data.age || '-'} سنة)\n` : '') +
+        (wizard.data.governorateNameAr ? `📍 *المحافظة:* ${wizard.data.governorateNameAr}\n` : '') +
+        `⏳ *تاريخ انتهاء البطاقة:* *${wizard.data.idCardExpiryDateStr || 'غير محدد / قيد الاستيفاء'}*\n` +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'هل هذه البيانات صحيحة للمتابعة؟ يمكنك اعتمادها فوراً أو تصحيح أي بيان.';
+
+      keyboard
+        .text('✅ البيانات صحيحة ومتابعة التعيين', 'action:worker_ai_confirm:ok')
+        .row()
+        .text('✏️ تصحيح الاسم', 'action:worker_ai_edit:name')
+        .text('✏️ تصحيح الرقم', 'action:worker_ai_edit:id')
+        .row()
+        .text('✏️ تصحيح تاريخ الانتهاء', 'action:worker_ai_edit:expiry')
+        .row()
+        .text('◀️ إعادة التقاط الصورة', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.AI_EDIT_NAME: {
+      text =
+        '✏️ *تصحيح الاسم الرباعي*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `الاسم الحالي: *${wizard.data.fullName || '-'}*\n\n` +
+        'يرجى إدخال الاسم الرباعي الصحيح للعامل:';
+      keyboard
+        .text('◀️ تراجع', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.AI_EDIT_ID: {
+      text =
+        '✏️ *تصحيح رقم الإثبات (القومي أو الجواز)*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `الرقم الحالي: \`${wizard.data.idNumber || '-'}\`\n\n` +
+        'يرجى إدخال الرقم الصحيح الآن:';
+      keyboard
+        .text('◀️ تراجع', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.AI_EDIT_EXPIRY:
+    case WorkerWizardStep.MANUAL_EXPIRY: {
+      text =
+        '⏳ *تاريخ انتهاء سريان البطاقة*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `التاريخ الحالي: *${wizard.data.idCardExpiryDateStr || 'غير محدد'}*\n\n` +
+        'يرجى إدخال تاريخ انتهاء سريان البطاقة بصيغة: *YYYY-MM-DD*\n' +
+        '_💡 مثال: 2029-08-15_';
+      keyboard
+        .text('⏭️ تخطي تاريخ الانتهاء', 'action:worker_photo:skip_back')
+        .row()
+        .text('◀️ تراجع', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
     case WorkerWizardStep.FULL_NAME: {
       text =
-        '👤 *تسجيل وتعيين عامل جديد [1/19]*\n' +
+        '👤 *تسجيل عامل جديد - إدخال يدوي [2/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'يرجى إدخال *الاسم الرباعي* للعامل:\n\n' +
         '💡 _مثال: محمد أحمد إبراهيم علي_';
-      keyboard.text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      keyboard
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.ID_NUMBER: {
+      const isNid = wizard.data.idType === 'NATIONAL_ID';
+      text =
+        `🔢 *رقم ${isNid ? 'بطاقة الرقم القومي' : 'جواز السفر'} [3/18]*\n` +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `أدخل رقم ${isNid ? 'الرقم القومي (14 رقماً مصرياً)' : 'جواز السفر'}:\n\n` +
+        (isNid ? '💡 _سيتم تدقيق تاريخ الميلاد والمحافظة والنوع آلياً وفق معايير الرقم القومي._' : '');
+      keyboard
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.PASSPORT_NATIONALITY: {
+      text =
+        '🌍 *جنسية العامل الوافد [4/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'أدخل جنسية العامل (مثال: سوداني، سوري، أردني):';
+      keyboard
+        .text('🇸🇩 سوداني', 'action:worker_nat:سوداني')
+        .text('🇸🇾 سوري', 'action:worker_nat:سوري')
+        .row()
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.PASSPORT_BIRTHDATE: {
+      text =
+        '🎂 *تاريخ ميلاد الوافد [5/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'أدخل تاريخ الميلاد بصيغة: YYYY-MM-DD (مثال: 1994-05-12):';
+      keyboard
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.PASSPORT_GENDER: {
+      text =
+        '👤 *النوع (الجنس) [6/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'اختر نوع العامل:';
+      keyboard
+        .text('👨 ذكر', 'action:worker_gender:MALE')
+        .text('👩 أنثى', 'action:worker_gender:FEMALE')
+        .row()
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
 
     case WorkerWizardStep.NICKNAME: {
       const autoNick = extractFirstTwoNames(wizard.data.fullName || '');
       text =
-        '👤 *اسم الشهرة بالموقع [2/19]*\n' +
+        '👤 *اسم الشهرة المعتمد بالموقع [5/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         `أدخل اسم الشهرة للعامل (أو اضغط اعتماد تلقائي لاستخدام: *${autoNick}*):\n\n` +
         '🏷️ _ملاحظة هامة: اسم الشهرة هو الاسم المعتمد لظهور العامل في قوائم التمام والسلف والعمليات الميدانية._';
@@ -744,25 +1182,28 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.PHONE: {
       text =
-        '📱 *رقم الهاتف المحمول والواتساب [3/19]*\n' +
+        '📱 *رقم الهاتف المحمول والواتساب [6/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'أدخل رقم الهاتف الشخصي للعامل (11 رقماً مصرياً):\n\n' +
         '💡 _مثال: 01012345678 أو 01155443322_';
-      keyboard.text('◀️ السابق', 'action:worker_step:back').text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      keyboard
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
 
     case WorkerWizardStep.PAYOUT_TRANSFER_CHOICE: {
       text =
-        '💳 *بيانات تحويل الراتب والمستحقات [4/19]*\n' +
+        '💳 *تحويل المستحقات والرواتب [7/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        `هل رقم تحويل المستحقات هو نفس رقم الهاتف الشخصي (\`${wizard.data.phone}\`)؟`;
+        `رقم الهاتف المسجل: \`${wizard.data.phone}\`\n\n` +
+        'كيف سيتم تحويل مستحقات وسلف العامل؟';
       keyboard
-        .text(`📱 نعم، نفس الرقم (${wizard.data.phone})`, 'action:worker_tr:same')
+        .text(`📱 نفس رقم الهاتف المحمول (${wizard.data.phone})`, 'action:worker_tr:same')
         .row()
-        .text('💳 لا، رقم تحويل / محفظة آخر', 'action:worker_tr:custom')
+        .text('💳 إدخال رقم محفظة إلكترونية / حساب آخر', 'action:worker_tr:custom')
         .row()
-        .text('⏭️ استلام نقدي بالخزينة (كاش)', 'action:worker_tr:cash')
+        .text('💵 استلام نقدي بالخزينة / الموقع', 'action:worker_tr:cash')
         .row()
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -771,12 +1212,10 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.CUSTOM_WALLET_INPUT: {
       text =
-        '💳 *رقم المحفظة أو حساب التحويل [4/19]*\n' +
+        '💳 *رقم المحفظة / الحساب البنكي*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'أدخل رقم هاتف المحفظة (11 رقماً) أو عنوان إنستاباي المعتمد:';
+        'أدخل رقم المحفظة أو الحساب البنكي لتحويل المستحقات:';
       keyboard
-        .text('⏭️ تخطي (استلام نقدي كاش)', 'action:worker_tr:cash')
-        .row()
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
@@ -784,92 +1223,16 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.PAYOUT_METHOD_CHOICE: {
       text =
-        '💳 *طريقة ونوع قناة التحويل [4/19]*\n' +
+        '🏦 *نوع القناة المالية [8/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        `الرقم المسجل للتحويل: \`${wizard.data.walletNumber}\`\n` +
-        'اختر وسيلة الاستلام المفضلة للعامل:';
+        `رقم الحساب/المحفظة: \`${wizard.data.walletNumber}\`\n\n` +
+        'اختر نوع المحفظة أو الحساب:';
       keyboard
-        .text('📱 محفظة فودافون كاش', 'action:worker_trm:wallet')
+        .text('🔴 فودافون كاش', 'action:worker_wallet_type:vodafone')
+        .text('⚡ إنستاباي / بنكي', 'action:worker_wallet_type:instapay')
         .row()
-        .text('⚡ إنستاباي (InstaPay) / تحويل بنكي', 'action:worker_trm:insta')
-        .row()
-        .text('💵 استلام نقدي بالخزينة / الموقع', 'action:worker_trm:cash')
-        .row()
-        .text('◀️ السابق', 'action:worker_step:back')
-        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      break;
-    }
-
-    case WorkerWizardStep.ID_TYPE: {
-      text =
-        '🔢 *وثيقة إثبات الشخصية [5/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'اختر نوع وثيقة إثبات الشخصية للعامل:';
-      keyboard
-        .text('🇪🇬 بطاقة الرقم القومي المصرية', 'action:worker_id_type:NATIONAL_ID')
-        .row()
-        .text('🌐 جواز سفر (للوافدين وغير المصريين)', 'action:worker_id_type:PASSPORT')
-        .row()
-        .text('◀️ السابق', 'action:worker_step:back')
-        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      break;
-    }
-
-    case WorkerWizardStep.ID_NUMBER: {
-      if (wizard.data.idType === 'NATIONAL_ID') {
-        text =
-          '🔢 *الرقم القومي المصري [5/19]*\n' +
-          '━━━━━━━━━━━━━━━━━━━━━\n' +
-          'أدخل الرقم القومي للعامل (14 رقماً مصرياً):\n\n' +
-          '💡 _سيتم فحص المحافظة وتاريخ الميلاد والعمر تلقائياً._';
-      } else {
-        text =
-          '🌐 *رقم جواز السفر [5/19]*\n' +
-          '━━━━━━━━━━━━━━━━━━━━━\n' +
-          'أدخل رقم جواز السفر للوافد:\n\n' +
-          '💡 _مثال: P10492837 أو A8920194_';
-      }
-      keyboard.text('◀️ السابق', 'action:worker_step:back').text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      break;
-    }
-
-    case WorkerWizardStep.PASSPORT_NATIONALITY: {
-      text =
-        '🌍 *جنسية العامل الوافد [5.1/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'اختر الجنسية المعتمدة أو اضغط كتابة دولة أخرى:';
-      keyboard
-        .text('🇸🇩 السودان', 'action:worker_nat:السودان')
-        .text('🇸🇾 سوريا', 'action:worker_nat:سوريا')
-        .row()
-        .text('🇹🇩 تشاد', 'action:worker_nat:تشاد')
-        .text('🇾🇪 اليمن', 'action:worker_nat:اليمن')
-        .row()
-        .text('✍️ كتابة دولة أخرى', 'action:worker_nat:custom')
-        .row()
-        .text('◀️ السابق', 'action:worker_step:back')
-        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      break;
-    }
-
-    case WorkerWizardStep.PASSPORT_BIRTHDATE: {
-      text =
-        '🎂 *تاريخ الميلاد (جواز السفر) [5.2/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'أدخل تاريخ ميلاد العامل بصيغة:\n' +
-        '`YYYY-MM-DD` (مثال: `1994-08-15`)';
-      keyboard.text('◀️ السابق', 'action:worker_step:back').text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      break;
-    }
-
-    case WorkerWizardStep.PASSPORT_GENDER: {
-      text =
-        '👤 *تحديد النوع / الجنس [5.3/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'اختر نوع العامل:';
-      keyboard
-        .text('👨 ذكر', 'action:worker_gender:MALE')
-        .text('👩 أنثى', 'action:worker_gender:FEMALE')
+        .text('🟢 اتصالات كاش', 'action:worker_wallet_type:etisalat')
+        .text('🟠 أورنج كاش', 'action:worker_wallet_type:orange')
         .row()
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -877,77 +1240,86 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
     }
 
     case WorkerWizardStep.JOB_CHOICE: {
-      text =
-        '💼 *المسمى الوظيفي المعتمد [6/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'اختر الوظيفة المقيد عليها العامل:';
-
       const jobs = await prisma.jobTitle.findMany({
         where: { isActive: true },
-        orderBy: { order: 'asc' },
+        include: { department: true },
+        take: 10,
+        orderBy: { code: 'asc' },
       });
 
-      jobs.forEach((job, i) => {
-        const icon = getJobEmoji(job.name);
-        keyboard.text(`${icon} ${job.name}`, `action:worker_job:${job.id}`);
-        if (i % 2 === 1) keyboard.row();
-      });
-      if (jobs.length % 2 !== 0) keyboard.row();
+      text =
+        '💼 *تحديد المسمى الوظيفي والمهنة [9/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'اختر المسمى الوظيفي المعتمد للعامل:';
 
-      keyboard.text('✍️ ...مسمى وظيفي آخر', 'action:worker_job:custom').row();
-      keyboard.text('◀️ السابق', 'action:worker_step:back').text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      for (let i = 0; i < jobs.length; i += 2) {
+        const j1 = jobs[i];
+        const j2 = jobs[i + 1];
+        const icon1 = getJobEmoji(j1.name);
+        if (j2) {
+          const icon2 = getJobEmoji(j2.name);
+          keyboard
+            .text(`${icon1} ${j1.name}`, `action:worker_job:${j1.id}`)
+            .text(`${icon2} ${j2.name}`, `action:worker_job:${j2.id}`)
+            .row();
+        } else {
+          keyboard.text(`${icon1} ${j1.name}`, `action:worker_job:${j1.id}`).row();
+        }
+      }
+
+      keyboard
+        .text('✍️ كتابة مسمى وظيفي مخصص', 'action:worker_job:custom')
+        .row()
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
 
     case WorkerWizardStep.CUSTOM_JOB_INPUT: {
-      text = '✍️ *أدخل المسمى الوظيفي المخصص بالتفصيل:*';
-      keyboard.text('◀️ السابق', 'action:worker_step:back').text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      text =
+        '💼 *كتابة مسمى وظيفي مخصص*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'أدخل المسمى الوظيفي للعامل:';
+      keyboard
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
 
     case WorkerWizardStep.SITE_CHOICE: {
-      text =
-        '📍 *موقع ومشروع العمل [7/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'اختر موقع التسكين والتشغيل المبدئي:';
-
       const sites = await prisma.site.findMany({
         where: { status: 'ACTIVE' },
+        take: 8,
         orderBy: { code: 'asc' },
       });
 
-      sites.forEach((site, i) => {
-        keyboard.text(`📍 ${site.name}`, `action:worker_site:${site.id}`);
-        if (i % 2 === 1) keyboard.row();
-      });
-      if (sites.length % 2 !== 0) keyboard.row();
+      text =
+        '📍 *تسكين وتعيين بموقع العمل [10/18]*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'اختر موقع العمل الميداني للعامل:';
 
-      keyboard.text('◀️ السابق', 'action:worker_step:back').text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      for (const site of sites) {
+        keyboard.text(`📍 ${site.name} (${site.code})`, `action:worker_site:${site.id}`).row();
+      }
+
+      keyboard
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
 
     case WorkerWizardStep.START_DATE_CHOICE: {
-      const today = new Date();
-      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-      const dayBefore = new Date(today.getTime() - 48 * 60 * 60 * 1000);
-
-      const todayStr = today.toISOString().substring(0, 10);
-      const yesterdayStr = yesterday.toISOString().substring(0, 10);
-      const dayBeforeStr = dayBefore.toISOString().substring(0, 10);
-
+      const todayFormatted = formatDate(new Date());
       text =
-        '📅 *تاريخ بدء ومباشرة العمل [8/19]*\n' +
+        '📅 *تاريخ بدء ومباشرة العمل [11/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'حدد تاريخ المباشرة الفعلي للعامل:';
+        `تاريخ اليوم: *${todayFormatted}*\n\n` +
+        'هل يبدأ العامل العمل من اليوم أم تاريخ مخصص؟';
 
       keyboard
-        .text(`📅 اليوم (${todayStr})`, `action:worker_sdate:${todayStr}`)
+        .text(`🟢 بدء العمل من اليوم (${todayFormatted})`, 'action:worker_hire:today')
         .row()
-        .text(`📅 أمس (${yesterdayStr})`, `action:worker_sdate:${yesterdayStr}`)
-        .row()
-        .text(`📅 أول أمس (${dayBeforeStr})`, `action:worker_sdate:${dayBeforeStr}`)
-        .row()
-        .text('✍️ كتابة تاريخ مخصص (YYYY-MM-DD)', 'action:worker_sdate:custom')
+        .text('🗓️ إدخال تاريخ تعيين مخصص', 'action:worker_hire:custom')
         .row()
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -956,29 +1328,32 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.CUSTOM_START_DATE_INPUT: {
       text =
-        '✍️ *أدخل تاريخ بدء العمل بصيغة:*\n' +
-        '`YYYY-MM-DD` (مثال: `2026-09-01`)';
-      keyboard.text('◀️ السابق', 'action:worker_step:back').text('❌ إلغاء العملية', 'action:cancel_worker_op');
+        '📅 *تاريخ تعيين مخصص*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'أدخل تاريخ المباشرة بصيغة: YYYY-MM-DD (مثال: 2026-03-01):';
+      keyboard
+        .text('◀️ السابق', 'action:worker_step:back')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
 
     case WorkerWizardStep.DRIVING_LICENSE: {
       text =
-        '🚗 *موقف ونوع رخصة القيادة [9/19]*\n' +
+        '🚗 *موقف رخصة القيادة [12/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'اختر نوع الرخصة المتاحة للعامل:';
+        'اختر رخصة القيادة التي يحملها العامل:';
       keyboard
-        .text('🚫 لا توجد رخصة قيادة', 'action:worker_lic:none')
+        .text('🚫 لا توجد رخصة', 'action:worker_lic:none')
         .row()
         .text('🚗 رخصة خاصة', 'action:worker_lic:pvt')
         .row()
-        .text('🚛 مهنية درجة أولى', 'action:worker_lic:1st')
+        .text('🚛 مهنية درجة ثالثة', 'action:worker_lic:3rd')
         .row()
         .text('🚚 مهنية درجة ثانية', 'action:worker_lic:2nd')
         .row()
-        .text('🚐 مهنية درجة ثالثة', 'action:worker_lic:3rd')
+        .text('🚜 مهنية درجة أولى', 'action:worker_lic:1st')
         .row()
-        .text('🚜 رخصة تشغيل معدات ثقيلة', 'action:worker_lic:heavy')
+        .text('🏗️ رخصة تشغيل معدات ثقيلة', 'action:worker_lic:heavy')
         .row()
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -987,13 +1362,13 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.MILITARY_STATUS: {
       text =
-        '🎖️ *الموقف من الخدمة العسكرية والتجنيد [10/19]*\n' +
+        '🎖️ *الموقف من التجنيد [13/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'اختر الموقف التجنيدي للعامل:';
       keyboard
-        .text('🎖️ أدى الخدمة العسكرية (قدوة حسنة)', 'action:worker_mil:served')
+        .text('🟢 أدى الخدمة العسكرية (قدوة حسنة)', 'action:worker_mil:served')
         .row()
-        .text('🛡️ إعفاء نهائي', 'action:worker_mil:final_exempt')
+        .text('📜 إعفاء نهائي', 'action:worker_mil:final_exempt')
         .row()
         .text('⏳ إعفاء مؤقت', 'action:worker_mil:temp_exempt')
         .row()
@@ -1010,7 +1385,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.EMERGENCY_PHONE: {
       text =
-        '🚨 *هاتف الطوارئ (Emergency Contact) [11/19]*\n' +
+        '🚨 *هاتف الطوارئ (Emergency Contact) [14/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'أدخل رقم هاتف شخص من أقارب العامل (أب / أخ / زوجة / قريب):\n\n' +
         '💡 _يمكنك الضغط على زر التخطي للمتابعة فوراً._';
@@ -1024,7 +1399,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.INSURANCE_STATUS: {
       text =
-        '🛡️ *الموقف التأميني السابق للعامل [12/19]*\n' +
+        '🛡️ *الموقف التأميني السابق للعامل [15/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'اختر موقف العامل التأميني بجهة العمل السابقة:';
       keyboard
@@ -1041,7 +1416,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.MARITAL_STATUS: {
       text =
-        '💍 *الحالة الاجتماعية للعامل [13/19]*\n' +
+        '💍 *الحالة الاجتماعية للعامل [16/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'اختر الحالة الاجتماعية للعامل:';
       keyboard
@@ -1060,34 +1435,6 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
       break;
     }
 
-    case WorkerWizardStep.ID_PHOTO_FRONT: {
-      text =
-        '📸 *[1/2] إرفاق صورة وجه البطاقة / الوثيقة [14/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'أرسل صورة وجه بطاقة الرقم القومي أو جواز السفر:\n\n' +
-        '💡 _الإرفاق اختياري، يمكنك الضغط على زر التخطي للاستكمال._';
-      keyboard
-        .text('⏭️ تخطي إرفاق الصورة', 'action:worker_photo:skip_front')
-        .row()
-        .text('◀️ السابق', 'action:worker_step:back')
-        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      break;
-    }
-
-    case WorkerWizardStep.ID_PHOTO_BACK: {
-      text =
-        '📸 *[2/2] إرفاق صورة ظهر البطاقة [15/19]*\n' +
-        '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'أرسل صورة ظهر بطاقة الرقم القومي:\n\n' +
-        '💡 _الإرفاق اختياري، يمكنك الضغط على زر التخطي للاستكمال._';
-      keyboard
-        .text('⏭️ تخطي إرفاق ظهر البطاقة', 'action:worker_photo:skip_back')
-        .row()
-        .text('◀️ السابق', 'action:worker_step:back')
-        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-      break;
-    }
-
     case WorkerWizardStep.CONFIRMATION: {
       const autoCode = await workerService.generateNextWorkerCode(
         wizard.data.departmentCode || 'OP',
@@ -1100,13 +1447,13 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
       const photoStatus =
         wizard.data.idCardFrontPath !== '-' && wizard.data.idCardBackPath !== '-'
-          ? '✅ تم إرفاق الوجه والظهر'
+          ? '✅ تم فحص وتوثيق الوجه والظهر'
           : wizard.data.idCardFrontPath !== '-'
-          ? '🟡 تم إرفاق الوجه فقط'
-          : '⚪ لم تُرفق صور (ملف قيد الاستيفاء)';
+          ? '🟡 تم توثيق الوجه فقط'
+          : '⚪ لم تُرفق صور (ملف يدوي قيد الاستيفاء)';
 
       text =
-        '📋 *مراجعة بيانات تعيين العامل الجديد [19/19]*\n' +
+        '📋 *مراجعة بيانات تعيين العامل الجديد [18/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         `🆔 *كود العامل المعتمد:* \`${autoCode}\`\n` +
         `👤 *الاسم الرباعي:* *${wizard.data.fullName}*\n` +
@@ -1114,6 +1461,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         `🔢 *رقم الإثبات:* \`${wizard.data.idNumber}\` (${wizard.data.idType === 'NATIONAL_ID' ? 'رقم قومي مصري' : `جواز سفر - ${wizard.data.nationality}`})\n` +
         `🎂 *تاريخ الميلاد والسن:* ${wizard.data.birthDateStr || '-'} (${wizard.data.age || '-'} سنة)\n` +
         (wizard.data.governorateNameAr ? `📍 *المحافظة:* ${wizard.data.governorateNameAr}\n` : '') +
+        (wizard.data.idCardExpiryDateStr ? `⏳ *تاريخ انتهاء البطاقة:* *${wizard.data.idCardExpiryDateStr}*\n` : '') +
         `${jobIcon} *الوظيفة:* ${wizard.data.jobTitleName} | 📍 *الموقع:* ${wizard.data.siteName}\n` +
         `💰 *الراتب المعتمد:* *${formatCurrency(totalSalary)}* (أساسي: ${formatCurrency(wizard.data.baseSalary || 0)} + حافز: ${formatCurrency(wizard.data.additionalSalary || 0)})\n` +
         `⏳ *نظام التشغيل:* ${wizard.data.shiftSystem || '20 يوم عمل / 10 راحة'}\n` +
@@ -1125,7 +1473,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         `🎖️ *الموقف التجنيدي:* ${wizard.data.militaryStatus || '-'}\n` +
         `🛡️ *التأمين السابق:* ${wizard.data.previousInsuranceStatus || '-'}\n` +
         `💍 *الحالة الاجتماعية:* ${wizard.data.maritalStatus || '-'}\n` +
-        `📂 *موقف صور البطاقة:* ${photoStatus}\n` +
+        `📂 *موقف الوثائق الذكية:* ${photoStatus}\n` +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         '_⚡ سيتم قيد العامل تلقائياً بهيكل الشركة وتحديث القوائم الميدانية اللحظية._';
 
@@ -1154,35 +1502,54 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
   }
 }
 
+/**
+ * 💾 الحفظ النهائي والتسجيل الرسمي للعامل بقاعدة البيانات
+ */
 async function handleWorkerFinalSave(
   ctx: MyContext,
   wizard: PendingWorkerWizardState,
   telegramId: bigint
 ): Promise<void> {
   const d = wizard.data;
+  const totalSalary = (d.baseSalary || 0) + (d.additionalSalary || 0);
+  const dailyWage = totalSalary > 0 ? totalSalary / 30 : 0;
+
+  let birthDateObj: Date | undefined = undefined;
+  if (d.birthDateStr && d.birthDateStr !== '-') {
+    birthDateObj = new Date(d.birthDateStr);
+  }
+
+  let hireDateObj = new Date();
+  if (d.hireDateStr) {
+    hireDateObj = new Date(d.hireDateStr);
+  }
+
+  let expiryDateObj: Date | undefined = undefined;
+  if (d.idCardExpiryDateStr && d.idCardExpiryDateStr !== '-') {
+    expiryDateObj = new Date(d.idCardExpiryDateStr);
+  }
 
   try {
-    const created = await workerService.createWorker({
-      name: d.fullName || '',
+    const result = await workerService.createWorker({
+      name: d.fullName || 'عامل جديد',
       nickname: d.nickname,
+      legacyCode: d.legacyCode,
       idType: d.idType || 'NATIONAL_ID',
-      idNumber: d.idNumber || '',
-      nationality: d.nationality || (d.idType === 'NATIONAL_ID' ? 'مصر' : 'وافد'),
-      birthDate: d.birthDateStr ? new Date(d.birthDateStr) : undefined,
-      gender: d.gender,
-      governorateCode: d.governorateCode,
-      phone: d.phone || '',
+      idNumber: d.idNumber || '00000000000000',
+      nationality: d.nationality || 'مصر',
+      birthDate: birthDateObj,
+      gender: d.gender || 'MALE',
+      phone: d.phone || '01000000000',
       jobTitleId: d.jobTitleId,
-      jobTitleName: d.jobTitleName || 'سائق سيارة',
+      jobTitleName: d.jobTitleName || 'عامل',
       departmentId: d.departmentId,
       siteId: d.siteId,
-      siteName: d.siteName,
-      hireDate: d.hireDateStr ? new Date(d.hireDateStr) : new Date(),
-      shiftSystem: d.shiftSystem || '20_WORK_10_REST',
-      dailyWage: (d.baseSalary || 0) > 0 ? (d.baseSalary || 0) / 30 : 0,
+      siteName: d.siteName || 'الموقع العام',
+      hireDate: hireDateObj,
+      dailyWage,
       basicSalary: d.baseSalary || 0,
       fixedAllowances: d.additionalSalary || 0,
-      paymentMethod: d.payoutMethod || 'CASH_SITE',
+      paymentMethod: d.payoutMethod || 'استلام نقدي بالخزينة / الموقع',
       walletType: d.walletType,
       accountNumber: d.walletNumber,
       drivingLicense: d.drivingLicense,
@@ -1190,53 +1557,58 @@ async function handleWorkerFinalSave(
       emergencyPhone: d.emergencyPhone,
       previousInsuranceStatus: d.previousInsuranceStatus,
       maritalStatus: d.maritalStatus,
-      idCardFrontPath: d.idCardFrontPath,
-      idCardBackPath: d.idCardBackPath,
+      idCardExpiryDate: expiryDateObj,
+      idCardFrontPath: d.idCardFrontPath !== '-' ? d.idCardFrontPath : undefined,
+      idCardBackPath: d.idCardBackPath !== '-' ? d.idCardBackPath : undefined,
     });
 
     await clearPendingWorkerWizard(telegramId);
 
-    const completionKb = new InlineKeyboard()
-      .url('📲 إرسال إشعار التعيين للعامل عبر واتساب', created.welcomeWhatsAppUrl)
+    // لوحة أزرار إتمام العمليات الموحدة (Universal Post-Action Completion Keyboard)
+    const workerPhone = (d.phone || '').replace(/\D/g, '');
+    const waPhone = workerPhone.startsWith('0') ? '20' + workerPhone.substring(1) : workerPhone;
+    const waText = encodeURIComponent(
+      `مرحباً بك يا ${result.worker.name} بشركة السعادة للمقاولات العامة والتعدين.\n` +
+      `تم قيدكم رسمياً بكود وظيفي: [ ${result.worker.code} ] - وظيفة: ${result.worker.jobTitle}.\n` +
+      `نتمنى لكم التوفيق والنجاح.`
+    );
+    const waUrl = `https://wa.me/${waPhone}?text=${waText}`;
+
+    const completionKeyboard = new InlineKeyboard()
+      .url('📲 إرسال إشعار التعيين للعامل عبر واتساب', waUrl)
       .row()
-      .text('➕ تسجيل وتعيين عامل آخر', 'action:worker:add')
+      .text('➕ تسجيل عامل آخر', 'action:worker:add')
       .row()
       .text('🔙 العودة لقسم الموارد البشرية', 'menu:domain:hr')
       .row()
       .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
-    const jobIcon = getJobEmoji(created.worker.jobTitle);
     const successText =
-      `🎉 *تم تسجيل وتعيين العامل بنجاح 100%!*\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `🆔 *كود العامل الرسمي:* \`${created.worker.code}\`\n` +
-      `👤 *الاسم الرباعي:* *${created.worker.name}*\n` +
-      `🏷️ *اسم الشهرة المعتمد للقوائم:* *${created.worker.nickname || d.nickname}*\n` +
-      `${jobIcon} *الوظيفة:* ${created.worker.jobTitle} | 📍 *الموقع:* ${d.siteName || 'الموقع العام'}\n` +
-      `📅 *تاريخ المباشرة:* ${formatDate(created.worker.hireDate)}\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `✅ *ما تم إنجازه آلياً:*\n` +
-      `1. قيد العامل بقاعدة بيانات المنظومة وتشفير بياناته الشخصية والبنكية بنكياً.\n` +
-      `2. تعميد اسم الشهرة كاسم العرض الأساسي في قوائم التمام والسلف والعمليات.\n` +
-      `3. تحديث الكاش اللحظي L1/L2 وإتاحة العامل بكافة البوابات.\n` +
-      `4. تجهيز رابط الترحيب الرسمي المباشر للعامل عبر واتساب.`;
+      '🎉 *تم تسجيل وتعيين العامل الجديد بنجاح!*\n' +
+      '━━━━━━━━━━━━━━━━━━━━━\n' +
+      `🆔 *كود العامل الرسمي:* \`${result.worker.code}\`\n` +
+      `👤 *الاسم:* *${result.worker.name}* (الشهرة: *${result.worker.nickname || '-'}*)\n` +
+      `🔢 *رقم الإثبات:* \`${d.idNumber}\`\n` +
+      (d.idCardExpiryDateStr ? `⏳ *انتهاء البطاقة:* *${d.idCardExpiryDateStr}*\n` : '') +
+      `💼 *الوظيفة:* ${result.worker.jobTitle} | 📍 *الموقع:* ${d.siteName || '-'}\n` +
+      `📅 *تاريخ التعيين:* *${formatDate(hireDateObj)}*\n` +
+      `📱 *الهاتف:* \`${d.phone}\` | 💳 *المستحقات:* \`${d.walletNumber}\` (${d.walletType})\n` +
+      '━━━━━━━━━━━━━━━━━━━━━\n' +
+      '✅ تم حفظ ملف العامل في قاعدة البيانات وتحديث كاش القوائم اللحظية بنجاح.';
 
     if (wizard.messageId && ctx.chat) {
       await ctx.api.editMessageText(ctx.chat.id, wizard.messageId, successText, {
         parse_mode: 'Markdown',
-        reply_markup: completionKb,
+        reply_markup: completionKeyboard,
       });
     } else {
-      await ctx.reply(successText, { parse_mode: 'Markdown', reply_markup: completionKb });
+      await ctx.reply(successText, {
+        parse_mode: 'Markdown',
+        reply_markup: completionKeyboard,
+      });
     }
   } catch (err: any) {
-    console.error('Error saving worker in wizard:', err);
-    await ctx.reply(`❌ *تعذر حفظ العامل:* ${err.message || 'خطأ غير متوقع'}`, {
-      parse_mode: 'Markdown',
-      reply_markup: new InlineKeyboard()
-        .text('🔄 إعادة المحاولة', 'action:worker_step:confirm')
-        .row()
-        .text('❌ إلغاء العملية', 'action:cancel_worker_op'),
-    });
+    console.error('Failed to create worker in final step:', err);
+    await ctx.reply(`❌ تعذر إتمام التعيين: ${err.message || 'خطأ غير متوقع'}`);
   }
 }

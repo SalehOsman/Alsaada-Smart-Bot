@@ -38,6 +38,7 @@ export interface CreateWorkerInput {
   previousInsuranceStatus?: string;
   idCardFrontPath?: string;
   idCardBackPath?: string;
+  idCardExpiryDate?: Date;
   notes?: string;
 }
 
@@ -282,6 +283,7 @@ export class WorkerService {
     const worker = await prisma.worker.create({
       data: {
         code: newCode,
+        legacyCode: input.legacyCode?.trim() || null,
         name: input.name.trim(),
         nickname: resolvedNickname,
         aliases: aliasesList,
@@ -312,6 +314,7 @@ export class WorkerService {
         previousInsuranceStatus: input.previousInsuranceStatus,
         idCardFrontPath: input.idCardFrontPath,
         idCardBackPath: input.idCardBackPath,
+        idCardExpiryDate: input.idCardExpiryDate || null,
         phoneEncrypted,
         phoneBlindIndex,
         emergencyContactName: input.emergencyContactName,
@@ -397,6 +400,89 @@ export class WorkerService {
         take: limit,
       });
     });
+  }
+
+  /**
+   * جلب كافة العمال النشطين لدعم شاشات الاختيار والبحث (WorkerPicker)
+   */
+  async getAllWorkersForPicker() {
+    return fastCache.rememberSWR('workers:all:picker', 120, async () => {
+      const workers = await prisma.worker.findMany({
+        where: { isDeleted: false, status: 'ACTIVE' },
+        include: { site: true, jobRef: true },
+        orderBy: { code: 'asc' },
+      });
+
+      return workers.map((w) => ({
+        id: w.id,
+        code: w.code,
+        legacyCode: w.legacyCode || undefined,
+        aliases: w.aliases || [],
+        name: w.name,
+        nickname: w.nickname || undefined,
+        jobTitle: w.jobTitle,
+        siteLocation: w.site?.name || undefined,
+        dailyWage: Number(w.dailyWage),
+      }));
+    });
+  }
+
+  /**
+   * تحديث كود العامل القديم ومزامنته مع مصفوفة aliases وتطهير الكاش
+   */
+  async updateWorkerLegacyCode(workerId: string, newLegacyCode: string): Promise<{ success: boolean; worker?: any; error?: string }> {
+    const cleanLegacy = newLegacyCode.trim();
+    if (!cleanLegacy) {
+      return { success: false, error: 'كود العامل القديم لا يمكن أن يكون فارغاً.' };
+    }
+
+    const worker = await prisma.worker.findUnique({
+      where: { id: workerId },
+      select: { id: true, code: true, name: true, legacyCode: true, aliases: true },
+    });
+
+    if (!worker) {
+      return { success: false, error: 'لم يتم العثور على العامل المطلوب.' };
+    }
+
+    // فحص عدم تكرار الكود القديم مع عامل آخر
+    const existing = await prisma.worker.findFirst({
+      where: {
+        id: { not: workerId },
+        isDeleted: false,
+        OR: [
+          { legacyCode: cleanLegacy },
+          { aliases: { has: cleanLegacy } },
+        ],
+      },
+      select: { code: true, name: true },
+    });
+
+    if (existing) {
+      return {
+        success: false,
+        error: `الكود القديم (${cleanLegacy}) مسجل بالفعل للعامل (${existing.name}) بالكود (${existing.code}).`,
+      };
+    }
+
+    // تحديث مصفوفة aliases
+    const updatedAliases = (worker.aliases || []).filter((a) => a !== worker.legacyCode);
+    if (!updatedAliases.includes(cleanLegacy)) {
+      updatedAliases.push(cleanLegacy);
+    }
+
+    const updatedWorker = await prisma.worker.update({
+      where: { id: workerId },
+      data: {
+        legacyCode: cleanLegacy,
+        aliases: updatedAliases,
+      },
+      include: { site: true, jobRef: true, department: true },
+    });
+
+    await fastCache.invalidate('workers:all:active');
+    await fastCache.invalidate('workers:all:picker');
+    return { success: true, worker: updatedWorker };
   }
 }
 

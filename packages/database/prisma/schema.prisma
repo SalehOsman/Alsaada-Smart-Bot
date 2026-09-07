@@ -253,6 +253,7 @@ model Worker {
   id                     String    @id @default(uuid())
   tenantId               String?
   code                   String    @unique // Active structured code (e.g. OP-DRV-0042)
+  legacyCode             String?   // Historical / legacy code (e.g. "106", "101")
   aliases                String[]  // Historical & legacy codes (e.g. ["106", "101", "OP-HLP-0015"])
   name                   String
   nickname               String?
@@ -289,6 +290,8 @@ model Worker {
   previousInsuranceStatus String?  // غير مؤمن، مؤمن سابقاً، متفرغ
   idCardFrontPath        String?   // صورة وجه البطاقة / الجواز
   idCardBackPath         String?   // صورة ظهر البطاقة
+  idCardExpiryDate       DateTime? // تاريخ انتهاء سريان البطاقة (مستخرج بالذكاء الاصطناعي من ظهر البطاقة)
+  idCardExpiryAlertSentAt DateTime? // تاريخ إرسال إشعار التنبيه قبل الانتهاء بشهر
   bloodType              String?
   telegramId             BigInt?   @unique
   status                 String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RESIGNED
@@ -329,11 +332,43 @@ model Worker {
   kitchenDispenses       KitchenMealDispense[]
   foodShipmentsReceived  FoodInboundShipment[]
   expenseClaims          WorkerExpenseClaim[]
+  editRequests           WorkerEditRequest[]
 
   @@index([phoneBlindIndex])
   @@index([status])
   @@index([isDeleted])
+  @@index([legacyCode])
+  @@index([idCardExpiryDate])
   @@map("workers")
+}
+
+model WorkerEditRequest {
+  id                  String    @id @default(uuid())
+  requestId           String    @unique // EDT-260907-001
+  workerId            String
+  workerCode          String
+  workerName          String
+  requesterTelegramId BigInt
+  requesterName       String
+  requesterRole       String    // FIELD_ADMIN, WORKER
+  fieldKey            String    // legacyCode, phone, walletNumber, jobTitle, siteId, drivingLicense, etc.
+  fieldName           String    // اسم الحقل بالعربية
+  oldValue            String?
+  newValue            String
+  reason              String?
+  status              String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedByAdminId   BigInt?
+  reviewedAt          DateTime?
+  reviewNotes         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  worker              Worker    @relation(fields: [workerId], references: [id])
+
+  @@index([status])
+  @@index([workerId])
+  @@index([workerCode])
+  @@map("worker_edit_requests")
 }
 
 model SalaryHistory {

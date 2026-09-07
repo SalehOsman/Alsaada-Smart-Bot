@@ -14,6 +14,7 @@ export interface AppConfig {
   redisUrl: string;
   databaseEncryptionKey: string;
   blindIndexSalt: string;
+  geminiApiKey: string;
 }
 
 export function loadConfig(): AppConfig {
@@ -26,6 +27,7 @@ export function loadConfig(): AppConfig {
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
   const databaseEncryptionKey = process.env.DATABASE_ENCRYPTION_KEY || '';
   const blindIndexSalt = process.env.BLIND_INDEX_SALT || '';
+  const geminiApiKey = process.env.GEMINI_API_KEY || '';
 
   if (!botToken || botToken === 'YOUR_NEW_BOT_TOKEN_HERE') {
     console.warn('⚠️ [CONFIG WARNING] BOT_TOKEN is not configured or using placeholder in .env');
@@ -41,6 +43,7 @@ export function loadConfig(): AppConfig {
     redisUrl,
     databaseEncryptionKey,
     blindIndexSalt,
+    geminiApiKey,
   };
 }
 

@@ -1,11 +1,13 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { workerService } from '../services/worker.service.js';
+import { prisma } from '../db.js';
 
 /**
  * 👥 تصيير بوابة الموارد البشرية والعمال (HR Domain Hub)
  * تطبق مبدأ الحجب المسبق الصارم (Pre-render RBAC UI Masking):
- * أزرار الإكسيل (تنزيل القالب / الرفع الجماعي) تظهر حصرياً للسوبر أدمن وتختفي كلياً للمشرف الميداني.
+ * - أزرار الإكسيل (تنزيل القالب / الرفع الجماعي) تظهر حصرياً للسوبر أدمن.
+ * - زر تعديل بيانات عامل يظهر كـ "✏️ تعديل بيانات عامل" للسوبر أدمن وكـ "📝 طلب تعديل بيانات عامل" للمشرف الميداني.
  */
 export async function renderHrHub(ctx: MyContext, inPlace = false): Promise<void> {
   if (ctx.callbackQuery) {
@@ -38,13 +40,22 @@ export async function renderHrHub(ctx: MyContext, inPlace = false): Promise<void
     .row()
     .text('📋 دليل وسجل العاملين', 'action:worker:directory');
 
-  // 🔒 الحجب المسبق الصارم: يظهر فقط للسوبر أدمن
+  // حوكمة التعديل: تعديل فوري للسوبر أدمن مقابل طلب تعديل للمشرف
   if (isSuperAdmin) {
+    keyboard.row().text('✏️ تعديل بيانات عامل (تنفيذ فوري)', 'action:worker_edit:pick');
+
+    const pendingRequestsCount = await prisma.workerEditRequest.count({ where: { status: 'PENDING' } }).catch(() => 0);
+    if (pendingRequestsCount > 0) {
+      keyboard.row().text(`📨 طلبات التعديل المعلقة (${pendingRequestsCount})`, 'action:worker_edit:pending_list');
+    }
+
     keyboard
       .row()
       .text('📥 تنزيل قالب العمال (إكسيل)', 'action:worker:download_excel')
       .row()
       .text('📤 رفع كشف العمال (إكسيل)', 'action:worker:upload_excel');
+  } else {
+    keyboard.row().text('📝 طلب تعديل بيانات عامل', 'action:worker_edit:pick');
   }
 
   keyboard
@@ -77,6 +88,9 @@ export async function renderWorkersDirectory(ctx: MyContext, inPlace = false): P
     await ctx.answerCallbackQuery().catch(() => {});
   }
 
+  const role = ctx.effectiveRole || 'GUEST';
+  const isSuperAdmin = role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin;
+
   const workers = await workerService.getRecentWorkers(15).catch(() => []);
 
   let text =
@@ -89,7 +103,8 @@ export async function renderWorkersDirectory(ctx: MyContext, inPlace = false): P
     workers.forEach((w, i) => {
       const flag = w.idType === 'PASSPORT' ? '🌍' : '🇪🇬';
       const siteName = w.site?.name || 'غير محدد';
-      text += `${i + 1}. ${flag} *${w.name}* (\`${w.code}\`)\n   💼 ${w.jobTitle} | 📍 ${siteName}\n`;
+      const legacyTag = w.legacyCode ? ` [قديم: \`${w.legacyCode}\`]` : '';
+      text += `${i + 1}. ${flag} *${w.name}* (\`${w.code}\`)${legacyTag}\n   💼 ${w.jobTitle} | 📍 ${siteName}\n`;
     });
   }
 
@@ -97,7 +112,15 @@ export async function renderWorkersDirectory(ctx: MyContext, inPlace = false): P
 
   const keyboard = new InlineKeyboard()
     .text('➕ تسجيل عامل جديد', 'action:worker:add_single')
-    .row()
+    .row();
+
+  if (isSuperAdmin) {
+    keyboard.text('✏️ تعديل بيانات عامل', 'action:worker_edit:pick').row();
+  } else {
+    keyboard.text('📝 طلب تعديل بيانات عامل', 'action:worker_edit:pick').row();
+  }
+
+  keyboard
     .text('🔙 العودة للموارد البشرية', 'menu:domain:hr')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 

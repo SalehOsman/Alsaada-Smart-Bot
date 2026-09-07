@@ -114,6 +114,16 @@ import {
   handleStartUploadWorkerExcel,
   handleWorkerExcelDocumentUpload,
 } from './handlers/worker-excel.handler.js';
+import {
+  handleStartWorkerEdit,
+  renderWorkerEditMenu,
+  handleStartEditWorkerField,
+  handleWorkerEditTextInput,
+  handleApproveEditRequest,
+  handleRejectEditRequest,
+  handleViewPendingEditRequests,
+} from './handlers/worker-edit.handler.js';
+import { workerExpiryAlertService } from './services/worker-expiry-alert.service.js';
 import { prisma } from './db.js';
 
 export function createBot(): Bot<MyContext> {
@@ -196,6 +206,7 @@ export function createBot(): Bot<MyContext> {
     }
 
     if (await handleWorkerWizardTextInput(ctx)) return;
+    if (await handleWorkerEditTextInput(ctx)) return;
     if (await handleJobMatrixTextInput(ctx)) return;
     if (await handleCompanyFieldTextInput(ctx)) return;
     if (await handleAdminFieldTextInput(ctx)) return;
@@ -472,9 +483,38 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery(['action:worker:add_single', 'action:worker:add'], handleStartAddWorker);
   bot.callbackQuery('action:worker:download_excel', handleDownloadWorkerTemplate);
   bot.callbackQuery('action:worker:upload_excel', handleStartUploadWorkerExcel);
+
+  // Worker Profile Editing & Governance
+  bot.callbackQuery('action:worker_edit:pick', handleStartWorkerEdit);
+  bot.callbackQuery('action:worker_edit:pending_list', handleViewPendingEditRequests);
+  bot.callbackQuery(/^action:worker_edit:menu:(.+)$/, async (ctx) => {
+    await renderWorkerEditMenu(ctx, ctx.match[1], true);
+  });
+  bot.callbackQuery(/^action:worker_edit:field:(.+):(.+)$/, async (ctx) => {
+    await handleStartEditWorkerField(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:worker_req:approve:(.+)$/, async (ctx) => {
+    await handleApproveEditRequest(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^action:worker_req:reject:(.+)$/, async (ctx) => {
+    await handleRejectEditRequest(ctx, ctx.match[1]);
+  });
+
   bot.callbackQuery(['action:cancel_worker_op', /^action:worker_/], handleWorkerWizardCallback);
 
-  // 15. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
+  // 15. Automated Expiry Alerts Daily Scheduler
+  setTimeout(() => {
+    workerExpiryAlertService.checkAndDispatchExpiryAlerts(bot.api).catch((err) => {
+      console.warn('⚠️ Expiry alert startup check failed:', err);
+    });
+  }, 10000);
+  setInterval(() => {
+    workerExpiryAlertService.checkAndDispatchExpiryAlerts(bot.api).catch((err) => {
+      console.warn('⚠️ Daily expiry alert scheduler failed:', err);
+    });
+  }, 24 * 60 * 60 * 1000);
+
+  // 16. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);
 
   return bot;
