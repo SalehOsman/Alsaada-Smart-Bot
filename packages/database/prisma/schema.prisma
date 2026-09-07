@@ -255,6 +255,7 @@ model Worker {
   code                   String    @unique // Active structured code (e.g. OP-DRV-0042)
   aliases                String[]  // Historical & legacy codes (e.g. ["106", "101", "OP-HLP-0015"])
   name                   String
+  nickname               String?
   idType                 String    @default("NATIONAL_ID") // NATIONAL_ID, PASSPORT
   nationality            String    @default("مصر")
   nationalIdEncrypted    String?
@@ -276,11 +277,18 @@ model Worker {
   fixedAllowances        Decimal   @default(0) @db.Decimal(12, 2)
   paymentMethod          String    @default("CASH_SITE") // CASH_SITE, VODAFONE_CASH, INSTAPAY, BANK_TRANSFER
   accountNumberEncrypted String?
+  walletType             String?   // e.g. "محفظة فودافون كاش", "إنستاباي"
   canteenCigarettePolicy String    @default("ONE_PACK_DAILY") // ONE_PACK_DAILY, FULL_COVERAGE, NONE, CUSTOM
   phoneEncrypted         String?
   phoneBlindIndex        String?
   emergencyContactName   String?
   emergencyPhoneEncrypted String?
+  drivingLicense         String?   // لا توجد رخصة، خاصة، مهنية 1، 2، 3، معدات ثقيلة
+  militaryStatus         String?   // أدى الخدمة، إعفاء نهائي، إعفاء مؤقت، إلخ
+  maritalStatus          String?   // أعزب، متزوج، متزوج ويعول، إلخ
+  previousInsuranceStatus String?  // غير مؤمن، مؤمن سابقاً، متفرغ
+  idCardFrontPath        String?   // صورة وجه البطاقة / الجواز
+  idCardBackPath         String?   // صورة ظهر البطاقة
   bloodType              String?
   telegramId             BigInt?   @unique
   status                 String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RESIGNED

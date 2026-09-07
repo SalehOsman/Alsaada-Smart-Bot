@@ -3,7 +3,7 @@ import { config } from '../config/env.js';
 import { fastCache } from './fast-cache.service.js';
 import { encryptField, decryptField, createBlindIndex } from '@alsaada/database';
 import { parseEgyptianNationalId } from '@alsaada/national-id-engine';
-import { normalizeDigits, formatDate } from '@alsaada/regional-engine';
+import { normalizeDigits, formatDate, extractFirstTwoNames } from '@alsaada/regional-engine';
 import { normalizeEgyptianPhone } from '@alsaada/core-components';
 
 export interface CreateWorkerInput {
@@ -29,8 +29,15 @@ export interface CreateWorkerInput {
   fixedAllowances?: number;
   paymentMethod?: string;
   accountNumber?: string;
+  walletType?: string;
   emergencyContactName?: string;
   emergencyPhone?: string;
+  drivingLicense?: string;
+  militaryStatus?: string;
+  maritalStatus?: string;
+  previousInsuranceStatus?: string;
+  idCardFrontPath?: string;
+  idCardBackPath?: string;
   notes?: string;
 }
 
@@ -267,7 +274,8 @@ export class WorkerService {
 
     // تجميع الأكواد القديمة وأسماء الشهرة في قائمة aliases
     const aliasesList: string[] = [];
-    if (input.nickname && input.nickname.trim()) aliasesList.push(input.nickname.trim());
+    const resolvedNickname = input.nickname?.trim() || extractFirstTwoNames(input.name.trim());
+    if (resolvedNickname) aliasesList.push(resolvedNickname);
     if (input.legacyCode && input.legacyCode.trim()) aliasesList.push(input.legacyCode.trim());
 
     // 5. حفظ السجل بقاعدة البيانات
@@ -275,6 +283,7 @@ export class WorkerService {
       data: {
         code: newCode,
         name: input.name.trim(),
+        nickname: resolvedNickname,
         aliases: aliasesList,
         idType: input.idType,
         nationality: input.nationality || (input.idType === 'NATIONAL_ID' ? 'مصر' : 'وافد'),
@@ -296,6 +305,13 @@ export class WorkerService {
         fixedAllowances: input.fixedAllowances || 0,
         paymentMethod: input.paymentMethod || 'CASH_SITE',
         accountNumberEncrypted,
+        walletType: input.walletType,
+        drivingLicense: input.drivingLicense,
+        militaryStatus: input.militaryStatus,
+        maritalStatus: input.maritalStatus,
+        previousInsuranceStatus: input.previousInsuranceStatus,
+        idCardFrontPath: input.idCardFrontPath,
+        idCardBackPath: input.idCardBackPath,
         phoneEncrypted,
         phoneBlindIndex,
         emergencyContactName: input.emergencyContactName,

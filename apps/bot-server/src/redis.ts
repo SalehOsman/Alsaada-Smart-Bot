@@ -269,22 +269,38 @@ export interface PendingWorkerWizardState {
   data: {
     fullName?: string;
     nickname?: string;
+    phone?: string;
+    payoutChoice?: string;
+    walletNumber?: string;
+    walletType?: string;
+    payoutMethod?: string;
     idType?: 'NATIONAL_ID' | 'PASSPORT';
     idNumber?: string;
     nationality?: string;
     birthDateStr?: string;
+    age?: number;
     gender?: 'MALE' | 'FEMALE';
     governorateCode?: string;
-    phone?: string;
+    governorateNameAr?: string;
     jobTitleId?: string;
     jobTitleName?: string;
     departmentId?: string;
+    departmentCode?: string;
+    jobCode?: string;
     siteId?: string;
     siteName?: string;
     hireDateStr?: string;
     shiftSystem?: string;
-    paymentMethod?: string;
-    walletNumber?: string;
+    drivingLicense?: string;
+    militaryStatus?: string;
+    emergencyPhone?: string;
+    previousInsuranceStatus?: string;
+    maritalStatus?: string;
+    idCardFrontPath?: string;
+    idCardBackPath?: string;
+    generatedCode?: string;
+    baseSalary?: number;
+    additionalSalary?: number;
   };
 }
 

@@ -25,7 +25,8 @@ export function buildWorkerPickerKeyboard(options: WorkerKeyboardOptions): Inlin
   for (const worker of options.workers) {
     const isSelected = selectedSet.has(worker.id);
     const checkmark = isSelected ? '✅ ' : '👤 ';
-    const label = `${checkmark}${worker.name} (${worker.code})`;
+    const displayName = worker.nickname ? `${worker.nickname}` : worker.name;
+    const label = `${checkmark}${displayName} (${worker.code})`;
     keyboard.text(label, `${workerPrefix}${worker.id}`).row();
   }
 

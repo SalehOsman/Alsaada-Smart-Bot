@@ -106,22 +106,14 @@ import {
 import {
   handleStartAddWorker,
   handleWorkerWizardTextInput,
-  handleWorkerWizardBack,
-  renderWizardStep,
-  handleConfirmSaveWorker,
-  WorkerWizardStep,
+  handleWorkerWizardPhotoInput,
+  handleWorkerWizardCallback,
 } from './handlers/new-worker-wizard.handler.js';
 import {
   handleDownloadWorkerTemplate,
   handleStartUploadWorkerExcel,
   handleWorkerExcelDocumentUpload,
 } from './handlers/worker-excel.handler.js';
-import {
-  getPendingWorkerWizard,
-  setPendingWorkerWizard,
-  clearPendingWorkerWizard,
-  clearPendingWorkerExcelUpload,
-} from './redis.js';
 import { prisma } from './db.js';
 
 export function createBot(): Bot<MyContext> {
@@ -160,10 +152,13 @@ export function createBot(): Bot<MyContext> {
   // 4. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
 
-  // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location, Excel Uploads)
-  bot.on('message:document', async (ctx, next) => {
-    if (await handleJobMatrixDocumentInput(ctx)) return;
-    if (await handleWorkerExcelDocumentUpload(ctx)) return;
+  // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location, Excel Uploads, Wizard Photos)
+  bot.on(['message:photo', 'message:document'], async (ctx, next) => {
+    if (await handleWorkerWizardPhotoInput(ctx)) return;
+    if (ctx.message?.document) {
+      if (await handleJobMatrixDocumentInput(ctx)) return;
+      if (await handleWorkerExcelDocumentUpload(ctx)) return;
+    }
     return next();
   });
 
@@ -474,116 +469,10 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery('action:worker:directory', async (ctx) => {
     await renderWorkersDirectory(ctx, true);
   });
-  bot.callbackQuery('action:worker:add_single', handleStartAddWorker);
+  bot.callbackQuery(['action:worker:add_single', 'action:worker:add'], handleStartAddWorker);
   bot.callbackQuery('action:worker:download_excel', handleDownloadWorkerTemplate);
   bot.callbackQuery('action:worker:upload_excel', handleStartUploadWorkerExcel);
-  bot.callbackQuery('action:cancel_worker_op', async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (ctx.from) {
-      const tid = BigInt(ctx.from.id);
-      await clearPendingWorkerWizard(tid);
-      await clearPendingWorkerExcelUpload(tid);
-    }
-    await renderHrHub(ctx, true);
-  });
-  bot.callbackQuery('action:worker_step:back', handleWorkerWizardBack);
-  bot.callbackQuery(/^action:worker_set_id_type:(NATIONAL_ID|PASSPORT)$/, async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (!ctx.from) return;
-    const tid = BigInt(ctx.from.id);
-    const wizard = await getPendingWorkerWizard(tid);
-    if (!wizard) return;
-    wizard.data.idType = ctx.match[1] as 'NATIONAL_ID' | 'PASSPORT';
-    wizard.step = WorkerWizardStep.ID_NUMBER;
-    await setPendingWorkerWizard(tid, wizard);
-    await renderWizardStep(ctx, wizard);
-  });
-  bot.callbackQuery(/^action:worker_nat:(.+)$/, async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (!ctx.from) return;
-    const tid = BigInt(ctx.from.id);
-    const wizard = await getPendingWorkerWizard(tid);
-    if (!wizard) return;
-    wizard.data.nationality = ctx.match[1];
-    wizard.step = WorkerWizardStep.PASSPORT_BIRTHDATE;
-    await setPendingWorkerWizard(tid, wizard);
-    await renderWizardStep(ctx, wizard);
-  });
-  bot.callbackQuery(/^action:worker_gender:(MALE|FEMALE)$/, async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (!ctx.from) return;
-    const tid = BigInt(ctx.from.id);
-    const wizard = await getPendingWorkerWizard(tid);
-    if (!wizard) return;
-    wizard.data.gender = ctx.match[1] as 'MALE' | 'FEMALE';
-    wizard.step = WorkerWizardStep.PHONE;
-    await setPendingWorkerWizard(tid, wizard);
-    await renderWizardStep(ctx, wizard);
-  });
-  bot.callbackQuery(/^action:worker_set_job:(.+)$/, async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (!ctx.from) return;
-    const tid = BigInt(ctx.from.id);
-    const wizard = await getPendingWorkerWizard(tid);
-    if (!wizard) return;
-    const jobId = ctx.match[1];
-    const job = await prisma.jobTitle.findUnique({
-      where: { id: jobId },
-      include: { department: true },
-    });
-    if (job) {
-      wizard.data.jobTitleId = job.id;
-      wizard.data.jobTitleName = job.name;
-      wizard.data.departmentId = job.departmentId;
-    }
-    wizard.step = WorkerWizardStep.SITE_SELECT;
-    await setPendingWorkerWizard(tid, wizard);
-    await renderWizardStep(ctx, wizard);
-  });
-  bot.callbackQuery(/^action:worker_set_site:(.+)$/, async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (!ctx.from) return;
-    const tid = BigInt(ctx.from.id);
-    const wizard = await getPendingWorkerWizard(tid);
-    if (!wizard) return;
-    const siteId = ctx.match[1];
-    const site = await prisma.site.findUnique({ where: { id: siteId } });
-    if (site) {
-      wizard.data.siteId = site.id;
-      wizard.data.siteName = site.name;
-    }
-    wizard.step = WorkerWizardStep.START_DATE;
-    await setPendingWorkerWizard(tid, wizard);
-    await renderWizardStep(ctx, wizard);
-  });
-  bot.callbackQuery(/^action:worker_date:(.+)$/, async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (!ctx.from) return;
-    const tid = BigInt(ctx.from.id);
-    const wizard = await getPendingWorkerWizard(tid);
-    if (!wizard) return;
-    wizard.data.hireDateStr = ctx.match[1];
-    wizard.step = WorkerWizardStep.PAYMENT_METHOD;
-    await setPendingWorkerWizard(tid, wizard);
-    await renderWizardStep(ctx, wizard);
-  });
-  bot.callbackQuery(/^action:worker_pay:(.+)$/, async (ctx) => {
-    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    if (!ctx.from) return;
-    const tid = BigInt(ctx.from.id);
-    const wizard = await getPendingWorkerWizard(tid);
-    if (!wizard) return;
-    const method = ctx.match[1];
-    wizard.data.paymentMethod = method;
-    if (method === 'CASH_SITE') {
-      wizard.step = WorkerWizardStep.CONFIRMATION;
-    } else {
-      wizard.step = WorkerWizardStep.WALLET_NUMBER;
-    }
-    await setPendingWorkerWizard(tid, wizard);
-    await renderWizardStep(ctx, wizard);
-  });
-  bot.callbackQuery('action:worker_confirm_save', handleConfirmSaveWorker);
+  bot.callbackQuery(['action:cancel_worker_op', /^action:worker_/], handleWorkerWizardCallback);
 
   // 15. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);

@@ -19,7 +19,13 @@ export interface WorkerRowData {
   siteCode: string;
   hireDate?: Date;
   paymentMethod: string;
+  walletType?: string;
   accountNumber?: string;
+  drivingLicense?: string;
+  militaryStatus?: string;
+  emergencyPhone?: string;
+  previousInsuranceStatus?: string;
+  maritalStatus?: string;
   notes?: string;
 }
 
@@ -60,7 +66,13 @@ export class WorkerExcelService {
       { header: 'كود الموقع *', key: 'siteCode', width: 16 },
       { header: 'تاريخ المباشرة (YYYY-MM-DD)', key: 'hireDate', width: 24 },
       { header: 'طريقة استلام الراتب', key: 'paymentMethod', width: 22 },
+      { header: 'نوع المحفظة / القناة', key: 'walletType', width: 22 },
       { header: 'رقم المحفظة / الحساب', key: 'accountNumber', width: 24 },
+      { header: 'رخصة القيادة', key: 'drivingLicense', width: 22 },
+      { header: 'الموقف التجنيدي', key: 'militaryStatus', width: 26 },
+      { header: 'هاتف الطوارئ', key: 'emergencyPhone', width: 20 },
+      { header: 'التأمين السابق', key: 'previousInsuranceStatus', width: 22 },
+      { header: 'الحالة الاجتماعية', key: 'maritalStatus', width: 20 },
       { header: 'ملاحظات', key: 'notes', width: 28 },
     ];
 
@@ -107,7 +119,13 @@ export class WorkerExcelService {
       siteCode: 'STE-01',
       hireDate: '2026-09-01',
       paymentMethod: 'استلام نقدي بالخزينة',
+      walletType: 'نقدي / كاش',
       accountNumber: '-',
+      drivingLicense: 'مهنية درجة ثانية',
+      militaryStatus: 'أدى الخدمة العسكرية (قدوة حسنة)',
+      emergencyPhone: '01099887766',
+      previousInsuranceStatus: 'غير مؤمن عليه بجهة أخرى',
+      maritalStatus: 'متزوج ويعول',
       notes: 'سائق لودر ممتاز',
     });
 
@@ -125,7 +143,13 @@ export class WorkerExcelService {
       siteCode: 'STE-01',
       hireDate: '2026-09-01',
       paymentMethod: 'فودافون كاش',
+      walletType: 'محفظة إلكترونية',
       accountNumber: '01298765432',
+      drivingLicense: 'لا توجد رخصة',
+      militaryStatus: 'غير مطلوب / معافى طبياً',
+      emergencyPhone: '01211223344',
+      previousInsuranceStatus: 'متفرغ وبدون تأمين',
+      maritalStatus: 'أعزب',
       notes: 'عامل تشغيل وخدمات',
     });
 
@@ -265,8 +289,14 @@ export class WorkerExcelService {
       const rawSiteCode = row.getCell(11).text?.trim().toUpperCase();
       const rawHireDate = row.getCell(12).text?.trim();
       const paymentMethod = row.getCell(13).text?.trim() || 'CASH_SITE';
-      const accountNumber = row.getCell(14).text?.trim() || '-';
-      const notes = row.getCell(15).text?.trim();
+      const walletType = row.getCell(14).text?.trim() || undefined;
+      const accountNumber = row.getCell(15).text?.trim() || '-';
+      const drivingLicense = row.getCell(16).text?.trim() || undefined;
+      const militaryStatus = row.getCell(17).text?.trim() || undefined;
+      const emergencyPhone = row.getCell(18).text?.trim() || undefined;
+      const previousInsuranceStatus = row.getCell(19).text?.trim() || undefined;
+      const maritalStatus = row.getCell(20).text?.trim() || undefined;
+      const notes = row.getCell(21).text?.trim();
 
       const lineRef = `السطر ${rowNumber} [${rawFullName}]`;
 
@@ -362,7 +392,13 @@ export class WorkerExcelService {
         siteCode: rawSiteCode,
         hireDate,
         paymentMethod,
+        walletType,
         accountNumber,
+        drivingLicense,
+        militaryStatus,
+        emergencyPhone,
+        previousInsuranceStatus,
+        maritalStatus,
         notes,
       });
     }
@@ -431,7 +467,13 @@ export class WorkerExcelService {
         basicSalary: Number(job.baseSalary),
         fixedAllowances: Number(job.additionalSalary),
         paymentMethod: r.paymentMethod,
+        walletType: r.walletType,
         accountNumber: r.accountNumber,
+        drivingLicense: r.drivingLicense,
+        militaryStatus: r.militaryStatus,
+        emergencyPhone: r.emergencyPhone,
+        previousInsuranceStatus: r.previousInsuranceStatus,
+        maritalStatus: r.maritalStatus,
         notes: r.notes,
       });
 

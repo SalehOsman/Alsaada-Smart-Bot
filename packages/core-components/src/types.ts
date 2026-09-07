@@ -3,6 +3,7 @@ export interface WorkerItem {
   code: string; // Current active structured code (e.g. OP-DRV-0042)
   aliases?: string[]; // Historical & legacy codes (e.g. ["101", "OP-HLP-0015"])
   name: string;
+  nickname?: string;
   jobTitle?: string;
   siteLocation?: string;
   phone?: string;
