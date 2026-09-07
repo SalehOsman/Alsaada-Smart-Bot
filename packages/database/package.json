@@ -11,7 +11,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
-    "db:studio": "prisma studio --port 5555 --browser none --hostname 0.0.0.0"
+    "db:studio": "prisma studio --port 5555 --browser none --hostname 0.0.0.0",
+    "db:purge:test": "tsx src/scripts/purge-test-data.ts --confirm"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1"

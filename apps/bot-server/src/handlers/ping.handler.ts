@@ -1,6 +1,8 @@
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 
+import { config } from '../config/env.js';
+
 export async function handlePing(ctx: MyContext): Promise<void> {
   const start = Date.now();
   let dbLatency = 0;
@@ -20,7 +22,7 @@ export async function handlePing(ctx: MyContext): Promise<void> {
 
   const responseText = 
     `⚡ *تقرير فحص أداء وسرعة النظام (System Telemetry & Health)*\n\n` +
-    `🏢 *المشروع:* Al-Saada Enterprise System v2.0\n` +
+    `🏢 *المشروع:* Al-Saada Enterprise System \`v${config.appVersion}\`\n` +
     `🗄️ *قاعدة البيانات:* ${dbStatus} (${dbLatency}ms)\n` +
     `⏱️ *سرعة استجابة المحرك:* ${totalLatency}ms\n` +
     `💾 *استهلاك الذاكرة:* ${memoryUsageMb} MB\n` +

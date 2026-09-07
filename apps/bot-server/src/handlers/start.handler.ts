@@ -1,5 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
+import { config } from '../config/env.js';
 
 export async function handleStart(ctx: MyContext): Promise<void> {
   const user = ctx.dbUser;
@@ -15,7 +16,7 @@ export async function handleStart(ctx: MyContext): Promise<void> {
 
   const welcomeText = 
     `🏢 *منظومة شركة السعادة للمقاولات العامة*\n` +
-    `🤖 *محرك البوت المؤسسي الجديد (Al-Saada Enterprise Engine v2.0)*\n\n` +
+    `🤖 *محرك البوت المؤسسي الجديد (Al-Saada Enterprise Engine \`v${config.appVersion}\`)*\n\n` +
     `مرحباً بك يا *${name}* 👋\n\n` +
     `🔹 *المعرف الرقمي:* \`${ctx.from?.id}\`\n` +
     `🔹 *الصلاحية المعتمدة:* ${roleLabel}\n` +

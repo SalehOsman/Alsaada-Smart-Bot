@@ -5,6 +5,7 @@ import path from 'path';
 dotenv.config();
 
 export interface AppConfig {
+  appVersion: string;
   nodeEnv: string;
   port: number;
   botToken: string;
@@ -16,6 +17,7 @@ export interface AppConfig {
 }
 
 export function loadConfig(): AppConfig {
+  const appVersion = process.env.APP_VERSION || '2.0.0-alpha.1';
   const nodeEnv = process.env.NODE_ENV || 'development';
   const port = parseInt(process.env.PORT || '3000', 10);
   const botToken = process.env.BOT_TOKEN || '';
@@ -30,6 +32,7 @@ export function loadConfig(): AppConfig {
   }
 
   return {
+    appVersion,
     nodeEnv,
     port,
     botToken,
