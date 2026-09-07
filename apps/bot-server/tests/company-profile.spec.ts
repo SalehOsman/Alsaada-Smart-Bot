@@ -1,7 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../src/redis.js', () => ({
-  redis: { on: vi.fn(), get: vi.fn().mockResolvedValue(null) },
+  redis: {
+    on: vi.fn(),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+    keys: vi.fn().mockResolvedValue([]),
+  },
   getPendingCompanyEdit: vi.fn().mockResolvedValue(null),
   setPendingCompanyEdit: vi.fn().mockResolvedValue(undefined),
   clearPendingCompanyEdit: vi.fn().mockResolvedValue(undefined),
@@ -13,9 +19,12 @@ import {
   handleCompanyFieldTextInput,
 } from '../src/handlers/company-profile.handler.js';
 import { MyContext } from '../src/types/context.js';
-
+import { fastCache } from '../src/services/fast-cache.service.js';
 
 describe('Company Profile Handler & Field Labels', () => {
+  beforeEach(() => {
+    fastCache.clearL1();
+  });
   it('should define all 8 official corporate fields with Arabic labels', () => {
     expect(COMPANY_FIELD_LABELS.legalName).toBe('اسم الشركة القانوني');
     expect(COMPANY_FIELD_LABELS.tradeName).toBe('الاسم التجاري المختصر');

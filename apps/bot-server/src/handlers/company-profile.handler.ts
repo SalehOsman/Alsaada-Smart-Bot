@@ -6,6 +6,7 @@ import {
   getPendingCompanyEdit,
   clearPendingCompanyEdit,
 } from '../redis.js';
+import { systemDataService } from '../services/system-data.service.js';
 
 export const COMPANY_FIELD_LABELS: Record<string, string> = {
   legalName: 'اسم الشركة القانوني',
@@ -45,10 +46,8 @@ export async function renderCompanyProfileCard(
     await clearPendingCompanyEdit(BigInt(ctx.from.id));
   }
 
-  // Fetch active company profile
-  const profile = await prisma.companyProfile.findFirst({
-    include: { tenant: true },
-  });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const profile = await systemDataService.getCompanyProfile();
 
   const keyboard = new InlineKeyboard()
     .text('✏️ الاسم القانوني', 'action:edit_comp:legalName')
@@ -79,10 +78,9 @@ export async function renderCompanyProfileCard(
 
   const text =
     `${banner}` +
-    `🏢 *الملف التعريفي وبيانات الشركة الرسمية (Corporate Profile)*\n` +
+    `🏢 *الملف التعريفي والبيانات الرسمية للشركة*\n` +
     `────────────────────────────\n` +
-    `📌 *المصدر المعتمد:* PostgreSQL 16 (\`company_profiles\`)\n` +
-    `البيانات المعتمدة في العقود، الخطابات، وسندات الرواتب:\n\n` +
+    `البيانات المعتمدة في العقود والمخاطبات الرسمية وسندات صرف المستحقات:\n\n` +
     `🏛️ *اسم الشركة القانوني:*\n\`${profile?.legalName || 'غير مسجل'}\`\n\n` +
     `🏷️ *الاسم التجاري المختصر:*\n\`${profile?.tradeName || 'غير مسجل'}\`\n\n` +
     `📜 *رقم السجل التجاري:*\n\`${profile?.commercialRegistrationNumber || 'غير مسجل'}\`\n\n` +
@@ -92,7 +90,7 @@ export async function renderCompanyProfileCard(
     `✉️ *البريد الإلكتروني الرسمي:*\n\`${profile?.officialEmail || 'غير مسجل'}\`\n\n` +
     `💱 *العملة الأساسية والمعتمدة:*\n\`${profile?.baseCurrency || 'EGP'}\`\n` +
     `────────────────────────────\n` +
-    `👇 *اضغط على أي بيان أعلاه لتعديله وتحديثه فورياً:*`;
+    `👇 *اختر أي بيان أعلاه لتعديله وتحديثه فورياً:*`;
 
   if (inPlace && ctx.callbackQuery) {
     try {
@@ -207,16 +205,15 @@ export async function handleCompanyFieldTextInput(ctx: MyContext): Promise<boole
       }
     }
 
-    // 2. Clear Redis pending state
+    // 2. Clear Redis pending state and invalidate L1/L2 cache
     await clearPendingCompanyEdit(telegramId);
+    await systemDataService.invalidateCompanyProfile();
 
     // 3. Silently delete user's text message to keep chat history clean
     await ctx.deleteMessage().catch(() => {});
 
     // 4. Update the original card in-place
-    const updatedProfile = await prisma.companyProfile.findFirst({
-      include: { tenant: true },
-    });
+    const updatedProfile = await systemDataService.getCompanyProfile();
 
     const keyboard = new InlineKeyboard()
       .text('✏️ الاسم القانوني', 'action:edit_comp:legalName')
@@ -241,11 +238,11 @@ export async function handleCompanyFieldTextInput(ctx: MyContext): Promise<boole
     }
 
     const text =
-      `✅ *تم تحديث ${fieldLabel} بنجاح وحفظه في قاعدة البيانات.*\n` +
+      `✅ *تم تحديث ${fieldLabel} بنجاح وحفظه في المنظومة.*\n` +
       `────────────────────────────\n\n` +
-      `🏢 *الملف التعريفي وبيانات الشركة الرسمية (Corporate Profile)*\n` +
+      `🏢 *الملف التعريفي والبيانات الرسمية للشركة*\n` +
       `────────────────────────────\n` +
-      `📌 *المصدر المعتمد:* PostgreSQL 16 (\`company_profiles\`)\n\n` +
+      `البيانات المعتمدة في العقود والمخاطبات الرسمية وسندات صرف المستحقات:\n\n` +
       `🏛️ *اسم الشركة القانوني:*\n\`${updatedProfile?.legalName || 'غير مسجل'}\`\n\n` +
       `🏷️ *الاسم التجاري المختصر:*\n\`${updatedProfile?.tradeName || 'غير مسجل'}\`\n\n` +
       `📜 *رقم السجل التجاري:*\n\`${updatedProfile?.commercialRegistrationNumber || 'غير مسجل'}\`\n\n` +
@@ -255,7 +252,7 @@ export async function handleCompanyFieldTextInput(ctx: MyContext): Promise<boole
       `✉️ *البريد الإلكتروني الرسمي:*\n\`${updatedProfile?.officialEmail || 'غير مسجل'}\`\n\n` +
       `💱 *العملة الأساسية والمعتمدة:*\n\`${updatedProfile?.baseCurrency || 'EGP'}\`\n` +
       `────────────────────────────\n` +
-      `👇 *اضغط على أي بيان أعلاه لتعديله وتحديثه فورياً:*`;
+      `👇 *اختر أي بيان أعلاه لتعديله وتحديثه فورياً:*`;
 
     try {
       await ctx.api.editMessageText(ctx.chat!.id, pending.messageId, text, {

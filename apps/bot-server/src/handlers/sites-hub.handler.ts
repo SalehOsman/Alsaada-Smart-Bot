@@ -7,6 +7,7 @@ import {
   clearPendingSiteAction,
 } from '../redis.js';
 import { parseCoordinates, formatGoogleMapsUrl } from '../utils/coordinates.js';
+import { systemDataService } from '../services/system-data.service.js';
 
 export const SITE_FIELD_LABELS: Record<string, string> = {
   name: 'اسم الموقع',
@@ -20,24 +21,7 @@ export const SITE_FIELD_LABELS: Record<string, string> = {
  * Calculates the next sequential site code (e.g. STE-02 after STE-01)
  */
 export async function getNextSiteCode(): Promise<string> {
-  const sites = await prisma.site.findMany({
-    select: { code: true },
-  });
-
-  let maxSeq = 0;
-  for (const s of sites) {
-    const match = s.code.match(/^STE-(\d+)$/i);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (!isNaN(num) && num > maxSeq) {
-        maxSeq = num;
-      }
-    }
-  }
-
-  const nextNum = maxSeq + 1;
-  const padded = nextNum < 10 ? `0${nextNum}` : `${nextNum}`;
-  return `STE-${padded}`;
+  return systemDataService.getNextSiteCode();
 }
 
 /**
@@ -60,14 +44,8 @@ export async function renderSitesHub(
 
   await clearPendingSiteAction(BigInt(ctx.from.id));
 
-  // Fetch all sites with project and worker counts
-  const sites = await prisma.site.findMany({
-    include: {
-      project: true,
-      workers: { select: { id: true } },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const sites = await systemDataService.getSites();
 
   const keyboard = new InlineKeyboard();
 
@@ -100,11 +78,11 @@ export async function renderSitesHub(
 
   const text =
     `${banner}` +
-    `🏗️ *مصفوفة المشاريع والفروع والمواقع الميدانية (Sites Hub)*\n` +
+    `🏗️ *مصفوفة المشاريع والفروع والمواقع الميدانية*\n` +
     `────────────────────────────\n` +
-    `📌 *المصدر المعتمد:* PostgreSQL 16 (\`sites\` & \`projects\`)\n` +
+    `دليل المواقع التشغيلية ومراكز التكلفة والمناجم التابعة للشركة.\n` +
     `📊 *إجمالي المواقع المسجلة:* ${sites.length} موقع\n\n` +
-    `👇 *اضغط على أي موقع أدناه للاطلاع على تفاصيله أو تعديل بياناته:*`;
+    `👇 *اختر الموقع المطلوب أدناه للاطلاع على بطاقته أو تعديل بياناته:*`;
 
   if (inPlace && ctx.callbackQuery) {
     try {
@@ -145,13 +123,8 @@ export async function renderSiteDetail(
 
   await clearPendingSiteAction(BigInt(ctx.from.id));
 
-  const site = await prisma.site.findUnique({
-    where: { code: siteCode },
-    include: {
-      project: true,
-      workers: { select: { id: true } },
-    },
-  });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const site = await systemDataService.getSiteByCode(siteCode);
 
   if (!site) {
     if (ctx.callbackQuery) {
@@ -243,10 +216,8 @@ export async function renderSiteEditMenu(
 
   await clearPendingSiteAction(BigInt(ctx.from.id));
 
-  const site = await prisma.site.findUnique({
-    where: { code: siteCode },
-    include: { project: true },
-  });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const site = await systemDataService.getSiteByCode(siteCode);
 
   if (!site) {
     if (ctx.callbackQuery) {
@@ -315,6 +286,7 @@ export async function handleToggleSiteStatus(
     where: { code: siteCode },
     data: { status: nextStatus },
   });
+  await systemDataService.invalidateSites();
 
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery({
@@ -377,7 +349,8 @@ export async function handleStartEditSiteField(
   const messageId = ctx.callbackQuery.message?.message_id;
   if (!messageId) return;
 
-  const site = await prisma.site.findUnique({ where: { code: siteCode } });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const site = await systemDataService.getSiteByCode(siteCode);
   if (!site) return;
 
   const telegramId = BigInt(ctx.from.id);
@@ -450,10 +423,8 @@ export async function handleStartEditSiteField(
       messageId,
     });
 
-    const projects = await prisma.project.findMany({
-      where: { status: 'ACTIVE' },
-      orderBy: { name: 'asc' },
-    });
+    // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+    const projects = await systemDataService.getActiveProjects();
 
     const keyboard = new InlineKeyboard();
     projects.forEach((p) => {
@@ -571,6 +542,7 @@ export async function handleSelectSiteProject(
     where: { code: siteCode },
     data: { projectId: project.id },
   });
+  await systemDataService.invalidateSites();
 
   await clearPendingSiteAction(BigInt(ctx.from.id));
 
@@ -598,6 +570,7 @@ export async function handleSetSiteGeofence(
     where: { code: siteCode },
     data: { geofenceRadiusMeters: radius },
   });
+  await systemDataService.invalidateSites();
 
   if (ctx.from) {
     await clearPendingSiteAction(BigInt(ctx.from.id));
@@ -628,6 +601,7 @@ export async function handleSiteLocationInput(ctx: MyContext): Promise<boolean> 
     where: { code: pending.siteCode },
     data: { latitude: lat, longitude: lng },
   });
+  await systemDataService.invalidateSites();
 
   await clearPendingSiteAction(telegramId);
   await ctx.deleteMessage().catch(() => {});
@@ -728,6 +702,7 @@ export async function handleSelectSiteGov(
   });
 
   await clearPendingSiteAction(telegramId);
+  await systemDataService.invalidateSites();
 
   const notice = `تمت إضافة موقع (${createdSite.name}) بنجاح وتفعيله في المنظومة.`;
   await renderSiteDetail(ctx, createdSite.code, true, notice);
@@ -765,6 +740,7 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
       where: { code: pending.siteCode },
       data: { name: textVal },
     });
+    await systemDataService.invalidateSites();
     await clearPendingSiteAction(telegramId);
     await ctx.deleteMessage().catch(() => {});
     await renderSiteDetail(ctx, pending.siteCode, false, `تم تعديل اسم الموقع إلى (${textVal}) بنجاح.`);
@@ -815,6 +791,7 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
       where: { code: pending.siteCode },
       data: { projectId: project.id },
     });
+    await systemDataService.invalidateSites();
 
     await clearPendingSiteAction(telegramId);
     await ctx.deleteMessage().catch(() => {});
@@ -839,6 +816,7 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
       where: { code: pending.siteCode },
       data: { governorateCode: textVal },
     });
+    await systemDataService.invalidateSites();
     await clearPendingSiteAction(telegramId);
     await ctx.deleteMessage().catch(() => {});
     await renderSiteDetail(ctx, pending.siteCode, false, `تم تعديل المحافظة إلى (${textVal}) بنجاح.`);
@@ -863,6 +841,7 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
       where: { code: pending.siteCode },
       data: { geofenceRadiusMeters: meters },
     });
+    await systemDataService.invalidateSites();
     await clearPendingSiteAction(telegramId);
     await ctx.deleteMessage().catch(() => {});
     await renderSiteDetail(ctx, pending.siteCode, false, `تم تعديل نطاق السياج الجغرافي إلى (${meters} متر) بنجاح.`);
@@ -892,6 +871,7 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
       where: { code: pending.siteCode },
       data: { latitude: coords.latitude, longitude: coords.longitude },
     });
+    await systemDataService.invalidateSites();
     await clearPendingSiteAction(telegramId);
     await ctx.deleteMessage().catch(() => {});
     const notice = `تم تسجيل إحداثيات الموقع بنجاح (${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}).`;
@@ -1038,6 +1018,7 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
     });
 
     await clearPendingSiteAction(telegramId);
+    await systemDataService.invalidateSites();
     await ctx.deleteMessage().catch(() => {});
 
     const notice = `تمت إضافة موقع (${createdSite.name}) بنجاح وتفعيله في المنظومة.`;

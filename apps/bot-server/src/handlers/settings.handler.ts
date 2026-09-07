@@ -1,6 +1,7 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { setImpersonatedRole, clearImpersonatedRole } from '../redis.js';
+import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 import { renderRoleHome } from './start.handler.js';
 
 /**
@@ -35,9 +36,10 @@ export async function handleSettings(ctx: MyContext): Promise<void> {
   }
 
   const text =
-    `⚙️ *مركز إعدادات النظام والتحكم السيادي (Settings Hub)*\n\n` +
-    `مرحباً بك في مركز الإعدادات المركزي للمدير العام. تم تنظيم الوظائف في تصنيفات فرعية لتسهيل التحكم:\n\n` +
-    `👇 *يرجى اختيار القسم الإداري المطلوب:*`;
+    `⚙️ *مركز إعدادات النظام والتحكم السيادي*\n` +
+    `────────────────────────────\n` +
+    `لوحة التحكم المركزية لإدارة الكيان المؤسسي، الفروع والمواقع الميدانية، وضبط صلاحيات الإشراف والأمان.\n\n` +
+    `👇 *اختر القسم الإداري المطلوب:*`;
 
   if (ctx.callbackQuery) {
     try {
@@ -153,7 +155,7 @@ export async function handleSettingsSubSystem(ctx: MyContext): Promise<void> {
   const text =
     `⚡ *أداء وتشغيل المنظومة والمحركات*\n` +
     `────────────────────────────\n` +
-    `فحص سرعة استجابة قاعدة البيانات PostgreSQL وكاش Redis وسرعة المحرك المركزي.\n\n` +
+    `فحص سرعة استجابة قاعدة البيانات ومحرك الكاش المركزي ومؤشرات الأداء اللحظية.\n\n` +
     `اختر الإجراء المطلوب:`;
 
   if (ctx.callbackQuery) {
@@ -195,7 +197,8 @@ export async function handleGhostModeMenu(ctx: MyContext): Promise<void> {
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
   const text =
-    `🎭 *نظام محاكاة وتقمص الأدوار للمدير العام (Ghost Mode Engine)*\n\n` +
+    `🎭 *نظام محاكاة وتقمص الأدوار للمدير العام*\n` +
+    `────────────────────────────\n` +
     `يتيح لك هذا النظام التحول الفوري لتجربة واجهة وتدفقات أي دور تشغيلي داخل المنظومة وكأنك ذلك المستخدم، للتحقق من دقة الصلاحيات وسلامة الواجهات ميدانياً.\n\n` +
     `⚠️ *ضمانة الاستثناء السيادي:* مهما كان الدور المختار (حتى لو كان زائر أو عامل مقيد)، يظل زر العودة كمدير عام متاحاً لك دائماً أسفل الواجهة، بالإضافة إلى الأمر المباشر \`/exit_ghost\`.\n\n` +
     `اختر الدور المراد تقمصه وتجربة واجهته:`;
@@ -232,6 +235,7 @@ export async function handleImpersonateRole(ctx: MyContext, targetRole: string):
 
   const telegramId = BigInt(ctx.from.id);
   await setImpersonatedRole(telegramId, targetRole);
+  await invalidateUserCache(telegramId);
 
   ctx.effectiveRole = targetRole;
   ctx.isImpersonating = true;
@@ -257,6 +261,7 @@ export async function handleExitImpersonate(ctx: MyContext): Promise<void> {
 
   const telegramId = BigInt(ctx.from.id);
   await clearImpersonatedRole(telegramId);
+  await invalidateUserCache(telegramId);
 
   ctx.effectiveRole = 'SUPER_ADMIN';
   ctx.isImpersonating = false;
@@ -281,6 +286,7 @@ export async function handleExitGhostCommand(ctx: MyContext): Promise<void> {
 
   const telegramId = BigInt(ctx.from.id);
   await clearImpersonatedRole(telegramId);
+  await invalidateUserCache(telegramId);
 
   ctx.effectiveRole = 'SUPER_ADMIN';
   ctx.isImpersonating = false;

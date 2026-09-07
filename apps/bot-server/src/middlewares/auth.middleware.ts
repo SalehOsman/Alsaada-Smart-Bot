@@ -1,13 +1,16 @@
-﻿import { NextFunction } from 'grammy';
+import { NextFunction } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
 import { redis, getImpersonatedRole } from '../redis.js';
+import { fastCache } from '../services/fast-cache.service.js';
 
 export const USER_CACHE_PREFIX = 'cache:user:';
 
 export async function invalidateUserCache(telegramId: bigint): Promise<void> {
   try {
+    await fastCache.invalidate(`auth:user:${telegramId}`);
+    await fastCache.invalidate(`auth:imp:${telegramId}`);
     await redis.del(`${USER_CACHE_PREFIX}${telegramId}`);
   } catch {}
 }
@@ -23,31 +26,16 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
   ctx.isRealSuperAdmin = isSuperAdminEnv;
 
   try {
-    const cacheKey = `${USER_CACHE_PREFIX}${telegramId}`;
-    let user: any = null;
-
-    try {
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        user = {
-          ...parsed,
-          telegramId: BigInt(parsed.telegramId),
-          createdAt: new Date(parsed.createdAt),
-          updatedAt: new Date(parsed.updatedAt),
-        };
-      }
-    } catch {}
-
-    if (!user) {
-      user = await prisma.user.findUnique({
+    // ⚡ L1 IN-MEMORY RAM AUTH LOOKUP (< 0.1ms) with SWR background revalidation
+    const user = await fastCache.rememberSWR(`auth:user:${telegramId}`, 180, async () => {
+      let dbUser = await prisma.user.findUnique({
         where: { telegramId },
       });
 
-      if (!user) {
+      if (!dbUser) {
         // Auto-provision Super Admin if ID matches SUPER_ADMIN_TELEGRAM_ID
         const initialRole = isSuperAdminEnv ? 'SUPER_ADMIN' : 'GUEST';
-        user = await prisma.user.create({
+        dbUser = await prisma.user.create({
           data: {
             telegramId,
             username: from.username || null,
@@ -56,30 +44,24 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
             isActive: isSuperAdminEnv ? true : false,
           },
         });
-        console.log(`👤 [AUTH] New user provisioned: ${user.fullName} (${user.telegramId}) as ${user.role}`);
-      } else if (isSuperAdminEnv && user.role !== 'SUPER_ADMIN') {
-        user = await prisma.user.update({
+        console.log(`👤 [AUTH] New user provisioned: ${dbUser.fullName} (${dbUser.telegramId}) as ${dbUser.role}`);
+      } else if (isSuperAdminEnv && dbUser.role !== 'SUPER_ADMIN') {
+        dbUser = await prisma.user.update({
           where: { telegramId },
           data: { role: 'SUPER_ADMIN', isActive: true },
         });
       }
 
-      if (user) {
-        try {
-          const serializable = {
-            ...user,
-            telegramId: user.telegramId.toString(),
-          };
-          await redis.set(cacheKey, JSON.stringify(serializable), 'EX', 300);
-        } catch {}
-      }
-    }
+      return dbUser;
+    });
 
     ctx.dbUser = user;
 
-    // Check for active impersonation mode if user is Super Admin
+    // Check for active impersonation mode if user is Super Admin (< 0.1ms via L1 cache)
     if (isSuperAdminEnv) {
-      const impRole = await getImpersonatedRole(telegramId);
+      const impRole = await fastCache.rememberSWR(`auth:imp:${telegramId}`, 120, async () => {
+        return getImpersonatedRole(telegramId);
+      });
       if (impRole) {
         ctx.effectiveRole = impRole;
         ctx.isImpersonating = true;

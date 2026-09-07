@@ -1,7 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../src/redis.js', () => ({
-  redis: { on: vi.fn(), get: vi.fn().mockResolvedValue(null) },
+  redis: {
+    on: vi.fn(),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+    keys: vi.fn().mockResolvedValue([]),
+  },
   getPendingSiteAction: vi.fn().mockResolvedValue(null),
   setPendingSiteAction: vi.fn().mockResolvedValue(undefined),
   clearPendingSiteAction: vi.fn().mockResolvedValue(undefined),
@@ -59,8 +65,13 @@ import {
 import { prisma } from '../src/db.js';
 import { MyContext } from '../src/types/context.js';
 import { getPendingSiteAction } from '../src/redis.js';
+import { fastCache } from '../src/services/fast-cache.service.js';
 
 describe('Sites & Projects Hub Handler', () => {
+  beforeEach(() => {
+    fastCache.clearL1();
+  });
+
   it('should define site field labels correctly', () => {
     expect(SITE_FIELD_LABELS.name).toBe('اسم الموقع');
     expect(SITE_FIELD_LABELS.project).toBe('المشروع التابع له');

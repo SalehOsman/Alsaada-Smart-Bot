@@ -1,7 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../src/redis.js', () => ({
-  redis: { on: vi.fn(), get: vi.fn().mockResolvedValue(null) },
+  redis: {
+    on: vi.fn(),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+    keys: vi.fn().mockResolvedValue([]),
+  },
   getPendingAdminEdit: vi.fn().mockResolvedValue(null),
   setPendingAdminEdit: vi.fn().mockResolvedValue(undefined),
   clearPendingAdminEdit: vi.fn().mockResolvedValue(undefined),
@@ -13,8 +19,12 @@ import {
   handleAdminFieldTextInput,
 } from '../src/handlers/admin-profile.handler.js';
 import { MyContext } from '../src/types/context.js';
+import { fastCache } from '../src/services/fast-cache.service.js';
 
 describe('Admin Personal Profile Handler', () => {
+  beforeEach(() => {
+    fastCache.clearL1();
+  });
   it('should define admin profile field labels correctly', () => {
     expect(ADMIN_FIELD_LABELS.fullName).toBe('الاسم الرسمي');
     expect(ADMIN_FIELD_LABELS.phone).toBe('رقم الهاتف المعتمد');

@@ -9,6 +9,7 @@ import {
   clearPendingAdminEdit,
 } from '../redis.js';
 import { invalidateUserCache } from '../middlewares/auth.middleware.js';
+import { systemDataService } from '../services/system-data.service.js';
 
 export const ADMIN_FIELD_LABELS: Record<string, string> = {
   fullName: 'الاسم الرسمي',
@@ -40,9 +41,8 @@ export async function renderAdminProfileCard(
   const telegramId = BigInt(ctx.from.id);
   await clearPendingAdminEdit(telegramId);
 
-  const user = await prisma.user.findUnique({
-    where: { telegramId },
-  });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const user = await systemDataService.getAdminUser(telegramId);
 
   let displayPhone = 'غير مسجل';
   if (user?.phoneEncrypted && config.databaseEncryptionKey) {
@@ -74,12 +74,12 @@ export async function renderAdminProfileCard(
 
   const text =
     `${banner}` +
-    `👤 *الملف التعريفي لحساب المدير العام (Super Admin Profile)*\n` +
+    `👤 *الملف التعريفي لحساب المدير العام*\n` +
     `────────────────────────────\n` +
-    `👑 *الصلاحية والصفة:* مدير عام المنظومة (Super Admin)\n` +
+    `👑 *الصفة والصلاحية:* المدير العام لمنظومة شركة السعادة\n` +
     `🆔 *المعرف الرقمي:* \`${ctx.from.id}\`\n` +
     `👤 *الاسم الرسمي المسجل:*\n\`${user?.fullName || 'غير مسجل'}\`\n\n` +
-    `📱 *رقم الهاتف المشفر (AES-256):*\n\`${displayPhone}\`\n\n` +
+    `📱 *رقم الهاتف المعتمد:*\n\`${displayPhone}\`\n\n` +
     `🌐 *اسم المستخدم:* \`${user?.username ? `@${user.username}` : 'بدون معرف'}\`\n` +
     `🛡️ *حالة الحساب:* 🟢 نشط ومعتمد سيادياً\n` +
     `────────────────────────────\n` +
@@ -201,6 +201,7 @@ export async function handleAdminFieldTextInput(ctx: MyContext): Promise<boolean
 
   await clearPendingAdminEdit(telegramId);
   await invalidateUserCache(telegramId);
+  await systemDataService.invalidateUser(telegramId);
   await ctx.deleteMessage().catch(() => {});
 
   const notice = `تم تحديث ${ADMIN_FIELD_LABELS[fieldKey] || fieldKey} بنجاح وحفظه في النظام.`;

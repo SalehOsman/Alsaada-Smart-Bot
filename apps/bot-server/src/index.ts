@@ -7,6 +7,7 @@ import { run } from '@grammyjs/runner';
 import { connectDatabase, disconnectDatabase } from './db.js';
 import { createBot } from './bot.js';
 import { config } from './config/env.js';
+import { systemDataService } from './services/system-data.service.js';
 
 async function bootstrap() {
   console.log('================================================================');
@@ -18,6 +19,8 @@ async function bootstrap() {
   // 1. Connect to PostgreSQL
   try {
     await connectDatabase();
+    // ⚡ Prime L1 in-memory RAM cache for instant sub-millisecond responses
+    await systemDataService.warmup();
   } catch (error) {
     console.error('❌ [FATAL] Failed to connect to PostgreSQL database:', error);
     process.exit(1);

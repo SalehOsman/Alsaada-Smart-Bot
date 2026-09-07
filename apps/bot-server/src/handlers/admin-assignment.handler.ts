@@ -2,6 +2,7 @@ import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { invalidateUserCache } from '../middlewares/auth.middleware.js';
+import { systemDataService } from '../services/system-data.service.js';
 
 /**
  * Lists all staff/admins and their current site assignments
@@ -25,10 +26,8 @@ export async function renderAdminAssignmentsHub(
     await ctx.answerCallbackQuery().catch(() => {});
   }
 
-  const users = await prisma.user.findMany({
-    include: { assignedSite: true },
-    orderBy: { createdAt: 'asc' },
-  });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const users = await systemDataService.getAdminUsersList();
 
   const keyboard = new InlineKeyboard();
 
@@ -103,10 +102,9 @@ export async function renderUserAssignmentCard(
     return renderAdminAssignmentsHub(ctx, inPlace);
   }
 
-  const sites = await prisma.site.findMany({
-    where: { status: 'ACTIVE' },
-    orderBy: { code: 'asc' },
-  });
+  // ⚡ L1 IN-MEMORY RAM (< 0.1ms) with SWR background revalidation via SystemDataService
+  const allSites = await systemDataService.getSites();
+  const sites = allSites.filter((s) => s.status === 'ACTIVE');
 
   const keyboard = new InlineKeyboard();
 
@@ -195,6 +193,7 @@ export async function handleSetUserSiteAssignment(
   });
 
   await invalidateUserCache(targetTelegramId);
+  await systemDataService.invalidateUser(targetTelegramId);
 
   const siteLabel = updatedUser.assignedSite
     ? `موقع ${updatedUser.assignedSite.name}`
