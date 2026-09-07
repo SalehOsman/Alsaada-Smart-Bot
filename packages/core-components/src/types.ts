@@ -1,6 +1,7 @@
 export interface WorkerItem {
   id: string;
-  code: string;
+  code: string; // Current active structured code (e.g. OP-DRV-0042)
+  aliases?: string[]; // Historical & legacy codes (e.g. ["101", "OP-HLP-0015"])
   name: string;
   jobTitle?: string;
   siteLocation?: string;

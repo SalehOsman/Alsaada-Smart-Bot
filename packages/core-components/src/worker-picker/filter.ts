@@ -38,8 +38,12 @@ export function filterWorkers(workers: WorkerItem[], options: WorkerFilterOption
     const normalizedQuery = normalizeArabicText(options.query);
     filtered = filtered.filter((w) => {
       const nameMatch = normalizeArabicText(w.name).includes(normalizedQuery);
-      const codeMatch = normalizeDigits(w.code).includes(normalizedQuery);
-      return nameMatch || codeMatch;
+      const codeMatch = normalizeDigits(w.code).toLowerCase().includes(normalizedQuery);
+      // Silent Alias Resolution: match against previous codes or legacy code
+      const aliasMatch = w.aliases?.some((alias) =>
+        normalizeDigits(alias).toLowerCase().includes(normalizedQuery)
+      );
+      return nameMatch || codeMatch || Boolean(aliasMatch);
     });
   }
 

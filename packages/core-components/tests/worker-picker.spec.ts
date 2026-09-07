@@ -43,6 +43,35 @@ describe('UniversalWorkerPicker', () => {
       expect(results[0]?.name).toBe('إسلام حسن عثمان');
     });
 
+    it('silently resolves workers by historical legacy code without showing old code in UI', () => {
+      const modernWorker: WorkerItem = {
+        id: '99',
+        code: 'FL-DRV-0042',
+        aliases: ['101', 'OP-HLP-0015'],
+        name: 'أحمد محمود إبراهيم',
+        jobTitle: 'سائق لودر',
+      };
+
+      // 1. Search by legacy code "101"
+      const resOldCode = filterWorkers([modernWorker], { query: '101' });
+      expect(resOldCode).toHaveLength(1);
+      expect(resOldCode[0]?.code).toBe('FL-DRV-0042');
+
+      // 2. Search by sequence number "0042"
+      const resSeq = filterWorkers([modernWorker], { query: '0042' });
+      expect(resSeq).toHaveLength(1);
+
+      // 3. Verify that UI keyboard displays ONLY current code and no old codes
+      const { items, pagination } = paginateItems([modernWorker], 1, 1);
+      const kb = buildWorkerPickerKeyboard({ workers: items, pagination });
+      const buttonText = kb.inline_keyboard[0]![0]!.text;
+
+      expect(buttonText).toContain('FL-DRV-0042');
+      expect(buttonText).not.toContain('101');
+      expect(buttonText).not.toContain('OP-HLP-0015');
+    });
+
+
     it('filters by site location', () => {
       const results = filterWorkers(sampleWorkers, { siteLocation: 'موقع الأدبية' });
       expect(results).toHaveLength(2);
