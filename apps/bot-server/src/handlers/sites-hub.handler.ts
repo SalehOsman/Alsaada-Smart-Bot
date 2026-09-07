@@ -10,6 +10,7 @@ import { parseCoordinates, formatGoogleMapsUrl } from '../utils/coordinates.js';
 
 export const SITE_FIELD_LABELS: Record<string, string> = {
   name: 'اسم الموقع',
+  project: 'المشروع التابع له',
   gov: 'المحافظة / الإقليم',
   location: 'الموقع الجغرافي (GPS)',
   geofence: 'نطاق السياج الجغرافي',
@@ -171,11 +172,7 @@ export async function renderSiteDetail(
   const toggleLabel = isActive ? '🔴 تعطيل الموقع (إيقاف التشغيل)' : '🟢 تنشيط الموقع (تشغيل)';
 
   const keyboard = new InlineKeyboard()
-    .text('✏️ تعديل اسم الموقع', `action:site:edit:name:${site.code}`)
-    .text('🗺️ تعديل المحافظة', `action:site:edit:gov:${site.code}`)
-    .row()
-    .text('📍 تسجيل / تحديث GPS', `action:site:edit:location:${site.code}`)
-    .text('📐 تعديل السياج', `action:site:edit:geofence:${site.code}`)
+    .text('✏️ تعديل المعلومات', `action:site:edit_menu:${site.code}`)
     .row()
     .text(toggleLabel, `action:site:toggle:${site.code}`)
     .row()
@@ -226,6 +223,85 @@ export async function renderSiteDetail(
     } catch {
       // fallback
     }
+  }
+
+  await ctx.reply(text, {
+    parse_mode: 'Markdown',
+    reply_markup: keyboard,
+  });
+}
+
+/**
+ * Renders the dedicated Edit Sub-Menu for a specific site
+ */
+export async function renderSiteEditMenu(
+  ctx: MyContext,
+  siteCode: string,
+  inPlace = false
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({
+        text: '🔒 هذا القسم مخصص حصرياً للمدير العام.',
+        show_alert: true,
+      });
+    }
+    return;
+  }
+
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+
+  await clearPendingSiteAction(BigInt(ctx.from.id));
+
+  const site = await prisma.site.findUnique({
+    where: { code: siteCode },
+    include: { project: true },
+  });
+
+  if (!site) {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({ text: '⚠️ الموقع غير موجود.', show_alert: true });
+    }
+    return renderSitesHub(ctx, inPlace);
+  }
+
+  const keyboard = new InlineKeyboard()
+    .text('✏️ تعديل اسم الموقع', `action:site:edit:name:${site.code}`)
+    .text('🏢 تعديل المشروع التابع له', `action:site:edit:project:${site.code}`)
+    .row()
+    .text('🗺️ تعديل المحافظة / الإقليم', `action:site:edit:gov:${site.code}`)
+    .text('📐 تعديل السياج الجغرافي', `action:site:edit:geofence:${site.code}`)
+    .row()
+    .text('📍 تسجيل / تحديث GPS', `action:site:edit:location:${site.code}`)
+    .row()
+    .text('◀️ رجوع لبطاقة الموقع', `action:site:view:${site.code}`)
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    keyboard
+      .row()
+      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
+  }
+
+  const text =
+    `✏️ *لوحة تعديل بيانات الموقع الميداني*\n` +
+    `────────────────────────────\n` +
+    `🏗️ *اسم الموقع:* ${site.name}\n` +
+    `🔹 *الكود الهيكلي:* \`${site.code}\`\n` +
+    `🏢 *المشروع التابع له حالياً:* ${site.project?.name || 'مشروع عام'}\n` +
+    `────────────────────────────\n` +
+    `👇 *اختر الحقل أو البيان الذي ترغب في تعديله أدناه:*`;
+
+  if (inPlace && ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      return;
+    } catch {}
   }
 
   await ctx.reply(text, {
@@ -380,6 +456,75 @@ export async function handleStartEditSiteField(
     return;
   }
 
+  if (fieldKey === 'project') {
+    await setPendingSiteAction(telegramId, {
+      action: 'edit_project',
+      siteCode,
+      messageId,
+    });
+
+    const projects = await prisma.project.findMany({
+      where: { status: 'ACTIVE' },
+      orderBy: { name: 'asc' },
+    });
+
+    const keyboard = new InlineKeyboard();
+    projects.forEach((p) => {
+      const isCurrent = p.id === site.projectId ? ' (الحالي) ✅' : '';
+      keyboard
+        .text(`🏢 ${p.name}${isCurrent}`, `action:site:set_project:${siteCode}:${p.id}`)
+        .row();
+    });
+
+    keyboard
+      .text('➕ كتابة اسم مشروع جديد / مخصص', `action:site:edit:proj_txt:${siteCode}`)
+      .row()
+      .text('◀️ رجوع لقائمة التعديل', `action:site:edit_menu:${siteCode}`)
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    const text =
+      `🏢 *تعديل المشروع التابع له الموقع*\n` +
+      `────────────────────────────\n` +
+      `🏗️ *الموقع:* ${site.name} (\`${site.code}\`)\n\n` +
+      `👇 *اختر المشروع التابع له من الأزرار أدناه، أو أرسل اسم مشروع جديد في رسالة نصية:*`;
+
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    } catch {}
+    return;
+  }
+
+  if (fieldKey === 'proj_txt') {
+    await setPendingSiteAction(telegramId, {
+      action: 'edit_project',
+      siteCode,
+      messageId,
+    });
+
+    const keyboard = new InlineKeyboard()
+      .text('◀️ رجوع لاختيار المشاريع', `action:site:edit:project:${siteCode}`)
+      .text('🔙 قائمة التعديل', `action:site:edit_menu:${siteCode}`);
+
+    const text =
+      `🏢 *كتابة اسم مشروع جديد للموقع*\n` +
+      `────────────────────────────\n` +
+      `🏗️ *الموقع:* ${site.name} (\`${site.code}\`)\n\n` +
+      `💬 *يرجى إرسال اسم المشروع الجديد في رسالة نصية الآن...*\n` +
+      `*(مثال: مشروع مجمع الفوسفات واللوجستيات بأبو طرطور)*\n\n` +
+      `أو اضغط زر الرجوع أدناه للتراجع.`;
+
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    } catch {}
+    return;
+  }
+
   // Name or Governorate
   const actionType = fieldKey === 'gov' ? 'edit_gov' : 'edit_name';
   await setPendingSiteAction(telegramId, {
@@ -389,7 +534,7 @@ export async function handleStartEditSiteField(
   });
 
   const keyboard = new InlineKeyboard()
-    .text('❌ إلغاء والعودة', `action:site:view:${siteCode}`);
+    .text('◀️ رجوع لقائمة التعديل', `action:site:edit_menu:${siteCode}`);
 
   const label = SITE_FIELD_LABELS[fieldKey] || fieldKey;
   const text =
@@ -397,7 +542,7 @@ export async function handleStartEditSiteField(
     `────────────────────────────\n` +
     `🏗️ *الموقع:* ${site.name} (\`${site.code}\`)\n\n` +
     `💬 *يرجى إرسال القيمة الجديدة في رسالة نصية الآن...*\n` +
-    `أو اضغط زر الإلغاء أدناه للتراجع.`;
+    `أو اضغط زر الرجوع أدناه للتراجع.`;
 
   try {
     await ctx.editMessageText(text, {
@@ -405,6 +550,36 @@ export async function handleStartEditSiteField(
       reply_markup: keyboard,
     });
   } catch {}
+}
+
+/**
+ * Associates a site with a specific project by ID
+ */
+export async function handleSelectSiteProject(
+  ctx: MyContext,
+  siteCode: string,
+  projectId: string
+): Promise<void> {
+  if (!ctx.isRealSuperAdmin || !ctx.from) return;
+
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  if (!project) return;
+
+  await prisma.site.update({
+    where: { code: siteCode },
+    data: { projectId },
+  });
+
+  await clearPendingSiteAction(BigInt(ctx.from.id));
+
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({
+      text: `تم ربط الموقع بمشروع: ${project.name}`,
+    });
+  }
+
+  const notice = `تم تحديث المشروع التابع له إلى (${project.name}) بنجاح.`;
+  await renderSiteDetail(ctx, siteCode, true, notice);
 }
 
 /**
@@ -574,7 +749,14 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
   // 1. Edit Name
   if (pending.action === 'edit_name' && pending.siteCode) {
     if (textVal.length < 3) {
-      await ctx.reply('⚠️ اسم الموقع قصير جداً.');
+      const errorKeyboard = new InlineKeyboard()
+        .text('🔄 إعادة إدخال الاسم', `action:site:edit:name:${pending.siteCode}`)
+        .text('◀️ رجوع لقائمة التعديل', `action:site:edit_menu:${pending.siteCode}`)
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+      await ctx.reply('⚠️ اسم الموقع قصير جداً (يجب أن يكون 3 أحرف على الأقل).', {
+        reply_markup: errorKeyboard,
+      });
       return true;
     }
     await prisma.site.update({
@@ -587,10 +769,68 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
     return true;
   }
 
+  // 1.1 Edit Project
+  if (pending.action === 'edit_project' && pending.siteCode) {
+    if (textVal.length < 3) {
+      const errorKeyboard = new InlineKeyboard()
+        .text('🔄 إعادة إدخال اسم المشروع', `action:site:edit:proj_txt:${pending.siteCode}`)
+        .text('◀️ رجوع لقائمة التعديل', `action:site:edit_menu:${pending.siteCode}`)
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+      await ctx.reply('⚠️ اسم المشروع قصير جداً (يجب أن يكون 3 أحرف على الأقل).', {
+        reply_markup: errorKeyboard,
+      });
+      return true;
+    }
+
+    let tenant = await prisma.tenant.findFirst();
+    if (!tenant) {
+      tenant = await prisma.tenant.create({
+        data: { code: 'ALSAADA', name: 'شركة السعادة للمقاولات العامة والتعدين' },
+      });
+    }
+
+    let project = await prisma.project.findFirst({
+      where: {
+        tenantId: tenant.id,
+        name: { equals: textVal, mode: 'insensitive' },
+      },
+    });
+
+    if (!project) {
+      const projCode = `PRJ-${Date.now().toString().slice(-4)}`;
+      project = await prisma.project.create({
+        data: {
+          tenantId: tenant.id,
+          code: projCode,
+          name: textVal,
+          status: 'ACTIVE',
+        },
+      });
+    }
+
+    await prisma.site.update({
+      where: { code: pending.siteCode },
+      data: { projectId: project.id },
+    });
+
+    await clearPendingSiteAction(telegramId);
+    await ctx.deleteMessage().catch(() => {});
+    await renderSiteDetail(ctx, pending.siteCode, false, `تم ربط الموقع بمشروع (${project.name}) بنجاح.`);
+    return true;
+  }
+
   // 2. Edit Governorate
   if (pending.action === 'edit_gov' && pending.siteCode) {
     if (textVal.length < 2) {
-      await ctx.reply('⚠️ اسم المحافظة قصير جداً.');
+      const errorKeyboard = new InlineKeyboard()
+        .text('🔄 إعادة إدخال المحافظة', `action:site:edit:gov:${pending.siteCode}`)
+        .text('◀️ رجوع لقائمة التعديل', `action:site:edit_menu:${pending.siteCode}`)
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+      await ctx.reply('⚠️ اسم المحافظة قصير جداً.', {
+        reply_markup: errorKeyboard,
+      });
       return true;
     }
     await prisma.site.update({
@@ -607,7 +847,14 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
   if (pending.action === 'edit_geofence' && pending.siteCode) {
     const meters = parseInt(textVal, 10);
     if (isNaN(meters) || meters < 50 || meters > 50000) {
-      await ctx.reply('⚠️ يرجى إدخال رقم صحيح لنطاق السياج بين 50 و 50000 متر.');
+      const errorKeyboard = new InlineKeyboard()
+        .text('🔄 إعادة إدخال السياج', `action:site:edit:geofence:${pending.siteCode}`)
+        .text('◀️ رجوع لقائمة التعديل', `action:site:edit_menu:${pending.siteCode}`)
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+      await ctx.reply('⚠️ يرجى إدخال رقم صحيح لنطاق السياج بين 50 و 50,000 متر.', {
+        reply_markup: errorKeyboard,
+      });
       return true;
     }
     await prisma.site.update({
@@ -624,8 +871,18 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
   if (pending.action === 'edit_location' && pending.siteCode) {
     const coords = await parseCoordinates(textVal);
     if (!coords) {
+      const errorKeyboard = new InlineKeyboard()
+        .text('🔄 إعادة المحاولة', `action:site:edit:location:${pending.siteCode}`)
+        .text('◀️ رجوع لقائمة التعديل', `action:site:edit_menu:${pending.siteCode}`)
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
       await ctx.reply(
-        '⚠️ تعذر استخراج الإحداثيات من النص المدخل.\nيرجى إرسال إحداثيات صحيحة (مثال: `25.4412, 30.5512`) أو رابط خرائط Google، أو استخدام مشبك المرفقات 📎 لمشاركة الموقع مباشرة.'
+        '⚠️ تعذر استخراج الإحداثيات من النص المدخل.\n' +
+        'يرجى إرسال إحداثيات صحيحة (مثال: `25.4412, 30.5512`) أو رابط خرائط Google، أو استخدام مشبك المرفقات 📎 لمشاركة الموقع مباشرة.',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: errorKeyboard,
+        }
       );
       return true;
     }
@@ -643,7 +900,14 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
   // 5. Add Site - Step 1: Name -> Present Step 2 with auto-generated code
   if (pending.action === 'add_name') {
     if (textVal.length < 3) {
-      await ctx.reply('⚠️ اسم الموقع قصير جداً. يرجى إدخال اسم واضح.');
+      const errorKeyboard = new InlineKeyboard()
+        .text('🔄 إعادة إدخال الاسم', 'action:site:add_new')
+        .text('🔙 العودة لمصفوفة المواقع', 'action:settings:sites_hub')
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+      await ctx.reply('⚠️ اسم الموقع قصير جداً. يرجى إدخال اسم واضح (3 أحرف على الأقل).', {
+        reply_markup: errorKeyboard,
+      });
       return true;
     }
 
@@ -686,7 +950,18 @@ export async function handleSiteTextInput(ctx: MyContext): Promise<boolean> {
     const formattedCode = textVal.toUpperCase().replace(/\s+/g, '-');
     const existing = await prisma.site.findUnique({ where: { code: formattedCode } });
     if (existing) {
-      await ctx.reply(`⚠️ كود الموقع \`${formattedCode}\` مستخدم بالفعل لموقع آخر. يرجى اختيار كود مختلف:`);
+      const errorKeyboard = new InlineKeyboard()
+        .text('🔄 اعتماد الكود المقترح', `action:site:confirm_code:${pending.draft?.code || 'STE-01'}`)
+        .row()
+        .text('🔙 العودة لمصفوفة المواقع', 'action:settings:sites_hub')
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+      await ctx.reply(
+        `⚠️ كود الموقع \`${formattedCode}\` مستخدم بالفعل لموقع آخر. يرجى إرسال كود آخر بالإنجليزية أو اعتماد الكود المقترح:`,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: errorKeyboard,
+        }
+      );
       return true;
     }
 

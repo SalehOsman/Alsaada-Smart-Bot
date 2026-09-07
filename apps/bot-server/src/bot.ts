@@ -47,11 +47,13 @@ import {
 import {
   renderSitesHub,
   renderSiteDetail,
+  renderSiteEditMenu,
   handleToggleSiteStatus,
   handleStartAddSite,
   handleSiteTextInput,
   handleSiteLocationInput,
   handleStartEditSiteField,
+  handleSelectSiteProject,
   handleSetSiteGeofence,
   handleConfirmSiteCode,
   handleSelectSiteGov,
@@ -167,6 +169,15 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery(/^action:site:confirm_code:(.+)$/, async (ctx) => {
     const confirmedCode = ctx.match[1];
     await handleConfirmSiteCode(ctx, confirmedCode);
+  });
+  bot.callbackQuery(/^action:site:edit_menu:(.+)$/, async (ctx) => {
+    const siteCode = ctx.match[1];
+    await renderSiteEditMenu(ctx, siteCode, true);
+  });
+  bot.callbackQuery(/^action:site:set_project:(.+):(.+)$/, async (ctx) => {
+    const siteCode = ctx.match[1];
+    const projectId = ctx.match[2];
+    await handleSelectSiteProject(ctx, siteCode, projectId);
   });
   bot.callbackQuery(/^action:site:set_gov:(.+):(.+)$/, async (ctx) => {
     const siteCode = ctx.match[1];

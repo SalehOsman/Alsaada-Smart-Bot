@@ -148,6 +148,7 @@ export interface PendingSiteAction {
     | 'add_code'
     | 'add_gov'
     | 'edit_name'
+    | 'edit_project'
     | 'edit_gov'
     | 'edit_location'
     | 'edit_geofence';
