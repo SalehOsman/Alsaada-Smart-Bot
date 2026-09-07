@@ -255,11 +255,15 @@ model Worker {
   code                   String    @unique // Active structured code (e.g. OP-DRV-0042)
   aliases                String[]  // Historical & legacy codes (e.g. ["106", "101", "OP-HLP-0015"])
   name                   String
-  nationalIdEncrypted    String
-  nationalIdBlindIndex   String    @unique
+  idType                 String    @default("NATIONAL_ID") // NATIONAL_ID, PASSPORT
+  nationality            String    @default("مصر")
+  nationalIdEncrypted    String?
+  nationalIdBlindIndex   String?   @unique
+  passportNumberEncrypted String?
+  passportBlindIndex     String?   @unique
   birthDate              DateTime
   gender                 String    // MALE, FEMALE
-  governorateCode        String
+  governorateCode        String    @default("88")
   jobTitle               String
   departmentId           String?
   jobTitleId             String?

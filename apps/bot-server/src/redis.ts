@@ -260,6 +260,91 @@ export async function clearPendingJobMatrixAction(telegramId: bigint): Promise<v
   }
 }
 
+const PENDING_WORKER_WIZARD_PREFIX = 'pending:worker_wizard:user:';
+const PENDING_WORKER_EXCEL_PREFIX = 'pending:worker_excel:user:';
+
+export interface PendingWorkerWizardState {
+  step: string;
+  messageId: number;
+  data: {
+    fullName?: string;
+    nickname?: string;
+    idType?: 'NATIONAL_ID' | 'PASSPORT';
+    idNumber?: string;
+    nationality?: string;
+    birthDateStr?: string;
+    gender?: 'MALE' | 'FEMALE';
+    governorateCode?: string;
+    phone?: string;
+    jobTitleId?: string;
+    jobTitleName?: string;
+    departmentId?: string;
+    siteId?: string;
+    siteName?: string;
+    hireDateStr?: string;
+    shiftSystem?: string;
+    paymentMethod?: string;
+    walletNumber?: string;
+  };
+}
+
+export async function setPendingWorkerWizard(
+  telegramId: bigint,
+  state: PendingWorkerWizardState
+): Promise<void> {
+  try {
+    await redis.set(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`, JSON.stringify(state), 'EX', 1800);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting pending worker wizard:', error);
+  }
+}
+
+export async function getPendingWorkerWizard(
+  telegramId: bigint
+): Promise<PendingWorkerWizardState | null> {
+  try {
+    const raw = await redis.get(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as PendingWorkerWizardState) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting pending worker wizard:', error);
+    return null;
+  }
+}
+
+export async function clearPendingWorkerWizard(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing pending worker wizard:', error);
+  }
+}
+
+export async function setPendingWorkerExcelUpload(telegramId: bigint, messageId: number): Promise<void> {
+  try {
+    await redis.set(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`, String(messageId), 'EX', 600);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting pending worker excel upload:', error);
+  }
+}
+
+export async function getPendingWorkerExcelUpload(telegramId: bigint): Promise<number | null> {
+  try {
+    const raw = await redis.get(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`);
+    return raw ? parseInt(raw, 10) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting pending worker excel upload:', error);
+    return null;
+  }
+}
+
+export async function clearPendingWorkerExcelUpload(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing pending worker excel upload:', error);
+  }
+}
+
 /**
  * Clean up all pending text wizard and input actions across all domains for a user
  */
@@ -269,6 +354,8 @@ export async function clearAllPendingUserActions(telegramId: bigint): Promise<vo
     clearPendingAdminEdit(telegramId),
     clearPendingSiteAction(telegramId),
     clearPendingJobMatrixAction(telegramId),
+    clearPendingWorkerWizard(telegramId),
+    clearPendingWorkerExcelUpload(telegramId),
   ]);
 }
 
