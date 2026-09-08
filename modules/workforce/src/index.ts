@@ -36,3 +36,13 @@ export * from './flows/01.5-worker-directory/flow.validators.js';
 export * from './flows/01.5-worker-directory/flow.messages.js';
 export { WorkerDirectoryTelemetry } from './flows/01.5-worker-directory/flow.telemetry.js';
 
+// Export flow 01.2.D components
+export * from './flows/01.2.D-worker-edit/flow.types.js';
+export * from './flows/01.2.D-worker-edit/flow.service.js';
+export * from './flows/01.2.D-worker-edit/flow.repository.js';
+export * from './flows/01.2.D-worker-edit/flow.handler.js';
+export * from './flows/01.2.D-worker-edit/flow.keyboard.js';
+export * from './flows/01.2.D-worker-edit/flow.validators.js';
+export * from './flows/01.2.D-worker-edit/flow.messages.js';
+export { WorkerEditTelemetry } from './flows/01.2.D-worker-edit/flow.telemetry.js';
+

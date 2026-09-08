@@ -1,0 +1,83 @@
+{
+  "flowCode": "01.2.D",
+  "flowName": "تعديل وتحديث بيانات عامل وحوكمة الموافقات",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "GENERAL_ADMIN",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "action:worker_edit:pick",
+    "action:worker_edit:pick:*",
+    "action:worker_edit:field:*",
+    "action:worker_edit:pending_list",
+    "action:worker_edit:req:*"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "الموارد البشرية",
+    "شؤون العاملين والتعيينات",
+    "تعديل بيانات عامل"
+  ],
+  "buttons": [
+    "action:worker_edit:pick",
+    "action:worker_edit:field",
+    "action:worker_edit:pending_list",
+    "action:worker_edit:approve",
+    "action:worker_edit:reject",
+    "action:worker_edit:cancel"
+  ],
+  "inputs": [
+    "select:worker_id",
+    "select:field_key",
+    "text:new_value",
+    "text:edit_reason"
+  ],
+  "outputs": [
+    "card:worker_edit_confirmation",
+    "card:edit_request_ticket",
+    "event:worker_profile_updated"
+  ],
+  "dataImpact": {
+    "database": [
+      "Worker",
+      "WorkerEditRequest",
+      "AuditLog"
+    ],
+    "googleSheets": [
+      "sync:workers_roster"
+    ],
+    "exports": [],
+    "notifications": [
+      "topic:hr_operations"
+    ]
+  },
+  "linkedFlows": [
+    "01.1",
+    "01.4",
+    "01.5"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 700,
+    "stepP95": 1200,
+    "commitP95": 2000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": true,
+  "allowAny": false
+}

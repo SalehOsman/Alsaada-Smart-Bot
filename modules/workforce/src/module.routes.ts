@@ -9,6 +9,9 @@ import { WorkerRegistrationRepository } from './flows/01.1-worker-registration/f
 import { WorkerDirectoryHandler } from './flows/01.5-worker-directory/flow.handler.js';
 import { WorkerDirectoryService } from './flows/01.5-worker-directory/flow.service.js';
 import { WorkerDirectoryRepository } from './flows/01.5-worker-directory/flow.repository.js';
+import { WorkerEditHandler } from './flows/01.2.D-worker-edit/flow.handler.js';
+import { WorkerEditService } from './flows/01.2.D-worker-edit/flow.service.js';
+import { WorkerEditRepository } from './flows/01.2.D-worker-edit/flow.repository.js';
 import { PrismaClient } from '@alsaada/database';
 
 export function registerWorkforceRoutes(
@@ -27,6 +30,50 @@ export function registerWorkforceRoutes(
   const dirRepo = new WorkerDirectoryRepository(prisma);
   const dirService = new WorkerDirectoryService(dirRepo, encryptionKey);
   const dirHandler = new WorkerDirectoryHandler(dirService);
+
+  const editRepo = new WorkerEditRepository(prisma);
+  const editService = new WorkerEditService(editRepo, encryptionKey);
+  const editHandler = new WorkerEditHandler(editService, editRepo);
+
+  // Flow 01.2.D Worker Edit
+  bot.callbackQuery('action:worker_edit:pick', async (ctx) => {
+    await dirHandler.handleDirectory(ctx, 1);
+  });
+
+  bot.callbackQuery(/^action:worker_edit:pick:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handlePickWorker(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:f:([a-zA-Z0-9_]+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) {
+      await editHandler.handleSelectField(ctx, match[1], match[2]);
+    }
+  });
+
+  bot.callbackQuery('action:w_edit:cancel', async (ctx) => {
+    await editHandler.handleCancel(ctx);
+  });
+
+  bot.callbackQuery('action:worker_edit:pending_list', async (ctx) => {
+    await editHandler.handlePendingTicketsList(ctx);
+  });
+
+  bot.callbackQuery(/^action:w_edit:rev:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleReviewTicket(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:appr:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleApproveTicket(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:rejc:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleRejectTicket(ctx, match[1]);
+  });
 
   // Flow 01.5 Worker Directory & 360 Profile
   bot.callbackQuery('action:worker:directory', async (ctx) => {

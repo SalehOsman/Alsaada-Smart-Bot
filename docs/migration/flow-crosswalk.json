@@ -1,9 +1,9 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-09-08T17:04:06.781Z",
-  "totalLegacyFlows": 118,
+  "totalLegacyFlows": 119,
   "totalNovelFlows": 11,
-  "totalTrackedEntries": 129,
+  "totalTrackedEntries": 130,
   "disambiguations": {
     "01.2.A": {
       "workforceFlow": "01.1 (تسجيل وتعيين عامل جديد)",
@@ -74,6 +74,17 @@
       "status": "IMPLEMENTED",
       "currentStatusRaw": "🟢 مكتمل وموثق 100%",
       "legacyPath": "modules/workforce/src/flows/01.5-worker-directory",
+      "notes": "Migrated to Vertical Slice in modules/workforce with 10 files and 5 tests under Gate G1-G10."
+    },
+    {
+      "targetFlowId": "01.2.D",
+      "legacyFlowId": "01.2.D",
+      "name": "تعديل وتحديث بيانات عامل وحوكمة الموافقات",
+      "domain": "الموارد البشرية والعمال",
+      "targetModule": "modules/workforce",
+      "status": "IMPLEMENTED",
+      "currentStatusRaw": "🟢 مكتمل وموثق 100%",
+      "legacyPath": "modules/workforce/src/flows/01.2.D-worker-edit",
       "notes": "Migrated to Vertical Slice in modules/workforce with 10 files and 5 tests under Gate G1-G10."
     },
     {
