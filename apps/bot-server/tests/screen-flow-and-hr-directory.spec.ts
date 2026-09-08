@@ -93,6 +93,52 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     expect(redisModule.clearUserActiveScreen).toHaveBeenCalledWith(123456n);
   });
 
+  it('should prevent in-place editing when action is clicked from a completed operation receipt', async () => {
+    const service = new ScreenFlowService();
+    vi.mocked(redisModule.getUserActiveScreen).mockResolvedValue({
+      chatId: 1001,
+      messageId: 888,
+      flowType: 'worker_created',
+      isCompleted: true,
+      updatedAt: Date.now(),
+    });
+
+    const mockCtx = {
+      from: { id: 123456 },
+      callbackQuery: {
+        message: { message_id: 888 }, // نقرة من كارت العملية المكتملة
+      },
+    } as unknown as MyContext;
+
+    const isCompletedClick = await service.isClickOnCompletedScreen(mockCtx);
+    expect(isCompletedClick).toBe(true);
+
+    // يجب حظر التعديل الموضعي فوراً لتبقى الرسالة في الشات دائماً
+    const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+    expect(inPlace).toBe(false);
+  });
+
+  it('should allow in-place editing when action is clicked from regular intermediate menu', async () => {
+    const service = new ScreenFlowService();
+    vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce({
+      chatId: 1001,
+      messageId: 555,
+      flowType: 'hr_hub',
+      isCompleted: false,
+      updatedAt: Date.now(),
+    });
+
+    const mockCtx = {
+      from: { id: 123456 },
+      callbackQuery: {
+        message: { message_id: 555 },
+      },
+    } as unknown as MyContext;
+
+    const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+    expect(inPlace).toBe(true);
+  });
+
   it('should detect stale callbacks from old messages and trigger alert with keyboard removal', async () => {
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce({

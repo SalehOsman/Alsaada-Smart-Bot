@@ -316,7 +316,8 @@ export function createBot(): Bot<MyContext> {
   // 5. Navigation & Main Settings Callbacks
   bot.callbackQuery('action:main_menu', async (ctx) => {
     await ctx.answerCallbackQuery();
-    await renderRoleHome(ctx, true);
+    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+    await renderRoleHome(ctx, inPlace);
   });
   bot.callbackQuery(/^action:claim_worker:(.+)$/, handleClaimWorker);
   bot.callbackQuery('menu:super_admin_settings', handleSettings);
@@ -504,14 +505,17 @@ export function createBot(): Bot<MyContext> {
 
   // 14. HR & Workforce Management Callbacks
   bot.callbackQuery('menu:domain:hr', async (ctx) => {
-    await renderHrHub(ctx, true);
+    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+    await renderHrHub(ctx, inPlace);
   });
   bot.callbackQuery(/^menu:hr_sub:(.+)$/, async (ctx) => {
     const subKey = ctx.match[1];
-    await renderHrSubHub(ctx, subKey, true);
+    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+    await renderHrSubHub(ctx, subKey, inPlace);
   });
   bot.callbackQuery('action:worker:directory', async (ctx) => {
-    await renderWorkersDirectory(ctx, 1, undefined, true);
+    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+    await renderWorkersDirectory(ctx, 1, undefined, inPlace);
   });
   bot.callbackQuery(/^action:worker:dir:page:(\d+)$/, async (ctx) => {
     const page = parseInt(ctx.match[1], 10) || 1;
@@ -544,7 +548,8 @@ export function createBot(): Bot<MyContext> {
   });
   bot.callbackQuery('action:worker_edit:pending_list', handleViewPendingEditRequests);
   bot.callbackQuery(/^(?:action:worker_edit:menu:|we:menu:)(.+)$/, async (ctx) => {
-    await renderWorkerEditMenu(ctx, ctx.match[1], true);
+    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+    await renderWorkerEditMenu(ctx, ctx.match[1], inPlace);
   });
   bot.callbackQuery(/^(?:action:worker_edit:field:|we:f:)(.+):(.+)$/, async (ctx) => {
     await handleStartEditWorkerField(ctx, ctx.match[1], ctx.match[2]);

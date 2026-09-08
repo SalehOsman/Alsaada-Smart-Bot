@@ -6,6 +6,7 @@ import {
    getPendingWorkerExcelUpload,
    clearPendingWorkerExcelUpload,
  } from '../redis.js';
+import { screenFlowService } from '../services/screen-flow.service.js';
 import { buildCompletionKeyboard } from '@alsaada/core-components';
 
 /**
@@ -86,8 +87,10 @@ export async function handleStartUploadWorkerExcel(ctx: MyContext): Promise<void
     `• مطابقة أكواد الوظائف والمواقع مع ورقة دليل الأكواد.\n\n` +
     `_في انتظار إرسال الملف الآن..._`;
 
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+
   let promptMsgId = 0;
-  if (ctx.callbackQuery) {
+  if (inPlace && ctx.callbackQuery) {
     try {
       const msg = await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
@@ -104,6 +107,15 @@ export async function handleStartUploadWorkerExcel(ctx: MyContext): Promise<void
   }
 
   await setPendingWorkerExcelUpload(telegramId, promptMsgId);
+  if (ctx.chat && promptMsgId) {
+    await screenFlowService.trackActiveScreen(
+      telegramId,
+      ctx.chat.id,
+      promptMsgId,
+      'worker_excel_prompt',
+      false
+    );
+  }
 }
 
 /**
@@ -193,7 +205,7 @@ export async function handleWorkerExcelDocumentUpload(ctx: MyContext): Promise<b
       mainMenuCallbackData: 'action:main_menu',
     });
 
-    await ctx.reply(
+    const sent = await ctx.reply(
       `🎉 *تم استيراد وقيد كشف العمالة بنجاح!*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `📊 *إحصائيات العملية:*\n` +
@@ -205,6 +217,16 @@ export async function handleWorkerExcelDocumentUpload(ctx: MyContext): Promise<b
         reply_markup: successKeyboard,
       }
     );
+
+    if (ctx.chat) {
+      await screenFlowService.trackActiveScreen(
+        telegramId,
+        ctx.chat.id,
+        sent.message_id,
+        'worker_excel_uploaded',
+        true
+      );
+    }
     return true;
   } catch (error: any) {
     console.error('Error importing worker Excel:', error);

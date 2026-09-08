@@ -36,8 +36,35 @@ export class ScreenFlowService {
   }
 
   /**
+   * 🔍 فحص ما إذا كانت النقرة صادرة عن كارت إتمام عملية مكتملة (Completed Operation Card)
+   */
+  async isClickOnCompletedScreen(ctx: MyContext): Promise<boolean> {
+    if (!ctx.callbackQuery || !ctx.from) return false;
+    const clickedMsgId = ctx.callbackQuery.message?.message_id;
+    if (!clickedMsgId) return false;
+    const telegramId = BigInt(ctx.from.id);
+    const active = await getUserActiveScreen(telegramId);
+    return Boolean(active && active.isCompleted && active.messageId === clickedMsgId);
+  }
+
+  /**
+   * 🔀 تحديد ما إذا كان يجب تصيير الشاشة التالية موضعياً (in-place) أو كرسالة جديدة
+   * إذا كانت النقرة صادرة عن كارت إتمام عملية مكتملة، يتم حظر التعديل الموضعي فوراً
+   * لتبقى بطاقة الإتمام وسند العملية في الشات دائماً دون حذف أو استبدال، وتفتح القائمة التالية كرسالة جديدة.
+   */
+  async shouldRenderInPlace(ctx: MyContext, requestedInPlace = true): Promise<boolean> {
+    if (!requestedInPlace) return false;
+    if (!ctx.callbackQuery) return false;
+    const fromCompleted = await this.isClickOnCompletedScreen(ctx);
+    if (fromCompleted) {
+      return false; // كارت العملية المكتملة يبقى في الشات دائماً
+    }
+    return true;
+  }
+
+  /**
    * 🧹 محو أي تدفق سابق غير مكتمل فورياً عند الانتقال لوظيفة جديدة
-   * يضمن: اختفاء رسائل التدفقات غير المكتملة كلياً وبقاء سندات العمليات المنتهية فقط
+   * يضمن: اختفاء رسائل التدفقات غير المكتملة كلياً وبقاء سندات العمليات المنتهية فقط دائماً في الشات
    */
   async cleanupUnfinishedFlow(ctx: MyContext, _newFlowType?: string): Promise<void> {
     if (!ctx.from) return;
@@ -62,7 +89,9 @@ export class ScreenFlowService {
       }
       await clearUserActiveScreen(telegramId);
     } else {
-      // عملية منتهية (Receipt) -> تبقى في الشات دائماً ولكن تُجرد من أزرار التنقل لمنع إعادة الضغط
+      // ✅ عملية منتهية (Completed Transaction / Receipt):
+      // تظل في الشات دائماً وأبداً بدون حذف وبدون أي تعديل على نصها!
+      // تجرد فقط من لوحة الأزرار لمنع إعادة الضغط المكرر
       if (ctx.api) {
         await ctx.api
           .editMessageReplyMarkup(active.chatId, active.messageId, { reply_markup: undefined })

@@ -13,6 +13,7 @@ import {
   clearPendingWorkerEdit,
   PendingWorkerEditState,
 } from '../redis.js';
+import { screenFlowService } from '../services/screen-flow.service.js';
 import { normalizeDigits, formatDate, formatDateDMY, parseFlexibleDate } from '@alsaada/regional-engine';
 import { decryptField } from '@alsaada/database';
 import {
@@ -126,22 +127,41 @@ export async function handleStartWorkerEdit(ctx: MyContext, page = 1): Promise<v
       ? '💡 _بصفتك المدير العام، سيتم تطبيق كافة التعديلات (بما فيها كود العامل القديم) فورياً في قاعدة البيانات._'
       : '💡 _بصفتك مشرفاً ميدانياً، سيتم إرسال طلب التعديل للمدير العام للاعتماد الرسمي قبل تطبيقه._');
 
-  if (ctx.callbackQuery) {
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+
+  let promptMsgId = 0;
+  if (inPlace && ctx.callbackQuery) {
     try {
-      await ctx.editMessageText(text, {
+      const msg = await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-      return;
+      promptMsgId = typeof msg === 'object' ? msg.message_id : 0;
     } catch {
-      // fallback
+      const sent = await ctx.reply(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      promptMsgId = sent.message_id;
     }
+  } else {
+    const sent = await ctx.reply(text, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
+    promptMsgId = sent.message_id;
   }
 
-  await ctx.reply(text, {
-    parse_mode: 'Markdown',
-    reply_markup: keyboard,
-  });
+  if (ctx.chat && promptMsgId && ctx.from) {
+    const telegramId = BigInt(ctx.from.id);
+    await screenFlowService.trackActiveScreen(
+      telegramId,
+      ctx.chat.id,
+      promptMsgId,
+      'worker_edit_pick',
+      false
+    );
+  }
 }
 
 /**
@@ -233,22 +253,40 @@ export async function renderWorkerEditMenu(
     '━━━━━━━━━━━━━━━━━━━━━\n' +
     'اختر البيان المراد تعديله أو أضف وثائق ومرفقات للعامل:';
 
-  if (inPlace && ctx.callbackQuery) {
+  const computedInPlace = await screenFlowService.shouldRenderInPlace(ctx, inPlace);
+  let sentMsgId = 0;
+  if (computedInPlace && ctx.callbackQuery) {
     try {
-      await ctx.editMessageText(text, {
+      const msg = await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-      return;
+      sentMsgId = typeof msg === 'object' ? msg.message_id : 0;
     } catch {
-      // fallback
+      const sent = await ctx.reply(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      sentMsgId = sent.message_id;
     }
+  } else {
+    const sent = await ctx.reply(text, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
+    sentMsgId = sent.message_id;
   }
 
-  await ctx.reply(text, {
-    parse_mode: 'Markdown',
-    reply_markup: keyboard,
-  });
+  if (ctx.chat && sentMsgId && ctx.from) {
+    const telegramId = BigInt(ctx.from.id);
+    await screenFlowService.trackActiveScreen(
+      telegramId,
+      ctx.chat.id,
+      sentMsgId,
+      `worker_edit_menu:${workerId}`,
+      false
+    );
+  }
 }
 
 /**
@@ -458,11 +496,27 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
           parse_mode: 'Markdown',
           reply_markup: completionKeyboard,
         });
+        await screenFlowService.trackActiveScreen(
+          telegramId,
+          ctx.chat.id,
+          editState.promptMsgId,
+          'worker_edit_success',
+          true
+        );
       } else {
-        await ctx.reply(successText, {
+        const sent = await ctx.reply(successText, {
           parse_mode: 'Markdown',
           reply_markup: completionKeyboard,
         });
+        if (ctx.chat) {
+          await screenFlowService.trackActiveScreen(
+            telegramId,
+            ctx.chat.id,
+            sent.message_id,
+            'worker_edit_success',
+            true
+          );
+        }
       }
       return true;
     } catch (err: any) {
@@ -516,11 +570,27 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
         parse_mode: 'Markdown',
         reply_markup: completionKeyboard,
       });
+      await screenFlowService.trackActiveScreen(
+        telegramId,
+        ctx.chat.id,
+        editState.promptMsgId,
+        'worker_edit_submitted',
+        true
+      );
     } else {
-      await ctx.reply(submittedText, {
+      const sent = await ctx.reply(submittedText, {
         parse_mode: 'Markdown',
         reply_markup: completionKeyboard,
       });
+      if (ctx.chat) {
+        await screenFlowService.trackActiveScreen(
+          telegramId,
+          ctx.chat.id,
+          sent.message_id,
+          'worker_edit_submitted',
+          true
+        );
+      }
     }
 
     // إرسال بطاقة حوكمة للسوبر أدمن للاعتماد الفوري
@@ -590,11 +660,20 @@ export async function handleApproveEditRequest(ctx: MyContext, requestId: string
       .row()
       .text('🔙 العودة لقسم الموارد البشرية', 'menu:domain:hr');
 
-    if (ctx.callbackQuery) {
+    if (ctx.callbackQuery && ctx.callbackQuery.message) {
       await ctx.editMessageText(approvedText, {
         parse_mode: 'Markdown',
         reply_markup: kb,
       });
+      if (ctx.chat) {
+        await screenFlowService.trackActiveScreen(
+          adminTelegramId,
+          ctx.chat.id,
+          ctx.callbackQuery.message.message_id,
+          'worker_edit_approved',
+          true
+        );
+      }
     }
 
     // إشعار مقدم الطلب إذا كان لديه حساب تليجرام
@@ -639,11 +718,20 @@ export async function handleRejectEditRequest(ctx: MyContext, requestId: string)
       '━━━━━━━━━━━━━━━━━━━━━\n' +
       'تم إغلاق الطلب دون أي تغيير في بيانات العامل.';
 
-    if (ctx.callbackQuery) {
+    if (ctx.callbackQuery && ctx.callbackQuery.message) {
       await ctx.editMessageText(rejectedText, {
         parse_mode: 'Markdown',
         reply_markup: new InlineKeyboard().text('🔙 العودة لقسم الموارد البشرية', 'menu:domain:hr'),
       });
+      if (ctx.chat) {
+        await screenFlowService.trackActiveScreen(
+          adminTelegramId,
+          ctx.chat.id,
+          ctx.callbackQuery.message.message_id,
+          'worker_edit_rejected',
+          true
+        );
+      }
     }
 
     // إشعار مقدم الطلب
@@ -753,8 +841,9 @@ export async function handleStartAddWorkerDoc(ctx: MyContext, workerId: string):
     '• صور مستندات ورخص وشهادات (JPG, PNG)\n' +
     '• سيتم حفظ المرفق تلقائياً في مجلد العامل الخاص ومزامنته سحابياً مع Google Drive.';
 
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
   let promptMsgId = 0;
-  if (ctx.callbackQuery) {
+  if (inPlace && ctx.callbackQuery) {
     try {
       const msg = await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
@@ -780,6 +869,15 @@ export async function handleStartAddWorkerDoc(ctx: MyContext, workerId: string):
   };
 
   await setPendingWorkerEdit(telegramId, editState);
+  if (ctx.chat && promptMsgId) {
+    await screenFlowService.trackActiveScreen(
+      telegramId,
+      ctx.chat.id,
+      promptMsgId,
+      'worker_add_doc_prompt',
+      false
+    );
+  }
 }
 
 /**
@@ -875,10 +973,19 @@ export async function handleWorkerEditDocumentInput(ctx: MyContext): Promise<boo
       '\n━━━━━━━━━━━━━━━━━━━━━\n' +
       '✅ تم تسجيل المستند وربطه بملف العامل بنجاح.';
 
-    await ctx.reply(successText, {
+    const sent = await ctx.reply(successText, {
       parse_mode: 'Markdown',
       reply_markup: completionKeyboard,
     });
+    if (ctx.chat) {
+      await screenFlowService.trackActiveScreen(
+        telegramId,
+        ctx.chat.id,
+        sent.message_id,
+        'worker_doc_uploaded',
+        true
+      );
+    }
     return true;
   } catch (err: any) {
     console.error('Error saving worker attachment:', err);
@@ -948,16 +1055,31 @@ export async function handleListWorkerDocs(ctx: MyContext, workerId: string): Pr
     .row()
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
-  if (ctx.callbackQuery) {
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+  let sentMsgId = 0;
+  if (inPlace && ctx.callbackQuery) {
     try {
-      await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
-      return;
+      const msg = await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      sentMsgId = typeof msg === 'object' ? msg.message_id : 0;
     } catch {
-      // fallback
+      const sent = await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      sentMsgId = sent.message_id;
     }
+  } else {
+    const sent = await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+    sentMsgId = sent.message_id;
   }
 
-  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+  if (ctx.chat && sentMsgId && ctx.from) {
+    const telegramId = BigInt(ctx.from.id);
+    await screenFlowService.trackActiveScreen(
+      telegramId,
+      ctx.chat.id,
+      sentMsgId,
+      `worker_docs_list:${workerId}`,
+      false
+    );
+  }
 }
 
 /**

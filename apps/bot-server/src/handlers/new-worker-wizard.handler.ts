@@ -158,8 +158,10 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
     '• تصوير وجه وظهر البطاقة لقراءة وتدقيق البيانات آلياً.\n' +
     '• أو المتابعة بالإدخال اليدوي المباشر.';
 
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+
   let promptMsgId = 0;
-  if (ctx.callbackQuery) {
+  if (inPlace && ctx.callbackQuery) {
     try {
       const msg = await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
