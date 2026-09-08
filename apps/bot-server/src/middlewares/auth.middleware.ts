@@ -12,7 +12,9 @@ export async function invalidateUserCache(telegramId: bigint): Promise<void> {
     await fastCache.invalidate(`auth:user:${telegramId}`);
     await fastCache.invalidate(`auth:imp:${telegramId}`);
     await fastCache.invalidate(`auth:dual:${telegramId}`);
-    await redis.del(`${USER_CACHE_PREFIX}${telegramId}`);
+    if (!redis.status || redis.status === 'ready') {
+      await redis.del(`${USER_CACHE_PREFIX}${telegramId}`);
+    }
   } catch {}
 }
 

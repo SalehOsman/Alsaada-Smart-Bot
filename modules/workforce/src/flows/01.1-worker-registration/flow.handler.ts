@@ -91,6 +91,36 @@ export class WorkerRegistrationHandler {
     await this.replyOrEdit(ctx, text, keyboard);
   }
 
+  async handlePhotoInput(ctx: WorkforceModuleContext, fileId: string): Promise<void> {
+    if (!ctx.from) return;
+    const telegramId = BigInt(ctx.from.id);
+    const draft = await this.service.getDraft(telegramId);
+    if (!draft) return;
+
+    if (draft.currentStep === WorkerWizardStep.PHOTO_FRONT) {
+      if (draft.idType === 'PASSPORT') {
+        await this.service.pushStep(telegramId, WorkerWizardStep.FULL_NAME, { frontPhotoFileId: fileId });
+        const prompt = WorkerRegistrationMessages.namePrompt();
+        const kb = WorkerRegistrationKeyboards.photoPromptKeyboard(true);
+        await this.replyOrEdit(ctx, prompt, kb);
+      } else {
+        await this.service.pushStep(telegramId, WorkerWizardStep.PHOTO_BACK, { frontPhotoFileId: fileId });
+        const prompt = WorkerRegistrationMessages.photoBackPrompt();
+        const kb = WorkerRegistrationKeyboards.photoPromptKeyboard(true);
+        await this.replyOrEdit(ctx, prompt, kb);
+      }
+      return;
+    }
+
+    if (draft.currentStep === WorkerWizardStep.PHOTO_BACK) {
+      await this.service.pushStep(telegramId, WorkerWizardStep.FULL_NAME, { backPhotoFileId: fileId });
+      const prompt = WorkerRegistrationMessages.namePrompt();
+      const kb = WorkerRegistrationKeyboards.photoPromptKeyboard(true);
+      await this.replyOrEdit(ctx, prompt, kb);
+      return;
+    }
+  }
+
   async handleTextInput(ctx: WorkforceModuleContext, textInput: string): Promise<void> {
     if (!ctx.from) return;
     const telegramId = BigInt(ctx.from.id);

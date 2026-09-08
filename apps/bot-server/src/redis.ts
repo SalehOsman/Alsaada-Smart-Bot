@@ -5,9 +5,16 @@ import { config } from './config/env.js';
  * Singleton Redis client connection for Al-Saada Enterprise Bot
  */
 export const redis = new Redis(config.redisUrl, {
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: 1,
   lazyConnect: false,
   enableReadyCheck: true,
+  enableOfflineQueue: false,
+  connectTimeout: 1000,
+  commandTimeout: 1000,
+  retryStrategy(times) {
+    if (times > 5) return null;
+    return Math.min(times * 150, 1000);
+  },
 });
 
 redis.on('connect', () => {
@@ -15,8 +22,56 @@ redis.on('connect', () => {
 });
 
 redis.on('error', (err) => {
-  console.error('❌ [REDIS ERROR] Connection failed:', err.message);
+  // Non-blocking warning: in-memory fallback is active
 });
+
+const memoryFallbackStore = new Map<string, { val: string; exp: number }>();
+
+function memGet(key: string): string | null {
+  const entry = memoryFallbackStore.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.exp) {
+    memoryFallbackStore.delete(key);
+    return null;
+  }
+  return entry.val;
+}
+
+function memSet(key: string, val: string, ttlSeconds: number): void {
+  memoryFallbackStore.set(key, { val, exp: Date.now() + ttlSeconds * 1000 });
+}
+
+function memDel(key: string): void {
+  memoryFallbackStore.delete(key);
+}
+
+export async function safeRedisGet(key: string): Promise<string | null> {
+  if (redis.status === 'ready') {
+    try {
+      const val = await redis.get(key);
+      if (val !== null) return val;
+    } catch {}
+  }
+  return memGet(key);
+}
+
+export async function safeRedisSet(key: string, val: string, ttlSeconds: number): Promise<void> {
+  memSet(key, val, ttlSeconds);
+  if (redis.status === 'ready') {
+    try {
+      await redis.set(key, val, 'EX', ttlSeconds);
+    } catch {}
+  }
+}
+
+export async function safeRedisDel(key: string): Promise<void> {
+  memDel(key);
+  if (redis.status === 'ready') {
+    try {
+      await redis.del(key);
+    } catch {}
+  }
+}
 
 const IMPERSONATE_PREFIX = 'impersonate:user:';
 
@@ -25,7 +80,7 @@ const IMPERSONATE_PREFIX = 'impersonate:user:';
  */
 export async function getImpersonatedRole(telegramId: bigint): Promise<string | null> {
   try {
-    return await redis.get(`${IMPERSONATE_PREFIX}${telegramId}`);
+    return await safeRedisGet(`${IMPERSONATE_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting impersonated role:', error);
     return null;
@@ -37,8 +92,7 @@ export async function getImpersonatedRole(telegramId: bigint): Promise<string | 
  */
 export async function setImpersonatedRole(telegramId: bigint, role: string): Promise<void> {
   try {
-    // Retain for 24 hours
-    await redis.set(`${IMPERSONATE_PREFIX}${telegramId}`, role, 'EX', 86400);
+    await safeRedisSet(`${IMPERSONATE_PREFIX}${telegramId}`, role, 86400);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting impersonated role:', error);
   }
@@ -49,7 +103,7 @@ export async function setImpersonatedRole(telegramId: bigint, role: string): Pro
  */
 export async function clearImpersonatedRole(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${IMPERSONATE_PREFIX}${telegramId}`);
+    await safeRedisDel(`${IMPERSONATE_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing impersonated role:', error);
   }
@@ -72,7 +126,7 @@ export async function setPendingCompanyEdit(
 ): Promise<void> {
   try {
     const data: PendingCompanyEdit = { fieldKey, messageId };
-    await redis.set(`${PENDING_EDIT_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+    await safeRedisSet(`${PENDING_EDIT_PREFIX}${telegramId}`, JSON.stringify(data), 600);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting pending company edit:', error);
   }
@@ -83,7 +137,7 @@ export async function setPendingCompanyEdit(
  */
 export async function getPendingCompanyEdit(telegramId: bigint): Promise<PendingCompanyEdit | null> {
   try {
-    const raw = await redis.get(`${PENDING_EDIT_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_EDIT_PREFIX}${telegramId}`);
     return raw ? (JSON.parse(raw) as PendingCompanyEdit) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting pending company edit:', error);
@@ -96,7 +150,7 @@ export async function getPendingCompanyEdit(telegramId: bigint): Promise<Pending
  */
 export async function clearPendingCompanyEdit(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_EDIT_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_EDIT_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing pending company edit:', error);
   }
@@ -116,7 +170,7 @@ export async function setPendingAdminEdit(
 ): Promise<void> {
   try {
     const data: PendingAdminEdit = { fieldKey, messageId };
-    await redis.set(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+    await safeRedisSet(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`, JSON.stringify(data), 600);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting pending admin edit:', error);
   }
@@ -124,7 +178,7 @@ export async function setPendingAdminEdit(
 
 export async function getPendingAdminEdit(telegramId: bigint): Promise<PendingAdminEdit | null> {
   try {
-    const raw = await redis.get(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`);
     return raw ? (JSON.parse(raw) as PendingAdminEdit) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting pending admin edit:', error);
@@ -134,7 +188,7 @@ export async function getPendingAdminEdit(telegramId: bigint): Promise<PendingAd
 
 export async function clearPendingAdminEdit(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_ADMIN_EDIT_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing pending admin edit:', error);
   }
@@ -166,7 +220,7 @@ export async function setPendingSiteAction(
   data: PendingSiteAction
 ): Promise<void> {
   try {
-    await redis.set(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+    await safeRedisSet(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`, JSON.stringify(data), 600);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting pending site action:', error);
   }
@@ -174,7 +228,7 @@ export async function setPendingSiteAction(
 
 export async function getPendingSiteAction(telegramId: bigint): Promise<PendingSiteAction | null> {
   try {
-    const raw = await redis.get(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`);
     return raw ? (JSON.parse(raw) as PendingSiteAction) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting pending site action:', error);
@@ -184,7 +238,7 @@ export async function getPendingSiteAction(telegramId: bigint): Promise<PendingS
 
 export async function clearPendingSiteAction(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_SITE_ACTION_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing pending site action:', error);
   }
@@ -236,7 +290,7 @@ export async function setPendingJobMatrixAction(
   data: PendingJobMatrixAction
 ): Promise<void> {
   try {
-    await redis.set(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`, JSON.stringify(data), 'EX', 600);
+    await safeRedisSet(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`, JSON.stringify(data), 600);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting pending job matrix action:', error);
   }
@@ -244,7 +298,7 @@ export async function setPendingJobMatrixAction(
 
 export async function getPendingJobMatrixAction(telegramId: bigint): Promise<PendingJobMatrixAction | null> {
   try {
-    const raw = await redis.get(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`);
     return raw ? (JSON.parse(raw) as PendingJobMatrixAction) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting pending job matrix action:', error);
@@ -254,7 +308,7 @@ export async function getPendingJobMatrixAction(telegramId: bigint): Promise<Pen
 
 export async function clearPendingJobMatrixAction(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_JOB_MATRIX_ACTION_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing pending job matrix action:', error);
   }
@@ -316,7 +370,7 @@ export async function setPendingWorkerWizard(
   state: PendingWorkerWizardState
 ): Promise<void> {
   try {
-    await redis.set(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`, JSON.stringify(state), 'EX', 1800);
+    await safeRedisSet(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`, JSON.stringify(state), 1800);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting pending worker wizard:', error);
   }
@@ -326,7 +380,7 @@ export async function getPendingWorkerWizard(
   telegramId: bigint
 ): Promise<PendingWorkerWizardState | null> {
   try {
-    const raw = await redis.get(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`);
     return raw ? (JSON.parse(raw) as PendingWorkerWizardState) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting pending worker wizard:', error);
@@ -336,7 +390,7 @@ export async function getPendingWorkerWizard(
 
 export async function clearPendingWorkerWizard(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_WORKER_WIZARD_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing pending worker wizard:', error);
   }
@@ -344,7 +398,7 @@ export async function clearPendingWorkerWizard(telegramId: bigint): Promise<void
 
 export async function setPendingWorkerExcelUpload(telegramId: bigint, messageId: number): Promise<void> {
   try {
-    await redis.set(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`, String(messageId), 'EX', 600);
+    await safeRedisSet(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`, String(messageId), 600);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting pending worker excel upload:', error);
   }
@@ -352,7 +406,7 @@ export async function setPendingWorkerExcelUpload(telegramId: bigint, messageId:
 
 export async function getPendingWorkerExcelUpload(telegramId: bigint): Promise<number | null> {
   try {
-    const raw = await redis.get(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`);
     return raw ? parseInt(raw, 10) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting pending worker excel upload:', error);
@@ -362,7 +416,7 @@ export async function getPendingWorkerExcelUpload(telegramId: bigint): Promise<n
 
 export async function clearPendingWorkerExcelUpload(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_WORKER_EXCEL_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing pending worker excel upload:', error);
   }
@@ -386,7 +440,7 @@ export interface PendingWorkerEditState {
 
 export async function setPendingWorkerEdit(telegramId: bigint, state: PendingWorkerEditState): Promise<void> {
   try {
-    await redis.set(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`, JSON.stringify(state), 'EX', 600);
+    await safeRedisSet(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`, JSON.stringify(state), 600);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting pending worker edit:', error);
   }
@@ -394,7 +448,7 @@ export async function setPendingWorkerEdit(telegramId: bigint, state: PendingWor
 
 export async function getPendingWorkerEdit(telegramId: bigint): Promise<PendingWorkerEditState | null> {
   try {
-    const raw = await redis.get(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`);
     return raw ? (JSON.parse(raw) as PendingWorkerEditState) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting pending worker edit:', error);
@@ -404,7 +458,7 @@ export async function getPendingWorkerEdit(telegramId: bigint): Promise<PendingW
 
 export async function clearPendingWorkerEdit(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_WORKER_EDIT_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing pending worker edit:', error);
   }
@@ -414,7 +468,7 @@ const PENDING_WORKER_DIR_SEARCH_PREFIX = 'pending:worker_dir_search:user:';
 
 export async function setPendingWorkerDirSearch(telegramId: bigint, promptMsgId: number): Promise<void> {
   try {
-    await redis.set(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`, promptMsgId.toString(), 'EX', 300);
+    await safeRedisSet(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`, promptMsgId.toString(), 300);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting worker dir search:', error);
   }
@@ -422,7 +476,7 @@ export async function setPendingWorkerDirSearch(telegramId: bigint, promptMsgId:
 
 export async function getPendingWorkerDirSearch(telegramId: bigint): Promise<number | null> {
   try {
-    const raw = await redis.get(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`);
     return raw ? parseInt(raw, 10) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting worker dir search:', error);
@@ -432,7 +486,7 @@ export async function getPendingWorkerDirSearch(telegramId: bigint): Promise<num
 
 export async function clearPendingWorkerDirSearch(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`);
+    await safeRedisDel(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing worker dir search:', error);
   }
@@ -461,7 +515,7 @@ const DUAL_MODE_PREFIX = 'dual_mode:user:';
  */
 export async function getAdminDualMode(telegramId: bigint): Promise<boolean> {
   try {
-    const val = await redis.get(`${DUAL_MODE_PREFIX}${telegramId}`);
+    const val = await safeRedisGet(`${DUAL_MODE_PREFIX}${telegramId}`);
     return val === 'true';
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting admin dual mode:', error);
@@ -475,9 +529,9 @@ export async function getAdminDualMode(telegramId: bigint): Promise<boolean> {
 export async function setAdminDualMode(telegramId: bigint, active: boolean): Promise<void> {
   try {
     if (active) {
-      await redis.set(`${DUAL_MODE_PREFIX}${telegramId}`, 'true', 'EX', 86400);
+      await safeRedisSet(`${DUAL_MODE_PREFIX}${telegramId}`, 'true', 86400);
     } else {
-      await redis.del(`${DUAL_MODE_PREFIX}${telegramId}`);
+      await safeRedisDel(`${DUAL_MODE_PREFIX}${telegramId}`);
     }
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting admin dual mode:', error);
@@ -500,7 +554,7 @@ const ACTIVE_SCREEN_PREFIX = 'user_active_screen:';
 
 export async function setUserActiveScreen(telegramId: bigint, state: UserActiveScreenState): Promise<void> {
   try {
-    await redis.set(`${ACTIVE_SCREEN_PREFIX}${telegramId}`, JSON.stringify(state), 'EX', 86400);
+    await safeRedisSet(`${ACTIVE_SCREEN_PREFIX}${telegramId}`, JSON.stringify(state), 86400);
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting user active screen:', error);
   }
@@ -508,7 +562,7 @@ export async function setUserActiveScreen(telegramId: bigint, state: UserActiveS
 
 export async function getUserActiveScreen(telegramId: bigint): Promise<UserActiveScreenState | null> {
   try {
-    const raw = await redis.get(`${ACTIVE_SCREEN_PREFIX}${telegramId}`);
+    const raw = await safeRedisGet(`${ACTIVE_SCREEN_PREFIX}${telegramId}`);
     return raw ? (JSON.parse(raw) as UserActiveScreenState) : null;
   } catch (error) {
     console.error('⚠️ [REDIS] Error getting user active screen:', error);
@@ -518,7 +572,7 @@ export async function getUserActiveScreen(telegramId: bigint): Promise<UserActiv
 
 export async function clearUserActiveScreen(telegramId: bigint): Promise<void> {
   try {
-    await redis.del(`${ACTIVE_SCREEN_PREFIX}${telegramId}`);
+    await safeRedisDel(`${ACTIVE_SCREEN_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing user active screen:', error);
   }

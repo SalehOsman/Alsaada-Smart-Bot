@@ -8,6 +8,12 @@ import type { WorkforceModuleContext } from '../../shared/module.types.js';
 import type { WorkerExportFilter } from './flow.types.js';
 
 export class WorkerExportHandler {
+  private readonly pendingUploads = new Set<string>();
+
+  isWaitingForUpload(userId: string): boolean {
+    return this.pendingUploads.has(userId);
+  }
+
   constructor(private readonly service: WorkerExportService) {}
 
   async handleDownloadTemplate(ctx: WorkforceModuleContext): Promise<void> {
@@ -45,6 +51,10 @@ export class WorkerExportHandler {
       return;
     }
 
+    if (ctx.from) {
+      this.pendingUploads.add(String(ctx.from.id));
+    }
+
     const kb = WorkerExportKeyboards.uploadPromptKeyboard();
     const text = FLOW_MESSAGES.UPLOAD_START_PROMPT;
 
@@ -63,6 +73,10 @@ export class WorkerExportHandler {
     ctx: WorkforceModuleContext,
     fileBuffer: Buffer
   ): Promise<boolean> {
+    if (ctx.from) {
+      this.pendingUploads.delete(String(ctx.from.id));
+    }
+
     if (!ctx.isRealSuperAdmin) {
       await ctx.reply(FLOW_MESSAGES.UNAUTHORIZED_SUPER_ADMIN);
       return false;

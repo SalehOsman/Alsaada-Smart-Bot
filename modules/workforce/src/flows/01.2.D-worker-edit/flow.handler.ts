@@ -10,6 +10,10 @@ import type { EditableWorkerField, PendingWorkerEditState } from './flow.types.j
 export class WorkerEditHandler {
   private readonly editDrafts = new Map<string, PendingWorkerEditState>();
 
+  hasActiveDraft(userId: string): boolean {
+    return this.editDrafts.has(userId);
+  }
+
   constructor(
     private readonly service: WorkerEditService,
     private readonly repository: WorkerEditRepository

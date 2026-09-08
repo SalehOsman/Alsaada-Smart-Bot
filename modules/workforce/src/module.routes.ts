@@ -211,4 +211,78 @@ export function registerWorkforceRoutes(
       await exportHandler.handleExportExecute(ctx, { type: 'GOVERNORATE', governorateCode: govCode });
     }
   });
+
+  // Text input routing for workforce flows (directory search, registration wizard, worker edit)
+  bot.on('message:text', async (ctx, next) => {
+    if (!ctx.message?.text || ctx.message.text.startsWith('/')) {
+      return next();
+    }
+    const text = ctx.message.text;
+    if (ctx.from) {
+      const uid = String(ctx.from.id);
+      const telegramId = BigInt(ctx.from.id);
+
+      if (dirHandler.isSearching(uid)) {
+        await dirHandler.handleSearchInput(ctx, text);
+        return;
+      }
+
+      const wizardDraft = await regService.getDraft(telegramId);
+      if (wizardDraft) {
+        await regHandler.handleTextInput(ctx, text);
+        return;
+      }
+
+      if (editHandler.hasActiveDraft(uid)) {
+        await editHandler.handleTextInput(ctx, text);
+        return;
+      }
+    }
+    return next();
+  });
+
+  // Photo input routing for worker registration
+  bot.on('message:photo', async (ctx, next) => {
+    if (ctx.from) {
+      const telegramId = BigInt(ctx.from.id);
+      const draft = await regService.getDraft(telegramId);
+      if (draft && (draft.currentStep === 'PHOTO_FRONT' || draft.currentStep === 'PHOTO_BACK')) {
+        const photos = ctx.message?.photo;
+        if (photos && photos.length > 0) {
+          const fileId = photos[photos.length - 1]?.file_id;
+          if (fileId) {
+            await regHandler.handlePhotoInput(ctx, fileId);
+            return;
+          }
+        }
+      }
+    }
+    return next();
+  });
+
+  // Document input routing for worker bulk Excel import
+  bot.on('message:document', async (ctx, next) => {
+    if (ctx.from && exportHandler.isWaitingForUpload(String(ctx.from.id))) {
+      const doc = ctx.message?.document;
+      if (doc && (doc.file_name?.endsWith('.xlsx') || doc.file_name?.endsWith('.xls'))) {
+        try {
+          const file = await ctx.api.getFile(doc.file_id);
+          if (file.file_path) {
+            const token = ctx.api.token;
+            const downloadUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
+            const response = await fetch(downloadUrl);
+            if (response.ok) {
+              const arrayBuffer = await response.arrayBuffer();
+              const buffer = Buffer.from(arrayBuffer);
+              await exportHandler.handleDocumentUpload(ctx, buffer);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('Failed to download Excel file for workforce import:', err);
+        }
+      }
+    }
+    return next();
+  });
 }

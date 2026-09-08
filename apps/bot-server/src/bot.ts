@@ -105,38 +105,7 @@ import {
   renderHrSubHub,
   handleHrPlaceholder,
 } from './handlers/hr-hub.handler.js';
-import {
-  renderWorkersDirectory,
-  renderWorkerDetailCard,
-  handleWorkerDirSearchPrompt,
-  handleWorkerDirSearchInput,
-  handleWorkerCallContact,
-} from './handlers/worker-directory.handler.js';
-import {
-  handleStartAddWorker,
-  handleWorkerWizardTextInput,
-  handleWorkerWizardPhotoInput,
-  handleWorkerWizardCallback,
-} from './handlers/new-worker-wizard.handler.js';
-import {
-  handleWorkerExcelDocumentUpload,
-} from './handlers/worker-excel.handler.js';
 import { registerWorkforceModule, type WorkforceModuleContext } from '@alsaada/workforce';
-import {
-  handleStartWorkerEdit,
-  renderWorkerEditMenu,
-  handleStartEditWorkerField,
-  handleWorkerEditTextInput,
-  handleApproveEditRequest,
-  handleRejectEditRequest,
-  handleViewPendingEditRequests,
-  handleStartAddWorkerDoc,
-  handleWorkerEditDocumentInput,
-  handleListWorkerDocs,
-  handleSendWorkerDoc,
-  handleSendWorkerIdPhoto,
-  handleWorkerEditGovernorateChoice,
-} from './handlers/worker-edit.handler.js';
 import { workerExpiryAlertService } from './services/worker-expiry-alert.service.js';
 import { prisma } from './db.js';
 
@@ -181,13 +150,16 @@ export function createBot(): Bot<MyContext> {
   // 4. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
 
-  // 4. Pending Input Interceptors (Company Profile, Admin Profile, Sites Wizard, GPS Location, Excel Uploads, Wizard Photos)
+  // 5. Register Workforce Domain Module (Doc 21 Modular Monolith)
+  registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
+    prisma,
+    encryptionKey: config.databaseEncryptionKey,
+  });
+
+  // 6. Pending Input Interceptors (Job Matrix Document, Sites Location, Text Inputs)
   bot.on(['message:photo', 'message:document'], async (ctx, next) => {
-    if (await handleWorkerWizardPhotoInput(ctx)) return;
-    if (await handleWorkerEditDocumentInput(ctx)) return;
     if (ctx.message?.document) {
       if (await handleJobMatrixDocumentInput(ctx)) return;
-      if (await handleWorkerExcelDocumentUpload(ctx)) return;
     }
     return next();
   });
@@ -224,9 +196,6 @@ export function createBot(): Bot<MyContext> {
       return next();
     }
 
-    if (await handleWorkerDirSearchInput(ctx)) return;
-    if (await handleWorkerWizardTextInput(ctx)) return;
-    if (await handleWorkerEditTextInput(ctx)) return;
     if (await handleJobMatrixTextInput(ctx)) return;
     if (await handleCompanyFieldTextInput(ctx)) return;
     if (await handleAdminFieldTextInput(ctx)) return;
@@ -512,73 +481,7 @@ export function createBot(): Bot<MyContext> {
     const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
     await renderHrSubHub(ctx, subKey, inPlace);
   });
-  bot.callbackQuery('action:worker:directory', async (ctx) => {
-    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
-    await renderWorkersDirectory(ctx, 1, undefined, inPlace);
-  });
-  bot.callbackQuery(/^action:worker:dir:page:(\d+)$/, async (ctx) => {
-    const page = parseInt(ctx.match[1], 10) || 1;
-    await renderWorkersDirectory(ctx, page, undefined, true);
-  });
-  bot.callbackQuery('action:worker:dir:clear_search', async (ctx) => {
-    await renderWorkersDirectory(ctx, 1, undefined, true);
-  });
-  bot.callbackQuery('action:worker:dir:search_prompt', handleWorkerDirSearchPrompt);
-  bot.callbackQuery(/^action:worker:view:(.+)$/, async (ctx) => {
-    const workerId = ctx.match[1];
-    await renderWorkerDetailCard(ctx, workerId, 1, true);
-  });
-  bot.callbackQuery(/^action:worker:call:(.+)$/, async (ctx) => {
-    const workerId = ctx.match[1];
-    await handleWorkerCallContact(ctx, workerId);
-  });
   bot.callbackQuery(/^(?:action:advances:|action:leaves:|action:payroll:|action:admin_affairs:)/, handleHrPlaceholder);
-  bot.callbackQuery(['action:worker:add_single', 'action:worker:add'], handleStartAddWorker);
-  // Register Workforce Domain Module (Doc 21 Modular Monolith)
-  registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
-    prisma,
-    encryptionKey: config.databaseEncryptionKey,
-  });
-
-  // Worker Profile Editing & Governance
-  bot.callbackQuery('action:worker_edit:pick', async (ctx) => {
-    await handleStartWorkerEdit(ctx, 1);
-  });
-  bot.callbackQuery(/^action:worker_edit:page:(\d+)$/, async (ctx) => {
-    const page = parseInt(ctx.match[1], 10) || 1;
-    await handleStartWorkerEdit(ctx, page);
-  });
-  bot.callbackQuery('action:worker_edit:pending_list', handleViewPendingEditRequests);
-  bot.callbackQuery(/^(?:action:worker_edit:menu:|we:menu:)(.+)$/, async (ctx) => {
-    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
-    await renderWorkerEditMenu(ctx, ctx.match[1], inPlace);
-  });
-  bot.callbackQuery(/^(?:action:worker_edit:field:|we:f:)(.+):(.+)$/, async (ctx) => {
-    await handleStartEditWorkerField(ctx, ctx.match[1], ctx.match[2]);
-  });
-  bot.callbackQuery(/^(?:action:worker_edit_gov:|we:gov:)(.+):(.+)$/, async (ctx) => {
-    await handleWorkerEditGovernorateChoice(ctx, ctx.match[1], ctx.match[2]);
-  });
-  bot.callbackQuery(/^(?:action:worker_edit:add_doc:|we:add:)(.+)$/, async (ctx) => {
-    await handleStartAddWorkerDoc(ctx, ctx.match[1]);
-  });
-  bot.callbackQuery(/^(?:action:worker_edit:list_docs:|we:docs:)(.+)$/, async (ctx) => {
-    await handleListWorkerDocs(ctx, ctx.match[1]);
-  });
-  bot.callbackQuery(/^action:worker_doc:send:(.+)$/, async (ctx) => {
-    await handleSendWorkerDoc(ctx, ctx.match[1]);
-  });
-  bot.callbackQuery(/^action:worker_doc:send_id:(.+):(front|back)$/, async (ctx) => {
-    await handleSendWorkerIdPhoto(ctx, ctx.match[1], ctx.match[2] as 'front' | 'back');
-  });
-  bot.callbackQuery(/^action:worker_req:approve:(.+)$/, async (ctx) => {
-    await handleApproveEditRequest(ctx, ctx.match[1]);
-  });
-  bot.callbackQuery(/^action:worker_req:reject:(.+)$/, async (ctx) => {
-    await handleRejectEditRequest(ctx, ctx.match[1]);
-  });
-
-  bot.callbackQuery(['action:cancel_worker_op', /^action:worker_/], handleWorkerWizardCallback);
 
   // 15. Automated Expiry Alerts Daily Scheduler
   setTimeout(() => {

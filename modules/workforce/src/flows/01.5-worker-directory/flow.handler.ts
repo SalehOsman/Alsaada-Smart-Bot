@@ -106,9 +106,18 @@ export class WorkerDirectoryHandler {
     await this.replyOrEdit(ctx, text, keyboard);
   }
 
+  private readonly searchPendingUsers = new Set<string>();
+
+  isSearching(userId: string): boolean {
+    return this.searchPendingUsers.has(userId);
+  }
+
   async handleSearchPrompt(ctx: WorkforceModuleContext): Promise<void> {
     if (ctx.callbackQuery) {
       await ctx.answerCallbackQuery().catch(() => {});
+    }
+    if (ctx.from) {
+      this.searchPendingUsers.add(String(ctx.from.id));
     }
     const text = WorkerDirectoryMessages.searchPrompt();
     const keyboard = WorkerDirectoryKeyboards.searchPromptKeyboard();
@@ -116,6 +125,9 @@ export class WorkerDirectoryHandler {
   }
 
   async handleSearchInput(ctx: WorkforceModuleContext, rawQuery: string): Promise<void> {
+    if (ctx.from) {
+      this.searchPendingUsers.delete(String(ctx.from.id));
+    }
     await ctx.deleteMessage().catch(() => {});
     const val = validateDirectorySearchQuery(rawQuery);
     if (!val.isValid || !val.cleanQuery) {
@@ -126,6 +138,9 @@ export class WorkerDirectoryHandler {
   }
 
   async handleClearSearch(ctx: WorkforceModuleContext): Promise<void> {
+    if (ctx.from) {
+      this.searchPendingUsers.delete(String(ctx.from.id));
+    }
     await this.handleDirectory(ctx, 1, undefined);
   }
 }

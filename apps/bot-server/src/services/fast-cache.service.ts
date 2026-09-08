@@ -30,6 +30,10 @@ export class FastCacheService {
     );
   }
 
+  private isRedisReady(): boolean {
+    return !redis.status || redis.status === 'ready';
+  }
+
   /**
    * 💡 استرجاع القيمة من الكاش المتعدد أو جلبها وتخزينها تلقائياً
    * L1 RAM -> L2 Redis -> L3 Fetcher
@@ -49,20 +53,22 @@ export class FastCacheService {
     }
 
     // 2. فحص المستوى الثاني: L2 Redis 7 Cache (< 1.5ms)
-    try {
-      const cachedJson = await redis.get(fullKey);
-      if (cachedJson) {
-        const parsed = JSON.parse(cachedJson) as T;
-        // حفظ في L1 للطلبات القادمة
-        this.l1Store.set(fullKey, {
-          value: parsed,
-          expiresAt: now + ttlSeconds * 1000,
-          staleAt: now + (ttlSeconds * 1000) / 2,
-        });
-        return parsed;
+    if (this.isRedisReady()) {
+      try {
+        const cachedJson = await redis.get(fullKey);
+        if (cachedJson) {
+          const parsed = JSON.parse(cachedJson) as T;
+          // حفظ في L1 للطلبات القادمة
+          this.l1Store.set(fullKey, {
+            value: parsed,
+            expiresAt: now + ttlSeconds * 1000,
+            staleAt: now + (ttlSeconds * 1000) / 2,
+          });
+          return parsed;
+        }
+      } catch (err) {
+        console.warn(`⚠️ [FastCache] Redis read error for ${fullKey}:`, err);
       }
-    } catch (err) {
-      console.warn(`⚠️ [FastCache] Redis read error for ${fullKey}:`, err);
     }
 
     // 3. المستوى الثالث: L3 Fetcher (Database Query)
@@ -126,10 +132,12 @@ export class FastCacheService {
     this.l1Store.set(fullKey, { value, expiresAt, staleAt });
 
     // 2. حفظ في L2 Redis الموزع
-    try {
-      await redis.set(fullKey, this.serialize(value), 'EX', ttlSeconds);
-    } catch (err) {
-      console.warn(`⚠️ [FastCache] Redis set error for ${fullKey}:`, err);
+    if (this.isRedisReady()) {
+      try {
+        await redis.set(fullKey, this.serialize(value), 'EX', ttlSeconds);
+      } catch (err) {
+        console.warn(`⚠️ [FastCache] Redis set error for ${fullKey}:`, err);
+      }
     }
   }
 
@@ -143,18 +151,20 @@ export class FastCacheService {
     const l1 = this.l1Store.get(fullKey);
     if (l1 && l1.expiresAt > now) return l1.value as T;
 
-    try {
-      const raw = await redis.get(fullKey);
-      if (raw) {
-        const parsed = JSON.parse(raw) as T;
-        this.l1Store.set(fullKey, {
-          value: parsed,
-          expiresAt: now + this.DEFAULT_TTL * 1000,
-          staleAt: now + (this.DEFAULT_TTL * 1000) / 2,
-        });
-        return parsed;
-      }
-    } catch {}
+    if (this.isRedisReady()) {
+      try {
+        const raw = await redis.get(fullKey);
+        if (raw) {
+          const parsed = JSON.parse(raw) as T;
+          this.l1Store.set(fullKey, {
+            value: parsed,
+            expiresAt: now + this.DEFAULT_TTL * 1000,
+            staleAt: now + (this.DEFAULT_TTL * 1000) / 2,
+          });
+          return parsed;
+        }
+      } catch {}
+    }
 
     return null;
   }
@@ -166,10 +176,12 @@ export class FastCacheService {
     const fullKey = `fastcache:${key}`;
     this.l1Store.delete(fullKey);
 
-    try {
-      await redis.del(fullKey);
-    } catch (err) {
-      console.warn(`⚠️ [FastCache] Redis invalidate error for ${fullKey}:`, err);
+    if (this.isRedisReady()) {
+      try {
+        await redis.del(fullKey);
+      } catch (err) {
+        console.warn(`⚠️ [FastCache] Redis invalidate error for ${fullKey}:`, err);
+      }
     }
   }
 
