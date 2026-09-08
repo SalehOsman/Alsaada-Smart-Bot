@@ -4,6 +4,8 @@ import {
   filterWorkers,
   paginateItems,
   buildWorkerPickerKeyboard,
+  getWorkerDisplayName,
+  formatWorkerPickerLabel,
   type WorkerItem,
 } from '../src/index.js';
 
@@ -119,5 +121,54 @@ describe('UniversalWorkerPicker', () => {
       );
       expect(hasCancel).toBe(true);
     });
+
+    it('strictly displays worker nickname over full name in buttons and labels', () => {
+      const workerWithNick: WorkerItem = {
+        id: 'w-1',
+        code: 'OP-DRV-0001',
+        name: 'إبراهيم سيد محمد عطا الله',
+        nickname: 'أبو خليل',
+      };
+
+      const workerWithoutNick: WorkerItem = {
+        id: 'w-2',
+        code: 'OP-DRV-0002',
+        name: 'علي حسن إبراهيم',
+      };
+
+      // 1. getWorkerDisplayName priority
+      expect(getWorkerDisplayName(workerWithNick)).toBe('أبو خليل');
+      expect(getWorkerDisplayName(workerWithoutNick)).toBe('علي حسن إبراهيم');
+
+      // 2. formatWorkerPickerLabel output
+      expect(formatWorkerPickerLabel(workerWithNick)).toBe('👤 أبو خليل (OP-DRV-0001)');
+      expect(formatWorkerPickerLabel(workerWithoutNick)).toBe('👤 علي حسن إبراهيم (OP-DRV-0002)');
+
+      // 3. buildWorkerPickerKeyboard button text
+      const { items, pagination } = paginateItems([workerWithNick, workerWithoutNick], 1, 2);
+      const kb = buildWorkerPickerKeyboard({
+        workers: items,
+        pagination,
+        backCallbackData: 'menu:domain:hr',
+        mainMenuCallbackData: 'action:main_menu',
+      });
+
+      const btn1 = kb.inline_keyboard[0]![0]!.text;
+      const btn2 = kb.inline_keyboard[1]![0]!.text;
+
+      expect(btn1).toBe('👤 أبو خليل (OP-DRV-0001)');
+      expect(btn2).toBe('👤 علي حسن إبراهيم (OP-DRV-0002)');
+
+      // 4. Verify navigation buttons
+      const hasBack = kb.inline_keyboard.some((row) =>
+        row.some((btn) => btn.text.includes('العودة') && btn.callback_data === 'menu:domain:hr')
+      );
+      const hasHome = kb.inline_keyboard.some((row) =>
+        row.some((btn) => btn.text.includes('الرئيسية') && btn.callback_data === 'action:main_menu')
+      );
+      expect(hasBack).toBe(true);
+      expect(hasHome).toBe(true);
+    });
   });
 });
+

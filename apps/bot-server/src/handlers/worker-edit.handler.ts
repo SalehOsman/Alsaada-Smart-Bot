@@ -20,6 +20,13 @@ import {
   detectGovernorateFromAddress,
   getGovernorateCodeByName,
 } from '@alsaada/national-id-engine';
+import {
+  buildWorkerPickerKeyboard,
+  paginateItems,
+  getWorkerDisplayName,
+  WorkerItem,
+  CustomActionButton,
+} from '@alsaada/core-components';
 
 const FIELD_LABELS: Record<string, string> = {
   legacyCode: 'كود العامل القديم / الأرشيفي',
@@ -61,9 +68,9 @@ export const FIELD_TO_SHORT_MAP: Record<string, string> = {
 };
 
 /**
- * 👥 بدء معالج تعديل بيانات عامل (عرض قائمة العمال للاختيار)
+ * 👥 بدء معالج تعديل بيانات عامل (عرض قائمة العمال للاختيار بتنسيق المكون المشترك الموحد)
  */
-export async function handleStartWorkerEdit(ctx: MyContext): Promise<void> {
+export async function handleStartWorkerEdit(ctx: MyContext, page = 1): Promise<void> {
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery().catch(() => {});
   }
@@ -72,31 +79,40 @@ export async function handleStartWorkerEdit(ctx: MyContext): Promise<void> {
   const role = ctx.effectiveRole || 'GUEST';
   const isSuperAdmin = role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin;
 
-  const workers = await workerService.getRecentWorkers(10).catch(() => []);
+  const rawWorkers = await workerService.getRecentWorkers(50).catch(() => []);
+  const workerItems: WorkerItem[] = rawWorkers.map((w) => ({
+    id: w.id,
+    code: w.code,
+    legacyCode: w.legacyCode,
+    name: w.name,
+    nickname: w.nickname,
+    jobTitle: w.jobTitle,
+    siteLocation: w.site?.name,
+  }));
 
-  const keyboard = new InlineKeyboard();
+  const { items, pagination } = paginateItems(workerItems, page, 6);
 
-  for (const w of workers) {
-    const legacyTag = w.legacyCode ? ` [قديم: ${w.legacyCode}]` : '';
-    keyboard
-      .text(`👤 ${w.name} (${w.code})${legacyTag}`, `we:menu:${w.id}`)
-      .row();
-  }
-
-  // إذا كان سوبر أدمن، نعرض زر استعراض الطلبات المعلقة إن وجدت
+  const customActionButtons: CustomActionButton[] = [];
   if (isSuperAdmin) {
     const pendingCount = await prisma.workerEditRequest.count({ where: { status: 'PENDING' } });
     if (pendingCount > 0) {
-      keyboard
-        .text(`📨 مراجعة طلبات التعديل المعلقة (${pendingCount})`, 'action:worker_edit:pending_list')
-        .row();
+      customActionButtons.push({
+        text: `📨 مراجعة طلبات التعديل المعلقة (${pendingCount})`,
+        callbackData: 'action:worker_edit:pending_list',
+      });
     }
   }
 
-  keyboard
-    .text('🔙 العودة لقسم الموارد البشرية', 'menu:domain:hr')
-    .row()
-    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+  const keyboard = buildWorkerPickerKeyboard({
+    workers: items,
+    pagination,
+    workerCallbackPrefix: 'we:menu:',
+    pageCallbackPrefix: 'action:worker_edit:page:',
+    customActionButtons,
+    backCallbackData: 'menu:domain:hr',
+    mainMenuCallbackData: 'action:main_menu',
+    includeLegacyCode: true,
+  });
 
   const title = isSuperAdmin
     ? '✏️ *تعديل بيانات عامل (تنفيذ فوري للسوبر أدمن)*'
@@ -105,7 +121,7 @@ export async function handleStartWorkerEdit(ctx: MyContext): Promise<void> {
   const text =
     `${title}\n` +
     '━━━━━━━━━━━━━━━━━━━━━\n' +
-    'اختر العامل المطلوب من السجلات الحديثة أدناه للبدء:\n\n' +
+    'اختر العامل المطلوب من السجلات أدناه للبدء:\n\n' +
     (isSuperAdmin
       ? '💡 _بصفتك المدير العام، سيتم تطبيق كافة التعديلات (بما فيها كود العامل القديم) فورياً في قاعدة البيانات._'
       : '💡 _بصفتك مشرفاً ميدانياً، سيتم إرسال طلب التعديل للمدير العام للاعتماد الرسمي قبل تطبيقه._');

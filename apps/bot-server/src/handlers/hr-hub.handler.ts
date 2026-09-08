@@ -2,6 +2,7 @@ import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { workerService } from '../services/worker.service.js';
 import { prisma } from '../db.js';
+import { getWorkerDisplayName } from '@alsaada/core-components';
 
 /**
  * 👥 تصيير بوابة الموارد البشرية والعمال (HR Domain Hub)
@@ -103,8 +104,9 @@ export async function renderWorkersDirectory(ctx: MyContext, inPlace = false): P
     workers.forEach((w, i) => {
       const flag = w.idType === 'PASSPORT' ? '🌍' : '🇪🇬';
       const siteName = w.site?.name || 'غير محدد';
+      const displayName = getWorkerDisplayName(w);
       const legacyTag = w.legacyCode ? ` [قديم: \`${w.legacyCode}\`]` : '';
-      text += `${i + 1}. ${flag} *${w.name}* (\`${w.code}\`)${legacyTag}\n   💼 ${w.jobTitle} | 📍 ${siteName}\n`;
+      text += `${i + 1}. ${flag} *${displayName}* (\`${w.code}\`)${legacyTag}\n   💼 ${w.jobTitle} | 📍 ${siteName}\n`;
     });
   }
 

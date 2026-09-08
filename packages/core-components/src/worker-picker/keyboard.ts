@@ -8,8 +8,37 @@ export interface WorkerKeyboardOptions {
   customActionButtons?: CustomActionButton[];
   allowSearch?: boolean;
   cancelCallbackData?: string;
+  backCallbackData?: string;
+  mainMenuCallbackData?: string;
   workerCallbackPrefix?: string;
   pageCallbackPrefix?: string;
+  includeLegacyCode?: boolean;
+}
+
+/**
+ * Resolves the primary display name for a worker, strictly prioritizing nickname (اسم الشهرة).
+ * Returns the worker's nickname if present and non-empty, otherwise falls back to full name.
+ */
+export function getWorkerDisplayName(worker: { name: string; nickname?: string | null }): string {
+  if (worker.nickname && worker.nickname.trim().length > 0) {
+    return worker.nickname.trim();
+  }
+  return worker.name.trim();
+}
+
+/**
+ * Formats a worker's button or list label consistently across the bot:
+ * `👤 [اسم الشهرة] ([الكود])` or `👤 [اسم الشهرة] ([الكود]) [قديم: 106]`
+ */
+export function formatWorkerPickerLabel(
+  worker: WorkerItem | { name: string; nickname?: string | null; code: string; legacyCode?: string | null },
+  isSelected = false,
+  includeLegacyCode = false
+): string {
+  const checkmark = isSelected ? '✅ ' : '👤 ';
+  const displayName = getWorkerDisplayName(worker);
+  const legacyTag = includeLegacyCode && worker.legacyCode ? ` [قديم: ${worker.legacyCode}]` : '';
+  return `${checkmark}${displayName} (${worker.code})${legacyTag}`;
 }
 
 /**
@@ -21,16 +50,14 @@ export function buildWorkerPickerKeyboard(options: WorkerKeyboardOptions): Inlin
   const pagePrefix = options.pageCallbackPrefix ?? 'worker_page:';
   const selectedSet = new Set(options.selectedWorkerIds ?? []);
 
-  // 1. Worker Buttons (2 per row or 1 per row if name is long)
+  // 1. Worker Buttons (prioritizing nickname via formatWorkerPickerLabel)
   for (const worker of options.workers) {
     const isSelected = selectedSet.has(worker.id);
-    const checkmark = isSelected ? '✅ ' : '👤 ';
-    const displayName = worker.nickname ? `${worker.nickname}` : worker.name;
-    const label = `${checkmark}${displayName} (${worker.code})`;
+    const label = formatWorkerPickerLabel(worker, isSelected, options.includeLegacyCode ?? false);
     keyboard.text(label, `${workerPrefix}${worker.id}`).row();
   }
 
-  // 2. Custom action buttons (e.g. Hospitality)
+  // 2. Custom action buttons (e.g. Hospitality or Pending Requests)
   if (options.customActionButtons && options.customActionButtons.length > 0) {
     for (const btn of options.customActionButtons) {
       keyboard.text(btn.text, btn.callbackData).row();
@@ -60,12 +87,31 @@ export function buildWorkerPickerKeyboard(options: WorkerKeyboardOptions): Inlin
     keyboard.row();
   }
 
-  // 4. Utility Row (Search & Cancel)
+  // 4. Utility & Navigation Rows (Search, Back/Cancel, Main Menu)
   if (options.allowSearch) {
-    keyboard.text('🔍 بحث بالاسم أو الكود', 'worker_search_prompt');
+    keyboard.text('🔍 بحث بالاسم أو الكود', 'worker_search_prompt').row();
   }
 
-  keyboard.text('❌ إلغاء', options.cancelCallbackData ?? 'action:cancel').row();
+  const navButtons: { text: string; callback: string }[] = [];
+  if (options.backCallbackData) {
+    navButtons.push({ text: '🔙 العودة', callback: options.backCallbackData });
+  }
+  if (options.cancelCallbackData) {
+    navButtons.push({ text: '❌ إلغاء', callback: options.cancelCallbackData });
+  } else if (!options.backCallbackData) {
+    navButtons.push({ text: '❌ إلغاء', callback: 'action:cancel' });
+  }
+
+  if (navButtons.length > 0) {
+    for (const btn of navButtons) {
+      keyboard.text(btn.text, btn.callback);
+    }
+    keyboard.row();
+  }
+
+  if (options.mainMenuCallbackData) {
+    keyboard.text('🏠 القائمة الرئيسية', options.mainMenuCallbackData).row();
+  }
 
   return keyboard;
 }

@@ -47,7 +47,8 @@
 5. **قاعدة الإلزام الحتمي بالنواة المشتركة وحظر إعادة كتابة الأكواد (Zero Code Duplication & Mandatory Shared Kernel Usage):**
    - **المبدأ الأساسي:** لا يُسمح لأي أداة ذكاء اصطناعي (AI Agent) أو مطور بإعادة اختراع العجلة أو كتابة منطق مكرر داخل موديولات الأعمال (`modules/*`).
    - **الالتزام الإلزامي الصارم باستيراد حزم النواة المجهزة مسبقاً (`packages/*`):**
-     * **اختيار وتصفية العمال والبحث:** يُحظر تماماً كتابة أزرار اختيار العمال أو منطق التصفية يدوياً؛ يجب استيراد واستخدام `UniversalWorkerPicker` و `filterWorkers` من `@alsaada/core-components`.
+     * **اختيار وتصفية العمال والبحث:** يُحظر تماماً كتابة أزرار اختيار العمال أو منطق التصفية يدوياً؛ يجب استيراد واستخدام `buildWorkerPickerKeyboard`, `getWorkerDisplayName`, `formatWorkerPickerLabel` و `filterWorkers` من `@alsaada/core-components`.
+     * **عرض اسم الشهرة حصراً في كافة قوائم العاملين (Mandatory Worker Nickname Display):** تُلزم كافة القوائم وشاشات الأزرار التي تعرض العاملين بإظهار **اسم الشهرة (Nickname)** بدلاً من الاسم الكامل الرباعي عبر دالة `getWorkerDisplayName` / `formatWorkerPickerLabel` (ولا يُعرض الاسم الكامل إلا كبديل احتياطي في حال عدم وجود اسم شهرة مسجل للعامل).
      * **المبالغ المالية والمدخلات ورادار التكرار:** يجب استيراد `UniversalAmountPicker` و `validateAmount` و `checkDuplicatePaymentRisk` من `@alsaada/core-components`.
      * **الكميات ووحدات القياس:** يجب استيراد `UniversalQuantityPicker` و `validateQuantity` من `@alsaada/core-components`.
      * **التواريخ والمدد والفترات:** يجب استيراد `UniversalDatePicker` و `parseRegionalDate` و `calculateDateRange` من `@alsaada/core-components`.
@@ -139,21 +140,22 @@
    - يجب أن تكون لغة البوت صامتة، نظيفة، رصينة، وتقتصر حصراً على رسائل الأعمال الإدارية المباشرة والموجزة.
 9. **إلزامية تقرير مطابقة المواصفات الشامل بنداً بنداً بعد كل وظيفة (Mandatory Point-by-Point DoD Verification Report):**
    - في بوابة الخروج DoD، يُلزم وكيل الذكاء الاصطناعي والمطور بتقديم تقرير تقني مفصل يثبت انطباق كافة مواصفات وتفاصيل الميزة المطلوبة بنداً بنداً بالدليل المادي والعملي دون أي إغفال.
-   - **قاعدة إلزامية حتمية:** لا يُعتبر أي تدفق أو وظيفة منتهية ومكتملة ما لم يقدم الوكيل جدول مطابقة تفصيلي يفحص الالتزام بالمعايير العامة الـ 14 التالية:
-     1. هندسة الرسالة الواحدة والتنقل الموضعي الصارم (`In-Place Single Message Lifecycle`).
-     2. الحذف الصامت الفوري لرسائل ومدخلات المستخدم النصية (`Silent Input Deletion`).
-     3. وجود زر الرجوع للخطوة السابقة واسترجاع الحالة دون فقد البيانات (`Back Navigation Button`).
-     4. لوحة أزرار ما بعد الإتمام الرباعية الموحدة بالترتيب النظامي (`Universal Post-Action Completion Keyboard`).
-     5. الحجب المسبق للواجهات ومنع تسريب الأزرار لغير المصرح لهم (`Strict Pre-Render RBAC UI Masking`).
-     6. معالجة الأخطاء التفاعلية وتوفير مسار تراجع وخروج آمن دون تعليق المحادثة (`Interactive Error Retry & Zero Deadlocks`).
-     7. إبطال وحظر استجابة الأزرار القديمة وإزالتها فوراً (`Stale Keyboard Invalidation`).
-     8. صيغة التواريخ القياسية `DD-MM-YYYY` والاعتماد على محرك التاريخ المرن `parseFlexibleDate`.
-     9. خلو الواجهات من المصطلحات التقنية والكواليس البرمجية (`Zero Developer Fluff`).
-     10. حدود الأداء وسرعة الاستجابة المقاسة رسمياً ضمن حدود الـ SLA (`Performance SLA Compliance`).
-     11. سلامة البيانات والتوازن المحاسبي والأثر الدقيق على قاعدة البيانات / الشيت (`Data Integrity & Dual-Entry`).
-     12. قنوات الإشعارات المتعددة ورابط الواتساب المباشر بالسند (`Multi-Channel Notifications & WhatsApp`).
-     13. سلامة البناء البرمجي `Build Exit 0` واجتياز حزمة الاختبارات الآلية بنسبة 100% (`TDD & Zero Regressions`).
-     14. حوكمة Git وتوثيق الـ Commit بمعيار Conventional Commits مع نظافة شجرة العمل (`Clean Git Working Tree`).
+    - **قاعدة إلزامية حتمية:** لا يُعتبر أي تدفق أو وظيفة منتهية ومكتملة ما لم يقدم الوكيل جدول مطابقة تفصيلي يفحص الالتزام بالمعايير العامة الـ 15 التالية:
+      1. هندسة الرسالة الواحدة والتنقل الموضعي الصارم (`In-Place Single Message Lifecycle`).
+      2. الحذف الصامت الفوري لرسائل ومدخلات المستخدم النصية (`Silent Input Deletion`).
+      3. وجود زر الرجوع للخطوة السابقة واسترجاع الحالة دون فقد البيانات (`Back Navigation Button`).
+      4. لوحة أزرار ما بعد الإتمام الرباعية الموحدة بالترتيب النظامي (`Universal Post-Action Completion Keyboard`).
+      5. الحجب المسبق للواجهات ومنع تسريب الأزرار لغير المصرح لهم (`Strict Pre-Render RBAC UI Masking`).
+      6. معالجة الأخطاء التفاعلية وتوفير مسار تراجع وخروج آمن دون تعليق المحادثة (`Interactive Error Retry & Zero Deadlocks`).
+      7. إبطال وحظر استجابة الأزرار القديمة وإزالتها فوراً (`Stale Keyboard Invalidation`).
+      8. صيغة التواريخ القياسية `DD-MM-YYYY` والاعتماد على محرك التاريخ المرن `parseFlexibleDate`.
+      9. خلو الواجهات من المصطلحات التقنية والكواليس البرمجية (`Zero Developer Fluff`).
+      10. حدود الأداء وسرعة الاستجابة المقاسة رسمياً ضمن حدود الـ SLA (`Performance SLA Compliance`).
+      11. سلامة البيانات والتوازن المحاسبي والأثر الدقيق على قاعدة البيانات / الشيت (`Data Integrity & Dual-Entry`).
+      12. قنوات الإشعارات المتعددة ورابط الواتساب المباشر بالسند (`Multi-Channel Notifications & WhatsApp`).
+      13. سلامة البناء البرمجي `Build Exit 0` واجتياز حزمة الاختبارات الآلية بنسبة 100% (`TDD & Zero Regressions`).
+      14. حوكمة Git وتوثيق الـ Commit بمعيار Conventional Commits مع نظافة شجرة العمل (`Clean Git Working Tree`).
+      15. الالتزام الصارم بالمكونات المشتركة وعرض اسم الشهرة في كافة قوائم العمال (`Shared Components Reuse & Worker Nickname Parity`).
 
 ---
 

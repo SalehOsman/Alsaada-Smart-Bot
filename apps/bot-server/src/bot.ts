@@ -493,7 +493,13 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery('action:worker:upload_excel', handleStartUploadWorkerExcel);
 
   // Worker Profile Editing & Governance
-  bot.callbackQuery('action:worker_edit:pick', handleStartWorkerEdit);
+  bot.callbackQuery('action:worker_edit:pick', async (ctx) => {
+    await handleStartWorkerEdit(ctx, 1);
+  });
+  bot.callbackQuery(/^action:worker_edit:page:(\d+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10) || 1;
+    await handleStartWorkerEdit(ctx, page);
+  });
   bot.callbackQuery('action:worker_edit:pending_list', handleViewPendingEditRequests);
   bot.callbackQuery(/^(?:action:worker_edit:menu:|we:menu:)(.+)$/, async (ctx) => {
     await renderWorkerEditMenu(ctx, ctx.match[1], true);
