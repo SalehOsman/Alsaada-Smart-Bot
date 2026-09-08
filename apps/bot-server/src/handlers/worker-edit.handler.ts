@@ -36,6 +36,30 @@ const FIELD_LABELS: Record<string, string> = {
   maritalStatus: 'الحالة الاجتماعية',
 };
 
+export const FIELD_KEY_SHORT_MAP: Record<string, string> = {
+  leg: 'legacyCode',
+  name: 'name',
+  nick: 'nickname',
+  phone: 'phone',
+  wallet: 'walletNumber',
+  gov: 'governorateCode',
+  addr: 'address',
+  exp: 'idCardExpiryDate',
+  emPhone: 'emergencyPhone',
+};
+
+export const FIELD_TO_SHORT_MAP: Record<string, string> = {
+  legacyCode: 'leg',
+  name: 'name',
+  nickname: 'nick',
+  phone: 'phone',
+  walletNumber: 'wallet',
+  governorateCode: 'gov',
+  address: 'addr',
+  idCardExpiryDate: 'exp',
+  emergencyPhone: 'emPhone',
+};
+
 /**
  * 👥 بدء معالج تعديل بيانات عامل (عرض قائمة العمال للاختيار)
  */
@@ -55,7 +79,7 @@ export async function handleStartWorkerEdit(ctx: MyContext): Promise<void> {
   for (const w of workers) {
     const legacyTag = w.legacyCode ? ` [قديم: ${w.legacyCode}]` : '';
     keyboard
-      .text(`👤 ${w.name} (${w.code})${legacyTag}`, `action:worker_edit:menu:${w.id}`)
+      .text(`👤 ${w.name} (${w.code})${legacyTag}`, `we:menu:${w.id}`)
       .row();
   }
 
@@ -152,26 +176,26 @@ export async function renderWorkerEditMenu(
   const govName = (worker.governorateCode && EGYPTIAN_GOVERNORATES[worker.governorateCode]?.nameAr) || 'غير مسجل';
 
   const keyboard = new InlineKeyboard()
-    .text(`🏷️ كود العامل القديم (${worker.legacyCode || 'غير مسجل'})`, `action:worker_edit:field:${worker.id}:legacyCode`)
+    .text(`🏷️ كود العامل القديم (${worker.legacyCode || 'غير مسجل'})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.legacyCode}`)
     .row()
-    .text(`👤 الاسم الكامل (${worker.name})`, `action:worker_edit:field:${worker.id}:name`)
+    .text(`👤 الاسم الكامل (${worker.name})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.name}`)
     .row()
-    .text(`🏷️ اسم الشهرة (${worker.nickname || '-'})`, `action:worker_edit:field:${worker.id}:nickname`)
+    .text(`🏷️ اسم الشهرة (${worker.nickname || '-'})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.nickname}`)
     .row()
-    .text(`📱 رقم الهاتف (${cleanPhone})`, `action:worker_edit:field:${worker.id}:phone`)
+    .text(`📱 رقم الهاتف (${cleanPhone})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.phone}`)
     .row()
-    .text(`💳 رقم المحفظة (${cleanWallet})`, `action:worker_edit:field:${worker.id}:walletNumber`)
+    .text(`💳 رقم المحفظة (${cleanWallet})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.walletNumber}`)
     .row()
-    .text(`📍 المحافظة (${govName})`, `action:worker_edit:field:${worker.id}:governorateCode`)
+    .text(`📍 المحافظة (${govName})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.governorateCode}`)
     .row()
-    .text(`🏠 العنوان (${addressFormatted.length > 20 ? addressFormatted.substring(0, 18) + '...' : addressFormatted})`, `action:worker_edit:field:${worker.id}:address`)
+    .text(`🏠 العنوان (${addressFormatted.length > 20 ? addressFormatted.substring(0, 18) + '...' : addressFormatted})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.address}`)
     .row()
-    .text(`⏳ انتهاء البطاقة (${expiryFormatted})`, `action:worker_edit:field:${worker.id}:idCardExpiryDate`)
+    .text(`⏳ انتهاء البطاقة (${expiryFormatted})`, `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.idCardExpiryDate}`)
     .row()
-    .text('🚨 هاتف الطوارئ', `action:worker_edit:field:${worker.id}:emergencyPhone`)
+    .text('🚨 هاتف الطوارئ', `we:f:${worker.id}:${FIELD_TO_SHORT_MAP.emergencyPhone}`)
     .row()
-    .text('📁 إضافة مرفق للعامل (صور / PDF)', `action:worker_edit:add_doc:${worker.id}`)
-    .text('📂 استعراض المرفقات', `action:worker_edit:list_docs:${worker.id}`)
+    .text('📁 إضافة مرفق للعامل (صور / PDF)', `we:add:${worker.id}`)
+    .text('📂 استعراض المرفقات', `we:docs:${worker.id}`)
     .row()
     .text('◀️ رجوع لقائمة العمال', 'action:worker_edit:pick')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -217,13 +241,14 @@ export async function renderWorkerEditMenu(
 export async function handleStartEditWorkerField(
   ctx: MyContext,
   workerId: string,
-  fieldKey: string
+  rawFieldKey: string
 ): Promise<void> {
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery().catch(() => {});
   }
   if (!ctx.from) return;
 
+  const fieldKey = FIELD_KEY_SHORT_MAP[rawFieldKey] || rawFieldKey;
   const worker = await prisma.worker.findUnique({ where: { id: workerId } });
   if (!worker) {
     await ctx.reply('⚠️ لم يتم العثور على سجل العامل.');
@@ -248,46 +273,46 @@ export async function handleStartEditWorkerField(
 
   if (fieldKey === 'governorateCode') {
     keyboard
-      .text('القاهرة', `action:worker_edit_gov:${worker.id}:القاهرة`)
-      .text('الجيزة', `action:worker_edit_gov:${worker.id}:الجيزة`)
-      .text('القليوبية', `action:worker_edit_gov:${worker.id}:القليوبية`)
-      .text('الإسكندرية', `action:worker_edit_gov:${worker.id}:الإسكندرية`)
+      .text('القاهرة', `we:gov:${worker.id}:01`)
+      .text('الجيزة', `we:gov:${worker.id}:21`)
+      .text('القليوبية', `we:gov:${worker.id}:14`)
+      .text('الإسكندرية', `we:gov:${worker.id}:02`)
       .row()
-      .text('الشرقية', `action:worker_edit_gov:${worker.id}:الشرقية`)
-      .text('الدقهلية', `action:worker_edit_gov:${worker.id}:الدقهلية`)
-      .text('المنوفية', `action:worker_edit_gov:${worker.id}:المنوفية`)
-      .text('الغربية', `action:worker_edit_gov:${worker.id}:الغربية`)
+      .text('الشرقية', `we:gov:${worker.id}:13`)
+      .text('الدقهلية', `we:gov:${worker.id}:12`)
+      .text('المنوفية', `we:gov:${worker.id}:17`)
+      .text('الغربية', `we:gov:${worker.id}:16`)
       .row()
-      .text('كفر الشيخ', `action:worker_edit_gov:${worker.id}:كفر الشيخ`)
-      .text('البحيرة', `action:worker_edit_gov:${worker.id}:البحيرة`)
-      .text('دمياط', `action:worker_edit_gov:${worker.id}:دمياط`)
-      .text('بورسعيد', `action:worker_edit_gov:${worker.id}:بورسعيد`)
+      .text('كفر الشيخ', `we:gov:${worker.id}:15`)
+      .text('البحيرة', `we:gov:${worker.id}:18`)
+      .text('دمياط', `we:gov:${worker.id}:11`)
+      .text('بورسعيد', `we:gov:${worker.id}:03`)
       .row()
-      .text('الإسماعيلية', `action:worker_edit_gov:${worker.id}:الإسماعيلية`)
-      .text('السويس', `action:worker_edit_gov:${worker.id}:السويس`)
-      .text('الفيوم', `action:worker_edit_gov:${worker.id}:الفيوم`)
-      .text('بني سويف', `action:worker_edit_gov:${worker.id}:بني سويف`)
+      .text('الإسماعيلية', `we:gov:${worker.id}:19`)
+      .text('السويس', `we:gov:${worker.id}:04`)
+      .text('الفيوم', `we:gov:${worker.id}:23`)
+      .text('بني سويف', `we:gov:${worker.id}:22`)
       .row()
-      .text('المنيا', `action:worker_edit_gov:${worker.id}:المنيا`)
-      .text('أسيوط', `action:worker_edit_gov:${worker.id}:أسيوط`)
-      .text('سوهاج', `action:worker_edit_gov:${worker.id}:سوهاج`)
-      .text('قنا', `action:worker_edit_gov:${worker.id}:قنا`)
+      .text('المنيا', `we:gov:${worker.id}:24`)
+      .text('أسيوط', `we:gov:${worker.id}:25`)
+      .text('سوهاج', `we:gov:${worker.id}:26`)
+      .text('قنا', `we:gov:${worker.id}:27`)
       .row()
-      .text('الأقصر', `action:worker_edit_gov:${worker.id}:الأقصر`)
-      .text('أسوان', `action:worker_edit_gov:${worker.id}:أسوان`)
-      .text('البحر الأحمر', `action:worker_edit_gov:${worker.id}:البحر الأحمر`)
-      .text('مطروح', `action:worker_edit_gov:${worker.id}:مطروح`)
+      .text('الأقصر', `we:gov:${worker.id}:29`)
+      .text('أسوان', `we:gov:${worker.id}:28`)
+      .text('البحر الأحمر', `we:gov:${worker.id}:31`)
+      .text('مطروح', `we:gov:${worker.id}:33`)
       .row()
-      .text('الوادي الجديد', `action:worker_edit_gov:${worker.id}:الوادي الجديد`)
-      .text('شمال سيناء', `action:worker_edit_gov:${worker.id}:شمال سيناء`)
-      .text('جنوب سيناء', `action:worker_edit_gov:${worker.id}:جنوب سيناء`)
+      .text('الوادي الجديد', `we:gov:${worker.id}:32`)
+      .text('شمال سيناء', `we:gov:${worker.id}:34`)
+      .text('جنوب سيناء', `we:gov:${worker.id}:35`)
       .row()
-      .text('خارج الجمهورية (وافد)', `action:worker_edit_gov:${worker.id}:خارج الجمهورية (وافد)`)
+      .text('خارج الجمهورية (وافد)', `we:gov:${worker.id}:88`)
       .row();
   }
 
   keyboard
-    .text('◀️ إلغاء والعودة لبيانات العامل', `action:worker_edit:menu:${worker.id}`)
+    .text('◀️ إلغاء والعودة لبيانات العامل', `we:menu:${worker.id}`)
     .row()
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -394,7 +419,7 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
       await clearPendingWorkerEdit(telegramId);
 
       const completionKeyboard = new InlineKeyboard()
-        .text('✏️ تعديل بيان آخر لنفس العامل', `action:worker_edit:menu:${editState.workerId}`)
+        .text('✏️ تعديل بيان آخر لنفس العامل', `we:menu:${editState.workerId}`)
         .row()
         .text('👥 دليل وسجل العاملين', 'action:worker:directory')
         .row()
@@ -489,7 +514,7 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
         .row()
         .text('❌ رفض الطلب', `action:worker_req:reject:${request.requestId}`)
         .row()
-        .text('👤 فتح ملف العامل', `action:worker_edit:menu:${editState.workerId}`);
+        .text('👤 فتح ملف العامل', `we:menu:${editState.workerId}`);
 
       try {
         await ctx.api.sendMessage(
@@ -545,7 +570,7 @@ export async function handleApproveEditRequest(ctx: MyContext, requestId: string
       '✅ تم تحديث بيانات العامل بنجاح.';
 
     const kb = new InlineKeyboard()
-      .text('👤 فتح ملف العامل', `action:worker_edit:menu:${updatedRequest.workerId}`)
+      .text('👤 فتح ملف العامل', `we:menu:${updatedRequest.workerId}`)
       .row()
       .text('🔙 العودة لقسم الموارد البشرية', 'menu:domain:hr');
 
@@ -697,7 +722,7 @@ export async function handleStartAddWorkerDoc(ctx: MyContext, workerId: string):
   }
 
   const keyboard = new InlineKeyboard()
-    .text('◀️ إلغاء والعودة لبيانات العامل', `action:worker_edit:menu:${worker.id}`)
+    .text('◀️ إلغاء والعودة لبيانات العامل', `we:menu:${worker.id}`)
     .row()
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -811,11 +836,11 @@ export async function handleWorkerEditDocumentInput(ctx: MyContext): Promise<boo
     await ctx.api.deleteMessage(ctx.chat!.id, waitMsg.message_id).catch(() => {});
 
     const completionKeyboard = new InlineKeyboard()
-      .text('📁 إضافة مرفق آخر لنفس العامل', `action:worker_edit:add_doc:${editState.workerId}`)
+      .text('📁 إضافة مرفق آخر لنفس العامل', `we:add:${editState.workerId}`)
       .row()
-      .text('📂 استعراض كافة مرفقات العامل', `action:worker_edit:list_docs:${editState.workerId}`)
+      .text('📂 استعراض كافة مرفقات العامل', `we:docs:${editState.workerId}`)
       .row()
-      .text('👤 العودة لبيانات العامل', `action:worker_edit:menu:${editState.workerId}`)
+      .text('👤 العودة لبيانات العامل', `we:menu:${editState.workerId}`)
       .row()
       .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -901,9 +926,9 @@ export async function handleListWorkerDocs(ctx: MyContext, workerId: string): Pr
   }
 
   keyboard
-    .text('📁 إضافة مرفق جديد', `action:worker_edit:add_doc:${worker.id}`)
+    .text('📁 إضافة مرفق جديد', `we:add:${worker.id}`)
     .row()
-    .text('👤 العودة لبيانات العامل', `action:worker_edit:menu:${worker.id}`)
+    .text('👤 العودة لبيانات العامل', `we:menu:${worker.id}`)
     .row()
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -1013,7 +1038,7 @@ export async function handleSendWorkerIdPhoto(
 export async function handleWorkerEditGovernorateChoice(
   ctx: MyContext,
   workerId: string,
-  govName: string
+  govCodeOrName: string
 ): Promise<void> {
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery().catch(() => {});
@@ -1026,6 +1051,7 @@ export async function handleWorkerEditGovernorateChoice(
     return;
   }
 
+  const govName = EGYPTIAN_GOVERNORATES[govCodeOrName]?.nameAr || govCodeOrName;
   const role = ctx.effectiveRole || 'GUEST';
   const isSuperAdmin = role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin;
   const telegramId = BigInt(ctx.from.id);
@@ -1040,7 +1066,7 @@ export async function handleWorkerEditGovernorateChoice(
       await clearPendingWorkerEdit(telegramId);
 
       const completionKeyboard = new InlineKeyboard()
-        .text('✏️ تعديل بيان آخر لنفس العامل', `action:worker_edit:menu:${workerId}`)
+        .text('✏️ تعديل بيان آخر لنفس العامل', `we:menu:${workerId}`)
         .row()
         .text('👥 دليل وسجل العاملين', 'action:worker:directory')
         .row()
@@ -1132,7 +1158,7 @@ export async function handleWorkerEditGovernorateChoice(
         .row()
         .text('❌ رفض الطلب', `action:worker_req:reject:${request.requestId}`)
         .row()
-        .text('👤 فتح ملف العامل', `action:worker_edit:menu:${worker.id}`);
+        .text('👤 فتح ملف العامل', `we:menu:${worker.id}`);
 
       try {
         await ctx.api.sendMessage(

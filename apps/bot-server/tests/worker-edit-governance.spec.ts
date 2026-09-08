@@ -228,4 +228,45 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
       );
     });
   });
+
+  describe('Telegram 64-Byte Callback Data Compliance & Short Mapping', () => {
+    it('should bidirectional map all editable fields without loss', async () => {
+      const { FIELD_KEY_SHORT_MAP, FIELD_TO_SHORT_MAP } = await import(
+        '../src/handlers/worker-edit.handler.js'
+      );
+
+      for (const [fullKey, shortKey] of Object.entries(FIELD_TO_SHORT_MAP)) {
+        expect(FIELD_KEY_SHORT_MAP[shortKey]).toBe(fullKey);
+      }
+    });
+
+    it('should strictly ensure all worker-edit inline keyboard callbacks are <= 64 UTF-8 bytes', async () => {
+      const { FIELD_TO_SHORT_MAP } = await import(
+        '../src/handlers/worker-edit.handler.js'
+      );
+      const { EGYPTIAN_GOVERNORATES } = await import('@alsaada/national-id-engine');
+
+      const sampleWorkerUuid = '123e4567-e89b-12d3-a456-426614174000'; // Standard 36-char UUID
+
+      // 1. Check worker edit menu field buttons
+      for (const shortKey of Object.values(FIELD_TO_SHORT_MAP)) {
+        const callback = `we:f:${sampleWorkerUuid}:${shortKey}`;
+        const byteLen = Buffer.byteLength(callback, 'utf8');
+        expect(byteLen).toBeLessThanOrEqual(64);
+      }
+
+      // 2. Check doc actions
+      expect(Buffer.byteLength(`we:add:${sampleWorkerUuid}`, 'utf8')).toBeLessThanOrEqual(64);
+      expect(Buffer.byteLength(`we:docs:${sampleWorkerUuid}`, 'utf8')).toBeLessThanOrEqual(64);
+      expect(Buffer.byteLength(`we:menu:${sampleWorkerUuid}`, 'utf8')).toBeLessThanOrEqual(64);
+
+      // 3. Check governorate picker callbacks
+      for (const govCode of Object.keys(EGYPTIAN_GOVERNORATES)) {
+        const callback = `we:gov:${sampleWorkerUuid}:${govCode}`;
+        const byteLen = Buffer.byteLength(callback, 'utf8');
+        expect(byteLen).toBeLessThanOrEqual(64);
+      }
+    });
+  });
 });
+

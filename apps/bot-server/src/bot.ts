@@ -495,19 +495,19 @@ export function createBot(): Bot<MyContext> {
   // Worker Profile Editing & Governance
   bot.callbackQuery('action:worker_edit:pick', handleStartWorkerEdit);
   bot.callbackQuery('action:worker_edit:pending_list', handleViewPendingEditRequests);
-  bot.callbackQuery(/^action:worker_edit:menu:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:worker_edit:menu:|we:menu:)(.+)$/, async (ctx) => {
     await renderWorkerEditMenu(ctx, ctx.match[1], true);
   });
-  bot.callbackQuery(/^action:worker_edit:field:(.+):(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:worker_edit:field:|we:f:)(.+):(.+)$/, async (ctx) => {
     await handleStartEditWorkerField(ctx, ctx.match[1], ctx.match[2]);
   });
-  bot.callbackQuery(/^action:worker_edit_gov:(.+):(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:worker_edit_gov:|we:gov:)(.+):(.+)$/, async (ctx) => {
     await handleWorkerEditGovernorateChoice(ctx, ctx.match[1], ctx.match[2]);
   });
-  bot.callbackQuery(/^action:worker_edit:add_doc:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:worker_edit:add_doc:|we:add:)(.+)$/, async (ctx) => {
     await handleStartAddWorkerDoc(ctx, ctx.match[1]);
   });
-  bot.callbackQuery(/^action:worker_edit:list_docs:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:worker_edit:list_docs:|we:docs:)(.+)$/, async (ctx) => {
     await handleListWorkerDocs(ctx, ctx.match[1]);
   });
   bot.callbackQuery(/^action:worker_doc:send:(.+)$/, async (ctx) => {
