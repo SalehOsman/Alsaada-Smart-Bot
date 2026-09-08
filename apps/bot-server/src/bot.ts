@@ -22,6 +22,7 @@ export const undiciDispatcher = new UndiciAgent({
 });
 setGlobalDispatcher(undiciDispatcher);
 import { clearAllPendingUserActions } from './redis.js';
+import { screenFlowService } from './services/screen-flow.service.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
 import { handleStart, renderRoleHome, handleClaimWorker } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
@@ -101,7 +102,13 @@ import {
 } from './handlers/job-matrix.handler.js';
 import {
   renderHrHub,
+  renderHrSubHub,
   renderWorkersDirectory,
+  renderWorkerDetailCard,
+  handleWorkerDirSearchPrompt,
+  handleWorkerDirSearchInput,
+  handleWorkerCallContact,
+  handleHrPlaceholder,
 } from './handlers/hr-hub.handler.js';
 import {
   handleStartAddWorker,
@@ -152,10 +159,15 @@ export function createBot(): Bot<MyContext> {
     console.error(`❌ [BOT ERROR] Error in update ${err.ctx?.update?.update_id}:`, err.error);
   });
 
-  // 2. ⚡ PERFORMANCE ENGINE: Universal Instant Button ACK (< 1ms reaction time)
-  // Must be the ABSOLUTE FIRST middleware so the Telegram loading spinner disappears IMMEDIATELY!
+  // 2. ⚡ PERFORMANCE ENGINE: Universal Stale Callback Guard & Instant Button ACK
+  // Must be the ABSOLUTE FIRST middleware so stale clicks are trapped and valid buttons ACK instantly!
   bot.use(async (ctx, next) => {
     if (ctx.callbackQuery) {
+      const { isStale } = await screenFlowService.isStaleCallback(ctx);
+      if (isStale) {
+        await screenFlowService.handleStaleCallback(ctx);
+        return;
+      }
       // Fire answerCallbackQuery in the background instantly without awaiting
       void ctx.answerCallbackQuery().catch(() => {});
     }
@@ -190,7 +202,7 @@ export function createBot(): Bot<MyContext> {
       return next();
     }
 
-    // If message is a persistent keyboard navigation button, bypass text wizards cleanly
+    // If message is a persistent keyboard navigation button, clean up unfinished flow & ephemeral inputs
     const navButtons = [
       '🏠 القائمة الرئيسية',
       '⚙️ إعدادات النظام',
@@ -206,18 +218,21 @@ export function createBot(): Bot<MyContext> {
       '🧾 فواتيري ومستخلصاتي',
     ];
     if (navButtons.includes(ctx.message.text)) {
-      if (ctx.from) {
-        await clearAllPendingUserActions(BigInt(ctx.from.id));
-      }
+      await screenFlowService.cleanupIncomingUserMessage(ctx);
+      await screenFlowService.cleanupUnfinishedFlow(ctx);
       return next();
     }
 
+    if (await handleWorkerDirSearchInput(ctx)) return;
     if (await handleWorkerWizardTextInput(ctx)) return;
     if (await handleWorkerEditTextInput(ctx)) return;
     if (await handleJobMatrixTextInput(ctx)) return;
     if (await handleCompanyFieldTextInput(ctx)) return;
     if (await handleAdminFieldTextInput(ctx)) return;
     if (await handleSiteTextInput(ctx)) return;
+
+    // Silent user message deletion for unrecognized text to keep chat clean
+    await screenFlowService.cleanupIncomingUserMessage(ctx);
     return next();
   });
 
@@ -226,15 +241,19 @@ export function createBot(): Bot<MyContext> {
   bot.command(['cancel', 'abort', 'clear'], async (ctx) => {
     if (!ctx.from) return;
     const telegramId = BigInt(ctx.from.id);
-    await clearAllPendingUserActions(telegramId);
+    await screenFlowService.cleanupIncomingUserMessage(ctx);
+    await screenFlowService.cleanupUnfinishedFlow(ctx);
     const keyboard = new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu');
-    await ctx.reply(
+    const sent = await ctx.reply(
       '❌ *تم إلغاء المعاملة الحالية والتراجع بنجاح.*\nتم إفراغ كافة البيانات المؤقتة، ويمكنك بدء إجراء جديد من القائمة الرئيسية أو الأوامر الجانبية.',
       {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       }
     );
+    if (ctx.chat) {
+      await screenFlowService.trackActiveScreen(telegramId, ctx.chat.id, sent.message_id, 'cancel', false);
+    }
   });
   bot.command(['ping', 'health', 'speed'], handlePing);
   bot.command(['settings', 'admin'], handleSettings);
@@ -485,9 +504,30 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery('menu:domain:hr', async (ctx) => {
     await renderHrHub(ctx, true);
   });
-  bot.callbackQuery('action:worker:directory', async (ctx) => {
-    await renderWorkersDirectory(ctx, true);
+  bot.callbackQuery(/^menu:hr_sub:(.+)$/, async (ctx) => {
+    const subKey = ctx.match[1];
+    await renderHrSubHub(ctx, subKey, true);
   });
+  bot.callbackQuery('action:worker:directory', async (ctx) => {
+    await renderWorkersDirectory(ctx, 1, undefined, true);
+  });
+  bot.callbackQuery(/^action:worker:dir:page:(\d+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10) || 1;
+    await renderWorkersDirectory(ctx, page, undefined, true);
+  });
+  bot.callbackQuery('action:worker:dir:clear_search', async (ctx) => {
+    await renderWorkersDirectory(ctx, 1, undefined, true);
+  });
+  bot.callbackQuery('action:worker:dir:search_prompt', handleWorkerDirSearchPrompt);
+  bot.callbackQuery(/^action:worker:view:(.+)$/, async (ctx) => {
+    const workerId = ctx.match[1];
+    await renderWorkerDetailCard(ctx, workerId, 1, true);
+  });
+  bot.callbackQuery(/^action:worker:call:(.+)$/, async (ctx) => {
+    const workerId = ctx.match[1];
+    await handleWorkerCallContact(ctx, workerId);
+  });
+  bot.callbackQuery(/^(?:action:advances:|action:leaves:|action:payroll:|action:admin_affairs:)/, handleHrPlaceholder);
   bot.callbackQuery(['action:worker:add_single', 'action:worker:add'], handleStartAddWorker);
   bot.callbackQuery('action:worker:download_excel', handleDownloadWorkerTemplate);
   bot.callbackQuery('action:worker:upload_excel', handleStartUploadWorkerExcel);

@@ -13,9 +13,11 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
     case 'SUPER_ADMIN':
       keyboard
         .text('👥 الموارد البشرية والرواتب', 'menu:domain:hr')
+        .row()
         .text('💰 المالية والخزينة', 'menu:domain:finance')
         .row()
         .text('🚜 تشغيل المواقع والإنتاج', 'menu:domain:operations')
+        .row()
         .text('⛽ التعيينات والمخازن', 'menu:domain:logistics')
         .row()
         .text('🏛️ الحوكمة وإدارة المخاطر', 'menu:domain:governance');
@@ -24,9 +26,11 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
     case 'EXECUTIVE':
       keyboard
         .text('📊 لوحة المؤشرات التنفيذية', 'menu:exec:dashboard')
+        .row()
         .text('💰 الموقف المالي والسيولة', 'menu:exec:liquidity')
         .row()
         .text('🚜 تقارير إنتاجية المواقع', 'menu:exec:production')
+        .row()
         .text('📈 موازنات ومصروفات المشاريع', 'menu:exec:budgets')
         .row()
         .text('📑 قرارات واعتمادات معلقة', 'menu:exec:approvals');
@@ -35,24 +39,28 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
     case 'FIELD_ADMIN':
       keyboard
         .text('👥 الموارد البشرية والعمال', 'menu:domain:hr')
+        .row()
         .text('💰 المالية والعهد الميدانية', 'menu:domain:finance')
         .row()
         .text('🚜 تشغيل المواقع والإنتاج', 'menu:domain:operations')
+        .row()
         .text('⛽ التعيينات والمخازن', 'menu:domain:logistics')
         .row()
         .text('🏛️ السلامة وإدارة المخاطر', 'menu:domain:governance');
       break;
 
-
     case 'WORKER':
       keyboard
         .text('📊 كشف حسابي ومسحوباتي', 'menu:worker:statement')
+        .row()
         .text('🧾 مفردات قسيمة الراتب', 'menu:worker:payslip')
         .row()
         .text('🏖️ طلب إجازة', 'menu:worker:leave_req')
+        .row()
         .text('💵 طلب سلفة', 'menu:worker:advance_req')
         .row()
         .text('🦺 عهدي ومهماتي', 'menu:worker:ppe')
+        .row()
         .text('💬 استفسار / تظلم', 'menu:worker:ticket');
 
       if (ctx.isDualWorkerMode) {
@@ -65,9 +73,11 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
     case 'SUPPLIER':
       keyboard
         .text('🧾 فواتيري ومستخلصاتي', 'menu:supplier:invoices')
+        .row()
         .text('💳 دفعاتي وحسابي المالي', 'menu:supplier:payments')
         .row()
         .text('📊 تصدير كشف الحساب', 'menu:supplier:statement')
+        .row()
         .text('📞 التواصل مع الإدارة', 'menu:supplier:contact');
       break;
 
@@ -75,6 +85,7 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
     default:
       keyboard
         .text('📝 طلب تسجيل وربط حساب', 'menu:guest:register')
+        .row()
         .text('❓ دليل الاستخدام واللوائح', 'menu:guest:guide')
         .row()
         .text('🆔 بطاقة معرف حسابي', 'menu:guest:identity');

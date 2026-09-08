@@ -410,6 +410,34 @@ export async function clearPendingWorkerEdit(telegramId: bigint): Promise<void> 
   }
 }
 
+const PENDING_WORKER_DIR_SEARCH_PREFIX = 'pending:worker_dir_search:user:';
+
+export async function setPendingWorkerDirSearch(telegramId: bigint, promptMsgId: number): Promise<void> {
+  try {
+    await redis.set(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`, promptMsgId.toString(), 'EX', 300);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting worker dir search:', error);
+  }
+}
+
+export async function getPendingWorkerDirSearch(telegramId: bigint): Promise<number | null> {
+  try {
+    const raw = await redis.get(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`);
+    return raw ? parseInt(raw, 10) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting worker dir search:', error);
+    return null;
+  }
+}
+
+export async function clearPendingWorkerDirSearch(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${PENDING_WORKER_DIR_SEARCH_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing worker dir search:', error);
+  }
+}
+
 /**
  * Clean up all pending text wizard and input actions across all domains for a user
  */
@@ -422,6 +450,7 @@ export async function clearAllPendingUserActions(telegramId: bigint): Promise<vo
     clearPendingWorkerWizard(telegramId),
     clearPendingWorkerExcelUpload(telegramId),
     clearPendingWorkerEdit(telegramId),
+    clearPendingWorkerDirSearch(telegramId),
   ]);
 }
 
@@ -452,6 +481,46 @@ export async function setAdminDualMode(telegramId: bigint, active: boolean): Pro
     }
   } catch (error) {
     console.error('⚠️ [REDIS] Error setting admin dual mode:', error);
+  }
+}
+
+// -------------------------------------------------------------
+// 10. Central User Active Screen & Ephemeral Flow Lifecycle
+// -------------------------------------------------------------
+
+export interface UserActiveScreenState {
+  chatId: number;
+  messageId: number;
+  flowType: string;
+  isCompleted?: boolean;
+  updatedAt: number;
+}
+
+const ACTIVE_SCREEN_PREFIX = 'user_active_screen:';
+
+export async function setUserActiveScreen(telegramId: bigint, state: UserActiveScreenState): Promise<void> {
+  try {
+    await redis.set(`${ACTIVE_SCREEN_PREFIX}${telegramId}`, JSON.stringify(state), 'EX', 86400);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting user active screen:', error);
+  }
+}
+
+export async function getUserActiveScreen(telegramId: bigint): Promise<UserActiveScreenState | null> {
+  try {
+    const raw = await redis.get(`${ACTIVE_SCREEN_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as UserActiveScreenState) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting user active screen:', error);
+    return null;
+  }
+}
+
+export async function clearUserActiveScreen(telegramId: bigint): Promise<void> {
+  try {
+    await redis.del(`${ACTIVE_SCREEN_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing user active screen:', error);
   }
 }
 

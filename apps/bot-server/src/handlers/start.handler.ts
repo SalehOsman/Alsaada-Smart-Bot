@@ -7,6 +7,7 @@ import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 import { buildMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 import { syncUserCommandsScope } from '../services/command-scope.service.js';
+import { screenFlowService } from '../services/screen-flow.service.js';
 
 export function getRoleTitle(role: string): string {
   switch (role) {
@@ -116,28 +117,56 @@ export function buildWelcomeMessage(ctx: MyContext): string {
  * Render the main role interface in-place or via a new message
  */
 export async function renderRoleHome(ctx: MyContext, inPlace = false): Promise<void> {
+  const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
   const text = buildWelcomeMessage(ctx);
   const keyboard = buildMainMenuKeyboard(ctx);
 
-  if (inPlace && ctx.callbackQuery) {
+  if (inPlace && ctx.callbackQuery?.message && ctx.chat) {
     try {
       await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
+      if (telegramId > 0n) {
+        await screenFlowService.trackActiveScreen(
+          telegramId,
+          ctx.chat.id,
+          ctx.callbackQuery.message.message_id,
+          'main_menu',
+          false
+        );
+      }
       return;
     } catch {
       // If content did not change or message cannot be edited, fall through to reply
     }
   }
 
-  await ctx.reply(text, {
+  // 1. تنظيف أي تدفق سابق غير مكتمل قبل عرض القائمة كرسالة جديدة
+  await screenFlowService.cleanupUnfinishedFlow(ctx, 'main_menu');
+
+  // 2. إرسال بطاقة القائمة الرئيسية وحفظ معرفها النشط
+  const sent = await ctx.reply(text, {
     parse_mode: 'Markdown',
     reply_markup: keyboard,
   });
+
+  if (telegramId > 0n && ctx.chat) {
+    await screenFlowService.trackActiveScreen(
+      telegramId,
+      ctx.chat.id,
+      sent.message_id,
+      'main_menu',
+      false
+    );
+  }
 }
 
 export async function handleStart(ctx: MyContext): Promise<void> {
+  // الحذف الصامت لأمر /start وتنظيف أي تدفق سابق
+  await screenFlowService.cleanupIncomingUserMessage(ctx);
+  await screenFlowService.cleanupUnfinishedFlow(ctx, 'start');
+
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
 
   // 1. فحص رابط الدعوة الذكي (Deep Link: /start join_CODE or /start worker_CODE)

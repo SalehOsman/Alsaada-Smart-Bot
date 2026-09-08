@@ -27,18 +27,71 @@ export function getWorkerDisplayName(worker: { name: string; nickname?: string |
 }
 
 /**
+ * Resolves an appropriate descriptive emoji icon based on the worker's job title / profession.
+ */
+export function getJobTitleIcon(jobTitle?: string | null): string {
+  if (!jobTitle) return '👷';
+  const t = jobTitle.trim().toLowerCase();
+
+  // Drivers and heavy machinery operators
+  if (/سائق|لودر|شاحن|قلاب|تريلا|معدة|حفار|بلدوزر|جرار|سيار|سواقة|نقل/i.test(t)) {
+    return '🚜';
+  }
+  // Technical, mechanical, electrical, hydraulics, maintenance
+  if (/فني|ميكانيك|كهربا|هيدروليك|صيان|تبريد|طلمبات|ديزل/i.test(t)) {
+    return '🔧';
+  }
+  // Industrial plant, crusher, screening line operators
+  if (/مشغل|كسارة|خط فرز|محطة|تحكم|تشغيل/i.test(t)) {
+    return '⚙️';
+  }
+  // Blacksmiths, welders, lathe
+  if (/حداد|لحام|خراط|برادة|صاج/i.test(t)) {
+    return '⚒️';
+  }
+  // Carpenters, builders, masonry, concrete
+  if (/نجار|بناء|خرسانة|محار|جبس|سيراميك|مباني/i.test(t)) {
+    return '🧱';
+  }
+  // Engineers, surveyors
+  if (/مهندس|مساح|مساحة|جيولوج/i.test(t)) {
+    return '📐';
+  }
+  // Supervisors, safety, security, guards
+  if (/مشرف|مراقب|أمن|حراس|سلامة|صحة مهنية/i.test(t)) {
+    return '🛡️';
+  }
+  // Cooks, catering, chefs, kitchen
+  if (/طباخ|شيف|إعاشة|مطبخ|أغذية/i.test(t)) {
+    return '🍳';
+  }
+  // Accountants, admins, storekeepers, clerks, HR
+  if (/محاسب|إداري|مخزن|أمين|كاتب|شؤون|مدير|مالي/i.test(t)) {
+    return '💼';
+  }
+  // General labor, production, mining, quarry, loaders
+  if (/عامل|إنتاج|تعدين|موقع|محجر|حفر|تحميل|تعتيق|مساعد/i.test(t)) {
+    return '👷';
+  }
+
+  return '👷';
+}
+
+/**
  * Formats a worker's button or list label consistently across the bot:
- * `👤 [اسم الشهرة] ([الكود])` or `👤 [اسم الشهرة] ([الكود]) [قديم: 106]`
+ * `[أيقونة الوظيفة] [اسم الشهرة] ([المسمى الوظيفي])` (e.g. `🚜 صالح رجب (سائق لودر)`)
+ * Falls back to code if jobTitle is not available.
  */
 export function formatWorkerPickerLabel(
-  worker: WorkerItem | { name: string; nickname?: string | null; code: string; legacyCode?: string | null },
+  worker: WorkerItem | { name: string; nickname?: string | null; code: string; legacyCode?: string | null; jobTitle?: string | null },
   isSelected = false,
   includeLegacyCode = false
 ): string {
-  const checkmark = isSelected ? '✅ ' : '👤 ';
+  const icon = isSelected ? '✅ ' : `${getJobTitleIcon(worker.jobTitle)} `;
   const displayName = getWorkerDisplayName(worker);
+  const descriptor = worker.jobTitle && worker.jobTitle.trim().length > 0 ? worker.jobTitle.trim() : worker.code;
   const legacyTag = includeLegacyCode && worker.legacyCode ? ` [قديم: ${worker.legacyCode}]` : '';
-  return `${checkmark}${displayName} (${worker.code})${legacyTag}`;
+  return `${icon}${displayName} (${descriptor})${legacyTag}`;
 }
 
 /**

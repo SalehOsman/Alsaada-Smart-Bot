@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHrHub } from '../src/handlers/hr-hub.handler.js';
+import { renderHrHub, renderHrSubHub } from '../src/handlers/hr-hub.handler.js';
 import {
   handleDownloadWorkerTemplate,
   handleStartUploadWorkerExcel,
@@ -17,10 +17,34 @@ vi.mock('../src/services/worker.service.js', () => ({
   },
 }));
 
+vi.mock('../src/services/screen-flow.service.js', () => ({
+  screenFlowService: {
+    trackActiveScreen: vi.fn().mockResolvedValue(undefined),
+    cleanupUnfinishedFlow: vi.fn().mockResolvedValue(undefined),
+    cleanupIncomingUserMessage: vi.fn().mockResolvedValue(undefined),
+    isStaleCallback: vi.fn().mockResolvedValue({ isStale: false }),
+    handleStaleCallback: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
+vi.mock('../src/db.js', () => ({
+  prisma: {
+    workerEditRequest: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    worker: {
+      findMany: vi.fn().mockResolvedValue([]),
+      count: vi.fn().mockResolvedValue(0),
+    },
+  },
+}));
+
 describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
-  it('should display Excel bulk upload and template download buttons for SUPER_ADMIN', async () => {
+  it('should display Payroll sub-hub and Excel buttons for SUPER_ADMIN', async () => {
     let sentMarkup: any = null;
     const mockCtx = {
+      from: { id: 111111 },
+      chat: { id: 111111 },
       effectiveRole: 'SUPER_ADMIN',
       isRealSuperAdmin: true,
       callbackQuery: null,
@@ -30,22 +54,33 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
       }),
     } as unknown as MyContext;
 
+    // 1. فحص ظهور الأقسام الخمسة بما فيها الرواتب للسوبر أدمن
     await renderHrHub(mockCtx, false);
 
     expect(mockCtx.reply).toHaveBeenCalled();
-    const buttons = sentMarkup.inline_keyboard.flat();
+    const hubButtons = sentMarkup.inline_keyboard.flat();
 
-    // يجب أن تظهر أزرار الإكسيل للسوبر أدمن
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(true);
-    expect(buttons.some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:advances')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:leaves')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:onboarding')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:admin_affairs')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
+
+    // 2. فحص ظهور أزرار الإكسيل في قسم شؤون العاملين للسوبر أدمن
+    await renderHrSubHub(mockCtx, 'onboarding', false);
+    const subButtons = sentMarkup.inline_keyboard.flat();
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(true);
   });
 
-  it('should STRICTLY MASK (hide) Excel buttons for FIELD_ADMIN (Zero UI Leakage)', async () => {
+  it('should STRICTLY MASK (hide) Payroll and Excel buttons for FIELD_ADMIN (Zero UI Leakage)', async () => {
     let sentMarkup: any = null;
     const mockCtx = {
+      from: { id: 222222 },
+      chat: { id: 222222 },
       effectiveRole: 'FIELD_ADMIN',
       isRealSuperAdmin: false,
       callbackQuery: null,
@@ -55,19 +90,25 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
       }),
     } as unknown as MyContext;
 
+    // 1. فحص حجب قسم الرواتب تماماً للمشرف الميداني
     await renderHrHub(mockCtx, false);
 
     expect(mockCtx.reply).toHaveBeenCalled();
-    const buttons = sentMarkup.inline_keyboard.flat();
+    const hubButtons = sentMarkup.inline_keyboard.flat();
 
-    // تظهر أزرار التسجيل الفردي والسجل فقط
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
-    expect(buttons.some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:advances')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:leaves')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:onboarding')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:admin_affairs')).toBe(true);
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(false); // محجوب مسبقاً!
 
-    // الحجب المسبق الصارم: يُمنع منعاً باتاً ظهور أزرار الإكسيل
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(false);
-    expect(buttons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false);
+    // 2. فحص حجب أزرار الإكسيل في قسم شؤون العاملين للمشرف
+    await renderHrSubHub(mockCtx, 'onboarding', false);
+    const subButtons = sentMarkup.inline_keyboard.flat();
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(false); // محجوب!
+    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب!
   });
 
   it('should block non-super-admin from downloading template if callback invoked directly', async () => {

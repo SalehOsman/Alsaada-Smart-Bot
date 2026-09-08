@@ -11,6 +11,7 @@ import {
   clearPendingWorkerExcelUpload,
   PendingWorkerWizardState,
 } from '../redis.js';
+import { screenFlowService } from '../services/screen-flow.service.js';
 import {
   formatCurrency,
   formatDate,
@@ -176,6 +177,9 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
 
   initialState.messageId = promptMsgId;
   await setPendingWorkerWizard(telegramId, initialState);
+  if (ctx.chat) {
+    await screenFlowService.trackActiveScreen(telegramId, ctx.chat.id, promptMsgId, 'worker_wizard', false);
+  }
 }
 
 /**
@@ -835,20 +839,19 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
-  // تخطي ظهر البطاقة والتحليل بالوجه فقط
-  if (data === 'action:worker_photo:skip_back') {
-    if (wizard.data.frontFileId) {
-      await analyzePhotosDirectly(ctx, wizard, telegramId, wizard.data.frontFileId, undefined);
-    } else {
-      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
-      await setPendingWorkerWizard(telegramId, wizard);
-      await renderWizardStep(ctx, wizard);
-    }
+  // حظر تخطي ظهر البطاقة نهائياً
+  if (data === 'action:worker_photo:skip_back' || data === 'action:worker_photo:manual_expiry') {
+    await ctx.answerCallbackQuery({
+      text: '⚠️ إرفاق ظهر البطاقة إلزامي للمتابعة بالاستخراج الآلي.',
+      show_alert: true,
+    }).catch(() => {});
     return;
   }
 
-  if (data === 'action:worker_photo:manual_expiry') {
-    wizard.step = WorkerWizardStep.MANUAL_EXPIRY;
+  // تخطي تاريخ الانتهاء في خطوة الإدخال اليدوي
+  if (data === 'action:worker_expiry:skip') {
+    wizard.data.idCardExpiryDateStr = '-';
+    wizard.step = wizard.data.isManualFallback ? WorkerWizardStep.NICKNAME : WorkerWizardStep.AI_CONFIRMATION;
     await setPendingWorkerWizard(telegramId, wizard);
     await renderWizardStep(ctx, wizard);
     return;
@@ -1233,16 +1236,13 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         '📸 *[2/2] إرفاق ظهر بطاقة الرقم القومي [3/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         '✅ تم حفظ صورة الوجه بنجاح.\n\n' +
-        'يرجى إرسال صورة *ظهر البطاقة* لقراءة تاريخ السريان (سارية حتى):\n\n' +
-        '• تأكد من ظهور سطر "سارية حتى" والباركود بوضوح.\n' +
-        '• يمكنك تخطي هذه الخطوة أو إدخال تاريخ السريان يدوياً.';
+        'يرجى إرسال صورة *ظهر البطاقة* لإتمام التحليل وقراءة تاريخ السريان:\n\n' +
+        '• إرفاق ظهر البطاقة إلزامي للمتابعة بالاستخراج الآلي.\n' +
+        '• تأكد من وضوح سطر "سارية حتى" والبيانات والباركود.';
 
       keyboard
-        .text('⏭️ تخطي ظهر البطاقة', 'action:worker_photo:skip_back')
-        .row()
-        .text('✍️ إدخال تاريخ الانتهاء يدوياً', 'action:worker_photo:manual_expiry')
-        .row()
         .text('◀️ إعادة إرسال الوجه', 'action:worker_step:back')
+        .row()
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
@@ -1373,7 +1373,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         'يرجى إدخال تاريخ انتهاء سريان البطاقة بصيغة: *يوم-شهر-سنة*\n' +
         '_💡 مثال: 26-05-2028 أو 2028/05_';
       keyboard
-        .text('⏭️ تخطي تاريخ الانتهاء', 'action:worker_photo:skip_back')
+        .text('⏭️ تخطي تاريخ الانتهاء', 'action:worker_expiry:skip')
         .row()
         .text('◀️ تراجع', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -1966,11 +1966,15 @@ async function handleWorkerFinalSave(
         parse_mode: 'Markdown',
         reply_markup: completionKeyboard,
       });
+      await screenFlowService.trackActiveScreen(telegramId, ctx.chat.id, wizard.messageId, 'worker_created', true);
     } else {
-      await ctx.reply(successText, {
+      const sent = await ctx.reply(successText, {
         parse_mode: 'Markdown',
         reply_markup: completionKeyboard,
       });
+      if (ctx.chat) {
+        await screenFlowService.trackActiveScreen(telegramId, ctx.chat.id, sent.message_id, 'worker_created', true);
+      }
     }
   } catch (err: any) {
     console.error('Failed to create worker in final step:', err);

@@ -68,7 +68,7 @@ describe('UniversalWorkerPicker', () => {
       const kb = buildWorkerPickerKeyboard({ workers: items, pagination });
       const buttonText = kb.inline_keyboard[0]![0]!.text;
 
-      expect(buttonText).toContain('FL-DRV-0042');
+      expect(buttonText).toContain('سائق لودر');
       expect(buttonText).not.toContain('101');
       expect(buttonText).not.toContain('OP-HLP-0015');
     });
@@ -128,21 +128,31 @@ describe('UniversalWorkerPicker', () => {
         code: 'OP-DRV-0001',
         name: 'إبراهيم سيد محمد عطا الله',
         nickname: 'أبو خليل',
+        jobTitle: 'سائق لودر ومعدات',
       };
 
       const workerWithoutNick: WorkerItem = {
         id: 'w-2',
         code: 'OP-DRV-0002',
         name: 'علي حسن إبراهيم',
+        jobTitle: 'فني ميكانيكا',
+      };
+
+      const workerWithoutJob: WorkerItem = {
+        id: 'w-3',
+        code: 'OP-LAB-0003',
+        name: 'إسلام عثمان',
       };
 
       // 1. getWorkerDisplayName priority
       expect(getWorkerDisplayName(workerWithNick)).toBe('أبو خليل');
       expect(getWorkerDisplayName(workerWithoutNick)).toBe('علي حسن إبراهيم');
 
-      // 2. formatWorkerPickerLabel output
-      expect(formatWorkerPickerLabel(workerWithNick)).toBe('👤 أبو خليل (OP-DRV-0001)');
-      expect(formatWorkerPickerLabel(workerWithoutNick)).toBe('👤 علي حسن إبراهيم (OP-DRV-0002)');
+      // 2. formatWorkerPickerLabel output (job icon + nickname + job title)
+      expect(formatWorkerPickerLabel(workerWithNick)).toBe('🚜 أبو خليل (سائق لودر ومعدات)');
+      expect(formatWorkerPickerLabel(workerWithoutNick)).toBe('🔧 علي حسن إبراهيم (فني ميكانيكا)');
+      expect(formatWorkerPickerLabel(workerWithoutJob)).toBe('👷 إسلام عثمان (OP-LAB-0003)');
+      expect(formatWorkerPickerLabel(workerWithNick, true)).toBe('✅ أبو خليل (سائق لودر ومعدات)');
 
       // 3. buildWorkerPickerKeyboard button text
       const { items, pagination } = paginateItems([workerWithNick, workerWithoutNick], 1, 2);
@@ -156,8 +166,8 @@ describe('UniversalWorkerPicker', () => {
       const btn1 = kb.inline_keyboard[0]![0]!.text;
       const btn2 = kb.inline_keyboard[1]![0]!.text;
 
-      expect(btn1).toBe('👤 أبو خليل (OP-DRV-0001)');
-      expect(btn2).toBe('👤 علي حسن إبراهيم (OP-DRV-0002)');
+      expect(btn1).toBe('🚜 أبو خليل (سائق لودر ومعدات)');
+      expect(btn2).toBe('🔧 علي حسن إبراهيم (فني ميكانيكا)');
 
       // 4. Verify navigation buttons
       const hasBack = kb.inline_keyboard.some((row) =>
