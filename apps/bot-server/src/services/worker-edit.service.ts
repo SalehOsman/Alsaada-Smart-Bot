@@ -88,21 +88,24 @@ export class WorkerEditService {
         dataToUpdate.aliases = aliases;
       }
     } else if (fieldKey === 'phone') {
+      if (!config.databaseEncryptionKey) {
+        throw new Error('SECURITY CONFIGURATION ERROR: DATABASE_ENCRYPTION_KEY is required to encrypt sensitive phone data');
+      }
       const cleanPhone = normalizeDigits(cleanValue.replace(/[\s-]/g, ''));
       dataToUpdate.phoneBlindIndex = createBlindIndex(cleanPhone, config.blindIndexSalt);
-      dataToUpdate.phoneEncrypted = config.databaseEncryptionKey
-        ? encryptField(cleanPhone, config.databaseEncryptionKey)
-        : cleanPhone;
+      dataToUpdate.phoneEncrypted = encryptField(cleanPhone, config.databaseEncryptionKey);
     } else if (fieldKey === 'emergencyPhone') {
+      if (!config.databaseEncryptionKey) {
+        throw new Error('SECURITY CONFIGURATION ERROR: DATABASE_ENCRYPTION_KEY is required to encrypt sensitive emergency phone data');
+      }
       const cleanEm = normalizeDigits(cleanValue.replace(/[\s-]/g, ''));
-      dataToUpdate.emergencyPhoneEncrypted = config.databaseEncryptionKey
-        ? encryptField(cleanEm, config.databaseEncryptionKey)
-        : cleanEm;
+      dataToUpdate.emergencyPhoneEncrypted = encryptField(cleanEm, config.databaseEncryptionKey);
     } else if (fieldKey === 'walletNumber') {
+      if (!config.databaseEncryptionKey) {
+        throw new Error('SECURITY CONFIGURATION ERROR: DATABASE_ENCRYPTION_KEY is required to encrypt sensitive wallet data');
+      }
       const cleanWallet = normalizeDigits(cleanValue.replace(/[\s-]/g, ''));
-      dataToUpdate.accountNumberEncrypted = config.databaseEncryptionKey
-        ? encryptField(cleanWallet, config.databaseEncryptionKey)
-        : cleanWallet;
+      dataToUpdate.accountNumberEncrypted = encryptField(cleanWallet, config.databaseEncryptionKey);
     } else if (fieldKey === 'walletType') {
       dataToUpdate.walletType = cleanValue;
     } else if (fieldKey === 'drivingLicense') {

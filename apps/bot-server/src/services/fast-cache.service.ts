@@ -86,22 +86,27 @@ export class FastCacheService {
 
     const l1Entry = this.l1Store.get(fullKey);
     if (l1Entry) {
-      // إذا تجاوزت البيانات فترة الحداثة ولم تنتهِ صلاحيتها تماماً، نبدأ التحديث الخلفي
-      if (now > l1Entry.staleAt && !this.backgroundRefreshPromises.has(fullKey)) {
-        const refreshPromise = fetcher()
-          .then(async (fresh) => {
-            await this.set(key, fresh, ttlSeconds);
-            return fresh;
-          })
-          .catch((err) => {
-            console.error(`⚠️ [FastCache-SWR] Background refresh failed for ${key}:`, err);
-          })
-          .finally(() => {
-            this.backgroundRefreshPromises.delete(fullKey);
-          });
-        this.backgroundRefreshPromises.set(fullKey, refreshPromise);
+      if (now >= l1Entry.expiresAt) {
+        // انتهت الصلاحية الكلية القصوى - حذف القيمة واللجوء لـ fetcher الفوري
+        this.l1Store.delete(fullKey);
+      } else {
+        // إذا تجاوزت البيانات فترة الحداثة ولم تنتهِ صلاحيتها تماماً، نبدأ التحديث الخلفي
+        if (now > l1Entry.staleAt && !this.backgroundRefreshPromises.has(fullKey)) {
+          const refreshPromise = fetcher()
+            .then(async (fresh) => {
+              await this.set(key, fresh, ttlSeconds);
+              return fresh;
+            })
+            .catch((err) => {
+              console.error(`⚠️ [FastCache-SWR] Background refresh failed for ${key}:`, err);
+            })
+            .finally(() => {
+              this.backgroundRefreshPromises.delete(fullKey);
+            });
+          this.backgroundRefreshPromises.set(fullKey, refreshPromise);
+        }
+        return l1Entry.value as T;
       }
-      return l1Entry.value as T;
     }
 
     // إذا لم تكن موجودة نهائياً في L1، نتحقق من L2 أو نجلبها مباشرة عبر remember

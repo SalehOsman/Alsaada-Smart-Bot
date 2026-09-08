@@ -8,6 +8,7 @@ import { buildMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 import { syncUserCommandsScope } from '../services/command-scope.service.js';
 import { screenFlowService } from '../services/screen-flow.service.js';
+import { verifyWorkerInviteToken } from '../services/worker.service.js';
 
 export function getRoleTitle(role: string): string {
   switch (role) {
@@ -169,10 +170,35 @@ export async function handleStart(ctx: MyContext): Promise<void> {
 
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
 
-  // 1. فحص رابط الدعوة الذكي (Deep Link: /start join_CODE or /start worker_CODE)
+  // 1. فحص رابط الدعوة الذكي المشفر (Deep Link: /start inv_CODE_TOKEN)
   const startPayload = (ctx.match || '').toString().trim();
-  if (startPayload.startsWith('join_') || startPayload.startsWith('worker_')) {
-    const workerCode = startPayload.replace(/^(join_|worker_)/, '').trim();
+  if (startPayload.startsWith('inv_') || startPayload.startsWith('join_') || startPayload.startsWith('worker_')) {
+    let workerCode = '';
+    let inviteToken = '';
+
+    if (startPayload.startsWith('inv_')) {
+      const parts = startPayload.replace(/^inv_/, '').split('_');
+      workerCode = parts[0]?.trim() || '';
+      inviteToken = parts[1]?.trim() || '';
+    } else {
+      workerCode = startPayload.replace(/^(join_|worker_)/, '').trim();
+    }
+
+    const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
+    const isTokenValid = inviteToken ? verifyWorkerInviteToken(workerCode, inviteToken, secretKey) : false;
+
+    // رفض الروابط غير الموقعة أو المخمنة لمنع اختطاف الحسابات
+    if (!isTokenValid) {
+      await ctx.reply(
+        '⚠️ *تنبيه أمني:* رابط الدعوة غير صالح أو غير موثق بتوقيع رقمي معتمد.\nيرجى التواصل مع إدارة الموارد البشرية للحصول على رابط دعوة معتمد ومحدث.',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+        }
+      );
+      return;
+    }
+
     const worker = await prisma.worker.findFirst({
       where: {
         OR: [
@@ -230,7 +256,7 @@ export async function handleStart(ctx: MyContext): Promise<void> {
         `اضغط على الزر أدناه لتأكيد هويتك وتفعيل خدماتك الذاتية فوراً:`;
 
       const kb = new InlineKeyboard()
-        .text('⚡ تأكيد وربط حسابي فوراً', `action:claim_worker:${worker.code}`)
+        .text('⚡ تأكيد وربط حسابي فوراً', `action:claim_worker:${worker.code}:${inviteToken}`)
         .row()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -268,8 +294,24 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
   await ctx.answerCallbackQuery().catch(() => {});
 
   const data = ctx.callbackQuery.data || '';
-  const workerCode = data.replace('action:claim_worker:', '').trim();
+  const rawData = data.replace('action:claim_worker:', '').trim();
+  const [workerCode, token] = rawData.split(':');
   const telegramId = BigInt(ctx.from.id);
+
+  if (!workerCode || !token) {
+    await ctx.reply('⚠️ *تنبيه أمني:* رمز توثيق الدعوة مفقود أو غير صالح.', {
+      reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+    });
+    return;
+  }
+
+  const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
+  if (!verifyWorkerInviteToken(workerCode, token, secretKey)) {
+    await ctx.reply('⚠️ *تنبيه أمني:* رمز توثيق الدعوة غير مطابق أو تم التلاعب به.', {
+      reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+    });
+    return;
+  }
 
   const worker = await prisma.worker.findFirst({
     where: {
@@ -301,28 +343,29 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
     return;
   }
 
-  // ربط العامل وتحديث حسابه في قاعدة البيانات
-  await prisma.worker.update({
-    where: { id: worker.id },
-    data: { telegramId },
-  });
-
-  await prisma.user.upsert({
-    where: { telegramId },
-    update: {
-      role: 'WORKER',
-      workerId: worker.id,
-      isActive: true,
-    },
-    create: {
-      telegramId,
-      username: ctx.from.username || null,
-      fullName: worker.name,
-      role: 'WORKER',
-      workerId: worker.id,
-      isActive: true,
-    },
-  });
+  // ربط العامل وتحديث حسابه في قاعدة البيانات ضمن معاملة ذرية موحدة (Atomic Transaction)
+  await prisma.$transaction([
+    prisma.worker.update({
+      where: { id: worker.id },
+      data: { telegramId },
+    }),
+    prisma.user.upsert({
+      where: { telegramId },
+      update: {
+        role: 'WORKER',
+        workerId: worker.id,
+        isActive: true,
+      },
+      create: {
+        telegramId,
+        username: ctx.from.username || null,
+        fullName: worker.name,
+        role: 'WORKER',
+        workerId: worker.id,
+        isActive: true,
+      },
+    }),
+  ]);
 
   await invalidateUserCache(telegramId);
   await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);

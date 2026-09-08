@@ -101,7 +101,7 @@ describe('Worker Full 19-Step Wizard & Compound Nickname Engine', () => {
       expect(worker.aliases).toContain('106');
       expect(welcomeWhatsAppUrl).toBeDefined();
       const decodedUrl = decodeURIComponent(welcomeWhatsAppUrl);
-      expect(decodedUrl).toContain(`start=join_${worker.code}`);
+      expect(decodedUrl).toMatch(new RegExp(`start=inv_${worker.code}_[a-f0-9]+`));
       expect(decodedUrl).toContain('قسيمة راتبك');
       expect(decodedUrl).toContain('تأكيد وربط حسابي');
     });

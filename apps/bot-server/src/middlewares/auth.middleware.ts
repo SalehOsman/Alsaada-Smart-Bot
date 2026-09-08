@@ -71,7 +71,11 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
         ctx.isImpersonating = false;
       }
     } else {
-      ctx.effectiveRole = user?.role || 'GUEST';
+      if (user && !user.isActive) {
+        ctx.effectiveRole = 'GUEST';
+      } else {
+        ctx.effectiveRole = user?.role || 'GUEST';
+      }
       ctx.isImpersonating = false;
     }
 

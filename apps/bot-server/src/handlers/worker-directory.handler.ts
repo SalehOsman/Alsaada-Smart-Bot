@@ -18,6 +18,7 @@ import {
   getPendingWorkerDirSearch,
   clearPendingWorkerDirSearch,
 } from '../redis.js';
+import { buildSiteScopeWhere, getScopedSiteId } from '../services/scope.service.js';
 
 /**
  * 📋 استعراض دليل وسجل العاملين التفاعلي (360°)
@@ -35,9 +36,10 @@ export async function renderWorkersDirectory(
   if (!ctx.from) return;
   const telegramId = BigInt(ctx.from.id);
 
-  // جلب كافة العمال النشطين
+  // جلب كافة العمال النشطين وفق نطاق موقع المشرف
+  const siteScope = buildSiteScopeWhere(ctx);
   const allWorkers = await prisma.worker.findMany({
-    where: { isDeleted: false, status: 'ACTIVE' },
+    where: { isDeleted: false, status: 'ACTIVE', ...siteScope },
     include: { site: true, department: true },
     orderBy: { createdAt: 'desc' },
   });
@@ -159,6 +161,14 @@ export async function renderWorkerDetailCard(
 
   if (!worker) {
     await ctx.reply('⚠️ تعذر العثور على ملف العامل المطلوب.');
+    return;
+  }
+
+  const scopedSiteId = getScopedSiteId(ctx);
+  if (scopedSiteId && worker.siteId && worker.siteId !== scopedSiteId) {
+    await ctx.reply('⚠️ ليس لديك صلاحية للاطلاع على ملف عامل خارج نطاق موقعك المصرح به.', {
+      reply_markup: new InlineKeyboard().text('🔙 العودة لدليل العمال', `action:workers_dir:page:${returnPage}`),
+    });
     return;
   }
 

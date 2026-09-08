@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
 import { fastCache } from './fast-cache.service.js';
@@ -5,6 +6,25 @@ import { encryptField, decryptField, createBlindIndex } from '@alsaada/database'
 import { parseEgyptianNationalId } from '@alsaada/national-id-engine';
 import { normalizeDigits, formatDate, formatDateDMY, extractFirstTwoNames } from '@alsaada/regional-engine';
 import { normalizeEgyptianPhone } from '@alsaada/core-components';
+
+/**
+ * توليد توقيع تشفيري عالي الأمان لرابط دعوة العامل (HMAC-SHA256)
+ */
+export function generateWorkerInviteToken(workerCode: string, secretKey: string): string {
+  return createHmac('sha256', secretKey)
+    .update(`invite:${workerCode.trim()}`)
+    .digest('hex')
+    .substring(0, 16);
+}
+
+/**
+ * التحقق من صحة التوقيع التشفيري لرابط الدعوة
+ */
+export function verifyWorkerInviteToken(workerCode: string, token: string, secretKey: string): boolean {
+  if (!token || !secretKey || !workerCode) return false;
+  const expected = generateWorkerInviteToken(workerCode, secretKey);
+  return expected === token.trim();
+}
 
 export interface CreateWorkerInput {
   name: string;
@@ -245,9 +265,11 @@ export class WorkerService {
 
     const cleanPhone = normalizeDigits(input.phone.trim().replace(/[\s-]/g, ''));
     const phoneBlindIndex = createBlindIndex(cleanPhone, config.blindIndexSalt);
-    const phoneEncrypted = config.databaseEncryptionKey
-      ? encryptField(cleanPhone, config.databaseEncryptionKey)
-      : cleanPhone;
+    if (!config.databaseEncryptionKey) {
+      throw new Error('SECURITY CONFIGURATION ERROR: DATABASE_ENCRYPTION_KEY is required to encrypt and store sensitive PII data');
+    }
+
+    const phoneEncrypted = encryptField(cleanPhone, config.databaseEncryptionKey);
 
     let nationalIdEncrypted: string | null = null;
     let nationalIdBlindIndex: string | null = null;
@@ -255,24 +277,20 @@ export class WorkerService {
     let passportBlindIndex: string | null = null;
 
     if (input.idType === 'NATIONAL_ID') {
-      nationalIdEncrypted = config.databaseEncryptionKey
-        ? encryptField(cleanId, config.databaseEncryptionKey)
-        : cleanId;
+      nationalIdEncrypted = encryptField(cleanId, config.databaseEncryptionKey);
       nationalIdBlindIndex = blindIndex;
     } else {
-      passportNumberEncrypted = config.databaseEncryptionKey
-        ? encryptField(cleanId, config.databaseEncryptionKey)
-        : cleanId;
+      passportNumberEncrypted = encryptField(cleanId, config.databaseEncryptionKey);
       passportBlindIndex = blindIndex;
     }
 
-    const emergencyPhoneEncrypted = input.emergencyPhone && config.databaseEncryptionKey
+    const emergencyPhoneEncrypted = input.emergencyPhone
       ? encryptField(input.emergencyPhone, config.databaseEncryptionKey)
-      : input.emergencyPhone;
+      : null;
 
-    const accountNumberEncrypted = input.accountNumber && config.databaseEncryptionKey
+    const accountNumberEncrypted = input.accountNumber
       ? encryptField(input.accountNumber, config.databaseEncryptionKey)
-      : input.accountNumber;
+      : null;
 
     // تجميع الأكواد القديمة وأسماء الشهرة في قائمة aliases
     const aliasesList: string[] = [];
@@ -369,7 +387,9 @@ export class WorkerService {
   }): string {
     const intlPhone = normalizeEgyptianPhone(data.phone) || data.phone.replace(/\D/g, '');
     const cleanBotUsername = (data.botUsername || config.botUsername || 'Alsaada_HRtest_Bot').replace(/^@/, '').trim();
-    const botLink = `https://t.me/${cleanBotUsername}?start=join_${data.code}`;
+    const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
+    const token = generateWorkerInviteToken(data.code, secretKey);
+    const botLink = `https://t.me/${cleanBotUsername}?start=inv_${data.code}_${token}`;
 
     const hireDateFormatted = data.hireDate
       ? (data.hireDate instanceof Date ? formatDateDMY(data.hireDate) : data.hireDate)
