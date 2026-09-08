@@ -96,3 +96,4 @@ F:\Alsaada-Smart-Bot/
 
 
 * [تقرير مراجعة الهيكلة والمطابقة والحوكمة — 08-09-2026](./docs/ai-execution-evidence/08-09-2026-restructuring-audit.md) — نتائج الفحص والمخالفات والمقترحات؛ قرار اعتماد المشروع: FAIL، وتلزم إعادة الفحص بعد المعالجة.
+* [خطة الإصلاح الشاملة وبوابات منع الدمج — 08-09-2026](./docs/superpowers/plans/2026-09-08-comprehensive-remediation-and-enforced-merge-gates.md) — خطة مقترحة تغطي نتائج R01–R17 والبوابات G1–G12؛ لم تنفذ الإصلاحات أو حماية الدمج بعد.
