@@ -165,7 +165,10 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-      promptMsgId = typeof msg === 'object' ? msg.message_id : 0;
+      promptMsgId =
+        typeof msg === 'object' && msg && 'message_id' in msg
+          ? (msg as any).message_id
+          : ctx.callbackQuery.message?.message_id || 0;
     } catch {
       const sent = await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
       promptMsgId = sent.message_id;
@@ -714,10 +717,19 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
       return true;
     }
 
+    case WorkerWizardStep.START_DATE_CHOICE:
     case WorkerWizardStep.CUSTOM_START_DATE_INPUT: {
       const parsedStart = parseFlexibleDate(inputRaw);
       if (!parsedStart.isValid || !parsedStart.date) {
-        await ctx.reply(parsedStart.error || '⚠️ يرجى إدخال تاريخ التعيين بصيغة: يوم-شهر-سنة (مثال: 01-03-2026).');
+        const retryKb = new InlineKeyboard()
+          .text('🔄 إعادة إدخال التاريخ', 'action:worker_hire:custom')
+          .row()
+          .text('◀️ السابق', 'action:worker_step:back')
+          .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+        await ctx.reply(
+          `⚠️ *صيغة التاريخ غير صحيحة:*\n${parsedStart.error || 'يرجى إدخال تاريخ التعيين بصيغة: يوم-شهر-سنة (مثال: 05-09-2026 أو 2026/09/05).'}\n\nيمكنك إعادة إدخال التاريخ المطلوب الآن:`,
+          { parse_mode: 'Markdown', reply_markup: retryKb }
+        );
         return true;
       }
       wizard.data.hireDateStr = parsedStart.formattedDMY;
@@ -769,6 +781,9 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
 
   // 2. حراسة الرسالة النشطة: إذا كان الزر ينتمي لرسالة قديمة غير الرسالة النشطة الحالية
   const clickedMsgId = ctx.callbackQuery.message?.message_id;
+  if (!wizard.messageId && clickedMsgId) {
+    wizard.messageId = clickedMsgId;
+  }
   if (wizard.messageId && clickedMsgId && clickedMsgId !== wizard.messageId) {
     await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
     await ctx
@@ -1024,9 +1039,21 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
   // تاريخ المباشرة
   if (data.startsWith('action:worker_hire:')) {
     const hireChoice = data.replace('action:worker_hire:', '');
+    const today = new Date();
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const dayBefore = new Date(today.getTime() - 48 * 60 * 60 * 1000);
+
     if (hireChoice === 'today') {
-      wizard.data.hireDateStr = formatDateDMY(new Date());
+      wizard.data.hireDateStr = formatDateDMY(today);
       wizard.step = WorkerWizardStep.DRIVING_LICENSE;
+    } else if (hireChoice === 'yesterday') {
+      wizard.data.hireDateStr = formatDateDMY(yesterday);
+      wizard.step = WorkerWizardStep.DRIVING_LICENSE;
+    } else if (hireChoice === 'day_before') {
+      wizard.data.hireDateStr = formatDateDMY(dayBefore);
+      wizard.step = WorkerWizardStep.DRIVING_LICENSE;
+    } else if (hireChoice === 'back_to_choice') {
+      wizard.step = WorkerWizardStep.START_DATE_CHOICE;
     } else {
       wizard.step = WorkerWizardStep.CUSTOM_START_DATE_INPUT;
     }
@@ -1615,17 +1642,29 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
     }
 
     case WorkerWizardStep.START_DATE_CHOICE: {
-      const todayFormatted = formatDateDMY(new Date());
+      const today = new Date();
+      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const dayBeforeYesterday = new Date(today.getTime() - 48 * 60 * 60 * 1000);
+
+      const todayFormatted = formatDateDMY(today);
+      const yesterdayFormatted = formatDateDMY(yesterday);
+      const dayBeforeFormatted = formatDateDMY(dayBeforeYesterday);
+
       text =
         '📅 *تاريخ بدء ومباشرة العمل [11/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         `تاريخ اليوم: *${todayFormatted}*\n\n` +
-        'هل يبدأ العامل العمل من اليوم أم تاريخ مخصص؟';
+        'حدد تاريخ المباشرة الفعلي للعامل من الخيارات السريعة، أو أرسل التاريخ المطلوب كتابة في رسالة:\n\n' +
+        '💡 _يمكنك كتابة التاريخ يدوياً مباشرة بأي صيغة (مثال: 05-09-2026 أو 2026/09/05)._';
 
       keyboard
         .text(`🟢 بدء العمل من اليوم (${todayFormatted})`, 'action:worker_hire:today')
         .row()
-        .text('🗓️ إدخال تاريخ تعيين مخصص', 'action:worker_hire:custom')
+        .text(`📅 بدء العمل من أمس (${yesterdayFormatted})`, 'action:worker_hire:yesterday')
+        .row()
+        .text(`📅 بدء العمل من أول أمس (${dayBeforeFormatted})`, 'action:worker_hire:day_before')
+        .row()
+        .text('✍️ إدخال تاريخ تعيين مخصص', 'action:worker_hire:custom')
         .row()
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -1634,11 +1673,13 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.CUSTOM_START_DATE_INPUT: {
       text =
-        '📅 *تاريخ تعيين مخصص*\n' +
+        '📅 *تاريخ تعيين مخصص [11/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'أدخل تاريخ المباشرة بصيغة: يوم-شهر-سنة (مثال: 01-03-2026):';
+        'أدخل تاريخ مباشرة وبدء العمل للعامل:\n\n' +
+        '💡 _يمكنك كتابة التاريخ بأي صيغة، مثال: 05-09-2026 أو 2026/09/05 أو 1/9_';
       keyboard
-        .text('◀️ السابق', 'action:worker_step:back')
+        .text('◀️ رجوع لخيارات التاريخ', 'action:worker_hire:back_to_choice')
+        .row()
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
@@ -1794,11 +1835,13 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
   }
 
   try {
-    if (wizard.messageId && ctx.chat) {
-      await ctx.api.editMessageText(ctx.chat.id, wizard.messageId, text, {
+    const targetMsgId = wizard.messageId || ctx.callbackQuery?.message?.message_id;
+    if (targetMsgId && ctx.chat) {
+      await ctx.api.editMessageText(ctx.chat.id, targetMsgId, text, {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
+      wizard.messageId = targetMsgId;
     } else {
       const sent = await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
       wizard.messageId = sent.message_id;
