@@ -1,0 +1,803 @@
+{
+    "schemaVersion":  1,
+    "date":  "08-09-2026",
+    "decision":  "FAIL",
+    "nextDecision":  "RETEST_REQUIRED",
+    "auditScope":  "Local code, governance and selected legacy reference review; no production or complete 126-flow UAT",
+    "repositoryHead":  "65f389f787747a1fa16552e8f5e1ebf1213f5b2b",
+    "legacyHead":  "3573366d060e99c88ffeb1b0a5586c571f7fa0a9",
+    "runtime":  "Node v24.11.1 on Windows",
+    "registry":  {
+                     "novelRows":  11,
+                     "note":  "Rows include grouped codes and are not a verified distinct-flow count",
+                     "totalRows":  129,
+                     "legacyRows":  118
+                 },
+    "checks":  [
+                   {
+                       "command":  "pnpm build",
+                       "checkpoint":  "initial",
+                       "exitCode":  1,
+                       "detail":  "Corepack rejected package.json; UTF-8 BOM observed"
+                   },
+                   {
+                       "command":  "pnpm build",
+                       "checkpoint":  "after externally observed BOM removal",
+                       "exitCode":  0,
+                       "workspaceBuilds":  5
+                   },
+                   {
+                       "command":  "pnpm test",
+                       "checkpoint":  "after build",
+                       "exitCode":  0,
+                       "passedTests":  247,
+                       "testFiles":  30,
+                       "durationSeconds":  7.42,
+                       "warnings":  [
+                                        "Redis connection failures",
+                                        "BOT_TOKEN configuration warning"
+                                    ]
+                   },
+                   {
+                       "command":  "pnpm lint",
+                       "exitCode":  2,
+                       "typeScriptDiagnostics":  209
+                   },
+                   {
+                       "command":  "pnpm arch:verify",
+                       "exitCode":  0,
+                       "checked":  0,
+                       "interpretation":  "No module flows checked; not architecture approval"
+                   },
+                   {
+                       "command":  "pnpm migration:verify",
+                       "exitCode":  1,
+                       "checked":  129,
+                       "rejectedFlows":  [
+                                             "NEW-06",
+                                             "NEW-07",
+                                             "NEW-08",
+                                             "NEW-09",
+                                             "NEW-10",
+                                             "NEW-11"
+                                         ]
+                   },
+                   {
+                       "command":  "pnpm flow-contracts:verify",
+                       "exitCode":  0,
+                       "checked":  0
+                   },
+                   {
+                       "command":  "pnpm docs:audit",
+                       "exitCode":  0,
+                       "checked":  41
+                   },
+                   {
+                       "command":  "pnpm docs:parity",
+                       "exitCode":  0,
+                       "checked":  19
+                   },
+                   {
+                       "command":  "pnpm governance:tamper-check",
+                       "exitCode":  1,
+                       "checked":  38,
+                       "detail":  "package.json hash mismatch and uncommitted change"
+                   },
+                   {
+                       "command":  "pnpm ai-compliance:verify",
+                       "checkpoint":  "before this report",
+                       "exitCode":  1,
+                       "checked":  1,
+                       "detail":  "Working tree not clean"
+                   },
+                   {
+                       "command":  "git status --short",
+                       "checkpoint":  "before report",
+                       "exitCode":  0,
+                       "clean":  false,
+                       "changedTrackedFiles":  7
+                   }
+               ],
+    "sourceFiles":  [
+                        {
+                            "path":  "AGENTS.md",
+                            "sha256":  "1308b5a378a7230d148cac883a260b7ade0d1e198b94e23f999134f5d6ca5371"
+                        },
+                        {
+                            "path":  "apps/bot-server/package.json",
+                            "sha256":  "1ceb7fdff16d8673585e4635a038aa7d3910e0c2c9679614e164606be09c69b6"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/bot.ts",
+                            "sha256":  "d53ce78fbe94001bfa4f1302bca84de727a23ba9725aed3aa4a36d06f2d641eb"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/config/env.ts",
+                            "sha256":  "84092e73a7989865d51f93716cb71be212e8165441ab35078b65b10033cf0ee2"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/db.ts",
+                            "sha256":  "10fc856bc5e464f7276f14f60da2be4fad15800eb514ffbe49b4bdcc11b3a2a2"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/admin-assignment.handler.ts",
+                            "sha256":  "784ece73d8140f16fbbddc3563627351873d7a9decd132bd6f1654c7e812675a"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/admin-profile.handler.ts",
+                            "sha256":  "eabec5c3b75ad073c98e7cfa384fd44fb963c379b7dd1cd1a148ccea5820d6c5"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/company-profile.handler.ts",
+                            "sha256":  "4393019258de70949206891121f6bf3d3488660091fd4b8c7629ebcc9d3e7e8b"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/hr-hub.handler.ts",
+                            "sha256":  "dfdb5d9fb55be379171c64deaaf1f1b38fe0e845b37cd7091f0d89c44fe562e4"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/job-matrix.handler.ts",
+                            "sha256":  "bd587c509c710e14e443743012b79f0d83e73fd043aa503b6ce1243852b69841"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/new-worker-wizard.handler.ts",
+                            "sha256":  "c81c20f22bc226b2dcc8ca6318d14997d3fb021ca0dd3b6263b6b6fd2d20c3df"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/ping.handler.ts",
+                            "sha256":  "bb6a24a8ee0e25b331f349ac0200cb84ef36249fd361b2ad04d989d47b269a55"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/placeholder.handler.ts",
+                            "sha256":  "4fa6addb368e4f7af7742ac6211c7d9beeb1096580b2592c740b858efe73ceef"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/settings.handler.ts",
+                            "sha256":  "94b71d109081c130639f47f9805bc695aee18eb220d2a53df10321b141221c6a"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/sites-hub.handler.ts",
+                            "sha256":  "c56ce62ffe6e47c5f0bcd9dc4ea35f2ac74199deeef0e4693f9328852bcb5e9b"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/start.handler.ts",
+                            "sha256":  "5d80b11a59d66cdbdd99c055b682f6d2160ff26424c5c4b5792ceedfa1461bfa"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/worker-directory.handler.ts",
+                            "sha256":  "936cc78a211ffe15610e6ab0a7d1ea95114d127c746722cc93539872ddb60557"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/worker-edit.handler.ts",
+                            "sha256":  "220f99a48f69a32cf30151c5cc346f69c05b41ac46fc1867c03ba239809f6358"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/handlers/worker-excel.handler.ts",
+                            "sha256":  "fa5bb4e89d41478a0ce78b6a39309f7ca5b7f09583c00a15c64a86c7070bdc6e"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/index.ts",
+                            "sha256":  "7ffdbc5d9ee9634c196fcc5f2705309837312060e7bf74a9001cd979520315e1"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/keyboards/main-menu.keyboard.ts",
+                            "sha256":  "5f9a39e6cc756a3f7c7cf96228be56a3b85cb64880f65f6cb16af1a284244b9b"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/keyboards/reply-bar.keyboard.ts",
+                            "sha256":  "57df4f92e735a2aa659994cd6cb73b48e2a20669ee73a9e0c13545259b820e59"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/middlewares/auth.middleware.ts",
+                            "sha256":  "9f52c252dd81601e20a57180dba9f236046a868e878c35baf30552e2dbe4de55"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/redis.ts",
+                            "sha256":  "1361125738fe8e0f2dae5bf3ef0817f44d2a6f5f65b47db97456f69a476c31b0"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/ai-vision-id.service.ts",
+                            "sha256":  "a1d15ab524bc8068eae91d0cffd5e8b499a1bc5670985de614fad02f1b5c0a7c"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/command-scope.service.ts",
+                            "sha256":  "4ea2e6bc33c877f96e62d245768706abbafc1b5c26a90715d820600d9dee5da6"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/cycle-transition.service.ts",
+                            "sha256":  "afff362ea569fc84861283490a8576e4b4c27f2daefa307f3144290db3f07480"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/fast-cache.service.ts",
+                            "sha256":  "65319698f7887bb68eac2213da9db1a1ff70f1e64376d514850ffce5700f9573"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/google-drive.service.ts",
+                            "sha256":  "395995d0e6f496eb01a5b1d086be2989311bf016a1870ca2030b8b56fadbed07"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/job-matrix-excel.service.ts",
+                            "sha256":  "b2e3bfa199dd6f5129b8928efc97fa2ca7f53d9ce26ca4b81254f3290a8f9aca"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/scope.service.ts",
+                            "sha256":  "e75e66c7c834c78629b03bf2aef7665c64ed1908c7db4891995aa6649802223a"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/screen-flow.service.ts",
+                            "sha256":  "5a9da618d1a84d62825732da9ea5947e00de09fcbc621d40d011dbe120946dcc"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/system-data.service.ts",
+                            "sha256":  "8c64f652f8d313868bccd9478473f4ae98f0e2552ce64e741dfd2d29e1b250a2"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/worker.service.ts",
+                            "sha256":  "813808aca47e83ed8b06cd171deae6d042d144440c65f2aa389e37f8821ca8cd"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/worker-edit.service.ts",
+                            "sha256":  "6b7fd2305f61a6c100de94a89732778d265f34c7ead4949da679482a2cb1c06d"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/worker-excel.service.ts",
+                            "sha256":  "fcc39cf3858513421088fecd8fa3b21ae34e4bbd9798da03284ab57cd85c8239"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/services/worker-expiry-alert.service.ts",
+                            "sha256":  "afe9758f2673ac32fbdc88b7334b9b2ec4b2ba074dc16b6cd7a68d0215e30f17"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/types/context.ts",
+                            "sha256":  "6fbe9ea5af8e2ade8626b7820644e20b46842a371fe3772245501058bf3786e5"
+                        },
+                        {
+                            "path":  "apps/bot-server/src/utils/coordinates.ts",
+                            "sha256":  "787be38e287d3795ec3293f579ad87123703682fd093a377abf58fc9400079ca"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/admin-assignment.spec.ts",
+                            "sha256":  "9477e436b50824b941b0290cbda13352127389fe0d65836b694b44c1179b4e54"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/admin-profile.spec.ts",
+                            "sha256":  "40775da896d05cae4f4ca976524ca0cd9ff6adb5ed74e4e3253e52b4342aaf58"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/company-profile.spec.ts",
+                            "sha256":  "cd04796a31cf531267f0d66f5a4c7ee33d685c20f49e5ce5c5215a5522eb3c77"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/coordinates.spec.ts",
+                            "sha256":  "a6498996c755b7ccf63ac8aadaed82f502accedfdd0ed26769c12697142cfe7f"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/fast-cache.spec.ts",
+                            "sha256":  "ab05e83ee5876ba7402fbad7f123a2ec425dd791dbd9d0beb8784fd883f5e783"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/hr-rbac-masking.spec.ts",
+                            "sha256":  "e26c544f22697a160da0a8dd7c19a1c24020cac570829e633a252eeff2df6207"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/job-matrix.spec.ts",
+                            "sha256":  "d55fec7289cc3346001165cb922ba1aeae5790189e5585ac7028baba897b6b8a"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/main-menu.spec.ts",
+                            "sha256":  "6eca01e10be855e1093e5c0ebbd12992c04087b287e4881900479f974399a150"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
+                            "sha256":  "3bee14d6f1f8409afe9beff9ff4d4b05dfedca4d28b11acdb7b2569ab777bc74"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/site-scope.spec.ts",
+                            "sha256":  "bdf0001f324b778f4226093cc0b10ddcafc3148203183df0b38e7f0075728f76"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/sites-hub.spec.ts",
+                            "sha256":  "4cbdebebe22675249fa5f406cef958a97508ae931935bd33e5c981b3dcebc536"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/worker-ai-vision.spec.ts",
+                            "sha256":  "a1df1abbd7db2a73c1c180993f1bee7ad0e2eee26368377155c2556e22decca0"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/worker-attachments-and-address.spec.ts",
+                            "sha256":  "750a60791cfca2606f346b878e864df51e5411a54264a3a7466d9a7c91649170"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/worker-edit-governance.spec.ts",
+                            "sha256":  "ce1fa8ae40a3fd7a54c040ccd8ea7e2f51f781e0a167ff949216996b05b80d10"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/worker-excel.spec.ts",
+                            "sha256":  "2f64bff819eaaf172db4422d0baf6a2b6f8ad077b18241f27c00f0e3d27f8fb1"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/worker-full-wizard.spec.ts",
+                            "sha256":  "bd9da51ed93d52ef8ec908ca3922671fd71987521c9fa6edbeb7af1f9e6c42b7"
+                        },
+                        {
+                            "path":  "apps/bot-server/tests/worker-id-types.spec.ts",
+                            "sha256":  "6477433c8c6aedfbb39e899f87abaeddd7f9699857a2bdeda260ade0d0aca298"
+                        },
+                        {
+                            "path":  "apps/bot-server/tsconfig.json",
+                            "sha256":  "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+                        },
+                        {
+                            "path":  "docker-compose.yml",
+                            "sha256":  "56d811453c7f17afdd6f023ecd299dbccb283055ded0f5771aed735d4138db3c"
+                        },
+                        {
+                            "path":  "docs/00-baseline-and-ssot-charter.md",
+                            "sha256":  "dd87886826d2cc26161b8e6ccf3c80ab25b20b38b36f5866d75424cef27be79b"
+                        },
+                        {
+                            "path":  "docs/01-architecture-and-tempot-synergy.md",
+                            "sha256":  "0f11ca7add3cfb499c7b26e5f9949168844e3be5ed400d24dbbf35479ae7ac80"
+                        },
+                        {
+                            "path":  "docs/02-core-shared-components-catalog.md",
+                            "sha256":  "290a4383ce3691637f93a3f82aed2c8038b7ec02b5b2e5b0fe2c572f1411e0a7"
+                        },
+                        {
+                            "path":  "docs/03-ai-vision-invoice-engine.md",
+                            "sha256":  "97ce1af4ce6831dd0c531ecabd779415e1c0fa13ea1d74337bd53f6806baec22"
+                        },
+                        {
+                            "path":  "docs/04-google-sheets-auto-provisioner.md",
+                            "sha256":  "b320530fdac25f9b4b2a7222cc9f7d05a22cf2071f4edeeba9d26b27799e80d6"
+                        },
+                        {
+                            "path":  "docs/05-master-implementation-roadmap.md",
+                            "sha256":  "4ca540205d7690b5df88e601100d94ccb20bba1de610569120bc93b6230ec995"
+                        },
+                        {
+                            "path":  "docs/06-tenant-onboarding-and-provisioning-wizard.md",
+                            "sha256":  "faa8abe64d6b3e42ca3d044700061e78efc11d1ed67bcb74b33ba02bf857508d"
+                        },
+                        {
+                            "path":  "docs/07-sheets-topology-and-registry-resolver.md",
+                            "sha256":  "26ac2a944de4453dc35069cc828b25b2e0bc9296bdf666d40c5f2e16985722c7"
+                        },
+                        {
+                            "path":  "docs/08-universal-rbac-and-executive-role.md",
+                            "sha256":  "e556c80358850c22280f6200da98af17fe7cf1df4d33bbb3123591be98a4f985"
+                        },
+                        {
+                            "path":  "docs/09-database-governance-and-superadmin-console.md",
+                            "sha256":  "0cbb3dc8c4cac43176d7ec55a063962993d87c8f736d43b6f9f22abff993328b"
+                        },
+                        {
+                            "path":  "docs/10-telegram-id-identity-verification.md",
+                            "sha256":  "6911043f9a305b1337342076436168c114a2443e71bd2b75c147c2cab5607252"
+                        },
+                        {
+                            "path":  "docs/11-universal-invitation-and-onboarding-engine.md",
+                            "sha256":  "78c015515d500477665737c4799fc5812ac9ae59e2be38cf5628b6ed0c17ae2f"
+                        },
+                        {
+                            "path":  "docs/12-system-configuration-and-operational-simplicity.md",
+                            "sha256":  "09287b1b1ad23234c3be8fe5a71e9840a2957adf02fddf65e87631ca106bfd2a"
+                        },
+                        {
+                            "path":  "docs/13-closed-loop-financial-and-pnl-engine.md",
+                            "sha256":  "070e9b876cc28cfe0491fc147674fa9637d8378452e2ade697dc72c6978f2744"
+                        },
+                        {
+                            "path":  "docs/14-ai-agent-governance-and-file-rules.md",
+                            "sha256":  "aa0018f0d515b78e822182e6c1ce244feb060349f31e50260f6559fc28969ff3"
+                        },
+                        {
+                            "path":  "docs/15-universal-module-and-flow-standard.md",
+                            "sha256":  "bd2f4f3a607f0a58274d0b69369b5522e0c7ce5b7a8dcf07f66a7f7b4c137abe"
+                        },
+                        {
+                            "path":  "docs/16-database-security-and-tamper-proof-ledger.md",
+                            "sha256":  "0ab0b2e8748e2dcc75884b710361162d2a155a5c78641eb1549680f4326ab408"
+                        },
+                        {
+                            "path":  "docs/17-worker-coding-and-silent-alias-resolution.md",
+                            "sha256":  "67d76622a26171789bdae98b621f30e8e160912474229644b2fb8c3db36efe91"
+                        },
+                        {
+                            "path":  "docs/18-enterprise-schema-and-entity-relationship-model.md",
+                            "sha256":  "de43faab425bf361998e5594ec0812db1ce6a5e5cb2584a9e92e02951f292757"
+                        },
+                        {
+                            "path":  "docs/19-legacy-to-enterprise-master-feature-migration-registry.md",
+                            "sha256":  "48a887852fdb4bf9c799466218bc5104f42efa752580c58e7077086305bad786"
+                        },
+                        {
+                            "path":  "docs/20-super-admin-settings-and-control-hub-guide.md",
+                            "sha256":  "1e40b506841b5aace30dda77b5d0462f5d847b40d42f3fdbf9dd0affe51966f4"
+                        },
+                        {
+                            "path":  "docs/21-mandatory-module-architecture-and-gates.md",
+                            "sha256":  "79b71635c8148d90463f62d9c5232aaa87346c1fbb0ef5fc732edcca9334f081"
+                        },
+                        {
+                            "path":  "docs/ai-execution-evidence/2026-09-08-module-gates-documentation.md",
+                            "sha256":  "94cbca8a0c13c2d6ac369bb829f148e575d10c3b223f473c8eba53593df361e9"
+                        },
+                        {
+                            "path":  "docs/ai-execution-evidence/README.md",
+                            "sha256":  "7e8dac3c3dbd6a413e24298a68685be0d005e4db8b96b660b9ae1ad9c5f2d6a3"
+                        },
+                        {
+                            "path":  "docs/superpowers/plans/2026-09-08-mandatory-module-gates-and-ai-compliance.md",
+                            "sha256":  "1cb4fff9e6a6a869a813957c141bda281958e8f8c92a4edf503b6c65f40a239d"
+                        },
+                        {
+                            "path":  "GEMINI.md",
+                            "sha256":  "df443e5a3d23bf11eff9100b95efdeebafaa86deebbb8ea8eb6a27f29824b246"
+                        },
+                        {
+                            "path":  "governance.lock.json",
+                            "sha256":  "b3755328fac4a7df48ce262172f29adcd60d0fa9739e5cc5c0c61e64ae939f21"
+                        },
+                        {
+                            "path":  "package.json",
+                            "sha256":  "935781d8b7a6a7f3beb69272a10737e856c2f2e3e8038f2a2e2a438f10bcab9e"
+                        },
+                        {
+                            "path":  "packages/core-components/package.json",
+                            "sha256":  "98f318cac35c68c0de7c70b2e9a31be0a184c063ee91d82f7b08b014e8fbc6a3"
+                        },
+                        {
+                            "path":  "packages/core-components/src/amount-picker/keyboard.ts",
+                            "sha256":  "66d4fbd3bb18ca571b349726a79f04ac36b9d3e5f151bf452edceb05faaa3bf0"
+                        },
+                        {
+                            "path":  "packages/core-components/src/amount-picker/validator.ts",
+                            "sha256":  "55c099d019ff486498ec8a1eac35bf155dcd97f3d348e84f7680f51283c7b284"
+                        },
+                        {
+                            "path":  "packages/core-components/src/completion-card/keyboard.ts",
+                            "sha256":  "6919ea587d6134e0f521b6830880bd7c6cf1829a671ce1f949181672b26618fa"
+                        },
+                        {
+                            "path":  "packages/core-components/src/completion-card/whatsapp.ts",
+                            "sha256":  "dec14a1805e89747ae7b9013c46cdaca3492e509749a1f2e224116299315d7c2"
+                        },
+                        {
+                            "path":  "packages/core-components/src/confirmation-card/formatter.ts",
+                            "sha256":  "706b48e0e5fe8d9a33ed9637fba94d4fedf0639c3341ca8e803114b15f62f85a"
+                        },
+                        {
+                            "path":  "packages/core-components/src/confirmation-card/keyboard.ts",
+                            "sha256":  "3414a1a1e66e84255ff0c91b95be3e291d0b8118669676673faa628261b60c40"
+                        },
+                        {
+                            "path":  "packages/core-components/src/date-picker/keyboard.ts",
+                            "sha256":  "8b96299ee4a5208d58802016a2c8572e4fe9241ab035877015074cc2b08fbfbc"
+                        },
+                        {
+                            "path":  "packages/core-components/src/date-picker/parser.ts",
+                            "sha256":  "fe20a6cf3ddbae3453c63a822820f8666a12face43695a474745c9e6fb52f890"
+                        },
+                        {
+                            "path":  "packages/core-components/src/index.ts",
+                            "sha256":  "8f2e76ad85b5e53f02e5cf1d0c1733707cd7f1289f4d1d8c97bcfabb2b9bcac9"
+                        },
+                        {
+                            "path":  "packages/core-components/src/multi-channel/topic-router.ts",
+                            "sha256":  "a31d97bb81a5da1e5219350efb2496a6d5565a0ec77b4e6251722833879dcd24"
+                        },
+                        {
+                            "path":  "packages/core-components/src/purchase-picker/suggestions.ts",
+                            "sha256":  "4572cd4b624617bce3d91c1defb165ad9b23d0ccf52a08d54acedf6673f2e667"
+                        },
+                        {
+                            "path":  "packages/core-components/src/quantity-picker/keyboard.ts",
+                            "sha256":  "bd790a70a6869fb2f63352446dd1a264ca6bd41c21672deaa5b364e18e9cdba8"
+                        },
+                        {
+                            "path":  "packages/core-components/src/quantity-picker/validator.ts",
+                            "sha256":  "65aa33db3170a8ae3dcd4b141f2974bbb66f614600b4c6a0f150205b657a4df2"
+                        },
+                        {
+                            "path":  "packages/core-components/src/source-picker/keyboard.ts",
+                            "sha256":  "b98e81e7d62aaab0ca3739e36233f47f73c272cb81f041a1ddab3716db0ffddb"
+                        },
+                        {
+                            "path":  "packages/core-components/src/source-picker/types.ts",
+                            "sha256":  "d7c158ac89e8f4e0e6a5a82f5e84ce8102e11631ebca9411e45450b10ffce4fa"
+                        },
+                        {
+                            "path":  "packages/core-components/src/source-picker/validator.ts",
+                            "sha256":  "7ba4f4456e84dce2a49d54a3b059db5523cb7f2e89e27deeeda82035f7564fb1"
+                        },
+                        {
+                            "path":  "packages/core-components/src/types.ts",
+                            "sha256":  "a58fbeb7b0b54b0322e7909a282a7da7cbfd25e895d67311f99bd2331e8244f1"
+                        },
+                        {
+                            "path":  "packages/core-components/src/worker-picker/filter.ts",
+                            "sha256":  "4032e07a66da002927234f81cf6e8234c3bc51bc77b067cb027a92c91689ce9f"
+                        },
+                        {
+                            "path":  "packages/core-components/src/worker-picker/keyboard.ts",
+                            "sha256":  "ab4b78abb54e0bff293b862e164f056671246a8906566e3d33142939c89cda20"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/amount-picker.spec.ts",
+                            "sha256":  "f6d69cb01c1ecf4e2c8d3abb7ba397a9d08746bae0c84fc46acf5df94698bafe"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/completion-card.spec.ts",
+                            "sha256":  "4c511ae8a840b935336aa915a77ce4a17e651f15a54b711708482d8645499d31"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/date-picker.spec.ts",
+                            "sha256":  "546d38e6c03ed1996909bf57b37e7f3fe93b4c6560a41374237999fdf1b7250a"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/purchase-picker.spec.ts",
+                            "sha256":  "9a373cd450fbf7e04eaf764ae074dccc13e06a4c35645e1cef13976c0228df35"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/quantity-picker.spec.ts",
+                            "sha256":  "60822eb8cb9f5f2975f47595c4d1db016cabba11d728b4d30a5f6979b1b920c4"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/source-picker.spec.ts",
+                            "sha256":  "1a97ba3cef9064fcb91a6c36c3b21603cc105b375718f0c7d3fd13457c72afbd"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/topic-router.spec.ts",
+                            "sha256":  "6ee21fe6fa6175f78643d084263eb8aa6de3fb8b3c085446cdece0fdaf6c4517"
+                        },
+                        {
+                            "path":  "packages/core-components/tests/worker-picker.spec.ts",
+                            "sha256":  "80d23297c55fe0b3cd39cff2e1a247930a08f6a4926b483a8dcf821f50217d8d"
+                        },
+                        {
+                            "path":  "packages/core-components/tsconfig.json",
+                            "sha256":  "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+                        },
+                        {
+                            "path":  "packages/database/package.json",
+                            "sha256":  "52760a7c3f9f07f2489e2650a710a859b76dff299a091e6b8f189ee066068abf"
+                        },
+                        {
+                            "path":  "packages/database/prisma/schema.prisma",
+                            "sha256":  "6601a239f37a8e07aa9c37d2aa6c815c639a1e03178c849b98d13f85cd5e921c"
+                        },
+                        {
+                            "path":  "packages/database/prisma/seed-data/company-profile.json",
+                            "sha256":  "4e71b422ee1038be63bd4a94d88cb02912d35e241a82a6f9b701a3595e852a92"
+                        },
+                        {
+                            "path":  "packages/database/src/crypto/blind-index.ts",
+                            "sha256":  "2ac9290b9870b11691db875f68c74aa7a77a9b3ba57541ec4c747a9e2457a7c9"
+                        },
+                        {
+                            "path":  "packages/database/src/crypto/cipher.ts",
+                            "sha256":  "46651d503556a069d7cb60b58e4158ce4d262685e9c93e812ca08abf3ee452d3"
+                        },
+                        {
+                            "path":  "packages/database/src/index.ts",
+                            "sha256":  "dcfd8367e12664baf545dc50c08e4b3effd7e853257fb875dfd0c4b6fee04ddc"
+                        },
+                        {
+                            "path":  "packages/database/src/ledger/hash-chain.ts",
+                            "sha256":  "5942282cfd989328a02e21199d7966cb89a5ce475cd361d594102adff0468ce2"
+                        },
+                        {
+                            "path":  "packages/database/src/scripts/purge-test-data.ts",
+                            "sha256":  "3eb9b849847d1fab5317c7dfb649d8a0400667148ce147b6fd5c829ee43040d6"
+                        },
+                        {
+                            "path":  "packages/database/src/scripts/seed-company-profile.ts",
+                            "sha256":  "816be27bcfdd3f7b15500436c4fda674d50c4b8e1ebc69f94558cc0e28c0bd7d"
+                        },
+                        {
+                            "path":  "packages/database/src/scripts/seed-hq-site.ts",
+                            "sha256":  "ce66f0b281bef696f532325b276a8d59ee134cce461326124e018b114aac1f53"
+                        },
+                        {
+                            "path":  "packages/database/tests/security.spec.ts",
+                            "sha256":  "8bf946ae8a43210da72764e0c9d385edaed356672bb87024f635691e5b2164cf"
+                        },
+                        {
+                            "path":  "packages/database/tsconfig.json",
+                            "sha256":  "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+                        },
+                        {
+                            "path":  "packages/national-id-engine/package.json",
+                            "sha256":  "caec2297d7d588d3f88497306c574f9b6acc4a3c2901532ee3910d73bf4ef46f"
+                        },
+                        {
+                            "path":  "packages/national-id-engine/src/constants.ts",
+                            "sha256":  "8ea9fce9df9da348f160bcc746275eec782b823a560b40c9fdf7cd8f246e859f"
+                        },
+                        {
+                            "path":  "packages/national-id-engine/src/index.ts",
+                            "sha256":  "4fc137226a22dc920e1ecb7cca79029fcbc6e76a93f8826e9edbca4b2381e81d"
+                        },
+                        {
+                            "path":  "packages/national-id-engine/src/parser.ts",
+                            "sha256":  "2050475b6753b280e308631389cb8dd7a0c550c980d96cc97572a6ceec7b808e"
+                        },
+                        {
+                            "path":  "packages/national-id-engine/src/types.ts",
+                            "sha256":  "abec8751131f48586829ed8802f80864ab835d4ed7a961b9bc003b9f007ae95c"
+                        },
+                        {
+                            "path":  "packages/national-id-engine/tests/national-id.spec.ts",
+                            "sha256":  "06eb5c5d272954a02fc6ca67f28ad82bdbfea8cdeeb1f9c98f650aa5013b78eb"
+                        },
+                        {
+                            "path":  "packages/national-id-engine/tsconfig.json",
+                            "sha256":  "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+                        },
+                        {
+                            "path":  "packages/regional-engine/package.json",
+                            "sha256":  "95652eccfaa97ee73d67d8370161bd2a081535a44105199021dc771dd768d4e2"
+                        },
+                        {
+                            "path":  "packages/regional-engine/src/currency.ts",
+                            "sha256":  "00d6652f91c7e90a172f0312bee8ded69e67b067d77e3a7942cadc8f6603256e"
+                        },
+                        {
+                            "path":  "packages/regional-engine/src/datetime.ts",
+                            "sha256":  "a5429beb43831cc267ec1d49901f63a1fd2cd011bdccd5dc05b71447c4e61570"
+                        },
+                        {
+                            "path":  "packages/regional-engine/src/index.ts",
+                            "sha256":  "fd04aa90fc3af16fcdde9d6828401b4543f0e1d74f371facddccf8595f366484"
+                        },
+                        {
+                            "path":  "packages/regional-engine/src/names.ts",
+                            "sha256":  "0ef58213331591e8bb2d58e41a54e8b4d4ff66714fdc2f2c6c4374087a525d67"
+                        },
+                        {
+                            "path":  "packages/regional-engine/src/numbers.ts",
+                            "sha256":  "1404ccbe2c6f37dbc3823b1f4dc28b5a69d5e6bfa2d3558b0ed91610d0e8c5e9"
+                        },
+                        {
+                            "path":  "packages/regional-engine/tests/names.spec.ts",
+                            "sha256":  "1c98444e8e2454f9016178fcada49d875caaa5ad1e0d0b35c17b54eb7bfffa7f"
+                        },
+                        {
+                            "path":  "packages/regional-engine/tests/regional.spec.ts",
+                            "sha256":  "168fdb37c0a40187165421cbfc084a055b9b8a84e893e0c5c6bf8d68f1eb02ed"
+                        },
+                        {
+                            "path":  "packages/regional-engine/tsconfig.json",
+                            "sha256":  "e4ed044d99005d1d36c726849468ff721d4fd6ed12967cc420470a4d9f690004"
+                        },
+                        {
+                            "path":  "pnpm-lock.yaml",
+                            "sha256":  "2a2f450b9388b0cdcbd2c61bd66e2d37cd1da333b2b77e6f9c9f7e5688f2a37d"
+                        },
+                        {
+                            "path":  "pnpm-workspace.yaml",
+                            "sha256":  "52b6e9eff4103583156c8fd18a6fc9d57d382d09ae4aa59f552702da242b2b18"
+                        },
+                        {
+                            "path":  "README.md",
+                            "sha256":  "10a0292230f839b303f564c0b10c3dcad016329acb6dc95cfade92ec07db92ce"
+                        },
+                        {
+                            "path":  "tools/governance/common.ts",
+                            "sha256":  "b0683271fb7b87c44e2e854ce2c9e6847473882831f0bd40e3cfece798bba679"
+                        },
+                        {
+                            "path":  "tools/governance/tests/governance-verifiers.spec.ts",
+                            "sha256":  "973a90eb20e6d98497857d1e2b43aea7b6053f50f5cd07058818d0cbe74ba2b8"
+                        },
+                        {
+                            "path":  "tools/governance/verify-ai-compliance.ts",
+                            "sha256":  "794f1d8ac96d3eb6f743cb1b94da39769dab52bc42de2beac1a688b24f07e9cb"
+                        },
+                        {
+                            "path":  "tools/governance/verify-architecture.ts",
+                            "sha256":  "04e0db327f66577c20135815a567321ddfb549297eb65f5d221909c5faa4c581"
+                        },
+                        {
+                            "path":  "tools/governance/verify-docs-audit.ts",
+                            "sha256":  "436b44d8a95c300f6f256e48b8bd58a9738852cec612cf541d2a5bf168d842f2"
+                        },
+                        {
+                            "path":  "tools/governance/verify-docs-parity.ts",
+                            "sha256":  "0e949d4daa25f5b44ce117d6c129c37b2862da64455c4f80baae3c4b9881c9af"
+                        },
+                        {
+                            "path":  "tools/governance/verify-flow-contracts.ts",
+                            "sha256":  "198cbd7a7fdf67e437f6101d23e92c42749b3460c6746239b0484024a8ebbca1"
+                        },
+                        {
+                            "path":  "tools/governance/verify-governance-lock.ts",
+                            "sha256":  "95abd18252e95cf152aef3cfc99e3b6634a00a5a3e918dcbc6fb6a800a8860e0"
+                        },
+                        {
+                            "path":  "tools/governance/verify-governance-tamper.ts",
+                            "sha256":  "20209b7e39f0c7053fd441c9903b5fda62246999bfd40d6b8389d32178e26da2"
+                        },
+                        {
+                            "path":  "tools/governance/verify-migration-registry.ts",
+                            "sha256":  "5ee27fdddbd23a04b7ebe3eab44caeac36ba6a8c19478ba35661b2dbe135919f"
+                        },
+                        {
+                            "path":  "tsconfig.json",
+                            "sha256":  "da39b3c6192e45956aebf97f7c80aa973e56920f48ae7a5493dd4f506fa749e5"
+                        }
+                    ],
+    "logs":  [
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\ai-compliance-verify.log",
+                     "sha256":  "b9d24b3cf4576227327920be1d1bef344b29dcd5a778e3f08b294eba49220cc7"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\arch-verify.log",
+                     "sha256":  "9b0468d3466370f5f529c9a8394d2213f99670c0699a4aa64c3aae46c7e85fe7"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\build.log",
+                     "sha256":  "827b2216ade9470f08481fb32739b674e734835005fc3e6cd776c776b2b242a0"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\build-current.log",
+                     "sha256":  "1135a0802ecd4ea0fdc3638d4e510afe457b9eaf5c271e78e1ba180d1c8c72d5"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\docs-audit.log",
+                     "sha256":  "f093786eecf3ef2060ea425970bf9000cacda71b75e3d80aa482257712177c8b"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\docs-parity.log",
+                     "sha256":  "830cd1d08bcf59a6cba43237712ddb5ff3f242ea7218998d18a71603ccf4e22a"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\flow-contracts-verify.log",
+                     "sha256":  "2f1566e8a9db888369e42421f18bd8e616dc2f6d2cf9d63fd124eff400fd3ae7"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\governance-tamper-check.log",
+                     "sha256":  "900096c5fe0486677aa6b94039f6cd133932543e15a9ad649107f050401911db"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\lint.log",
+                     "sha256":  "ab368be7153e0d1e08b7e08df430b2736377b54134525b91233660f9497b4e1a"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\migration-verify.log",
+                     "sha256":  "fc1a9d4e19d3e8a56a388417710bf0b5c52732653386e20c5214bf6ea46e20e8"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\test.log",
+                     "sha256":  "9ee3ff3816bd92a8deb13fa71c384227184a465b44f97fcef8d06c3a633d3992"
+                 },
+                 {
+                     "path":  "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\architecture-audit\\test-after-build.log",
+                     "sha256":  "9cd96257f9bc8cfd600ca2bfe52d0d1a0e5c24e8508840d549709ebee4a253f9"
+                 }
+             ],
+    "reportSha256":  "246f470ba52f656db186f2d84ca6ff34f7c680e895f96fb323ca553ea9854fc7",
+    "postReportVerification":  {
+                                   "sourceHashDrift":  0,
+                                   "localLinksValid":  true,
+                                   "docsAudit":  {
+                                                     "checked":  41,
+                                                     "exitCode":  0
+                                                 },
+                                   "docsParity":  {
+                                                      "checked":  19,
+                                                      "exitCode":  0
+                                                  },
+                                   "governanceTamper":  {
+                                                            "checked":  38,
+                                                            "exitCode":  1
+                                                        },
+                                   "aiCompliance":  {
+                                                        "checked":  2,
+                                                        "exitCode":  1,
+                                                        "reason":  "Working tree not clean; no missing report markers reported"
+                                                    }
+                               }
+}

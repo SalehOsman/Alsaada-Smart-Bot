@@ -94,3 +94,5 @@ F:\Alsaada-Smart-Bot/
 * [18. المعمارية الهندسية الشاملة لقاعدة بيانات PostgreSQL ونموذج الكيانات والعلاقات](./docs/18-enterprise-schema-and-entity-relationship-model.md)
 * [19. السجل المرجعي الشامل لحصر وترحيل وظائف المنظومة والوظائف المستحدثة](./docs/19-legacy-to-enterprise-master-feature-migration-registry.md)
 
+
+* [تقرير مراجعة الهيكلة والمطابقة والحوكمة — 08-09-2026](./docs/ai-execution-evidence/08-09-2026-restructuring-audit.md) — نتائج الفحص والمخالفات والمقترحات؛ قرار اعتماد المشروع: FAIL، وتلزم إعادة الفحص بعد المعالجة.
