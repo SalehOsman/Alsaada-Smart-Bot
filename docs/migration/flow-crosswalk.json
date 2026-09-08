@@ -57,13 +57,13 @@
     {
       "targetFlowId": "01.4",
       "legacyFlowId": "01.4",
-      "name": "تصدير واستخراج كشوف العمالة المتقدم",
+      "name": "تصدير واستخراج كشوف العمالة المتقدم إكسيل RTL",
       "domain": "الموارد البشرية والعمال",
-      "targetModule": "modules/hr",
-      "status": "PENDING",
-      "currentStatusRaw": "⏳ بانتظار الترحيل",
-      "legacyPath": "apps/bot-server/src/services/worker-export.service.ts",
-      "notes": ""
+      "targetModule": "modules/workforce",
+      "status": "IMPLEMENTED",
+      "currentStatusRaw": "🟢 مكتمل وموثق 100%",
+      "legacyPath": "modules/workforce/src/flows/01.4-worker-export",
+      "notes": "Migrated to Vertical Slice in modules/workforce with 10 files and 5 tests under Gate G1-G10."
     },
     {
       "targetFlowId": "01.5",

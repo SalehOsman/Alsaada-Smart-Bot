@@ -1,0 +1,15 @@
+{
+  "moduleName": "workforce",
+  "displayName": "قطاع الموارد البشرية وشؤون العاملين",
+  "version": "1.0.0",
+  "owner": "HR & Operations Sector",
+  "flows": [
+    "01.4-worker-export"
+  ],
+  "dependencies": [
+    "@alsaada/core-components",
+    "@alsaada/database",
+    "@alsaada/national-id-engine",
+    "@alsaada/regional-engine"
+  ]
+}

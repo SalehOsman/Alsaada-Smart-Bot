@@ -14,6 +14,7 @@
     "@alsaada/database": "workspace:*",
     "@alsaada/national-id-engine": "workspace:*",
     "@alsaada/regional-engine": "workspace:*",
+    "@alsaada/workforce": "workspace:*",
     "@grammyjs/runner": "^2.0.3",
     "@prisma/client": "^6.4.1",
     "dotenv": "^16.4.7",

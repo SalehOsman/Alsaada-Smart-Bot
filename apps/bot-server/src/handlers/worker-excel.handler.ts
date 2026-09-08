@@ -1,6 +1,8 @@
 import { InlineKeyboard, InputFile } from 'grammy';
 import { MyContext } from '../types/context.js';
-import { workerExcelService } from '../services/worker-excel.service.js';
+import { workerExcelService, WorkerExportFilter } from '../services/worker-excel.service.js';
+import { prisma } from '../db.js';
+import { EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
 import {
    setPendingWorkerExcelUpload,
    getPendingWorkerExcelUpload,
@@ -244,5 +246,306 @@ export async function handleWorkerExcelDocumentUpload(ctx: MyContext): Promise<b
       { parse_mode: 'Markdown', reply_markup: retryKb }
     );
     return true;
+  }
+}
+
+/**
+ * 📊 عرض قائمة خيارات تصفية كشف العاملين (معالج التصدير)
+ */
+export async function handleWorkerExportStart(ctx: MyContext): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+
+  const role = ctx.effectiveRole || 'GUEST';
+  if (role === 'GUEST' || role === 'WORKER' || role === 'SUPPLIER') {
+    await ctx.reply('🔒 عذراً، هذه الوظيفة مقتصرة على مسؤولي الإدارة والمواقع فقط.');
+    return;
+  }
+
+  const keyboard = new InlineKeyboard()
+    .text('🌐 الكشف الكامل (كافة العاملين)', 'action:worker_export:do:all')
+    .row()
+    .text('🏢 تصفية حسب القسم الوظيفي', 'action:worker_export:dept_menu')
+    .row()
+    .text('💼 تصفية حسب المهنة / الوظيفة', 'action:worker_export:job_menu:1')
+    .row()
+    .text('📍 تصفية حسب المحافظة', 'action:worker_export:gov_menu')
+    .row()
+    .text('◀️ رجوع لقسم استيراد وتصدير الكشوف', 'menu:hr_sub:worker_excel')
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `📊 *تصدير كشف العاملين المعتمد إلى إكسيل (.xlsx)*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `اختر نطاق الكشف المطلوب تصديره:\n\n` +
+    `• *الكشف الكامل:* تصدير ملف يحتوي على كافة العاملين المقيدين.\n` +
+    `• *حسب القسم الوظيفي:* كشف مخصص لقطاع أو إدارة محددة.\n` +
+    `• *حسب المهنة / الوظيفة:* كشف لكافة العاملين بمهنة معينة.\n` +
+    `• *حسب المحافظة:* كشف جغرافي للعمالة المنتمية لمحافظة ما.`;
+
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+  if (inPlace && ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * 🏢 قائمة اختيار القسم الوظيفي لتصفية كشف العمال
+ */
+export async function handleWorkerExportDeptMenu(ctx: MyContext): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+
+  const departments = await prisma.department.findMany({
+    where: { isActive: true },
+    orderBy: { order: 'asc' },
+  });
+
+  const keyboard = new InlineKeyboard();
+  for (const dept of departments) {
+    keyboard.text(`🏢 ${dept.name}`, `action:worker_export:do:dept:${dept.id}`).row();
+  }
+
+  keyboard
+    .text('◀️ رجوع لخيارات التصفية', 'action:worker_export:start')
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `🏢 *تصفية كشف العاملين حسب القسم الوظيفي*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `يرجى اختيار القسم المطلوب استخراج كشف عماله:`;
+
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+  if (inPlace && ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * 💼 قائمة اختيار المهنة / الوظيفة لتصفية كشف العمال (مرقمة الصفحات)
+ */
+export async function handleWorkerExportJobMenu(ctx: MyContext, page = 1): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+
+  const pageSize = 6;
+  const totalJobs = await prisma.jobTitle.count({ where: { isActive: true } });
+  const totalPages = Math.max(1, Math.ceil(totalJobs / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+
+  const jobs = await prisma.jobTitle.findMany({
+    where: { isActive: true },
+    orderBy: { order: 'asc' },
+    skip: (currentPage - 1) * pageSize,
+    take: pageSize,
+  });
+
+  const keyboard = new InlineKeyboard();
+  for (const job of jobs) {
+    keyboard.text(`💼 ${job.name}`, `action:worker_export:do:job:${job.id}`).row();
+  }
+
+  const navRow: { text: string; callback_data: string }[] = [];
+  if (currentPage > 1) {
+    navRow.push({ text: '◀️ السابق', callback_data: `action:worker_export:job_menu:${currentPage - 1}` });
+  }
+  if (currentPage < totalPages) {
+    navRow.push({ text: 'التالي ▶️', callback_data: `action:worker_export:job_menu:${currentPage + 1}` });
+  }
+  if (navRow.length > 0) {
+    for (const btn of navRow) {
+      keyboard.text(btn.text, btn.callback_data);
+    }
+    keyboard.row();
+  }
+
+  keyboard
+    .text('◀️ رجوع لخيارات التصفية', 'action:worker_export:start')
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `💼 *تصفية كشف العاملين حسب المهنة / الوظيفة*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `الصفحة (${currentPage} من ${totalPages})\n` +
+    `اختر المسمى الوظيفي المطلوب تصدير عماله:`;
+
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+  if (inPlace && ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * 📍 قائمة اختيار المحافظة لتصفية كشف العمال
+ */
+export async function handleWorkerExportGovMenu(ctx: MyContext): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+
+  const govGroups = await prisma.worker.groupBy({
+    by: ['governorateCode'],
+    where: { isDeleted: false, status: 'ACTIVE' },
+    _count: { id: true },
+    orderBy: { _count: { id: 'desc' } },
+  });
+
+  const keyboard = new InlineKeyboard();
+
+  if (govGroups.length === 0) {
+    keyboard
+      .text('◀️ رجوع لخيارات التصفية', 'action:worker_export:start')
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    const emptyText =
+      `📍 *تصفية كشف العاملين حسب المحافظة*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `لا توجد بيانات عمال مسجلين حالياً بأي محافظة.`;
+
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(emptyText, { parse_mode: 'Markdown', reply_markup: keyboard }).catch(() => {});
+      return;
+    }
+    await ctx.reply(emptyText, { parse_mode: 'Markdown', reply_markup: keyboard });
+    return;
+  }
+
+  for (const group of govGroups) {
+    const govCode = group.governorateCode || '88';
+    const govName = EGYPTIAN_GOVERNORATES[govCode]?.nameAr || (govCode === '88' ? 'خارج الجمهورية / وافد' : govCode);
+    const count = group._count.id;
+    keyboard.text(`📍 ${govName} (${count} عامل)`, `action:worker_export:do:gov:${govCode}`).row();
+  }
+
+  keyboard
+    .text('◀️ رجوع لخيارات التصفية', 'action:worker_export:start')
+    .row()
+    .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+  const text =
+    `📍 *تصفية كشف العاملين حسب المحافظة*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `اختر المحافظة لاستخراج كشف عمالها المعتمد:`;
+
+  const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
+  if (inPlace && ctx.callbackQuery) {
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+      return;
+    } catch {}
+  }
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+}
+
+/**
+ * ⚡ تنفيذ عملية تصدير كشف العمال وتوليد ملف الإكسيل وإرساله للمستخدم
+ */
+export async function handleExecuteWorkerExport(
+  ctx: MyContext,
+  filterType: 'all' | 'dept' | 'job' | 'gov',
+  filterParam?: string
+): Promise<void> {
+  const role = ctx.effectiveRole || 'GUEST';
+  if (role === 'GUEST' || role === 'WORKER' || role === 'SUPPLIER') {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({ text: '🔒 هذه الوظيفة مقتصرة على مدراء ومسؤولي النظام فقط.' });
+    }
+    return;
+  }
+
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({ text: '⏳ جاري إعداد وتوليد كشف الإكسيل المعتمد...' });
+  }
+
+  const isSuperAdmin = role === 'SUPER_ADMIN' || Boolean(ctx.isRealSuperAdmin);
+
+  const filter: WorkerExportFilter = {
+    type:
+      filterType === 'dept'
+        ? 'DEPARTMENT'
+        : filterType === 'job'
+        ? 'JOB_TITLE'
+        : filterType === 'gov'
+        ? 'GOVERNORATE'
+        : 'ALL',
+    departmentId: filterType === 'dept' ? filterParam : undefined,
+    jobTitleId: filterType === 'job' ? filterParam : undefined,
+    governorateCode: filterType === 'gov' ? filterParam : undefined,
+  };
+
+  try {
+    const result = await workerExcelService.generateWorkersExportBuffer(filter, isSuperAdmin);
+    const inputFile = new InputFile(result.buffer, result.fileName);
+
+    const completionKeyboard = new InlineKeyboard()
+      .text('🔄 تنزيل كشف آخر (تصفية أخرى)', 'action:worker_export:start')
+      .row()
+      .text('📥 تنزيل قالب استيراد العمالة', 'action:worker:download_excel')
+      .row()
+      .text('🔙 العودة لاستيراد وتصدير كشف العمال', 'menu:hr_sub:worker_excel')
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    const classificationText = isSuperAdmin
+      ? 'نسخة الإدارة العليا (تتضمن الأجور والرواتب والحسابات البنكية)'
+      : 'نسخة إدارية وميدانية (بيانات تشغيلية - الرواتب محجوبة)';
+
+    const caption =
+      `📊 *كشف قيد وبيانات العاملين المعتمد (إكسيل)*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `🎯 *نطاق التصفية:* ${result.filterLabel}\n` +
+      `👥 *إجمالي العمال بالكشف:* *${result.workerCount} عامل*\n` +
+      `🔒 *تصنيف الملف:* ${classificationText}\n\n` +
+      `✅ *تم توليد وتجهيز الملف بالكامل وفق المعايير الإدارية المعتمدة.*`;
+
+    await ctx.replyWithDocument(inputFile, {
+      caption,
+      parse_mode: 'Markdown',
+      reply_markup: completionKeyboard,
+    });
+  } catch (error) {
+    console.error('Failed to generate worker export Excel:', error);
+
+    const errorKb = new InlineKeyboard()
+      .text('🔄 إعادة المحاولة', 'action:worker_export:start')
+      .row()
+      .text('🔙 العودة لقسم استيراد وتصدير الكشوف', 'menu:hr_sub:worker_excel')
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    await ctx.reply('❌ تعذر توليد وتصدير كشف العمال حالياً. يرجى إعادة المحاولة لاحقاً.', {
+      reply_markup: errorKb,
+    });
   }
 }

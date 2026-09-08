@@ -165,15 +165,38 @@ export async function renderHrSubHub(ctx: MyContext, subKey: string, inPlace = t
         if (pendingCount > 0) {
           keyboard.text(`📨 مراجعة طلبات التعديل المعلقة (\${pendingCount})`, 'action:worker_edit:pending_list').row();
         }
-
-        keyboard
-          .text('📥 تنزيل قالب العمال (إكسيل)', 'action:worker:download_excel')
-          .row()
-          .text('📤 رفع كشف العمال (إكسيل)', 'action:worker:upload_excel')
-          .row();
       } else {
         keyboard.text('📝 طلب تعديل بيانات عامل', 'action:worker_edit:pick').row();
       }
+
+      keyboard
+        .text('📥📤 استيراد وتصدير كشف العمال', 'menu:hr_sub:worker_excel')
+        .row();
+      break;
+    }
+
+    case 'worker_excel': {
+      text =
+        `📥📤 *قسم استيراد وتصدير كشف العمال*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `تنزيل كشف العمال المعتمد (إكسيل)، تنزيل القالب الرسمي، ورفع وتحديث البيانات.\n\n` +
+        `اختر الإجراء المطلوب:`;
+
+      keyboard
+        .text('📊 تنزيل كشف العاملين (إكسيل)', 'action:worker_export:start')
+        .row()
+        .text('📥 تنزيل قالب استيراد العمالة', 'action:worker:download_excel')
+        .row();
+
+      if (isSuperAdmin) {
+        keyboard
+          .text('📤 رفع كشف العمال (إكسيل)', 'action:worker:upload_excel')
+          .row();
+      }
+
+      keyboard
+        .text('◀️ رجوع لشؤون العاملين', 'menu:hr_sub:onboarding')
+        .row();
       break;
     }
 

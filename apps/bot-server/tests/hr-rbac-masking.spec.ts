@@ -67,13 +67,19 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:admin_affairs')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
 
-    // 2. فحص ظهور أزرار الإكسيل في قسم شؤون العاملين للسوبر أدمن
+    // 2. فحص ظهور زر التصنيف الفرعي لاستيراد وتصدير كشف العمال في قسم شؤون العاملين للسوبر أدمن
     await renderHrSubHub(mockCtx, 'onboarding', false);
     const subButtons = sentMarkup.inline_keyboard.flat();
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
-    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
-    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(true);
+    expect(subButtons.some((b: any) => b.callback_data === 'menu:hr_sub:worker_excel')).toBe(true);
+
+    // 3. فحص أزرار قسم استيراد وتصدير كشف العمال للسوبر أدمن (تصدير، قالب، ورفع)
+    await renderHrSubHub(mockCtx, 'worker_excel', false);
+    const excelSubButtons = sentMarkup.inline_keyboard.flat();
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker_export:start')).toBe(true);
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(true);
   });
 
   it('should STRICTLY MASK (hide) Payroll and Excel buttons for FIELD_ADMIN (Zero UI Leakage)', async () => {
@@ -102,13 +108,19 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:admin_affairs')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(false); // محجوب مسبقاً!
 
-    // 2. فحص حجب أزرار الإكسيل في قسم شؤون العاملين للمشرف
+    // 2. فحص ظهور زر التصنيف الفرعي للمشرف
     await renderHrSubHub(mockCtx, 'onboarding', false);
     const subButtons = sentMarkup.inline_keyboard.flat();
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
-    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(false); // محجوب!
-    expect(subButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب!
+    expect(subButtons.some((b: any) => b.callback_data === 'menu:hr_sub:worker_excel')).toBe(true);
+
+    // 3. فحص أزرار قسم استيراد وتصدير كشف العمال للمشرف: التصدير متاح، لكن رفع الكشف محجوب!
+    await renderHrSubHub(mockCtx, 'worker_excel', false);
+    const excelSubButtons = sentMarkup.inline_keyboard.flat();
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker_export:start')).toBe(true);
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب!
   });
 
   it('should block non-super-admin from downloading template if callback invoked directly', async () => {

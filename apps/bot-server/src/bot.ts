@@ -119,10 +119,9 @@ import {
   handleWorkerWizardCallback,
 } from './handlers/new-worker-wizard.handler.js';
 import {
-  handleDownloadWorkerTemplate,
-  handleStartUploadWorkerExcel,
   handleWorkerExcelDocumentUpload,
 } from './handlers/worker-excel.handler.js';
+import { registerWorkforceModule, type WorkforceModuleContext } from '@alsaada/workforce';
 import {
   handleStartWorkerEdit,
   renderWorkerEditMenu,
@@ -535,8 +534,11 @@ export function createBot(): Bot<MyContext> {
   });
   bot.callbackQuery(/^(?:action:advances:|action:leaves:|action:payroll:|action:admin_affairs:)/, handleHrPlaceholder);
   bot.callbackQuery(['action:worker:add_single', 'action:worker:add'], handleStartAddWorker);
-  bot.callbackQuery('action:worker:download_excel', handleDownloadWorkerTemplate);
-  bot.callbackQuery('action:worker:upload_excel', handleStartUploadWorkerExcel);
+  // Register Workforce Domain Module (Doc 21 Modular Monolith)
+  registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
+    prisma,
+    encryptionKey: config.databaseEncryptionKey,
+  });
 
   // Worker Profile Editing & Governance
   bot.callbackQuery('action:worker_edit:pick', async (ctx) => {

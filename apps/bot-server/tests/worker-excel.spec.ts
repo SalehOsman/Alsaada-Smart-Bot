@@ -2,8 +2,97 @@ import { describe, it, expect, vi } from 'vitest';
 import { workerExcelService } from '../src/services/worker-excel.service.js';
 import ExcelJS from 'exceljs';
 
+const mockWorkersList = [
+  {
+    id: 'w-1',
+    code: 'OP-DRV-0001',
+    legacyCode: '101',
+    name: 'أحمد محمود علي إبراهيم',
+    nickname: 'أبو حميد',
+    idType: 'NATIONAL_ID',
+    nationalIdEncrypted: 'mock-nid-1',
+    birthDate: new Date('1990-05-15'),
+    gender: 'MALE',
+    governorateCode: '27',
+    jobTitle: 'سائق لودر ومعدات ثقيلة',
+    departmentId: 'dept-1',
+    jobTitleId: 'job-1',
+    siteId: 'site-1',
+    hireDate: new Date('2024-01-01'),
+    contractType: 'DAILY_LABOR',
+    shiftSystem: 'دورة 20+10',
+    dailyWage: 250,
+    basicSalary: 7500,
+    fixedAllowances: 1500,
+    paymentMethod: 'VODAFONE_CASH',
+    walletType: 'محفظة فودافون كاش',
+    accountNumberEncrypted: 'mock-acc-1',
+    canteenCigarettePolicy: 'ONE_PACK_DAILY',
+    phoneEncrypted: 'mock-phone-1',
+    emergencyPhoneEncrypted: 'mock-em-1',
+    emergencyContactName: 'محمود علي (الأب)',
+    drivingLicense: 'مهنية ثانية',
+    militaryStatus: 'أدى الخدمة',
+    maritalStatus: 'متزوج',
+    idCardExpiryDate: new Date('2028-10-20'),
+    address: 'قنا - مركز قوص',
+    status: 'ACTIVE',
+    isDeleted: false,
+    site: { id: 'site-1', name: 'موقع السباعية' },
+    department: { id: 'dept-1', name: 'إدارة التشغيل والمعدات' },
+    jobRef: { id: 'job-1', name: 'سائق لودر ومعدات ثقيلة' },
+  },
+  {
+    id: 'w-2',
+    code: 'OP-HLP-0002',
+    legacyCode: '102',
+    name: 'خالد عبد الله حسن',
+    nickname: 'خالد',
+    idType: 'NATIONAL_ID',
+    nationalIdEncrypted: 'mock-nid-2',
+    birthDate: new Date('1995-08-20'),
+    gender: 'MALE',
+    governorateCode: '28',
+    jobTitle: 'عامل تشغيل وخدمات',
+    departmentId: 'dept-1',
+    jobTitleId: 'job-2',
+    siteId: 'site-1',
+    hireDate: new Date('2024-02-01'),
+    contractType: 'PERMANENT',
+    shiftSystem: 'دورة 24+6',
+    dailyWage: 200,
+    basicSalary: 6000,
+    fixedAllowances: 1000,
+    paymentMethod: 'CASH_SITE',
+    walletType: '',
+    accountNumberEncrypted: '',
+    canteenCigarettePolicy: 'NONE',
+    phoneEncrypted: 'mock-phone-2',
+    emergencyPhoneEncrypted: '',
+    emergencyContactName: '',
+    drivingLicense: 'لا يوجد',
+    militaryStatus: 'إعفاء نهائي',
+    maritalStatus: 'أعزب',
+    idCardExpiryDate: new Date('2029-05-10'),
+    address: 'أسوان - دراو',
+    status: 'ACTIVE',
+    isDeleted: false,
+    site: { id: 'site-1', name: 'موقع السباعية' },
+    department: { id: 'dept-1', name: 'إدارة التشغيل والمعدات' },
+    jobRef: { id: 'job-2', name: 'عامل تشغيل وخدمات' },
+  },
+];
+
 vi.mock('../src/db.js', () => ({
   prisma: {
+    department: {
+      findUnique: vi.fn().mockImplementation(({ where }) =>
+        Promise.resolve({ id: where.id, name: 'إدارة التشغيل والمعدات', code: 'OP' })
+      ),
+      findMany: vi.fn().mockResolvedValue([
+        { id: 'dept-1', name: 'إدارة التشغيل والمعدات', code: 'OP', order: 1 },
+      ]),
+    },
     jobTitle: {
       findMany: vi.fn().mockResolvedValue([
         {
@@ -60,7 +149,18 @@ vi.mock('../src/db.js', () => ({
     },
     worker: {
       findFirst: vi.fn().mockResolvedValue(null),
-      findMany: vi.fn().mockResolvedValue([]),
+      findMany: vi.fn().mockImplementation((args) => {
+        if (args?.where?.jobTitleId) {
+          return Promise.resolve(mockWorkersList.filter((w) => w.jobTitleId === args.where.jobTitleId));
+        }
+        if (args?.where?.governorateCode) {
+          return Promise.resolve(mockWorkersList.filter((w) => w.governorateCode === args.where.governorateCode));
+        }
+        if (args?.where?.departmentId) {
+          return Promise.resolve(mockWorkersList.filter((w) => w.departmentId === args.where.departmentId));
+        }
+        return Promise.resolve(mockWorkersList);
+      }),
       create: vi.fn().mockImplementation(({ data }) =>
         Promise.resolve({
           id: 'wrk-1',
@@ -171,5 +271,121 @@ describe('Worker Excel Service — Template Generation & Bulk Import', () => {
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.errors.some(e => e.includes('الرقم القومي'))).toBe(true);
     expect(result.errors.some(e => e.includes('كود الوظيفة'))).toBe(true);
+  });
+
+  describe('Worker Excel Export — Full Roster, Smart Filtering & RBAC Data Masking', () => {
+    it('should generate FULL workers export with FINANCIAL columns for Super Admin', async () => {
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(
+        { type: 'ALL' },
+        true // isSuperAdmin = true
+      );
+
+      expect(exportResult.buffer).toBeDefined();
+      expect(exportResult.workerCount).toBe(2);
+      expect(exportResult.fileName).toBe('كشف_العاملين_الشامل.xlsx');
+
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(exportResult.buffer as any);
+
+      const sheet = workbook.getWorksheet('كشف العاملين');
+      expect(sheet).toBeDefined();
+
+      // Row 1: Title
+      expect(sheet!.getRow(1).getCell(1).text).toContain('كشف قيد وبيانات العاملين');
+      // Row 2: Metadata (contains Super Admin classification)
+      expect(sheet!.getRow(2).getCell(1).text).toContain('الإدارة العليا');
+      expect(sheet!.getRow(2).getCell(1).text).toContain('2 عامل');
+
+      // Row 4: Headers
+      const headerRow = sheet!.getRow(4);
+      const headerValues: string[] = [];
+      headerRow.eachCell((cell) => headerValues.push(cell.text));
+
+      // Financial columns must be PRESENT for Super Admin
+      expect(headerValues).toContain('الأجر اليومي (ج.م)');
+      expect(headerValues).toContain('الراتب الأساسي (ج.م)');
+      expect(headerValues).toContain('البدلات الثابتة (ج.م)');
+      expect(headerValues).toContain('إجمالي الاستحقاق الشهري (ج.م)');
+      expect(headerValues).toContain('رقم الحساب / المحفظة');
+      expect(headerValues.length).toBe(33);
+
+      // Check row 5 (Worker 1) financial values
+      const worker1Row = sheet!.getRow(5);
+      expect(worker1Row.getCell(2).text).toBe('OP-DRV-0001');
+      expect(worker1Row.getCell(4).text).toBe('أحمد محمود علي إبراهيم');
+      expect(worker1Row.getCell(26).value).toBe(250); // Daily wage
+      expect(worker1Row.getCell(27).value).toBe(7500); // Basic salary
+      expect(worker1Row.getCell(28).value).toBe(1500); // Fixed allowances
+      expect(worker1Row.getCell(29).value).toBe(9000); // Total salary
+    });
+
+    it('should STRICTLY MASK and OMIT all FINANCIAL columns for regular Admin (isSuperAdmin = false)', async () => {
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(
+        { type: 'ALL' },
+        false // isSuperAdmin = false (Regular Admin / Field Admin)
+      );
+
+      expect(exportResult.buffer).toBeDefined();
+      expect(exportResult.workerCount).toBe(2);
+
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(exportResult.buffer as any);
+
+      const sheet = workbook.getWorksheet('كشف العاملين');
+      expect(sheet).toBeDefined();
+
+      // Row 2: Metadata must show administrative classification (no salaries)
+      expect(sheet!.getRow(2).getCell(1).text).toContain('بيانات تشغيلية');
+
+      // Row 4: Headers
+      const headerRow = sheet!.getRow(4);
+      const headerValues: string[] = [];
+      headerRow.eachCell((cell) => headerValues.push(cell.text));
+
+      // Exactly 25 administrative columns — ZERO financial columns!
+      expect(headerValues.length).toBe(25);
+      expect(headerValues.some((h) => h.includes('الراتب'))).toBe(false);
+      expect(headerValues.some((h) => h.includes('الأجر'))).toBe(false);
+      expect(headerValues.some((h) => h.includes('البدلات'))).toBe(false);
+      expect(headerValues.some((h) => h.includes('المحفظة'))).toBe(false);
+
+      // Verify Worker 1 row does not exceed 25 columns
+      const worker1Row = sheet!.getRow(5);
+      expect(worker1Row.getCell(2).text).toBe('OP-DRV-0001');
+      expect(worker1Row.getCell(26).value).toBeNull();
+    });
+
+    it('should filter workers export by DEPARTMENT', async () => {
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(
+        { type: 'DEPARTMENT', departmentId: 'dept-1' },
+        true
+      );
+
+      expect(exportResult.filterLabel).toContain('قسم: إدارة التشغيل والمعدات');
+      expect(exportResult.fileName).toContain('قسم_إدارة_التشغيل_والمعدات');
+      expect(exportResult.workerCount).toBe(2);
+    });
+
+    it('should filter workers export by JOB_TITLE', async () => {
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(
+        { type: 'JOB_TITLE', jobTitleId: 'job-1' },
+        true
+      );
+
+      expect(exportResult.filterLabel).toContain('مهنة: سائق لودر ومعدات ثقيلة');
+      expect(exportResult.fileName).toContain('سائق_لودر');
+      expect(exportResult.workerCount).toBe(1);
+    });
+
+    it('should filter workers export by GOVERNORATE', async () => {
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(
+        { type: 'GOVERNORATE', governorateCode: '27' },
+        false
+      );
+
+      expect(exportResult.filterLabel).toContain('محافظة: قنا');
+      expect(exportResult.fileName).toContain('قنا');
+      expect(exportResult.workerCount).toBe(1);
+    });
   });
 });

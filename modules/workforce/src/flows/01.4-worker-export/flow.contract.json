@@ -1,0 +1,88 @@
+{
+  "flowCode": "01.4",
+  "flowName": "تصدير واستيراد كشوف العمالة المتقدم إكسيل RTL",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "GENERAL_ADMIN",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "action:worker:download_excel",
+    "action:worker:upload_excel",
+    "action:worker_export:start",
+    "action:worker_export:do:*",
+    "action:worker_export:dept_menu",
+    "action:worker_export:job_menu:*",
+    "action:worker_export:gov_menu"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "الموارد البشرية",
+    "استيراد وتصدير الكشوف"
+  ],
+  "buttons": [
+    "action:worker:download_excel",
+    "action:worker:upload_excel",
+    "action:worker_export:start",
+    "action:worker_export:do:all",
+    "action:worker_export:dept_menu",
+    "action:worker_export:job_menu",
+    "action:worker_export:gov_menu"
+  ],
+  "inputs": [
+    "document:xlsx",
+    "filter:departmentId",
+    "filter:jobTitleId",
+    "filter:governorateCode"
+  ],
+  "outputs": [
+    "document:xlsx_export",
+    "document:xlsx_template",
+    "summary:import_statistics"
+  ],
+  "dataImpact": {
+    "database": [
+      "Worker",
+      "WorkerAuditLog",
+      "OutboxEvent"
+    ],
+    "googleSheets": [
+      "sync:workers_roster"
+    ],
+    "exports": [
+      "xlsx:workers_roster",
+      "xlsx:template"
+    ],
+    "notifications": [
+      "topic:hr_operations"
+    ]
+  },
+  "linkedFlows": [
+    "01.1",
+    "01.2",
+    "01.3"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 700,
+    "stepP95": 1200,
+    "commitP95": 2000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": true,
+  "allowAny": false
+}

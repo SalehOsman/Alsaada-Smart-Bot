@@ -38,6 +38,9 @@ importers:
       '@alsaada/regional-engine':
         specifier: workspace:*
         version: link:../../packages/regional-engine
+      '@alsaada/workforce':
+        specifier: workspace:*
+        version: link:../../modules/workforce
       '@grammyjs/runner':
         specifier: ^2.0.3
         version: 2.0.3(grammy@1.46.0)
@@ -72,6 +75,37 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  modules/workforce:
+    dependencies:
+      '@alsaada/core-components':
+        specifier: workspace:*
+        version: link:../../packages/core-components
+      '@alsaada/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@alsaada/national-id-engine':
+        specifier: workspace:*
+        version: link:../../packages/national-id-engine
+      '@alsaada/regional-engine':
+        specifier: workspace:*
+        version: link:../../packages/regional-engine
+      exceljs:
+        specifier: ^4.4.0
+        version: 4.4.0
+      grammy:
+        specifier: ^1.35.0
+        version: 1.46.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.9
+        version: 22.20.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.8
+        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(tsx@4.23.13)
 
   packages/core-components:
     dependencies:
