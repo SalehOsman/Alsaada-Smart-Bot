@@ -3,7 +3,7 @@ import { config } from '../config/env.js';
 import { fastCache } from './fast-cache.service.js';
 import { encryptField, decryptField, createBlindIndex } from '@alsaada/database';
 import { parseEgyptianNationalId } from '@alsaada/national-id-engine';
-import { normalizeDigits, formatDate, extractFirstTwoNames } from '@alsaada/regional-engine';
+import { normalizeDigits, formatDate, formatDateDMY, extractFirstTwoNames } from '@alsaada/regional-engine';
 import { normalizeEgyptianPhone } from '@alsaada/core-components';
 
 export interface CreateWorkerInput {
@@ -372,7 +372,7 @@ export class WorkerService {
     const botLink = `https://t.me/${cleanBotUsername}?start=join_${data.code}`;
 
     const hireDateFormatted = data.hireDate
-      ? (data.hireDate instanceof Date ? formatDate(data.hireDate) : data.hireDate)
+      ? (data.hireDate instanceof Date ? formatDateDMY(data.hireDate) : data.hireDate)
       : undefined;
 
     const siteLine = data.siteName ? `📍 *الموقع الميداني:* ${data.siteName}` : '📍 *الموقع الميداني:* الموقع العام للعمليات';

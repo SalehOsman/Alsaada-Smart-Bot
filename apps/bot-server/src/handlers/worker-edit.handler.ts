@@ -13,7 +13,7 @@ import {
   clearPendingWorkerEdit,
   PendingWorkerEditState,
 } from '../redis.js';
-import { normalizeDigits, formatDate } from '@alsaada/regional-engine';
+import { normalizeDigits, formatDate, formatDateDMY, parseFlexibleDate } from '@alsaada/regional-engine';
 import { decryptField } from '@alsaada/database';
 
 const FIELD_LABELS: Record<string, string> = {
@@ -141,7 +141,7 @@ export async function renderWorkerEditMenu(
     }
   }
 
-  const expiryFormatted = worker.idCardExpiryDate ? formatDate(worker.idCardExpiryDate) : 'غير مسجل';
+  const expiryFormatted = worker.idCardExpiryDate ? formatDateDMY(worker.idCardExpiryDate) : 'غير مسجل';
   const addressFormatted = worker.address || 'غير مسجل';
 
   const keyboard = new InlineKeyboard()
@@ -230,7 +230,7 @@ export async function handleStartEditWorkerField(
   else if (fieldKey === 'nickname') currentVal = worker.nickname || '-';
   else if (fieldKey === 'address') currentVal = worker.address || '-';
   else if (fieldKey === 'idCardExpiryDate')
-    currentVal = worker.idCardExpiryDate ? formatDate(worker.idCardExpiryDate) : '-';
+    currentVal = worker.idCardExpiryDate ? formatDateDMY(worker.idCardExpiryDate) : '-';
 
   const keyboard = new InlineKeyboard()
     .text('◀️ إلغاء والعودة لبيانات العامل', `action:worker_edit:menu:${worker.id}`)
@@ -244,7 +244,7 @@ export async function handleStartEditWorkerField(
     `👤 *العامل:* *${worker.name}* (\`${worker.code}\`)\n` +
     `📌 *القيمة الحالية:* *${currentVal}*\n\n` +
     (fieldKey === 'idCardExpiryDate'
-      ? 'يرجى إدخال تاريخ انتهاء البطاقة الجديد بصيغة: *YYYY-MM-DD* (مثال: 2029-10-15):'
+      ? 'يرجى إدخال تاريخ انتهاء البطاقة الجديد بصيغة: *يوم-شهر-سنة* (مثال: 26-05-2028 أو 2028/05):'
       : fieldKey === 'legacyCode'
       ? 'يرجى إدخال كود العامل القديم / الأرشيفي (أرقام أو حروف إنجليزية):'
       : fieldKey === 'address'
@@ -292,7 +292,7 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
   const editState = await getPendingWorkerEdit(telegramId);
   if (!editState) return false;
 
-  const inputRaw = ctx.message.text.trim();
+  let inputRaw = ctx.message.text.trim();
   await ctx.api.deleteMessage(ctx.chat!.id, ctx.message.message_id).catch(() => {});
 
   const role = ctx.effectiveRole || 'GUEST';
@@ -306,11 +306,12 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
       return true;
     }
   } else if (editState.fieldKey === 'idCardExpiryDate') {
-    const cleanDate = normalizeDigits(inputRaw.replace(/[\/.]/g, '-'));
-    if (!cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      await ctx.reply('⚠️ يرجى إدخال تاريخ انتهاء البطاقة بصيغة: YYYY-MM-DD (مثال: 2029-10-15).');
+    const parsedExp = parseFlexibleDate(inputRaw);
+    if (!parsedExp.isValid) {
+      await ctx.reply(parsedExp.error || '⚠️ صيغة التاريخ غير صحيحة. يرجى إدخال تاريخ انتهاء البطاقة بصيغة: يوم-شهر-سنة (مثال: 26-05-2028 أو 2028/05).');
       return true;
     }
+    inputRaw = parsedExp.formattedDMY!;
   } else if (editState.fieldKey === 'legacyCode') {
     if (inputRaw.length < 1 || inputRaw === '-') {
       await ctx.reply('⚠️ كود العامل القديم غير صالح.');

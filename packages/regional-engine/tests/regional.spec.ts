@@ -4,7 +4,9 @@ import {
   parseRegionalNumber,
   formatCurrency,
   formatDate,
+  formatDateDMY,
   formatDateTime,
+  parseFlexibleDate,
   DEFAULT_CURRENCY,
   DEFAULT_TIMEZONE,
 } from '../src/index.js';
@@ -55,10 +57,61 @@ describe('@alsaada/regional-engine', () => {
       expect(formatted).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 
+    it('formats date in DD-MM-YYYY (day-month-year) standard', () => {
+      const fixedDate = new Date(Date.UTC(2028, 4, 26, 12, 0, 0)); // 26 May 2028
+      expect(formatDateDMY(fixedDate)).toBe('26-05-2028');
+    });
+
     it('formats datetime containing date and time components', () => {
       const fixedDate = new Date('2026-09-07T08:30:00Z');
       const formatted = formatDateTime(fixedDate, DEFAULT_TIMEZONE);
       expect(formatted).toContain('2026-09-07');
+    });
+  });
+
+  describe('Universal parseFlexibleDate Engine', () => {
+    it('parses DD/MM/YYYY and formats to DD-MM-YYYY', () => {
+      const res = parseFlexibleDate('26/05/2028');
+      expect(res.isValid).toBe(true);
+      expect(res.formattedDMY).toBe('26-05-2028');
+      expect(res.formattedISO).toBe('2028-05-26');
+    });
+
+    it('parses YYYY-MM-DD and formats to DD-MM-YYYY', () => {
+      const res = parseFlexibleDate('2028-05-26');
+      expect(res.isValid).toBe(true);
+      expect(res.formattedDMY).toBe('26-05-2028');
+    });
+
+    it('parses Arabic numerals e.g. ٢٦-٠٥-٢٠٢٨', () => {
+      const res = parseFlexibleDate('٢٦-٠٥-٢٠٢٨');
+      expect(res.isValid).toBe(true);
+      expect(res.formattedDMY).toBe('26-05-2028');
+    });
+
+    it('parses Year and Month only (YYYY/MM) as on Egyptian National IDs', () => {
+      const res = parseFlexibleDate('2028/05');
+      expect(res.isValid).toBe(true);
+      expect(res.formattedDMY).toBe('01-05-2028');
+      expect(res.formattedISO).toBe('2028-05-01');
+    });
+
+    it('parses date inside surrounding text e.g. البطاقة سارية حتى 2028/05', () => {
+      const res = parseFlexibleDate('البطاقة سارية حتى 2028/05');
+      expect(res.isValid).toBe(true);
+      expect(res.formattedDMY).toBe('01-05-2028');
+    });
+
+    it('parses 2-digit years e.g. 26/05/28', () => {
+      const res = parseFlexibleDate('26/05/28');
+      expect(res.isValid).toBe(true);
+      expect(res.formattedDMY).toBe('26-05-2028');
+    });
+
+    it('returns error for invalid dates', () => {
+      const res = parseFlexibleDate('not-a-date');
+      expect(res.isValid).toBe(false);
+      expect(res.error).toBeDefined();
     });
   });
 });

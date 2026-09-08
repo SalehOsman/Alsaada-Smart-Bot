@@ -170,7 +170,7 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       const result = await aiVisionIdService.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_BACK');
 
       expect(result.isValid).toBe(true);
-      expect(result.expiryDateStr).toBe('2029-08-15');
+      expect(result.expiryDateStr).toBe('15-08-2029');
     });
 
     it('should extract passport number, name and expiry from passport photo', async () => {
@@ -210,7 +210,7 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       expect(result.isValid).toBe(true);
       expect(result.passportNumber).toBe('A12345678');
       expect(result.fullName).toBe('جون دو سميث');
-      expect(result.expiryDateStr).toBe('2030-05-20');
+      expect(result.expiryDateStr).toBe('20-05-2030');
     });
   });
 

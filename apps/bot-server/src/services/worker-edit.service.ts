@@ -2,7 +2,7 @@ import { prisma } from '../db.js';
 import { config } from '../config/env.js';
 import { fastCache } from './fast-cache.service.js';
 import { workerService } from './worker.service.js';
-import { normalizeDigits } from '@alsaada/regional-engine';
+import { normalizeDigits, parseFlexibleDate } from '@alsaada/regional-engine';
 import { encryptField, createBlindIndex } from '@alsaada/database';
 
 export interface CreateEditRequestInput {
@@ -113,7 +113,8 @@ export class WorkerEditService {
     } else if (fieldKey === 'previousInsuranceStatus') {
       dataToUpdate.previousInsuranceStatus = cleanValue;
     } else if (fieldKey === 'idCardExpiryDate') {
-      dataToUpdate.idCardExpiryDate = new Date(cleanValue);
+      const parsedExp = parseFlexibleDate(cleanValue);
+      dataToUpdate.idCardExpiryDate = parsedExp.isValid ? parsedExp.date : new Date(cleanValue);
     } else if (fieldKey === 'jobTitle') {
       dataToUpdate.jobTitle = cleanValue;
     } else if (fieldKey === 'siteId') {

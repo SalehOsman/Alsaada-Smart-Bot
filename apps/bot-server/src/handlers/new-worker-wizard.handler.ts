@@ -14,6 +14,8 @@ import {
 import {
   formatCurrency,
   formatDate,
+  formatDateDMY,
+  parseFlexibleDate,
   normalizeDigits,
   extractFirstTwoNames,
 } from '@alsaada/regional-engine';
@@ -132,11 +134,11 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
   };
 
   const keyboard = new InlineKeyboard()
-    .text('🇪🇬 بطاقة رقم قومي مصري (مسح ذكي فائق)', 'action:worker_doc:national_id')
+    .text('🇪🇬 بطاقة رقم قومي مصري (استخراج آلي)', 'action:worker_doc:national_id')
     .row()
     .text('🌐 جواز سفر لوافد / أجنبي', 'action:worker_doc:passport')
     .row()
-    .text('✍️ إدخال يدوي مباشر (تجاوز الفحص الذكي)', 'action:worker_step:manual_fallback')
+    .text('✍️ إدخال يدوي مباشر', 'action:worker_step:manual_fallback')
     .row()
     .text('❌ إلغاء العملية', 'action:cancel_worker_op')
     .row()
@@ -146,9 +148,8 @@ export async function handleStartAddWorker(ctx: MyContext): Promise<void> {
     '👤 *تسجيل وتعيين عامل جديد [1/18]*\n' +
     '━━━━━━━━━━━━━━━━━━━━━\n' +
     'اختر نوع وثيقة إثبات الهوية للبدء:\n\n' +
-    '💡 *المسح الذكي فائق السرعة (AI Vision):*\n' +
-    '• يتيح لك النظام تصوير وجه وظهر البطاقة أولاً.\n' +
-    '• تتم قراءة وتدقيق الرقم القومي والاسم الكامل وتاريخ الانتهاء معاً بالذكاء الاصطناعي في ثوانٍ معدودة دون تعليق.';
+    '• تصوير وجه وظهر البطاقة لقراءة وتدقيق البيانات آلياً.\n' +
+    '• أو المتابعة بالإدخال اليدوي المباشر.';
 
   let promptMsgId = 0;
   if (ctx.callbackQuery) {
@@ -229,10 +230,16 @@ async function analyzePhotosDirectly(
 ): Promise<boolean> {
   const isNid = wizard.data.idType === 'NATIONAL_ID';
 
-  const statusMsg = await ctx.reply(
-    '⏳ *جاري الفحص الذكي الفائق للبطاقة واستخراج البيانات الرسمية بالذكاء الاصطناعي...*',
-    { parse_mode: 'Markdown' }
-  );
+  if (wizard.messageId && ctx.chat) {
+    await ctx.api
+      .editMessageText(
+        ctx.chat.id,
+        wizard.messageId,
+        '⏳ *جاري قراءة وتدقيق بيانات البطاقة بالذكاء الاصطناعي...*',
+        { parse_mode: 'Markdown' }
+      )
+      .catch(() => {});
+  }
 
   try {
     // 1. تحميل ملفات الصور من تليجرام بالتوازي
@@ -270,7 +277,7 @@ async function analyzePhotosDirectly(
       throw new Error('Front buffer missing');
     }
 
-    // 2. تحليل الوجه والظهر معاً بالتوازي (Parallel Execution) لتقليل وقت الانتظار إلى أقل من النصف!
+    // 2. تحليل الوجه والظهر بالتوازي (Parallel Execution)
     const scanPromises: [Promise<any>, Promise<any>] = [
       aiVisionIdService.scanDocument(
         frontBuffer,
@@ -284,8 +291,6 @@ async function analyzePhotosDirectly(
 
     const [frontScan, backScan] = await Promise.all(scanPromises);
 
-    await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
-
     // فحص صلاحية الوجه
     if (!frontScan.isValid) {
       const errorKb = new InlineKeyboard()
@@ -298,9 +303,24 @@ async function analyzePhotosDirectly(
 
       const errMsg =
         frontScan.userErrorMessage ||
-        '❌ *الصورة المرفقة ليست لرقم قومي او باسبور يرجى ارفاق صورة بطاقة رقم قومي او باسبور على حسب حالة الاختيار*';
+        '❌ *الصورة المرفقة ليست لرقم قومي أو جواز سفر. يرجى إرفاق صورة واضحة وكاملة.*';
 
-      await ctx.reply(errMsg, { parse_mode: 'Markdown', reply_markup: errorKb });
+      if (wizard.messageId && ctx.chat) {
+        await ctx.api
+          .editMessageText(ctx.chat.id, wizard.messageId, errMsg, {
+            parse_mode: 'Markdown',
+            reply_markup: errorKb,
+          })
+          .catch(async () => {
+            const sent = await ctx.reply(errMsg, { parse_mode: 'Markdown', reply_markup: errorKb });
+            wizard.messageId = sent.message_id;
+            await setPendingWorkerWizard(telegramId, wizard);
+          });
+      } else {
+        const sent = await ctx.reply(errMsg, { parse_mode: 'Markdown', reply_markup: errorKb });
+        wizard.messageId = sent.message_id;
+        await setPendingWorkerWizard(telegramId, wizard);
+      }
       return true;
     }
 
@@ -312,7 +332,7 @@ async function analyzePhotosDirectly(
     if (isNid) {
       const rawNid = frontScan.nationalIdNumber!;
       wizard.data.idNumber = rawNid;
-      wizard.data.birthDateStr = frontScan.birthDate ? formatDate(frontScan.birthDate) : '-';
+      wizard.data.birthDateStr = frontScan.birthDate ? formatDateDMY(frontScan.birthDate) : '-';
       wizard.data.gender = frontScan.gender;
       wizard.data.governorateNameAr = frontScan.governorateNameAr;
       if (frontScan.birthDate) {
@@ -341,14 +361,29 @@ async function analyzePhotosDirectly(
           .text('🔄 إرفاق بطاقة أخرى', 'action:worker_photo:retry_front')
           .row()
           .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-        await ctx.reply(
+        const dupText =
           `⚠️ *تنبيه تعارض: الرقم القومي مسجل مسبقاً!*\n` +
           `• الرقم القومي: \`${rawNid}\`\n` +
           `• كود العامل: \`${dup.existingWorker.code}\`\n` +
           `• الاسم: *${dup.existingWorker.name}*\n` +
-          `• الوظيفة: ${dup.existingWorker.jobTitle}`,
-          { parse_mode: 'Markdown', reply_markup: dupKb }
-        );
+          `• الوظيفة: ${dup.existingWorker.jobTitle}`;
+
+        if (wizard.messageId && ctx.chat) {
+          await ctx.api
+            .editMessageText(ctx.chat.id, wizard.messageId, dupText, {
+              parse_mode: 'Markdown',
+              reply_markup: dupKb,
+            })
+            .catch(async () => {
+              const sent = await ctx.reply(dupText, { parse_mode: 'Markdown', reply_markup: dupKb });
+              wizard.messageId = sent.message_id;
+              await setPendingWorkerWizard(telegramId, wizard);
+            });
+        } else {
+          const sent = await ctx.reply(dupText, { parse_mode: 'Markdown', reply_markup: dupKb });
+          wizard.messageId = sent.message_id;
+          await setPendingWorkerWizard(telegramId, wizard);
+        }
         return true;
       }
 
@@ -374,13 +409,28 @@ async function analyzePhotosDirectly(
           .text('🔄 إرفاق جواز آخر', 'action:worker_photo:retry_front')
           .row()
           .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-        await ctx.reply(
+        const dupText =
           `⚠️ *تنبيه تعارض: رقم الجواز مسجل مسبقاً!*\n` +
           `• رقم الجواز: \`${wizard.data.idNumber}\`\n` +
           `• كود العامل: \`${dup.existingWorker.code}\`\n` +
-          `• الاسم: *${dup.existingWorker.name}*`,
-          { parse_mode: 'Markdown', reply_markup: dupKb }
-        );
+          `• الاسم: *${dup.existingWorker.name}*`;
+
+        if (wizard.messageId && ctx.chat) {
+          await ctx.api
+            .editMessageText(ctx.chat.id, wizard.messageId, dupText, {
+              parse_mode: 'Markdown',
+              reply_markup: dupKb,
+            })
+            .catch(async () => {
+              const sent = await ctx.reply(dupText, { parse_mode: 'Markdown', reply_markup: dupKb });
+              wizard.messageId = sent.message_id;
+              await setPendingWorkerWizard(telegramId, wizard);
+            });
+        } else {
+          const sent = await ctx.reply(dupText, { parse_mode: 'Markdown', reply_markup: dupKb });
+          wizard.messageId = sent.message_id;
+          await setPendingWorkerWizard(telegramId, wizard);
+        }
         return true;
       }
 
@@ -390,7 +440,6 @@ async function analyzePhotosDirectly(
       return true;
     }
   } catch (error: any) {
-    await ctx.api.deleteMessage(ctx.chat!.id, statusMsg.message_id).catch(() => {});
     console.error('⚠️ [AI-VISION-DIRECT] Error analyzing photos:', error);
     const errKb = new InlineKeyboard()
       .text('🔄 إعادة المحاولة', 'action:worker_photo:retry_front')
@@ -398,10 +447,25 @@ async function analyzePhotosDirectly(
       .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
       .row()
       .text('❌ إلغاء العملية', 'action:cancel_worker_op');
-    await ctx.reply(
-      '⚠️ تعذر فحص الصور بالذكاء الاصطناعي حالياً. يمكنك إعادة المحاولة أو المتابعة بالإدخال اليدوي.',
-      { reply_markup: errKb }
-    );
+    const errText =
+      '⚠️ تعذر قراءة بيانات الصور بالذكاء الاصطناعي حالياً. يمكنك إعادة المحاولة أو المتابعة بالإدخال اليدوي.';
+
+    if (wizard.messageId && ctx.chat) {
+      await ctx.api
+        .editMessageText(ctx.chat.id, wizard.messageId, errText, {
+          parse_mode: 'Markdown',
+          reply_markup: errKb,
+        })
+        .catch(async () => {
+          const sent = await ctx.reply(errText, { parse_mode: 'Markdown', reply_markup: errKb });
+          wizard.messageId = sent.message_id;
+          await setPendingWorkerWizard(telegramId, wizard);
+        });
+    } else {
+      const sent = await ctx.reply(errText, { parse_mode: 'Markdown', reply_markup: errKb });
+      wizard.messageId = sent.message_id;
+      await setPendingWorkerWizard(telegramId, wizard);
+    }
     return true;
   }
 }
@@ -470,7 +534,7 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
         }
 
         wizard.data.idNumber = inputRaw;
-        wizard.data.birthDateStr = formatDate(val.birthDate);
+        wizard.data.birthDateStr = formatDateDMY(val.birthDate);
         wizard.data.age = Math.floor(
           (new Date().getTime() - val.birthDate.getTime()) / (365.25 * 24 * 3600 * 1000)
         );
@@ -520,12 +584,19 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
 
     case WorkerWizardStep.MANUAL_EXPIRY:
     case WorkerWizardStep.AI_EDIT_EXPIRY: {
-      let cleanExpiry = normalizeDigits(inputRaw.replace(/[\/.]/g, '-'));
-      if (!cleanExpiry.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        await ctx.reply('⚠️ صيغة التاريخ غير صحيحة. يرجى إدخال تاريخ انتهاء البطاقة بصيغة: YYYY-MM-DD (مثال: 2029-08-15) أو اضغط تخطي.');
+      if (inputRaw === 'تخطي' || inputRaw === '-') {
+        wizard.data.idCardExpiryDateStr = '-';
+        wizard.step = wizard.data.isManualFallback ? WorkerWizardStep.NICKNAME : WorkerWizardStep.AI_CONFIRMATION;
+        await setPendingWorkerWizard(telegramId, wizard);
+        await renderWizardStep(ctx, wizard);
         return true;
       }
-      wizard.data.idCardExpiryDateStr = cleanExpiry;
+      const parsedExp = parseFlexibleDate(inputRaw);
+      if (!parsedExp.isValid) {
+        await ctx.reply(parsedExp.error || '⚠️ صيغة التاريخ غير صحيحة. يرجى إدخال تاريخ انتهاء البطاقة بصيغة: يوم-شهر-سنة (مثال: 26-05-2028 أو 2028/05) أو اضغط تخطي.');
+        return true;
+      }
+      wizard.data.idCardExpiryDateStr = parsedExp.formattedDMY;
       wizard.step = wizard.data.isManualFallback ? WorkerWizardStep.NICKNAME : WorkerWizardStep.AI_CONFIRMATION;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
@@ -553,15 +624,14 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
     }
 
     case WorkerWizardStep.PASSPORT_BIRTHDATE: {
-      let cleanDate = normalizeDigits(inputRaw.replace(/[\/.]/g, '-'));
-      if (!cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        await ctx.reply('⚠️ يرجى إدخال تاريخ الميلاد بصيغة: YYYY-MM-DD (مثال: 1994-05-12).');
+      const parsedBirth = parseFlexibleDate(inputRaw);
+      if (!parsedBirth.isValid || !parsedBirth.date) {
+        await ctx.reply(parsedBirth.error || '⚠️ يرجى إدخال تاريخ الميلاد بصيغة: يوم-شهر-سنة (مثال: 12-05-1994).');
         return true;
       }
-      const bDate = new Date(cleanDate);
-      wizard.data.birthDateStr = cleanDate;
+      wizard.data.birthDateStr = parsedBirth.formattedDMY;
       wizard.data.age = Math.floor(
-        (new Date().getTime() - bDate.getTime()) / (365.25 * 24 * 3600 * 1000)
+        (new Date().getTime() - parsedBirth.date.getTime()) / (365.25 * 24 * 3600 * 1000)
       );
       wizard.step = WorkerWizardStep.PASSPORT_GENDER;
       await setPendingWorkerWizard(telegramId, wizard);
@@ -616,12 +686,12 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
     }
 
     case WorkerWizardStep.CUSTOM_START_DATE_INPUT: {
-      let cleanDate = normalizeDigits(inputRaw.replace(/[\/.]/g, '-'));
-      if (!cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        await ctx.reply('⚠️ يرجى إدخال تاريخ التعيين بصيغة: YYYY-MM-DD (مثال: 2026-03-01).');
+      const parsedStart = parseFlexibleDate(inputRaw);
+      if (!parsedStart.isValid || !parsedStart.date) {
+        await ctx.reply(parsedStart.error || '⚠️ يرجى إدخال تاريخ التعيين بصيغة: يوم-شهر-سنة (مثال: 01-03-2026).');
         return true;
       }
-      wizard.data.hireDateStr = cleanDate;
+      wizard.data.hireDateStr = parsedStart.formattedDMY;
       wizard.step = WorkerWizardStep.DRIVING_LICENSE;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
@@ -656,6 +726,31 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return; // مجرد ملصق للصفحة
   }
 
+  // 1. حراسة المعاملة المنتهية: إذا تم الضغط على زر من أزرار المعالج والمعالج غير موجود
+  if (!wizard) {
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx
+      .answerCallbackQuery({
+        text: '⚠️ هذه المعاملة منتهية الصلاحية أو تم إكمالها مسبقاً.',
+        show_alert: true,
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 2. حراسة الرسالة النشطة: إذا كان الزر ينتمي لرسالة قديمة غير الرسالة النشطة الحالية
+  const clickedMsgId = ctx.callbackQuery.message?.message_id;
+  if (wizard.messageId && clickedMsgId && clickedMsgId !== wizard.messageId) {
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx
+      .answerCallbackQuery({
+        text: '⚠️ هذه الرسالة منتهية الصلاحية، يرجى استخدام القائمة أو الأزرار النشطة الأخيرة.',
+        show_alert: true,
+      })
+      .catch(() => {});
+    return;
+  }
+
   if (data === 'action:cancel_worker_op') {
     await clearPendingWorkerWizard(telegramId);
     await clearPendingWorkerExcelUpload(telegramId);
@@ -673,8 +768,6 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     );
     return;
   }
-
-  if (!wizard) return;
 
   if (data === 'action:worker_step:back') {
     await handleStepBack(ctx, wizard, telegramId);
@@ -888,7 +981,7 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
   if (data.startsWith('action:worker_hire:')) {
     const hireChoice = data.replace('action:worker_hire:', '');
     if (hireChoice === 'today') {
-      wizard.data.hireDateStr = formatDate(new Date());
+      wizard.data.hireDateStr = formatDateDMY(new Date());
       wizard.step = WorkerWizardStep.DRIVING_LICENSE;
     } else {
       wizard.step = WorkerWizardStep.CUSTOM_START_DATE_INPUT;
@@ -1061,10 +1154,10 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         '👤 *تسجيل وتعيين عامل جديد [1/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         'اختر نوع وثيقة إثبات الهوية للبدء:\n\n' +
-        '💡 *المسح الذكي الفوري (AI Vision):*\n' +
-        'يقوم البوت بقراءة وتدقيق الرقم القومي والاسم الكامل وتاريخ سريان البطاقة تلقائياً.';
+        '• تصوير وجه وظهر البطاقة لقراءة وتدقيق البيانات آلياً.\n' +
+        '• أو المتابعة بالإدخال اليدوي المباشر.';
       keyboard
-        .text('🇪🇬 بطاقة رقم قومي مصري (مسح ذكي)', 'action:worker_doc:national_id')
+        .text('🇪🇬 بطاقة رقم قومي مصري (استخراج آلي)', 'action:worker_doc:national_id')
         .row()
         .text('🌐 جواز سفر لوافد / أجنبي', 'action:worker_doc:passport')
         .row()
@@ -1079,15 +1172,11 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
     case WorkerWizardStep.PHOTO_FRONT: {
       const isNid = wizard.data.idType === 'NATIONAL_ID';
       text =
-        `📸 *[1/2] تصوير وجه ${isNid ? 'بطاقة الرقم القومي' : 'جواز السفر'} [2/18]*\n` +
+        `📸 *[1/2] إرفاق وجه ${isNid ? 'بطاقة الرقم القومي' : 'جواز السفر'} [2/18]*\n` +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        `يرجى إرسال صورة *وجه ${isNid ? 'بطاقة الرقم القومي' : 'صفحة البيانات في جواز السفر'}* الآن:\n\n` +
-        '📌 *تعليمات التصوير الإلزامية:*\n' +
-        '• يجب أن تكون البطاقة واضحة وكاملة داخل الإطار دون اقتطاع أركانها.\n' +
-        '• غير مغطاة بأصابع اليد أو بأي جسم خارجي يغطي الأرقام أو البيانات.\n' +
-        '• بجودة عالية وإضاءة جيدة بدون فلاش يعكس الأرقام.\n' +
-        `• في حالة إرفاق صورة ليست لـ ${isNid ? 'رقم قومي' : 'جواز سفر'}، سيتم رفضها تلقائياً.\n\n` +
-        '💡 _المسار فائق السرعة: سيتم استلام صورة الوجه فوراً ثم يطلب البوت صورة الظهر ليتم استخراج كافة البيانات معاً بنقرة واحدة._';
+        `يرجى إرسال صورة *وجه ${isNid ? 'بطاقة الرقم القومي' : 'صفحة البيانات بجواز السفر'}* الآن:\n\n` +
+        '• تأكد من وضوح الأرقام والبيانات داخل الإطار.\n' +
+        '• تجنب انعكاس الفلاش المباشر على الأرقام.';
 
       keyboard
         .text('✍️ المتابعة بالإدخال اليدوي', 'action:worker_step:manual_fallback')
@@ -1099,21 +1188,19 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
 
     case WorkerWizardStep.PHOTO_BACK: {
       text =
-        '📸 *[2/2] تصوير ظهر بطاقة الرقم القومي (تاريخ الانتهاء) [3/18]*\n' +
+        '📸 *[2/2] إرفاق ظهر بطاقة الرقم القومي [3/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        '✅ *تم حفظ صورة الوجه بنجاح.*\n\n' +
-        'يرجى الآن إرسال صورة *ظهر بطاقة الرقم القومي* لاستخراج تاريخ انتهاء السريان:\n\n' +
-        '📌 *تعليمات التصوير:*\n' +
-        '• تأكد من وضوح شريط تاريخ السريان "سارية حتى" والباركود.\n' +
-        '• سيتم تحليل الوجه والظهر معاً بالذكاء الاصطناعي فور إرسال هذه الصورة.\n\n' +
-        '💡 _يمكنك التخطي الآن ليتم فحص الوجه فقط، أو إدخال التاريخ يدوياً._';
+        '✅ تم حفظ صورة الوجه بنجاح.\n\n' +
+        'يرجى إرسال صورة *ظهر البطاقة* لقراءة تاريخ السريان (سارية حتى):\n\n' +
+        '• تأكد من ظهور سطر "سارية حتى" والباركود بوضوح.\n' +
+        '• يمكنك تخطي هذه الخطوة أو إدخال تاريخ السريان يدوياً.';
 
       keyboard
-        .text('⏭️ تخطي ظهر البطاقة والتحليل الآن', 'action:worker_photo:skip_back')
+        .text('⏭️ تخطي ظهر البطاقة', 'action:worker_photo:skip_back')
         .row()
         .text('✍️ إدخال تاريخ الانتهاء يدوياً', 'action:worker_photo:manual_expiry')
         .row()
-        .text('◀️ إعادة تصوير الوجه', 'action:worker_step:back')
+        .text('◀️ إعادة إرسال الوجه', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
@@ -1121,20 +1208,19 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
     case WorkerWizardStep.AI_CONFIRMATION: {
       const isNid = wizard.data.idType === 'NATIONAL_ID';
       text =
-        '📋 *تأكيد بيانات الهوية المستخرجة بالذكاء الاصطناعي [4/18]*\n' +
+        '📋 *مراجعة وتأكيد بيانات الهوية [4/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'تم تدقيق وثيقة الهوية واستخراج البيانات التالية:\n\n' +
-        `👤 *الاسم الرباعي:* *${wizard.data.fullName || 'قيد الاستيفاء'}*\n` +
+        `👤 *الاسم الرباعي:* *${wizard.data.fullName || 'غير محدد'}*\n` +
         `🔢 *رقم الإثبات:* \`${wizard.data.idNumber || '-'}\` (${isNid ? 'رقم قومي مصري' : `جواز سفر - ${wizard.data.nationality}`})\n` +
-        (isNid ? `📅 *تاريخ الميلاد والسن:* ${wizard.data.birthDateStr || '-'} (${wizard.data.age || '-'} سنة)\n` : '') +
+        (isNid ? `📅 *تاريخ الميلاد:* ${wizard.data.birthDateStr || '-'} (${wizard.data.age || '-'} سنة)\n` : '') +
         (wizard.data.governorateNameAr ? `📍 *المحافظة:* ${wizard.data.governorateNameAr}\n` : '') +
-        (wizard.data.address ? `🏠 *العنوان ومحل الإقامة:* *${wizard.data.address}*\n` : '') +
-        `⏳ *تاريخ انتهاء البطاقة:* *${wizard.data.idCardExpiryDateStr || 'غير محدد / قيد الاستيفاء'}*\n` +
+        (wizard.data.address ? `🏠 *العنوان:* *${wizard.data.address}*\n` : '') +
+        `⏳ *انتهاء البطاقة:* *${wizard.data.idCardExpiryDateStr || 'غير محدد'}*\n` +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'هل هذه البيانات صحيحة للمتابعة؟ يمكنك اعتمادها فوراً أو تصحيح أي بيان.';
+        'يرجى التأكيد للمتابعة أو تعديل أي بيان:';
 
       keyboard
-        .text('✅ البيانات صحيحة ومتابعة التعيين', 'action:worker_ai_confirm:ok')
+        .text('✅ اعتماد البيانات ومتابعة التعيين', 'action:worker_ai_confirm:ok')
         .row()
         .text('✏️ تصحيح الاسم', 'action:worker_ai_edit:name')
         .text('✏️ تصحيح الرقم', 'action:worker_ai_edit:id')
@@ -1189,8 +1275,8 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         '⏳ *تاريخ انتهاء سريان البطاقة*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
         `التاريخ الحالي: *${wizard.data.idCardExpiryDateStr || 'غير محدد'}*\n\n` +
-        'يرجى إدخال تاريخ انتهاء سريان البطاقة بصيغة: *YYYY-MM-DD*\n' +
-        '_💡 مثال: 2029-08-15_';
+        'يرجى إدخال تاريخ انتهاء سريان البطاقة بصيغة: *يوم-شهر-سنة*\n' +
+        '_💡 مثال: 26-05-2028 أو 2028/05_';
       keyboard
         .text('⏭️ تخطي تاريخ الانتهاء', 'action:worker_photo:skip_back')
         .row()
@@ -1242,7 +1328,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
       text =
         '🎂 *تاريخ ميلاد الوافد [5/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'أدخل تاريخ الميلاد بصيغة: YYYY-MM-DD (مثال: 1994-05-12):';
+        'أدخل تاريخ الميلاد بصيغة: يوم-شهر-سنة (مثال: 12-05-1994):';
       keyboard
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -1434,7 +1520,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
     }
 
     case WorkerWizardStep.START_DATE_CHOICE: {
-      const todayFormatted = formatDate(new Date());
+      const todayFormatted = formatDateDMY(new Date());
       text =
         '📅 *تاريخ بدء ومباشرة العمل [11/18]*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -1455,7 +1541,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
       text =
         '📅 *تاريخ تعيين مخصص*\n' +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        'أدخل تاريخ المباشرة بصيغة: YYYY-MM-DD (مثال: 2026-03-01):';
+        'أدخل تاريخ المباشرة بصيغة: يوم-شهر-سنة (مثال: 01-03-2026):';
       keyboard
         .text('◀️ السابق', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
@@ -1591,7 +1677,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         `${jobIcon} *الوظيفة:* ${wizard.data.jobTitleName} | 📍 *الموقع:* ${wizard.data.siteName}\n` +
         `💰 *الراتب المعتمد:* *${formatCurrency(totalSalary)}* (أساسي: ${formatCurrency(wizard.data.baseSalary || 0)} + حافز: ${formatCurrency(wizard.data.additionalSalary || 0)})\n` +
         `⏳ *نظام التشغيل:* ${wizard.data.shiftSystem || '20 يوم عمل / 10 راحة'}\n` +
-        `📅 *تاريخ بدء العمل:* *${wizard.data.hireDateStr || formatDate(new Date())}*\n` +
+        `📅 *تاريخ بدء العمل:* *${wizard.data.hireDateStr || formatDateDMY(new Date())}*\n` +
         `📱 *الهاتف والواتساب:* \`${wizard.data.phone}\`\n` +
         `🚨 *هاتف الطوارئ:* \`${wizard.data.emergencyPhone || '-'}\`\n` +
         `💳 *تحويل المستحقات:* \`${wizard.data.walletNumber || '-'}\` (${wizard.data.walletType || 'نقدي'})\n` +
@@ -1642,17 +1728,22 @@ async function handleWorkerFinalSave(
 
   let birthDateObj: Date | undefined = undefined;
   if (d.birthDateStr && d.birthDateStr !== '-') {
-    birthDateObj = new Date(d.birthDateStr);
+    const parsed = parseFlexibleDate(d.birthDateStr);
+    birthDateObj = parsed.isValid ? parsed.date : undefined;
   }
 
   let hireDateObj = new Date();
   if (d.hireDateStr) {
-    hireDateObj = new Date(d.hireDateStr);
+    const parsed = parseFlexibleDate(d.hireDateStr);
+    if (parsed.isValid && parsed.date) {
+      hireDateObj = parsed.date;
+    }
   }
 
   let expiryDateObj: Date | undefined = undefined;
   if (d.idCardExpiryDateStr && d.idCardExpiryDateStr !== '-') {
-    expiryDateObj = new Date(d.idCardExpiryDateStr);
+    const parsed = parseFlexibleDate(d.idCardExpiryDateStr);
+    expiryDateObj = parsed.isValid ? parsed.date : undefined;
   }
 
   try {
@@ -1726,7 +1817,7 @@ async function handleWorkerFinalSave(
       backBuffer
     );
 
-    // تحديث مسار الصور في قاعدة البيانات بالمسار المحلي الرسمي
+    // تحديث مسارات التخزين في سجل العامل إن توفرت
     if (archiveResult.localFrontPath || archiveResult.localBackPath) {
       await prisma.worker.update({
         where: { id: result.worker.id },
@@ -1767,7 +1858,7 @@ async function handleWorkerFinalSave(
       (d.address ? `🏠 *العنوان:* ${d.address}\n` : '') +
       (d.idCardExpiryDateStr ? `⏳ *انتهاء البطاقة:* *${d.idCardExpiryDateStr}*\n` : '') +
       `💼 *الوظيفة:* ${result.worker.jobTitle} | 📍 *الموقع:* ${d.siteName || '-'}\n` +
-      `📅 *تاريخ التعيين:* *${formatDate(hireDateObj)}*\n` +
+      `📅 *تاريخ التعيين:* *${formatDateDMY(hireDateObj)}*\n` +
       `📱 *الهاتف:* \`${d.phone}\` | 💳 *المستحقات:* \`${d.walletNumber}\` (${d.walletType})\n` +
       archiveNote +
       driveNote +

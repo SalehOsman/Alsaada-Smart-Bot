@@ -13,6 +13,20 @@ vi.mock('../src/redis.js', () => ({
   clearPendingAdminEdit: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../src/services/system-data.service.js', () => ({
+  systemDataService: {
+    getAdminUser: vi.fn().mockResolvedValue({
+      id: 1,
+      telegramId: 7594239391n,
+      role: 'SUPER_ADMIN',
+      fullName: 'المدير العام',
+      username: 'super_admin_user',
+      phoneEncrypted: null,
+    }),
+    invalidateUser: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 import {
   ADMIN_FIELD_LABELS,
   renderAdminProfileCard,

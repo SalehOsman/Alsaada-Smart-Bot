@@ -1,12 +1,13 @@
 import { config } from '../config/env.js';
-import { normalizeDigits } from '@alsaada/regional-engine';
+import { normalizeDigits, parseFlexibleDate } from '@alsaada/regional-engine';
 import { parseEgyptianNationalId } from '@alsaada/national-id-engine';
 
 export type ExpectedDocType = 'NATIONAL_ID_FRONT' | 'NATIONAL_ID_BACK' | 'PASSPORT';
+export type DocTypeEnum = 'EGYPTIAN_NATIONAL_ID_FRONT' | 'EGYPTIAN_NATIONAL_ID_BACK' | 'PASSPORT' | 'OTHER';
 
 export interface AiVisionScanResult {
   isValid: boolean;
-  detectedDocType: 'EGYPTIAN_NATIONAL_ID_FRONT' | 'EGYPTIAN_NATIONAL_ID_BACK' | 'PASSPORT' | 'OTHER';
+  detectedDocType: DocTypeEnum;
   isQualityAcceptable: boolean;
   nationalIdNumber?: string;
   passportNumber?: string;
@@ -72,15 +73,16 @@ export class AiVisionIdService {
    - "OTHER": أي صورة أخرى (رخصة قيادة، بطاقة تأمين، كارنيه نقابة، إيصال، صورة شخصية عادية، مستند غير متعلق، أو مستند من دولة أخرى).
 
 2. جودة الصورة (isQualityAcceptable):
-   - يجب أن تكون البطاقة كاملة وظاهرة داخل الإطار دون اقتطاع أركانها.
-   - يجب ألا تكون مغطاة بأصابع اليد أو بأي جسم خارجي يغطي الأرقام أو البيانات (isCoveredOrObscured).
-   - يجب ألا تكون مشوشة أو باهتة بدرجة تمنع القراءة الدقيقة (isBlurryOrUnreadable).
+   - isCoveredOrObscured: ضع true فقط وفقط إذا كانت أصابع اليد أو أي جسم خارجي تغطي وتحجب الأرقام القومية أو الاسم أو البيانات الأساسية وتمنع قراءتها. أما إذا كانت أصابع اليد تمسك بالبطاقة من الحواف أو الأطراف الفارغة دون حجب أي أرقام أو نصوص، فضع false حتماً ولا تعتبرها مغطاة.
+   - isBlurryOrUnreadable: ضع true فقط إذا كانت الصورة باهتة أو مطموسة لدرجة تجعل قراءة الأرقام والبيانات مستحيلة تماماً. إذا كانت البيانات مقروءة بوضوح فضع false حتماً.
 
 3. استخراج البيانات:
-   - nationalIdNumber: الرقم القومي المصري المكون من 14 رقماً بالضبط، مستخرجاً كأرقام إنجليزية (0-9).
+   - nationalIdNumber: في وجه البطاقة المصرية فقط، استخرج الرقم القومي المصري المكون من 14 رقماً بالضبط كأرقام إنجليزية (0-9). في ظهر البطاقة ضع null.
    - passportNumber: رقم جواز السفر.
-   - expiryDate: تاريخ انتهاء سريان البطاقة أو الجواز بصيغة "YYYY-MM-DD". في ظهر البطاقة المصرية ابحث عن عبارة "سارية حتى" أو تاريخ الانتهاء.
-   - fullName: اسم الشخص الكامل المدون على البطاقة/الجواز.
+   - expiryDate: تاريخ انتهاء سريان البطاقة أو الجواز.
+     * هام جداً لظهر بطاقة الرقم القومي المصرية: ابحث بدقة متناهية عن السطر الذي يتضمن عبارة "البطاقة سارية حتى" أو "سارية حتى" (يكون عادة بالأسفل يساراً أو بجانب الباركود)، واستخرج التاريخ المكتوب بعده مباشرة مهما كان شكله (سواء سنة وشهر مثل "2028/05" أو تاريخ كامل مثل "26/05/2028" أو "2028-05-26").
+     * لا تترك expiryDate فارغاً أو null أبداً إذا كان تاريخ السريان مدوناً في ظهر البطاقة بعد "سارية حتى".
+   - fullName: اسم الشخص الكامل المدون على وجه البطاقة/الجواز.
    - address: العنوان الكامل ومحل الإقامة المدون على البطاقة (سواء في الوجه أو الظهر) أو جواز السفر (مثل: المحافظة، المركز/القسم، القرية/الشارع).
 
 أرجع النتيجة حصراً بصيغة JSON التالية دون أي نصوص إضافية:
@@ -90,7 +92,7 @@ export class AiVisionIdService {
   "isBlurryOrUnreadable": true | false,
   "nationalIdNumber": "14 digits or null",
   "passportNumber": "string or null",
-  "expiryDate": "YYYY-MM-DD or null",
+  "expiryDate": "string or null",
   "fullName": "string or null",
   "address": "string or null",
   "notes": "string"
@@ -158,11 +160,19 @@ export class AiVisionIdService {
       };
     }
 
-    const detectedType = parsedJson.detectedDocType || 'OTHER';
+    const validDocTypes: DocTypeEnum[] = [
+      'EGYPTIAN_NATIONAL_ID_FRONT',
+      'EGYPTIAN_NATIONAL_ID_BACK',
+      'PASSPORT',
+      'OTHER',
+    ];
+    const detectedType: DocTypeEnum = validDocTypes.includes(parsedJson.detectedDocType)
+      ? (parsedJson.detectedDocType as DocTypeEnum)
+      : 'OTHER';
     const isCovered = Boolean(parsedJson.isCoveredOrObscured);
     const isBlurry = Boolean(parsedJson.isBlurryOrUnreadable);
 
-    // 1. حراسة الجودة ومنع التغطية بالأصابع
+    // 1. حراسة الجودة ومنع التغطية بالأصابع أو التشويش
     if (isCovered || isBlurry) {
       return {
         isValid: false,
@@ -171,7 +181,7 @@ export class AiVisionIdService {
         rawJson: parsedJson,
         userErrorMessage:
           '⚠️ *الصورة غير مقبولة:*\n' +
-          (isCovered ? '• الصورة مغطاة بأصابع اليد أو بأجسام خارجية تحجب الأرقام.\n' : '') +
+          (isCovered ? '• الصورة مغطاة بأصابع اليد أو بأجسام خارجية تحجب الأرقام أو البيانات.\n' : '') +
           (isBlurry ? '• الصورة مشوشة أو باهتة وغير واضحة.\n' : '') +
           'يرجى تصوير البطاقة كاملة داخل الإطار بجودة عالية وإضاءة واضحة دون أي تغطية.',
       };
@@ -179,8 +189,8 @@ export class AiVisionIdService {
 
     // 2. حراسة نوع المستند (AI Document Type Guardrail)
     const matchesExpected =
-      (expectedType === 'NATIONAL_ID_FRONT' && detectedType === 'EGYPTIAN_NATIONAL_ID_FRONT') ||
-      (expectedType === 'NATIONAL_ID_BACK' && detectedType === 'EGYPTIAN_NATIONAL_ID_BACK') ||
+      (expectedType === 'NATIONAL_ID_FRONT' && (detectedType === 'EGYPTIAN_NATIONAL_ID_FRONT' || detectedType.includes('FRONT'))) ||
+      (expectedType === 'NATIONAL_ID_BACK' && (detectedType === 'EGYPTIAN_NATIONAL_ID_BACK' || detectedType.includes('BACK'))) ||
       (expectedType === 'PASSPORT' && detectedType === 'PASSPORT');
 
     if (!matchesExpected) {
@@ -216,16 +226,16 @@ export class AiVisionIdService {
           detectedDocType: detectedType,
           isQualityAcceptable: false,
           rawJson: parsedJson,
-          userErrorMessage: `⚠️ الرقم القومي المقروء (${rawNid}) غير صالح تقويمياً أو جغرافياً: ${parsedNid.error || ''}. يرجى إعادة التصوير بوضوح.`,
+          userErrorMessage: `⚠️ الرقم القومي المقروء (${rawNid}) غير صالح تقويمياً أو جغرافياً: ${parsedNid?.error || ''}. يرجى إعادة التصوير بوضوح.`,
         };
       }
 
       return {
         isValid: true,
-        detectedDocType: detectedType,
+        detectedDocType: 'EGYPTIAN_NATIONAL_ID_FRONT',
         isQualityAcceptable: true,
         nationalIdNumber: rawNid,
-        fullName: parsedJson.fullName || undefined,
+        fullName: parsedJson.fullName ? String(parsedJson.fullName).trim() : undefined,
         address: parsedJson.address ? String(parsedJson.address).trim() : undefined,
         birthDate: parsedNid.info.birthDate,
         gender: parsedNid.info.gender,
@@ -236,35 +246,45 @@ export class AiVisionIdService {
 
     // 4. استخراج تاريخ الانتهاء عند فحص ظهر البطاقة
     if (expectedType === 'NATIONAL_ID_BACK') {
-      let expiry = (parsedJson.expiryDate || '').trim();
-      expiry = normalizeDigits(expiry.replace(/[\/.]/g, '-'));
-
-      let expiryDate: string | undefined = undefined;
-      if (expiry.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        expiryDate = expiry;
-      }
+      const rawExpiry = String(parsedJson.expiryDate || parsedJson.notes || '').trim();
+      const parsedExp = parseFlexibleDate(rawExpiry);
+      const expiryDateStr = parsedExp.isValid ? parsedExp.formattedDMY : undefined;
 
       return {
         isValid: true,
-        detectedDocType: detectedType,
+        detectedDocType: 'EGYPTIAN_NATIONAL_ID_BACK',
         isQualityAcceptable: true,
-        expiryDateStr: expiryDate,
+        expiryDateStr,
         address: parsedJson.address ? String(parsedJson.address).trim() : undefined,
         rawJson: parsedJson,
       };
     }
 
     // 5. فحص جواز السفر
-    const rawPass = (parsedJson.passportNumber || '').trim().toUpperCase();
+    if (expectedType === 'PASSPORT') {
+      const rawPass = String(parsedJson.passportNumber || '').trim().toUpperCase();
+      const rawExpiry = String(parsedJson.expiryDate || parsedJson.notes || '').trim();
+      const parsedExp = parseFlexibleDate(rawExpiry);
+      const expiryDateStr = parsedExp.isValid ? parsedExp.formattedDMY : undefined;
+
+      return {
+        isValid: true,
+        detectedDocType: 'PASSPORT',
+        isQualityAcceptable: true,
+        passportNumber: rawPass || undefined,
+        fullName: parsedJson.fullName ? String(parsedJson.fullName).trim() : undefined,
+        address: parsedJson.address ? String(parsedJson.address).trim() : undefined,
+        expiryDateStr,
+        rawJson: parsedJson,
+      };
+    }
+
     return {
-      isValid: true,
+      isValid: false,
       detectedDocType: detectedType,
-      isQualityAcceptable: true,
-      passportNumber: rawPass || undefined,
-      fullName: parsedJson.fullName || undefined,
-      address: parsedJson.address ? String(parsedJson.address).trim() : undefined,
-      expiryDateStr: parsedJson.expiryDate || undefined,
+      isQualityAcceptable: false,
       rawJson: parsedJson,
+      userErrorMessage: '⚠️ نوع المستند غير معروف.',
     };
   }
 }
