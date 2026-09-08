@@ -256,8 +256,7 @@ export async function handleImpersonateRole(ctx: MyContext, targetRole: string):
   }
 
   await ctx.reply(
-    `🎭 *تم تفعيل وضع المحاكاة (Ghost Mode): ${getRoleTitle(targetRole)}*\n` +
-    `تم تحديث شريط التنقل السفلي وقائمة الأوامر الجانبية لتعكس تجربة هذا الدور بالكامل.`,
+    `🎭 *تم تفعيل وضع المحاكاة: ${getRoleTitle(targetRole)}*`,
     {
       parse_mode: 'Markdown',
       reply_markup: replyKeyboard,
@@ -298,8 +297,7 @@ export async function handleExitImpersonate(ctx: MyContext): Promise<void> {
   }
 
   await ctx.reply(
-    '👑 *تم إنهاء وضع المحاكاة بنجاح والعودة لصلاحيات المدير العام السيادية.*\n' +
-    'تم استعادة شريط التنقل وقائمة الأوامر السيادية بالكامل.',
+    '👑 *تم إنهاء وضع المحاكاة والعودة لصلاحيات المدير العام.*',
     {
       parse_mode: 'Markdown',
       reply_markup: replyKeyboard,
@@ -331,8 +329,7 @@ export async function handleExitGhostCommand(ctx: MyContext): Promise<void> {
   const replyKeyboard = buildPersistentReplyKeyboard(ctx);
 
   await ctx.reply(
-    '👑 *تم إنهاء وضع المحاكاة بنجاح والعودة لهوية المدير العام السيادية.*\n' +
-    'تم استعادة شريط التنقل وقائمة الأوامر السيادية بالكامل.',
+    '👑 *تم إنهاء وضع المحاكاة والعودة لصلاحيات المدير العام.*',
     {
       parse_mode: 'Markdown',
       reply_markup: replyKeyboard,

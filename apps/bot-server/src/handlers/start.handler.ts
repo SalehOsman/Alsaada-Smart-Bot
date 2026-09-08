@@ -221,9 +221,12 @@ export async function handleStart(ctx: MyContext): Promise<void> {
   }
 
   const replyKeyboard = buildPersistentReplyKeyboard(ctx);
-  await ctx.reply('⚡ تم تحديث شريط التنقل السريع وقائمة الأوامر المعتمدة.', {
+  const navMsg = await ctx.reply('⏳', {
     reply_markup: replyKeyboard,
   });
+  if (ctx.chat) {
+    await ctx.api.deleteMessage(ctx.chat.id, navMsg.message_id).catch(() => {});
+  }
 
   await renderRoleHome(ctx, false);
 }
@@ -305,9 +308,12 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
     `يمكنك الآن متابعة كافة مستحقاتك، طلبات الإجازات، والسلف المالية مباشرة.`;
 
   const replyKeyboard = buildPersistentReplyKeyboard(ctx);
-  await ctx.reply('⚡ تم تفعيل شريط الخدمات الذاتية للعاملين بنجاح.', {
+  const navMsg = await ctx.reply('⏳', {
     reply_markup: replyKeyboard,
   });
+  if (ctx.chat) {
+    await ctx.api.deleteMessage(ctx.chat.id, navMsg.message_id).catch(() => {});
+  }
 
   ctx.effectiveRole = 'WORKER';
   if (ctx.dbUser) {

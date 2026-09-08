@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   parseEgyptianNationalId,
   isValidEgyptianNationalId,
+  detectGovernorateFromAddress,
+  getGovernorateCodeByName,
 } from '../src/index.js';
 
 describe('@alsaada/national-id-engine', () => {
@@ -90,5 +92,21 @@ describe('@alsaada/national-id-engine', () => {
     expect(isValidEgyptianNationalId('')).toBe(false);
     expect(isValidEgyptianNationalId(null)).toBe(false);
     expect(isValidEgyptianNationalId(undefined)).toBe(false);
+  });
+
+  it('detects governorates from address text accurately', () => {
+    expect(detectGovernorateFromAddress('القاهرة - مدينة نصر - شارع عباس العقاد')).toBe('القاهرة');
+    expect(detectGovernorateFromAddress('الجيزة - الدقي - شارع التحرير')).toBe('الجيزة');
+    expect(detectGovernorateFromAddress('بورسعيد - حي الشرق')).toBe('بورسعيد');
+    expect(detectGovernorateFromAddress('الإسكندرية - سيدي جابر')).toBe('الإسكندرية');
+    expect(detectGovernorateFromAddress('الغردقة - البحر الأحمر')).toBe('البحر الأحمر');
+  });
+
+  it('resolves governorate codes by name', () => {
+    expect(getGovernorateCodeByName('القاهرة')).toBe('01');
+    expect(getGovernorateCodeByName('الإسكندرية')).toBe('02');
+    expect(getGovernorateCodeByName('بورسعيد')).toBe('03');
+    expect(getGovernorateCodeByName('الجيزة')).toBe('21');
+    expect(getGovernorateCodeByName('خارج الجمهورية (وافد)')).toBe('88');
   });
 });

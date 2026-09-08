@@ -115,3 +115,327 @@ export function parseEgyptianNationalId(rawInput: string | null | undefined): Na
 export function isValidEgyptianNationalId(rawInput: string | null | undefined): boolean {
   return parseEgyptianNationalId(rawInput).isValid;
 }
+
+/**
+ * Detects Egyptian governorate from address text or common city/district names.
+ */
+export function detectGovernorateFromAddress(address: string | null | undefined): string | null {
+  if (!address) return null;
+  const norm = address
+    .trim()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي');
+
+  if (
+    norm.includes('القاهره') ||
+    norm.includes('قاهره') ||
+    norm.includes('مدينه نصر') ||
+    norm.includes('المعادي') ||
+    norm.includes('مصر الجديده') ||
+    norm.includes('عين شمس') ||
+    norm.includes('حلوان') ||
+    norm.includes('المرج') ||
+    norm.includes('شبرا مصر') ||
+    norm.includes('الزيتون')
+  ) {
+    return 'القاهرة';
+  }
+  if (
+    norm.includes('الجيزه') ||
+    norm.includes('جيزه') ||
+    norm.includes('الدقي') ||
+    norm.includes('العجوزه') ||
+    norm.includes('الهرم') ||
+    norm.includes('فيصل') ||
+    norm.includes('اكتوبر') ||
+    norm.includes('زايد') ||
+    norm.includes('البدرشين') ||
+    norm.includes('الحوامديه') ||
+    norm.includes('العياط') ||
+    norm.includes('الصف') ||
+    norm.includes('اوسيم') ||
+    norm.includes('بولاق الدكرور')
+  ) {
+    return 'الجيزة';
+  }
+  if (
+    norm.includes('الاسكندريه') ||
+    norm.includes('اسكندريه') ||
+    norm.includes('سموحه') ||
+    norm.includes('المنتزه') ||
+    norm.includes('العجمي') ||
+    norm.includes('سيدي جابر') ||
+    norm.includes('الرمل') ||
+    norm.includes('العامريه') ||
+    norm.includes('برج العرب')
+  ) {
+    return 'الإسكندرية';
+  }
+  if (
+    norm.includes('القليوبيه') ||
+    norm.includes('قليوبيه') ||
+    norm.includes('شبرا الخيمه') ||
+    norm.includes('بنها') ||
+    norm.includes('قليوب') ||
+    norm.includes('طوخ') ||
+    norm.includes('العبور') ||
+    norm.includes('الخانكه') ||
+    norm.includes('القناطر الخيريه')
+  ) {
+    return 'القليوبية';
+  }
+  if (
+    norm.includes('الشرقيه') ||
+    norm.includes('شرقيه') ||
+    norm.includes('الزقازيق') ||
+    norm.includes('بلبيس') ||
+    norm.includes('العاشر من رمضان') ||
+    norm.includes('فاقوس') ||
+    norm.includes('ابو حماد') ||
+    norm.includes('منيا القمح')
+  ) {
+    return 'الشرقية';
+  }
+  if (
+    norm.includes('الدقهليه') ||
+    norm.includes('دقهليه') ||
+    norm.includes('المنصوره') ||
+    norm.includes('ميت غمر') ||
+    norm.includes('السنبلاوين') ||
+    norm.includes('دكرنس') ||
+    norm.includes('بلقاس') ||
+    norm.includes('شربين') ||
+    norm.includes('اجا')
+  ) {
+    return 'الدقهلية';
+  }
+  if (
+    norm.includes('البحيره') ||
+    norm.includes('بحيره') ||
+    norm.includes('دمنهور') ||
+    norm.includes('كفر الدوار') ||
+    norm.includes('ايتاي البارود') ||
+    norm.includes('كوم حماده') ||
+    norm.includes('رشيد') ||
+    norm.includes('ادكو') ||
+    norm.includes('وادي النطرون')
+  ) {
+    return 'البحيرة';
+  }
+  if (
+    norm.includes('الغربيه') ||
+    norm.includes('غربيه') ||
+    norm.includes('طنطا') ||
+    norm.includes('المحله') ||
+    norm.includes('زفتي') ||
+    norm.includes('كفر الزيات') ||
+    norm.includes('سمنود')
+  ) {
+    return 'الغربية';
+  }
+  if (
+    norm.includes('المنوفيه') ||
+    norm.includes('منوفيه') ||
+    norm.includes('شبين الكوم') ||
+    norm.includes('منوف') ||
+    norm.includes('اشمون') ||
+    norm.includes('قويسنا') ||
+    norm.includes('بركه السبع') ||
+    norm.includes('السادات')
+  ) {
+    return 'المنوفية';
+  }
+  if (
+    norm.includes('كفر الشيخ') ||
+    norm.includes('دسوق') ||
+    norm.includes('فوه') ||
+    norm.includes('مطوبس') ||
+    norm.includes('بيلا') ||
+    norm.includes('بلطيم')
+  ) {
+    return 'كفر الشيخ';
+  }
+  if (
+    norm.includes('دمياط') ||
+    norm.includes('راس البر') ||
+    norm.includes('فارسكور') ||
+    norm.includes('الزرقا')
+  ) {
+    return 'دمياط';
+  }
+  if (
+    norm.includes('بورسعيد') ||
+    norm.includes('بور سعيد') ||
+    norm.includes('بورفؤاد') ||
+    norm.includes('المناخ') ||
+    norm.includes('الزهور')
+  ) {
+    return 'بورسعيد';
+  }
+  if (
+    norm.includes('السويس') ||
+    norm.includes('سويس') ||
+    norm.includes('الاربعين') ||
+    norm.includes('عتاقه')
+  ) {
+    return 'السويس';
+  }
+  if (
+    norm.includes('الاسماعيليه') ||
+    norm.includes('اسماعيليه') ||
+    norm.includes('التل الكبير') ||
+    norm.includes('فايد') ||
+    norm.includes('القنطره')
+  ) {
+    return 'الإسماعيلية';
+  }
+  if (
+    norm.includes('الفيوم') ||
+    norm.includes('فيوم') ||
+    norm.includes('سنورس') ||
+    norm.includes('اطسا') ||
+    norm.includes('طاميه') ||
+    norm.includes('ابشواي')
+  ) {
+    return 'الفيوم';
+  }
+  if (
+    norm.includes('بني سويف') ||
+    norm.includes('الواسطي') ||
+    norm.includes('ناصر') ||
+    norm.includes('اهناسيا') ||
+    norm.includes('ببا') ||
+    norm.includes('الفشن')
+  ) {
+    return 'بني سويف';
+  }
+  if (
+    norm.includes('المنيا') ||
+    norm.includes('منيا') ||
+    norm.includes('مغاغه') ||
+    norm.includes('بني مزار') ||
+    norm.includes('مطاي') ||
+    norm.includes('سمالوط') ||
+    norm.includes('ملوي')
+  ) {
+    return 'المنيا';
+  }
+  if (
+    norm.includes('اسيوط') ||
+    norm.includes('ديروط') ||
+    norm.includes('القوصيه') ||
+    norm.includes('ابنوب') ||
+    norm.includes('منفلوط') ||
+    norm.includes('ابو تيج')
+  ) {
+    return 'أسيوط';
+  }
+  if (
+    norm.includes('سوهاج') ||
+    norm.includes('طهطا') ||
+    norm.includes('جرجا') ||
+    norm.includes('اخميم') ||
+    norm.includes('المراغه') ||
+    norm.includes('طما') ||
+    norm.includes('البلينا')
+  ) {
+    return 'سوهاج';
+  }
+  if (
+    norm.includes('قنا') ||
+    norm.includes('نجع حمادي') ||
+    norm.includes('قوص') ||
+    norm.includes('دشنا') ||
+    norm.includes('ابو تشت') ||
+    norm.includes('فرشوط')
+  ) {
+    return 'قنا';
+  }
+  if (
+    norm.includes('الاقصر') ||
+    norm.includes('اقصر') ||
+    norm.includes('اسنا') ||
+    norm.includes('ارمنت')
+  ) {
+    return 'الأقصر';
+  }
+  if (
+    norm.includes('اسوان') ||
+    norm.includes('كوم امبو') ||
+    norm.includes('ادفو') ||
+    norm.includes('نصر النوبه') ||
+    norm.includes('دراو')
+  ) {
+    return 'أسوان';
+  }
+  if (
+    norm.includes('البحر الاحمر') ||
+    norm.includes('الغردقه') ||
+    norm.includes('سفاجا') ||
+    norm.includes('القصير') ||
+    norm.includes('مرسي علم') ||
+    norm.includes('راس غارب')
+  ) {
+    return 'البحر الأحمر';
+  }
+  if (
+    norm.includes('الوادي الجديد') ||
+    norm.includes('الخارجه') ||
+    norm.includes('الداخله') ||
+    norm.includes('الفرافره')
+  ) {
+    return 'الوادي الجديد';
+  }
+  if (
+    norm.includes('مطروح') ||
+    norm.includes('مرسي مطروح') ||
+    norm.includes('الحمام') ||
+    norm.includes('العلمين') ||
+    norm.includes('الضبعة') ||
+    norm.includes('سيوه')
+  ) {
+    return 'مطروح';
+  }
+  if (
+    norm.includes('شمال سيناء') ||
+    norm.includes('العريش') ||
+    norm.includes('الشيخ زويد') ||
+    norm.includes('رفح') ||
+    norm.includes('بئر العبد')
+  ) {
+    return 'شمال سيناء';
+  }
+  if (
+    norm.includes('جنوب سيناء') ||
+    norm.includes('شرم الشيخ') ||
+    norm.includes('الطور') ||
+    norm.includes('دهب') ||
+    norm.includes('نويبع') ||
+    norm.includes('طابا')
+  ) {
+    return 'جنوب سيناء';
+  }
+
+  return null;
+}
+
+/**
+ * Resolves governorate code ('01', '02', etc.) from Arabic governorate name.
+ */
+export function getGovernorateCodeByName(nameAr: string | null | undefined): string | null {
+  if (!nameAr) return null;
+  const clean = nameAr.trim().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+
+  if (clean.includes('خارج الجمهوريه') || clean.includes('وافد')) {
+    return '88';
+  }
+
+  for (const [code, info] of Object.entries(EGYPTIAN_GOVERNORATES)) {
+    const govClean = info.nameAr.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+    if (clean === govClean || clean.includes(govClean) || govClean.includes(clean)) {
+      return code;
+    }
+  }
+  return null;
+}

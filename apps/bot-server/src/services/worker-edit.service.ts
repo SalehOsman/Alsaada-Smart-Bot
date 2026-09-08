@@ -4,6 +4,7 @@ import { fastCache } from './fast-cache.service.js';
 import { workerService } from './worker.service.js';
 import { normalizeDigits, parseFlexibleDate } from '@alsaada/regional-engine';
 import { encryptField, createBlindIndex } from '@alsaada/database';
+import { detectGovernorateFromAddress, getGovernorateCodeByName } from '@alsaada/national-id-engine';
 
 export interface CreateEditRequestInput {
   workerId: string;
@@ -121,6 +122,16 @@ export class WorkerEditService {
       dataToUpdate.siteId = cleanValue;
     } else if (fieldKey === 'address') {
       dataToUpdate.address = cleanValue;
+      const detectedGov = detectGovernorateFromAddress(cleanValue);
+      if (detectedGov) {
+        const govCode = getGovernorateCodeByName(detectedGov);
+        if (govCode) {
+          dataToUpdate.governorateCode = govCode;
+        }
+      }
+    } else if (fieldKey === 'governorateCode' || fieldKey === 'governorate') {
+      const govCode = getGovernorateCodeByName(cleanValue) || cleanValue;
+      dataToUpdate.governorateCode = govCode;
     }
 
     const updated = await prisma.worker.update({

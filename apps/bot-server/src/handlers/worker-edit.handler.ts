@@ -15,6 +15,11 @@ import {
 } from '../redis.js';
 import { normalizeDigits, formatDate, formatDateDMY, parseFlexibleDate } from '@alsaada/regional-engine';
 import { decryptField } from '@alsaada/database';
+import {
+  EGYPTIAN_GOVERNORATES,
+  detectGovernorateFromAddress,
+  getGovernorateCodeByName,
+} from '@alsaada/national-id-engine';
 
 const FIELD_LABELS: Record<string, string> = {
   legacyCode: 'كود العامل القديم / الأرشيفي',
@@ -24,6 +29,7 @@ const FIELD_LABELS: Record<string, string> = {
   emergencyPhone: 'هاتف الطوارئ',
   walletNumber: 'رقم المحفظة / الحساب البنكي',
   idCardExpiryDate: 'تاريخ انتهاء سريان البطاقة',
+  governorateCode: 'محافظة العامل',
   address: 'محل الإقامة / العنوان',
   drivingLicense: 'رخصة القيادة',
   militaryStatus: 'الموقف التجنيدي',
@@ -143,6 +149,7 @@ export async function renderWorkerEditMenu(
 
   const expiryFormatted = worker.idCardExpiryDate ? formatDateDMY(worker.idCardExpiryDate) : 'غير مسجل';
   const addressFormatted = worker.address || 'غير مسجل';
+  const govName = (worker.governorateCode && EGYPTIAN_GOVERNORATES[worker.governorateCode]?.nameAr) || 'غير مسجل';
 
   const keyboard = new InlineKeyboard()
     .text(`🏷️ كود العامل القديم (${worker.legacyCode || 'غير مسجل'})`, `action:worker_edit:field:${worker.id}:legacyCode`)
@@ -154,6 +161,8 @@ export async function renderWorkerEditMenu(
     .text(`📱 رقم الهاتف (${cleanPhone})`, `action:worker_edit:field:${worker.id}:phone`)
     .row()
     .text(`💳 رقم المحفظة (${cleanWallet})`, `action:worker_edit:field:${worker.id}:walletNumber`)
+    .row()
+    .text(`📍 المحافظة (${govName})`, `action:worker_edit:field:${worker.id}:governorateCode`)
     .row()
     .text(`🏠 العنوان (${addressFormatted.length > 20 ? addressFormatted.substring(0, 18) + '...' : addressFormatted})`, `action:worker_edit:field:${worker.id}:address`)
     .row()
@@ -177,6 +186,7 @@ export async function renderWorkerEditMenu(
     `👤 *العامل:* *${worker.name}* (كود رسمي: \`${worker.code}\`)\n` +
     `🏷️ *الكود القديم الأرشيفي:* *${worker.legacyCode || 'غير مسجل'}*\n` +
     `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'غير محدد'}\n` +
+    `📍 *المحافظة:* *${govName}*\n` +
     `🏠 *العنوان ومحل الإقامة:* *${addressFormatted}*\n` +
     `📱 *الهاتف:* \`${cleanPhone}\` | 💳 *المحفظة:* \`${cleanWallet}\`\n` +
     `⏳ *تاريخ انتهاء البطاقة:* *${expiryFormatted}*\n` +
@@ -228,11 +238,55 @@ export async function handleStartEditWorkerField(
   if (fieldKey === 'legacyCode') currentVal = worker.legacyCode || '-';
   else if (fieldKey === 'name') currentVal = worker.name;
   else if (fieldKey === 'nickname') currentVal = worker.nickname || '-';
+  else if (fieldKey === 'governorateCode')
+    currentVal = (worker.governorateCode && EGYPTIAN_GOVERNORATES[worker.governorateCode]?.nameAr) || worker.governorateCode || '-';
   else if (fieldKey === 'address') currentVal = worker.address || '-';
   else if (fieldKey === 'idCardExpiryDate')
     currentVal = worker.idCardExpiryDate ? formatDateDMY(worker.idCardExpiryDate) : '-';
 
-  const keyboard = new InlineKeyboard()
+  const keyboard = new InlineKeyboard();
+
+  if (fieldKey === 'governorateCode') {
+    keyboard
+      .text('القاهرة', `action:worker_edit_gov:${worker.id}:القاهرة`)
+      .text('الجيزة', `action:worker_edit_gov:${worker.id}:الجيزة`)
+      .text('القليوبية', `action:worker_edit_gov:${worker.id}:القليوبية`)
+      .text('الإسكندرية', `action:worker_edit_gov:${worker.id}:الإسكندرية`)
+      .row()
+      .text('الشرقية', `action:worker_edit_gov:${worker.id}:الشرقية`)
+      .text('الدقهلية', `action:worker_edit_gov:${worker.id}:الدقهلية`)
+      .text('المنوفية', `action:worker_edit_gov:${worker.id}:المنوفية`)
+      .text('الغربية', `action:worker_edit_gov:${worker.id}:الغربية`)
+      .row()
+      .text('كفر الشيخ', `action:worker_edit_gov:${worker.id}:كفر الشيخ`)
+      .text('البحيرة', `action:worker_edit_gov:${worker.id}:البحيرة`)
+      .text('دمياط', `action:worker_edit_gov:${worker.id}:دمياط`)
+      .text('بورسعيد', `action:worker_edit_gov:${worker.id}:بورسعيد`)
+      .row()
+      .text('الإسماعيلية', `action:worker_edit_gov:${worker.id}:الإسماعيلية`)
+      .text('السويس', `action:worker_edit_gov:${worker.id}:السويس`)
+      .text('الفيوم', `action:worker_edit_gov:${worker.id}:الفيوم`)
+      .text('بني سويف', `action:worker_edit_gov:${worker.id}:بني سويف`)
+      .row()
+      .text('المنيا', `action:worker_edit_gov:${worker.id}:المنيا`)
+      .text('أسيوط', `action:worker_edit_gov:${worker.id}:أسيوط`)
+      .text('سوهاج', `action:worker_edit_gov:${worker.id}:سوهاج`)
+      .text('قنا', `action:worker_edit_gov:${worker.id}:قنا`)
+      .row()
+      .text('الأقصر', `action:worker_edit_gov:${worker.id}:الأقصر`)
+      .text('أسوان', `action:worker_edit_gov:${worker.id}:أسوان`)
+      .text('البحر الأحمر', `action:worker_edit_gov:${worker.id}:البحر الأحمر`)
+      .text('مطروح', `action:worker_edit_gov:${worker.id}:مطروح`)
+      .row()
+      .text('الوادي الجديد', `action:worker_edit_gov:${worker.id}:الوادي الجديد`)
+      .text('شمال سيناء', `action:worker_edit_gov:${worker.id}:شمال سيناء`)
+      .text('جنوب سيناء', `action:worker_edit_gov:${worker.id}:جنوب سيناء`)
+      .row()
+      .text('خارج الجمهورية (وافد)', `action:worker_edit_gov:${worker.id}:خارج الجمهورية (وافد)`)
+      .row();
+  }
+
+  keyboard
     .text('◀️ إلغاء والعودة لبيانات العامل', `action:worker_edit:menu:${worker.id}`)
     .row()
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -247,6 +301,8 @@ export async function handleStartEditWorkerField(
       ? 'يرجى إدخال تاريخ انتهاء البطاقة الجديد بصيغة: *يوم-شهر-سنة* (مثال: 26-05-2028 أو 2028/05):'
       : fieldKey === 'legacyCode'
       ? 'يرجى إدخال كود العامل القديم / الأرشيفي (أرقام أو حروف إنجليزية):'
+      : fieldKey === 'governorateCode'
+      ? 'اختر المحافظة من القائمة أدناه أو اكتب اسمها في رسالة نصية:'
       : fieldKey === 'address'
       ? 'يرجى إدخال العنوان ومحل الإقامة الجديد بالتفصيل (المحافظة، المركز/القسم، القرية أو الشارع):'
       : `يرجى إدخال القيمة الجديدة لـ *${fieldName}* الآن:`);
@@ -317,6 +373,9 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
       await ctx.reply('⚠️ كود العامل القديم غير صالح.');
       return true;
     }
+  } else if (editState.fieldKey === 'governorateCode') {
+    const detected = detectGovernorateFromAddress(inputRaw);
+    inputRaw = detected || inputRaw.trim();
   } else if (editState.fieldKey === 'address') {
     if (inputRaw.length < 3) {
       await ctx.reply('⚠️ يرجى إدخال عنوان واضح ومفصل (المحافظة، المركز/القسم، القرية أو الشارع).');
@@ -351,7 +410,7 @@ export async function handleWorkerEditTextInput(ctx: MyContext): Promise<boolean
         `⏮️ *القيمة السابقة:* ${editState.oldValue}\n` +
         `⏭️ *القيمة المعتمدة الجديدة:* *${inputRaw}*\n` +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
-        '⚡ تم حفظ التعديل بقاعدة البيانات وتحديث الذاكرة السريعة L1/L2.';
+        '✅ تم حفظ التعديل وتحديث بيانات العامل بنجاح.';
 
       if (editState.promptMsgId && ctx.chat) {
         await ctx.api.editMessageText(ctx.chat.id, editState.promptMsgId, successText, {
@@ -483,7 +542,7 @@ export async function handleApproveEditRequest(ctx: MyContext, requestId: string
       `⏭️ *القيمة المعتمدة:* *${updatedRequest.newValue}*\n` +
       `📅 *تاريخ الاعتماد:* ${formatDate(updatedRequest.reviewedAt || new Date())}\n` +
       '━━━━━━━━━━━━━━━━━━━━━\n' +
-      '⚡ تم تحديث قاعدة البيانات وتحديث الذاكرة اللحظية بنجاح.';
+      '✅ تم تحديث بيانات العامل بنجاح.';
 
     const kb = new InlineKeyboard()
       .text('👤 فتح ملف العامل', `action:worker_edit:menu:${updatedRequest.workerId}`)
@@ -773,7 +832,7 @@ export async function handleWorkerEditDocumentInput(ctx: MyContext): Promise<boo
       `📊 *الحجم:* ${(fileBuffer.length / 1024).toFixed(1)} KB` +
       driveNote +
       '\n━━━━━━━━━━━━━━━━━━━━━\n' +
-      '✅ تم تسجيل المستند وربطه بملف العامل في قاعدة البيانات بنجاح.';
+      '✅ تم تسجيل المستند وربطه بملف العامل بنجاح.';
 
     await ctx.reply(successText, {
       parse_mode: 'Markdown',
@@ -945,5 +1004,156 @@ export async function handleSendWorkerIdPhoto(
   } catch (err: any) {
     console.error('Error sending worker ID photo:', err);
     await ctx.reply(`❌ تعذر إرسال الصورة: ${err?.message || 'خطأ غير متوقع'}`);
+  }
+}
+
+/**
+ * 📍 معالجة اختيار المحافظة مباشرة من الأزرار
+ */
+export async function handleWorkerEditGovernorateChoice(
+  ctx: MyContext,
+  workerId: string,
+  govName: string
+): Promise<void> {
+  if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery().catch(() => {});
+  }
+  if (!ctx.from) return;
+
+  const worker = await prisma.worker.findUnique({ where: { id: workerId } });
+  if (!worker) {
+    await ctx.reply('⚠️ لم يتم العثور على سجل العامل.');
+    return;
+  }
+
+  const role = ctx.effectiveRole || 'GUEST';
+  const isSuperAdmin = role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin;
+  const telegramId = BigInt(ctx.from.id);
+  const oldGov =
+    (worker.governorateCode && EGYPTIAN_GOVERNORATES[worker.governorateCode]?.nameAr) ||
+    worker.governorateCode ||
+    'غير محدد';
+
+  if (isSuperAdmin) {
+    try {
+      await workerEditService.applyDirectSuperAdminEdit(workerId, 'governorateCode', govName);
+      await clearPendingWorkerEdit(telegramId);
+
+      const completionKeyboard = new InlineKeyboard()
+        .text('✏️ تعديل بيان آخر لنفس العامل', `action:worker_edit:menu:${workerId}`)
+        .row()
+        .text('👥 دليل وسجل العاملين', 'action:worker:directory')
+        .row()
+        .text('🔙 العودة للموارد البشرية', 'menu:domain:hr')
+        .row()
+        .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+      const successText =
+        '✅ *تم تحديث محافظة العامل بنجاح فورياً!*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `👤 *العامل:* *${worker.name}* (\`${worker.code}\`)\n` +
+        `📌 *البيان:* *محافظة العامل*\n` +
+        `⏮️ *المحافظة السابقة:* ${oldGov}\n` +
+        `⏭️ *المحافظة الجديدة:* *${govName}*\n` +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        '✅ تم حفظ التعديل وتحديث بيانات العامل بنجاح.';
+
+      if (ctx.callbackQuery?.message) {
+        await ctx.editMessageText(successText, {
+          parse_mode: 'Markdown',
+          reply_markup: completionKeyboard,
+        });
+      } else {
+        await ctx.reply(successText, {
+          parse_mode: 'Markdown',
+          reply_markup: completionKeyboard,
+        });
+      }
+      return;
+    } catch (err: any) {
+      await ctx.reply(`❌ تعذر تطبيق التعديل: ${err?.message || 'خطأ غير متوقع'}`);
+      return;
+    }
+  }
+
+  // مسار المشرف الميداني -> رفع طلب معلق
+  try {
+    const requesterName = ctx.from.first_name + (ctx.from.last_name ? ` ${ctx.from.last_name}` : '');
+    const request = await workerEditService.createEditRequest({
+      workerId: worker.id,
+      workerCode: worker.code,
+      workerName: worker.name,
+      requesterTelegramId: telegramId,
+      requesterName,
+      requesterRole: role,
+      fieldKey: 'governorateCode',
+      fieldName: 'محافظة العامل',
+      oldValue: oldGov,
+      newValue: govName,
+      reason: 'طلب تعديل المحافظة من المشرف الميداني',
+    });
+
+    await clearPendingWorkerEdit(telegramId);
+
+    const completionKeyboard = new InlineKeyboard()
+      .text('📝 تقديم طلب تعديل آخر', 'action:worker_edit:pick')
+      .row()
+      .text('🔙 العودة للموارد البشرية', 'menu:domain:hr')
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+    const submittedText =
+      '📨 *تم رفع طلب تعديل محافظة العامل بنجاح!*\n' +
+      '━━━━━━━━━━━━━━━━━━━━━\n' +
+      `🆔 *رقم الطلب:* \`${request.requestId}\`\n` +
+      `👤 *العامل:* *${worker.name}* (\`${worker.code}\`)\n` +
+      `📌 *البيان المطلوب تعديله:* *محافظة العامل*\n` +
+      `⏮️ *المحافظة الحالية:* ${oldGov}\n` +
+      `⏭️ *المحافظة المقترحة:* *${govName}*\n` +
+      '━━━━━━━━━━━━━━━━━━━━━\n' +
+      '⏳ *الحالة:* قيد مراجعة واعتماد المدير العام (السوبر أدمن).\n' +
+      '💡 لن يتم تطبيق هذا التعديل على سجل العامل إلا بعد اعتماده رسمياً.';
+
+    if (ctx.callbackQuery?.message) {
+      await ctx.editMessageText(submittedText, {
+        parse_mode: 'Markdown',
+        reply_markup: completionKeyboard,
+      });
+    } else {
+      await ctx.reply(submittedText, {
+        parse_mode: 'Markdown',
+        reply_markup: completionKeyboard,
+      });
+    }
+
+    if (config.superAdminTelegramId && config.superAdminTelegramId > 0n) {
+      const adminApprovalKb = new InlineKeyboard()
+        .text('✅ اعتماد وتطبيق التعديل', `action:worker_req:approve:${request.requestId}`)
+        .row()
+        .text('❌ رفض الطلب', `action:worker_req:reject:${request.requestId}`)
+        .row()
+        .text('👤 فتح ملف العامل', `action:worker_edit:menu:${worker.id}`);
+
+      try {
+        await ctx.api.sendMessage(
+          Number(config.superAdminTelegramId),
+          '🔔 *طلب تعديل محافظة عامل جديد بحاجة للمراجعة والاعتماد*\n' +
+          '━━━━━━━━━━━━━━━━━━━━━\n' +
+          `🆔 *رقم الطلب:* \`${request.requestId}\`\n` +
+          `👤 *العامل:* *${worker.name}* (\`${worker.code}\`)\n` +
+          `📌 *البيان:* *محافظة العامل*\n` +
+          `⏮️ *القيمة الحالية:* ${oldGov}\n` +
+          `⏭️ *القيمة المقترحة:* *${govName}*\n` +
+          `👤 *مقدم الطلب:* ${requesterName} (${role})\n` +
+          '━━━━━━━━━━━━━━━━━━━━━\n' +
+          '💡 يمكنك اتخاذ القرار مباشرة من الأزرار أدناه:',
+          { parse_mode: 'Markdown', reply_markup: adminApprovalKb }
+        );
+      } catch (notifyErr) {
+        console.error('Failed to notify super admin about edit request:', notifyErr);
+      }
+    }
+  } catch (err: any) {
+    await ctx.reply(`❌ تعذر تقديم الطلب: ${err?.message || 'خطأ غير متوقع'}`);
   }
 }

@@ -870,7 +870,6 @@ export async function handleJobMatrixDocumentInput(ctx: MyContext): Promise<bool
       `📊 *إجمالي الصفوف المعالجة:* ${result.totalRowsProcessed} صف\n` +
       `🏢 *الأقسام الوظيفية:* +${result.departmentsCreated} جديد | 🔄 ${result.departmentsUpdated} محدث\n` +
       `💼 *الوظائف والمهن:* +${result.jobsCreated} جديد | 🔄 ${result.jobsUpdated} محدث\n` +
-      `⚡ *الكاش:* تم تحديث كاش الذاكرة اللحظية بنجاح.\n` +
       `────────────────────────────\n` +
       `كافة بيانات الأقسام والوظائف أصبحت سارية ومتاحة لتعيين العمالة فورياً.`,
       {

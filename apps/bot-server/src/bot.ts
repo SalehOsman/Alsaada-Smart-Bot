@@ -127,6 +127,7 @@ import {
   handleListWorkerDocs,
   handleSendWorkerDoc,
   handleSendWorkerIdPhoto,
+  handleWorkerEditGovernorateChoice,
 } from './handlers/worker-edit.handler.js';
 import { workerExpiryAlertService } from './services/worker-expiry-alert.service.js';
 import { prisma } from './db.js';
@@ -499,6 +500,9 @@ export function createBot(): Bot<MyContext> {
   });
   bot.callbackQuery(/^action:worker_edit:field:(.+):(.+)$/, async (ctx) => {
     await handleStartEditWorkerField(ctx, ctx.match[1], ctx.match[2]);
+  });
+  bot.callbackQuery(/^action:worker_edit_gov:(.+):(.+)$/, async (ctx) => {
+    await handleWorkerEditGovernorateChoice(ctx, ctx.match[1], ctx.match[2]);
   });
   bot.callbackQuery(/^action:worker_edit:add_doc:(.+)$/, async (ctx) => {
     await handleStartAddWorkerDoc(ctx, ctx.match[1]);

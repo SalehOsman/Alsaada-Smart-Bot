@@ -296,7 +296,7 @@ export class WorkerService {
         passportBlindIndex,
         birthDate: valResult.birthDate || new Date('1990-01-01'),
         gender: valResult.gender || 'MALE',
-        governorateCode: valResult.governorateCode || '88',
+        governorateCode: input.governorateCode || valResult.governorateCode || '88',
         jobTitle: input.jobTitleName,
         jobTitleId: input.jobTitleId,
         departmentId: input.departmentId,

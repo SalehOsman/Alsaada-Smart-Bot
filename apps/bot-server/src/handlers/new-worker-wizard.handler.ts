@@ -19,6 +19,11 @@ import {
   normalizeDigits,
   extractFirstTwoNames,
 } from '@alsaada/regional-engine';
+import {
+  detectGovernorateFromAddress,
+  getGovernorateCodeByName,
+  EGYPTIAN_GOVERNORATES,
+} from '@alsaada/national-id-engine';
 
 export enum WorkerWizardStep {
   DOC_TYPE = 'DOC_TYPE',
@@ -27,6 +32,7 @@ export enum WorkerWizardStep {
   AI_CONFIRMATION = 'AI_CONFIRMATION',
   AI_EDIT_NAME = 'AI_EDIT_NAME',
   AI_EDIT_ID = 'AI_EDIT_ID',
+  AI_EDIT_GOVERNORATE = 'AI_EDIT_GOVERNORATE',
   AI_EDIT_EXPIRY = 'AI_EDIT_EXPIRY',
   AI_EDIT_ADDRESS = 'AI_EDIT_ADDRESS',
   FULL_NAME = 'FULL_NAME',
@@ -354,6 +360,12 @@ async function analyzePhotosDirectly(
         wizard.data.address = frontScan.address;
       }
 
+      // تدقيق المحافظة ومطابقتها مع العنوان إذا كان العنوان يحدد محافظة معينة
+      const addressGov = detectGovernorateFromAddress(wizard.data.address);
+      if (addressGov) {
+        wizard.data.governorateNameAr = addressGov;
+      }
+
       // فحص الازدواجية فورياً
       const dup = await workerService.checkDuplicate('NATIONAL_ID', rawNid);
       if (dup.isDuplicate && dup.existingWorker) {
@@ -539,7 +551,7 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
           (new Date().getTime() - val.birthDate.getTime()) / (365.25 * 24 * 3600 * 1000)
         );
         wizard.data.gender = val.gender;
-        wizard.data.governorateNameAr = val.governorateNameAr;
+        wizard.data.governorateNameAr = detectGovernorateFromAddress(wizard.data.address) || val.governorateNameAr;
 
         if (wizard.step === WorkerWizardStep.AI_EDIT_ID) {
           wizard.step = WorkerWizardStep.AI_CONFIRMATION;
@@ -603,12 +615,25 @@ export async function handleWorkerWizardTextInput(ctx: MyContext): Promise<boole
       return true;
     }
 
+    case WorkerWizardStep.AI_EDIT_GOVERNORATE: {
+      const detected = detectGovernorateFromAddress(inputRaw);
+      wizard.data.governorateNameAr = detected || inputRaw.trim();
+      wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+      await setPendingWorkerWizard(telegramId, wizard);
+      await renderWizardStep(ctx, wizard);
+      return true;
+    }
+
     case WorkerWizardStep.AI_EDIT_ADDRESS: {
       if (inputRaw.length < 3) {
         await ctx.reply('⚠️ يرجى كتابة عنوان واضح ومفصل (المحافظة، المركز/القسم، الشارع أو القرية).');
         return true;
       }
       wizard.data.address = inputRaw;
+      const detectedGov = detectGovernorateFromAddress(inputRaw);
+      if (detectedGov) {
+        wizard.data.governorateNameAr = detectedGov;
+      }
       wizard.step = WorkerWizardStep.AI_CONFIRMATION;
       await setPendingWorkerWizard(telegramId, wizard);
       await renderWizardStep(ctx, wizard);
@@ -860,6 +885,22 @@ export async function handleWorkerWizardCallback(ctx: MyContext): Promise<void> 
     return;
   }
 
+  if (data === 'action:worker_ai_edit:governorate') {
+    wizard.step = WorkerWizardStep.AI_EDIT_GOVERNORATE;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
+  if (data.startsWith('action:worker_gov:')) {
+    const gov = data.replace('action:worker_gov:', '').trim();
+    wizard.data.governorateNameAr = gov;
+    wizard.step = WorkerWizardStep.AI_CONFIRMATION;
+    await setPendingWorkerWizard(telegramId, wizard);
+    await renderWizardStep(ctx, wizard);
+    return;
+  }
+
   if (data === 'action:worker_ai_edit:address') {
     wizard.step = WorkerWizardStep.AI_EDIT_ADDRESS;
     await setPendingWorkerWizard(telegramId, wizard);
@@ -1064,6 +1105,7 @@ async function handleStepBack(
       break;
     case WorkerWizardStep.AI_EDIT_NAME:
     case WorkerWizardStep.AI_EDIT_ID:
+    case WorkerWizardStep.AI_EDIT_GOVERNORATE:
     case WorkerWizardStep.AI_EDIT_EXPIRY:
     case WorkerWizardStep.AI_EDIT_ADDRESS:
       wizard.step = WorkerWizardStep.AI_CONFIRMATION;
@@ -1213,7 +1255,7 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         `👤 *الاسم الرباعي:* *${wizard.data.fullName || 'غير محدد'}*\n` +
         `🔢 *رقم الإثبات:* \`${wizard.data.idNumber || '-'}\` (${isNid ? 'رقم قومي مصري' : `جواز سفر - ${wizard.data.nationality}`})\n` +
         (isNid ? `📅 *تاريخ الميلاد:* ${wizard.data.birthDateStr || '-'} (${wizard.data.age || '-'} سنة)\n` : '') +
-        (wizard.data.governorateNameAr ? `📍 *المحافظة:* ${wizard.data.governorateNameAr}\n` : '') +
+        (wizard.data.governorateNameAr ? `📍 *المحافظة:* *${wizard.data.governorateNameAr}*\n` : '') +
         (wizard.data.address ? `🏠 *العنوان:* *${wizard.data.address}*\n` : '') +
         `⏳ *انتهاء البطاقة:* *${wizard.data.idCardExpiryDateStr || 'غير محدد'}*\n` +
         '━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -1225,10 +1267,63 @@ async function renderWizardStep(ctx: MyContext, wizard: PendingWorkerWizardState
         .text('✏️ تصحيح الاسم', 'action:worker_ai_edit:name')
         .text('✏️ تصحيح الرقم', 'action:worker_ai_edit:id')
         .row()
+        .text('✏️ تصحيح المحافظة', 'action:worker_ai_edit:governorate')
         .text('✏️ تصحيح العنوان', 'action:worker_ai_edit:address')
+        .row()
         .text('✏️ تصحيح تاريخ الانتهاء', 'action:worker_ai_edit:expiry')
         .row()
         .text('◀️ إعادة التقاط الصور', 'action:worker_photo:retry_front')
+        .text('❌ إلغاء العملية', 'action:cancel_worker_op');
+      break;
+    }
+
+    case WorkerWizardStep.AI_EDIT_GOVERNORATE: {
+      text =
+        '📍 *تحديد وتصحيح محافظة العامل*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        `المحافظة الحالية: *${wizard.data.governorateNameAr || 'غير محدد'}*\n` +
+        (wizard.data.address ? `العنوان المسجل: _${wizard.data.address}_\n` : '') +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        'اختر المحافظة الصحيحة من الأزرار أدناه أو اكتب اسمها في رسالة:';
+
+      keyboard
+        .text('القاهرة', 'action:worker_gov:القاهرة')
+        .text('الجيزة', 'action:worker_gov:الجيزة')
+        .text('القليوبية', 'action:worker_gov:القليوبية')
+        .text('الإسكندرية', 'action:worker_gov:الإسكندرية')
+        .row()
+        .text('الشرقية', 'action:worker_gov:الشرقية')
+        .text('الدقهلية', 'action:worker_gov:الدقهلية')
+        .text('المنوفية', 'action:worker_gov:المنوفية')
+        .text('الغربية', 'action:worker_gov:الغربية')
+        .row()
+        .text('كفر الشيخ', 'action:worker_gov:كفر الشيخ')
+        .text('البحيرة', 'action:worker_gov:البحيرة')
+        .text('دمياط', 'action:worker_gov:دمياط')
+        .text('بورسعيد', 'action:worker_gov:بورسعيد')
+        .row()
+        .text('الإسماعيلية', 'action:worker_gov:الإسماعيلية')
+        .text('السويس', 'action:worker_gov:السويس')
+        .text('الفيوم', 'action:worker_gov:الفيوم')
+        .text('بني سويف', 'action:worker_gov:بني سويف')
+        .row()
+        .text('المنيا', 'action:worker_gov:المنيا')
+        .text('أسيوط', 'action:worker_gov:أسيوط')
+        .text('سوهاج', 'action:worker_gov:سوهاج')
+        .text('قنا', 'action:worker_gov:قنا')
+        .row()
+        .text('الأقصر', 'action:worker_gov:الأقصر')
+        .text('أسوان', 'action:worker_gov:أسوان')
+        .text('البحر الأحمر', 'action:worker_gov:البحر الأحمر')
+        .text('مطروح', 'action:worker_gov:مطروح')
+        .row()
+        .text('الوادي الجديد', 'action:worker_gov:الوادي الجديد')
+        .text('شمال سيناء', 'action:worker_gov:شمال سيناء')
+        .text('جنوب سيناء', 'action:worker_gov:جنوب سيناء')
+        .row()
+        .text('خارج الجمهورية (وافد)', 'action:worker_gov:خارج الجمهورية (وافد)')
+        .row()
+        .text('◀️ رجوع لبطاقة المراجعة', 'action:worker_step:back')
         .text('❌ إلغاء العملية', 'action:cancel_worker_op');
       break;
     }
@@ -1757,6 +1852,7 @@ async function handleWorkerFinalSave(
       birthDate: birthDateObj,
       gender: d.gender || 'MALE',
       address: d.address,
+      governorateCode: getGovernorateCodeByName(d.governorateNameAr) || undefined,
       phone: d.phone || '01000000000',
       jobTitleId: d.jobTitleId,
       jobTitleName: d.jobTitleName || 'عامل',
@@ -1863,7 +1959,7 @@ async function handleWorkerFinalSave(
       archiveNote +
       driveNote +
       '\n━━━━━━━━━━━━━━━━━━━━━\n' +
-      '✅ تم حفظ ملف العامل في قاعدة البيانات وتحديث كاش القوائم اللحظية بنجاح.';
+      '✅ تم تسجيل واعتماد ملف العامل بنجاح.';
 
     if (wizard.messageId && ctx.chat) {
       await ctx.api.editMessageText(ctx.chat.id, wizard.messageId, successText, {
