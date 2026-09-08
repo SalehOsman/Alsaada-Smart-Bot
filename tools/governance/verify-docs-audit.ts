@@ -21,6 +21,8 @@ const REQUIRED_SCRIPTS = [
   'flow-contracts:verify',
   'docs:audit',
   'docs:parity',
+  'governance:lock',
+  'governance:tamper-check',
   'ai-compliance:verify',
 ] as const;
 
@@ -38,9 +40,15 @@ const REQUIRED_STANDARD_MARKERS = [
   'G8',
   'G9',
   'G10',
+  'G11',
+  'G12',
   'pnpm arch:verify',
   'pnpm migration:verify',
   'pnpm flow-contracts:verify',
+  'pnpm docs:audit',
+  'pnpm docs:parity',
+  'pnpm governance:lock',
+  'pnpm governance:tamper-check',
   'pnpm ai-compliance:verify',
 ] as const;
 
@@ -79,4 +87,3 @@ export function verifyDocsAudit(root = process.cwd()): VerificationResult {
 if (isCliEntrypoint(import.meta.url)) {
   printAndExit('docs:audit', verifyDocsAudit(process.cwd()));
 }
-

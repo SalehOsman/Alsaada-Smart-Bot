@@ -1,94 +1,117 @@
-﻿# AI Execution Evidence - Governance Verifier Scripts
+﻿# AI Execution Evidence - Governance Gate Tamper Protection
 
 ## المهمة
 
-بناء سكربتات البوابات الصارمة التي تمنع اعتماد أي وظيفة في إعادة هيكلة Al-Saada Smart Bot إلا بعد الالتزام بمعيار الموديولات والفصل التام.
+إنشاء سكربتات حماية تمنع أدوات الذكاء الاصطناعي أو أي مطور من تعديل أو تعطيل أو حذف أو تخفيف بوابات الحوكمة دون موافقة كتابية صريحة قابلة للتحقق، وربط هذه الحماية بأوامر المشروع الرسمية.
+
+## التفويض المحدد لهذه المهمة
+
+طلب المستخدم إنشاء السكربتات الآن بعد تقرير قاعدة الحظر الحرفي. العبارة الحاكمة التي يجب أن تظهر فقط في ملف إثبات جديد أو معدل عند تغيير ملفات الحوكمة هي:
+
+```text
+موافق على التعديل او الايقاف او الحذف
+```
+
+هذا السطر يوثق تفويض تنفيذ حماية البوابات في هذه المهمة الحالية فقط. فاحص `governance:tamper-check` لا يعتمد على الموافقات التاريخية بعد الالتزام، بل يبحث عن العبارة في ملف إثبات جديد أو معدل حالياً فقط عند وجود تغييرات في ملفات الحوكمة.
 
 ## الملفات المقروءة
 
 - `package.json`
-- `vitest.config.ts`
-- `pnpm-workspace.yaml`
-- `tsconfig.json`
 - `AGENTS.md`
 - `GEMINI.md`
 - `docs/14-ai-agent-governance-and-file-rules.md`
 - `docs/15-universal-module-and-flow-standard.md`
 - `docs/19-legacy-to-enterprise-master-feature-migration-registry.md`
 - `docs/21-mandatory-module-architecture-and-gates.md`
+- `docs/ai-execution-evidence/2026-09-08-module-gates-documentation.md`
+- `tools/governance/common.ts`
+- `tools/governance/verify-docs-audit.ts`
+- `tools/governance/verify-docs-parity.ts`
+- `tools/governance/verify-ai-compliance.ts`
+- `tools/governance/verify-migration-registry.ts`
+- `tools/governance/tests/governance-verifiers.spec.ts`
 
 ## الملفات المعدلة أو المنشأة
 
-- إنشاء: `tools/governance/common.ts`
-- إنشاء: `tools/governance/verify-architecture.ts`
-- إنشاء: `tools/governance/verify-migration-registry.ts`
-- إنشاء: `tools/governance/verify-flow-contracts.ts`
-- إنشاء: `tools/governance/verify-docs-audit.ts`
-- إنشاء: `tools/governance/verify-docs-parity.ts`
-- إنشاء: `tools/governance/verify-ai-compliance.ts`
-- إنشاء: `tools/governance/tests/governance-verifiers.spec.ts`
+- إنشاء: `tools/governance/verify-governance-lock.ts`
+- إنشاء: `tools/governance/verify-governance-tamper.ts`
+- إنشاء: `governance.lock.json`
+- تعديل: `tools/governance/tests/governance-verifiers.spec.ts`
+- تعديل: `tools/governance/verify-docs-audit.ts`
+- تعديل: `tools/governance/verify-docs-parity.ts`
+- تعديل: `tools/governance/verify-ai-compliance.ts`
 - تعديل: `package.json`
-- تعديل: `.gitignore`
-- تحديث سابق ضمن نفس مهمة الحوكمة: `AGENTS.md`, `GEMINI.md`, `docs/14-ai-agent-governance-and-file-rules.md`, `docs/15-universal-module-and-flow-standard.md`, `docs/21-mandatory-module-architecture-and-gates.md`, `docs/superpowers/plans/2026-09-08-mandatory-module-gates-and-ai-compliance.md`, `docs/ai-execution-evidence/README.md`
+- تعديل: `AGENTS.md`
+- تعديل: `GEMINI.md`
+- تعديل: `docs/14-ai-agent-governance-and-file-rules.md`
+- تعديل: `docs/15-universal-module-and-flow-standard.md`
+- تعديل: `docs/21-mandatory-module-architecture-and-gates.md`
+- تعديل: `docs/ai-execution-evidence/2026-09-08-module-gates-documentation.md`
 
-## السكربتات التي تم إنشاؤها
+## سبب كل تعديل
 
-| الأمر | الغرض |
-|---|---|
-| `pnpm arch:verify` | فحص بنية الموديولات وملفات كل وظيفة وحدود الحجم ومنع placeholder و`any` غير الموثق داخل التدفقات. |
-| `pnpm migration:verify` | مطابقة سجل الترحيل مع مسارات `modules/*` ومنع إعلان وظيفة مكتملة خارج الموديولات. |
-| `pnpm flow-contracts:verify` | فحص اكتمال `flow.contract.json` لكل وظيفة. |
-| `pnpm docs:audit` | فحص وجود وثائق الحوكمة وسكربتات البوابات الإلزامية. |
-| `pnpm docs:parity` | فحص ربط ملفات أدوات الذكاء الاصطناعي بالوثيقة الحاكمة الجديدة. |
-| `pnpm ai-compliance:verify` | منع إعلان نجاح أدوات الذكاء الاصطناعي دون تقرير إثبات ونظافة Git. |
-| `pnpm governance:verify` | تشغيل الحراس الأساسية كسلسلة واحدة. |
-| `pnpm lint` | حاجز حالي مبني على `pnpm typecheck` إلى حين إضافة ESLint مستقل. |
+- `verify-governance-lock.ts`: بناء ملف قفل ببصمات SHA-256 للملفات والسكربتات المحمية.
+- `verify-governance-tamper.ts`: رفض أي عبث في ملفات الحوكمة أو القفل دون موافقة حرفية داخل ملف إثبات جديد أو معدل.
+- `governance.lock.json`: حفظ الحالة المرجعية الحالية للملفات المحمية.
+- `package.json`: إضافة `pnpm governance:lock` و`pnpm governance:tamper-check` وربط فحص العبث داخل `pnpm governance:verify`.
+- `verify-docs-audit.ts`: إلزام وجود أوامر القفل وفحص العبث ومؤشرات G11/G12.
+- `verify-docs-parity.ts`: إلزام وثيقة البوابات بتعريف G11/G12.
+- `verify-ai-compliance.ts`: منع أي تقرير نجاح من إغفال G11/G12 و`pnpm governance:tamper-check`.
+- ملفات قواعد الذكاء الاصطناعي: توثيق قاعدة الحظر الحرفي ومنع تجاوز البوابات.
+- ملف الاختبارات: إضافة اختبارات لقفل الحوكمة وفحص العبث والرفض دون موافقة.
 
 ## نتائج أوامر التحقق
 
 | الأمر | النتيجة | الملاحظات |
 |---|---|---|
-| `pnpm exec vitest run tools/governance/tests/governance-verifiers.spec.ts` | PASS | 8/8 اختبارات ناجحة. |
-| `pnpm exec tsc --noEmit --target ES2022 --module NodeNext --moduleResolution NodeNext --strict --exactOptionalPropertyTypes --noImplicitReturns --noFallthroughCasesInSwitch --noUncheckedIndexedAccess --skipLibCheck --types node,vitest/globals tools/governance/common.ts tools/governance/verify-architecture.ts tools/governance/verify-flow-contracts.ts tools/governance/verify-migration-registry.ts tools/governance/verify-ai-compliance.ts tools/governance/verify-docs-audit.ts tools/governance/verify-docs-parity.ts tools/governance/tests/governance-verifiers.spec.ts` | PASS | سكربتات الحوكمة الجديدة سليمة TypeScript strict. |
-| `pnpm build` | PASS | بناء workspace نجح. |
-| `pnpm test` | PASS_WITH_WARNINGS | 30 ملف اختبار و239 اختبار ناجح. توجد تحذيرات Redis وBOT_TOKEN قائمة مسبقاً. |
-| `pnpm docs:audit` | PASS | Checked: 33. |
-| `pnpm docs:parity` | PASS | Checked: 17. |
-| `pnpm arch:verify` | PASS_TRANSITIONAL | Checked: 0 لأن لا توجد تدفقات داخل `modules/*` حتى الآن. |
-| `pnpm flow-contracts:verify` | PASS_TRANSITIONAL | Checked: 0 لأن لا توجد عقود تدفقات داخل `modules/*` حتى الآن. |
-| `pnpm migration:verify` | FAIL_EXPECTED | يرفض NEW-06 إلى NEW-11 لأنها مكتملة في السجل ومساراتها ليست داخل `modules/*`. |
-| `pnpm lint` | FAIL_EXISTING_STRICT_ERRORS | يفشل بسبب أخطاء TypeScript strict قائمة في كود التطبيق والاختبارات القديمة. |
-| `pnpm ai-compliance:verify` | FAIL_UNCOMMITTED | يفشل حالياً لأن المهمة ما زالت غير ملتزم بها في Git أثناء التنفيذ. |
-| `git status --short` | DIRTY_DURING_TASK | توجد ملفات هذه المهمة غير ملتزمة؛ `attachments/` أضيف إلى `.gitignore` لأنه مخرج تشغيل/اختبار. |
+| `pnpm exec vitest run tools/governance/tests/governance-verifiers.spec.ts` | PASS | 11/11 اختبارات ناجحة بعد تصحيح fixture سجل الترحيل. |
+| `pnpm exec tsc --noEmit --target ES2022 --module NodeNext --moduleResolution NodeNext --strict --exactOptionalPropertyTypes --noImplicitReturns --noFallthroughCasesInSwitch --noUncheckedIndexedAccess --skipLibCheck --types node,vitest/globals tools/governance/common.ts tools/governance/verify-architecture.ts tools/governance/verify-flow-contracts.ts tools/governance/verify-migration-registry.ts tools/governance/verify-ai-compliance.ts tools/governance/verify-docs-audit.ts tools/governance/verify-docs-parity.ts tools/governance/verify-governance-lock.ts tools/governance/verify-governance-tamper.ts tools/governance/tests/governance-verifiers.spec.ts` | PASS | سكربتات الحوكمة سليمة في TypeScript strict. |
+| `pnpm docs:audit` | PASS | Checked: 41. |
+| `pnpm docs:parity` | PASS | Checked: 19. |
+| `pnpm governance:lock` | PASS | Protected files: 19، وتم إنشاء `governance.lock.json`. |
+| `pnpm governance:tamper-check` | PASS_WITH_CURRENT_TASK_APPROVAL | Checked: 38، ومرّ بسبب وجود ملف إثبات معدل حالياً يحتوي الموافقة الحرفية الخاصة بهذه المهمة. |
+| `pnpm build` | PASS | جميع حزم workspace بُنيت بنجاح. |
+| `pnpm test` | PASS_WITH_WARNINGS | 30 ملف اختبار و242 اختباراً ناجحاً. ظهرت تحذيرات Redis وBOT_TOKEN القائمة مسبقاً. |
+| `pnpm arch:verify` | PASS_TRANSITIONAL | Checked: 0 لأن الترحيل الموديولي لم يبدأ فعلياً بعد داخل `modules/*`. |
+| `pnpm migration:verify` | FAIL_EXPECTED | Checked: 129، ويرفض NEW-06 إلى NEW-11 لأنها معلنة مكتملة ومساراتها ليست داخل `modules/*`. |
+| `pnpm flow-contracts:verify` | PASS_TRANSITIONAL | Checked: 0 لأنه لا توجد عقود تدفقات داخل `modules/*` حتى الآن. |
+| `pnpm lint` | FAIL_EXISTING_STRICT_ERRORS | يفشل لأن `pnpm typecheck` يكشف أخطاء TypeScript قديمة في `apps/bot-server` وبعض الاختبارات، وليست ناتجة عن سكربتات الحوكمة. |
+| `pnpm ai-compliance:verify` | PENDING_UNTIL_CLEAN_GIT | سيتم تشغيله بعد الالتزام لأن البوابة ترفض شجرة العمل غير النظيفة أثناء تنفيذ المهمة. |
+| `git status --short` | DIRTY_DURING_TASK | تغييرات المهمة الحالية غير ملتزم بها بعد. |
 
-## جدول البوابات G1 إلى G10
+## جدول البوابات G1 إلى G12
 
-| البوابة | حالة السكربت | حالة المشروع الحالية |
+| البوابة | الحالة | الدليل |
 |---|---|---|
-| G1 - العزل الموديولي | Implemented | لا توجد تدفقات modules بعد؛ الحارس جاهز. |
-| G2 - عقد الوظيفة | Implemented | لا توجد عقود بعد؛ الحارس جاهز. |
-| G3 - النواة المشتركة | Partially Implemented | يفحص `any` وplaceholder داخل التدفقات، ويحتاج توسيع لاحق لفحص imports. |
-| G4 - الصلاحيات | Contract Gate Implemented | مفروض عبر `flow.contract.json` عند وجود التدفقات. |
-| G5 - تجربة البوت | Contract/Test Presence Implemented | يفرض وجود اختبارات UX لكل تدفق. |
-| G6 - البيانات | Contract Gate Implemented | يفرض `dataImpact` داخل العقد. |
-| G7 - الأداء | Contract Gate Implemented | يفرض `performanceSlaMs` داخل العقد. |
-| G8 - الاختبارات | Implemented | يفرض ملفات اختبارات التدفق. |
-| G9 - التوثيق | Implemented | `docs:audit` و`docs:parity` يعملان. |
-| G10 - Git والحالة النهائية | Implemented | `ai-compliance:verify` يفشل عند وجود dirty tree. |
+| G1 - العزل الموديولي | PASS_TRANSITIONAL | `pnpm arch:verify` يفحص الموديولات عند وجود تدفقات. |
+| G2 - عقد الوظيفة | PASS_TRANSITIONAL | `pnpm flow-contracts:verify` يفحص عقود التدفقات عند وجودها. |
+| G3 - النواة المشتركة | PARTIAL_GATE | فحوص `arch:verify` تمنع placeholder و`any` داخل التدفقات وتحتاج لاحقاً فحص imports أعمق. |
+| G4 - الصلاحيات | CONTRACT_GATE | مفروضة عبر حقول allowedRoles وblockedRoles. |
+| G5 - تجربة البوت | CONTRACT_AND_TEST_GATE | مفروضة بوجود اختبارات UX لكل تدفق. |
+| G6 - البيانات | CONTRACT_GATE | مفروضة عبر dataImpact. |
+| G7 - الأداء | CONTRACT_GATE | مفروضة عبر performanceSlaMs. |
+| G8 - الاختبارات | PASS | `pnpm exec vitest run tools/governance/tests/governance-verifiers.spec.ts` نجح 11/11. |
+| G9 - التوثيق | PASS | `pnpm docs:audit` و`pnpm docs:parity` نجحا. |
+| G10 - Git والحالة النهائية | PENDING | سيُحسم بعد commit و`git status --short`. |
+| G11 - قفل الحوكمة | PASS | `pnpm governance:lock` أنشأ قفلاً لـ 19 ملفاً محمياً. |
+| G12 - منع العبث | PASS_WITH_CURRENT_TASK_APPROVAL | `pnpm governance:tamper-check` مرّ مع تحذيرات uncommitted governance changes لأنها تخص مهمة إنشاء الحماية الحالية وملف الإثبات الحالي يحتوي الموافقة الحرفية. |
 
 ## التحفظات الحالية
 
-1. `migration:verify` يلتقط مخالفة حقيقية: وظائف NEW-06 إلى NEW-11 معلنة مكتملة لكنها ليست داخل `modules/*`.
-2. `pnpm lint` يفشل لأنه مربوط حالياً بـ `typecheck`، والـ typecheck الجذري يكشف أخطاء strict قديمة في `apps/bot-server` وبعض الاختبارات.
-3. `arch:verify` و`flow-contracts:verify` يمران انتقالياً لأن عدد التدفقات داخل `modules/*` يساوي صفر؛ عند إنشاء أول تدفق سيصبح الفحص فعلياً على ملفات الوظيفة.
-4. لم يتم تنفيذ CI أو Git hooks في هذه الخطوة.
+1. `migration:verify` سيظل يرفض NEW-06 إلى NEW-11 إذا بقيت معلنة مكتملة خارج `modules/*`.
+2. `pnpm lint` قد يظل يفشل بسبب أخطاء TypeScript strict قديمة في التطبيق لا تخص سكربتات الحوكمة.
+3. هذه المهمة لا تنقل أي تدفق تشغيلي ولا تعدل وظائف البوت.
 
 ## إجراء منع التكرار
 
-تم تحويل قواعد الموديولات من توثيق فقط إلى سكربتات قابلة للفشل، وربطها بأوامر `package.json`. أي أداة تحاول إعلان وظيفة مكتملة خارج `modules/*` سيوقفها `migration:verify`. وأي أداة تحاول تسليم عمل دون تقرير إثبات أو مع شجرة Git غير نظيفة سيوقفها `ai-compliance:verify`.
+تم تحويل قاعدة عدم العبث بالبوابات إلى حاجزين قابلين للفحص:
+
+1. `pnpm governance:lock`: يحفظ بصمات الملفات المحمية في `governance.lock.json`.
+2. `pnpm governance:tamper-check`: يرفض أي اختلاف أو ملف حوكمة جديد غير مقفل أو تغيير غير ملتزم في ملفات الحوكمة ما لم توجد العبارة الحرفية داخل ملف إثبات جديد أو معدل حالياً.
 
 ## القرار النهائي
 
 `RETEST_REQUIRED`
 
-سبب القرار: سكربتات الحوكمة نفسها مبنية ومختبرة، لكن المشروع الحالي لا يجتاز كل البوابات بسبب مخالفات قائمة في سجل الترحيل وTypeScript strict. الخطوة التالية هي معالجة الوظائف NEW-06 إلى NEW-11 أو تعديل حالتها من مكتملة إلى انتقالية حتى يتم نقلها إلى `modules/*`.
+سبب القرار: السكربتات الجديدة مبنية ومتصلة بالأوامر الرسمية، لكن الحكم النهائي ينتظر تشغيل فحص العبث بعد هذا التحديث ثم التحقق النهائي والالتزام في Git.
+

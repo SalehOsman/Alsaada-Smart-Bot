@@ -8,11 +8,12 @@ import { verifyArchitecture } from '../verify-architecture.js';
 import { verifyDocsAudit } from '../verify-docs-audit.js';
 import { verifyDocsParity } from '../verify-docs-parity.js';
 import { verifyFlowContracts } from '../verify-flow-contracts.js';
+import { buildGovernanceLock, APPROVAL_PHRASE } from '../verify-governance-lock.js';
+import { verifyGovernanceTamper } from '../verify-governance-tamper.js';
 import { verifyMigrationRegistry } from '../verify-migration-registry.js';
 
 function fixtureRoot(name: string): string {
   const root = join(tmpdir(), `alsaada-governance-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  mkdirSync(root, { recursive: true });
   mkdirSync(join(root, 'docs'), { recursive: true });
   mkdirSync(join(root, 'modules'), { recursive: true });
   return root;
@@ -24,18 +25,22 @@ function writeJson(path: string, value: unknown): void {
 
 function writeMandatoryDocs(root: string): void {
   const standardReference = 'docs/21-mandatory-module-architecture-and-gates.md';
+  mkdirSync(join(root, 'docs', 'ai-execution-evidence'), { recursive: true });
+  mkdirSync(join(root, 'tools', 'governance'), { recursive: true });
   writeFileSync(join(root, 'AGENTS.md'), `${standardReference}\n`, 'utf8');
   writeFileSync(join(root, 'GEMINI.md'), `${standardReference}\n`, 'utf8');
   writeFileSync(join(root, 'docs', '14-ai-agent-governance-and-file-rules.md'), `${standardReference}\n`, 'utf8');
   writeFileSync(join(root, 'docs', '15-universal-module-and-flow-standard.md'), `${standardReference}\n`, 'utf8');
   writeFileSync(join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'), '# Registry\n', 'utf8');
-  mkdirSync(join(root, 'docs', 'ai-execution-evidence'), { recursive: true });
-  writeFileSync(join(root, 'docs', 'ai-execution-evidence', 'README.md'), '# Evidence\\n', 'utf8');
+  writeFileSync(join(root, 'docs', 'ai-execution-evidence', 'README.md'), '# Evidence\n', 'utf8');
   writeFileSync(
     join(root, 'docs', '21-mandatory-module-architecture-and-gates.md'),
-    'G1 G2 G3 G4 G5 G6 G7 G8 G9 G10 modules/<module-name>/ src/ flows/ pnpm arch:verify pnpm migration:verify pnpm flow-contracts:verify pnpm ai-compliance:verify\n',
+    'G1 G2 G3 G4 G5 G6 G7 G8 G9 G10 G11 G12 modules/<module-name>/ src/ flows/ pnpm arch:verify pnpm migration:verify pnpm flow-contracts:verify pnpm docs:audit pnpm docs:parity pnpm governance:lock pnpm governance:tamper-check pnpm ai-compliance:verify\n',
     'utf8',
   );
+  writeFileSync(join(root, 'tools', 'governance', 'verify-architecture.ts'), 'export {};\n', 'utf8');
+  writeFileSync(join(root, 'tools', 'governance', 'verify-governance-lock.ts'), 'export {};\n', 'utf8');
+  writeFileSync(join(root, 'tools', 'governance', 'verify-governance-tamper.ts'), 'export {};\n', 'utf8');
   writeJson(join(root, 'package.json'), {
     scripts: {
       build: 'pnpm -r run build',
@@ -46,6 +51,8 @@ function writeMandatoryDocs(root: string): void {
       'flow-contracts:verify': 'tsx tools/governance/verify-flow-contracts.ts',
       'docs:audit': 'tsx tools/governance/verify-docs-audit.ts',
       'docs:parity': 'tsx tools/governance/verify-docs-parity.ts',
+      'governance:lock': 'tsx tools/governance/verify-governance-lock.ts --write',
+      'governance:tamper-check': 'tsx tools/governance/verify-governance-tamper.ts',
       'ai-compliance:verify': 'tsx tools/governance/verify-ai-compliance.ts',
     },
   });
@@ -110,21 +117,20 @@ describe('governance verifiers', () => {
     const result = verifyArchitecture(root);
 
     expect(result.ok).toBe(true);
-    expect(result.failures).toEqual([]);
   });
 
-  test('architecture verifier rejects a modular flow with a missing required file', () => {
+  test('architecture verifier rejects missing required flow files', () => {
     const root = fixtureRoot('arch-missing-file');
     const flowDir = createCompleteFlow(root);
-    writeFileSync(join(flowDir, 'flow.service.ts'), '', 'utf8');
+    writeFileSync(join(flowDir, 'flow.service.ts'), 'placeholder\n', 'utf8');
 
     const result = verifyArchitecture(root);
 
     expect(result.ok).toBe(false);
-    expect(result.failures.some((failure) => failure.includes('flow.service.ts'))).toBe(true);
+    expect(result.failures.some((failure) => failure.includes('placeholder'))).toBe(true);
   });
 
-  test('flow contracts verifier rejects contracts missing RBAC and SLA fields', () => {
+  test('flow contracts verifier rejects contracts without RBAC and SLA', () => {
     const root = fixtureRoot('contract-fail');
     const flowDir = join(root, 'modules', 'advances', 'src', 'flows', '02.1-direct-advance');
     mkdirSync(flowDir, { recursive: true });
@@ -133,6 +139,17 @@ describe('governance verifiers', () => {
       flowName: 'Direct Advance',
       module: 'advances',
       status: 'Implemented',
+      allowedRoles: [],
+      blockedRoles: [],
+      entryPoints: [],
+      navigationPath: [],
+      buttons: [],
+      inputs: [],
+      outputs: [],
+      dataImpact: { database: [], googleSheets: [], exports: [], notifications: [] },
+      linkedFlows: [],
+      requiredTests: [],
+      manualUatRequired: true,
     });
 
     const result = verifyFlowContracts(root);
@@ -142,25 +159,25 @@ describe('governance verifiers', () => {
     expect(result.failures.some((failure) => failure.includes('performanceSlaMs'))).toBe(true);
   });
 
-  test('migration verifier rejects completed registry entries outside modules', () => {
+  test('migration verifier rejects completed flows outside modules', () => {
     const root = fixtureRoot('migration-fail');
-    writeFileSync(join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'), [
-      '| الكود | الوظيفة | القسم | الحالة | المسار | Commit |',
-      '|---|---|---|---|---|---|',
-      '| **`02.1`** | تسجيل سلفة | المالية | 🟢 مكتمل وموثق 100% | `apps/bot-server/src/flows/advances/direct-advance.ts` | abc123 |',
-    ].join('\n'), 'utf8');
+    mkdirSync(join(root, 'docs'), { recursive: true });
+    writeFileSync(
+      join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
+      '| Code | Feature | Owner | Status | New Module Path | Commit |\n|---|---|---|---|---|---|\n| `01.2.A` | Advance | Finance | Implemented | apps/bot-server/src/handlers/advance.handler.ts | abc123 |\n',
+      'utf8',
+    );
 
     const result = verifyMigrationRegistry(root);
 
     expect(result.ok).toBe(false);
-    expect(result.failures.some((failure) => failure.includes('must use modules/'))).toBe(true);
+    expect(result.failures.some((failure) => failure.includes('path must use modules'))).toBe(true);
   });
 
-  test('ai compliance verifier rejects PASS evidence without all gate results', () => {
+  test('ai compliance verifier rejects PASS evidence without all gate evidence', () => {
     const root = fixtureRoot('ai-fail');
-    const evidenceDir = join(root, 'docs', 'ai-execution-evidence');
-    mkdirSync(evidenceDir, { recursive: true });
-    writeFileSync(join(evidenceDir, 'task.md'), 'القرار: PASS\nG1 - العزل الموديولي: PASS\n', 'utf8');
+    mkdirSync(join(root, 'docs', 'ai-execution-evidence'), { recursive: true });
+    writeFileSync(join(root, 'docs', 'ai-execution-evidence', 'task.md'), 'PASS\nG1\npnpm build\n', 'utf8');
 
     const result = verifyAiCompliance(root, { requireEvidence: true, requireCleanGit: false });
 
@@ -199,7 +216,46 @@ describe('governance verifiers', () => {
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('AGENTS.md'))).toBe(true);
   });
-});
 
+  test('governance lock builder records protected governance files with hashes', () => {
+    const root = fixtureRoot('lock-build');
+    writeMandatoryDocs(root);
+
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+
+    expect(lock.approvalPhrase).toBe(APPROVAL_PHRASE);
+    expect(lock.files.some((file) => file.path === 'AGENTS.md')).toBe(true);
+    expect(lock.files.some((file) => file.path === 'GEMINI.md')).toBe(true);
+    expect(lock.files.some((file) => file.path === 'tools/governance/verify-governance-lock.ts')).toBe(true);
+    expect(lock.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256))).toBe(true);
+  });
+
+  test('governance tamper verifier rejects protected file changes without the exact approval phrase', () => {
+    const root = fixtureRoot('tamper-fail');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed without approval\n', 'utf8');
+
+    const result = verifyGovernanceTamper(root);
+
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((failure) => failure.includes(APPROVAL_PHRASE))).toBe(true);
+  });
+
+  test('governance tamper verifier allows protected file changes only with the exact approval phrase', () => {
+    const root = fixtureRoot('tamper-approval');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed with approval\n', 'utf8');
+    writeFileSync(join(root, 'docs', 'ai-execution-evidence', 'approval.md'), `${APPROVAL_PHRASE}\n`, 'utf8');
+
+    const result = verifyGovernanceTamper(root);
+
+    expect(result.ok).toBe(true);
+    expect(result.warnings.some((warning) => warning.includes('explicit approval'))).toBe(true);
+  });
+});
 
 

@@ -198,3 +198,29 @@ docs/ai-execution-evidence/<task-id>.md
 5. حالة سجل الترحيل بعد التحديث.
 
 أي نجاح بلا دليل يعامل كـ `INVALID_REPORT` ويعاد للفحص.
+
+## 12. بوابات حماية الحوكمة نفسها
+
+| البوابة | المطلوب | قرار الفشل |
+|---|---|---|
+| G11 - بوابة قفل الحوكمة | وجود `governance.lock.json` مُحدّث ببصمات SHA-256 لكل ملفات وقواعد وسكربتات الحوكمة المحمية عبر `pnpm governance:lock` | `GOVERNANCE_LOCK_FAIL` |
+| G12 - بوابة منع العبث بالحوكمة | تشغيل `pnpm governance:tamper-check` ورفض أي تعديل أو حذف أو تعطيل أو تخفيف لملفات البوابات دون موافقة صريحة موثقة | `GOVERNANCE_TAMPER_FAIL` |
+
+## 13. قاعدة الموافقة الحرفية لتعديل البوابات
+
+يُحظر على أي أداة ذكاء اصطناعي أو مطور تعديل أو حذف أو تعطيل أو تخفيف أي بوابة حوكمة أو سكربت تحقق أو قاعدة من قواعد المشروع، بما في ذلك ملفات `AGENTS.md` و`GEMINI.md` و`package.json` و`docs/14-ai-agent-governance-and-file-rules.md` و`docs/15-universal-module-and-flow-standard.md` و`docs/21-mandatory-module-architecture-and-gates.md` و`tools/governance` وملفات CI، إلا إذا وردت موافقة كتابية صريحة من المستخدم تحتوي نفس اللفظ التالي دون تغيير:
+
+```text
+موافق على التعديل او الايقاف او الحذف
+```
+
+في غياب هذه العبارة الحرفية، يجب اعتبار الطلب `BLOCKED` وعدم إجراء أي تعديل على ملفات الحوكمة أو تعطيل أي بوابة، حتى لو بدا التعديل منطقياً أو ضرورياً.
+
+## 14. أوامر حماية البوابات الإضافية
+
+```bash
+pnpm governance:lock
+pnpm governance:tamper-check
+```
+
+يجب تشغيل `pnpm governance:tamper-check` ضمن `pnpm governance:verify` قبل `pnpm ai-compliance:verify`. ولا يجوز اعتماد تقرير أي أداة ذكاء اصطناعي ما لم يذكر نتيجة G11 وG12 ونتيجة أمر فحص العبث.

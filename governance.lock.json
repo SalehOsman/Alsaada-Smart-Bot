@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-08T14:22:10.827Z",
+  "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
+  "protectedPaths": {
+    "files": [
+      "AGENTS.md",
+      "GEMINI.md",
+      "package.json",
+      "pnpm-workspace.yaml",
+      ".gitignore",
+      "docs/14-ai-agent-governance-and-file-rules.md",
+      "docs/15-universal-module-and-flow-standard.md",
+      "docs/21-mandatory-module-architecture-and-gates.md",
+      "docs/ai-execution-evidence/README.md"
+    ],
+    "directories": [
+      "tools/governance",
+      ".github/workflows"
+    ]
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "f862166923b80e384949716740e86462eb5ee164d6c1ea88462b88c789225b8b"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "1308b5a378a7230d148cac883a260b7ade0d1e198b94e23f999134f5d6ca5371"
+    },
+    {
+      "path": "docs/14-ai-agent-governance-and-file-rules.md",
+      "sha256": "aa0018f0d515b78e822182e6c1ce244feb060349f31e50260f6559fc28969ff3"
+    },
+    {
+      "path": "docs/15-universal-module-and-flow-standard.md",
+      "sha256": "bd2f4f3a607f0a58274d0b69369b5522e0c7ce5b7a8dcf07f66a7f7b4c137abe"
+    },
+    {
+      "path": "docs/21-mandatory-module-architecture-and-gates.md",
+      "sha256": "79b71635c8148d90463f62d9c5232aaa87346c1fbb0ef5fc732edcca9334f081"
+    },
+    {
+      "path": "docs/ai-execution-evidence/README.md",
+      "sha256": "7e8dac3c3dbd6a413e24298a68685be0d005e4db8b96b660b9ae1ad9c5f2d6a3"
+    },
+    {
+      "path": "GEMINI.md",
+      "sha256": "df443e5a3d23bf11eff9100b95efdeebafaa86deebbb8ea8eb6a27f29824b246"
+    },
+    {
+      "path": "package.json",
+      "sha256": "ca216bb697e57df6c40871790755f781989bba4ad39d31ecbc4ba9f0383fcba4"
+    },
+    {
+      "path": "pnpm-workspace.yaml",
+      "sha256": "52b6e9eff4103583156c8fd18a6fc9d57d382d09ae4aa59f552702da242b2b18"
+    },
+    {
+      "path": "tools/governance/common.ts",
+      "sha256": "b0683271fb7b87c44e2e854ce2c9e6847473882831f0bd40e3cfece798bba679"
+    },
+    {
+      "path": "tools/governance/tests/governance-verifiers.spec.ts",
+      "sha256": "973a90eb20e6d98497857d1e2b43aea7b6053f50f5cd07058818d0cbe74ba2b8"
+    },
+    {
+      "path": "tools/governance/verify-ai-compliance.ts",
+      "sha256": "794f1d8ac96d3eb6f743cb1b94da39769dab52bc42de2beac1a688b24f07e9cb"
+    },
+    {
+      "path": "tools/governance/verify-architecture.ts",
+      "sha256": "04e0db327f66577c20135815a567321ddfb549297eb65f5d221909c5faa4c581"
+    },
+    {
+      "path": "tools/governance/verify-docs-audit.ts",
+      "sha256": "436b44d8a95c300f6f256e48b8bd58a9738852cec612cf541d2a5bf168d842f2"
+    },
+    {
+      "path": "tools/governance/verify-docs-parity.ts",
+      "sha256": "0e949d4daa25f5b44ce117d6c129c37b2862da64455c4f80baae3c4b9881c9af"
+    },
+    {
+      "path": "tools/governance/verify-flow-contracts.ts",
+      "sha256": "198cbd7a7fdf67e437f6101d23e92c42749b3460c6746239b0484024a8ebbca1"
+    },
+    {
+      "path": "tools/governance/verify-governance-lock.ts",
+      "sha256": "95abd18252e95cf152aef3cfc99e3b6634a00a5a3e918dcbc6fb6a800a8860e0"
+    },
+    {
+      "path": "tools/governance/verify-governance-tamper.ts",
+      "sha256": "20209b7e39f0c7053fd441c9903b5fda62246999bfd40d6b8389d32178e26da2"
+    },
+    {
+      "path": "tools/governance/verify-migration-registry.ts",
+      "sha256": "5ee27fdddbd23a04b7ebe3eab44caeac36ba6a8c19478ba35661b2dbe135919f"
+    }
+  ]
+}

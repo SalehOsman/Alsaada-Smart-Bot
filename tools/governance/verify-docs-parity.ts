@@ -11,7 +11,7 @@ const GOVERNANCE_FILES = [
 
 const STANDARD_REFERENCE = 'docs/21-mandatory-module-architecture-and-gates.md';
 const MODULE_PATH_MARKERS = ['modules/<module-name>/', 'src/', 'flows/'] as const;
-const REQUIRED_GATES = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] as const;
+const REQUIRED_GATES = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12'] as const;
 
 export function verifyDocsParity(root = process.cwd()): VerificationResult {
   const result = createResult();

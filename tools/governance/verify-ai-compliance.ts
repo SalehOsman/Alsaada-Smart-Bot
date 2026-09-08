@@ -7,7 +7,7 @@ export interface AiComplianceOptions {
   requireCleanGit?: boolean;
 }
 
-const REQUIRED_GATES = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] as const;
+const REQUIRED_GATES = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12'] as const;
 const REQUIRED_COMMANDS = [
   'pnpm build',
   'pnpm test',
@@ -17,6 +17,7 @@ const REQUIRED_COMMANDS = [
   'pnpm flow-contracts:verify',
   'pnpm docs:audit',
   'pnpm docs:parity',
+  'pnpm governance:tamper-check',
   'pnpm ai-compliance:verify',
   'git status --short',
 ] as const;
@@ -68,4 +69,3 @@ export function verifyAiCompliance(root = process.cwd(), options: AiComplianceOp
 if (isCliEntrypoint(import.meta.url)) {
   printAndExit('ai-compliance:verify', verifyAiCompliance(process.cwd(), { requireEvidence: true, requireCleanGit: true }));
 }
-
