@@ -103,13 +103,15 @@ import {
 import {
   renderHrHub,
   renderHrSubHub,
+  handleHrPlaceholder,
+} from './handlers/hr-hub.handler.js';
+import {
   renderWorkersDirectory,
   renderWorkerDetailCard,
   handleWorkerDirSearchPrompt,
   handleWorkerDirSearchInput,
   handleWorkerCallContact,
-  handleHrPlaceholder,
-} from './handlers/hr-hub.handler.js';
+} from './handlers/worker-directory.handler.js';
 import {
   handleStartAddWorker,
   handleWorkerWizardTextInput,
