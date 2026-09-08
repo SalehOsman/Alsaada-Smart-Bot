@@ -71,7 +71,7 @@ export class WorkerEditHandler {
       });
     }
 
-    const text = WorkerEditMessages.selectFieldPrompt(worker.name, worker.code);
+    const text = WorkerEditMessages.selectFieldPrompt(worker.name, worker.code, worker.nickname);
     const keyboard = WorkerEditKeyboards.fieldsSelectionKeyboard(worker.id);
     await this.replyOrEdit(ctx, text, keyboard);
   }

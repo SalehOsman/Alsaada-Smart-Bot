@@ -10,11 +10,13 @@ export const WorkerEditMessages = {
     );
   },
 
-  selectFieldPrompt(workerName: string, workerCode: string): string {
+  selectFieldPrompt(workerName: string, workerCode: string, nickname?: string | null): string {
+    const nickLine = nickname ? `• *اسم الشهرة:* ${nickname}\n` : '';
     return (
       `✏️ *تعديل بيانات العامل*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `• *الاسم:* ${workerName}\n` +
+      nickLine +
       `• *الكود:* \`#${workerCode}\`\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `اختر الحقل الذي ترغب في تعديله:`

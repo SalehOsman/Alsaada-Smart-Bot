@@ -244,6 +244,7 @@ export async function renderWorkerEditMenu(
     `${title}\n` +
     '━━━━━━━━━━━━━━━━━━━━━\n' +
     `👤 *العامل:* *${worker.name}* (كود رسمي: \`${worker.code}\`)\n` +
+    `🏷️ *اسم الشهرة:* *${worker.nickname || 'غير مسجل'}*\n` +
     `🏷️ *الكود القديم الأرشيفي:* *${worker.legacyCode || 'غير مسجل'}*\n` +
     `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'غير محدد'}\n` +
     `📍 *المحافظة:* *${govName}*\n` +
