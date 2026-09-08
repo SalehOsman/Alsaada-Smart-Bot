@@ -26,3 +26,13 @@ export * from './flows/01.1-worker-registration/flow.validators.js';
 export * from './flows/01.1-worker-registration/flow.messages.js';
 export { WorkerRegistrationTelemetry } from './flows/01.1-worker-registration/flow.telemetry.js';
 
+// Export flow 01.5 components
+export * from './flows/01.5-worker-directory/flow.types.js';
+export * from './flows/01.5-worker-directory/flow.service.js';
+export * from './flows/01.5-worker-directory/flow.repository.js';
+export * from './flows/01.5-worker-directory/flow.handler.js';
+export * from './flows/01.5-worker-directory/flow.keyboard.js';
+export * from './flows/01.5-worker-directory/flow.validators.js';
+export * from './flows/01.5-worker-directory/flow.messages.js';
+export { WorkerDirectoryTelemetry } from './flows/01.5-worker-directory/flow.telemetry.js';
+

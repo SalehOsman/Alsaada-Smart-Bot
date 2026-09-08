@@ -5,7 +5,8 @@
   "owner": "HR & Operations Sector",
   "flows": [
     "01.1-worker-registration",
-    "01.4-worker-export"
+    "01.4-worker-export",
+    "01.5-worker-directory"
   ],
   "dependencies": [
     "@alsaada/core-components",

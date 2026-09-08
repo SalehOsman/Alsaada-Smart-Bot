@@ -1,0 +1,74 @@
+{
+  "flowCode": "01.5",
+  "flowName": "دليل وسجل العاملين الشامل والأرشيف السابق (360°)",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "GENERAL_ADMIN",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "action:worker:directory",
+    "action:worker:dir:page:*",
+    "action:worker:view:*",
+    "action:worker:dir:search_prompt",
+    "action:worker:dir:clear_search"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "الموارد البشرية",
+    "شؤون العاملين والتعيينات",
+    "دليل وسجل العاملين (360°)"
+  ],
+  "buttons": [
+    "action:worker:directory",
+    "action:worker:dir:page",
+    "action:worker:view",
+    "action:worker:dir:search_prompt",
+    "action:worker:dir:clear_search"
+  ],
+  "inputs": [
+    "text:search_query",
+    "pagination:page_number",
+    "select:worker_id"
+  ],
+  "outputs": [
+    "list:workers_directory",
+    "card:worker_profile_360"
+  ],
+  "dataImpact": {
+    "database": [
+      "Worker"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "01.1",
+    "01.2.D",
+    "01.4"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 700,
+    "stepP95": 1200,
+    "commitP95": 2000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": true,
+  "allowAny": false
+}

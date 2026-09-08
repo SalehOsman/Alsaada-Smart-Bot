@@ -6,6 +6,9 @@ import { WorkerExportRepository } from './flows/01.4-worker-export/flow.reposito
 import { WorkerRegistrationHandler } from './flows/01.1-worker-registration/flow.handler.js';
 import { WorkerRegistrationService } from './flows/01.1-worker-registration/flow.service.js';
 import { WorkerRegistrationRepository } from './flows/01.1-worker-registration/flow.repository.js';
+import { WorkerDirectoryHandler } from './flows/01.5-worker-directory/flow.handler.js';
+import { WorkerDirectoryService } from './flows/01.5-worker-directory/flow.service.js';
+import { WorkerDirectoryRepository } from './flows/01.5-worker-directory/flow.repository.js';
 import { PrismaClient } from '@alsaada/database';
 
 export function registerWorkforceRoutes(
@@ -20,6 +23,34 @@ export function registerWorkforceRoutes(
   const regRepo = new WorkerRegistrationRepository(prisma);
   const regService = new WorkerRegistrationService(regRepo, undefined, encryptionKey);
   const regHandler = new WorkerRegistrationHandler(regService, regRepo);
+
+  const dirRepo = new WorkerDirectoryRepository(prisma);
+  const dirService = new WorkerDirectoryService(dirRepo, encryptionKey);
+  const dirHandler = new WorkerDirectoryHandler(dirService);
+
+  // Flow 01.5 Worker Directory & 360 Profile
+  bot.callbackQuery('action:worker:directory', async (ctx) => {
+    await dirHandler.handleDirectory(ctx, 1);
+  });
+
+  bot.callbackQuery(/^action:worker:dir:page:(\d+)$/, async (ctx) => {
+    const match = ctx.match;
+    const page = match?.[1] ? parseInt(match[1], 10) : 1;
+    await dirHandler.handleDirectory(ctx, page);
+  });
+
+  bot.callbackQuery(/^action:worker:view:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await dirHandler.handleViewWorker(ctx, match[1]);
+  });
+
+  bot.callbackQuery('action:worker:dir:search_prompt', async (ctx) => {
+    await dirHandler.handleSearchPrompt(ctx);
+  });
+
+  bot.callbackQuery('action:worker:dir:clear_search', async (ctx) => {
+    await dirHandler.handleClearSearch(ctx);
+  });
 
   // Flow 01.1 Worker Registration
   bot.callbackQuery('action:worker:add_single', async (ctx) => {
