@@ -14,4 +14,15 @@ export * from './flows/01.4-worker-export/flow.handler.js';
 export * from './flows/01.4-worker-export/flow.keyboard.js';
 export * from './flows/01.4-worker-export/flow.validators.js';
 export * from './flows/01.4-worker-export/flow.messages.js';
-export * from './flows/01.4-worker-export/flow.telemetry.js';
+export { WorkerExportTelemetry } from './flows/01.4-worker-export/flow.telemetry.js';
+
+// Export flow 01.1 components
+export * from './flows/01.1-worker-registration/flow.types.js';
+export * from './flows/01.1-worker-registration/flow.service.js';
+export * from './flows/01.1-worker-registration/flow.repository.js';
+export * from './flows/01.1-worker-registration/flow.handler.js';
+export * from './flows/01.1-worker-registration/flow.keyboard.js';
+export * from './flows/01.1-worker-registration/flow.validators.js';
+export * from './flows/01.1-worker-registration/flow.messages.js';
+export { WorkerRegistrationTelemetry } from './flows/01.1-worker-registration/flow.telemetry.js';
+

@@ -3,6 +3,9 @@ import type { WorkforceModuleContext } from './shared/module.types.js';
 import { WorkerExportHandler } from './flows/01.4-worker-export/flow.handler.js';
 import { WorkerExportService } from './flows/01.4-worker-export/flow.service.js';
 import { WorkerExportRepository } from './flows/01.4-worker-export/flow.repository.js';
+import { WorkerRegistrationHandler } from './flows/01.1-worker-registration/flow.handler.js';
+import { WorkerRegistrationService } from './flows/01.1-worker-registration/flow.service.js';
+import { WorkerRegistrationRepository } from './flows/01.1-worker-registration/flow.repository.js';
 import { PrismaClient } from '@alsaada/database';
 
 export function registerWorkforceRoutes(
@@ -13,6 +16,54 @@ export function registerWorkforceRoutes(
   const exportRepo = new WorkerExportRepository(prisma);
   const exportService = new WorkerExportService(exportRepo, encryptionKey);
   const exportHandler = new WorkerExportHandler(exportService);
+
+  const regRepo = new WorkerRegistrationRepository(prisma);
+  const regService = new WorkerRegistrationService(regRepo, undefined, encryptionKey);
+  const regHandler = new WorkerRegistrationHandler(regService, regRepo);
+
+  // Flow 01.1 Worker Registration
+  bot.callbackQuery('action:worker:add_single', async (ctx) => {
+    await regHandler.handleStart(ctx);
+  });
+
+  bot.callbackQuery('wizard:worker:doc_type:nat_id', async (ctx) => {
+    await regHandler.handleDocType(ctx, 'NATIONAL_ID');
+  });
+
+  bot.callbackQuery('wizard:worker:doc_type:passport', async (ctx) => {
+    await regHandler.handleDocType(ctx, 'PASSPORT');
+  });
+
+  bot.callbackQuery('wizard:worker:ai_skip', async (ctx) => {
+    await regHandler.handleSkipPhoto(ctx);
+  });
+
+  bot.callbackQuery('wizard:worker:back', async (ctx) => {
+    await regHandler.handleBack(ctx);
+  });
+
+  bot.callbackQuery('wizard:worker:cancel', async (ctx) => {
+    await regHandler.handleCancel(ctx);
+  });
+
+  bot.callbackQuery('wizard:worker:confirm', async (ctx) => {
+    await regHandler.handleConfirm(ctx);
+  });
+
+  bot.callbackQuery(/^wizard:worker:payout:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await regHandler.handlePayoutChoice(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^wizard:worker:job:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await regHandler.handleJobChoice(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^wizard:worker:site:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await regHandler.handleSiteChoice(ctx, match[1]);
+  });
 
   // Template Download
   bot.callbackQuery('action:worker:download_excel', async (ctx) => {

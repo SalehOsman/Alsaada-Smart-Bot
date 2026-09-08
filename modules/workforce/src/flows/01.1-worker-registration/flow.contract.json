@@ -1,0 +1,89 @@
+{
+  "flowCode": "01.1",
+  "flowName": "تسجيل وتعيين عامل / موظف جديد",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "GENERAL_ADMIN",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "action:worker:add_single",
+    "wizard:worker:doc_type:nat_id",
+    "wizard:worker:doc_type:passport",
+    "wizard:worker:confirm",
+    "wizard:worker:cancel",
+    "wizard:worker:back"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "الموارد البشرية",
+    "شؤون العاملين والتعيينات",
+    "تسجيل عامل جديد"
+  ],
+  "buttons": [
+    "action:worker:add_single",
+    "wizard:worker:doc_type:nat_id",
+    "wizard:worker:doc_type:passport",
+    "wizard:worker:ai_skip",
+    "wizard:worker:confirm",
+    "wizard:worker:cancel",
+    "wizard:worker:back"
+  ],
+  "inputs": [
+    "text:full_name",
+    "text:id_number",
+    "text:phone",
+    "photo:id_card_front",
+    "photo:id_card_back",
+    "select:job",
+    "select:site",
+    "select:shift_system"
+  ],
+  "outputs": [
+    "card:worker_profile",
+    "link:whatsapp_welcome",
+    "event:worker_created"
+  ],
+  "dataImpact": {
+    "database": [
+      "Worker",
+      "AuditLog",
+      "OutboxEvent"
+    ],
+    "googleSheets": [
+      "sync:workers_roster"
+    ],
+    "exports": [],
+    "notifications": [
+      "topic:hr_operations"
+    ]
+  },
+  "linkedFlows": [
+    "01.2",
+    "01.4",
+    "NEW-01"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 700,
+    "stepP95": 1200,
+    "commitP95": 2000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": true,
+  "allowAny": false
+}

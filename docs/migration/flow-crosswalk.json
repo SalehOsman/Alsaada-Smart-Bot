@@ -26,11 +26,11 @@
       "legacyFlowId": "01.2.A (Workforce)",
       "name": "تسجيل وتعيين عامل / موظف جديد",
       "domain": "الموارد البشرية والعمال",
-      "targetModule": "modules/hr",
-      "status": "PENDING",
-      "currentStatusRaw": "⏳ بانتظار الترحيل",
-      "legacyPath": "apps/bot-server/src/flows/register-worker/",
-      "notes": "Disambiguated from advances 01.2.A. Formerly 01.2.A-new-worker."
+      "targetModule": "modules/workforce",
+      "status": "IMPLEMENTED",
+      "currentStatusRaw": "🟢 مكتمل وموثق 100%",
+      "legacyPath": "modules/workforce/src/flows/01.1-worker-registration",
+      "notes": "Migrated to Vertical Slice in modules/workforce with 10 files and 5 tests under Gate G1-G10."
     },
     {
       "targetFlowId": "01.2",

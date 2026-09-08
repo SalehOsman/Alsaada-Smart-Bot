@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "owner": "HR & Operations Sector",
   "flows": [
+    "01.1-worker-registration",
     "01.4-worker-export"
   ],
   "dependencies": [
