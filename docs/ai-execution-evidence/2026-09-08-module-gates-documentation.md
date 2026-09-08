@@ -76,8 +76,8 @@
 | `pnpm migration:verify` | FAIL_EXPECTED | Checked: 129، ويرفض NEW-06 إلى NEW-11 لأنها معلنة مكتملة ومساراتها ليست داخل `modules/*`. |
 | `pnpm flow-contracts:verify` | PASS_TRANSITIONAL | Checked: 0 لأنه لا توجد عقود تدفقات داخل `modules/*` حتى الآن. |
 | `pnpm lint` | FAIL_EXISTING_STRICT_ERRORS | يفشل لأن `pnpm typecheck` يكشف أخطاء TypeScript قديمة في `apps/bot-server` وبعض الاختبارات، وليست ناتجة عن سكربتات الحوكمة. |
-| `pnpm ai-compliance:verify` | PENDING_UNTIL_CLEAN_GIT | سيتم تشغيله بعد الالتزام لأن البوابة ترفض شجرة العمل غير النظيفة أثناء تنفيذ المهمة. |
-| `git status --short` | DIRTY_DURING_TASK | تغييرات المهمة الحالية غير ملتزم بها بعد. |
+| `pnpm ai-compliance:verify` | PASS | Checked: 1 بعد commit `baee356` وشجرة عمل نظيفة. |
+| `git status --short` | PASS | لا توجد تعديلات معلقة بعد commit `baee356`. |
 
 ## جدول البوابات G1 إلى G12
 
@@ -92,7 +92,7 @@
 | G7 - الأداء | CONTRACT_GATE | مفروضة عبر performanceSlaMs. |
 | G8 - الاختبارات | PASS | `pnpm exec vitest run tools/governance/tests/governance-verifiers.spec.ts` نجح 11/11. |
 | G9 - التوثيق | PASS | `pnpm docs:audit` و`pnpm docs:parity` نجحا. |
-| G10 - Git والحالة النهائية | PENDING | سيُحسم بعد commit و`git status --short`. |
+| G10 - Git والحالة النهائية | PASS | commit `baee356` تم إنشاؤه و`git status --short` عاد فارغاً بعد الالتزام. |
 | G11 - قفل الحوكمة | PASS | `pnpm governance:lock` أنشأ قفلاً لـ 19 ملفاً محمياً. |
 | G12 - منع العبث | PASS_WITH_CURRENT_TASK_APPROVAL | `pnpm governance:tamper-check` مرّ مع تحذيرات uncommitted governance changes لأنها تخص مهمة إنشاء الحماية الحالية وملف الإثبات الحالي يحتوي الموافقة الحرفية. |
 
@@ -113,5 +113,6 @@
 
 `RETEST_REQUIRED`
 
-سبب القرار: السكربتات الجديدة مبنية ومتصلة بالأوامر الرسمية، لكن الحكم النهائي ينتظر تشغيل فحص العبث بعد هذا التحديث ثم التحقق النهائي والالتزام في Git.
+سبب القرار: سكربتات الحماية مبنية ومتصلة بالأوامر الرسمية ومختبرة، لكن المشروع ككل لا يحصل على PASS عام لأن `migration:verify` و`lint` ما زالا يرصدان مخالفات انتقالية قائمة خارج نطاق هذه المهمة.
+
 
