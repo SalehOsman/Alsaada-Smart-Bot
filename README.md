@@ -93,6 +93,8 @@ F:\Alsaada-Smart-Bot/
 * [17. الدليل المعياري لتكويد العمال وهيكل الأقسام والربط الصامت بالأكواد القديمة](./docs/17-worker-coding-and-silent-alias-resolution.md)
 * [18. المعمارية الهندسية الشاملة لقاعدة بيانات PostgreSQL ونموذج الكيانات والعلاقات](./docs/18-enterprise-schema-and-entity-relationship-model.md)
 * [19. السجل المرجعي الشامل لحصر وترحيل وظائف المنظومة والوظائف المستحدثة](./docs/19-legacy-to-enterprise-master-feature-migration-registry.md)
+* [20. دليل وحدة التحكم وإعدادات السوبر أدمن والتحكم السيادي](./docs/20-super-admin-settings-and-control-hub-guide.md)
+* [21. معيار الموديولات الإلزامي وبوابات الاعتماد الصارمة](./docs/21-mandatory-module-architecture-and-gates.md)
 
 
 * [تقرير مراجعة الهيكلة والمطابقة والحوكمة — 08-09-2026](./docs/ai-execution-evidence/08-09-2026-restructuring-audit.md) — نتائج الفحص والمخالفات والمقترحات؛ قرار اعتماد المشروع: FAIL، وتلزم إعادة الفحص بعد المعالجة.
