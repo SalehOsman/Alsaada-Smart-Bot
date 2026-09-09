@@ -65,13 +65,7 @@ export class WorkerEditHandler {
     }
     const isSuper = this.isSuperAdmin(ctx);
     if (ctx.from) {
-      this.editDrafts.set(String(ctx.from.id), {
-        workerId: worker.id,
-        workerCode: worker.code,
-        workerName: worker.name,
-        currentTab: tab,
-        isSuperAdmin: isSuper,
-      });
+      this.editDrafts.set(String(ctx.from.id), { workerId: worker.id, workerCode: worker.code, workerName: worker.name, currentTab: tab, isSuperAdmin: isSuper });
     }
     const rawNatId = this.service.decryptFieldSafe(worker.nationalIdEncrypted || worker.passportNumberEncrypted);
     const workerView: WorkerCardView = {
