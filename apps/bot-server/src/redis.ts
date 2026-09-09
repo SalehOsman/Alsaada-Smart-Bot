@@ -578,3 +578,47 @@ export async function clearUserActiveScreen(telegramId: bigint): Promise<void> {
   }
 }
 
+const PERSISTENT_KEYBOARD_MSG_PREFIX = 'user_persistent_keyboard_msg:';
+
+export interface PersistentKeyboardAnchorState {
+  chatId: number;
+  messageId: number;
+}
+
+export async function setPersistentKeyboardMsg(
+  telegramId: bigint,
+  chatId: number,
+  messageId: number
+): Promise<void> {
+  try {
+    await safeRedisSet(
+      `${PERSISTENT_KEYBOARD_MSG_PREFIX}${telegramId}`,
+      JSON.stringify({ chatId, messageId }),
+      86400 * 30
+    );
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting persistent keyboard msg:', error);
+  }
+}
+
+export async function getPersistentKeyboardMsg(
+  telegramId: bigint
+): Promise<PersistentKeyboardAnchorState | null> {
+  try {
+    const raw = await safeRedisGet(`${PERSISTENT_KEYBOARD_MSG_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as PersistentKeyboardAnchorState) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting persistent keyboard msg:', error);
+    return null;
+  }
+}
+
+export async function clearPersistentKeyboardMsg(telegramId: bigint): Promise<void> {
+  try {
+    await safeRedisDel(`${PERSISTENT_KEYBOARD_MSG_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing persistent keyboard msg:', error);
+  }
+}
+
+

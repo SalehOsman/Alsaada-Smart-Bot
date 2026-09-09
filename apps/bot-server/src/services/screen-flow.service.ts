@@ -5,10 +5,66 @@ import {
   clearUserActiveScreen,
   clearAllPendingUserActions,
   getPendingWorkerWizard,
+  getPersistentKeyboardMsg,
+  setPersistentKeyboardMsg,
   UserActiveScreenState,
 } from '../redis.js';
+import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 
 export class ScreenFlowService {
+  /**
+   * 📌 ضمان وجود وتثبيت كيبورد الأزرار السفلي الدائم دون حذفه أو اختفائه
+   */
+  async ensurePersistentKeyboard(ctx: MyContext, customText?: string): Promise<void> {
+    if (!ctx.from || !ctx.chat) return;
+    const telegramId = BigInt(ctx.from.id);
+    const existing = await getPersistentKeyboardMsg(telegramId);
+
+    // إذا كانت هناك رسالة مثبتة قديمة في الشات، نقوم بتنظيفها برفق حتى لا تتراكم
+    if (existing && ctx.api) {
+      await ctx.api.deleteMessage(existing.chatId, existing.messageId).catch(() => {});
+    }
+
+    const replyKeyboard = buildPersistentReplyKeyboard(ctx);
+    const text =
+      customText ||
+      `🏢 *شركة السعادة للمقاولات العامة والتعدين* ⚡\n` +
+      `لوحة أزرار التنقل والتحكم الميداني مفعلة ومتاحة بالأسفل دائماً ⬇️`;
+
+    try {
+      const sent = await ctx.api.sendMessage(ctx.chat.id, text, {
+        parse_mode: 'Markdown',
+        reply_markup: replyKeyboard,
+      });
+      await setPersistentKeyboardMsg(telegramId, ctx.chat.id, sent.message_id);
+    } catch {
+      // Fallback
+    }
+  }
+
+  /**
+   * 🧹 حذف رسالة القائمة الرئيسية فوراً عند النقر على أي قسم منها
+   */
+  async cleanupMainMenuIfActive(ctx: MyContext): Promise<boolean> {
+    if (!ctx.from) return false;
+    const telegramId = BigInt(ctx.from.id);
+    const active = await getUserActiveScreen(telegramId);
+    if (active && active.flowType === 'main_menu') {
+      const clickedMsgId = ctx.callbackQuery?.message?.message_id;
+      if (!clickedMsgId || clickedMsgId === active.messageId) {
+        if (ctx.api) {
+          await ctx.api.deleteMessage(active.chatId, active.messageId).catch(() => {});
+        } else if (ctx.callbackQuery?.message?.chat) {
+          await ctx.deleteMessage().catch(() => {});
+        }
+        await clearUserActiveScreen(telegramId);
+        (ctx as any).fromMainMenu = true;
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * 📌 تسجيل الشاشة أو التدفق النشط حالياً للمستخدم
    */
@@ -55,9 +111,19 @@ export class ScreenFlowService {
   async shouldRenderInPlace(ctx: MyContext, requestedInPlace = true): Promise<boolean> {
     if (!requestedInPlace) return false;
     if (!ctx.callbackQuery) return false;
+    if ((ctx as any).fromMainMenu) {
+      return false;
+    }
     const fromCompleted = await this.isClickOnCompletedScreen(ctx);
     if (fromCompleted) {
       return false; // كارت العملية المكتملة يبقى في الشات دائماً
+    }
+    // إذا كانت النقرة من القائمة الرئيسية، يتم حظر التعديل الموضعي لحذفها وإرسال التدفق المطلوب منفرداً
+    if (ctx.from) {
+      const active = await getUserActiveScreen(BigInt(ctx.from.id));
+      if (active?.flowType === 'main_menu') {
+        return false;
+      }
     }
     return true;
   }

@@ -275,13 +275,7 @@ export async function handleStart(ctx: MyContext): Promise<void> {
     );
   }
 
-  const replyKeyboard = buildPersistentReplyKeyboard(ctx);
-  const navMsg = await ctx.reply('⏳', {
-    reply_markup: replyKeyboard,
-  });
-  if (ctx.chat) {
-    await ctx.api.deleteMessage(ctx.chat.id, navMsg.message_id).catch(() => {});
-  }
+  await screenFlowService.ensurePersistentKeyboard(ctx);
 
   await renderRoleHome(ctx, false);
 }
@@ -379,20 +373,14 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
     `━━━━━━━━━━━━━━━━━━━━━\n` +
     `يمكنك الآن متابعة كافة مستحقاتك، طلبات الإجازات، والسلف المالية مباشرة.`;
 
-  const replyKeyboard = buildPersistentReplyKeyboard(ctx);
-  const navMsg = await ctx.reply('⏳', {
-    reply_markup: replyKeyboard,
-  });
-  if (ctx.chat) {
-    await ctx.api.deleteMessage(ctx.chat.id, navMsg.message_id).catch(() => {});
-  }
-
   ctx.effectiveRole = 'WORKER';
   if (ctx.dbUser) {
     ctx.dbUser.role = 'WORKER';
     ctx.dbUser.workerId = worker.id;
     ctx.dbUser.isActive = true;
   }
+
+  await screenFlowService.ensurePersistentKeyboard(ctx);
 
   try {
     await ctx.editMessageText(successText, {

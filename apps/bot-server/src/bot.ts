@@ -150,6 +150,23 @@ export function createBot(): Bot<MyContext> {
   // 4. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
 
+  // 4.1. 🧹 Universal Main Menu Invalidation & Automatic Deletion Interceptor
+  // When user clicks ANY section from the main menu, delete the main menu message immediately
+  // and ensure destination screens are sent cleanly as separate standalone cards.
+  bot.use(async (ctx, next) => {
+    if (ctx.callbackQuery && ctx.from) {
+      const active = await screenFlowService.getActiveScreen(BigInt(ctx.from.id));
+      if (
+        active &&
+        active.flowType === 'main_menu' &&
+        ctx.callbackQuery.message?.message_id === active.messageId
+      ) {
+        await screenFlowService.cleanupMainMenuIfActive(ctx);
+      }
+    }
+    return next();
+  });
+
   // 5. Register Workforce Domain Module (Doc 21 Modular Monolith)
   registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
     prisma,

@@ -19,6 +19,9 @@ vi.mock('../src/redis.js', () => ({
   setPendingWorkerDirSearch: vi.fn(),
   getPendingWorkerDirSearch: vi.fn(),
   clearPendingWorkerDirSearch: vi.fn(),
+  getPersistentKeyboardMsg: vi.fn(),
+  setPersistentKeyboardMsg: vi.fn(),
+  clearPersistentKeyboardMsg: vi.fn(),
 }));
 
 import * as redisModule from '../src/redis.js';
@@ -169,6 +172,125 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
         show_alert: true,
       })
     );
+  });
+
+  it('should delete main menu message and set ctx.fromMainMenu when cleanupMainMenuIfActive is invoked', async () => {
+    const service = new ScreenFlowService();
+    const deleteMessageSpy = vi.fn().mockResolvedValue(true);
+    const mockCtx = {
+      from: { id: 123456 },
+      callbackQuery: {
+        message: { message_id: 333 },
+      },
+      api: {
+        deleteMessage: deleteMessageSpy,
+      },
+    } as unknown as MyContext;
+
+    vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce({
+      chatId: 1001,
+      messageId: 333,
+      flowType: 'main_menu',
+      isCompleted: false,
+      updatedAt: Date.now(),
+    });
+
+    const cleaned = await service.cleanupMainMenuIfActive(mockCtx);
+    expect(cleaned).toBe(true);
+    expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 333);
+    expect(redisModule.clearUserActiveScreen).toHaveBeenCalledWith(123456n);
+    expect((mockCtx as any).fromMainMenu).toBe(true);
+  });
+
+  it('should prevent in-place rendering when clicked from main menu screen', async () => {
+    const service = new ScreenFlowService();
+    vi.mocked(redisModule.getUserActiveScreen).mockResolvedValue({
+      chatId: 1001,
+      messageId: 333,
+      flowType: 'main_menu',
+      isCompleted: false,
+      updatedAt: Date.now(),
+    });
+
+    const mockCtx = {
+      from: { id: 123456 },
+      callbackQuery: {
+        message: { message_id: 333 },
+      },
+    } as unknown as MyContext;
+
+    const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+    expect(inPlace).toBe(false);
+  });
+
+  it('should prevent in-place rendering when ctx.fromMainMenu flag is set even if active screen is already cleared', async () => {
+    const service = new ScreenFlowService();
+    vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce(null);
+
+    const mockCtx = {
+      from: { id: 123456 },
+      callbackQuery: {
+        message: { message_id: 333 },
+      },
+      fromMainMenu: true,
+    } as unknown as MyContext;
+
+    const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+    expect(inPlace).toBe(false);
+  });
+
+  it('should ensure persistent reply keyboard anchor is sent and recorded in redis', async () => {
+    const service = new ScreenFlowService();
+    const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 444 });
+    const mockCtx = {
+      from: { id: 123456 },
+      chat: { id: 1001 },
+      effectiveRole: 'SUPER_ADMIN',
+      api: {
+        sendMessage: sendMessageSpy,
+        deleteMessage: vi.fn(),
+      },
+    } as unknown as MyContext;
+
+    vi.mocked(redisModule.getPersistentKeyboardMsg).mockResolvedValueOnce(null);
+
+    await service.ensurePersistentKeyboard(mockCtx);
+
+    expect(sendMessageSpy).toHaveBeenCalledWith(
+      1001,
+      expect.stringContaining('شركة السعادة للمقاولات العامة والتعدين'),
+      expect.objectContaining({
+        parse_mode: 'Markdown',
+        reply_markup: expect.anything(),
+      })
+    );
+    expect(redisModule.setPersistentKeyboardMsg).toHaveBeenCalledWith(123456n, 1001, 444);
+  });
+
+  it('should clean up old persistent keyboard anchor message before sending a new one', async () => {
+    const service = new ScreenFlowService();
+    const deleteMessageSpy = vi.fn().mockResolvedValue(true);
+    const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 445 });
+    const mockCtx = {
+      from: { id: 123456 },
+      chat: { id: 1001 },
+      effectiveRole: 'FIELD_ADMIN',
+      api: {
+        deleteMessage: deleteMessageSpy,
+        sendMessage: sendMessageSpy,
+      },
+    } as unknown as MyContext;
+
+    vi.mocked(redisModule.getPersistentKeyboardMsg).mockResolvedValueOnce({
+      chatId: 1001,
+      messageId: 222,
+    });
+
+    await service.ensurePersistentKeyboard(mockCtx);
+
+    expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 222);
+    expect(sendMessageSpy).toHaveBeenCalledWith(1001, expect.any(String), expect.anything());
+    expect(redisModule.setPersistentKeyboardMsg).toHaveBeenCalledWith(123456n, 1001, 445);
   });
 });
 

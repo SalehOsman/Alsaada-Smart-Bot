@@ -1,5 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
+import { screenFlowService } from '../services/screen-flow.service.js';
 
 /**
  * Clean placeholder handler for unbuilt sub-features and domain menus.
@@ -27,20 +28,34 @@ export async function handleMenuPlaceholder(ctx: MyContext): Promise<void> {
     `🔹 *الحالة التشغيلية:* تم اعتماد هيكل الزر في القائمة الرئيسية، وجارٍ استكمال بناء معالج الإدخال والتحقق الميداني وفق وثيقة حوكمة الهجرة المؤسسية (SSOT).\n\n` +
     `اضغط أدناه للعودة:`;
 
-  if (ctx.callbackQuery) {
+  let sentMsgId = 0;
+  if (ctx.callbackQuery && !(ctx as any).fromMainMenu) {
     try {
-      await ctx.editMessageText(text, {
+      const edited = await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-      return;
+      sentMsgId = typeof edited === 'object' ? edited.message_id : 0;
     } catch {
       // fallback
     }
   }
 
-  await ctx.reply(text, {
-    parse_mode: 'Markdown',
-    reply_markup: keyboard,
-  });
+  if (!sentMsgId) {
+    const sent = await ctx.reply(text, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
+    sentMsgId = sent.message_id;
+  }
+
+  if (ctx.from && ctx.chat && sentMsgId) {
+    await screenFlowService.trackActiveScreen(
+      BigInt(ctx.from.id),
+      ctx.chat.id,
+      sentMsgId,
+      'placeholder',
+      false
+    );
+  }
 }

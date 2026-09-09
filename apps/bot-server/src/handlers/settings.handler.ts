@@ -5,6 +5,7 @@ import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 import { renderRoleHome, getRoleTitle } from './start.handler.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 import { syncUserCommandsScope } from '../services/command-scope.service.js';
+import { screenFlowService } from '../services/screen-flow.service.js';
 
 /**
  * Super Admin Settings Hub Handler (Main Categorized Hub)
@@ -43,22 +44,36 @@ export async function handleSettings(ctx: MyContext): Promise<void> {
     `لوحة التحكم المركزية لإدارة الكيان المؤسسي، الفروع والمواقع الميدانية، وضبط صلاحيات الإشراف والأمان.\n\n` +
     `👇 *اختر القسم الإداري المطلوب:*`;
 
-  if (ctx.callbackQuery) {
+  let sentMsgId = 0;
+  if (ctx.callbackQuery && !(ctx as any).fromMainMenu) {
     try {
-      await ctx.editMessageText(text, {
+      const edited = await ctx.editMessageText(text, {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-      return;
+      sentMsgId = typeof edited === 'object' ? edited.message_id : 0;
     } catch {
       // fallback
     }
   }
 
-  await ctx.reply(text, {
-    parse_mode: 'Markdown',
-    reply_markup: keyboard,
-  });
+  if (!sentMsgId) {
+    const sent = await ctx.reply(text, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
+    sentMsgId = sent.message_id;
+  }
+
+  if (ctx.from && ctx.chat && sentMsgId) {
+    await screenFlowService.trackActiveScreen(
+      BigInt(ctx.from.id),
+      ctx.chat.id,
+      sentMsgId,
+      'settings',
+      false
+    );
+  }
 }
 
 /**
