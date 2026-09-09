@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-09T17:29:23.123Z",
+  "generatedAt": "2026-09-09T18:55:47.233Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -26,15 +26,15 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "8c2ac64ed166f21f65a30d1dc62087fa332f0523047cb2751e79dd81e71bc9d2"
+      "sha256": "64e23d47b2e685777d5f302279089ec26a7869efc90b01a32b7c257b0608a64f"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
-      "sha256": "6b5ca7461d07a10be7c996bf3506b8068f8e0ba96beef26ac1a4f57d764ae0e4"
+      "sha256": "11015f664636ed01f55084383180e415cb5dce39ae8eded4c3d95d2a00c6604d"
     },
     {
       "path": "docs/15-universal-module-and-flow-standard.md",
-      "sha256": "2274d0a2d04005fbca6f31952e15079ff3548b3f8b873c403b508fede7ae470e"
+      "sha256": "35ee111ca50bb409ec94a73cd0dced4baa468f004733545a49aab3cdc800c1b7"
     },
     {
       "path": "docs/21-mandatory-module-architecture-and-gates.md",
@@ -46,11 +46,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "0ab686951be35c311b10794d2e7c71715127bd3647e4dd8acfb3b1745b5a28a0"
+      "sha256": "9ee0a85b8f1757515db267460fb597654badb42c5588a53a465c4dd909bd3b9d"
     },
     {
       "path": "package.json",
-      "sha256": "7c7269a21194085a259e5878a7636f44b9d7c8f54138ba928e4567554eeb7b33"
+      "sha256": "f6ddfa860759177cee709b8522ed278ca914408650401023b8c0b2b8f7812296"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -62,7 +62,7 @@
     },
     {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
-      "sha256": "9eec9c5a43a5ea725b5599049607c38f90b432de427f2a529e0f8c52e2119673"
+      "sha256": "00aa224a24a458941369b493d9f367af001d33df6402d54603aeb8a6941f4c47"
     },
     {
       "path": "tools/governance/verify-ai-compliance.ts",
@@ -83,6 +83,10 @@
     {
       "path": "tools/governance/verify-flow-contracts.ts",
       "sha256": "198cbd7a7fdf67e437f6101d23e92c42749b3460c6746239b0484024a8ebbca1"
+    },
+    {
+      "path": "tools/governance/verify-flow-fast.ts",
+      "sha256": "f5e4c08c19d76ae250ff596d5673c713fd53a776d2ac206d6385d6ce22f17315"
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",

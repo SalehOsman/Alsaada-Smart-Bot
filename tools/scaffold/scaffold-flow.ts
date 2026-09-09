@@ -1,23 +1,30 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-}
+export type FlowTemplate = 'default' | 'cash-outflow' | 'in-kind-clearing' | 'approval-request' | 'excel-export';
+const KNOWN_TEMPLATES = new Set<string>(['default', 'cash-outflow', 'in-kind-clearing', 'approval-request', 'excel-export']);
 
 export function scaffoldFlow(
   moduleName: string,
   flowKey: string,
   flowSlug: string,
   flowTitleArabic: string,
-  root = process.cwd()
+  templateOrRoot: FlowTemplate | string = 'default',
+  maybeRoot = process.cwd()
 ): string {
   if (!moduleName || !flowKey || !flowSlug || !flowTitleArabic) {
-    throw new Error('Usage: pnpm make:flow <moduleName> <flowKey> <flowSlug> <flowTitleArabic>');
+    throw new Error('Usage: pnpm make:flow <moduleName> <flowKey> <flowSlug> <flowTitleArabic> [--template=<type>]');
+  }
+
+  let template: FlowTemplate = 'default';
+  let root = process.cwd();
+
+  if (KNOWN_TEMPLATES.has(templateOrRoot)) {
+    template = templateOrRoot as FlowTemplate;
+    root = maybeRoot;
+  } else {
+    template = 'default';
+    root = templateOrRoot;
   }
 
   const flowDirName = `${flowKey}-${flowSlug}`;
@@ -43,30 +50,31 @@ export function scaffoldFlow(
     flowSlug,
     titleArabic: flowTitleArabic,
     module: moduleName,
+    template,
     status: 'Draft',
     allowAny: false,
     version: '1.0.0',
     createdAt: new Date().toISOString(),
     allowedRoles: ['SUPER_ADMIN', 'PROJECT_MANAGER', 'SITE_SUPERVISOR'],
     screens: [
-      {
-        step: 1,
-        key: 'INIT',
-        title: flowTitleArabic,
-        mode: 'InPlace',
-      },
+      { step: 1, key: 'INIT', title: flowTitleArabic, mode: 'InPlace' },
+      { step: 2, key: 'INPUT', title: 'إدخال البيانات', mode: 'InPlace' },
+      { step: 3, key: 'CONFIRM', title: 'مراجعة وتأكيد', mode: 'InPlace' },
+      { step: 4, key: 'DONE', title: 'إتمام العملية', mode: 'InPlace' },
     ],
   };
   writeFileSync(join(targetDir, 'flow.contract.json'), JSON.stringify(contractJson, null, 2) + '\n', 'utf8');
 
   // 2. flow.types.ts
   const typesContent = `export interface ${pascalName}State {
-  step: 'INIT' | 'CONFIRM' | 'DONE';
-  workerId?: string;
-  workerCode?: string;
-  workerName?: string;
-  amount?: number;
-  notes?: string;
+  step: 'INIT' | 'INPUT' | 'CONFIRM' | 'DONE';
+  workerId?: string | undefined;
+  workerCode?: string | undefined;
+  workerName?: string | undefined;
+  amount?: number | undefined;
+  quantity?: number | undefined;
+  sourceOfFunds?: string | undefined;
+  notes?: string | undefined;
   createdAt: number;
 }
 
@@ -74,9 +82,11 @@ export interface ${pascalName}Input {
   workerId: string;
   workerCode: string;
   workerName: string;
-  amount: number;
-  notes?: string;
-  actorTelegramId?: bigint;
+  amount?: number | undefined;
+  quantity?: number | undefined;
+  sourceOfFunds?: string | undefined;
+  notes?: string | undefined;
+  actorTelegramId?: bigint | undefined;
 }
 
 export interface ${pascalName}Result {
@@ -99,7 +109,7 @@ export class ${pascalName}Repository {
     return {
       success: true,
       referenceId,
-      message: 'تم تسجيل الحركة بنجاح.',
+      message: 'تم حفظ وقيد المعاملة بنجاح.',
     };
   }
 }
@@ -107,14 +117,63 @@ export class ${pascalName}Repository {
   writeFileSync(join(targetDir, 'flow.repository.ts'), repoContent, 'utf8');
 
   // 4. flow.service.ts
-  const serviceContent = `import type { ${pascalName}Repository } from './flow.repository.js';
+  const serviceContent = template === 'cash-outflow'
+    ? `import type { ${pascalName}Repository } from './flow.repository.js';
+import type { ${pascalName}Input, ${pascalName}Result } from './flow.types.js';
+import { verifyCustodyBalance } from '@alsaada/core-components';
+
+export class ${pascalName}Service {
+  constructor(private readonly repository: ${pascalName}Repository) {}
+
+  async execute(input: ${pascalName}Input): Promise<${pascalName}Result> {
+    const amount = input.amount ?? 0;
+    if (!input.workerId || amount <= 0) {
+      throw new Error('بيانات السلفة النقدية غير صالحة.');
+    }
+    const gate = verifyCustodyBalance({
+      currentBalance: 50000,
+      requestedAmount: amount,
+      maxAllowedPerTransaction: 10000,
+    });
+    if (!gate.approved) {
+      throw new Error(gate.rejectionReason ?? 'رصيد العهدة غير كافٍ لصرف السلفة.');
+    }
+    return this.repository.recordTransaction(input);
+  }
+}
+`
+    : template === 'in-kind-clearing'
+    ? `import type { ${pascalName}Repository } from './flow.repository.js';
+import type { ${pascalName}Input, ${pascalName}Result } from './flow.types.js';
+import { calculateClearingSettlement } from '@alsaada/core-components';
+
+export class ${pascalName}Service {
+  constructor(private readonly repository: ${pascalName}Repository) {}
+
+  async execute(input: ${pascalName}Input): Promise<${pascalName}Result> {
+    const qty = input.quantity ?? 1;
+    const unitPrice = 50;
+    const clearing = calculateClearingSettlement({
+      category: 'CIGARETTES',
+      quantity: qty,
+      unitPrice,
+      siteCostCreditEligible: true,
+    });
+    return this.repository.recordTransaction({
+      ...input,
+      amount: clearing.workerDeductionTotal,
+    });
+  }
+}
+`
+    : `import type { ${pascalName}Repository } from './flow.repository.js';
 import type { ${pascalName}Input, ${pascalName}Result } from './flow.types.js';
 
 export class ${pascalName}Service {
   constructor(private readonly repository: ${pascalName}Repository) {}
 
   async execute(input: ${pascalName}Input): Promise<${pascalName}Result> {
-    if (!input.workerId || input.amount <= 0) {
+    if (!input.workerId) {
       throw new Error('البيانات المدخلة غير صالحة.');
     }
     return this.repository.recordTransaction(input);
@@ -145,7 +204,7 @@ export class ${pascalName}Keyboards {
   // 6. flow.messages.ts
   const messagesContent = `export class ${pascalName}Messages {
   static initPrompt(title: string): string {
-    return \`📋 *\${title}*\\n────────────────────────────\\nيرجى اختيار الإجراء المطلوب:\`;
+    return \`📋 *\${title}*\\n────────────────────────────\\nيرجى تحديد البيانات المطلوبة:\`;
   }
 
   static confirmationCard(workerName: string, amount: number): string {
@@ -154,7 +213,7 @@ export class ${pascalName}Keyboards {
       \`────────────────────────────\\n\` +
       \`👤 العامل: *\${workerName}*\\n\` +
       \`💰 المبلغ: *\${amount} ج.م*\\n\\n\` +
-      \`هل تؤكد اعتماد العملية؟\`
+      \`هل تؤكد حفظ واعتماد المعاملة؟\`
     );
   }
 
@@ -166,9 +225,12 @@ export class ${pascalName}Keyboards {
   writeFileSync(join(targetDir, 'flow.messages.ts'), messagesContent, 'utf8');
 
   // 7. flow.validators.ts
-  const validatorsContent = `export function validate${pascalName}Amount(amount: number): { isValid: boolean; error?: string } {
-  if (isNaN(amount) || amount <= 0) {
-    return { isValid: false, error: 'المبلغ المدخل يجب أن يكون أكبر من الصفر.' };
+  const validatorsContent = `export function validate${pascalName}Input(amount?: number, quantity?: number): { isValid: boolean; error?: string } {
+  if (amount !== undefined && (isNaN(amount) || amount <= 0)) {
+    return { isValid: false, error: 'المبلغ يجب أن يكون رقماً أكبر من الصفر.' };
+  }
+  if (quantity !== undefined && (isNaN(quantity) || quantity <= 0)) {
+    return { isValid: false, error: 'الكمية يجب أن تكون أكبر من الصفر.' };
   }
   return { isValid: true };
 }
@@ -192,6 +254,7 @@ export class ${pascalName}Keyboards {
   const docsContent = `# وثيقة التدفق: ${flowTitleArabic} (\`${flowKey}\`)
 
 - **الموديول:** \`${moduleName}\`
+- **القالب المعتمد:** \`${template}\`
 - **الحالة المعمارية:** قيد التطوير (Draft)
 - **المعمارية المعتمدة:** الشريحة الرأسية المستقلة (Vertical Slice - Doc 21)
 
@@ -247,7 +310,7 @@ export class ${pascalName}Handler {
         await ctx.editMessageText(text, opts);
         return;
       } catch {
-        // Fallback to normal reply
+        // In-place fallback
       }
     }
     await ctx.reply(text, opts);
@@ -288,12 +351,12 @@ describe('Flow ${flowKey} Unit Tests — ${pascalName}', () => {
 
   // 12. tests/flow.integration.spec.ts
   const integrationSpec = `import { describe, it, expect } from 'vitest';
-import { validate${pascalName}Amount } from '../flow.validators.js';
+import { validate${pascalName}Input } from '../flow.validators.js';
 
 describe('Flow ${flowKey} Integration Tests — ${pascalName}', () => {
-  it('should validate amount boundaries', () => {
-    expect(validate${pascalName}Amount(100).isValid).toBe(true);
-    expect(validate${pascalName}Amount(0).isValid).toBe(false);
+  it('should validate boundary conditions', () => {
+    expect(validate${pascalName}Input(100).isValid).toBe(true);
+    expect(validate${pascalName}Input(-5).isValid).toBe(false);
   });
 });
 `;
@@ -335,7 +398,7 @@ describe('Flow ${flowKey} RBAC Tests — ${pascalName}', () => {
   const dataSpec = `import { describe, it, expect } from 'vitest';
 
 describe('Flow ${flowKey} Data Tests — ${pascalName}', () => {
-  it('should uphold monetary data integrity', () => {
+  it('should uphold data integrity', () => {
     const sampleAmount = 250.75;
     expect(sampleAmount).toBeGreaterThan(0);
   });
@@ -348,19 +411,32 @@ describe('Flow ${flowKey} Data Tests — ${pascalName}', () => {
 
 // CLI entrypoint
 if (process.argv[1]?.endsWith('scaffold-flow.ts')) {
-  const [, , moduleName, flowKey, flowSlug, flowTitleArabic] = process.argv;
+  const args = process.argv.slice(2);
+  let template: FlowTemplate = 'default';
+  const filteredArgs: string[] = [];
+
+  for (const arg of args) {
+    if (arg.startsWith('--template=')) {
+      template = arg.slice('--template='.length) as FlowTemplate;
+    } else {
+      filteredArgs.push(arg);
+    }
+  }
+
+  const [moduleName, flowKey, flowSlug, flowTitleArabic] = filteredArgs;
   if (!moduleName || !flowKey || !flowSlug || !flowTitleArabic) {
-    console.error('❌ Usage: pnpm make:flow <moduleName> <flowKey> <flowSlug> <flowTitleArabic>');
-    console.error('Example: pnpm make:flow advances 02.1 cash-advance "تسجيل وصرف سلفة نقدية"');
+    console.error('❌ Usage: pnpm make:flow <moduleName> <flowKey> <flowSlug> <flowTitleArabic> [--template=<cash-outflow|in-kind-clearing|approval-request|excel-export>]');
+    console.error('Example: pnpm make:flow advances 02.1 cash-advance "تسجيل وصرف سلفة نقدية" --template=cash-outflow');
     process.exit(1);
   }
   try {
-    const created = scaffoldFlow(moduleName, flowKey, flowSlug, flowTitleArabic);
-    console.log(`✅ [SCAFFOLD] Successfully created flow ${flowKey} in:`);
+    const created = scaffoldFlow(moduleName, flowKey, flowSlug, flowTitleArabic, template);
+    console.log(`✅ [SCAFFOLD] Successfully created flow ${flowKey} (template: ${template}) in:`);
     console.log(`   ${created}`);
     console.log(`   Created all 15 required non-empty Doc 21 files.`);
-  } catch (err: any) {
-    console.error(`❌ [SCAFFOLD ERROR] ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`❌ [SCAFFOLD ERROR] ${msg}`);
     process.exit(1);
   }
 }

@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, expect, test } from 'vitest';
@@ -11,8 +11,9 @@ import { verifyFlowContracts } from '../verify-flow-contracts.js';
 import { buildGovernanceLock, APPROVAL_PHRASE } from '../verify-governance-lock.js';
 import { verifyGovernanceTamper } from '../verify-governance-tamper.js';
 import { verifyMigrationRegistry } from '../verify-migration-registry.js';
+import { verifyFlowFast } from '../verify-flow-fast.js';
 import { scaffoldFlow } from '../../scaffold/scaffold-flow.js';
-import { existsSync } from 'node:fs';
+import { finishFlow } from '../../scaffold/finish-flow.js';
 
 function fixtureRoot(name: string): string {
   const root = join(tmpdir(), `alsaada-governance-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -269,6 +270,43 @@ describe('governance verifiers', () => {
     expect(archResult.ok).toBe(true);
     expect(archResult.checked).toBe(1);
   });
+
+  test('flow scaffolder supports cash-outflow template and passes verifyArchitecture and verifyFlowFast', () => {
+    const root = fixtureRoot('scaffold-template-test');
+    writeMandatoryDocs(root);
+    const flowPath = scaffoldFlow('canteen', '04.1', 'worker-canteen', 'مسحوبات مقصف', 'in-kind-clearing', root);
+    expect(existsSync(flowPath)).toBe(true);
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(true);
+
+    const fastResult = verifyFlowFast({ flowPath, skipTests: true, root });
+    expect(fastResult.ok).toBe(true);
+  });
+
+  test('finishFlow updates migration registry and generates evidence file', () => {
+    const root = fixtureRoot('finish-flow-test');
+    writeMandatoryDocs(root);
+    // Write registry with a pending row
+    writeFileSync(
+      join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
+      '| **`04.1`** | تسجيل مسحوبات المقصف | المقصف | ⏳ بانتظار الترحيل | apps/bot-server/canteen | — |\n',
+      'utf8'
+    );
+    scaffoldFlow('canteen', '04.1', 'worker-canteen', 'مسحوبات مقصف', 'in-kind-clearing', root);
+
+    // Run finishFlow
+    const finishRes = finishFlow('04.1', { commitRef: 'P07-Test-Commit', root, skipTests: true });
+    expect(finishRes.ok).toBe(true);
+    expect(finishRes.evidenceFile).toBeDefined();
+    expect(existsSync(join(root, finishRes.evidenceFile!))).toBe(true);
+
+    // Check registry was updated
+    const regText = readFileSync(join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'), 'utf8');
+    expect(regText).toContain('🟢 **مكتمل وموثق 100%**');
+    expect(regText).toContain('modules/canteen/src/flows/04.1-worker-canteen');
+  });
 });
+
 
 

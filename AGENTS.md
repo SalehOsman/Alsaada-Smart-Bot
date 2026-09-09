@@ -91,10 +91,13 @@
         - فصل السلف النقدية كتدفق مستقل (إلزامية تحديد مصدر الأموال من العهد المفتوحة أو الخزينة الرئيسية، فحص كفاية الرصيد، خروج نقدية فعلي).
 7. **إلزامية استخدام أداة توليد التدفقات المعيارية والـ Pre-Commit Hooks (Mandatory Scaffolding & Git Hooks Standard):**
    - **توليد التدفقات المعيارية آلياً:** عند إنشاء أي تدفق أو موديول جديد، يُلزم وكيل الذكاء الاصطناعي والمطور حصراً باستخدام أداة التوليد السريع:  
-     `pnpm make:flow <module-name> <flow-name> [title]`  
-     (مثال: `pnpm make:flow advances worker-advance "تسجيل سلفة عامل"`).  
-     تضمن هذه الأداة توليد الهيكل المعماري المنضبط بنسبة 100% وفقاً للوثيقة 21 (`flow.contract.json`, `flow.handler.ts`, `types.ts`, `flow.spec.ts`) بملفات تحت سقف 350 سطراً وخالية من `any` واجتياز بوابات الحوكمة فورياً.
-   - **خطافات Git المحلية (Pre-Commit Hooks):** تفعيل واستخدام خطافات `.githooks/pre-commit` لفحص الأنواع وعقود التدفقات والهيكل المعماري تلقائياً قبل أي التزام في Git.
+     `pnpm make:flow <module-name> <flow-name> [title] [--template=<type>]`  
+     (مثال: `pnpm make:flow advances worker-advance "تسجيل سلفة عامل" --template=cash-outflow`).  
+     تدعم الأداة القوالب النمطية الأربعة (`cash-outflow`, `in-kind-clearing`, `approval-request`, `excel-export`) لربط محركات النواة مسبقاً وتوليد الشريحة بنسبة 90% تحت سقف 350 سطراً وخالية من `any`.
+   - **معمارية الفحص ذات المستويين وأدوات التسريع (Two-Tier Verification):**
+     * **المسار السريع أثناء التطوير:** استخدام `pnpm flow:check <flow-path>` لفحص التايب سكريبت وسقف الأسطر واختبارات التدفق حصراً في أقل من ثانيتين (< 2s) أثناء كتابة الكود.
+     * **أتمتة الإغلاق والتوثيق:** استخدام `pnpm flow:finish <flow-code>` لتحديث سجل الترحيل `docs/19` وتوليد ملف الإثبات وتحديث قفل الحوكمة تلقائياً.
+     * **بوابة الالتزام الشاملة:** تعمل خطافات `.githooks/pre-commit` وفواحص `pnpm governance:verify` عند الـ Commit لفحص المشروع ككل وضمان Zero-Regression.
 
 ---
 
