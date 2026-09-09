@@ -102,7 +102,8 @@ export class WorkerDirectoryHandler {
     const keyboard = WorkerDirectoryKeyboards.profile360ActionsKeyboard(
       workerId,
       profile.directWhatsAppUrl,
-      Boolean(profile.phone)
+      Boolean(profile.phone),
+      profile.missingDataWhatsAppUrl
     );
 
     await this.replyOrEdit(ctx, text, keyboard);

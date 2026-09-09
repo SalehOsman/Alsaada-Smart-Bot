@@ -59,6 +59,11 @@ export const WorkerDirectoryMessages = {
       p.militaryStatus ? `• *الخدمة العسكرية:* ${cleanMd(p.militaryStatus)}` : '',
       p.maritalStatus ? `• *الحالة الاجتماعية:* ${cleanMd(p.maritalStatus)}` : '',
       p.paymentMethod ? `• *وسيلة الصرف:* ${cleanMd(p.paymentMethod)}` : '',
+      `━━━━━━━━━━━━━━━━━━━━━`,
+      `📁 *اكتمال الملف والبيانات:*`,
+      p.isProfileComplete
+        ? `• *الحالة:* 🟢 مكتمل بنسبة 100%`
+        : `• *الحالة:* ⚠️ غير مكتمل (${p.completionPercentage}%)\n• *المستندات/البيانات الناقصة:*\n  ▫️ ${p.missingItems.map(cleanMd).join('\n  ▫️ ')}`,
     ].filter(Boolean);
 
     return lines.join('\n');

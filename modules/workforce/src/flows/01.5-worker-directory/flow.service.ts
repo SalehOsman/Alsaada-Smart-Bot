@@ -99,6 +99,125 @@ export class WorkerDirectoryService {
       directWhatsAppUrl = `https://api.whatsapp.com/send?phone=${intlPhone}`;
     }
 
+    // Missing items & attachments evaluation
+    const missingItems: string[] = [];
+    let requiredItemsCount = 0;
+
+    // 1. صورة وجه البطاقة / الجواز
+    requiredItemsCount++;
+    if (!worker.idCardFrontPath) {
+      missingItems.push(worker.idType === 'PASSPORT' ? 'صورة جواز السفر' : 'صورة وجه البطاقة');
+    }
+
+    // 2. صورة ظهر البطاقة (للرقم القومي فقط)
+    if (worker.idType !== 'PASSPORT') {
+      requiredItemsCount++;
+      if (!worker.idCardBackPath) {
+        missingItems.push('صورة ظهر البطاقة');
+      }
+    }
+
+    // 3. رقم هاتف العامل
+    requiredItemsCount++;
+    if (!phone || phone.trim() === '') {
+      missingItems.push('رقم هاتف العامل');
+    }
+
+    // 4. رقم هاتف الطوارئ
+    requiredItemsCount++;
+    if (!emergencyPhone || emergencyPhone.trim() === '') {
+      missingItems.push('رقم هاتف الطوارئ');
+    }
+
+    // 5. محل الإقامة / العنوان
+    requiredItemsCount++;
+    if (!worker.address || worker.address.trim() === '') {
+      missingItems.push('محل الإقامة والعنوان');
+    }
+
+    // 6. الموقف التأميني / الرقم التأميني
+    requiredItemsCount++;
+    const hasInsurance = Boolean(
+      (worker.insuranceNumber && worker.insuranceNumber.trim() !== '') ||
+      (worker.insuranceStatus && worker.insuranceStatus.trim() !== '')
+    );
+    if (!hasInsurance) {
+      missingItems.push('الموقف التأميني / الرقم التأميني');
+    }
+
+    // 7. الموقف التجنيدي (للذكور)
+    if (worker.gender === 'MALE') {
+      requiredItemsCount++;
+      if (!worker.militaryStatus || worker.militaryStatus.trim() === '') {
+        missingItems.push('الموقف التجنيدي');
+      }
+    }
+
+    // 8. رخصة القيادة (إذا كانت الوظيفة قيادة أو تشغيل معدات)
+    const isDrivingRole = [
+      'سائق',
+      'سواق',
+      'معدة',
+      'لودر',
+      'حفار',
+      'جريدر',
+      'ونش',
+      'تريلا',
+      'قلاب',
+      'شاحنة',
+      'خلاطة',
+    ].some((kw) => (worker.jobTitle || '').includes(kw));
+
+    if (isDrivingRole) {
+      requiredItemsCount++;
+      const hasLicense = Boolean(
+        worker.drivingLicense &&
+        worker.drivingLicense !== 'لا توجد رخصة' &&
+        worker.drivingLicense !== 'NO_LICENSE'
+      );
+      if (!hasLicense) {
+        missingItems.push('رخصة القيادة');
+      }
+    }
+
+    // 9. بيانات تحويل الراتب / الحساب أو المحفظة
+    if (worker.paymentMethod && worker.paymentMethod !== 'CASH_SITE') {
+      requiredItemsCount++;
+      const hasPaymentInfo = Boolean(
+        worker.accountNumberEncrypted || worker.instaPayHandle
+      );
+      if (!hasPaymentInfo) {
+        missingItems.push('بيانات الحساب البنكي أو المحفظة');
+      }
+    }
+
+    const completedItemsCount = Math.max(0, requiredItemsCount - missingItems.length);
+    const completionPercentage = requiredItemsCount > 0
+      ? Math.round((completedItemsCount / requiredItemsCount) * 100)
+      : 100;
+    const isProfileComplete = missingItems.length === 0;
+
+    // Missing Data WhatsApp Request URL
+    let missingDataWhatsAppUrl: string | undefined;
+    if (!isProfileComplete) {
+      const displayName = worker.nickname || worker.name;
+      const missingListText = missingItems.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
+      const messageText =
+        `السلام عليكم زميلنا العزيز / ${displayName}،\n` +
+        `تحية طيبة من إدارة الموارد البشرية بشركة السعادة.\n\n` +
+        `نرجو من سيادتكم التكرم بموافاتنا بالبيانات والمستندات التالية لاستكمال ملفكم الوظيفي بالمنظومة:\n` +
+        `${missingListText}\n\n` +
+        `شاكرين ومقدرين حسن تعاونكم معنا.`;
+
+      if (phone) {
+        const cleanPhone = normalizeDigits(phone.replace(/\D/g, ''));
+        const intlPhone = normalizeEgyptianPhone(cleanPhone) || cleanPhone;
+        missingDataWhatsAppUrl = `https://api.whatsapp.com/send?phone=${intlPhone}&text=${encodeURIComponent(messageText)}`;
+      } else {
+        missingDataWhatsAppUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageText)}`;
+      }
+    }
+
     return {
       id: worker.id,
       code: worker.code,
@@ -124,6 +243,10 @@ export class WorkerDirectoryService {
       address: worker.address || undefined,
       status: worker.status,
       directWhatsAppUrl,
+      isProfileComplete,
+      completionPercentage,
+      missingItems,
+      missingDataWhatsAppUrl,
     };
   }
 }

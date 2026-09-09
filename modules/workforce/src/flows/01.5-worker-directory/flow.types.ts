@@ -36,6 +36,10 @@ export interface WorkerProfile360 {
   address?: string;
   status: string;
   directWhatsAppUrl?: string;
+  isProfileComplete: boolean;
+  completionPercentage: number;
+  missingItems: string[];
+  missingDataWhatsAppUrl?: string;
 }
 
 export interface WorkerDirectoryQuery {

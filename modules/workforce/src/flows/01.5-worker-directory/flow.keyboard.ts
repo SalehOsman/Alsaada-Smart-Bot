@@ -36,8 +36,17 @@ export class WorkerDirectoryKeyboards {
     });
   }
 
-  static profile360ActionsKeyboard(workerId: string, whatsAppUrl?: string, hasPhone: boolean = true): InlineKeyboard {
+  static profile360ActionsKeyboard(
+    workerId: string,
+    whatsAppUrl?: string,
+    hasPhone: boolean = true,
+    missingDataWhatsAppUrl?: string
+  ): InlineKeyboard {
     const kb = new InlineKeyboard();
+
+    if (missingDataWhatsAppUrl) {
+      kb.url('📲 طلب استكمال النواقص عبر واتساب', missingDataWhatsAppUrl).row();
+    }
 
     if (whatsAppUrl) {
       kb.url('💬 مراسلة العامل عبر واتساب', whatsAppUrl).row();

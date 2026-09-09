@@ -47,6 +47,9 @@ describe('Flow 01.5 Unit Tests — Worker Directory & 360 Profile Validators', (
       shiftSystem: 'دورة 30+10',
       dailyWageMasked: '•••••• ج.م (محجوب)',
       status: 'ACTIVE',
+      isProfileComplete: true,
+      completionPercentage: 100,
+      missingItems: [],
     };
 
     const card = WorkerDirectoryMessages.profile360Card(profile);
@@ -55,5 +58,28 @@ describe('Flow 01.5 Unit Tests — Worker Directory & 360 Profile Validators', (
     expect(card).toContain('أبو السيد');
     expect(card).toContain('**********1234');
     expect(card).toContain('سائق لودر');
+    expect(card).toContain('مكتمل بنسبة 100%');
+  });
+
+  it('should render incomplete profile status and list missing items in 360 card', () => {
+    const profile: WorkerProfile360 = {
+      id: 'wrk-2',
+      code: 'OP-DRV-002',
+      name: 'علي حسن',
+      idType: 'NATIONAL_ID',
+      idNumberMasked: '**********5678',
+      jobTitle: 'سائق لودر',
+      hireDate: new Date('2026-09-01'),
+      status: 'ACTIVE',
+      isProfileComplete: false,
+      completionPercentage: 60,
+      missingItems: ['صورة وجه البطاقة', 'رقم هاتف الطوارئ', 'رخصة القيادة'],
+    };
+
+    const card = WorkerDirectoryMessages.profile360Card(profile);
+    expect(card).toContain('غير مكتمل (60%)');
+    expect(card).toContain('صورة وجه البطاقة');
+    expect(card).toContain('رقم هاتف الطوارئ');
+    expect(card).toContain('رخصة القيادة');
   });
 });
