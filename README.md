@@ -49,7 +49,7 @@
 F:\Alsaada-Smart-Bot/
 ├── docs/                        # 📚 التوثيق المعماري الشامل والمواصفات القياسية (00 إلى 21)
 ├── packages/                    # 🧱 الحزم التقنية المشتركة والنواة المستقلة (Core Shared Kernel)
-│   ├── core-components/         # مكونات الواجهة التفاعلية (WorkerPicker, AmountPicker, DatePicker, etc.)
+│   ├── core-components/         # مكونات الواجهة والمحركات (Pickers, Clearing, CustodyGate, Installments, Outbox, etc.)
 │   ├── database/                # قاعدة البيانات (Prisma 7 + PostgreSQL + التشفير والهاش التراكمي ونظام التدقيق)
 │   ├── national-id-engine/      # محرك تحليل الهوية القومية المصرية والتحقق الرياضي والبيانات الديموغرافية
 │   └── regional-engine/         # محرك التوقيت (Africa/Cairo) وتنسيق العملات والأرقام المشرقية
@@ -60,8 +60,11 @@ F:\Alsaada-Smart-Bot/
 ├── apps/
 │   └── bot-server/              # التطبيق التنفيذي الرئيسي (grammY Bot Engine + Hono Webhook Server)
 │
-└── tools/
-    └── governance/              # حراس بوابات الحوكمة وفحص المعمارية والعقود وسقف بايتات تليجرام
+├── tools/
+│   ├── governance/              # حراس بوابات الحوكمة وفحص المعمارية والعقود وسقف بايتات تليجرام
+│   └── scaffold/                # أداة التوليد الآلي للتدفقات المعيارية (pnpm make:flow)
+│
+└── .githooks/                   # خطافات Git المحلية للفحص المسبق التلقائي قبل الالتزام
 ```
 
 ---
@@ -71,9 +74,10 @@ F:\Alsaada-Smart-Bot/
 | الأمر البرمجي | الوصف والهدف الهندسي |
 | :--- | :--- |
 | `pnpm build` | بناء تجميعي كامل لكافة الحزم والموديولات بتصريف TypeScript 5.9+ صارم وخالٍ من الأخطاء |
-| `pnpm test` | تشغيل 321 اختباراً آلياً عبر 51 جناح اختبار بنسبة نجاح 100% (TDD & Zero-Regression) |
-| `pnpm governance:verify` | تشغيل بوابات الحوكمة الثمانية الشاملة معاً والتحقق الصارم من استيفاء شروط الاعتماد |
-| `pnpm arch:verify` | التحقق من العزل الموديولي وحظر استيراد موديول لموديول آخر |
+| `pnpm test` | تشغيل 344 اختباراً آلياً عبر 58 جناح اختبار بنسبة نجاح 100% (TDD & Zero-Regression) |
+| `pnpm make:flow` | أداة توليد التدفقات المعيارية الآلية لإنشاء شرائح رأسية متكاملة للوثيقة 21 (< 350 سطراً) |
+| `pnpm governance:verify` | تشغيل بوابات الحوكمة الشاملة معاً والتحقق الصارم من استيفاء شروط الاعتماد |
+| `pnpm arch:verify` | التحقق من العزل الموديولي وسقف الأسطر (< 350) وحظر استيراد موديول لموديول آخر |
 | `pnpm migration:verify` | فحص مطابقة سجل الترحيل Master Migration Registry والتحقق من المسارات والـ Commits |
 | `pnpm flow-contracts:verify` | فحص عقود التدفقات ومعالجات الواجهة وتطابق واجهات الإدخال والتنقل |
 | `pnpm telegram-contracts:verify` | حارس عقود Telegram Bot API الآلي لضمان سقف 512 بايت للروابط و64 بايت لبيانات الـ Callbacks |

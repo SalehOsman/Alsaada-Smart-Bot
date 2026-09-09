@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+# Al-Saada Smart Bot Enterprise — Pre-Commit Governance Guard
+echo "🔍 [PRE-COMMIT] Running strict TypeScript, contracts, and architecture checks..."
+
+pnpm typecheck || {
+  echo "❌ [PRE-COMMIT ERROR] Typecheck failed. Fix TypeScript errors before committing."
+  exit 1
+}
+
+pnpm telegram-contracts:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Telegram contracts violated. Check URL/Callback byte limits."
+  exit 1
+}
+
+pnpm arch:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Architecture verification failed. Check handler line counts and required files."
+  exit 1
+}
+
+echo "✅ [PRE-COMMIT] All pre-commit checks passed successfully."
+exit 0

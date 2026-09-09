@@ -73,6 +73,13 @@ flowchart TD
   8. **الهوية الوطنية المصرية:** استيراد `parseEgyptianNationalId` من `@alsaada/national-id-engine`.
   9. **التوقيت والعملات والأرقام المشرقية:** استيراد `normalizeDigits`, `formatCurrency`, `formatDateTime` من `@alsaada/regional-engine`.
   10. **الأمان والتشفير وقاعدة البيانات:** استيراد عميل قاعدة البيانات وأدوات التشفير والهاش التراكمي من `@alsaada/database`.
+  11. **المقاصة الثلاثية وتخفيض التكاليف للمسحوبات:** استيراد `TripleBalanceClearingEngine` و `calculateClearingSettlement` من `@alsaada/core-components`.
+  12. **صمام أمان العهد والمطابقة المالية اللحظية:** استيراد `UniversalCustodyGate` و `verifyCustodyBalance` من `@alsaada/core-components`.
+  13. **جدولة الأقساط والاستقطاعات الذكية:** استيراد `UniversalInstallmentEngine` و `calculateEqualInstallments` من `@alsaada/core-components`.
+  14. **معالجة وحفظ المرفقات الميدانية:** استيراد `UniversalAttachmentPipeline` و `saveAttachmentBuffer` من `@alsaada/core-components`.
+  15. **مسار الموافقات متعدد المستويات والتوقيع:** استيراد `UniversalApprovalWorkflow` و `createApprovalTicket` من `@alsaada/core-components`.
+  16. **محرك الورديات وحساب رصيد الإجازات:** استيراد `UniversalShiftAccrualEngine` و `calculateShiftCycle` و `calculateLeaveBalance` من `@alsaada/core-components`.
+  17. **طابور المزامنة الخلفية الصامتة مع Google Sheets:** استيراد `TransactionalOutboxQueue` من `@alsaada/core-components`.
 * **العقوبة الهندسية عند المخالفة:** أي كود يتضمن تكراراً لمنطق متاح بالنواة المشتركة يُرفض فوراً كعيب برمجي جسيم (`Anti-Pattern / Code Duplication FAIL`).
 
 ### 6️⃣ بروتوكول الفحص المسبق واستدعاء النواة عند نقل أو بناء أي وظيفة (Pre-Flight Audit Protocol):
@@ -86,6 +93,13 @@ flowchart TD
      * مسحوبات السجائر (عينية، مخزون كانتين، 0 كاش، مقاصة تخفيض تكلفة الموقع).
      * مسحوبات المشتريات العينية (مقترحات ذكية، 0 كاش، مقاصة تخفيض مشتريات الموردين).
      * السلف النقدية (إلزامية تحديد مصدر الأموال من العهد المفتوحة أو الخزينة الرئيسية، وفحص كفاية الرصيد، وخروج نقدية فعلي).
+
+### 7️⃣ إلزامية أداة توليد التدفقات المعيارية وخطافات Git (Mandatory Scaffolding & Git Hooks):
+* **توليد التدفقات المعيارية آلياً:** يلتزم وكيل الذكاء الاصطناعي والمطور حصراً بإنشاء أي تدفق جديد عبر أمر:  
+  `pnpm make:flow <module-name> <flow-name> [title]`  
+  لضمان الالتزام الصارم بالهيكل المعزول للوثيقة 21 (< 350 سطراً، عقود JSON، الأنواع الصارمة، واختبارات المحاكاة).
+* **خطافات Git المحلية (Pre-Commit Hooks):** تفعيل واستخدام `.githooks/pre-commit` لضمان عدم تمرير أي كود يخالف الأنواع أو يتجاوز سقف الأسطر أو يخرق عقود تليجرام.
+* **حظر الاستدعاء الشبكي المباشر للشيتات في المعالجات:** حظر استدعاء Google Sheets تزامناً داخل المعالجات، واستخدام `TransactionalOutboxQueue` حصراً للترحيل في الخلفية.
 
 ---
 

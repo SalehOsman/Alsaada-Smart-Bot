@@ -66,6 +66,13 @@
      * **بطاقات المراجعة والتأكيد:** يجب استيراد `formatConfirmationCard` و `buildConfirmationKeyboard` من `@alsaada/core-components`.
      * **لوحة أزرار ما بعد الإنجاز (Section 5.2):** يجب استيراد `buildCompletionKeyboard` و `buildWhatsAppLink` من `@alsaada/core-components`. يُحظر تماماً بناء لوحة أزرار ختامية يدوية.
      * **توجيه الإشعارات للتوبيكات:** يجب استيراد `resolveTopicId` من `@alsaada/core-components`.
+     * **المقاصة الثلاثية وتخفيض التكاليف:** يجب استيراد `TripleBalanceClearingEngine` و `calculateClearingSettlement` من `@alsaada/core-components`.
+     * **صمام أمان العهد والمطابقة المالية اللحظية:** يجب استيراد `UniversalCustodyGate` و `verifyCustodyBalance` من `@alsaada/core-components`.
+     * **محرك جدولة الأقساط والاستقطاعات الذكية:** يجب استيراد `UniversalInstallmentEngine` و `calculateEqualInstallments` من `@alsaada/core-components`.
+     * **خط أنابيب معالجة وتخزين المرفقات الميدانية:** يجب استيراد `UniversalAttachmentPipeline` و `saveAttachmentBuffer` من `@alsaada/core-components`.
+     * **مسار الموافقات متعدد المستويات والتوقيع:** يجب استيراد `UniversalApprovalWorkflow` و `createApprovalTicket` من `@alsaada/core-components`.
+     * **محرك الورديات والأرصدة المستحقة وحسابات الإجازات:** يجب استيراد `UniversalShiftAccrualEngine` و `calculateShiftCycle` و `calculateLeaveBalance` من `@alsaada/core-components`.
+     * **طابور المزامنة الخلفية الصامتة مع Google Sheets:** يجب استيراد `TransactionalOutboxQueue` من `@alsaada/core-components`.
      * **الرقم القومي المصري:** يجب استيراد `parseEgyptianNationalId` من `@alsaada/national-id-engine`.
      * **الأرقام المشرقية والعملة والتوقيت:** يجب استيراد `normalizeDigits`, `formatCurrency`, `formatDateTime` من `@alsaada/regional-engine`.
      * **أمان البيانات والهاش الجنائي:** يجب استيراد أدوات التشفير والهاش التراكمي من `@alsaada/database`.
@@ -82,6 +89,12 @@
         - فصل مسحوبات السجائر كتدفق مستقل (عيني، مخزون كانتين، مقاصة تخفيض تكلفة الموقع، `0` كاش).
         - فصل مسحوبات المشتريات العينية كتدفق مستقل (مقترحات ذكية، مقاصة تخفيض مشتريات الموردين، `0` كاش).
         - فصل السلف النقدية كتدفق مستقل (إلزامية تحديد مصدر الأموال من العهد المفتوحة أو الخزينة الرئيسية، فحص كفاية الرصيد، خروج نقدية فعلي).
+7. **إلزامية استخدام أداة توليد التدفقات المعيارية والـ Pre-Commit Hooks (Mandatory Scaffolding & Git Hooks Standard):**
+   - **توليد التدفقات المعيارية آلياً:** عند إنشاء أي تدفق أو موديول جديد، يُلزم وكيل الذكاء الاصطناعي والمطور حصراً باستخدام أداة التوليد السريع:  
+     `pnpm make:flow <module-name> <flow-name> [title]`  
+     (مثال: `pnpm make:flow advances worker-advance "تسجيل سلفة عامل"`).  
+     تضمن هذه الأداة توليد الهيكل المعماري المنضبط بنسبة 100% وفقاً للوثيقة 21 (`flow.contract.json`, `flow.handler.ts`, `types.ts`, `flow.spec.ts`) بملفات تحت سقف 350 سطراً وخالية من `any` واجتياز بوابات الحوكمة فورياً.
+   - **خطافات Git المحلية (Pre-Commit Hooks):** تفعيل واستخدام خطافات `.githooks/pre-commit` لفحص الأنواع وعقود التدفقات والهيكل المعماري تلقائياً قبل أي التزام في Git.
 
 ---
 
@@ -92,9 +105,10 @@
 2. **التطوير الموجه بالاختبارات (TDD & Zero Regressions):**
    - كتابة اختبارات آلية لكل ميزة أو تدفق ومحاكاة رسائل البوت.
    - تشغيل حزمة الاختبارات الشاملة والتأكد من نجاح كافة الاختبارات بنسبة 100%.
-3. **المعمارية الهجينة الموحدة (Unified Native Hybrid Engine):**
+3. **المعمارية الهجينة الموحدة وحظر الاستدعاء المباشر للشيتات (Unified Native Hybrid Engine & Zero Sync Sheets Calls):**
    - قاعدة البيانات اللحظية (SQLite / PostgreSQL) هي المصدر الأساسي للحفظ السريع في الميدان (< 15ms).
    - ترحيل العمليات إلى Google Sheets عبر طابور المزامنة الخلفي (`Transactional Outbox`) للمديرين والمحاسبين.
+   - **حظر المزامنة اللحظية المباشرة مع Google Sheets داخل معالجات البوت:** يُحظر تماماً إجراء أي استدعاء شبكي تزامني مباشر لـ Google Sheets API داخل معالجات الرسائل (`flow.handler.ts`). جميع عمليات الترحيل الخارجي يجب أن تُسجل كحدث في طابور المزامنة الخلفي (`TransactionalOutboxQueue`) لضمان سرعة الاستجابة الميدانية (< 15ms) وحماية البوت من مهلة التليجرام.
 
 ---
 

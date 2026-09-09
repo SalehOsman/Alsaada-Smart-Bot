@@ -17,3 +17,18 @@ export * from './source-picker/validator.js';
 export * from './source-picker/keyboard.js';
 export * from './purchase-picker/suggestions.js';
 
+// Enterprise Shared Engines
+export * from './clearing-engine/types.js';
+export * from './clearing-engine/clearing.js';
+export * from './custody-gate/types.js';
+export * from './custody-gate/gate.js';
+export * from './installment-engine/types.js';
+export * from './installment-engine/engine.js';
+export * from './attachment-pipeline/types.js';
+export * from './attachment-pipeline/pipeline.js';
+export * from './approval-workflow/types.js';
+export * from './approval-workflow/workflow.js';
+export * from './shift-accrual/types.js';
+export * from './shift-accrual/engine.js';
+export * from './outbox-queue/types.js';
+export * from './outbox-queue/worker.js';

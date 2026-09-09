@@ -112,14 +112,22 @@ modules/canteen/
   * **التحقق من الهوية المصرية:** استيراد `parseEgyptianNationalId` من `@alsaada/national-id-engine`.
   * **التوقيت والعملات والأرقام المشرقية:** استيراد `normalizeDigits`, `formatCurrency`, `formatDateTime` من `@alsaada/regional-engine`.
   * **أمان قاعدة البيانات والهاش الجنائي:** استيراد التشفير وسلسلة الهاش التراكمية من `@alsaada/database`.
+  * **المقاصة الثلاثية وتخفيض التكاليف:** استيراد `TripleBalanceClearingEngine` و `calculateClearingSettlement` من `@alsaada/core-components`.
+  * **صمام أمان العهد والمطابقة المالية اللحظية:** استيراد `UniversalCustodyGate` و `verifyCustodyBalance` من `@alsaada/core-components`.
+  * **محرك جدولة الأقساط والاستقطاعات الذكية:** استيراد `UniversalInstallmentEngine` و `calculateEqualInstallments` من `@alsaada/core-components`.
+  * **خط أنابيب معالجة وتخزين المرفقات الميدانية:** استيراد `UniversalAttachmentPipeline` و `saveAttachmentBuffer` من `@alsaada/core-components`.
+  * **مسار الموافقات متعدد المستويات والتوقيع:** استيراد `UniversalApprovalWorkflow` و `createApprovalTicket` من `@alsaada/core-components`.
+  * **محرك الورديات والأرصدة المستحقة وحسابات الإجازات:** استيراد `UniversalShiftAccrualEngine` و `calculateShiftCycle` و `calculateLeaveBalance` من `@alsaada/core-components`.
+  * **طابور المزامنة الخلفية الصامتة مع Google Sheets:** استيراد `TransactionalOutboxQueue` من `@alsaada/core-components`.
 * **معيار بوابة الجودة (DoD Gate):** أي كود يتضمن تكراراً لمنطق متاح مسبقاً في النواة المشتركة يُرفض فوراً (`FAIL - Duplicate Code Anti-Pattern`).
 
 ---
 
 ### 8️⃣ معايير الأداء والسرعة الصارمة (Performance SLA)
 * أزرار التنقل العادية بين القوائم والمعالج: **أقل من `800ms`**.
-* الحفظ في قاعدة البيانات وطابور المزامنة: **أقل من `50ms`**.
+* الحفظ في قاعدة البيانات وطابور المزامنة: **أقل من `15ms`**.
 * استدعاء القوائم المتكررة (قائمة العمال، كتالوج الأصناف، إعدادات النظام): يتم من الكاش السريع بالذاكرة في **أقل من `5ms`**.
+* **حظر الاستدعاء المباشر لـ Google Sheets في المعالجات:** يُحظر تماماً استدعاء Google Sheets API تزامناً داخل المعالجات لتفادي مهلة التليجرام؛ وتُرحل العمليات حصراً عبر `TransactionalOutboxQueue` في الخلفية.
 
 ---
 
@@ -175,3 +183,15 @@ modules/<module-name>/src/flows/<flow-code>-<flow-slug>/
 ```
 
 في غياب هذه العبارة تبقى البوابات ملزمة بنسبة 100%.
+
+## أداة توليد التدفقات المعيارية وخطافات Git (Scaffolding CLI & Git Hooks)
+
+1. **أداة التوليد الآلي (`pnpm make:flow`):**  
+   لتطبيق معايير الوثيقة 21 بدقة ودون أي اجتهاد يدوي، يُلزم استخدام أداة السقالات المعيارية:
+   ```bash
+   pnpm make:flow <module-name> <flow-name> [title]
+   ```
+   تولد الأداة تلقائياً كافة ملفات الشريحة الرأسية (العقد، المعالج، الأنواع، ومجموعة الاختبارات الأربعة) تحت سقف 350 سطراً مع مطابقة بوابات الحوكمة فورياً.
+
+2. **خطافات Git للتحقق المسبق (Local Pre-Commit Hooks):**  
+   يتم تفعيل خطافات `.githooks/pre-commit` لفحص التايب سكريبت وعقود تليجرام وسقف الأسطر تلقائياً قبل أي commit.

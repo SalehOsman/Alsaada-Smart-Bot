@@ -1,4 +1,4 @@
-﻿import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, expect, test } from 'vitest';
@@ -11,6 +11,8 @@ import { verifyFlowContracts } from '../verify-flow-contracts.js';
 import { buildGovernanceLock, APPROVAL_PHRASE } from '../verify-governance-lock.js';
 import { verifyGovernanceTamper } from '../verify-governance-tamper.js';
 import { verifyMigrationRegistry } from '../verify-migration-registry.js';
+import { scaffoldFlow } from '../../scaffold/scaffold-flow.js';
+import { existsSync } from 'node:fs';
 
 function fixtureRoot(name: string): string {
   const root = join(tmpdir(), `alsaada-governance-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -255,6 +257,17 @@ describe('governance verifiers', () => {
 
     expect(result.ok).toBe(true);
     expect(result.warnings.some((warning) => warning.includes('explicit approval'))).toBe(true);
+  });
+
+  test('flow scaffolder creates a 100% compliant flow passing verifyArchitecture', () => {
+    const root = fixtureRoot('scaffold-test');
+    writeMandatoryDocs(root);
+    const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
+    expect(existsSync(flowPath)).toBe(true);
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(true);
+    expect(archResult.checked).toBe(1);
   });
 });
 
