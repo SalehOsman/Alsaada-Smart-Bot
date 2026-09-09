@@ -72,9 +72,18 @@ export class WorkerDirectoryService {
       }
     }
 
-    const idNumberMasked = rawId.length > 4
-      ? '*'.repeat(Math.max(0, rawId.length - 4)) + rawId.slice(-4)
-      : (rawId || '••••••••');
+    const canViewFullId = [
+      'SUPER_ADMIN',
+      'GENERAL_ADMIN',
+      'EXECUTIVE',
+      'FIELD_ADMIN',
+      'HR_MANAGER',
+      'PROJECT_MANAGER',
+    ].includes(viewerRole);
+
+    const idNumberMasked = canViewFullId
+      ? (rawId || 'غير مسجل')
+      : (rawId.length > 4 ? '*'.repeat(Math.max(0, rawId.length - 4)) + rawId.slice(-4) : (rawId || '••••••••'));
 
     // Financial RBAC masking
     const canViewFinances = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'ACCOUNTANT'].includes(viewerRole);

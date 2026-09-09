@@ -84,7 +84,7 @@ export const WorkerEditMessages = {
       `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
       `• *طريقة الصرف:* ${cleanMd(worker.paymentMethod) || 'نقداً بالخزينة (كاش)'}\n` +
-      `• *رقم الحساب / المحفظة:* \`${worker.accountNumberEncrypted ? 'مسجل ومحمي 🔒' : 'غير مسجل'}\`\n` +
+      `• *رقم الحساب / المحفظة:* \`${worker.accountNumber || (worker.accountNumberEncrypted ? 'مسجل ومحمي 🔒' : 'غير مسجل')}\`\n` +
       `• *اسم صاحب المحفظة:* ${cleanMd(worker.walletOwnerName) || 'مسجل باسم العامل'}\n` +
       `• *معرف إنستاباي:* \`${worker.instaPayHandle || 'لا يوجد'}\`\n` +
       `• *اليومية التعاقدية:* \`${worker.dailyWage ? String(worker.dailyWage) + ' ج.م' : 'غير محددة'}\`\n` +
@@ -106,8 +106,8 @@ export const WorkerEditMessages = {
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
-      `• *رقم الهاتف والواتساب:* \`${worker.phoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل'}\`\n` +
-      `• *هاتف الطوارئ البديل:* \`${worker.emergencyPhoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل'}\`\n` +
+      `• *رقم الهاتف والواتساب:* \`${worker.phone || (worker.phoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل')}\`\n` +
+      `• *هاتف الطوارئ البديل:* \`${worker.emergencyPhone || (worker.emergencyPhoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل')}\`\n` +
       `• *اسم جهة الطوارئ:* ${cleanMd(worker.emergencyContactName) || 'غير مسجل'}\n` +
       `• *مقاس حذاء السيفتي:* \`${worker.ppeShoeSize || 'غير محدد'}\`\n` +
       `• *مقاس زي العمل (اليونيفورم):* \`${worker.ppeUniformSize || 'غير محدد'}\`\n` +

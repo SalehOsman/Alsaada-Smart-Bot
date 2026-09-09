@@ -132,6 +132,11 @@ export function registerWorkforceRoutes(
     if (match?.[1]) await dirHandler.handleViewWorker(ctx, match[1]);
   });
 
+  bot.callbackQuery(/^action:worker:call:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await dirHandler.handleCallWorker(ctx, match[1]);
+  });
+
   bot.callbackQuery('action:worker:dir:search_prompt', async (ctx) => {
     await dirHandler.handleSearchPrompt(ctx);
   });

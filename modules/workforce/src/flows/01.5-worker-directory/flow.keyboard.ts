@@ -36,11 +36,15 @@ export class WorkerDirectoryKeyboards {
     });
   }
 
-  static profile360ActionsKeyboard(workerId: string, whatsAppUrl?: string): InlineKeyboard {
+  static profile360ActionsKeyboard(workerId: string, whatsAppUrl?: string, hasPhone: boolean = true): InlineKeyboard {
     const kb = new InlineKeyboard();
 
     if (whatsAppUrl) {
       kb.url('💬 مراسلة العامل عبر واتساب', whatsAppUrl).row();
+    }
+
+    if (hasPhone) {
+      kb.text('📞 اتصال هاتفي مباشر', `action:worker:call:${workerId}`).row();
     }
 
     kb.text('✏️ تعديل بيانات العامل', `action:worker_edit:pick:${workerId}`).row();

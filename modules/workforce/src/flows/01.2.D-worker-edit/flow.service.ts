@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { encryptField, createBlindIndex, Prisma } from '@alsaada/database';
+import { encryptField, decryptField, createBlindIndex, Prisma } from '@alsaada/database';
 import { normalizeDigits, parseFlexibleDate } from '@alsaada/regional-engine';
 import { detectGovernorateFromAddress, getGovernorateCodeByName } from '@alsaada/national-id-engine';
 import { WorkerEditRepository } from './flow.repository.js';
@@ -27,6 +27,15 @@ export class WorkerEditService {
     private readonly blindIndexSalt: string = 'alsaada-blind-index-salt-secret'
   ) {
     this.normalizedKeyHex = normalizeKeyToHex(this.encryptionKey);
+  }
+
+  decryptFieldSafe(encrypted?: string | null): string {
+    if (!encrypted) return '';
+    try {
+      return decryptField(encrypted, this.normalizedKeyHex);
+    } catch {
+      return encrypted;
+    }
   }
 
   async applyDirectEdit(

@@ -73,7 +73,14 @@ export class WorkerEditHandler {
         isSuperAdmin: isSuper,
       });
     }
-    const { text, kb } = this.renderTab(worker, tab, isSuper);
+    const rawNatId = this.service.decryptFieldSafe(worker.nationalIdEncrypted || worker.passportNumberEncrypted);
+    const workerView: WorkerCardView = {
+      ...worker,
+      nationalId: rawNatId,
+      phone: this.service.decryptFieldSafe(worker.phoneEncrypted),
+      emergencyPhone: this.service.decryptFieldSafe(worker.emergencyPhoneEncrypted),
+    };
+    const { text, kb } = this.renderTab(workerView, tab, isSuper);
     await this.replyOrEdit(ctx, text, kb);
   }
 

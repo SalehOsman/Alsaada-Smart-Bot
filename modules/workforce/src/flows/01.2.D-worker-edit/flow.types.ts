@@ -127,6 +127,9 @@ export interface WorkerCardView {
   canteenCigarettePolicy?: string | null;
   cigaretteBrand?: string | null;
   canteenItem?: { name: string } | null;
+  phone?: string | null;
+  emergencyPhone?: string | null;
+  accountNumber?: string | null;
   phoneEncrypted?: string | null;
   emergencyPhoneEncrypted?: string | null;
   emergencyContactName?: string | null;

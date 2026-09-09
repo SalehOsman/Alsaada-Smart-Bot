@@ -3,6 +3,7 @@ import type { WorkforceModuleContext } from '../../shared/module.types.js';
 import { WorkerDirectoryService } from './flow.service.js';
 import { WorkerDirectoryMessages } from './flow.messages.js';
 import { WorkerDirectoryKeyboards } from './flow.keyboard.js';
+import { normalizeDigits } from '@alsaada/regional-engine';
 import { validateDirectorySearchQuery, validateDirectoryPage, validateWorkerIdParam } from './flow.validators.js';
 
 export class WorkerDirectoryHandler {
@@ -100,10 +101,43 @@ export class WorkerDirectoryHandler {
     const text = WorkerDirectoryMessages.profile360Card(profile);
     const keyboard = WorkerDirectoryKeyboards.profile360ActionsKeyboard(
       workerId,
-      profile.directWhatsAppUrl
+      profile.directWhatsAppUrl,
+      Boolean(profile.phone)
     );
 
     await this.replyOrEdit(ctx, text, keyboard);
+  }
+
+  async handleCallWorker(ctx: WorkforceModuleContext, workerId: string): Promise<void> {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery().catch(() => {});
+    }
+    const val = validateWorkerIdParam(workerId);
+    if (!val.isValid) {
+      await ctx.reply('⚠️ لم يتم العثور على العامل.');
+      return;
+    }
+    const role = ctx.effectiveRole || 'GUEST';
+    const profile = await this.service.getWorkerProfile360(workerId, role);
+    if (!profile || !profile.phone) {
+      await ctx.reply('⚠️ لا يوجد رقم هاتف مسجل لهذا العامل.');
+      return;
+    }
+    const rawDigits = profile.phone.replace(/\D/g, '');
+    const cleanPhone = normalizeDigits(rawDigits);
+    const intlPhone = cleanPhone.startsWith('2')
+      ? `+${cleanPhone}`
+      : (cleanPhone.startsWith('0') ? `+20${cleanPhone.slice(1)}` : `+20${cleanPhone}`);
+    const displayName = profile.nickname || profile.name;
+
+    try {
+      await ctx.replyWithContact(intlPhone, displayName);
+    } catch {
+      await ctx.reply(
+        `📞 *بيانات الاتصال المباشر بالعامل:*\n━━━━━━━━━━━━━━━━━━━━━\n• *الاسم:* ${displayName}\n• *رقم الهاتف:* \`${intlPhone}\`\n\n_اضغط على الرقم للاتصال به مباشرة من هاتفك._`,
+        { parse_mode: 'Markdown' }
+      );
+    }
   }
 
   private readonly searchPendingUsers = new Set<string>();
