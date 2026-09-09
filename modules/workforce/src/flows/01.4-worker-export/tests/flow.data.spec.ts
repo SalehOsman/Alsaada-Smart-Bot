@@ -59,7 +59,7 @@ describe('Flow 01.4 Data Tests — Formatting, RTL Alignment & Standard Dates', 
     const result = await service.generateWorkersExportBuffer({ type: 'ALL' }, true);
 
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(result.buffer);
+    await workbook.xlsx.load(result.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
     const sheet = workbook.getWorksheet('كشف العاملين');
     expect(sheet).toBeDefined();
 

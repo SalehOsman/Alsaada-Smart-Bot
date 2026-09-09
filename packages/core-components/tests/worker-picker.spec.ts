@@ -171,10 +171,10 @@ describe('UniversalWorkerPicker', () => {
 
       // 4. Verify navigation buttons
       const hasBack = kb.inline_keyboard.some((row) =>
-        row.some((btn) => btn.text.includes('العودة') && btn.callback_data === 'menu:domain:hr')
+        row.some((btn) => 'callback_data' in btn && btn.text.includes('العودة') && btn.callback_data === 'menu:domain:hr')
       );
       const hasHome = kb.inline_keyboard.some((row) =>
-        row.some((btn) => btn.text.includes('الرئيسية') && btn.callback_data === 'action:main_menu')
+        row.some((btn) => 'callback_data' in btn && btn.text.includes('الرئيسية') && btn.callback_data === 'action:main_menu')
       );
       expect(hasBack).toBe(true);
       expect(hasHome).toBe(true);

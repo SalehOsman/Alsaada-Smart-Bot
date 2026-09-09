@@ -175,7 +175,7 @@ export const WorkerRegistrationMessages = {
     return lines.join('\n');
   },
 
-  registrationSuccess(data: { code: string; name: string; jobTitle: string; siteName?: string; hireDate: Date }): string {
+  registrationSuccess(data: { code: string; name: string; jobTitle: string; siteName?: string | undefined; hireDate: Date }): string {
     const formattedDate = formatDateDMY(data.hireDate);
     return (
       `✅ *تم تسجيل وتعيين العامل بنجاح*\n` +

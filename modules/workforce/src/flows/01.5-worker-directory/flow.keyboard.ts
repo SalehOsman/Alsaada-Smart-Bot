@@ -7,11 +7,11 @@ import {
 
 export interface Profile360ActionsOptions {
   workerId: string;
-  whatsAppUrl?: string;
-  hasPhone?: boolean;
-  hasMissingData?: boolean;
-  canRevealId?: boolean;
-  isIdRevealed?: boolean;
+  whatsAppUrl?: string | undefined;
+  hasPhone?: boolean | undefined;
+  hasMissingData?: boolean | undefined;
+  canRevealId?: boolean | undefined;
+  isIdRevealed?: boolean | undefined;
 }
 
 export class WorkerDirectoryKeyboards {

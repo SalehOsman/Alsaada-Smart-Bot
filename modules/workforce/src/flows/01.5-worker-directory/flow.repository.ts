@@ -43,10 +43,10 @@ export class WorkerDirectoryRepository {
     const items: WorkerDirectoryItem[] = workers.map((w) => ({
       id: w.id,
       code: w.code,
-      legacyCode: w.legacyCode || undefined,
+      legacyCode: w.legacyCode,
       aliases: w.aliases || [],
       name: w.name,
-      nickname: w.nickname || undefined,
+      nickname: w.nickname,
       jobTitle: w.jobTitle,
       siteName: w.site?.name || undefined,
       status: w.status,

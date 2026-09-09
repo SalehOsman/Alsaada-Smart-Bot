@@ -32,16 +32,26 @@ export class WorkerRegistrationHandler {
   ): Promise<void> {
     if (ctx.callbackQuery?.message) {
       try {
-        await ctx.editMessageText(text, {
-          parse_mode: 'Markdown',
-          reply_markup: keyboard,
-        });
+        if (keyboard) {
+          await ctx.editMessageText(text, {
+            parse_mode: 'Markdown',
+            reply_markup: keyboard,
+          });
+        } else {
+          await ctx.editMessageText(text, {
+            parse_mode: 'Markdown',
+          });
+        }
         return;
       } catch {
         // Fallback to sending new message if edit fails
       }
     }
-    await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+    if (keyboard) {
+      await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+    } else {
+      await ctx.reply(text, { parse_mode: 'Markdown' });
+    }
   }
 
   async handleStart(ctx: WorkforceModuleContext): Promise<void> {

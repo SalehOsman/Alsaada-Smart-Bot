@@ -154,7 +154,7 @@ export class ScreenFlowService {
         await ctx.api.deleteMessage(active.chatId, active.messageId).catch(async () => {
           // في حال تعذر الحذف (مثلاً مر عليها أكثر من 48 ساعة)، يتم تجريد الأزرار فوراً
           await ctx.api
-            .editMessageReplyMarkup(active.chatId, active.messageId, { reply_markup: undefined })
+            .editMessageReplyMarkup(active.chatId, active.messageId, { reply_markup: { inline_keyboard: [] } })
             .catch(() => {});
         });
       }
@@ -165,7 +165,7 @@ export class ScreenFlowService {
       // تجرد فقط من لوحة الأزرار لمنع إعادة الضغط المكرر
       if (ctx.api) {
         await ctx.api
-          .editMessageReplyMarkup(active.chatId, active.messageId, { reply_markup: undefined })
+          .editMessageReplyMarkup(active.chatId, active.messageId, { reply_markup: { inline_keyboard: [] } })
           .catch(() => {});
       }
       await clearUserActiveScreen(telegramId);
@@ -213,7 +213,7 @@ export class ScreenFlowService {
    * ⚠️ إبطال وتجريد لوحة مفاتيح الرسالة القديمة وتنبيه المستخدم
    */
   async handleStaleCallback(ctx: MyContext): Promise<void> {
-    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch(() => {});
+    await ctx.editMessageReplyMarkup({ reply_markup: { inline_keyboard: [] } }).catch(() => {});
     await ctx
       .answerCallbackQuery({
         text: '⚠️ هذه الرسالة منتهية الصلاحية، يرجى استخدام القائمة أو الأزرار النشطة الأخيرة.',

@@ -87,7 +87,7 @@ describe('Admin Personal Profile Handler', () => {
     await renderAdminProfileCard(mockCtx, true);
 
     expect(editMessageTextMock).toHaveBeenCalled();
-    const renderedText = editMessageTextMock.mock.calls[0][0] as string;
+    const renderedText = editMessageTextMock.mock.calls[0]![0] as string;
     // Verify that username is wrapped in code backticks
     expect(renderedText).toMatch(/`@?[^`]+`/);
     // Ensure no unescaped @ followed by underscores outside backticks

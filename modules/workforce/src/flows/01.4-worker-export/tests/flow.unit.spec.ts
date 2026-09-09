@@ -125,7 +125,7 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     expect(buffer).toBeDefined();
 
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
+    await workbook.xlsx.load(buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
 
     const dataSheet = workbook.getWorksheet('بيانات العمال الجدد');
     expect(dataSheet).toBeDefined();
@@ -142,7 +142,7 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     expect(result.fileName).toBe('كشف_العاملين_الشامل.xlsx');
 
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(result.buffer);
+    await workbook.xlsx.load(result.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
     const sheet = workbook.getWorksheet('كشف العاملين');
     expect(sheet).toBeDefined();
 
@@ -163,7 +163,7 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     expect(result.workerCount).toBe(2);
 
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(result.buffer);
+    await workbook.xlsx.load(result.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
     const sheet = workbook.getWorksheet('كشف العاملين');
     expect(sheet).toBeDefined();
 

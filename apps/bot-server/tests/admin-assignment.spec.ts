@@ -86,7 +86,7 @@ describe('Admin Site Assignment & Scoping Handler', () => {
     await renderAdminAssignmentsHub(mockCtx, true);
 
     expect(editMock).toHaveBeenCalled();
-    const replyMarkup = editMock.mock.calls[0][1]?.reply_markup;
+    const replyMarkup = editMock.mock.calls[0]![1]?.reply_markup;
     const markupStr = JSON.stringify(replyMarkup);
     expect(markupStr).toContain('محمود أحمد');
     expect(markupStr).toContain('موقع الخارجة');

@@ -4,10 +4,10 @@ import crypto from 'crypto';
 import { config } from '../config/env.js';
 
 export interface SaveWorkerIdPhotosResult {
-  localFrontPath?: string;
-  localBackPath?: string;
-  driveFrontId?: string;
-  driveBackId?: string;
+  localFrontPath?: string | undefined;
+  localBackPath?: string | undefined;
+  driveFrontId?: string | undefined;
+  driveBackId?: string | undefined;
 }
 
 export class GoogleDriveService {
@@ -264,7 +264,7 @@ export class GoogleDriveService {
     originalFileName: string,
     fileBuffer: Buffer,
     mimeType = 'application/pdf'
-  ): Promise<{ localPath: string; fileName: string; driveFileId?: string }> {
+  ): Promise<{ localPath: string; fileName: string; driveFileId?: string | undefined }> {
     const saved = this.saveWorkerAttachmentLocally(workerCode, originalFileName, fileBuffer);
     let driveFileId: string | undefined = undefined;
 

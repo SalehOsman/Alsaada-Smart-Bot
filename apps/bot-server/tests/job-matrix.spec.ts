@@ -57,13 +57,13 @@ vi.mock('../src/db.js', () => {
         Promise.resolve({ id: 'new-dept-id', ...data, jobs: [] })
       ),
       update: vi.fn().mockImplementation(({ where, data }) =>
-        Promise.resolve({ ...mockDepartments[0], ...data })
+        Promise.resolve({ ...mockDepartments[0]!, ...data })
       ),
     },
     jobTitle: {
       findUnique: vi.fn().mockImplementation(({ where }) => {
         if (where.departmentId_code?.code === 'DRV') {
-          return Promise.resolve(mockDepartments[0].jobs[0]);
+          return Promise.resolve(mockDepartments[0]!.jobs[0]);
         }
         return Promise.resolve(null);
       }),
@@ -71,7 +71,7 @@ vi.mock('../src/db.js', () => {
         Promise.resolve({ id: 'new-job-id', ...data })
       ),
       update: vi.fn().mockImplementation(({ where, data }) =>
-        Promise.resolve({ ...mockDepartments[0].jobs[0], ...data })
+        Promise.resolve({ ...mockDepartments[0]!.jobs[0], ...data })
       ),
     },
   };
@@ -81,39 +81,39 @@ vi.mock('../src/db.js', () => {
       department: {
         findMany: vi.fn().mockResolvedValue(mockDepartments),
         findUnique: vi.fn().mockImplementation(({ where }) => {
-          if (where.code === 'OP') return Promise.resolve(mockDepartments[0]);
+          if (where.code === 'OP') return Promise.resolve(mockDepartments[0]!);
           return Promise.resolve(null);
         }),
-        create: vi.fn().mockResolvedValue(mockDepartments[0]),
-        update: vi.fn().mockResolvedValue(mockDepartments[0]),
-        delete: vi.fn().mockResolvedValue(mockDepartments[0]),
+        create: vi.fn().mockResolvedValue(mockDepartments[0]!),
+        update: vi.fn().mockResolvedValue(mockDepartments[0]!),
+        delete: vi.fn().mockResolvedValue(mockDepartments[0]!),
       },
       jobTitle: {
-        findMany: vi.fn().mockResolvedValue(mockDepartments[0].jobs),
+        findMany: vi.fn().mockResolvedValue(mockDepartments[0]!.jobs),
         findUnique: vi.fn().mockImplementation(({ where }) => {
           if (where.id === 'job-1' || where.departmentId_code?.code === 'DRV') {
             return Promise.resolve({
-              ...mockDepartments[0].jobs[0],
-              department: mockDepartments[0],
+              ...mockDepartments[0]!.jobs[0],
+              department: mockDepartments[0]!,
             });
           }
           return Promise.resolve(null);
         }),
         update: vi.fn().mockImplementation(({ where, data }) =>
           Promise.resolve({
-            ...mockDepartments[0].jobs[0],
+            ...mockDepartments[0]!.jobs[0],
             ...data,
-            department: mockDepartments[0],
+            department: mockDepartments[0]!,
           })
         ),
         create: vi.fn().mockImplementation(({ data }) =>
           Promise.resolve({
             id: 'new-job-id',
             ...data,
-            department: mockDepartments[0],
+            department: mockDepartments[0]!,
           })
         ),
-        delete: vi.fn().mockResolvedValue(mockDepartments[0].jobs[0]),
+        delete: vi.fn().mockResolvedValue(mockDepartments[0]!.jobs[0]),
       },
       worker: {
         count: vi.fn().mockResolvedValue(0),
@@ -183,7 +183,7 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
 
       // Verify Excel contents using ExcelJS
       const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(buffer);
+      await workbook.xlsx.load(buffer as any);
 
       const dataSheet = workbook.getWorksheet('دليل الأقسام والوظائف');
       expect(dataSheet).toBeDefined();
@@ -245,8 +245,8 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
       const depts = await systemDataService.getDepartments();
       expect(depts).toBeDefined();
       expect(depts.length).toBeGreaterThan(0);
-      expect(depts[0].code).toBe('OP');
-      expect(depts[0].jobs[0].code).toBe('DRV');
+      expect(depts[0]?.code).toBe('OP');
+      expect((depts[0] as any)?.jobs[0]?.code).toBe('DRV');
 
       // Second call served instantly from L1 cache
       const t0 = performance.now();
@@ -681,10 +681,10 @@ describe('💼 Job Matrix & Functional Departments Suite', () => {
       expect(result.integerLeaveDays).toBe(11);
       expect(result.fractionalDay).toBe(0.25);
       expect(result.periods).toHaveLength(2);
-      expect(result.periods[0].daysCount).toBe(15);
-      expect(result.periods[0].earnedRestDays).toBe(7.5);
-      expect(result.periods[1].daysCount).toBe(15);
-      expect(result.periods[1].earnedRestDays).toBe(3.75);
+      expect(result.periods[0]?.daysCount).toBe(15);
+      expect(result.periods[0]?.earnedRestDays).toBe(7.5);
+      expect(result.periods[1]?.daysCount).toBe(15);
+      expect(result.periods[1]?.earnedRestDays).toBe(3.75);
       expect(result.summaryArabic).toContain('11.25 يوم راحة');
     });
   });

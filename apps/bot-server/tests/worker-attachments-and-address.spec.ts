@@ -106,8 +106,8 @@ describe('Worker Dedicated Folder Storage & Address Extraction / Editing', () =>
       expect(saved.localFrontPath).toBe('attachments/workers/OP-LAB-0050/OP-LAB-0050_front.jpg');
       expect(saved.localBackPath).toBe('attachments/workers/OP-LAB-0050/OP-LAB-0050_back.jpg');
 
-      const frontFullPath = path.join(process.cwd(), saved.localFrontPath);
-      const backFullPath = path.join(process.cwd(), saved.localBackPath);
+      const frontFullPath = path.join(process.cwd(), saved.localFrontPath!);
+      const backFullPath = path.join(process.cwd(), saved.localBackPath!);
 
       expect(fs.existsSync(frontFullPath)).toBe(true);
       expect(fs.existsSync(backFullPath)).toBe(true);

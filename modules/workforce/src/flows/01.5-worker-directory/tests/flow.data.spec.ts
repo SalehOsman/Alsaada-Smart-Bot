@@ -83,7 +83,7 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const { WorkerDirectoryKeyboards } = await import('../flow.keyboard.js');
     const kb = WorkerDirectoryKeyboards.profile360ActionsKeyboard('wrk-1', 'https://wa.me/2010', true);
     const flat = kb.inline_keyboard.flat();
-    const callBtn = flat.find((b) => b.callback_data === 'action:worker:call:wrk-1');
+    const callBtn = flat.find((b) => 'callback_data' in b && b.callback_data === 'action:worker:call:wrk-1');
     expect(callBtn).toBeDefined();
     expect(callBtn?.text).toContain('اتصال هاتفي مباشر');
   });
@@ -152,7 +152,7 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const flat = kb.inline_keyboard.flat();
     const missingBtn = flat.find((b) => b.text.includes('طلب استكمال النواقص عبر واتساب'));
     expect(missingBtn).toBeDefined();
-    expect(missingBtn?.callback_data).toBe('action:worker:mwa:wrk-inc');
+    expect(missingBtn && 'callback_data' in missingBtn ? missingBtn.callback_data : undefined).toBe('action:worker:mwa:wrk-inc');
   });
 
   it('should evaluate 100% complete profile without missing data button', async () => {

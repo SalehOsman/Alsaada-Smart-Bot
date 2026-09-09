@@ -66,7 +66,7 @@ export class WorkerRegistrationService {
   validateId(
     idType: 'NATIONAL_ID' | 'PASSPORT',
     rawId: string,
-    extra?: { birthDate?: Date; gender?: 'MALE' | 'FEMALE' }
+    extra?: { birthDate?: Date | undefined; gender?: 'MALE' | 'FEMALE' | undefined }
   ): WorkerValidationResult {
     return validateWorkerIdentification(idType, rawId, extra);
   }
@@ -84,12 +84,12 @@ export class WorkerRegistrationService {
     name: string;
     code: string;
     jobTitle: string;
-    siteName?: string;
-    hireDate?: Date | string;
-    shiftSystem?: string;
-    payoutMethod?: string;
-    walletType?: string;
-    accountNumber?: string;
+    siteName?: string | undefined;
+    hireDate?: Date | string | undefined;
+    shiftSystem?: string | undefined;
+    payoutMethod?: string | undefined;
+    walletType?: string | undefined;
+    accountNumber?: string | undefined;
     phone: string;
   }): string {
     const intlPhone = normalizeEgyptianPhone(data.phone) || data.phone.replace(/\D/g, '');
@@ -134,6 +134,18 @@ export class WorkerRegistrationService {
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `🔗 *رابط الانضمام والتفعيل المباشر بالبوت:*\n` +
       `${botLink}\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `✨ *أبرز خدمات ومميزات البوت للعامل:*\n` +
+      `• 🔔 إشعارات لحظية بكل حركة مالية (سلف، مسحوبات، حوافز، مكافآت).\n` +
+      `• 💵 استعراض مفردات وقسيمة راتبك الشهري فور اعتمادها.\n` +
+      `• 🌴 تقديم طلبات الإجازات ومتابعة رصيدك واستحقاقاتك.\n` +
+      `• 📝 تقديم طلبات السلف وتحديث بيانات المحفظة الإلكترونية.\n` +
+      `• 🛡️ متابعة مهمات الوقاية الشخصية (PPE) والتظلمات الميدانية.\n` +
+      `• 🪪 بطاقة الهوية الرقمية وكارت العمل الميداني المعتمد.\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚡ *خطوات التفعيل السريعة:*\n` +
+      `1️⃣ اضغط على الرابط أعلاه ثم اضغط على زر *Start (ابدأ)*.\n` +
+      `2️⃣ اضغط زر *(⚡ تأكيد وربط حسابي فوراً)* لتفعيل خدماتك مباشرة دون كتابة أي بيانات.\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `_مع تمنياتنا لك بدوام التوفيق والنجاح والسلامة في مواقع شركة السعادة._`;
 

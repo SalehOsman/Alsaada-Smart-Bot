@@ -14,7 +14,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.length).toBe(5);
     expect(buttons.some(b => b.callback_data === 'menu:domain:hr')).toBe(true);
@@ -34,7 +34,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.some(b => b.callback_data === 'menu:exec:dashboard')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:exec:liquidity')).toBe(true);
@@ -49,7 +49,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.length).toBe(5);
     expect(buttons.some(b => b.callback_data === 'menu:domain:hr')).toBe(true);
@@ -71,7 +71,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.some(b => b.callback_data === 'action:switch_identity:field_admin')).toBe(true);
   });
@@ -84,7 +84,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.some(b => b.callback_data === 'menu:worker:statement')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:worker:payslip')).toBe(true);
@@ -99,7 +99,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.some(b => b.callback_data === 'menu:supplier:invoices')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:supplier:payments')).toBe(true);
@@ -113,7 +113,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.some(b => b.callback_data === 'menu:guest:register')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'menu:guest:guide')).toBe(true);
@@ -128,7 +128,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     // Worker buttons should be present
     expect(buttons.some(b => b.callback_data === 'menu:worker:statement')).toBe(true);
@@ -146,7 +146,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     } as unknown as MyContext;
 
     const keyboard = buildMainMenuKeyboard(mockCtx);
-    const buttons = keyboard.inline_keyboard.flat();
+    const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
@@ -192,7 +192,7 @@ describe('Persistent Bottom Reply Keyboard', () => {
   it('should build persistent reply keyboard for SUPER_ADMIN with home and system settings only', () => {
     const mockCtx = { effectiveRole: 'SUPER_ADMIN' } as MyContext;
     const kb = buildPersistentReplyKeyboard(mockCtx);
-    const buttons = kb.keyboard.flat();
+    const buttons = kb.keyboard.flat() as Array<{ text: string }>;
     expect(buttons.length).toBe(2);
     expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
     expect(buttons.some(b => b.text === '⚙️ إعدادات النظام')).toBe(true);
@@ -204,7 +204,7 @@ describe('Persistent Bottom Reply Keyboard', () => {
   it('should build persistent reply keyboard for FIELD_ADMIN with worker switch button', () => {
     const mockCtx = { effectiveRole: 'FIELD_ADMIN' } as MyContext;
     const kb = buildPersistentReplyKeyboard(mockCtx);
-    const buttons = kb.keyboard.flat();
+    const buttons = kb.keyboard.flat() as Array<{ text: string }>;
     expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
     expect(buttons.some(b => b.text === '👷 التبديل لحسابي كعامل')).toBe(true);
     expect(buttons.some(b => b.text === '👤 ملفي وإعداداتي')).toBe(true);
@@ -213,7 +213,7 @@ describe('Persistent Bottom Reply Keyboard', () => {
   it('should build persistent reply keyboard for WORKER in dual mode with supervisor return button', () => {
     const mockCtx = { effectiveRole: 'WORKER', isDualWorkerMode: true } as MyContext;
     const kb = buildPersistentReplyKeyboard(mockCtx);
-    const buttons = kb.keyboard.flat();
+    const buttons = kb.keyboard.flat() as Array<{ text: string }>;
     expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
     expect(buttons.some(b => b.text === '🛡️ العودة لبوابة الإشراف')).toBe(true);
   });
@@ -221,7 +221,7 @@ describe('Persistent Bottom Reply Keyboard', () => {
   it('should build persistent reply keyboard for regular WORKER with statement and payslip', () => {
     const mockCtx = { effectiveRole: 'WORKER', isDualWorkerMode: false } as MyContext;
     const kb = buildPersistentReplyKeyboard(mockCtx);
-    const buttons = kb.keyboard.flat();
+    const buttons = kb.keyboard.flat() as Array<{ text: string }>;
     expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
     expect(buttons.some(b => b.text === '📊 كشف حسابي')).toBe(true);
     expect(buttons.some(b => b.text === '🧾 قسيمة راتبي')).toBe(true);
@@ -230,7 +230,7 @@ describe('Persistent Bottom Reply Keyboard', () => {
   it('should NOT include /cancel button on persistent reply keyboard', () => {
     const mockCtx = { effectiveRole: 'SUPER_ADMIN' } as MyContext;
     const kb = buildPersistentReplyKeyboard(mockCtx);
-    const buttons = kb.keyboard.flat();
+    const buttons = kb.keyboard.flat() as Array<{ text: string }>;
     expect(buttons.some(b => b.text.includes('إلغاء') || b.text.includes('cancel'))).toBe(false);
   });
 });

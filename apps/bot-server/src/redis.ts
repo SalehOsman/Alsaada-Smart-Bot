@@ -269,20 +269,20 @@ export interface PendingJobMatrixAction {
     | 'edit_job_cycle_policy'
     | 'edit_job_cycle_custom_date'
     | 'edit_job_min_headcount';
-  deptCode?: string;
-  jobCode?: string;
+  deptCode?: string | undefined;
+  jobCode?: string | undefined;
   draft?: {
-    deptCode?: string;
-    deptName?: string;
-    jobCode?: string;
-    jobTitle?: string;
-    baseSalary?: number;
-    additionalSalary?: number;
-    workDays?: number;
-    restDays?: number;
-    minHeadcount?: number;
-  };
-  messageId?: number;
+    deptCode?: string | undefined;
+    deptName?: string | undefined;
+    jobCode?: string | undefined;
+    jobTitle?: string | undefined;
+    baseSalary?: number | undefined;
+    additionalSalary?: number | undefined;
+    workDays?: number | undefined;
+    restDays?: number | undefined;
+    minHeadcount?: number | undefined;
+  } | undefined;
+  messageId?: number | undefined;
 }
 
 export async function setPendingJobMatrixAction(

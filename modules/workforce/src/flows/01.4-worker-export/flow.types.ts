@@ -2,9 +2,9 @@ export type WorkerExportFilterType = 'ALL' | 'DEPARTMENT' | 'JOB_TITLE' | 'GOVER
 
 export interface WorkerExportFilter {
   type: WorkerExportFilterType;
-  departmentId?: string;
-  jobTitleId?: string;
-  governorateCode?: string;
+  departmentId?: string | undefined;
+  jobTitleId?: string | undefined;
+  governorateCode?: string | undefined;
 }
 
 export interface WorkerExportResult {
@@ -17,26 +17,26 @@ export interface WorkerExportResult {
 export interface WorkerRowData {
   rowNumber: number;
   fullName: string;
-  nickname?: string;
-  legacyCode?: string;
+  nickname?: string | undefined;
+  legacyCode?: string | undefined;
   idType: 'NATIONAL_ID' | 'PASSPORT';
   idNumber: string;
   nationality: string;
-  birthDate?: Date;
-  gender?: 'MALE' | 'FEMALE';
+  birthDate?: Date | undefined;
+  gender?: 'MALE' | 'FEMALE' | undefined;
   phone: string;
   jobCode: string;
   siteCode: string;
-  hireDate?: Date;
+  hireDate?: Date | undefined;
   paymentMethod: string;
-  walletType?: string;
-  accountNumber?: string;
-  drivingLicense?: string;
-  militaryStatus?: string;
-  emergencyPhone?: string;
-  previousInsuranceStatus?: string;
-  maritalStatus?: string;
-  notes?: string;
+  walletType?: string | undefined;
+  accountNumber?: string | undefined;
+  drivingLicense?: string | undefined;
+  militaryStatus?: string | undefined;
+  emergencyPhone?: string | undefined;
+  previousInsuranceStatus?: string | undefined;
+  maritalStatus?: string | undefined;
+  notes?: string | undefined;
 }
 
 export interface WorkerImportResult {
@@ -44,7 +44,7 @@ export interface WorkerImportResult {
   totalRowsProcessed: number;
   workersCreated: number;
   errors: string[];
-  createdWorkers?: Array<{ code: string; name: string }>;
+  createdWorkers?: Array<{ code: string; name: string }> | undefined;
 }
 
 export interface DepartmentSummary {

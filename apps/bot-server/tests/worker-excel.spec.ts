@@ -190,16 +190,16 @@ describe('Worker Excel Service — Template Generation & Bulk Import', () => {
     await workbook.xlsx.load(buffer as any);
 
     expect(workbook.worksheets.length).toBe(2);
-    expect(workbook.worksheets[0].name).toBe('بيانات العمال الجدد');
-    expect(workbook.worksheets[1].name).toBe('دليل الأكواد المعتمدة');
+    expect(workbook.worksheets[0]?.name).toBe('بيانات العمال الجدد');
+    expect(workbook.worksheets[1]?.name).toBe('دليل الأكواد المعتمدة');
 
-    const sheet1 = workbook.worksheets[0];
+    const sheet1 = workbook.worksheets[0]!;
     const headerRow = sheet1.getRow(1);
     expect(headerRow.getCell(1).text).toContain('الاسم الرباعي');
     expect(headerRow.getCell(3).text).toContain('كود العامل القديم');
     expect(headerRow.getCell(4).text).toContain('نوع الإثبات');
 
-    const sheet2 = workbook.worksheets[1];
+    const sheet2 = workbook.worksheets[1]!;
     expect(sheet2.rowCount).toBeGreaterThan(1);
   });
 

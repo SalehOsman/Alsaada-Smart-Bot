@@ -44,29 +44,29 @@ export function verifyTelegramContracts(root: string = process.cwd()): Verificat
 
       // 1. Check callback_data literals: e.g. 'action:...', callbackData: '...'
       const callbackMatches = lineText.matchAll(/['](action:[^']+|wizard:[^']+|menu:[^']+)[']/g);
- for (const match of callbackMatches) {
- const raw = match[1];
- // Calculate effective length assuming sample 36-character UUID if template is used
- const sampleResolved = raw.replace(/\$\{[^}]+\}/g, '12345678-1234-1234-1234-123456789abc');
- const byteLen = Buffer.byteLength(sampleResolved, 'utf8');
- result.checked += 1;
- if (byteLen > MAX_TELEGRAM_CALLBACK_BYTES) {
- violations.push({
- file: relativePath,
- line: lineNum,
- type: 'CALLBACK_OVERFLOW',
- detail: sampleResolved,
- byteLength: byteLen,
- maxAllowed: MAX_TELEGRAM_CALLBACK_BYTES,
- });
- }
- }
+      for (const match of callbackMatches) {
+        const raw = match[1] ?? '';
+        // Calculate effective length assuming sample 36-character UUID if template is used
+        const sampleResolved = raw.replace(/\$\{[^}]+\}/g, '12345678-1234-1234-1234-123456789abc');
+        const byteLen = Buffer.byteLength(sampleResolved, 'utf8');
+        result.checked += 1;
+        if (byteLen > MAX_TELEGRAM_CALLBACK_BYTES) {
+          violations.push({
+            file: relativePath,
+            line: lineNum,
+            type: 'CALLBACK_OVERFLOW',
+            detail: sampleResolved,
+            byteLength: byteLen,
+            maxAllowed: MAX_TELEGRAM_CALLBACK_BYTES,
+          });
+        }
+      }
 
- // 2. Check URL buttons: e.g. .url('...', 'https://...')
- const urlMatches = lineText.matchAll(/\.url\(\s*['][^']+[']\s*,\s*[']([^']+)[']\s*\)/g);
- for (const match of urlMatches) {
- const urlStr = match[1];
- result.checked += 1;
+      // 2. Check URL buttons: e.g. .url('...', 'https://...')
+      const urlMatches = lineText.matchAll(/\.url\(\s*['][^']+[']\s*,\s*[']([^']+)[']\s*\)/g);
+      for (const match of urlMatches) {
+        const urlStr = match[1] ?? '';
+        result.checked += 1;
 
         if (urlStr.startsWith('tel:')) {
           violations.push({

@@ -150,7 +150,7 @@ describe('⚡ FastCacheService & SystemDataService Architecture', () => {
     it('should retrieve sites from SystemDataService and cache in L1', async () => {
       const sites1 = await systemDataService.getSites();
       expect(sites1).toHaveLength(1);
-      expect(sites1[0].code).toBe('STE-01');
+      expect(sites1[0]?.code).toBe('STE-01');
 
       const sites2 = await systemDataService.getSites();
       expect(sites2).toBe(sites1); // Exact reference from L1 RAM (< 0.1ms)

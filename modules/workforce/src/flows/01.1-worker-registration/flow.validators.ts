@@ -6,7 +6,7 @@ import type { WorkerValidationResult } from './flow.types.js';
 export function validateWorkerIdentification(
   idType: 'NATIONAL_ID' | 'PASSPORT',
   rawId: string,
-  extra?: { birthDate?: Date; gender?: 'MALE' | 'FEMALE' }
+  extra?: { birthDate?: Date | undefined; gender?: 'MALE' | 'FEMALE' | undefined }
 ): WorkerValidationResult {
   if (!rawId || !rawId.trim()) {
     return { isValid: false, error: 'رقم الإثبات مطلوب ولا يمكن تركه فارغاً.' };

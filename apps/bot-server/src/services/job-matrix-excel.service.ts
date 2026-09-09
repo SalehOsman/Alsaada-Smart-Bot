@@ -13,7 +13,7 @@ export interface ParsedJobRow {
   restDays: number;
   shiftNature: string;
   minHeadcount: number;
-  notes?: string;
+  notes?: string | undefined;
   rowNumber: number;
 }
 
@@ -401,7 +401,7 @@ export class JobMatrixExcelService {
               totalCycleDays,
               shiftNature: r.shiftNature,
               minHeadcount: r.minHeadcount,
-              notes: r.notes,
+              notes: r.notes ?? null,
               isActive: true,
             },
           });
@@ -420,7 +420,7 @@ export class JobMatrixExcelService {
               totalCycleDays,
               shiftNature: r.shiftNature,
               minHeadcount: r.minHeadcount,
-              notes: r.notes,
+              notes: r.notes ?? null,
               isActive: true,
             },
           });

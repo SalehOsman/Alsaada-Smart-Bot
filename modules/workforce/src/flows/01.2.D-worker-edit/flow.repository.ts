@@ -136,7 +136,7 @@ export class WorkerEditRepository {
         status,
         reviewedByAdminId,
         reviewedAt: new Date(),
-        reviewNotes,
+        reviewNotes: reviewNotes ?? null,
       },
     });
   }

@@ -9,15 +9,15 @@ export interface AiVisionScanResult {
   isValid: boolean;
   detectedDocType: DocTypeEnum;
   isQualityAcceptable: boolean;
-  nationalIdNumber?: string;
-  passportNumber?: string;
-  expiryDateStr?: string; // YYYY-MM-DD
-  fullName?: string;
-  address?: string; // محل الإقامة / العنوان الكامل
-  birthDate?: Date;
-  gender?: 'MALE' | 'FEMALE';
-  governorateNameAr?: string;
-  userErrorMessage?: string;
+  nationalIdNumber?: string | undefined;
+  passportNumber?: string | undefined;
+  expiryDateStr?: string | undefined; // YYYY-MM-DD
+  fullName?: string | undefined;
+  address?: string | undefined; // محل الإقامة / العنوان الكامل
+  birthDate?: Date | undefined;
+  gender?: 'MALE' | 'FEMALE' | undefined;
+  governorateNameAr?: string | undefined;
+  userErrorMessage?: string | undefined;
   rawJson?: any;
 }
 

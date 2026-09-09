@@ -6,9 +6,9 @@ import { formatDate } from '@alsaada/regional-engine';
 import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 import { buildMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
-import { syncUserCommandsScope } from '../services/command-scope.service.js';
 import { screenFlowService } from '../services/screen-flow.service.js';
-import { verifyWorkerInviteToken } from '../services/worker.service.js';
+import { verifyWorkerInviteToken } from '@alsaada/workforce';
+import { syncUserCommandsScope } from '../services/command-scope.service.js';
 
 export function getRoleTitle(role: string): string {
   switch (role) {

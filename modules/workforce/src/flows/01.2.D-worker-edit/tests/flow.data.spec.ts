@@ -41,14 +41,15 @@ describe('Flow 01.2.D Data Tests — Sensitive Fields Encryption & Blind Indexin
     const newPhone = '01122334455';
     await service.applyDirectEdit('wrk-1', 'phone', newPhone);
 
-    expect(capturedData).not.toBeNull();
-    if (!capturedData) return;
+    const resultData = capturedData as { phoneEncrypted?: string; phoneBlindIndex?: string } | null;
+    expect(resultData).not.toBeNull();
+    if (!resultData) return;
 
-    expect(capturedData.phoneEncrypted).toBeDefined();
-    expect(capturedData.phoneEncrypted).not.toBe(newPhone);
-    expect(capturedData.phoneBlindIndex).toBeDefined();
+    expect(resultData.phoneEncrypted).toBeDefined();
+    expect(resultData.phoneEncrypted).not.toBe(newPhone);
+    expect(resultData.phoneBlindIndex).toBeDefined();
 
-    const decrypted = decryptField(capturedData.phoneEncrypted!, encryptionKey);
+    const decrypted = decryptField(resultData.phoneEncrypted!, encryptionKey);
     expect(decrypted).toBe(newPhone);
   });
 });

@@ -75,23 +75,29 @@ describe('Flow 01.1 Data Tests — PII Encryption, Blind Indexing & Standard Dat
       jobTitleName: 'سائق',
     });
 
-    expect(capturedPayload).not.toBeNull();
-    if (!capturedPayload) return;
+    const resultPayload = capturedPayload as {
+      phoneEncrypted: string;
+      phoneBlindIndex: string;
+      nationalIdEncrypted: string | null;
+      nationalIdBlindIndex: string | null;
+    } | null;
+    expect(resultPayload).not.toBeNull();
+    if (!resultPayload) return;
 
     // Verify values are not plain text
-    expect(capturedPayload.phoneEncrypted).not.toBe(originalPhone);
-    expect(capturedPayload.nationalIdEncrypted).not.toBe(originalNatId);
+    expect(resultPayload.phoneEncrypted).not.toBe(originalPhone);
+    expect(resultPayload.nationalIdEncrypted).not.toBe(originalNatId);
 
     // Verify blind indexes are populated
-    expect(capturedPayload.phoneBlindIndex).toBeDefined();
-    expect(capturedPayload.nationalIdBlindIndex).toBeDefined();
+    expect(resultPayload.phoneBlindIndex).toBeDefined();
+    expect(resultPayload.nationalIdBlindIndex).toBeDefined();
 
     // Verify decryption recovers original values
-    const decryptedPhone = decryptField(capturedPayload.phoneEncrypted, encryptionKey);
+    const decryptedPhone = decryptField(resultPayload.phoneEncrypted, encryptionKey);
     expect(decryptedPhone).toBe(originalPhone);
 
-    if (capturedPayload.nationalIdEncrypted) {
-      const decryptedNatId = decryptField(capturedPayload.nationalIdEncrypted, encryptionKey);
+    if (resultPayload.nationalIdEncrypted) {
+      const decryptedNatId = decryptField(resultPayload.nationalIdEncrypted, encryptionKey);
       expect(decryptedNatId).toBe(originalNatId);
     }
   });

@@ -156,15 +156,15 @@ describe('Flow 01.2.D Integration Tests — Super Admin Direct Edit & Ticket Gov
     const service = new WorkerEditService(repo);
 
     await service.applyDirectEdit('wrk-1', 'insuranceNumber', '12345678');
-    expect(capturedUpdate.insuranceNumber).toBe('12345678');
+    expect((capturedUpdate as Record<string, unknown> | null)?.insuranceNumber).toBe('12345678');
 
     await service.applyDirectEdit('wrk-1', 'insuranceStatus', 'مؤمن عليه');
-    expect(capturedUpdate.insuranceStatus).toBe('مؤمن عليه');
+    expect((capturedUpdate as Record<string, unknown> | null)?.insuranceStatus).toBe('مؤمن عليه');
 
     await service.applyDirectEdit('wrk-1', 'dailyWage', '350');
-    expect(String(capturedUpdate.dailyWage)).toBe('350');
+    expect(String((capturedUpdate as Record<string, unknown> | null)?.dailyWage)).toBe('350');
 
     await service.applyDirectEdit('wrk-1', 'ppeShoeSize', '43');
-    expect(capturedUpdate.ppeShoeSize).toBe('43');
+    expect((capturedUpdate as Record<string, unknown> | null)?.ppeShoeSize).toBe('43');
   });
 });

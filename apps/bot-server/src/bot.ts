@@ -317,7 +317,7 @@ export function createBot(): Bot<MyContext> {
     await renderCompanyProfileCard(ctx, true);
   });
   bot.callbackQuery(/^action:edit_comp:(.+)$/, async (ctx) => {
-    const fieldKey = ctx.match[1];
+    const fieldKey = ctx.match[1]!;
     await handleStartEditCompanyField(ctx, fieldKey);
   });
 
@@ -326,45 +326,45 @@ export function createBot(): Bot<MyContext> {
     await renderSitesHub(ctx, true);
   });
   bot.callbackQuery(/^action:site:view:(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1];
+    const siteCode = ctx.match[1]!;
     await renderSiteDetail(ctx, siteCode, true);
   });
   bot.callbackQuery(/^action:site:toggle:(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1];
+    const siteCode = ctx.match[1]!;
     await handleToggleSiteStatus(ctx, siteCode);
   });
   bot.callbackQuery('action:site:add_new', handleStartAddSite);
   bot.callbackQuery(/^action:site:edit:(.+):(.+)$/, async (ctx) => {
-    const fieldKey = ctx.match[1];
-    const siteCode = ctx.match[2];
+    const fieldKey = ctx.match[1]!;
+    const siteCode = ctx.match[2]!;
     await handleStartEditSiteField(ctx, fieldKey, siteCode);
   });
   bot.callbackQuery(/^action:site:set_geo(?:fence)?:(.+):(\d+)$/, async (ctx) => {
-    const siteCode = ctx.match[1];
-    const radius = parseInt(ctx.match[2], 10);
+    const siteCode = ctx.match[1]!;
+    const radius = parseInt(ctx.match[2]!, 10);
     await handleSetSiteGeofence(ctx, siteCode, radius);
   });
   bot.callbackQuery(/^action:site:confirm_code:(.+)$/, async (ctx) => {
-    const confirmedCode = ctx.match[1];
+    const confirmedCode = ctx.match[1]!;
     await handleConfirmSiteCode(ctx, confirmedCode);
   });
   bot.callbackQuery(/^action:site:edit_menu:(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1];
+    const siteCode = ctx.match[1]!;
     await renderSiteEditMenu(ctx, siteCode, true);
   });
   bot.callbackQuery(/^action:site:sp:(.+):(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1];
-    const projectRef = ctx.match[2];
+    const siteCode = ctx.match[1]!;
+    const projectRef = ctx.match[2]!;
     await handleSelectSiteProject(ctx, siteCode, projectRef);
   });
   bot.callbackQuery(/^action:site:set_project:(.+):(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1];
-    const projectRef = ctx.match[2];
+    const siteCode = ctx.match[1]!;
+    const projectRef = ctx.match[2]!;
     await handleSelectSiteProject(ctx, siteCode, projectRef);
   });
   bot.callbackQuery(/^action:site:set_gov:(.+):(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1];
-    const govName = ctx.match[2];
+    const siteCode = ctx.match[1]!;
+    const govName = ctx.match[2]!;
     await handleSelectSiteGov(ctx, siteCode, govName);
   });
 
@@ -378,7 +378,7 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery('action:switch_identity:worker', handleSwitchToWorker);
   bot.callbackQuery('action:switch_identity:field_admin', handleSwitchToFieldAdmin);
   bot.callbackQuery(/^action:edit_admin:(.+)$/, async (ctx) => {
-    const fieldKey = ctx.match[1];
+    const fieldKey = ctx.match[1]!;
     await handleStartEditAdminField(ctx, fieldKey);
   });
 
@@ -388,12 +388,12 @@ export function createBot(): Bot<MyContext> {
     await renderAdminAssignmentsHub(ctx, true);
   });
   bot.callbackQuery(/^action:admin_assign:user:(\d+)$/, async (ctx) => {
-    const targetTelegramId = BigInt(ctx.match[1]);
+    const targetTelegramId = BigInt(ctx.match[1]!);
     await renderUserAssignmentCard(ctx, targetTelegramId, true);
   });
   bot.callbackQuery(/^action:admin_assign:set:(\d+):(.+)$/, async (ctx) => {
-    const targetTelegramId = BigInt(ctx.match[1]);
-    const siteIdOrGlobal = ctx.match[2];
+    const targetTelegramId = BigInt(ctx.match[1]!);
+    const siteIdOrGlobal = ctx.match[2]!;
     await handleSetUserSiteAssignment(ctx, targetTelegramId, siteIdOrGlobal);
   });
 
@@ -404,7 +404,7 @@ export function createBot(): Bot<MyContext> {
 
   // 12. Dynamic Impersonation Callbacks (Regex)
   bot.callbackQuery(/^action:impersonate:(.+)$/, async (ctx) => {
-    const role = ctx.match[1];
+    const role = ctx.match[1]!;
     await handleImpersonateRole(ctx, role);
   });
 
@@ -416,76 +416,76 @@ export function createBot(): Bot<MyContext> {
   bot.callbackQuery('action:dept:upload_excel', handleStartUploadExcel);
   bot.callbackQuery('action:dept:add', handleStartAddDepartment);
   bot.callbackQuery(/^action:dept:view:(.+)$/, async (ctx) => {
-    await renderDepartmentDetail(ctx, ctx.match[1], true);
+    await renderDepartmentDetail(ctx, ctx.match[1]!, true);
   });
   bot.callbackQuery(/^action:dept:edit_name:(.+)$/, async (ctx) => {
-    await handleStartEditDeptName(ctx, ctx.match[1]);
+    await handleStartEditDeptName(ctx, ctx.match[1]!);
   });
   bot.callbackQuery(/^action:dept:edit_code:(.+)$/, async (ctx) => {
-    await handleStartEditDeptCode(ctx, ctx.match[1]);
+    await handleStartEditDeptCode(ctx, ctx.match[1]!);
   });
   bot.callbackQuery(/^action:dept:toggle_active:(.+)$/, async (ctx) => {
-    await handleToggleDeptActive(ctx, ctx.match[1]);
+    await handleToggleDeptActive(ctx, ctx.match[1]!);
   });
   bot.callbackQuery(/^action:dept:delete_prompt:(.+)$/, async (ctx) => {
-    await handlePromptDeleteDept(ctx, ctx.match[1]);
+    await handlePromptDeleteDept(ctx, ctx.match[1]!);
   });
   bot.callbackQuery(/^action:dept:delete_confirm:(.+)$/, async (ctx) => {
-    await handleConfirmDeleteDept(ctx, ctx.match[1]);
+    await handleConfirmDeleteDept(ctx, ctx.match[1]!);
   });
   bot.callbackQuery(/^action:job:add:(.+)$/, async (ctx) => {
-    await handleStartAddJob(ctx, ctx.match[1]);
+    await handleStartAddJob(ctx, ctx.match[1]!);
   });
   bot.callbackQuery(/^action:job:edit_code:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobCode(ctx, ctx.match[1], ctx.match[2]);
+    await handleStartEditJobCode(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:toggle_active:(.+):(.+)$/, async (ctx) => {
-    await handleToggleJobActive(ctx, ctx.match[1], ctx.match[2]);
+    await handleToggleJobActive(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:delete_prompt:(.+):(.+)$/, async (ctx) => {
-    await handlePromptDeleteJob(ctx, ctx.match[1], ctx.match[2]);
+    await handlePromptDeleteJob(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:delete_confirm:(.+):(.+)$/, async (ctx) => {
-    await handleConfirmDeleteJob(ctx, ctx.match[1], ctx.match[2]);
+    await handleConfirmDeleteJob(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:view:(.+):(.+)$/, async (ctx) => {
-    await renderJobDetail(ctx, ctx.match[1], ctx.match[2], true);
+    await renderJobDetail(ctx, ctx.match[1]!, ctx.match[2]!, true);
   });
   bot.callbackQuery(/^action:job:headcount:(.+):(.+):(inc|dec)$/, async (ctx) => {
-    await handleJobHeadcountDelta(ctx, ctx.match[1], ctx.match[2], ctx.match[3] as 'inc' | 'dec');
+    await handleJobHeadcountDelta(ctx, ctx.match[1]!, ctx.match[2]!, ctx.match[3] as 'inc' | 'dec');
   });
   bot.callbackQuery(/^action:job:toggle_cycle:(.+):(.+)$/, async (ctx) => {
-    await handleJobToggleCycle(ctx, ctx.match[1], ctx.match[2]);
+    await handleJobToggleCycle(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:edit_salary:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobSalary(ctx, ctx.match[1], ctx.match[2]);
+    await handleStartEditJobSalary(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:edit_title:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobTitle(ctx, ctx.match[1], ctx.match[2]);
+    await handleStartEditJobTitle(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:edit_cycle:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobCycle(ctx, ctx.match[1], ctx.match[2]);
+    await handleStartEditJobCycle(ctx, ctx.match[1]!, ctx.match[2]!);
   });
   bot.callbackQuery(/^action:job:quick_preset:(.+):(.+):(\d+):(\d+)$/, async (ctx) => {
     await handleQuickPresetCycle(
       ctx,
-      ctx.match[1],
-      ctx.match[2],
-      parseInt(ctx.match[3], 10),
-      parseInt(ctx.match[4], 10)
+      ctx.match[1]!,
+      ctx.match[2]!,
+      parseInt(ctx.match[3]!, 10),
+      parseInt(ctx.match[4]!, 10)
     );
   });
   bot.callbackQuery(/^action:job:set_wd:(.+):(.+):(\d+)$/, async (ctx) => {
-    await handleSetWorkDays(ctx, ctx.match[1], ctx.match[2], parseInt(ctx.match[3], 10));
+    await handleSetWorkDays(ctx, ctx.match[1]!, ctx.match[2]!, parseInt(ctx.match[3]!, 10));
   });
   bot.callbackQuery(/^action:job:set_rd:(.+):(.+):(\d+)$/, async (ctx) => {
-    await handleSetRestDays(ctx, ctx.match[1], ctx.match[2], parseInt(ctx.match[3], 10));
+    await handleSetRestDays(ctx, ctx.match[1]!, ctx.match[2]!, parseInt(ctx.match[3]!, 10));
   });
   bot.callbackQuery(/^action:job:apply_policy:(.+):(.+):(.+)$/, async (ctx) => {
-    await handleApplyCyclePolicy(ctx, ctx.match[1], ctx.match[2], ctx.match[3] as any);
+    await handleApplyCyclePolicy(ctx, ctx.match[1]!, ctx.match[2]!, ctx.match[3] as any);
   });
   bot.callbackQuery(/^action:job:prompt_custom_date:(.+):(.+)$/, async (ctx) => {
-    await handlePromptCustomDate(ctx, ctx.match[1], ctx.match[2]);
+    await handlePromptCustomDate(ctx, ctx.match[1]!, ctx.match[2]!);
   });
 
   // 14. HR & Workforce Management Callbacks
@@ -494,7 +494,7 @@ export function createBot(): Bot<MyContext> {
     await renderHrHub(ctx, inPlace);
   });
   bot.callbackQuery(/^menu:hr_sub:(.+)$/, async (ctx) => {
-    const subKey = ctx.match[1];
+    const subKey = ctx.match[1]!;
     const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
     await renderHrSubHub(ctx, subKey, inPlace);
   });

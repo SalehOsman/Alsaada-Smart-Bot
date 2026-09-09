@@ -51,7 +51,7 @@ export class SystemDataService {
     let maxSeq = 0;
     for (const s of sites) {
       const match = s.code.match(/^STE-(\d+)$/i);
-      if (match) {
+      if (match && match[1]) {
         const num = parseInt(match[1], 10);
         if (!isNaN(num) && num > maxSeq) {
           maxSeq = num;
@@ -119,12 +119,11 @@ export class SystemDataService {
     return fastCache.rememberSWR(cacheKey, 600, async () => {
       if (!prisma?.department?.findMany) return [];
       return prisma.department.findMany({
-        where: includeInactive ? undefined : { isActive: true },
+        ...(includeInactive ? {} : { where: { isActive: true } }),
         include: {
-          jobs: {
-            where: includeInactive ? undefined : { isActive: true },
-            orderBy: [{ order: 'asc' }, { name: 'asc' }],
-          },
+          jobs: includeInactive
+            ? { orderBy: [{ order: 'asc' }, { name: 'asc' }] }
+            : { where: { isActive: true }, orderBy: [{ order: 'asc' }, { name: 'asc' }] },
         },
         orderBy: [{ order: 'asc' }, { name: 'asc' }],
       });
@@ -140,10 +139,9 @@ export class SystemDataService {
       return prisma.department.findUnique({
         where: { code },
         include: {
-          jobs: {
-            where: includeInactive ? undefined : { isActive: true },
-            orderBy: [{ order: 'asc' }, { name: 'asc' }],
-          },
+          jobs: includeInactive
+            ? { orderBy: [{ order: 'asc' }, { name: 'asc' }] }
+            : { where: { isActive: true }, orderBy: [{ order: 'asc' }, { name: 'asc' }] },
         },
       });
     });

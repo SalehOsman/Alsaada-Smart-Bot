@@ -74,8 +74,8 @@ export class CycleTransitionService {
         newRatio: newRatio,
         transitionPolicy: params.policy,
         effectiveDate,
-        appliedByAdminId: params.appliedByAdminId,
-        notes: params.notes,
+        appliedByAdminId: params.appliedByAdminId ?? null,
+        notes: params.notes ?? null,
       },
     });
 
@@ -196,7 +196,7 @@ export class CycleTransitionService {
     let totalEarned = 0;
 
     for (let i = 0; i < relevantTransitions.length; i++) {
-      const transition = relevantTransitions[i];
+      const transition = relevantTransitions[i]!;
       const transDate = new Date(transition.effDate);
 
       // الفترة السابقة لتاريخ هذا الانتقال (تأخذ النسبة السابقة)
@@ -227,7 +227,7 @@ export class CycleTransitionService {
 
     // الفترة المتبقية حتى نهاية النطاق الزمني (تأخذ النسبة الأحدث)
     if (currentStart <= end) {
-      const lastTrans = relevantTransitions[relevantTransitions.length - 1];
+      const lastTrans = relevantTransitions[relevantTransitions.length - 1]!;
       const pDays = Math.round((end.getTime() - currentStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       const pRatio = lastTrans.newRestDays / (lastTrans.newWorkDays || 20);
       const pEarned = Math.round(pDays * pRatio * 100) / 100;

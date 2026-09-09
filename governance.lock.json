@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-09T12:28:31.871Z",
+  "generatedAt": "2026-09-09T13:22:23.070Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -98,7 +98,7 @@
     },
     {
       "path": "tools/governance/verify-telegram-contracts.ts",
-      "sha256": "a828a4735c7e3426018fae38c22e99f3b8161f4b3e5cc581212fa212b80da731"
+      "sha256": "313921dc01513ff1544dea36b221ddfb37b959b28639655e229c510ab4ba89f7"
     }
   ]
 }

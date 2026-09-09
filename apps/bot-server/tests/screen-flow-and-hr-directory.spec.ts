@@ -72,7 +72,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     // الرسالة تبقى في الشات ولا يتم حذفها
     expect(deleteMessageSpy).not.toHaveBeenCalled();
     // تُجرد أزرارها لمنع إعادة النقر
-    expect(editMarkupSpy).toHaveBeenCalledWith(1001, 777, { reply_markup: undefined });
+    expect(editMarkupSpy).toHaveBeenCalledWith(1001, 777, { reply_markup: { inline_keyboard: [] } });
     expect(redisModule.clearUserActiveScreen).toHaveBeenCalledWith(123456n);
   });
 
@@ -145,7 +145,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     expect(check.reason).toBe('message_mismatch');
 
     await service.handleStaleCallback(mockCtx);
-    expect(mockCtx.editMessageReplyMarkup).toHaveBeenCalledWith({ reply_markup: undefined });
+    expect(mockCtx.editMessageReplyMarkup).toHaveBeenCalledWith({ reply_markup: { inline_keyboard: [] } });
     expect(mockCtx.answerCallbackQuery).toHaveBeenCalledWith(
       expect.objectContaining({
         text: expect.stringContaining('هذه الرسالة منتهية الصلاحية'),

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Utility for parsing GPS coordinates from user text input, decimal pairs, or Google Maps URLs.
  */
 
@@ -25,7 +25,7 @@ function extractFromText(text: string): ParsedCoordinates | null {
 
   // 1. Plain comma or space separated: "25.4412, 30.5512" or "25.4412 30.5512"
   const plainMatch = text.match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);
-  if (plainMatch) {
+  if (plainMatch && plainMatch[1] && plainMatch[2]) {
     const lat = parseFloat(plainMatch[1]);
     const lng = parseFloat(plainMatch[2]);
     if (isValidLatLng(lat, lng)) {
@@ -35,7 +35,7 @@ function extractFromText(text: string): ParsedCoordinates | null {
 
   // 2. Google Maps exact place pin: !3d25.336338!4d30.2968969
   const pinMatch = text.match(/!3d(-?\d+(?:\.\d+)?).*?!4d(-?\d+(?:\.\d+)?)/);
-  if (pinMatch) {
+  if (pinMatch && pinMatch[1] && pinMatch[2]) {
     const lat = parseFloat(pinMatch[1]);
     const lng = parseFloat(pinMatch[2]);
     if (isValidLatLng(lat, lng)) {
@@ -45,7 +45,7 @@ function extractFromText(text: string): ParsedCoordinates | null {
 
   // 3. Google Maps URL query pattern: ?q=25.4412,30.5512 or &q=25.4412,30.5512
   const urlQMatch = text.match(/[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
-  if (urlQMatch) {
+  if (urlQMatch && urlQMatch[1] && urlQMatch[2]) {
     const lat = parseFloat(urlQMatch[1]);
     const lng = parseFloat(urlQMatch[2]);
     if (isValidLatLng(lat, lng)) {
@@ -55,7 +55,7 @@ function extractFromText(text: string): ParsedCoordinates | null {
 
   // 4. Google Maps URL path pattern: @25.4412,30.5512,17z
   const urlAtMatch = text.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
-  if (urlAtMatch) {
+  if (urlAtMatch && urlAtMatch[1] && urlAtMatch[2]) {
     const lat = parseFloat(urlAtMatch[1]);
     const lng = parseFloat(urlAtMatch[2]);
     if (isValidLatLng(lat, lng)) {
@@ -65,7 +65,7 @@ function extractFromText(text: string): ParsedCoordinates | null {
 
   // 5. Loose pattern with text before/after: "Location: 25.4412, 30.5512"
   const looseMatch = text.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
-  if (looseMatch) {
+  if (looseMatch && looseMatch[1] && looseMatch[2]) {
     const lat = parseFloat(looseMatch[1]);
     const lng = parseFloat(looseMatch[2]);
     if (isValidLatLng(lat, lng)) {

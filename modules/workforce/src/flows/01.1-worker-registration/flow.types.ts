@@ -34,110 +34,111 @@ export enum WorkerWizardStep {
 
 export interface CreateWorkerInput {
   name: string;
-  nickname?: string;
-  legacyCode?: string;
+  nickname?: string | undefined;
+  legacyCode?: string | undefined;
   idType: 'NATIONAL_ID' | 'PASSPORT';
   idNumber: string;
-  nationality?: string;
-  birthDate?: Date;
-  gender?: 'MALE' | 'FEMALE';
-  governorateCode?: string;
+  nationality?: string | undefined;
+  birthDate?: Date | undefined;
+  gender?: 'MALE' | 'FEMALE' | undefined;
+  governorateCode?: string | undefined;
   phone: string;
-  jobTitleId?: string;
-  jobTitleName: string;
-  departmentId?: string;
-  siteId?: string;
-  siteName?: string;
-  hireDate?: Date;
-  shiftSystem?: string;
-  dailyWage?: number;
-  basicSalary?: number;
-  fixedAllowances?: number;
-  paymentMethod?: string;
-  accountNumber?: string;
-  walletType?: string;
-  emergencyContactName?: string;
-  emergencyPhone?: string;
-  drivingLicense?: string;
-  militaryStatus?: string;
-  maritalStatus?: string;
-  previousInsuranceStatus?: string;
-  idCardFrontPath?: string;
-  idCardBackPath?: string;
-  idCardExpiryDate?: Date;
-  address?: string;
-  notes?: string;
+  jobTitleId?: string | undefined;
+  jobTitleName?: string | undefined;
+  departmentId?: string | undefined;
+  siteId?: string | undefined;
+  siteName?: string | undefined;
+  hireDate?: Date | undefined;
+  shiftSystem?: string | undefined;
+  dailyWage?: number | undefined;
+  basicSalary?: number | undefined;
+  fixedAllowances?: number | undefined;
+  paymentMethod?: string | undefined;
+  accountNumber?: string | undefined;
+  walletType?: string | undefined;
+  walletNumber?: string | undefined;
+  emergencyContactName?: string | undefined;
+  emergencyPhone?: string | undefined;
+  drivingLicense?: string | undefined;
+  militaryStatus?: string | undefined;
+  maritalStatus?: string | undefined;
+  previousInsuranceStatus?: string | undefined;
+  idCardFrontPath?: string | undefined;
+  idCardBackPath?: string | undefined;
+  idCardExpiryDate?: Date | undefined;
+  address?: string | undefined;
+  notes?: string | undefined;
 }
 
 export interface WorkerValidationResult {
   isValid: boolean;
-  error?: string;
-  birthDate?: Date;
-  age?: number;
-  gender?: 'MALE' | 'FEMALE';
-  genderArabic?: string;
-  governorateCode?: string;
-  governorateNameAr?: string;
+  error?: string | undefined;
+  birthDate?: Date | undefined;
+  age?: number | undefined;
+  gender?: 'MALE' | 'FEMALE' | undefined;
+  genderArabic?: string | undefined;
+  governorateCode?: string | undefined;
+  governorateNameAr?: string | undefined;
 }
 
 export interface PendingWorkerWizardState {
   currentStep: WorkerWizardStep;
-  idType?: 'NATIONAL_ID' | 'PASSPORT';
-  frontPhotoFileId?: string;
-  backPhotoFileId?: string;
-  frontPhotoPath?: string;
-  backPhotoPath?: string;
+  idType?: 'NATIONAL_ID' | 'PASSPORT' | undefined;
+  frontPhotoFileId?: string | undefined;
+  backPhotoFileId?: string | undefined;
+  frontPhotoPath?: string | undefined;
+  backPhotoPath?: string | undefined;
   aiDetectedData?: {
-    nationalId?: string;
-    passportNumber?: string;
-    name?: string;
-    birthDate?: string;
-    gender?: 'MALE' | 'FEMALE';
-    governorateName?: string;
-    governorateCode?: string;
-    expiryDate?: string;
-    address?: string;
-  };
-  name?: string;
-  nickname?: string;
-  legacyCode?: string;
-  idNumber?: string;
-  nationality?: string;
-  birthDate?: string;
-  gender?: 'MALE' | 'FEMALE';
-  governorateCode?: string;
-  expiryDate?: string;
-  address?: string;
-  phone?: string;
-  paymentMethod?: string;
-  accountNumber?: string;
-  walletType?: string;
-  jobTitleId?: string;
-  jobTitleName?: string;
-  siteId?: string;
-  siteName?: string;
-  hireDate?: string;
-  shiftSystem?: string;
-  dailyWage?: number;
-  drivingLicense?: string;
-  militaryStatus?: string;
-  emergencyPhone?: string;
-  insuranceStatus?: string;
-  maritalStatus?: string;
-  activeMessageId?: number;
-  chatId?: number;
-  previousSteps?: WorkerWizardStep[];
+    nationalId?: string | undefined;
+    passportNumber?: string | undefined;
+    name?: string | undefined;
+    birthDate?: string | undefined;
+    gender?: 'MALE' | 'FEMALE' | undefined;
+    governorateName?: string | undefined;
+    governorateCode?: string | undefined;
+    expiryDate?: string | undefined;
+    address?: string | undefined;
+  } | undefined;
+  name?: string | undefined;
+  nickname?: string | undefined;
+  legacyCode?: string | undefined;
+  idNumber?: string | undefined;
+  nationality?: string | undefined;
+  birthDate?: string | undefined;
+  gender?: 'MALE' | 'FEMALE' | undefined;
+  governorateCode?: string | undefined;
+  expiryDate?: string | undefined;
+  address?: string | undefined;
+  phone?: string | undefined;
+  paymentMethod?: string | undefined;
+  accountNumber?: string | undefined;
+  walletType?: string | undefined;
+  jobTitleId?: string | undefined;
+  jobTitleName?: string | undefined;
+  siteId?: string | undefined;
+  siteName?: string | undefined;
+  hireDate?: string | undefined;
+  shiftSystem?: string | undefined;
+  dailyWage?: number | undefined;
+  drivingLicense?: string | undefined;
+  militaryStatus?: string | undefined;
+  emergencyPhone?: string | undefined;
+  insuranceStatus?: string | undefined;
+  maritalStatus?: string | undefined;
+  activeMessageId?: number | undefined;
+  chatId?: number | undefined;
+  previousSteps?: WorkerWizardStep[] | undefined;
 }
 
 export interface RegisteredWorkerResult {
   id: string;
   code: string;
   name: string;
-  nickname?: string;
+  nickname?: string | undefined;
   jobTitle: string;
-  siteName?: string;
+  siteName?: string | undefined;
   hireDate: Date;
-  shiftSystem?: string;
+  shiftSystem?: string | undefined;
   welcomeWhatsAppUrl: string;
 }
 
@@ -147,8 +148,8 @@ export interface WorkerDuplicateCheckResult {
     code: string;
     name: string;
     jobTitle: string;
-    siteName?: string;
-  } | null;
+    siteName?: string | undefined;
+  } | null | undefined;
 }
 
 export interface WorkerLookupOption {
@@ -171,15 +172,15 @@ export interface AiVisionScanResult {
   isValid: boolean;
   detectedDocType: 'EGYPTIAN_NATIONAL_ID_FRONT' | 'EGYPTIAN_NATIONAL_ID_BACK' | 'PASSPORT' | 'OTHER';
   isQualityAcceptable: boolean;
-  nationalIdNumber?: string;
-  passportNumber?: string;
-  expiryDateStr?: string;
-  fullName?: string;
-  address?: string;
-  birthDate?: Date;
-  gender?: 'MALE' | 'FEMALE';
-  governorateNameAr?: string;
-  userErrorMessage?: string;
+  nationalIdNumber?: string | undefined;
+  passportNumber?: string | undefined;
+  expiryDateStr?: string | undefined;
+  fullName?: string | undefined;
+  address?: string | undefined;
+  birthDate?: Date | undefined;
+  gender?: 'MALE' | 'FEMALE' | undefined;
+  governorateNameAr?: string | undefined;
+  userErrorMessage?: string | undefined;
 }
 
 export interface AiVisionScanner {

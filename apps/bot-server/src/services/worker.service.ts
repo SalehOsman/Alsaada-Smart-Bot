@@ -1,231 +1,60 @@
-import { createHmac } from 'node:crypto';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
 import { fastCache } from './fast-cache.service.js';
-import { encryptField, decryptField, createBlindIndex } from '@alsaada/database';
-import { parseEgyptianNationalId } from '@alsaada/national-id-engine';
-import { normalizeDigits, formatDate, formatDateDMY, extractFirstTwoNames } from '@alsaada/regional-engine';
-import { normalizeEgyptianPhone } from '@alsaada/core-components';
+import { encryptField, createBlindIndex } from '@alsaada/database';
+import { normalizeDigits, extractFirstTwoNames } from '@alsaada/regional-engine';
+import {
+  WorkerRegistrationRepository,
+  WorkerRegistrationService,
+  validateWorkerIdentification,
+  generateWorkerInviteToken,
+  verifyWorkerInviteToken,
+  type CreateWorkerInput,
+  type WorkerValidationResult,
+} from '@alsaada/workforce';
 
-/**
- * توليد توقيع تشفيري عالي الأمان لرابط دعوة العامل (HMAC-SHA256)
- */
-export function generateWorkerInviteToken(workerCode: string, secretKey: string): string {
-  return createHmac('sha256', secretKey)
-    .update(`invite:${workerCode.trim()}`)
-    .digest('hex')
-    .substring(0, 16);
-}
-
-/**
- * التحقق من صحة التوقيع التشفيري لرابط الدعوة
- */
-export function verifyWorkerInviteToken(workerCode: string, token: string, secretKey: string): boolean {
-  if (!token || !secretKey || !workerCode) return false;
-  const expected = generateWorkerInviteToken(workerCode, secretKey);
-  return expected === token.trim();
-}
-
-export interface CreateWorkerInput {
-  name: string;
-  nickname?: string;
-  legacyCode?: string; // الكود القديم إن وجد للأرشفة والمطابقة
-  idType: 'NATIONAL_ID' | 'PASSPORT';
-  idNumber: string;
-  nationality?: string;
-  birthDate?: Date;
-  gender?: 'MALE' | 'FEMALE';
-  governorateCode?: string;
-  phone: string;
-  jobTitleId?: string;
-  jobTitleName: string;
-  departmentId?: string;
-  siteId?: string;
-  siteName?: string;
-  hireDate?: Date;
-  shiftSystem?: string;
-  dailyWage?: number;
-  basicSalary?: number;
-  fixedAllowances?: number;
-  paymentMethod?: string;
-  accountNumber?: string;
-  walletType?: string;
-  emergencyContactName?: string;
-  emergencyPhone?: string;
-  drivingLicense?: string;
-  militaryStatus?: string;
-  maritalStatus?: string;
-  previousInsuranceStatus?: string;
-  idCardFrontPath?: string;
-  idCardBackPath?: string;
-  idCardExpiryDate?: Date;
-  address?: string;
-  notes?: string;
-}
-
-export interface WorkerValidationResult {
-  isValid: boolean;
-  error?: string;
-  birthDate?: Date;
-  age?: number;
-  gender?: 'MALE' | 'FEMALE';
-  genderArabic?: string;
-  governorateCode?: string;
-  governorateNameAr?: string;
-}
+export { generateWorkerInviteToken, verifyWorkerInviteToken };
+export type { CreateWorkerInput, WorkerValidationResult };
 
 export class WorkerService {
-  /**
-   * التحقق من صحة وثيقة الهوية (رقم قومي مصري أو جواز سفر)
-   */
+  private readonly repository: WorkerRegistrationRepository;
+  private readonly registrationService: WorkerRegistrationService;
+
+  constructor() {
+    this.repository = new WorkerRegistrationRepository(prisma);
+    this.registrationService = new WorkerRegistrationService(
+      this.repository,
+      undefined,
+      config.databaseEncryptionKey || 'alsaada-default-key-min-32-chars-long!',
+      config.blindIndexSalt || 'alsaada-blind-index-salt-secret',
+      config.botUsername || 'Alsaada_HRtest_Bot'
+    );
+  }
+
   validateIdentification(
     idType: 'NATIONAL_ID' | 'PASSPORT',
     rawId: string,
-    extra?: { birthDate?: Date; gender?: 'MALE' | 'FEMALE' }
+    extra?: { birthDate?: Date | undefined; gender?: 'MALE' | 'FEMALE' | undefined }
   ): WorkerValidationResult {
-    if (!rawId || !rawId.trim()) {
-      return { isValid: false, error: 'رقم الإثبات مطلوب ولا يمكن تركه فارغاً.' };
-    }
-
-    if (idType === 'NATIONAL_ID') {
-      const parsed = parseEgyptianNationalId(rawId);
-      if (!parsed.isValid || !parsed.info) {
-        return { isValid: false, error: parsed.error || 'الرقم القومي غير صالح.' };
-      }
-      return {
-        isValid: true,
-        birthDate: parsed.info.birthDate,
-        age: parsed.info.age,
-        gender: parsed.info.gender,
-        genderArabic: parsed.info.genderArabic,
-        governorateCode: parsed.info.governorateCode,
-        governorateNameAr: parsed.info.governorateNameAr,
-      };
-    } else {
-      // جواز السفر
-      const cleanPassport = normalizeDigits(rawId.trim().toUpperCase().replace(/[\s-]/g, ''));
-      if (cleanPassport.length < 5 || cleanPassport.length > 20) {
-        return {
-          isValid: false,
-          error: `رقم جواز السفر غير صحيح (يجب أن يتراوح بين 5 و 20 حرفاً ورقم).`,
-        };
-      }
-      if (!extra?.birthDate) {
-        return { isValid: false, error: 'تاريخ الميلاد إلزامي في حال تسجيل جواز السفر.' };
-      }
-      if (!extra?.gender) {
-        return { isValid: false, error: 'تحديد النوع (ذكر / أنثى) إلزامي في حال تسجيل جواز السفر.' };
-      }
-
-      const today = new Date();
-      let age = today.getFullYear() - extra.birthDate.getFullYear();
-      const m = today.getMonth() - extra.birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < extra.birthDate.getDate())) {
-        age--;
-      }
-
-      return {
-        isValid: true,
-        birthDate: extra.birthDate,
-        age: Math.max(0, age),
-        gender: extra.gender,
-        genderArabic: extra.gender === 'MALE' ? 'ذكر' : 'أنثى',
-        governorateCode: '88', // وافد / خارج الجمهورية
-        governorateNameAr: 'خارج الجمهورية (وافد)',
-      };
-    }
+    return validateWorkerIdentification(idType, rawId, extra);
   }
 
-  /**
-   * فحص الازدواجية في قاعدة البيانات لمنع تكرار تسجيل العامل
-   */
   async checkDuplicate(
     idType: 'NATIONAL_ID' | 'PASSPORT',
     idNumber: string
-  ): Promise<{ isDuplicate: boolean; existingWorker?: { code: string; name: string; jobTitle: string; siteName?: string } | null }> {
-    const cleanId = normalizeDigits(idNumber.trim().toUpperCase().replace(/[\s-]/g, ''));
-    const blindIndex = createBlindIndex(cleanId, config.blindIndexSalt);
-
-    if (idType === 'NATIONAL_ID') {
-      const existing = await prisma.worker.findFirst({
-        where: {
-          nationalIdBlindIndex: blindIndex,
-          isDeleted: false,
-        },
-        include: { site: true },
-      });
-
-      if (existing) {
-        return {
-          isDuplicate: true,
-          existingWorker: {
-            code: existing.code,
-            name: existing.name,
-            jobTitle: existing.jobTitle,
-            siteName: existing.site?.name,
-          },
-        };
-      }
-    } else {
-      const existing = await prisma.worker.findFirst({
-        where: {
-          passportBlindIndex: blindIndex,
-          isDeleted: false,
-        },
-        include: { site: true },
-      });
-
-      if (existing) {
-        return {
-          isDuplicate: true,
-          existingWorker: {
-            code: existing.code,
-            name: existing.name,
-            jobTitle: existing.jobTitle,
-            siteName: existing.site?.name,
-          },
-        };
-      }
-    }
-
-    return { isDuplicate: false, existingWorker: null };
+  ): Promise<{ isDuplicate: boolean; existingWorker?: { code: string; name: string; jobTitle: string; siteName?: string | undefined } | null | undefined }> {
+    return this.registrationService.checkDuplicate(idType, idNumber);
   }
 
-  /**
-   * توليد كود العامل الذكي القادم وفقاً للقسم والوظيفة (e.g. OP-DRV-001 أو WRK-001)
-   */
   async generateNextWorkerCode(deptCode?: string, jobCode?: string): Promise<string> {
-    const prefix = deptCode && jobCode ? `${deptCode.toUpperCase()}-${jobCode.toUpperCase()}` : 'WRK';
-
-    const workers = await prisma.worker.findMany({
-      where: {
-        code: { startsWith: `${prefix}-` },
-      },
-      select: { code: true },
-    });
-
-    let maxSeq = 0;
-    const regex = new RegExp(`^${prefix}-(\\d+)$`, 'i');
-    for (const w of workers) {
-      const match = w.code.match(regex);
-      if (match && match[1]) {
-        const num = parseInt(match[1], 10);
-        if (!isNaN(num) && num > maxSeq) {
-          maxSeq = num;
-        }
-      }
-    }
-
-    const nextSeq = maxSeq + 1;
-    const padded = String(nextSeq).padStart(3, '0'); // 3 أرقام مثل OP-DRV-001
-    return `${prefix}-${padded}`;
+    return this.repository.generateNextWorkerCode(deptCode || 'OP', jobCode || 'DRV');
   }
 
-  /**
-   * تسجيل وحفظ عامل جديد في المنظومة
-   */
   async createWorker(input: CreateWorkerInput) {
-    // 1. التحقق من الهوية
+    if (!config.databaseEncryptionKey) {
+      throw new Error('SECURITY CONFIGURATION ERROR: DATABASE_ENCRYPTION_KEY is required to encrypt and store sensitive PII data');
+    }
+
     const valResult = this.validateIdentification(input.idType, input.idNumber, {
       birthDate: input.birthDate,
       gender: input.gender,
@@ -234,7 +63,6 @@ export class WorkerService {
       throw new Error(valResult.error || 'بيانات إثبات الشخصية غير صالحة.');
     }
 
-    // 2. فحص الازدواجية
     const dupCheck = await this.checkDuplicate(input.idType, input.idNumber);
     if (dupCheck.isDuplicate && dupCheck.existingWorker) {
       throw new Error(
@@ -242,33 +70,23 @@ export class WorkerService {
       );
     }
 
-    // 3. كود الوظيفة والقسم لتوليد الكود الهيكلي
     let deptCode = 'OP';
     let jobCode = 'DRV';
-
     if (input.jobTitleId) {
-      const job = await prisma.jobTitle.findUnique({
-        where: { id: input.jobTitleId },
-        include: { department: true },
-      });
-      if (job) {
-        jobCode = job.code;
-        deptCode = job.department.code;
+      const jobInfo = await this.repository.getJobTitleWithDepartment(input.jobTitleId);
+      if (jobInfo) {
+        deptCode = jobInfo.deptCode;
+        jobCode = jobInfo.jobCode;
       }
     }
 
     const newCode = await this.generateNextWorkerCode(deptCode, jobCode);
 
-    // 4. التشفير والفهارس العمياء
     const cleanId = normalizeDigits(input.idNumber.trim().toUpperCase().replace(/[\s-]/g, ''));
     const blindIndex = createBlindIndex(cleanId, config.blindIndexSalt);
 
     const cleanPhone = normalizeDigits(input.phone.trim().replace(/[\s-]/g, ''));
     const phoneBlindIndex = createBlindIndex(cleanPhone, config.blindIndexSalt);
-    if (!config.databaseEncryptionKey) {
-      throw new Error('SECURITY CONFIGURATION ERROR: DATABASE_ENCRYPTION_KEY is required to encrypt and store sensitive PII data');
-    }
-
     const phoneEncrypted = encryptField(cleanPhone, config.databaseEncryptionKey);
 
     let nationalIdEncrypted: string | null = null;
@@ -284,75 +102,39 @@ export class WorkerService {
       passportBlindIndex = blindIndex;
     }
 
-    const emergencyPhoneEncrypted = input.emergencyPhone
-      ? encryptField(input.emergencyPhone, config.databaseEncryptionKey)
-      : null;
+    let accountNumberEncrypted: string | null = null;
+    if (input.accountNumber && input.accountNumber.trim() && input.accountNumber.trim() !== '-') {
+      accountNumberEncrypted = encryptField(input.accountNumber.trim(), config.databaseEncryptionKey);
+    }
 
-    const accountNumberEncrypted = input.accountNumber
-      ? encryptField(input.accountNumber, config.databaseEncryptionKey)
-      : null;
+    let emergencyPhoneEncrypted: string | null = null;
+    if (input.emergencyPhone && input.emergencyPhone.trim()) {
+      emergencyPhoneEncrypted = encryptField(normalizeDigits(input.emergencyPhone.trim()), config.databaseEncryptionKey);
+    }
 
-    // تجميع الأكواد القديمة وأسماء الشهرة في قائمة aliases
-    const aliasesList: string[] = [];
     const resolvedNickname = input.nickname?.trim() || extractFirstTwoNames(input.name.trim());
+    const aliasesList: string[] = [];
     if (resolvedNickname) aliasesList.push(resolvedNickname);
-    if (input.legacyCode && input.legacyCode.trim()) aliasesList.push(input.legacyCode.trim());
+    if (input.legacyCode?.trim()) aliasesList.push(input.legacyCode.trim());
 
-    // 5. حفظ السجل بقاعدة البيانات
-    const worker = await prisma.worker.create({
-      data: {
-        code: newCode,
-        legacyCode: input.legacyCode?.trim() || null,
-        name: input.name.trim(),
-        nickname: resolvedNickname,
-        aliases: aliasesList,
-        idType: input.idType,
-        nationality: input.nationality || (input.idType === 'NATIONAL_ID' ? 'مصر' : 'وافد'),
-        nationalIdEncrypted,
-        nationalIdBlindIndex,
-        passportNumberEncrypted,
-        passportBlindIndex,
-        birthDate: valResult.birthDate || new Date('1990-01-01'),
-        gender: valResult.gender || 'MALE',
-        governorateCode: input.governorateCode || valResult.governorateCode || '88',
-        jobTitle: input.jobTitleName,
-        jobTitleId: input.jobTitleId,
-        departmentId: input.departmentId,
-        siteId: input.siteId,
-        hireDate: input.hireDate || new Date(),
-        shiftSystem: input.shiftSystem || '20_WORK_10_REST',
-        dailyWage: input.dailyWage || 0,
-        basicSalary: input.basicSalary || 0,
-        fixedAllowances: input.fixedAllowances || 0,
-        paymentMethod: input.paymentMethod || 'CASH_SITE',
-        accountNumberEncrypted,
-        walletType: input.walletType,
-        drivingLicense: input.drivingLicense,
-        militaryStatus: input.militaryStatus,
-        maritalStatus: input.maritalStatus,
-        previousInsuranceStatus: input.previousInsuranceStatus,
-        idCardFrontPath: input.idCardFrontPath,
-        idCardBackPath: input.idCardBackPath,
-        idCardExpiryDate: input.idCardExpiryDate || null,
-        address: input.address?.trim() || null,
-        phoneEncrypted,
-        phoneBlindIndex,
-        emergencyContactName: input.emergencyContactName,
-        emergencyPhoneEncrypted,
-        status: 'ACTIVE',
-      },
-      include: {
-        site: true,
-        department: true,
-        jobRef: true,
-      },
+    const worker = await this.repository.createWorkerAtomic({
+      code: newCode,
+      input,
+      resolvedNickname,
+      aliases: aliasesList,
+      nationalIdEncrypted,
+      nationalIdBlindIndex,
+      passportNumberEncrypted,
+      passportBlindIndex,
+      phoneEncrypted,
+      phoneBlindIndex,
+      accountNumberEncrypted,
+      emergencyPhoneEncrypted,
     });
 
-    // 6. تطهير الكاش
     await fastCache.invalidate('workers:all:active');
     await fastCache.invalidate('workers:summary:count');
 
-    // 7. إنشاء رابط الترحيب الرسمي عبر واتساب متضمناً رابط الانضمام للبوت
     const welcomeWhatsAppUrl = this.buildWorkerWelcomeWhatsAppUrl({
       name: worker.name,
       code: worker.code,
@@ -369,97 +151,45 @@ export class WorkerService {
     return { worker, welcomeWhatsAppUrl };
   }
 
-  /**
-   * إنشاء رابط دعوة ترحيبي رسمي للعامل عبر واتساب متضمناً رابط الانضمام للبوت والمميزات
-   */
   buildWorkerWelcomeWhatsAppUrl(data: {
     name: string;
     code: string;
     jobTitle: string;
-    siteName?: string;
-    hireDate?: Date | string;
-    shiftSystem?: string;
-    payoutMethod?: string;
-    walletType?: string;
-    accountNumber?: string;
+    siteName?: string | undefined;
+    hireDate?: Date | string | undefined;
+    shiftSystem?: string | undefined;
+    payoutMethod?: string | undefined;
+    walletType?: string | undefined;
+    accountNumber?: string | undefined;
     phone: string;
-    botUsername?: string;
+    botUsername?: string | undefined;
   }): string {
-    const intlPhone = normalizeEgyptianPhone(data.phone) || data.phone.replace(/\D/g, '');
-    const cleanBotUsername = (data.botUsername || config.botUsername || 'Alsaada_HRtest_Bot').replace(/^@/, '').trim();
-    const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
-    const token = generateWorkerInviteToken(data.code, secretKey);
-    const botLink = `https://t.me/${cleanBotUsername}?start=inv_${data.code}_${token}`;
-
-    const hireDateFormatted = data.hireDate
-      ? (data.hireDate instanceof Date ? formatDateDMY(data.hireDate) : data.hireDate)
-      : undefined;
-
-    const siteLine = data.siteName ? `📍 *الموقع الميداني:* ${data.siteName}` : '📍 *الموقع الميداني:* الموقع العام للعمليات';
-    const hireDateLine = hireDateFormatted ? `📅 *تاريخ مباشرة العمل:* ${hireDateFormatted}` : '';
-    const shiftLine = data.shiftSystem ? `🔄 *نظام الدوام:* ${data.shiftSystem.replace(/_/g, ' ')}` : '';
-    const payoutLine = data.payoutMethod
-      ? `💳 *وسيلة الصرف:* ${data.payoutMethod}${data.accountNumber && data.accountNumber !== '-' ? ` (رقم: ${data.accountNumber})` : ''}`
-      : '';
-
-    const details = [
-      `👤 *الاسم الكامل:* ${data.name}`,
-      `🆔 *كودك الوظيفي المعتمد:* \`#${data.code}\``,
-      `💼 *المسمى الوظيفي:* ${data.jobTitle}`,
-      siteLine,
-      hireDateLine,
-      shiftLine,
-      payoutLine,
-    ].filter(Boolean).join('\n');
-
-    const text =
-      `*شركة السعادة للمقاولات العامة والتعدين*\n` +
-      `*دعوة الانضمام لبوابة الموارد البشرية والخدمات الذاتية*\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `أهلاً وسهلاً بك زميلنا العزيز/ *${data.name}*\n` +
-      `يسر إدارة الموارد البشرية تهنئتكم بالانضمام لفريق العمل، وتم قيد بياناتكم رسمياً في المنظومة الذكية للشركة:\n\n` +
-      `${details}\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `🔗 *رابط الانضمام والتفعيل المباشر بالبوت:*\n` +
-      `${botLink}\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `✨ *أبرز خدمات ومميزات البوت للعامل:*\n` +
-      `• 🔔 إشعارات لحظية بكل حركة مالية (سلف، مسحوبات، حوافز، مكافآت).\n` +
-      `• 💵 استعراض مفردات وقسيمة راتبك الشهري فور اعتمادها.\n` +
-      `• 🌴 تقديم طلبات الإجازات ومتابعة رصيدك واستحقاقاتك.\n` +
-      `• 📝 تقديم طلبات السلف وتحديث بيانات المحفظة الإلكترونية.\n` +
-      `• 🛡️ متابعة مهمات الوقاية الشخصية (PPE) والتظلمات الميدانية.\n` +
-      `• 🪪 بطاقة الهوية الرقمية وكارت العمل الميداني المعتمد.\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `⚡ *خطوات التفعيل السريعة:*\n` +
-      `1️⃣ اضغط على الرابط أعلاه ثم اضغط على زر *Start (ابدأ)*.\n` +
-      `2️⃣ اضغط زر *(⚡ تأكيد وربط حسابي فوراً)* لتفعيل خدماتك مباشرة دون كتابة أي بيانات.\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `_مع تمنياتنا لك بدوام التوفيق والنجاح والسلامة في مواقع شركة السعادة._`;
-
-    const encoded = encodeURIComponent(text);
-    return intlPhone
-      ? `https://api.whatsapp.com/send?phone=${intlPhone}&text=${encoded}`
-      : `https://api.whatsapp.com/send?text=${encoded}`;
+    return this.registrationService.buildWelcomeWhatsAppUrl(data);
   }
 
-  /**
-   * جلب إحصائيات القوى العاملة (سريعة من الكاش)
-   */
   async getWorkersSummary() {
     return fastCache.rememberSWR('workers:summary:count', 300, async () => {
       const [totalActive, egyptianCount, foreignCount] = await Promise.all([
-        prisma.worker.count({ where: { isDeleted: false, status: 'ACTIVE' } }),
-        prisma.worker.count({ where: { isDeleted: false, status: 'ACTIVE', idType: 'NATIONAL_ID' } }),
-        prisma.worker.count({ where: { isDeleted: false, status: 'ACTIVE', idType: 'PASSPORT' } }),
+        prisma.worker.count({ where: { status: 'ACTIVE', isDeleted: false } }),
+        prisma.worker.count({
+          where: {
+            status: 'ACTIVE',
+            isDeleted: false,
+            idType: 'NATIONAL_ID',
+          },
+        }),
+        prisma.worker.count({
+          where: {
+            status: 'ACTIVE',
+            isDeleted: false,
+            idType: 'PASSPORT',
+          },
+        }),
       ]);
       return { totalActive, egyptianCount, foreignCount };
     });
   }
 
-  /**
-   * جلب قائمة مختصرة بأحدث العمال المسجلين
-   */
   async getRecentWorkers(limit = 10) {
     return fastCache.rememberSWR(`workers:recent:${limit}`, 180, async () => {
       return prisma.worker.findMany({
@@ -471,9 +201,6 @@ export class WorkerService {
     });
   }
 
-  /**
-   * جلب كافة العمال النشطين لدعم شاشات الاختيار والبحث (WorkerPicker)
-   */
   async getAllWorkersForPicker() {
     return fastCache.rememberSWR('workers:all:picker', 120, async () => {
       const workers = await prisma.worker.findMany({
@@ -496,9 +223,6 @@ export class WorkerService {
     });
   }
 
-  /**
-   * تحديث كود العامل القديم ومزامنته مع مصفوفة aliases وتطهير الكاش
-   */
   async updateWorkerLegacyCode(workerId: string, newLegacyCode: string): Promise<{ success: boolean; worker?: any; error?: string }> {
     const cleanLegacy = newLegacyCode.trim();
     if (!cleanLegacy) {
@@ -514,7 +238,6 @@ export class WorkerService {
       return { success: false, error: 'لم يتم العثور على العامل المطلوب.' };
     }
 
-    // فحص عدم تكرار الكود القديم مع عامل آخر
     const existing = await prisma.worker.findFirst({
       where: {
         id: { not: workerId },
@@ -534,7 +257,6 @@ export class WorkerService {
       };
     }
 
-    // تحديث مصفوفة aliases
     const updatedAliases = (worker.aliases || []).filter((a) => a !== worker.legacyCode);
     if (!updatedAliases.includes(cleanLegacy)) {
       updatedAliases.push(cleanLegacy);

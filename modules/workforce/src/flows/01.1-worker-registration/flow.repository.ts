@@ -19,8 +19,8 @@ export interface AtomicWorkerCreationPayload {
   emergencyPhoneEncrypted: string | null;
   aliases: string[];
   resolvedNickname: string;
-  actorTelegramId?: bigint;
-  actorRole?: string;
+  actorTelegramId?: bigint | undefined;
+  actorRole?: string | undefined;
 }
 
 export class WorkerRegistrationRepository {
@@ -45,7 +45,7 @@ export class WorkerRegistrationRepository {
             code: existing.code,
             name: existing.name,
             jobTitle: existing.jobTitle,
-            siteName: existing.site?.name,
+            siteName: existing.site?.name ?? undefined,
           },
         };
       }
@@ -64,7 +64,7 @@ export class WorkerRegistrationRepository {
             code: existing.code,
             name: existing.name,
             jobTitle: existing.jobTitle,
-            siteName: existing.site?.name,
+            siteName: existing.site?.name ?? undefined,
           },
         };
       }
@@ -136,54 +136,61 @@ export class WorkerRegistrationRepository {
 
   async createWorkerAtomic(payload: AtomicWorkerCreationPayload) {
     const execute = async (tx: Prisma.TransactionClient) => {
-      const worker = await tx.worker.create({
-        data: {
-          code: payload.code,
-          legacyCode: payload.input.legacyCode?.trim() || null,
-          name: payload.input.name.trim(),
-          nickname: payload.resolvedNickname,
-          aliases: payload.aliases,
-          idType: payload.input.idType,
-          nationality: payload.input.nationality || (payload.input.idType === 'NATIONAL_ID' ? 'مصر' : 'وافد'),
-          nationalIdEncrypted: payload.nationalIdEncrypted,
-          nationalIdBlindIndex: payload.nationalIdBlindIndex,
-          passportNumberEncrypted: payload.passportNumberEncrypted,
-          passportBlindIndex: payload.passportBlindIndex,
-          birthDate: payload.input.birthDate || new Date('1990-01-01'),
-          gender: payload.input.gender || 'MALE',
-          governorateCode: payload.input.governorateCode || '88',
-          jobTitle: payload.input.jobTitleName,
-          jobTitleId: payload.input.jobTitleId,
-          departmentId: payload.input.departmentId,
-          siteId: payload.input.siteId,
-          hireDate: payload.input.hireDate || new Date(),
-          shiftSystem: payload.input.shiftSystem || '20_WORK_10_REST',
-          dailyWage: payload.input.dailyWage || 0,
-          basicSalary: payload.input.basicSalary || 0,
-          fixedAllowances: payload.input.fixedAllowances || 0,
-          paymentMethod: payload.input.paymentMethod || 'CASH_SITE',
-          accountNumberEncrypted: payload.accountNumberEncrypted,
-          walletType: payload.input.walletType,
-          drivingLicense: payload.input.drivingLicense,
-          militaryStatus: payload.input.militaryStatus,
-          maritalStatus: payload.input.maritalStatus,
-          previousInsuranceStatus: payload.input.previousInsuranceStatus,
-          idCardFrontPath: payload.input.idCardFrontPath,
-          idCardBackPath: payload.input.idCardBackPath,
-          idCardExpiryDate: payload.input.idCardExpiryDate || null,
-          address: payload.input.address?.trim() || null,
-          phoneEncrypted: payload.phoneEncrypted,
-          phoneBlindIndex: payload.phoneBlindIndex,
-          emergencyContactName: payload.input.emergencyContactName,
-          emergencyPhoneEncrypted: payload.emergencyPhoneEncrypted,
-          status: 'ACTIVE',
-        },
+      const createData: Prisma.WorkerUncheckedCreateInput = {
+        code: payload.code,
+        legacyCode: payload.input.legacyCode?.trim() || null,
+        name: payload.input.name.trim(),
+        nickname: payload.resolvedNickname,
+        aliases: payload.aliases,
+        idType: payload.input.idType,
+        nationality: payload.input.nationality || (payload.input.idType === 'NATIONAL_ID' ? 'مصر' : 'وافد'),
+        nationalIdEncrypted: payload.nationalIdEncrypted ?? null,
+        nationalIdBlindIndex: payload.nationalIdBlindIndex ?? null,
+        passportNumberEncrypted: payload.passportNumberEncrypted ?? null,
+        passportBlindIndex: payload.passportBlindIndex ?? null,
+        birthDate: payload.input.birthDate || new Date('1990-01-01'),
+        gender: payload.input.gender || 'MALE',
+        governorateCode: payload.input.governorateCode || '88',
+        jobTitle: payload.input.jobTitleName || 'عامل',
+        jobTitleId: payload.input.jobTitleId ?? null,
+        departmentId: payload.input.departmentId ?? null,
+        siteId: payload.input.siteId ?? null,
+        hireDate: payload.input.hireDate || new Date(),
+        shiftSystem: payload.input.shiftSystem || '20_WORK_10_REST',
+        dailyWage: payload.input.dailyWage || 0,
+        basicSalary: payload.input.basicSalary || 0,
+        fixedAllowances: payload.input.fixedAllowances || 0,
+        paymentMethod: payload.input.paymentMethod || 'CASH_SITE',
+        accountNumberEncrypted: payload.accountNumberEncrypted ?? null,
+        walletType: payload.input.walletType ?? null,
+        drivingLicense: payload.input.drivingLicense ?? null,
+        militaryStatus: payload.input.militaryStatus ?? null,
+        maritalStatus: payload.input.maritalStatus ?? null,
+        previousInsuranceStatus: payload.input.previousInsuranceStatus ?? null,
+        idCardFrontPath: payload.input.idCardFrontPath ?? null,
+        idCardBackPath: payload.input.idCardBackPath ?? null,
+        idCardExpiryDate: payload.input.idCardExpiryDate || null,
+        address: payload.input.address?.trim() || null,
+        phoneEncrypted: payload.phoneEncrypted,
+        phoneBlindIndex: payload.phoneBlindIndex,
+        emergencyContactName: payload.input.emergencyContactName ?? null,
+        emergencyPhoneEncrypted: payload.emergencyPhoneEncrypted ?? null,
+        status: 'ACTIVE',
+      };
+      const worker = (await tx.worker.create({
+        data: createData,
         include: {
           site: true,
           department: true,
           jobRef: true,
         },
-      });
+      })) as Prisma.WorkerGetPayload<{
+        include: {
+          site: true;
+          department: true;
+          jobRef: true;
+        };
+      }>;
 
       // Audit Log
       if (tx.auditLog) {

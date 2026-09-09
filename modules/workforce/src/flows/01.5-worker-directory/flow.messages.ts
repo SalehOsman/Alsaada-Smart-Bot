@@ -72,7 +72,7 @@ export const WorkerDirectoryMessages = {
     return lines.join('\n');
   },
 
-  formatMissingDataWhatsAppMessage(p: { name: string; nickname?: string | null; missingItems: string[] }): string {
+  formatMissingDataWhatsAppMessage(p: { name: string; nickname?: string | null | undefined; missingItems: string[] }): string {
     const displayName = p.nickname || p.name;
     const itemsList = p.missingItems.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
     return (

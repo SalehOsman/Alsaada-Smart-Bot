@@ -29,15 +29,16 @@ export class WorkerEditHandler {
   }
 
   private async replyOrEdit(ctx: Context, text: string, keyboard?: InlineKeyboard): Promise<void> {
+    const opts = { parse_mode: 'Markdown' as const, ...(keyboard ? { reply_markup: keyboard } : {}) };
     if (ctx.callbackQuery?.message) {
       try {
-        await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+        await ctx.editMessageText(text, opts);
         return;
       } catch {
         // Fallback to regular reply if in-place edit fails
       }
     }
-    await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+    await ctx.reply(text, opts);
   }
 
   private renderTab(worker: WorkerCardView, tab: WorkerProfileTab, isSuperAdmin: boolean): { text: string; kb: InlineKeyboard } {
