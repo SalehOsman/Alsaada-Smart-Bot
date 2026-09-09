@@ -193,21 +193,8 @@ export function createBot(): Bot<MyContext> {
     }
 
     // If message is a persistent keyboard navigation button, clean up unfinished flow & ephemeral inputs
-    const navButtons = [
-      '🏠 القائمة الرئيسية',
-      '⚙️ إعدادات النظام',
-      '👤 ملفي الشخصي',
-      '👤 ملفي وإعداداتي',
-      '⚡ فحص الكفاءة',
-      '👷 التبديل لحسابي كعامل',
-      '🛡️ العودة لبوابة الإشراف',
-      '🆔 بطاقة معرفي',
-      '🧾 قسيمة راتبي',
-      '📊 كشف حسابي',
-      '📊 لوحة المؤشرات',
-      '🧾 فواتيري ومستخلصاتي',
-    ];
-    if (navButtons.includes(ctx.message.text)) {
+    const isNav = /القائمة الرئيسية|إعدادات النظام|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي/.test(ctx.message.text);
+    if (isNav) {
       await screenFlowService.cleanupIncomingUserMessage(ctx);
       await screenFlowService.cleanupUnfinishedFlow(ctx);
       return next();
@@ -260,19 +247,19 @@ export function createBot(): Bot<MyContext> {
   bot.command(['exit_ghost', 'exit_impersonate', 'exit_simulation'], handleExitGhostCommand);
 
   // 4.5. Persistent Bottom Reply Keyboard Button Handlers
-  bot.hears('🏠 القائمة الرئيسية', async (ctx) => {
+  bot.hears(/القائمة الرئيسية/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
     await renderRoleHome(ctx, false);
   });
-  bot.hears('⚙️ إعدادات النظام', handleSettings);
-  bot.hears(['👤 ملفي الشخصي', '👤 ملفي وإعداداتي'], async (ctx) => {
+  bot.hears(/إعدادات النظام/, handleSettings);
+  bot.hears(/ملفي (الشخصي|وإعداداتي)/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
     await renderAdminProfileCard(ctx, false);
   });
-  bot.hears('⚡ فحص الكفاءة', handlePing);
-  bot.hears('👷 التبديل لحسابي كعامل', handleSwitchToWorker);
-  bot.hears('🛡️ العودة لبوابة الإشراف', handleSwitchToFieldAdmin);
-  bot.hears('🆔 بطاقة معرفي', async (ctx) => {
+  bot.hears(/فحص الكفاءة/, handlePing);
+  bot.hears(/التبديل لحسابي كعامل/, handleSwitchToWorker);
+  bot.hears(/العودة لبوابة الإشراف/, handleSwitchToFieldAdmin);
+  bot.hears(/بطاقة معرفي/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
     await ctx.reply(
       `🆔 *بطاقة المعرف الرقمي الخاصة بك*\n` +
@@ -284,16 +271,16 @@ export function createBot(): Bot<MyContext> {
       { parse_mode: 'Markdown' }
     );
   });
-  bot.hears('🧾 قسيمة راتبي', async (ctx) => {
+  bot.hears(/قسيمة راتبي/, async (ctx) => {
     await ctx.reply('🧾 *خدمة قسائم الرواتب (تحت التجهيز)*\nسيتم عرض مفردات الراتب والبدلات فور ربط محرك الرواتب المالي.', { parse_mode: 'Markdown' });
   });
-  bot.hears('📊 كشف حسابي', async (ctx) => {
+  bot.hears(/كشف حسابي/, async (ctx) => {
     await ctx.reply('📊 *خدمة كشف الحساب والمسحوبات (تحت التجهيز)*\nسيتم استعراض السلف والمسحوبات فور اعتماد الربط المحاسبي.', { parse_mode: 'Markdown' });
   });
-  bot.hears('📊 لوحة المؤشرات', async (ctx) => {
+  bot.hears(/لوحة المؤشرات/, async (ctx) => {
     await ctx.reply('📊 *لوحة المؤشرات التنفيذية*\nمؤشرات السيولة والإنتاجية تحت التجهيز.', { parse_mode: 'Markdown' });
   });
-  bot.hears('🧾 فواتيري ومستخلصاتي', async (ctx) => {
+  bot.hears(/فواتيري ومستخلصاتي/, async (ctx) => {
     await ctx.reply('🧾 *بوابة مستخلصات الموردين*\nعرض الفواتير المعتمدة تحت التجهيز.', { parse_mode: 'Markdown' });
   });
 

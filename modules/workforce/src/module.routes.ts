@@ -279,21 +279,8 @@ export function registerWorkforceRoutes(
     if (!ctx.message?.text || ctx.message.text.startsWith('/')) {
       return next();
     }
-    const navButtons = [
-      '🏠 القائمة الرئيسية',
-      '⚙️ إعدادات النظام',
-      '👤 ملفي الشخصي',
-      '👤 ملفي وإعداداتي',
-      '⚡ فحص الكفاءة',
-      '👷 التبديل لحسابي كعامل',
-      '🛡️ العودة لبوابة الإشراف',
-      '🆔 بطاقة معرفي',
-      '🧾 قسيمة راتبي',
-      '📊 كشف حسابي',
-      '📊 لوحة المؤشرات',
-      '🧾 فواتيري ومستخلصاتي',
-    ];
-    if (navButtons.includes(ctx.message.text.trim())) {
+    const isNav = /القائمة الرئيسية|إعدادات النظام|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي/.test(ctx.message.text);
+    if (isNav) {
       if (ctx.from) {
         editHandler.clearDraft(String(ctx.from.id));
       }
