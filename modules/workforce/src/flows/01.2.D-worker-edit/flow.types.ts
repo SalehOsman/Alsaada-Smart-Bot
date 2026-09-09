@@ -59,6 +59,7 @@ export interface EditExecutionResult {
   isDirectExecution: boolean;
   ticketId?: string;
   error?: string;
+  worker?: unknown;
 }
 
 export interface PendingEditTicket {

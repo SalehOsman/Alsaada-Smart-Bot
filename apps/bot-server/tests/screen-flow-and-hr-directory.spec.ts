@@ -247,7 +247,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     expect(redisModule.setPersistentKeyboardMsg).toHaveBeenCalledWith(123456n, 1001, 444);
   });
 
-  it('should clean up old persistent keyboard anchor message before sending a new one', async () => {
+  it('should preserve existing persistent keyboard anchor without deleting it by default', async () => {
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);
     const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 445 });
@@ -267,6 +267,31 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     });
 
     await service.ensurePersistentKeyboard(mockCtx);
+
+    expect(deleteMessageSpy).not.toHaveBeenCalled();
+    expect(sendMessageSpy).not.toHaveBeenCalled();
+  });
+
+  it('should clean up old persistent keyboard anchor message when forceRefresh is true', async () => {
+    const service = new ScreenFlowService();
+    const deleteMessageSpy = vi.fn().mockResolvedValue(true);
+    const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 445 });
+    const mockCtx = {
+      from: { id: 123456 },
+      chat: { id: 1001 },
+      effectiveRole: 'FIELD_ADMIN',
+      api: {
+        deleteMessage: deleteMessageSpy,
+        sendMessage: sendMessageSpy,
+      },
+    } as unknown as MyContext;
+
+    vi.mocked(redisModule.getPersistentKeyboardMsg).mockResolvedValueOnce({
+      chatId: 1001,
+      messageId: 222,
+    });
+
+    await service.ensurePersistentKeyboard(mockCtx, undefined, true);
 
     expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 222);
     expect(sendMessageSpy).toHaveBeenCalledWith(1001, expect.any(String), expect.anything());

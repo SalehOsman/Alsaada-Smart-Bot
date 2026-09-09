@@ -5,6 +5,15 @@ import {
   type PaginationState,
 } from '@alsaada/core-components';
 
+export interface Profile360ActionsOptions {
+  workerId: string;
+  whatsAppUrl?: string;
+  hasPhone?: boolean;
+  hasMissingData?: boolean;
+  canRevealId?: boolean;
+  isIdRevealed?: boolean;
+}
+
 export class WorkerDirectoryKeyboards {
   static directoryKeyboard(
     workers: WorkerItem[],
@@ -37,29 +46,68 @@ export class WorkerDirectoryKeyboards {
   }
 
   static profile360ActionsKeyboard(
-    workerId: string,
-    whatsAppUrl?: string,
-    hasPhone: boolean = true,
-    missingDataWhatsAppUrl?: string
+    workerIdOrOptions: string | Profile360ActionsOptions,
+    legacyWhatsAppUrl?: string,
+    legacyHasPhone: boolean = true,
+    legacyMissingDataWhatsAppUrl?: string
   ): InlineKeyboard {
     const kb = new InlineKeyboard();
 
-    if (missingDataWhatsAppUrl) {
-      kb.url('📲 طلب استكمال النواقص عبر واتساب', missingDataWhatsAppUrl).row();
+    let opts: Profile360ActionsOptions;
+    if (typeof workerIdOrOptions === 'object') {
+      opts = workerIdOrOptions;
+    } else {
+      opts = {
+        workerId: workerIdOrOptions,
+        whatsAppUrl: legacyWhatsAppUrl,
+        hasPhone: legacyHasPhone,
+        hasMissingData: Boolean(legacyMissingDataWhatsAppUrl),
+      };
     }
 
-    if (whatsAppUrl) {
-      kb.url('💬 مراسلة العامل عبر واتساب', whatsAppUrl).row();
+    // 1. Missing data request (opens dedicated message with 1-tap copy text and WhatsApp button)
+    if (opts.hasMissingData) {
+      kb.text('📲 طلب استكمال النواقص عبر واتساب', `action:worker:mwa:${opts.workerId}`).row();
     }
 
-    if (hasPhone) {
-      kb.text('📞 اتصال هاتفي مباشر', `action:worker:call:${workerId}`).row();
+    // 2. National ID toggle (Admin / Super Admin)
+    if (opts.canRevealId) {
+      if (opts.isIdRevealed) {
+        kb.text('🙈 تمويه الرقم القومي', `action:worker:tid:${opts.workerId}:0`).row();
+      } else {
+        kb.text('👁️ كشف الرقم القومي', `action:worker:tid:${opts.workerId}:1`).row();
+      }
     }
 
-    kb.text('✏️ تعديل بيانات العامل', `action:worker_edit:pick:${workerId}`).row();
+    // 3. Direct WhatsApp messaging (lightweight URL <= 45 bytes)
+    if (opts.whatsAppUrl) {
+      kb.url('💬 مراسلة العامل عبر واتساب', opts.whatsAppUrl).row();
+    }
+
+    // 4. Direct phone call button
+    if (opts.hasPhone) {
+      kb.text('📞 اتصال هاتفي مباشر', `action:worker:call:${opts.workerId}`).row();
+    } else {
+      kb.text('📞 لا يوجد هاتف مسجل', `action:worker:nophone:${opts.workerId}`).row();
+    }
+
+    // 5. Edit worker
+    kb.text('✏️ تعديل بيانات العامل', `action:worker_edit:pick:${opts.workerId}`).row();
+
+    // 6. Navigation
     kb.text('◀️ العودة لدليل العاملين', 'action:worker:directory').row();
     kb.text('🏠 القائمة الرئيسية', 'action:main_menu');
 
+    return kb;
+  }
+
+  static missingDataDispatchKeyboard(workerId: string, directWhatsAppUrl?: string): InlineKeyboard {
+    const kb = new InlineKeyboard();
+    if (directWhatsAppUrl) {
+      kb.url('💬 فتح شات واتساب مع العامل', directWhatsAppUrl).row();
+    }
+    kb.text('◀️ العودة لبطاقة العامل', `action:worker:view:${workerId}`).row();
+    kb.text('🏠 القائمة الرئيسية', 'action:main_menu');
     return kb;
   }
 

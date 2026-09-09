@@ -137,6 +137,22 @@ export function registerWorkforceRoutes(
     if (match?.[1]) await dirHandler.handleCallWorker(ctx, match[1]);
   });
 
+  bot.callbackQuery(/^action:worker:tid:(.+):([01])$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) {
+      await dirHandler.handleToggleNationalId(ctx, match[1], match[2] === '1');
+    }
+  });
+
+  bot.callbackQuery(/^action:worker:mwa:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await dirHandler.handleMissingDataWhatsApp(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:worker:nophone:(.+)$/, async (ctx) => {
+    await dirHandler.handleNoPhoneAlert(ctx);
+  });
+
   bot.callbackQuery('action:worker:dir:search_prompt', async (ctx) => {
     await dirHandler.handleSearchPrompt(ctx);
   });

@@ -15,12 +15,17 @@ export class ScreenFlowService {
   /**
    * 📌 ضمان وجود وتثبيت كيبورد الأزرار السفلي الدائم دون حذفه أو اختفائه
    */
-  async ensurePersistentKeyboard(ctx: MyContext, customText?: string): Promise<void> {
+  async ensurePersistentKeyboard(ctx: MyContext, customText?: string, forceRefresh = false): Promise<void> {
     if (!ctx.from || !ctx.chat) return;
     const telegramId = BigInt(ctx.from.id);
     const existing = await getPersistentKeyboardMsg(telegramId);
 
-    // إذا كانت هناك رسالة مثبتة قديمة في الشات، نقوم بتنظيفها برفق حتى لا تتراكم
+    // إذا كانت هناك رسالة كيبورد مثبتة سابقة، نحافظ عليها حتى لا يختفي الكيبورد من واجهة تليجرام
+    if (existing && !forceRefresh) {
+      return;
+    }
+
+    // إذا طُلب التحديث الصريح، نقوم بتنظيف الرسالة القديمة برفق
     if (existing && ctx.api) {
       await ctx.api.deleteMessage(existing.chatId, existing.messageId).catch(() => {});
     }

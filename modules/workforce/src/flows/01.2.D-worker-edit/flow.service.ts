@@ -153,6 +153,7 @@ export class WorkerEditService {
       fieldName,
       newValue: cleanValue,
       isDirectExecution: true,
+      worker: updated,
     };
   }
 

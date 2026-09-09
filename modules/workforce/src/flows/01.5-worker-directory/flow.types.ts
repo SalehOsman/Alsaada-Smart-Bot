@@ -18,6 +18,9 @@ export interface WorkerProfile360 {
   nickname?: string;
   idType: 'NATIONAL_ID' | 'PASSPORT';
   idNumberMasked: string;
+  idNumberFull?: string;
+  canRevealId?: boolean;
+  isIdRevealed?: boolean;
   phone?: string;
   jobTitle: string;
   departmentName?: string;

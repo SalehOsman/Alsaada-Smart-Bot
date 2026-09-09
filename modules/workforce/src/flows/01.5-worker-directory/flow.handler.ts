@@ -76,7 +76,11 @@ export class WorkerDirectoryHandler {
     await this.replyOrEdit(ctx, text, keyboard);
   }
 
-  async handleViewWorker(ctx: WorkforceModuleContext, workerId: string): Promise<void> {
+  async handleViewWorker(
+    ctx: WorkforceModuleContext,
+    workerId: string,
+    isIdRevealed = false
+  ): Promise<void> {
     if (ctx.callbackQuery) {
       await ctx.answerCallbackQuery().catch(() => {});
     }
@@ -98,15 +102,76 @@ export class WorkerDirectoryHandler {
       return;
     }
 
-    const text = WorkerDirectoryMessages.profile360Card(profile);
-    const keyboard = WorkerDirectoryKeyboards.profile360ActionsKeyboard(
+    const text = WorkerDirectoryMessages.profile360Card(profile, isIdRevealed);
+    const keyboard = WorkerDirectoryKeyboards.profile360ActionsKeyboard({
       workerId,
-      profile.directWhatsAppUrl,
-      Boolean(profile.phone),
-      profile.missingDataWhatsAppUrl
+      whatsAppUrl: profile.directWhatsAppUrl,
+      hasPhone: Boolean(profile.phone),
+      hasMissingData: !profile.isProfileComplete,
+      canRevealId: profile.canRevealId,
+      isIdRevealed,
+    });
+
+    await this.replyOrEdit(ctx, text, keyboard);
+  }
+
+  async handleToggleNationalId(
+    ctx: WorkforceModuleContext,
+    workerId: string,
+    reveal: boolean
+  ): Promise<void> {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery().catch(() => {});
+    }
+    if (!this.checkRbac(ctx)) {
+      await this.replyOrEdit(ctx, '⛔ عذراً، لا تملك الصلاحية لتغيير عرض الرقم القومي.');
+      return;
+    }
+    await this.handleViewWorker(ctx, workerId, reveal);
+  }
+
+  async handleMissingDataWhatsApp(
+    ctx: WorkforceModuleContext,
+    workerId: string
+  ): Promise<void> {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery().catch(() => {});
+    }
+    if (!this.checkRbac(ctx)) {
+      await this.replyOrEdit(ctx, '⛔ عذراً، لا تملك الصلاحية لطلب استكمال النواقص.');
+      return;
+    }
+
+    const val = validateWorkerIdParam(workerId);
+    if (!val.isValid) {
+      await this.replyOrEdit(ctx, WorkerDirectoryMessages.notFound());
+      return;
+    }
+
+    const role = ctx.effectiveRole || 'GUEST';
+    const profile = await this.service.getWorkerProfile360(workerId, role);
+    if (!profile) {
+      await this.replyOrEdit(ctx, WorkerDirectoryMessages.notFound());
+      return;
+    }
+
+    const messageText = WorkerDirectoryMessages.formatMissingDataWhatsAppMessage(profile);
+    const text = WorkerDirectoryMessages.missingDataDispatchCard(profile, messageText);
+    const keyboard = WorkerDirectoryKeyboards.missingDataDispatchKeyboard(
+      workerId,
+      profile.directWhatsAppUrl
     );
 
     await this.replyOrEdit(ctx, text, keyboard);
+  }
+
+  async handleNoPhoneAlert(ctx: WorkforceModuleContext): Promise<void> {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({
+        text: '⚠️ لا يوجد رقم هاتف مسجل لهذا العامل في المنظومة.',
+        show_alert: true,
+      }).catch(() => {});
+    }
   }
 
   async handleCallWorker(ctx: WorkforceModuleContext, workerId: string): Promise<void> {

@@ -3,6 +3,7 @@ import { decryptField } from '@alsaada/database';
 import { normalizeDigits, formatCurrency } from '@alsaada/regional-engine';
 import { normalizeEgyptianPhone } from '@alsaada/core-components';
 import { WorkerDirectoryRepository } from './flow.repository.js';
+import { WorkerDirectoryMessages } from './flow.messages.js';
 import type {
   WorkerDirectoryQuery,
   WorkerDirectoryResult,
@@ -81,9 +82,15 @@ export class WorkerDirectoryService {
       'PROJECT_MANAGER',
     ].includes(viewerRole);
 
-    const idNumberMasked = canViewFullId
-      ? (rawId || 'غير مسجل')
-      : (rawId.length > 4 ? '*'.repeat(Math.max(0, rawId.length - 4)) + rawId.slice(-4) : (rawId || '••••••••'));
+    const idNumberFull = canViewFullId && rawId ? rawId : undefined;
+    let idNumberMasked = 'غير مسجل';
+    if (rawId) {
+      if (canViewFullId) {
+        idNumberMasked = rawId;
+      } else {
+        idNumberMasked = rawId.length >= 4 ? `**********${rawId.slice(-4)}` : '**********';
+      }
+    }
 
     // Financial RBAC masking
     const canViewFinances = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'ACCOUNTANT'].includes(viewerRole);
@@ -91,12 +98,14 @@ export class WorkerDirectoryService {
       ? formatCurrency(Number(worker.dailyWage || 0))
       : '•••••• ج.م (محجوب)';
 
-    // WhatsApp URL
+    // WhatsApp Direct Chat URL (strictly <= 50 ASCII bytes, 100% Telegram compliant)
     let directWhatsAppUrl: string | undefined;
     if (phone) {
-      const cleanPhone = normalizeDigits(phone.replace(/\D/g, ''));
-      const intlPhone = normalizeEgyptianPhone(cleanPhone) || cleanPhone;
-      directWhatsAppUrl = `https://api.whatsapp.com/send?phone=${intlPhone}`;
+      const cleanDigits = normalizeDigits(phone.replace(/\D/g, ''));
+      const intlDigits = cleanDigits.startsWith('2')
+        ? cleanDigits
+        : (cleanDigits.startsWith('0') ? `2${cleanDigits}` : `20${cleanDigits}`);
+      directWhatsAppUrl = `https://api.whatsapp.com/send?phone=${intlDigits}`;
     }
 
     // Missing items & attachments evaluation
@@ -197,25 +206,14 @@ export class WorkerDirectoryService {
       : 100;
     const isProfileComplete = missingItems.length === 0;
 
-    // Missing Data WhatsApp Request URL
     let missingDataWhatsAppUrl: string | undefined;
-    if (!isProfileComplete) {
-      const displayName = worker.nickname || worker.name;
-      const missingListText = missingItems.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
-      const messageText =
-        `السلام عليكم زميلنا العزيز / ${displayName}،\n` +
-        `تحية طيبة من إدارة الموارد البشرية بشركة السعادة.\n\n` +
-        `نرجو من سيادتكم التكرم بموافاتنا بالبيانات والمستندات التالية لاستكمال ملفكم الوظيفي بالمنظومة:\n` +
-        `${missingListText}\n\n` +
-        `شاكرين ومقدرين حسن تعاونكم معنا.`;
-
-      if (phone) {
-        const cleanPhone = normalizeDigits(phone.replace(/\D/g, ''));
-        const intlPhone = normalizeEgyptianPhone(cleanPhone) || cleanPhone;
-        missingDataWhatsAppUrl = `https://api.whatsapp.com/send?phone=${intlPhone}&text=${encodeURIComponent(messageText)}`;
-      } else {
-        missingDataWhatsAppUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageText)}`;
-      }
+    if (!isProfileComplete && missingItems.length > 0) {
+      const waText = WorkerDirectoryMessages.formatMissingDataWhatsAppMessage({
+        name: worker.name,
+        nickname: worker.nickname,
+        missingItems,
+      });
+      missingDataWhatsAppUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
     }
 
     return {
@@ -226,6 +224,8 @@ export class WorkerDirectoryService {
       nickname: worker.nickname || undefined,
       idType: worker.idType === 'PASSPORT' ? 'PASSPORT' : 'NATIONAL_ID',
       idNumberMasked,
+      idNumberFull,
+      canRevealId: Boolean(canViewFullId && rawId),
       phone,
       jobTitle: worker.jobTitle,
       departmentName: worker.department?.name,

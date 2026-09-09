@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-09T11:46:24.069Z",
+  "generatedAt": "2026-09-09T12:28:31.871Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -50,7 +50,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "935781d8b7a6a7f3beb69272a10737e856c2f2e3e8038f2a2e2a438f10bcab9e"
+      "sha256": "c6c0b9cfbbd70daff17142361ae9ccded91c72c2243474860923c20c35003b3c"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -95,6 +95,10 @@
     {
       "path": "tools/governance/verify-migration-registry.ts",
       "sha256": "5ee27fdddbd23a04b7ebe3eab44caeac36ba6a8c19478ba35661b2dbe135919f"
+    },
+    {
+      "path": "tools/governance/verify-telegram-contracts.ts",
+      "sha256": "a828a4735c7e3426018fae38c22e99f3b8161f4b3e5cc581212fa212b80da731"
     }
   ]
 }

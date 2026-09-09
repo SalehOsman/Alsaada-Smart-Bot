@@ -152,7 +152,7 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const flat = kb.inline_keyboard.flat();
     const missingBtn = flat.find((b) => b.text.includes('طلب استكمال النواقص عبر واتساب'));
     expect(missingBtn).toBeDefined();
-    expect(missingBtn?.url).toBe(profile?.missingDataWhatsAppUrl);
+    expect(missingBtn?.callback_data).toBe('action:worker:mwa:wrk-inc');
   });
 
   it('should evaluate 100% complete profile without missing data button', async () => {

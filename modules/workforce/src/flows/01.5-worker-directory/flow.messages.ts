@@ -25,11 +25,14 @@ export const WorkerDirectoryMessages = {
     );
   },
 
-  profile360Card(p: WorkerProfile360): string {
+  profile360Card(p: WorkerProfile360, isIdRevealed = false): string {
     const formattedHireDate = formatDateDMY(p.hireDate);
     const formattedExpiryDate = p.idCardExpiryDate ? formatDateDMY(p.idCardExpiryDate) : undefined;
     const isPassport = p.idType === 'PASSPORT';
     const idLabel = isPassport ? '🌍 جواز السفر' : '🇪🇬 الرقم القومي';
+    const displayedId = isIdRevealed && p.idNumberFull
+      ? `${p.idNumberFull} 🔓`
+      : `${p.idNumberMasked} 🔒`;
 
     const lines = [
       `👤 *بطاقة العامل الشاملة (360°)*`,
@@ -47,7 +50,7 @@ export const WorkerDirectoryMessages = {
       `━━━━━━━━━━━━━━━━━━━━━`,
       `📋 *بيانات الهوية والاتصال:*`,
       `• *نوع الوثيقة:* ${idLabel}`,
-      `• *رقم الإثبات:* \`${p.idNumberMasked}\``,
+      `• *رقم الإثبات:* \`${displayedId}\``,
       formattedExpiryDate ? `• *تاريخ انتهاء الوثيقة:* ${formattedExpiryDate}` : '',
       p.phone ? `• *رقم الهاتف:* \`${p.phone}\`` : '',
       p.emergencyPhone ? `• *هاتف الطوارئ:* \`${p.emergencyPhone}\`${p.emergencyContactName ? ` (${cleanMd(p.emergencyContactName)})` : ''}` : '',
@@ -67,6 +70,34 @@ export const WorkerDirectoryMessages = {
     ].filter(Boolean);
 
     return lines.join('\n');
+  },
+
+  formatMissingDataWhatsAppMessage(p: { name: string; nickname?: string | null; missingItems: string[] }): string {
+    const displayName = p.nickname || p.name;
+    const itemsList = p.missingItems.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
+    return (
+      `السلام عليكم زميلنا العزيز / ${displayName}،\n` +
+      `تحية طيبة من إدارة الموارد البشرية بشركة السعادة.\n\n` +
+      `نرجو من سيادتكم التكرم بموافاتنا بالبيانات والمستندات التالية لاستكمال ملفكم الوظيفي بالمنظومة:\n` +
+      `${itemsList}\n\n` +
+      `شاكرين ومقدرين حسن تعاونكم معنا.`
+    );
+  },
+
+  missingDataDispatchCard(p: WorkerProfile360, messageText: string): string {
+    const displayName = p.nickname || p.name;
+    return (
+      `📲 *طلب استكمال النواقص والمستندات عبر واتساب*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `• *العامل:* ${cleanMd(displayName)} (\`#${p.code}\`)\n` +
+      `• *رقم الهاتف:* \`${p.phone || 'غير مسجل'}\`\n` +
+      `• *نسبة اكتمال الملف:* ${p.completionPercentage}%\n\n` +
+      `📋 *النواقص المطلوب استيفاؤها:*\n` +
+      p.missingItems.map((item, i) => `  ▫️ ${i + 1}. ${cleanMd(item)}`).join('\n') +
+      `\n\n💬 *نص الرسالة المجهز (انسخه بنقرة واحدة):*\n` +
+      `\`\`\`\n${messageText}\n\`\`\`\n\n` +
+      `_اضغط على زر فتح شات واتساب أدناه لمراسلة العامل وإرسال الرسالة فوراً._`
+    );
   },
 
   notFound(): string {
