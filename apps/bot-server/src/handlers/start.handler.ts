@@ -234,7 +234,7 @@ export async function handleStart(ctx: MyContext): Promise<void> {
       // إذا كان العامل غير مرتبط أو قيد التفعيل
       const siteLine = worker.site?.name ? `📍 *الموقع الميداني المخصص:* ${worker.site.name}\n` : '';
       const hireDateLine = `📅 *تاريخ مباشرة العمل:* *${formatDate(worker.hireDate)}*\n`;
-      const shiftLine = worker.shiftSystem ? `🔄 *نظام الدوام:* ${worker.shiftSystem}\n` : '';
+      const shiftLine = worker.shiftSystem ? `🔄 *نظام الدوام:* ${worker.shiftSystem.replace(/_/g, ' ')}\n` : '';
 
       const welcomeCard =
         `👋 *أهلاً وسهلاً بك زميلنا العزيز/ ${worker.name}*\n` +

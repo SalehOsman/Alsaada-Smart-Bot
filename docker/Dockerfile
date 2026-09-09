@@ -19,24 +19,27 @@ COPY packages/database/package.json packages/database/
 COPY packages/regional-engine/package.json packages/regional-engine/
 COPY packages/national-id-engine/package.json packages/national-id-engine/
 COPY packages/core-components/package.json packages/core-components/
+COPY modules/workforce/package.json modules/workforce/
 COPY apps/bot-server/package.json apps/bot-server/
 
 # Install all dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile=false
 
-# Copy source code across packages and apps
+# Copy source code across packages, modules and apps
 COPY packages/ packages/
+COPY modules/ modules/
 COPY apps/ apps/
 COPY tsconfig.json ./
 
 # Generate Prisma Client
 RUN pnpm --filter @alsaada/database db:generate
 
-# Compile TypeScript across all packages and the bot server
+# Compile TypeScript across all packages, modules and the bot server
 RUN pnpm --filter @alsaada/regional-engine build
 RUN pnpm --filter @alsaada/national-id-engine build
 RUN pnpm --filter @alsaada/database build
 RUN pnpm --filter @alsaada/core-components build
+RUN pnpm --filter @alsaada/workforce build
 RUN pnpm --filter @alsaada/bot-server build
 
 # -------------------------------------------------------------

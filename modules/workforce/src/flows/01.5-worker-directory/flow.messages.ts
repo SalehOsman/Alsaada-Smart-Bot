@@ -1,6 +1,8 @@
 import { formatDateDMY } from '@alsaada/regional-engine';
 import type { WorkerProfile360 } from './flow.types.js';
 
+import { formatShiftSystem, cleanMd } from '../../shared/module.messages.js';
+
 export const WorkerDirectoryMessages = {
   directoryHeader(total: number, page: number, totalPages: number, searchQuery?: string): string {
     const searchLine = searchQuery ? `🔍 *نتائج البحث عن:* "${searchQuery}"\n` : '';
@@ -32,31 +34,31 @@ export const WorkerDirectoryMessages = {
     const lines = [
       `👤 *بطاقة العامل الشاملة (360°)*`,
       `━━━━━━━━━━━━━━━━━━━━━`,
-      `• *الاسم الكامل:* ${p.name}`,
-      p.nickname ? `• *اسم الشهرة:* ${p.nickname}` : '',
+      `• *الاسم الكامل:* ${cleanMd(p.name)}`,
+      p.nickname ? `• *اسم الشهرة:* ${cleanMd(p.nickname)}` : '',
       `• *الكود الوظيفي:* \`#${p.code}\``,
       p.legacyCode ? `• *الكود القديم:* \`${p.legacyCode}\`` : '',
-      `• *المسمى الوظيفي:* ${p.jobTitle}`,
-      p.departmentName ? `• *القسم:* ${p.departmentName}` : '',
-      `• *الموقع الميداني:* ${p.siteName || 'الموقع العام'}`,
+      `• *المسمى الوظيفي:* ${cleanMd(p.jobTitle)}`,
+      p.departmentName ? `• *القسم:* ${cleanMd(p.departmentName)}` : '',
+      `• *الموقع الميداني:* ${cleanMd(p.siteName) || 'الموقع العام'}`,
       `• *تاريخ مباشرة العمل:* ${formattedHireDate}`,
-      p.shiftSystem ? `• *نظام الدوام:* ${p.shiftSystem}` : '',
-      p.dailyWageMasked ? `• *اليومية / الراتب:* ${p.dailyWageMasked}` : '',
+      p.shiftSystem ? `• *نظام الدوام:* ${formatShiftSystem(p.shiftSystem)}` : '',
+      p.dailyWageMasked ? `• *اليومية / الراتب:* ${cleanMd(p.dailyWageMasked)}` : '',
       `━━━━━━━━━━━━━━━━━━━━━`,
       `📋 *بيانات الهوية والاتصال:*`,
       `• *نوع الوثيقة:* ${idLabel}`,
       `• *رقم الإثبات:* \`${p.idNumberMasked}\``,
       formattedExpiryDate ? `• *تاريخ انتهاء الوثيقة:* ${formattedExpiryDate}` : '',
       p.phone ? `• *رقم الهاتف:* \`${p.phone}\`` : '',
-      p.emergencyPhone ? `• *هاتف الطوارئ:* \`${p.emergencyPhone}\`${p.emergencyContactName ? ` (${p.emergencyContactName})` : ''}` : '',
-      p.address ? `• *محل الإقامة:* ${p.address}` : '',
+      p.emergencyPhone ? `• *هاتف الطوارئ:* \`${p.emergencyPhone}\`${p.emergencyContactName ? ` (${cleanMd(p.emergencyContactName)})` : ''}` : '',
+      p.address ? `• *محل الإقامة:* ${cleanMd(p.address)}` : '',
       `━━━━━━━━━━━━━━━━━━━━━`,
       `🛡️ *الحالة التشغيلية والسلامة:*`,
       `• *الحالة بالمنظومة:* ${p.status === 'ACTIVE' ? '🟢 نشط وعلى رأس العمل' : '⚪ منتهي الخدمة / مؤرشف'}`,
-      p.drivingLicense ? `• *رخصة القيادة:* ${p.drivingLicense}` : '',
-      p.militaryStatus ? `• *الخدمة العسكرية:* ${p.militaryStatus}` : '',
-      p.maritalStatus ? `• *الحالة الاجتماعية:* ${p.maritalStatus}` : '',
-      p.paymentMethod ? `• *وسيلة الصرف:* ${p.paymentMethod}` : '',
+      p.drivingLicense ? `• *رخصة القيادة:* ${cleanMd(p.drivingLicense)}` : '',
+      p.militaryStatus ? `• *الخدمة العسكرية:* ${cleanMd(p.militaryStatus)}` : '',
+      p.maritalStatus ? `• *الحالة الاجتماعية:* ${cleanMd(p.maritalStatus)}` : '',
+      p.paymentMethod ? `• *وسيلة الصرف:* ${cleanMd(p.paymentMethod)}` : '',
     ].filter(Boolean);
 
     return lines.join('\n');

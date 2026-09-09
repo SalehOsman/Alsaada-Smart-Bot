@@ -105,7 +105,7 @@ export interface WorkerCardView {
   maritalStatus?: string | null;
   bloodType?: string | null;
   jobTitle?: string | null;
-  jobRef?: { title?: string | null } | null;
+  jobRef?: { id?: string; name?: string | null; title?: string | null } | null;
   site?: { name?: string | null } | null;
   department?: { name?: string | null } | null;
   shiftSystem?: string | null;

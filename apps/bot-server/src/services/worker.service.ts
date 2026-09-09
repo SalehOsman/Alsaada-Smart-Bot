@@ -397,7 +397,7 @@ export class WorkerService {
 
     const siteLine = data.siteName ? `📍 *الموقع الميداني:* ${data.siteName}` : '📍 *الموقع الميداني:* الموقع العام للعمليات';
     const hireDateLine = hireDateFormatted ? `📅 *تاريخ مباشرة العمل:* ${hireDateFormatted}` : '';
-    const shiftLine = data.shiftSystem ? `🔄 *نظام الدوام:* ${data.shiftSystem}` : '';
+    const shiftLine = data.shiftSystem ? `🔄 *نظام الدوام:* ${data.shiftSystem.replace(/_/g, ' ')}` : '';
     const payoutLine = data.payoutMethod
       ? `💳 *وسيلة الصرف:* ${data.payoutMethod}${data.accountNumber && data.accountNumber !== '-' ? ` (رقم: ${data.accountNumber})` : ''}`
       : '';

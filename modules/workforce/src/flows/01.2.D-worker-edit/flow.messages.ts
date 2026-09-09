@@ -10,6 +10,8 @@ function formatDate(d?: Date | string | null): string {
   return `${day}-${month}-${year}`;
 }
 
+import { formatShiftSystem, cleanMd } from '../../shared/module.messages.js';
+
 export const CIGARETTE_POLICY_LABELS: Record<string, string> = {
   ONE_PACK_DAILY: 'علبة واحدة يومياً',
   TWO_PACKS_DAILY: 'علبتين يومياً',
@@ -33,16 +35,16 @@ export const WorkerEditMessages = {
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `• *الاسم الكامل:* ${worker.name}\n` +
-      `• *اسم الشهرة المعتمد:* *${worker.nickname || 'غير مسجل'}*\n` +
+      `• *الاسم الكامل:* ${cleanMd(worker.name)}\n` +
+      `• *اسم الشهرة المعتمد:* *${cleanMd(worker.nickname) || 'غير مسجل'}*\n` +
       `• *كود النظام:* \`#${worker.code}\`\n` +
       `• *الكود الأرشيفي:* \`${worker.legacyCode || 'لا يوجد'}\`\n` +
       `• *الرقم القومي:* \`${worker.nationalId || 'غير مسجل'}\`\n` +
       `• *تاريخ انتهاء البطاقة:* \`${formatDate(worker.idCardExpiryDate)}\`\n` +
-      `• *المحافظة:* ${worker.governorateCode || 'غير محددة'}\n` +
-      `• *العنوان التفصيلي:* ${worker.address || 'غير مسجل'}\n` +
-      `• *الموقف التجنيدي:* ${worker.militaryStatus || 'غير مسجل'}\n` +
-      `• *الحالة الاجتماعية:* ${worker.maritalStatus || 'غير مسجل'}\n` +
+      `• *المحافظة:* ${cleanMd(worker.governorateCode) || 'غير محددة'}\n` +
+      `• *العنوان التفصيلي:* ${cleanMd(worker.address) || 'غير مسجل'}\n` +
+      `• *الموقف التجنيدي:* ${cleanMd(worker.militaryStatus) || 'غير مسجل'}\n` +
+      `• *الحالة الاجتماعية:* ${cleanMd(worker.maritalStatus) || 'غير مسجل'}\n` +
       `• *فصيلة الدم:* \`${worker.bloodType || 'غير مسجلة'}\`\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `💡 _اضغط على أي حقل بالأسفل لتعديله مباشرة:_`
@@ -54,18 +56,18 @@ export const WorkerEditMessages = {
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `• *الاسم:* ${worker.name} (${worker.nickname || 'بدون شهرة'})\n` +
+      `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
-      `• *المسمى الوظيفي:* ${worker.jobRef?.title || worker.jobTitle || 'غير محدد'}\n` +
-      `• *الموقع الميداني:* ${worker.site?.name || 'غير محدد'}\n` +
-      `• *الإدارة / القسم:* ${worker.department?.name || 'العمليات الميدانية'}\n` +
-      `• *نظام الوردية:* ${worker.shiftSystem || 'وردية نهارية (12 ساعة)'}\n` +
-      `• *نوع التعاقد:* ${worker.contractType || 'يومية حرة'}\n` +
+      `• *المسمى الوظيفي:* ${cleanMd(worker.jobRef?.name || worker.jobRef?.title || worker.jobTitle || 'غير محدد')}\n` +
+      `• *الموقع الميداني:* ${cleanMd(worker.site?.name || 'غير محدد')}\n` +
+      `• *الإدارة / القسم:* ${cleanMd(worker.department?.name || 'العمليات الميدانية')}\n` +
+      `• *نظام الوردية:* ${formatShiftSystem(worker.shiftSystem)}\n` +
+      `• *نوع التعاقد:* ${cleanMd(worker.contractType) || 'يومية حرة'}\n` +
       `• *تاريخ التعيين:* \`${formatDate(worker.hireDate)}\`\n` +
-      `• *حالة التشغيل:* ${worker.status === 'ACTIVE' ? 'نشط ميدانياً 🟢' : worker.status || 'نشط'}\n` +
-      `• *رخصة القيادة:* ${worker.drivingLicense || 'بدون رخصة'}\n` +
-      `• *عنبر السكن بالكامب:* ${worker.barracksUnit || 'غير محدد'}\n` +
-      `• *رقم السرير / الغرفة:* ${worker.bedNumber || 'غير محدد'}\n` +
+      `• *حالة التشغيل:* ${worker.status === 'ACTIVE' ? 'نشط ميدانياً 🟢' : cleanMd(worker.status) || 'نشط'}\n` +
+      `• *رخصة القيادة:* ${cleanMd(worker.drivingLicense) || 'بدون رخصة'}\n` +
+      `• *عنبر السكن بالكامب:* ${cleanMd(worker.barracksUnit) || 'غير محدد'}\n` +
+      `• *رقم السرير / الغرفة:* ${cleanMd(worker.bedNumber) || 'غير محدد'}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `💡 _اضغط على أي حقل بالأسفل لتعديله مباشرة:_`
     );
@@ -73,23 +75,23 @@ export const WorkerEditMessages = {
 
   tab3FinanceCard(worker: WorkerCardView, isSuperAdmin: boolean): string {
     const title = isSuperAdmin ? '✏️ *بطاقة العامل — 💰 البيانات المالية والمخصصات*' : '📋 *ملف العامل — 💰 البيانات المالية والمخصصات*';
-    const policyLabel = CIGARETTE_POLICY_LABELS[worker.canteenCigarettePolicy || 'NONE'] || worker.canteenCigarettePolicy || 'بدون مخصص';
-    const brandLabel = worker.cigaretteBrand || (worker.canteenItem ? worker.canteenItem.name : 'غير محدد');
+    const policyLabel = CIGARETTE_POLICY_LABELS[worker.canteenCigarettePolicy || 'NONE'] || cleanMd(worker.canteenCigarettePolicy) || 'بدون مخصص';
+    const brandLabel = cleanMd(worker.cigaretteBrand || (worker.canteenItem ? worker.canteenItem.name : 'غير محدد'));
 
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `• *الاسم:* ${worker.name} (${worker.nickname || 'بدون شهرة'})\n` +
+      `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
-      `• *طريقة الصرف:* ${worker.paymentMethod || 'نقداً بالخزينة (كاش)'}\n` +
+      `• *طريقة الصرف:* ${cleanMd(worker.paymentMethod) || 'نقداً بالخزينة (كاش)'}\n` +
       `• *رقم الحساب / المحفظة:* \`${worker.accountNumberEncrypted ? 'مسجل ومحمي 🔒' : 'غير مسجل'}\`\n` +
-      `• *اسم صاحب المحفظة:* ${worker.walletOwnerName || 'مسجل باسم العامل'}\n` +
+      `• *اسم صاحب المحفظة:* ${cleanMd(worker.walletOwnerName) || 'مسجل باسم العامل'}\n` +
       `• *معرف إنستاباي:* \`${worker.instaPayHandle || 'لا يوجد'}\`\n` +
       `• *اليومية التعاقدية:* \`${worker.dailyWage ? String(worker.dailyWage) + ' ج.م' : 'غير محددة'}\`\n` +
       `• *الراتب الأساسي:* \`${worker.basicSalary ? String(worker.basicSalary) + ' ج.م' : 'غير محدد'}\`\n` +
       `• *البدلات الثابتة:* \`${worker.fixedAllowances ? String(worker.fixedAllowances) + ' ج.م' : '0 ج.م'}\`\n` +
       `• *الرقم التأميني:* \`${worker.insuranceNumber || 'غير مسجل'}\`\n` +
-      `• *الموقف من التأمينات:* ${worker.insuranceStatus || 'غير مؤمن عليه'}\n` +
+      `• *الموقف من التأمينات:* ${cleanMd(worker.insuranceStatus) || 'غير مؤمن عليه'}\n` +
       `• *سياسة مخصص السجائر:* ${policyLabel}\n` +
       `• *صنف السجائر المعتمد:* ${brandLabel}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -102,25 +104,25 @@ export const WorkerEditMessages = {
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `• *الاسم:* ${worker.name} (${worker.nickname || 'بدون شهرة'})\n` +
+      `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
       `• *رقم الهاتف والواتساب:* \`${worker.phoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل'}\`\n` +
       `• *هاتف الطوارئ البديل:* \`${worker.emergencyPhoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل'}\`\n` +
-      `• *اسم جهة الطوارئ:* ${worker.emergencyContactName || 'غير مسجل'}\n` +
+      `• *اسم جهة الطوارئ:* ${cleanMd(worker.emergencyContactName) || 'غير مسجل'}\n` +
       `• *مقاس حذاء السيفتي:* \`${worker.ppeShoeSize || 'غير محدد'}\`\n` +
       `• *مقاس زي العمل (اليونيفورم):* \`${worker.ppeUniformSize || 'غير محدد'}\`\n` +
-      `• *الملاحظات الطبية والحساسية:* ${worker.medicalNotes || 'لا توجد ملاحظات طبية خاصة'}\n` +
+      `• *الملاحظات الطبية والحساسية:* ${cleanMd(worker.medicalNotes) || 'لا توجد ملاحظات طبية خاصة'}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `💡 _اضغط على أي حقل بالأسفل لتعديله مباشرة:_`
     );
   },
 
   selectFieldPrompt(workerName: string, workerCode: string, nickname?: string | null): string {
-    const nickLine = nickname ? `• *اسم الشهرة:* ${nickname}\n` : '';
+    const nickLine = nickname ? `• *اسم الشهرة:* ${cleanMd(nickname)}\n` : '';
     return (
       `✏️ *تعديل بيانات العامل*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `• *الاسم:* ${workerName}\n` +
+      `• *الاسم:* ${cleanMd(workerName)}\n` +
       nickLine +
       `• *الكود:* \`#${workerCode}\`\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -129,11 +131,11 @@ export const WorkerEditMessages = {
   },
 
   selectCigarettePolicyPrompt(workerName: string, currentPolicy?: string | null): string {
-    const cur = currentPolicy ? CIGARETTE_POLICY_LABELS[currentPolicy] || currentPolicy : 'بدون مخصص';
+    const cur = currentPolicy ? CIGARETTE_POLICY_LABELS[currentPolicy] || cleanMd(currentPolicy) : 'بدون مخصص';
     return (
       `🚬 *تحديد مخصص السجائر للعامل*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `• *العامل:* ${workerName}\n` +
+      `• *العامل:* ${cleanMd(workerName)}\n` +
       `• *المخصص الحالي:* ${cur}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `*الخطوة 1 من 2:* اختر سياسة مخصص السجائر المناسبة:`
@@ -141,14 +143,14 @@ export const WorkerEditMessages = {
   },
 
   selectCigaretteBrandPrompt(workerName: string, policy: string): string {
-    const pLabel = CIGARETTE_POLICY_LABELS[policy] || policy;
+    const pLabel = CIGARETTE_POLICY_LABELS[policy] || cleanMd(policy);
     return (
-      `🚬 *اختيار صنف ونوع السجائر المعتمد*\n` +
+      `🚬 *تحديد صنف ونوع السجائر*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `• *العامل:* ${workerName}\n` +
-      `• *السياسة المحددة:* ${pLabel}\n` +
+      `• *العامل:* ${cleanMd(workerName)}\n` +
+      `• *السياسة المعتمدة:* ${pLabel}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `*الخطوة 2 من 2:* اختر صنف السجائر من الأصناف المتاحة بمخزن الكانتين:`
+      `*الخطوة 2 من 2:* اختر صنف السجائر المصروف من المخزن:`
     );
   },
 

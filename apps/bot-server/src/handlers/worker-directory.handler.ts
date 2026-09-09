@@ -202,6 +202,19 @@ export async function renderWorkerDetailCard(
     ? `🟢 *مرتبط بحساب تليجرام* (\`${worker.telegramId}\`)`
     : `⚪ *غير مرتبط ببوت تليجرام حتى الآن*`;
 
+  const formatShift = (sys?: string | null): string => {
+    if (!sys) return 'غير محدد';
+    const map: Record<string, string> = {
+      '20_WORK_10_REST': '20 يوم عمل / 10 أيام راحة',
+      '24_WORK_6_REST': '24 يوم عمل / 6 أيام راحة',
+      '6_WORK_1_REST': '6 أيام عمل / يوم راحة',
+      CONTINUOUS: 'دوام مستمر',
+      ROTATING: 'ورديات متغيرة',
+    };
+    return map[sys] || sys.replace(/_/g, ' ');
+  };
+  const cleanMd = (str?: string | null): string => (str ? str.replace(/_/g, ' ') : '');
+
   // الحجب المسبق الصارم للبيانات المالية (Pre-render Financial RBAC Masking)
   let financialSection = '';
   if (isSuperAdmin) {
@@ -210,31 +223,31 @@ export async function renderWorkerDetailCard(
     const daily = Number(worker.dailyWage || 0);
     financialSection =
       `\n💰 *البيانات المالية والمستحقات (خاص بالسوبر أدمن):*\n` +
-      `• الراتب الأساسي: *${formatCurrency(basic)} ج.م*\n` +
-      `• البدلات الشهرية: *${formatCurrency(allowances)} ج.م*\n` +
-      `• إجمالي الراتب: *${formatCurrency(basic + allowances)} ج.م*\n` +
-      `• الأجر اليومي التقديري: *${formatCurrency(daily)} ج.م*\n`;
+      `• الراتب الأساسي: *${formatCurrency(basic)}*\n` +
+      `• البدلات الشهرية: *${formatCurrency(allowances)}*\n` +
+      `• إجمالي الراتب: *${formatCurrency(basic + allowances)}*\n` +
+      `• الأجر اليومي التقديري: *${formatCurrency(daily)}*\n`;
   }
 
   const text =
     `👤 *بطاقة بيانات العامل الميدانية (360°)*\n` +
     `━━━━━━━━━━━━━━━━━━━━━\n` +
-    `🔹 *الاسم الكامل:* *${worker.name}*\n` +
-    `🏷️ *اسم الشهرة:* *${worker.nickname || '-'}*\n` +
+    `🔹 *الاسم الكامل:* *${cleanMd(worker.name)}*\n` +
+    `🏷️ *اسم الشهرة:* *${cleanMd(worker.nickname) || '-'}*\n` +
     `🆔 *كود العامل:* \`${worker.code}\`${worker.legacyCode ? ` | القديم: \`${worker.legacyCode}\`` : ''}\n` +
-    `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'غير محدد'}\n` +
+    `💼 *الوظيفة:* ${cleanMd(worker.jobTitle)} | 📍 *الموقع:* ${cleanMd(worker.site?.name || 'غير محدد')}\n` +
     `━━━━━━━━━━━━━━━━━━━━━\n` +
     `🔢 *نوع الإثبات:* ${worker.idType === 'NATIONAL_ID' ? '🇪🇬 رقم قومي مصري' : '🌍 جواز سفر'}\n` +
     `📋 *رقم الإثبات:* \`${cleanId}\`\n` +
     `⏳ *تاريخ انتهاء السريان:* *${expiryDateStr}*\n` +
-    `📅 *تاريخ الميلاد:* ${birthDateStr} | 📍 *المحافظة:* ${govName}\n` +
-    `🏠 *العنوان ومحل الإقامة:* ${worker.address || '-'}\n` +
+    `📅 *تاريخ الميلاد:* ${birthDateStr} | 📍 *المحافظة:* ${cleanMd(govName)}\n` +
+    `🏠 *العنوان ومحل الإقامة:* ${cleanMd(worker.address || '-')}\n` +
     `📅 *تاريخ التعيين:* ${hireDateStr}\n` +
-    `🔄 *نظام الدوام والشيفت:* ${worker.shiftSystem || '20_WORK_10_REST'}\n` +
+    `🔄 *نظام الدوام والشيفت:* ${formatShift(worker.shiftSystem)}\n` +
     `━━━━━━━━━━━━━━━━━━━━━\n` +
     `📱 *رقم الهاتف:* \`${cleanPhone}\`\n` +
     `🚨 *هاتف الطوارئ:* \`${cleanEmergencyPhone}\`\n` +
-    `💳 *المحفظة / الحساب:* \`${cleanWallet}\` (${worker.walletType || 'نقدي'})\n` +
+    `💳 *المحفظة / الحساب:* \`${cleanWallet}\` (${cleanMd(worker.walletType || 'نقدي')})\n` +
     `🤖 *حالة البوت الذكي:* ${telegramStatus}\n` +
     financialSection +
     `━━━━━━━━━━━━━━━━━━━━━\n` +

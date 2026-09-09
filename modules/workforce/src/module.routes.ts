@@ -41,7 +41,7 @@ export function registerWorkforceRoutes(
     await dirHandler.handleDirectory(ctx, 1);
   });
 
-  bot.callbackQuery(/^action:worker_edit:pick:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:worker_edit:pick:|we:menu:)(.+)$/, async (ctx) => {
     const match = ctx.match;
     if (match?.[1]) await editHandler.handlePickWorker(ctx, match[1]);
   });
