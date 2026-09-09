@@ -4,9 +4,6 @@ import { prisma } from '../db.js';
 import { workerService } from '../services/worker.service.js';
 import { screenFlowService } from '../services/screen-flow.service.js';
 
-// Re-export worker directory features for clean modularity and backwards compatibility
-export * from './worker-directory.handler.js';
-
 /**
  * 👥 تصيير بوابة قطاع الموارد البشرية والعمالة (HR Domain Hub)
  * مُقسمة إلى 5 أقسام فرعية بالترتيب المعتمد:

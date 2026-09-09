@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { workerEditService } from '../src/services/worker-edit.service.js';
 import { workerExpiryAlertService } from '../src/services/worker-expiry-alert.service.js';
 import { prisma } from '../src/db.js';
+import { FIELD_KEY_SHORT_MAP, FIELD_TO_SHORT_MAP } from '@alsaada/workforce';
+import { EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
 
 vi.mock('../src/db.js', () => ({
   prisma: {
@@ -230,22 +232,13 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
   });
 
   describe('Telegram 64-Byte Callback Data Compliance & Short Mapping', () => {
-    it('should bidirectional map all editable fields without loss', async () => {
-      const { FIELD_KEY_SHORT_MAP, FIELD_TO_SHORT_MAP } = await import(
-        '../src/handlers/worker-edit.handler.js'
-      );
-
+    it('should bidirectional map all editable fields without loss', () => {
       for (const [fullKey, shortKey] of Object.entries(FIELD_TO_SHORT_MAP)) {
         expect(FIELD_KEY_SHORT_MAP[shortKey]).toBe(fullKey);
       }
     });
 
-    it('should strictly ensure all worker-edit inline keyboard callbacks are <= 64 UTF-8 bytes', async () => {
-      const { FIELD_TO_SHORT_MAP } = await import(
-        '../src/handlers/worker-edit.handler.js'
-      );
-      const { EGYPTIAN_GOVERNORATES } = await import('@alsaada/national-id-engine');
-
+    it('should strictly ensure all worker-edit inline keyboard callbacks are <= 64 UTF-8 bytes', () => {
       const sampleWorkerUuid = '123e4567-e89b-12d3-a456-426614174000'; // Standard 36-char UUID
 
       // 1. Check worker edit menu field buttons

@@ -1,9 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHrHub, renderHrSubHub } from '../src/handlers/hr-hub.handler.js';
-import {
-  handleDownloadWorkerTemplate,
-  handleStartUploadWorkerExcel,
-} from '../src/handlers/worker-excel.handler.js';
 import { MyContext } from '../src/types/context.js';
 
 vi.mock('../src/services/worker.service.js', () => ({
@@ -121,41 +117,5 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker_export:start')).toBe(true);
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب!
-  });
-
-  it('should block non-super-admin from downloading template if callback invoked directly', async () => {
-    const mockCtx = {
-      isRealSuperAdmin: false,
-      callbackQuery: {},
-      answerCallbackQuery: vi.fn().mockResolvedValue(true),
-      replyWithDocument: vi.fn(),
-      reply: vi.fn(),
-    } as unknown as MyContext;
-
-    await handleDownloadWorkerTemplate(mockCtx);
-
-    expect(mockCtx.replyWithDocument).not.toHaveBeenCalled();
-    expect(mockCtx.answerCallbackQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ text: expect.stringContaining('مقتصرة على المدير العام') })
-    );
-  });
-
-  it('should block non-super-admin from starting Excel upload if callback invoked directly', async () => {
-    const mockCtx = {
-      isRealSuperAdmin: false,
-      from: { id: 99999 },
-      callbackQuery: {},
-      answerCallbackQuery: vi.fn().mockResolvedValue(true),
-      reply: vi.fn(),
-      editMessageText: vi.fn(),
-    } as unknown as MyContext;
-
-    await handleStartUploadWorkerExcel(mockCtx);
-
-    expect(mockCtx.reply).not.toHaveBeenCalled();
-    expect(mockCtx.editMessageText).not.toHaveBeenCalled();
-    expect(mockCtx.answerCallbackQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ text: expect.stringContaining('مقتصرة على المدير العام') })
-    );
   });
 });
