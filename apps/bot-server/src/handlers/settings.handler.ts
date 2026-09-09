@@ -11,16 +11,25 @@ import { screenFlowService } from '../services/screen-flow.service.js';
  * Super Admin Settings Hub Handler (Main Categorized Hub)
  */
 export async function handleSettings(ctx: MyContext): Promise<void> {
-  if (!ctx.isRealSuperAdmin) {
-    await ctx.answerCallbackQuery({
-      text: '🔒 هذا القسم مخصص حصرياً للمدير العام.',
-      show_alert: true,
-    });
+  const isSuper = Boolean(
+    ctx.isRealSuperAdmin ||
+    ctx.effectiveRole === 'SUPER_ADMIN' ||
+    ctx.dbUser?.role === 'SUPER_ADMIN'
+  );
+  if (!isSuper) {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({
+        text: '🔒 هذا القسم مخصص حصرياً للمدير العام.',
+        show_alert: true,
+      }).catch(() => {});
+    } else {
+      await ctx.reply('🔒 هذا القسم مخصص حصرياً للمدير العام.');
+    }
     return;
   }
 
   if (ctx.callbackQuery) {
-    await ctx.answerCallbackQuery();
+    await ctx.answerCallbackQuery().catch(() => {});
   }
 
   const keyboard = new InlineKeyboard()

@@ -103,7 +103,7 @@ export class WorkerEditKeyboards {
   ): InlineKeyboard {
     const kb = new InlineKeyboard();
 
-    // Top Tab Bar
+    // Top Tab Bar (2x2 Grid)
     const t1 = activeTab === 'PERSONAL' ? '👤 الشخصية 🟢' : '👤 الشخصية';
     const t2 = activeTab === 'JOB' ? '💼 الوظيفة 🟢' : '💼 الوظيفة';
     const t3 = activeTab === 'FINANCE' ? '💰 المالية 🟢' : '💰 المالية';
@@ -111,6 +111,7 @@ export class WorkerEditKeyboards {
 
     kb.text(t1, `action:w_edit:tab:PERSONAL:${workerId}`)
       .text(t2, `action:w_edit:tab:JOB:${workerId}`)
+      .row()
       .text(t3, `action:w_edit:tab:FINANCE:${workerId}`)
       .text(t4, `action:w_edit:tab:DOCS:${workerId}`)
       .row();
@@ -149,10 +150,9 @@ export class WorkerEditKeyboards {
       kb.text('👤 اسم صاحب المحفظة', `action:w_edit:f:wown:${workerId}`)
         .text('⚡ معرف إنستاباي', `action:w_edit:f:inst:${workerId}`)
         .row();
-      kb.text('💵 اليومية الميدانية', `action:w_edit:f:wage:${workerId}`)
-        .text('💰 الراتب الأساسي', `action:w_edit:f:bsal:${workerId}`)
+      kb.text('💰 الراتب الأساسي الشهري', `action:w_edit:f:bsal:${workerId}`)
+        .text('➕ البدلات الثابتة', `action:w_edit:f:fall:${workerId}`)
         .row();
-      kb.text('➕ البدلات الثابتة', `action:w_edit:f:fall:${workerId}`).row();
     } else if (activeTab === 'DOCS') {
       kb.text('📱 رقم الهاتف والواتساب', `action:w_edit:f:phone:${workerId}`)
         .text('🆘 هاتف الطوارئ', `action:w_edit:f:emPhone:${workerId}`)

@@ -84,12 +84,11 @@ export const WorkerEditMessages = {
       `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
       `• *طريقة الصرف:* ${cleanMd(worker.paymentMethod) || 'نقداً بالخزينة (كاش)'}\n` +
-      `• *رقم الحساب / المحفظة:* \`${worker.accountNumber || (worker.accountNumberEncrypted ? 'مسجل ومحمي 🔒' : 'غير مسجل')}\`\n` +
+      `• *رقم الحساب / المحفظة:* \`${worker.accountNumber || (worker.accountNumberEncrypted && !isSuperAdmin ? 'مسجل ومحمي 🔒' : 'غير مسجل')}\`\n` +
       `• *اسم صاحب المحفظة:* ${cleanMd(worker.walletOwnerName) || 'مسجل باسم العامل'}\n` +
       `• *معرف إنستاباي:* \`${worker.instaPayHandle || 'لا يوجد'}\`\n` +
-      `• *اليومية التعاقدية:* \`${worker.dailyWage ? String(worker.dailyWage) + ' ج.م' : 'غير محددة'}\`\n` +
-      `• *الراتب الأساسي:* \`${worker.basicSalary ? String(worker.basicSalary) + ' ج.م' : 'غير محدد'}\`\n` +
-      `• *البدلات الثابتة:* \`${worker.fixedAllowances ? String(worker.fixedAllowances) + ' ج.م' : '0 ج.م'}\`\n` +
+      `• *الراتب الأساسي الشهري:* \`${worker.basicSalary ? String(worker.basicSalary) + ' ج.م' : 'غير محدد'}\`\n` +
+      `• *البدلات الثابتة الشهرية:* \`${worker.fixedAllowances ? String(worker.fixedAllowances) + ' ج.م' : '0 ج.م'}\`\n` +
       `• *الرقم التأميني:* \`${worker.insuranceNumber || 'غير مسجل'}\`\n` +
       `• *الموقف من التأمينات:* ${cleanMd(worker.insuranceStatus) || 'غير مؤمن عليه'}\n` +
       `• *سياسة مخصص السجائر:* ${policyLabel}\n` +
@@ -101,13 +100,15 @@ export const WorkerEditMessages = {
 
   tab4DocsCard(worker: WorkerCardView, isSuperAdmin: boolean): string {
     const title = isSuperAdmin ? '✏️ *بطاقة العامل — 📞 الاتصال والسلامة والمستندات*' : '📋 *ملف العامل — 📞 الاتصال والسلامة والمستندات*';
+    const phoneVal = worker.phone || (worker.phoneEncrypted && !isSuperAdmin ? '`مسجل ومشفر 🔒`' : '`غير مسجل`');
+    const emVal = worker.emergencyPhone || (worker.emergencyPhoneEncrypted && !isSuperAdmin ? '`مسجل ومشفر 🔒`' : '`غير مسجل`');
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
-      `• *رقم الهاتف والواتساب:* \`${worker.phone || (worker.phoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل')}\`\n` +
-      `• *هاتف الطوارئ البديل:* \`${worker.emergencyPhone || (worker.emergencyPhoneEncrypted ? 'مسجل ومشفر 🔒' : 'غير مسجل')}\`\n` +
+      `• *رقم الهاتف والواتساب:* ${phoneVal}\n` +
+      `• *هاتف الطوارئ البديل:* ${emVal}\n` +
       `• *اسم جهة الطوارئ:* ${cleanMd(worker.emergencyContactName) || 'غير مسجل'}\n` +
       `• *مقاس حذاء السيفتي:* \`${worker.ppeShoeSize || 'غير محدد'}\`\n` +
       `• *مقاس زي العمل (اليونيفورم):* \`${worker.ppeUniformSize || 'غير محدد'}\`\n` +

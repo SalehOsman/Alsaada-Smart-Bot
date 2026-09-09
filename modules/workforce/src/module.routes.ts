@@ -279,6 +279,26 @@ export function registerWorkforceRoutes(
     if (!ctx.message?.text || ctx.message.text.startsWith('/')) {
       return next();
     }
+    const navButtons = [
+      '🏠 القائمة الرئيسية',
+      '⚙️ إعدادات النظام',
+      '👤 ملفي الشخصي',
+      '👤 ملفي وإعداداتي',
+      '⚡ فحص الكفاءة',
+      '👷 التبديل لحسابي كعامل',
+      '🛡️ العودة لبوابة الإشراف',
+      '🆔 بطاقة معرفي',
+      '🧾 قسيمة راتبي',
+      '📊 كشف حسابي',
+      '📊 لوحة المؤشرات',
+      '🧾 فواتيري ومستخلصاتي',
+    ];
+    if (navButtons.includes(ctx.message.text.trim())) {
+      if (ctx.from) {
+        editHandler.clearDraft(String(ctx.from.id));
+      }
+      return next();
+    }
     const text = ctx.message.text;
     if (ctx.from) {
       const uid = String(ctx.from.id);

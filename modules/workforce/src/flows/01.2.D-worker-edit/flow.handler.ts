@@ -11,7 +11,12 @@ export class WorkerEditHandler {
   private readonly editDrafts = new Map<string, PendingWorkerEditState>();
 
   hasActiveDraft(userId: string): boolean {
-    return this.editDrafts.has(userId);
+    const draft = this.editDrafts.get(userId);
+    return Boolean(draft && draft.fieldKey);
+  }
+
+  clearDraft(userId: string): void {
+    this.editDrafts.delete(userId);
   }
 
   constructor(
@@ -42,12 +47,7 @@ export class WorkerEditHandler {
   }
 
   private renderTab(worker: WorkerCardView, tab: WorkerProfileTab, isSuperAdmin: boolean): { text: string; kb: InlineKeyboard } {
-    const textMap: Record<WorkerProfileTab, (w: WorkerCardView, s: boolean) => string> = {
-      PERSONAL: WorkerEditMessages.tab1PersonalCard,
-      JOB: WorkerEditMessages.tab2JobCard,
-      FINANCE: WorkerEditMessages.tab3FinanceCard,
-      DOCS: WorkerEditMessages.tab4DocsCard,
-    };
+    const textMap = { PERSONAL: WorkerEditMessages.tab1PersonalCard, JOB: WorkerEditMessages.tab2JobCard, FINANCE: WorkerEditMessages.tab3FinanceCard, DOCS: WorkerEditMessages.tab4DocsCard };
     const text = (textMap[tab] || WorkerEditMessages.tab1PersonalCard)(worker, isSuperAdmin);
     const kb = WorkerEditKeyboards.workerProfileTabsKeyboard(worker.id, tab, isSuperAdmin);
     return { text, kb };
@@ -74,6 +74,7 @@ export class WorkerEditHandler {
       nationalId: rawNatId,
       phone: this.service.decryptFieldSafe(worker.phoneEncrypted),
       emergencyPhone: this.service.decryptFieldSafe(worker.emergencyPhoneEncrypted),
+      accountNumber: this.service.decryptFieldSafe(worker.accountNumberEncrypted),
     };
     const { text, kb } = this.renderTab(workerView, tab, isSuper);
     await this.replyOrEdit(ctx, text, kb);

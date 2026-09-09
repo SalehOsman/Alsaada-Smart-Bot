@@ -30,9 +30,10 @@ export const WorkerDirectoryMessages = {
     const formattedExpiryDate = p.idCardExpiryDate ? formatDateDMY(p.idCardExpiryDate) : undefined;
     const isPassport = p.idType === 'PASSPORT';
     const idLabel = isPassport ? '🌍 جواز السفر' : '🇪🇬 الرقم القومي';
+    const isActuallyMasked = p.idNumberMasked.includes('*') || p.idNumberMasked.includes('•');
     const displayedId = isIdRevealed && p.idNumberFull
       ? `${p.idNumberFull} 🔓`
-      : `${p.idNumberMasked} 🔒`;
+      : (isActuallyMasked ? `${p.idNumberMasked} 🔒` : p.idNumberMasked);
 
     const lines = [
       `👤 *بطاقة العامل الشاملة (360°)*`,
@@ -46,14 +47,14 @@ export const WorkerDirectoryMessages = {
       `• *الموقع الميداني:* ${cleanMd(p.siteName) || 'الموقع العام'}`,
       `• *تاريخ مباشرة العمل:* ${formattedHireDate}`,
       p.shiftSystem ? `• *نظام الدوام:* ${formatShiftSystem(p.shiftSystem)}` : '',
-      p.dailyWageMasked ? `• *اليومية / الراتب:* ${cleanMd(p.dailyWageMasked)}` : '',
+      p.dailyWageMasked ? `• *الراتب الشهري الأساسي:* ${cleanMd(p.dailyWageMasked)}` : '',
       `━━━━━━━━━━━━━━━━━━━━━`,
       `📋 *بيانات الهوية والاتصال:*`,
       `• *نوع الوثيقة:* ${idLabel}`,
       `• *رقم الإثبات:* \`${displayedId}\``,
       formattedExpiryDate ? `• *تاريخ انتهاء الوثيقة:* ${formattedExpiryDate}` : '',
-      p.phone ? `• *رقم الهاتف:* \`${p.phone}\`` : '',
-      p.emergencyPhone ? `• *هاتف الطوارئ:* \`${p.emergencyPhone}\`${p.emergencyContactName ? ` (${cleanMd(p.emergencyContactName)})` : ''}` : '',
+      p.phone ? `• *رقم الهاتف:* ${p.phone}` : '',
+      p.emergencyPhone ? `• *هاتف الطوارئ:* ${p.emergencyPhone}${p.emergencyContactName ? ` (${cleanMd(p.emergencyContactName)})` : ''}` : '',
       p.address ? `• *محل الإقامة:* ${cleanMd(p.address)}` : '',
       `━━━━━━━━━━━━━━━━━━━━━`,
       `🛡️ *الحالة التشغيلية والسلامة:*`,

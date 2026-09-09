@@ -206,14 +206,10 @@ export class WorkerDirectoryHandler {
       : (cleanPhone.startsWith('0') ? `+20${cleanPhone.slice(1)}` : `+20${cleanPhone}`);
     const displayName = profile.nickname || profile.name;
 
-    try {
-      await ctx.replyWithContact(intlPhone, displayName);
-    } catch {
-      await ctx.reply(
-        `📞 *بيانات الاتصال المباشر بالعامل:*\n━━━━━━━━━━━━━━━━━━━━━\n• *الاسم:* ${displayName}\n• *رقم الهاتف:* \`${intlPhone}\`\n\n_اضغط على الرقم للاتصال به مباشرة من هاتفك._`,
-        { parse_mode: 'Markdown' }
-      );
-    }
+    await ctx.reply(
+      `📞 *الاتصال المباشر بالعامل:*\n━━━━━━━━━━━━━━━━━━━━━\n• *الاسم:* ${displayName}\n• *رقم الهاتف:* ${intlPhone}\n\n_انقر على الرقم أعلاه للاتصال به مباشرة من هاتفك._`,
+      { parse_mode: 'Markdown' }
+    );
   }
 
   private readonly searchPendingUsers = new Set<string>();
