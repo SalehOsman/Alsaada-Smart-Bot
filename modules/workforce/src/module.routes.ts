@@ -12,6 +12,7 @@ import { WorkerDirectoryRepository } from './flows/01.5-worker-directory/flow.re
 import { WorkerEditHandler } from './flows/01.2.D-worker-edit/flow.handler.js';
 import { WorkerEditService } from './flows/01.2.D-worker-edit/flow.service.js';
 import { WorkerEditRepository } from './flows/01.2.D-worker-edit/flow.repository.js';
+import type { WorkerProfileTab } from './flows/01.2.D-worker-edit/flow.types.js';
 import { PrismaClient } from '@alsaada/database';
 
 export function registerWorkforceRoutes(
@@ -45,10 +46,50 @@ export function registerWorkforceRoutes(
     if (match?.[1]) await editHandler.handlePickWorker(ctx, match[1]);
   });
 
+  bot.callbackQuery(/^action:w_edit:tab:([A-Z]+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) {
+      await editHandler.handleSwitchTab(ctx, match[1] as WorkerProfileTab, match[2]);
+    }
+  });
+
   bot.callbackQuery(/^action:w_edit:f:([a-zA-Z0-9_]+):(.+)$/, async (ctx) => {
     const match = ctx.match;
     if (match?.[1] && match?.[2]) {
       await editHandler.handleSelectField(ctx, match[1], match[2]);
+    }
+  });
+
+  bot.callbackQuery(/^action:w_edit:pk:([a-zA-Z0-9_]+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) {
+      await editHandler.handleOpenPicker(ctx, match[1], match[2]);
+    }
+  });
+
+  bot.callbackQuery(/^action:w_edit:pv:([a-zA-Z0-9_]+):(\d+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2] && match?.[3]) {
+      await editHandler.handleSelectPickerValue(ctx, match[1], match[2], match[3]);
+    }
+  });
+
+  bot.callbackQuery(/^action:w_edit:cg_start:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleCigaretteStart(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:cgp:([a-zA-Z0-9_]+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) {
+      await editHandler.handleCigaretteSelectPolicy(ctx, match[1], match[2]);
+    }
+  });
+
+  bot.callbackQuery(/^action:w_edit:cgb:(\d+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) {
+      await editHandler.handleCigaretteSelectBrand(ctx, match[1], match[2]);
     }
   });
 

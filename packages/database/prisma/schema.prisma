@@ -280,6 +280,17 @@ model Worker {
   accountNumberEncrypted String?
   walletType             String?   // e.g. "محفظة فودافون كاش", "إنستاباي"
   canteenCigarettePolicy String    @default("ONE_PACK_DAILY") // ONE_PACK_DAILY, FULL_COVERAGE, NONE, CUSTOM
+  cigaretteBrand         String?   // نوع / صنف السجائر المعتمد للعامل
+  canteenItemId          String?   // معرف صنف السجائر من جدول مخزن الكانتين
+  walletOwnerName        String?   // اسم صاحب المحفظة
+  instaPayHandle         String?   // معرف إنستاباي
+  insuranceNumber        String?   // الرقم التأميني المكون من 8-10 أرقام
+  insuranceStatus        String?   // الموقف من التأمينات (مؤمن عليه حالياً، مؤمن سابقاً، غير مؤمن، متفرغ)
+  ppeShoeSize            String?   // مقاس حذاء السلامة السيفتي (41-46)
+  ppeUniformSize         String?   // مقاس الأفرول / الزي الميداني (M-4XL)
+  medicalNotes           String?   // الأمراض المزمنة، الحساسية، الملاحظات الطبية
+  barracksUnit           String?   // مقر السكن / رقم الكرفان أو العنبر بالموقع
+  bedNumber              String?   // رقم السرير المخصص
   phoneEncrypted         String?
   phoneBlindIndex        String?
   emergencyContactName   String?
@@ -308,6 +319,7 @@ model Worker {
   department             Department?                  @relation(fields: [departmentId], references: [id])
   jobRef                 JobTitle?                    @relation(fields: [jobTitleId], references: [id])
   site                   Site?                        @relation(fields: [siteId], references: [id])
+  canteenItem            CanteenItem?                 @relation("WorkerCigaretteItem", fields: [canteenItemId], references: [id])
   user                   User?
   salaryHistories        SalaryHistory[]
   customAllowances       WorkerCustomAllowance[]
@@ -1084,6 +1096,7 @@ model CanteenItem {
 
   site    Site              @relation(fields: [siteId], references: [id])
   ledgers FinancialLedger[]
+  workers Worker[]          @relation("WorkerCigaretteItem")
 
   @@map("canteen_items")
 }

@@ -91,6 +91,48 @@ export class WorkerEditService {
       const aliases = (worker.aliases || []).filter((a) => a !== cleanValue);
       aliases.push(cleanValue);
       dataToUpdate.aliases = aliases;
+    } else if (fieldKey === 'bloodType') {
+      dataToUpdate.bloodType = cleanValue;
+    } else if (fieldKey === 'shiftSystem') {
+      dataToUpdate.shiftSystem = cleanValue;
+    } else if (fieldKey === 'contractType') {
+      dataToUpdate.contractType = cleanValue;
+    } else if (fieldKey === 'barracksUnit') {
+      dataToUpdate.barracksUnit = cleanValue;
+    } else if (fieldKey === 'bedNumber') {
+      dataToUpdate.bedNumber = cleanValue;
+    } else if (fieldKey === 'dailyWage') {
+      dataToUpdate.dailyWage = new Prisma.Decimal(cleanValue);
+    } else if (fieldKey === 'basicSalary') {
+      dataToUpdate.basicSalary = new Prisma.Decimal(cleanValue);
+    } else if (fieldKey === 'fixedAllowances') {
+      dataToUpdate.fixedAllowances = new Prisma.Decimal(cleanValue);
+    } else if (fieldKey === 'paymentMethod') {
+      dataToUpdate.paymentMethod = cleanValue;
+    } else if (fieldKey === 'walletOwnerName') {
+      dataToUpdate.walletOwnerName = cleanValue;
+    } else if (fieldKey === 'instaPayHandle') {
+      dataToUpdate.instaPayHandle = cleanValue;
+    } else if (fieldKey === 'insuranceNumber') {
+      dataToUpdate.insuranceNumber = cleanValue;
+    } else if (fieldKey === 'insuranceStatus') {
+      dataToUpdate.insuranceStatus = cleanValue;
+    } else if (fieldKey === 'canteenCigarettePolicy') {
+      dataToUpdate.canteenCigarettePolicy = cleanValue;
+      if (cleanValue === 'NONE') {
+        dataToUpdate.cigaretteBrand = null;
+        dataToUpdate.canteenItem = { disconnect: true };
+      }
+    } else if (fieldKey === 'cigaretteBrand') {
+      dataToUpdate.cigaretteBrand = cleanValue;
+    } else if (fieldKey === 'emergencyContactName') {
+      dataToUpdate.emergencyContactName = cleanValue;
+    } else if (fieldKey === 'ppeShoeSize') {
+      dataToUpdate.ppeShoeSize = cleanValue;
+    } else if (fieldKey === 'ppeUniformSize') {
+      dataToUpdate.ppeUniformSize = cleanValue;
+    } else if (fieldKey === 'medicalNotes') {
+      dataToUpdate.medicalNotes = cleanValue;
     }
 
     const updated = await this.repository.updateWorkerDirect(workerId, dataToUpdate, actorTelegramId);
@@ -171,6 +213,43 @@ export class WorkerEditService {
 
     await this.repository.updateTicketStatus(ticket.id, 'REJECTED', adminTelegramId, reason);
     return { success: true };
+  }
+
+  async applyCigaretteAllocation(
+    workerId: string,
+    policy: string,
+    brandName?: string | null,
+    canteenItemId?: string | null,
+    actorTelegramId?: bigint
+  ): Promise<EditExecutionResult> {
+    const worker = await this.repository.findWorkerForEdit(workerId);
+    if (!worker) {
+      return { success: false, isDirectExecution: true, error: 'لم يتم العثور على العامل المطلوب' };
+    }
+
+    const dataToUpdate: Prisma.WorkerUpdateInput = {
+      canteenCigarettePolicy: policy,
+      cigaretteBrand: brandName || null,
+    };
+
+    if (canteenItemId) {
+      dataToUpdate.canteenItem = { connect: { id: canteenItemId } };
+    } else if (policy === 'NONE') {
+      dataToUpdate.canteenItem = { disconnect: true };
+    }
+
+    const updated = await this.repository.updateWorkerDirect(workerId, dataToUpdate, actorTelegramId);
+    return {
+      success: true,
+      workerCode: updated.code,
+      fieldName: 'مخصص السجائر المعتمد',
+      newValue: policy === 'NONE' ? 'بدون مخصص' : `${policy} (${brandName || 'غير محدد'})`,
+      isDirectExecution: true,
+    };
+  }
+
+  async getCigaretteItems(siteId?: string) {
+    return this.repository.getActiveCigaretteItems(siteId);
   }
 
   async listPendingTickets(): Promise<PendingEditTicket[]> {

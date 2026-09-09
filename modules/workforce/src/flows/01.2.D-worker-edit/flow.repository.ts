@@ -22,7 +22,21 @@ export class WorkerEditRepository {
   async findWorkerForEdit(workerId: string) {
     return this.prisma.worker.findUnique({
       where: { id: workerId },
-      include: { site: true, jobRef: true, department: true },
+      include: { site: true, jobRef: true, department: true, canteenItem: true },
+    });
+  }
+
+  async getActiveCigaretteItems(siteId?: string) {
+    if (siteId) {
+      const siteItems = await this.prisma.canteenItem.findMany({
+        where: { category: 'CIGARETTES', isActive: true, siteId },
+        orderBy: { name: 'asc' },
+      });
+      if (siteItems.length > 0) return siteItems;
+    }
+    return this.prisma.canteenItem.findMany({
+      where: { category: 'CIGARETTES', isActive: true },
+      orderBy: { name: 'asc' },
     });
   }
 
