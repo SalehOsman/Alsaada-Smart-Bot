@@ -171,6 +171,10 @@ export async function handleSettingsSubSystem(ctx: MyContext): Promise<void> {
   const keyboard = new InlineKeyboard()
     .text('⚡ فحص كفاءة واستجابة النظام /ping', 'action:settings:ping')
     .row()
+    .text('⚠️ سجل الأعطال والأخطاء الأخيرة', 'action:settings:error_logs')
+    .row()
+    .text('📊 مؤشرات الأداء والسرعة (APM)', 'action:settings:perf_logs')
+    .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 

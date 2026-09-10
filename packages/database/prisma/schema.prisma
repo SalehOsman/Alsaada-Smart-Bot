@@ -1474,3 +1474,32 @@ model OutboxEvent {
   @@index([status, createdAt])
   @@map("outbox_events")
 }
+
+// -------------------------------------------------------------
+// 13. System Error Logs & Incident Tracking (Enterprise Crash Vault)
+// -------------------------------------------------------------
+
+model SystemErrorLog {
+  id              String    @id @default(uuid())
+  errorReference  String    @unique // e.g. ERR-7A3F
+  errorHash       String
+  occurrenceCount Int       @default(1)
+  actorTelegramId BigInt?
+  actorRole       String?
+  actionTrigger   String?   // Command or CallbackData e.g. menu:domain:hr
+  sourceLocation  String?   // Module / Handler / Function
+  errorMessage    String
+  stackTrace      String?
+  breadcrumbs     Json?     // Array of last 5 user interaction steps
+  severity        String    @default("ERROR") // WARNING, ERROR, CRITICAL, FATAL
+  isResolved      Boolean   @default(false)
+  resolvedAt      DateTime?
+  resolvedById    BigInt?
+  createdAt       DateTime  @default(now())
+  lastSeenAt      DateTime  @default(now())
+
+  @@index([severity, createdAt])
+  @@index([errorHash, isResolved])
+  @@index([actorTelegramId, createdAt])
+  @@map("system_error_logs")
+}

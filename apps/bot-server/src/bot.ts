@@ -24,6 +24,14 @@ setGlobalDispatcher(undiciDispatcher);
 import { clearAllPendingUserActions } from './redis.js';
 import { screenFlowService } from './services/screen-flow.service.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
+import { telemetryMiddleware } from './middlewares/telemetry.middleware.js';
+import { errorVaultService } from './services/error-vault.service.js';
+import {
+  renderErrorLogsList,
+  renderErrorLogDetail,
+  handleResolveError,
+  renderPerformanceDashboard,
+} from './handlers/error-console.handler.js';
 import { handleStart, renderRoleHome, handleClaimWorker } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
 import {
@@ -124,9 +132,9 @@ export function createBot(): Bot<MyContext> {
     },
   });
 
-  // 1. Error boundary
-  bot.catch((err) => {
-    console.error(`❌ [BOT ERROR] Error in update ${err.ctx?.update?.update_id}:`, err.error);
+  // 1. Centralized Error Vault & Early Warning Crash Dispatcher
+  bot.catch(async (err) => {
+    await errorVaultService.handleGlobalBotError(err, bot.api);
   });
 
   // 2. ⚡ PERFORMANCE ENGINE: Universal Stale Callback Guard & Instant Button ACK
@@ -149,6 +157,9 @@ export function createBot(): Bot<MyContext> {
 
   // 4. Authentication & Zero-Trust RBAC Middleware
   bot.use(authMiddleware);
+
+  // 4.0. ⚡ APM Performance & User Breadcrumbs Telemetry Middleware
+  bot.use(telemetryMiddleware);
 
   // 4.1. 🧹 Universal Main Menu Invalidation & Automatic Deletion Interceptor
   // When user clicks ANY section from the main menu, delete the main menu message immediately
@@ -384,10 +395,28 @@ export function createBot(): Bot<MyContext> {
     await handleSetUserSiteAssignment(ctx, targetTelegramId, siteIdOrGlobal);
   });
 
-  // 11. System Health & Ghost Mode Callbacks
+  // 11. System Health, APM & Error Console Callbacks
   bot.callbackQuery('action:settings:ghost_mode', handleGhostModeMenu);
   bot.callbackQuery('action:settings:ping', handlePing);
   bot.callbackQuery('action:exit_impersonate', handleExitImpersonate);
+  bot.callbackQuery('action:settings:error_logs', async (ctx) => {
+    await renderErrorLogsList(ctx, 1, true);
+  });
+  bot.callbackQuery(/^action:error_log:page:(\d+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1]!, 10);
+    await renderErrorLogsList(ctx, page, true);
+  });
+  bot.callbackQuery(/^action:error_log:view:(.+)$/, async (ctx) => {
+    const errorId = ctx.match[1]!;
+    await renderErrorLogDetail(ctx, errorId, true);
+  });
+  bot.callbackQuery(/^action:error_log:resolve:(.+)$/, async (ctx) => {
+    const errorId = ctx.match[1]!;
+    await handleResolveError(ctx, errorId);
+  });
+  bot.callbackQuery('action:settings:perf_logs', async (ctx) => {
+    await renderPerformanceDashboard(ctx, true);
+  });
 
   // 12. Dynamic Impersonation Callbacks (Regex)
   bot.callbackQuery(/^action:impersonate:(.+)$/, async (ctx) => {
