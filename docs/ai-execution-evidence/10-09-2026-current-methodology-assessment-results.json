@@ -1,0 +1,1865 @@
+{
+  "schemaVersion": 1,
+  "date": "10-09-2026",
+  "assessment": "FAIL_RETEST_REQUIRED",
+  "scope": "Current working tree; targeted review, not full legacy UAT",
+  "source": {
+    "head": "2433adb5a6d3c330e237df929926a2a2a5c32040",
+    "branch": "codex/remediation-and-merge-gates",
+    "status": [
+      " M apps/bot-server/package.json",
+      " M apps/bot-server/src/bot.ts",
+      " D apps/bot-server/src/handlers/admin-assignment.handler.ts",
+      " D apps/bot-server/src/handlers/admin-profile.handler.ts",
+      " D apps/bot-server/src/handlers/company-profile.handler.ts",
+      " D apps/bot-server/src/handlers/error-console.handler.ts",
+      " D apps/bot-server/src/handlers/job-matrix.handler.ts",
+      " D apps/bot-server/src/handlers/settings.handler.ts",
+      " D apps/bot-server/src/handlers/sites-hub.handler.ts",
+      " D apps/bot-server/src/services/cycle-transition.service.ts",
+      " D apps/bot-server/src/services/job-matrix-excel.service.ts",
+      " D apps/bot-server/tests/admin-assignment.spec.ts",
+      " D apps/bot-server/tests/admin-profile.spec.ts",
+      " D apps/bot-server/tests/company-profile.spec.ts",
+      " M apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
+      " D apps/bot-server/tests/job-matrix.spec.ts",
+      " D apps/bot-server/tests/sites-hub.spec.ts",
+      " M docs/19-legacy-to-enterprise-master-feature-migration-registry.md",
+      " M governance.lock.json",
+      " M modules/workforce/src/flows/01.1-worker-registration/flow.types.ts",
+      " M modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+      " M modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
+      " M modules/workforce/src/index.ts",
+      " M modules/workforce/src/module.register.ts",
+      " M modules/workforce/src/shared/module.types.ts",
+      " M pnpm-lock.yaml",
+      "?? apps/bot-server/src/handlers/identity-switch.handler.ts",
+      "?? docs/ai-execution-evidence/2026-09-10-settings-module-decomposition-and-super-admin-suites.md",
+      "?? modules/settings/",
+      "?? modules/workforce/src/hub/",
+      "?? modules/workforce/src/services/"
+    ],
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "sha256": "1721f6dc7d7011b995603dc15654756b33c469465fb131fb628377e299ea7b54"
+      },
+      {
+        "path": "apps\\bot-server\\package.json",
+        "sha256": "e056c61625e3d4bf51b55777bcff980b33d6dc3be64cf499a1e5018c66892e9b"
+      },
+      {
+        "path": "apps\\bot-server\\src\\bot.ts",
+        "sha256": "9f4a4a0a2e1ec48d4c2dcad1183cf843ea9f522afdea1cfbca9ba7105db3df21"
+      },
+      {
+        "path": "apps\\bot-server\\src\\config\\env.ts",
+        "sha256": "d0a150723e22bcb057a69a8a8fca87577f2565feb9849810946a40ee9093dedf"
+      },
+      {
+        "path": "apps\\bot-server\\src\\db.ts",
+        "sha256": "10fc856bc5e464f7276f14f60da2be4fad15800eb514ffbe49b4bdcc11b3a2a2"
+      },
+      {
+        "path": "apps\\bot-server\\src\\handlers\\hr-hub.handler.ts",
+        "sha256": "84b5f051caf583b7b49545d1bf7182b39ee0bbbc914b051546819170fcbcaf27"
+      },
+      {
+        "path": "apps\\bot-server\\src\\handlers\\identity-switch.handler.ts",
+        "sha256": "939381a21b84b5942b195c1e2b78af49a8722c197b6d5f5ed50a8265047144ce"
+      },
+      {
+        "path": "apps\\bot-server\\src\\handlers\\ping.handler.ts",
+        "sha256": "bb6a24a8ee0e25b331f349ac0200cb84ef36249fd361b2ad04d989d47b269a55"
+      },
+      {
+        "path": "apps\\bot-server\\src\\handlers\\placeholder.handler.ts",
+        "sha256": "54881d49f2cba629264d124fe1f074c2e573dbc28a9074b587bb71624318d7f3"
+      },
+      {
+        "path": "apps\\bot-server\\src\\handlers\\start.handler.ts",
+        "sha256": "c8c48e93275eb397dfc121d583f79645e9fb81aac8626dd8c582764bd3c14341"
+      },
+      {
+        "path": "apps\\bot-server\\src\\index.ts",
+        "sha256": "7ffdbc5d9ee9634c196fcc5f2705309837312060e7bf74a9001cd979520315e1"
+      },
+      {
+        "path": "apps\\bot-server\\src\\keyboards\\main-menu.keyboard.ts",
+        "sha256": "5f9a39e6cc756a3f7c7cf96228be56a3b85cb64880f65f6cb16af1a284244b9b"
+      },
+      {
+        "path": "apps\\bot-server\\src\\keyboards\\reply-bar.keyboard.ts",
+        "sha256": "57df4f92e735a2aa659994cd6cb73b48e2a20669ee73a9e0c13545259b820e59"
+      },
+      {
+        "path": "apps\\bot-server\\src\\middlewares\\auth.middleware.ts",
+        "sha256": "b8596b5e577a148bd044a6070c625f69851c9954d8818c04f9ce888608b8a0ad"
+      },
+      {
+        "path": "apps\\bot-server\\src\\middlewares\\telemetry.middleware.ts",
+        "sha256": "3341051d6be25a3a5845e1fabf6cc8cfcff396c662df68d8353396ad23f75fac"
+      },
+      {
+        "path": "apps\\bot-server\\src\\redis.ts",
+        "sha256": "c8e45f1e1db885c6296de4b566efad23cb0553db41ca0ebd11c63096acd9fb63"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\ai-vision-id.service.ts",
+        "sha256": "d53a1943a57505992f5edd3d74f303bce110873ecdf773dd4a798baedddaaf8f"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\command-scope.service.ts",
+        "sha256": "4ea2e6bc33c877f96e62d245768706abbafc1b5c26a90715d820600d9dee5da6"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\error-vault.service.ts",
+        "sha256": "bc4b1998f2e3d1caf02ab662c6930183df7e94814d7ad7149261771c45ac50a7"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\fast-cache.service.ts",
+        "sha256": "f066d6bc20f0af10eed79805e65bfac2585e01b311df96ad48e60dc53b062611"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\google-drive.service.ts",
+        "sha256": "c22f2a6e95fbe694458d863f677545629f29a3cc5f7b954491d83981519cb2c5"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\scope.service.ts",
+        "sha256": "e75e66c7c834c78629b03bf2aef7665c64ed1908c7db4891995aa6649802223a"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\screen-flow.service.ts",
+        "sha256": "ae2f44d817ea96fa824f1b752536931e93559d600bce795a1d37871a78e56401"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\system-data.service.ts",
+        "sha256": "b8d91f90560206a5b6d9d67aadedf89559ade42dffc31ce06ab92e9fd968eaa1"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\telemetry.service.ts",
+        "sha256": "1ac8e8963f34a6c1879ecf73fed6debc13820d3271978a3e6d83f469263caad4"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\worker-edit.service.ts",
+        "sha256": "1c5f42cf17f8d6cd816e11978069c6ff99666d271ba88fa4d69759e35195d88c"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\worker-excel.service.ts",
+        "sha256": "705e179d8fb0fd01238d3e16a20f39ff2cdc11ae2dca11057050d00b3f25d23e"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\worker-expiry-alert.service.ts",
+        "sha256": "afe9758f2673ac32fbdc88b7334b9b2ec4b2ba074dc16b6cd7a68d0215e30f17"
+      },
+      {
+        "path": "apps\\bot-server\\src\\services\\worker.service.ts",
+        "sha256": "7664e84a96685ca2c24aa709832616fd725cb8d7e03599955e887c1bc798b0f7"
+      },
+      {
+        "path": "apps\\bot-server\\src\\types\\context.ts",
+        "sha256": "6fbe9ea5af8e2ade8626b7820644e20b46842a371fe3772245501058bf3786e5"
+      },
+      {
+        "path": "apps\\bot-server\\src\\utils\\coordinates.ts",
+        "sha256": "1fe0ca7258de33ce40b17fb68f6156145466be3d4aae4fcd134fb1c92a0a13f5"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\coordinates.spec.ts",
+        "sha256": "a6498996c755b7ccf63ac8aadaed82f502accedfdd0ed26769c12697142cfe7f"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\error-vault-and-telemetry.spec.ts",
+        "sha256": "68c6785a7f065026f58630941ebecc05e04baaeee41f9e171cf91aefe4b58d08"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\fast-cache.spec.ts",
+        "sha256": "77bfd8bd944c5c697039cb077794be6e7cf59b96feb58e82dbbd6ebf492ac8ef"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\hr-rbac-masking.spec.ts",
+        "sha256": "53b4ae11687fe9aaa807bf546f98dc5b507924a7ad4344a4abae53f2eac89899"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\main-menu.spec.ts",
+        "sha256": "ab90c6d99f45304e23ceaa520382fce80dfc68fe26f9ac4e8732a374a7c41e42"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\screen-flow-and-hr-directory.spec.ts",
+        "sha256": "d2fa18583ef54c127635a9f59b469c8c3c320ec93522b5f6b44aee1c64bf472a"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\security-hardening-r07-r09.spec.ts",
+        "sha256": "92edcc6ca50900a2038f4a608009ff4a804dda15da09c7b7d2dd7b37bf2d5106"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\site-scope.spec.ts",
+        "sha256": "bdf0001f324b778f4226093cc0b10ddcafc3148203183df0b38e7f0075728f76"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\worker-ai-vision.spec.ts",
+        "sha256": "a1df1abbd7db2a73c1c180993f1bee7ad0e2eee26368377155c2556e22decca0"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\worker-attachments-and-address.spec.ts",
+        "sha256": "aead4bb3042b8a04a64b011325a5ed647ee40dd1d63708ad0c18247d16845de1"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\worker-edit-governance.spec.ts",
+        "sha256": "f23d9f56844be66c87970291526d21e882ca8cd9def978ca58de9a328116e4f9"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\worker-excel.spec.ts",
+        "sha256": "7e519e269006c0548fb0e5e315f5bff6af5dfc13df2a81399f3c466ada19d050"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\worker-full-wizard.spec.ts",
+        "sha256": "43061c1fcc6e1314399d4b526d1fc27ce1a87a59f04d894c3e947751af6e7dce"
+      },
+      {
+        "path": "apps\\bot-server\\tests\\worker-id-types.spec.ts",
+        "sha256": "6477433c8c6aedfbb39e899f87abaeddd7f9699857a2bdeda260ade0d0aca298"
+      },
+      {
+        "path": "apps\\bot-server\\tsconfig.json",
+        "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+      },
+      {
+        "path": "docker-compose.yml",
+        "sha256": "56d811453c7f17afdd6f023ecd299dbccb283055ded0f5771aed735d4138db3c"
+      },
+      {
+        "path": "docker/Dockerfile",
+        "sha256": "6b1809b4ff69a664ce6fe63924928266d439376bfda352b2ae8a0ff49fc79927"
+      },
+      {
+        "path": "docs\\00-baseline-and-ssot-charter.md",
+        "sha256": "dd87886826d2cc26161b8e6ccf3c80ab25b20b38b36f5866d75424cef27be79b"
+      },
+      {
+        "path": "docs\\01-architecture-and-tempot-synergy.md",
+        "sha256": "0f11ca7add3cfb499c7b26e5f9949168844e3be5ed400d24dbbf35479ae7ac80"
+      },
+      {
+        "path": "docs\\02-core-shared-components-catalog.md",
+        "sha256": "290a4383ce3691637f93a3f82aed2c8038b7ec02b5b2e5b0fe2c572f1411e0a7"
+      },
+      {
+        "path": "docs\\03-ai-vision-invoice-engine.md",
+        "sha256": "97ce1af4ce6831dd0c531ecabd779415e1c0fa13ea1d74337bd53f6806baec22"
+      },
+      {
+        "path": "docs\\04-google-sheets-auto-provisioner.md",
+        "sha256": "b320530fdac25f9b4b2a7222cc9f7d05a22cf2071f4edeeba9d26b27799e80d6"
+      },
+      {
+        "path": "docs\\05-master-implementation-roadmap.md",
+        "sha256": "4ca540205d7690b5df88e601100d94ccb20bba1de610569120bc93b6230ec995"
+      },
+      {
+        "path": "docs\\06-tenant-onboarding-and-provisioning-wizard.md",
+        "sha256": "faa8abe64d6b3e42ca3d044700061e78efc11d1ed67bcb74b33ba02bf857508d"
+      },
+      {
+        "path": "docs\\07-sheets-topology-and-registry-resolver.md",
+        "sha256": "26ac2a944de4453dc35069cc828b25b2e0bc9296bdf666d40c5f2e16985722c7"
+      },
+      {
+        "path": "docs\\08-universal-rbac-and-executive-role.md",
+        "sha256": "e556c80358850c22280f6200da98af17fe7cf1df4d33bbb3123591be98a4f985"
+      },
+      {
+        "path": "docs\\09-database-governance-and-superadmin-console.md",
+        "sha256": "0cbb3dc8c4cac43176d7ec55a063962993d87c8f736d43b6f9f22abff993328b"
+      },
+      {
+        "path": "docs\\10-telegram-id-identity-verification.md",
+        "sha256": "6911043f9a305b1337342076436168c114a2443e71bd2b75c147c2cab5607252"
+      },
+      {
+        "path": "docs\\11-universal-invitation-and-onboarding-engine.md",
+        "sha256": "78c015515d500477665737c4799fc5812ac9ae59e2be38cf5628b6ed0c17ae2f"
+      },
+      {
+        "path": "docs\\12-system-configuration-and-operational-simplicity.md",
+        "sha256": "09287b1b1ad23234c3be8fe5a71e9840a2957adf02fddf65e87631ca106bfd2a"
+      },
+      {
+        "path": "docs\\13-closed-loop-financial-and-pnl-engine.md",
+        "sha256": "070e9b876cc28cfe0491fc147674fa9637d8378452e2ade697dc72c6978f2744"
+      },
+      {
+        "path": "docs\\14-ai-agent-governance-and-file-rules.md",
+        "sha256": "11015f664636ed01f55084383180e415cb5dce39ae8eded4c3d95d2a00c6604d"
+      },
+      {
+        "path": "docs\\15-universal-module-and-flow-standard.md",
+        "sha256": "35ee111ca50bb409ec94a73cd0dced4baa468f004733545a49aab3cdc800c1b7"
+      },
+      {
+        "path": "docs\\16-database-security-and-tamper-proof-ledger.md",
+        "sha256": "0ab0b2e8748e2dcc75884b710361162d2a155a5c78641eb1549680f4326ab408"
+      },
+      {
+        "path": "docs\\17-worker-coding-and-silent-alias-resolution.md",
+        "sha256": "67d76622a26171789bdae98b621f30e8e160912474229644b2fb8c3db36efe91"
+      },
+      {
+        "path": "docs\\18-enterprise-schema-and-entity-relationship-model.md",
+        "sha256": "de43faab425bf361998e5594ec0812db1ce6a5e5cb2584a9e92e02951f292757"
+      },
+      {
+        "path": "docs\\19-legacy-to-enterprise-master-feature-migration-registry.md",
+        "sha256": "6815fae5805e2e08a18c41e5239e6e3bb07726db1d1cf3613c704ec5565cf353"
+      },
+      {
+        "path": "docs\\20-super-admin-settings-and-control-hub-guide.md",
+        "sha256": "1e40b506841b5aace30dda77b5d0462f5d847b40d42f3fdbf9dd0affe51966f4"
+      },
+      {
+        "path": "docs\\21-mandatory-module-architecture-and-gates.md",
+        "sha256": "79b71635c8148d90463f62d9c5232aaa87346c1fbb0ef5fc732edcca9334f081"
+      },
+      {
+        "path": "docs\\22-telegram-ux-ui-design-system-and-ergonomics.md",
+        "sha256": "711b86a44dfcd9ce5b26f9c6b40b48e7a5327905b1e0db0b75139b6234cac098"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\08-09-2026-restructuring-audit-results.json",
+        "sha256": "b8b3e931d6a16e913faeaad1304fb54952aaa23dbecb7dfe86d8a8a9087d2336"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\08-09-2026-restructuring-audit.md",
+        "sha256": "246f470ba52f656db186f2d84ca6ff34f7c680e895f96fb323ca553ea9854fc7"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-08-module-gates-documentation.md",
+        "sha256": "94cbca8a0c13c2d6ac369bb829f148e575d10c3b223f473c8eba53593df361e9"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-09-enterprise-shared-engines-implementation.md",
+        "sha256": "babb9ae833ca305370e220cf6e29bbeaa8fc593a0a300366856d587a3a531f41"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-09-package-json-bom-sanitization.md",
+        "sha256": "68f7e0423797de2e86e0397c3b9bff434304b9c827891de50485b42848f82c21"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-09-remediation-and-telegram-contracts-guard.md",
+        "sha256": "1a931fc6024b7fd1c28de6ad39b3e8a7f7bfd458e36fc74e8f4a328bcadea80b"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-09-strict-governance-and-typecheck-closure.md",
+        "sha256": "c37662f4c81f898ec942a5692174b49a153c601a43b95f577ab84d14b56e93c4"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-09-two-tier-verification-and-speed-tools.md",
+        "sha256": "d9113857bc9b6c189edc963214bc43434cb2d5694b184e258dfa3ecd6aa55219"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-09-ux-ergonomics-and-super-admin-visibility.md",
+        "sha256": "de29d45d0abd8c52bde705243bb76378363105f8d117ed066bd71be177e0cfd3"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-09-zero-postponement-transparency-rule.md",
+        "sha256": "bfbfff09fe80b0e14215a0f189981648021ec70b9376a0ed551a9a9d77e013fc"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-10-direct-admin-editing-and-hot-reload-workflow.md",
+        "sha256": "75065bada996434c2a6ac322df318458757c4894f63a59f4485fc7eaf9d558f5"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-10-enterprise-telemetry-and-error-vault.md",
+        "sha256": "ae7e646512813322ac97c30d6afa5388fdc26e2953c49017c789b432d62893e0"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-10-navigation-immunity-and-ghost-mode-rbac.md",
+        "sha256": "f809a1bc69f28afa6838aba03a665de02f187cdf755022d63c0501ca1f19d18e"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-10-settings-module-decomposition-and-super-admin-suites.md",
+        "sha256": "a4bea6ca57d47eb9bce8813c820523552b979c5dae8af02ceb58aac73788abf8"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\2026-09-10-telegram-ux-spoiler-and-native-components.md",
+        "sha256": "d33e2f9f4737acac748f5d23df4e94b73b2c165cba207873465e61ed7df829b8"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\p00-baseline-pinning.md",
+        "sha256": "bca4a18f5b3427be70a88581601ffb87a90389afbb67ffcfcd36d22ec14a7da7"
+      },
+      {
+        "path": "docs\\ai-execution-evidence\\README.md",
+        "sha256": "7e8dac3c3dbd6a413e24298a68685be0d005e4db8b96b660b9ae1ad9c5f2d6a3"
+      },
+      {
+        "path": "docs\\migration\\flow-crosswalk.json",
+        "sha256": "41ae4511e9110506d1a4fc04bc380448ca0548c388b26eebba592252224749cc"
+      },
+      {
+        "path": "docs\\superpowers\\plans\\2026-09-08-comprehensive-remediation-and-enforced-merge-gates.md",
+        "sha256": "872dc874e8f4a9f0287b671401a89271f65546d11027c32cd576bafb63ad9f0c"
+      },
+      {
+        "path": "docs\\superpowers\\plans\\2026-09-08-mandatory-module-gates-and-ai-compliance.md",
+        "sha256": "1cb4fff9e6a6a869a813957c141bda281958e8f8c92a4edf503b6c65f40a239d"
+      },
+      {
+        "path": "governance.lock.json",
+        "sha256": "2c2bc295e0aa90e29b5be46fb165de727b6b3f3e2d5f1c6aa9cb639b7ec34ee7"
+      },
+      {
+        "path": "modules\\settings\\package.json",
+        "sha256": "07c2b8cec05244462a572ebe6ea58af7d384375229af2408f62d744850af64ce"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.contract.json",
+        "sha256": "1204eff063c9b63f84ab4c284f428ce62dbbd6cb82b3cd1ed207a1317005111c"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.docs.md",
+        "sha256": "7b428f995869abf9b33fc40e96f933e74d9d2778b0659e37396bdd3a62e21887"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.handler.ts",
+        "sha256": "5197db3e85891cb46a8b6338c90c817fd6a96ea249302870fa142d566c1f81a8"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.keyboard.ts",
+        "sha256": "5f4f3e9b44b5e19ec8164c954a8ec9aefee728fcd9608bde915d3c93bbc0de99"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.messages.ts",
+        "sha256": "32af93362bde0b6efdc7fa0e57483e0edf24f832a5cf3f8cc7742d00ae7967c9"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.repository.ts",
+        "sha256": "c1b7dd424364c04a84d0afeaaacda8c02094c83acbfaf74e23d534f2a550942f"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.service.ts",
+        "sha256": "2a787c7dc90ad1fd5dc525dc809619f7381b1c87d892a87fbe55547704bc3ea6"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.telemetry.ts",
+        "sha256": "5795f30b18d33c6c5cffb82485e67ad90530ebe46d9b9636bfb693d1b01cc905"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.types.ts",
+        "sha256": "dd8e38f89b441465dd4d763290132954da8f1caab4fa4795c18394ce7ebe38d4"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\flow.validators.ts",
+        "sha256": "0aa4fed0f6588a60253870ed80362f1b8632e6f5dcebbba3efde4c6d0867c4e5"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\tests\\flow.data.spec.ts",
+        "sha256": "9d72672ab8f016f022e34ddb4f031f7f695073a1903c3178d7c922f17d4168fb"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\tests\\flow.integration.spec.ts",
+        "sha256": "e5ed679b3a418443fbb8ab7dde806374c36d201367580e28973a13e922b0f59f"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\tests\\flow.rbac.spec.ts",
+        "sha256": "18210a8b6719705a3a7a132be3fd1339876b2599478b8eb45514337b42087cbf"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\tests\\flow.unit.spec.ts",
+        "sha256": "ef90e37411e85b73b3554b8b342a820200d7cc7225eba47c657493cf56385d9f"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.1-corporate-profile\\tests\\flow.ux.spec.ts",
+        "sha256": "b88a33b527b51f80842eb5757ba7cea1350a4ba0636462f124d5a4a8a3a29f85"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.contract.json",
+        "sha256": "17e8d04d5a38a69b3fc8920986247eb68279b3aa1d226330a81ab26a93c137f2"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.docs.md",
+        "sha256": "0afb4c7f509a100ae42b98e5d4f3eecd5f5ac3f77d2a1b02767c9913bd10cf93"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.handler.ts",
+        "sha256": "f4c480d3ae04938fee3209f6b9e34e53ffc51355804fb64a22129e7608e84b62"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.keyboard.ts",
+        "sha256": "01b16ba927e0cadf6f45e5b0ef3802a35b6dbd1fbf12c75d54cd09f738348371"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.messages.ts",
+        "sha256": "d9bbf0aa79e70bcc00ba7fdeffc3ff7190a1daae47471ffafa9dd07d6627308b"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.repository.ts",
+        "sha256": "5412221f4b1ec4439ebdfc934515205b84e4361a3874450c24e2fc0c31ed13c7"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.service.ts",
+        "sha256": "7f976567f2d1edc0893fffa67f62a299d27a28933d90161c33a98e6b1c6e836a"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.telemetry.ts",
+        "sha256": "12ce3252e848ca304110266463a1c5b082da86fc3e0dc1352a674a549248494e"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.types.ts",
+        "sha256": "f792f8a43bc6f5559d297219d20e512e7d801def74fb828d10dbabafb29f5413"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\flow.validators.ts",
+        "sha256": "b6d0c2d5bced6a2b61d51c9e43777ddf10482a8814b618d9a72e1266c4d5783f"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\tests\\flow.data.spec.ts",
+        "sha256": "21ce81207eeb4bb21a4108e911baffd927ca4f75781f94df09aabe2da45b5908"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\tests\\flow.integration.spec.ts",
+        "sha256": "848dd7b980d01d851eb8d4a1a68a420b2c6ed40df51f1631fb5deb03c20a8abc"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\tests\\flow.rbac.spec.ts",
+        "sha256": "03f376ef79be943a5dc256ad1d67c1ab3faa7280bb1ee1e85a9e918ab7d1dc49"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\tests\\flow.unit.spec.ts",
+        "sha256": "098cb558b6be1c0b38c351215c83352089a490cbc25230e998212df431e82884"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.2-sites-hub\\tests\\flow.ux.spec.ts",
+        "sha256": "b74f619b83fa4468b4202c9b725f1faaa13f3de73ecf47f9728a5c20211428c7"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.contract.json",
+        "sha256": "b35b6afe9a6a1c8116ca75b4a81f1d003936d3ae6c07e592bae08e0b9c9559c6"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.docs.md",
+        "sha256": "e4c3753297d8a4c062aec5b7e2a954df033ed50178eab92679f45d53ec94f4b5"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.handler.ts",
+        "sha256": "a240282942d5c6e9166681a8628c274875a8c0304e0c5a81e19d3f98225df35b"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.keyboard.ts",
+        "sha256": "ffed814d77ea2d5bf193fcc257d61fd9899cc0f048406142eed74bc4039b24ac"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.messages.ts",
+        "sha256": "d306f93cf2a8d0de24e7d6fee210703f65d29e52362b8a7be3b1b0a0feaf74a7"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.repository.ts",
+        "sha256": "8190bce09adb26026c6033735162e258b635ef757bc008baaf19d4285a6a0272"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.service.ts",
+        "sha256": "fbf7eb0e1f9a9f1bae74a061903e341c10befc94d6591e4586f52b4edc50938d"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.telemetry.ts",
+        "sha256": "5920d9ee31ada5dfe1fbc2a414c75f6dfaa9018ea6d4bce91f79c9423df38956"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.types.ts",
+        "sha256": "da8b44e7c6db2e4b567807ed7ed4e4c3771e74a5a7b36c8c6bd83398cfe0a9a9"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\flow.validators.ts",
+        "sha256": "c4fa0bb28817b81437d49aec049c903e59ca32b41f6c29969a48c8c35f3d2c15"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\tests\\flow.data.spec.ts",
+        "sha256": "b460ab551321549739f334bf889d725048f053c9c1b1af7139c37ccc3cf51623"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\tests\\flow.integration.spec.ts",
+        "sha256": "7110965b2e783f6065ee82b1848a4a5d51d87aba037a79c79fc7acc035ddb000"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\tests\\flow.rbac.spec.ts",
+        "sha256": "456dd8ede95da0c561ac578b087c97db45d24958130c60f479e2518fc8d226a3"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\tests\\flow.unit.spec.ts",
+        "sha256": "24431f5590c09af3dfdf30f97078068f0a55e78434d2e3cf3d7d4caae6bed292"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.3-job-matrix\\tests\\flow.ux.spec.ts",
+        "sha256": "58f360e9565c47e93278df2d0d7a0b9b1371bdb6e667732af930d3821f43d70d"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.contract.json",
+        "sha256": "bdc4b45895bb9d4e7c5f799766e91e5b5610033515102b9caba2843153f591f9"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.docs.md",
+        "sha256": "19d054c78d3e7967c4cebb5a37b25560656c400654a6a3060da5cb9fdd1db6b2"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.handler.ts",
+        "sha256": "235761abcc28731e2bd17d81aadcdff41bf173595615917d81469147af2e8e5b"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.keyboard.ts",
+        "sha256": "30f353a5d373691ccb3b3a27c91ce781a5c6a62144444168cd434c0ccf8de35c"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.messages.ts",
+        "sha256": "5a8d2d5c200ffede2be6a0e8f5a7d690b6d18c42b1d81bbc322bf76352f9d8ee"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.repository.ts",
+        "sha256": "4f5cf2d08a5a060a13efaf437dc0a900f160e30bd146457b8b2fdde15c5cf62a"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.service.ts",
+        "sha256": "a8aca7d8b06fc3ec4ee88842585f3078bcaaeefd338c58f4e9486aea5aab7fe1"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.telemetry.ts",
+        "sha256": "b8e8800a82536e45aad108d157f9b280fc7824fc5c859911c2d661a9a0638b56"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.types.ts",
+        "sha256": "6c8ac5e2b2d1c50f380675e1c366142752515a7ec8e9612aef63bd652f7dd3a8"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\flow.validators.ts",
+        "sha256": "97187470f82a6125e971590b555ab5eb1b541772e83d7215168281d6ce9a57ca"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\tests\\flow.data.spec.ts",
+        "sha256": "2d86caeff011665c7f0d4aa94856b377bf598fdc32453f9e603f6fb682e5d559"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\tests\\flow.integration.spec.ts",
+        "sha256": "3fa3e3d51cabd68708e2f7150b0d7930c62f4163ec6167be1f368cd808c4aad9"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\tests\\flow.rbac.spec.ts",
+        "sha256": "b580793b902348a87a7559cb24a2e6402b9d22daf3c0cf57d1930858172e037a"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\tests\\flow.unit.spec.ts",
+        "sha256": "ec4a9dd0c443ff3a2724a311218625632e122dca8cc094eeb0cdb671dad985ee"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.4-admin-profile\\tests\\flow.ux.spec.ts",
+        "sha256": "240d59d6155a2cdfcb7ef64c8a1f215578509b361f64ff58698192978ee290c2"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.contract.json",
+        "sha256": "ad6014f3ab093f655f1ff3d3e3bff95fe5c7a27f6a9b96755805f0cf5d8b2302"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.docs.md",
+        "sha256": "b4f0947f51118b2d7a85a369eb019aea3b8ed2034dcbbb246b8b865859bbb1b6"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.handler.ts",
+        "sha256": "0df8cc8e494e8433f302f1bfc23e0714e46133da696037edee76fed88d36485b"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.keyboard.ts",
+        "sha256": "2a100313c64143ed81d298614a7dabedb6da1c5d4d2eb8b7f866728fd45c71fb"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.messages.ts",
+        "sha256": "6d1db50567484329a4bab2ccd3d8f92dccc316b4999275191cd2b348926b1c9d"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.repository.ts",
+        "sha256": "456aba3882584178f2f368ae010a3c8c3a2d4413b7901ea1aa8ebfae85860e1c"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.service.ts",
+        "sha256": "f59276060f14ce2efa5b2ab0ed54fb5dd10ac949685ab624ea182005cc737694"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.telemetry.ts",
+        "sha256": "31a8a6a26b985ad6a029ed17d3715d6b22701f67af3b89d96eb68b7a45a873ca"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.types.ts",
+        "sha256": "7284934156efc23cacb8165941f72a31f7f9cfdde68cddcb441bfc655e58fde1"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\flow.validators.ts",
+        "sha256": "ee61498f5a18ec912c587bb840f84cb78c883910dbdd50e7f40e7e1f54050b29"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\tests\\flow.data.spec.ts",
+        "sha256": "e421a678a2dc870b92642aa6b34f4b197f8ea0867edf69b8ad42c212aea53f59"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\tests\\flow.integration.spec.ts",
+        "sha256": "e66cf51e56ad8758c673bca5662f85bb3d6591e52b8a6d2f6ac7132fc40b78f3"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\tests\\flow.rbac.spec.ts",
+        "sha256": "4565455064a7cfe4b0d54914b7f0098ed1e9078e4c3c19e200ced42d62ead558"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\tests\\flow.unit.spec.ts",
+        "sha256": "ffb2c929c45bd4166c10a97fc30e604428a91f2090d994a8e6c99782fc26134c"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.5-admin-assignment\\tests\\flow.ux.spec.ts",
+        "sha256": "1e34acdd841faa2a968621b878032234159c13a668e68d79238c69e3a6cc22e9"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.contract.json",
+        "sha256": "12d6c949437c6d6cc1bb2759b53e5ad4d8d5e24c2057fc7a0ed1b8873cc1147f"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.docs.md",
+        "sha256": "81686aae7ace057f8762a4bc2c64d6bf5b773f359e31c85c2e419c07b5f03202"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.handler.ts",
+        "sha256": "26fbc3f81df61c784015d7c4a530d6dda470321139e69d65b1027382c681a708"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.keyboard.ts",
+        "sha256": "b6d9cda16bc9b977c5840058987a86df77eb74670df3c252e638b3c7f8283d10"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.messages.ts",
+        "sha256": "e3fa93472f20ea1047db3daaaef5f7aa36494352dc77a596051dfc81769c5866"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.repository.ts",
+        "sha256": "bd468e683a7dd3e16d89d4c0a299922ae9b00763f4b6a9c0d000dc0e02c4fd6f"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.service.ts",
+        "sha256": "c647ab4ab6f78a7cb104b8e07b9c8663fa6f934fe5a09cda6d93ec420e20ee54"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.telemetry.ts",
+        "sha256": "276256df7075c7e1f9be3b43f60c535db856f1599e37c5d23ab1bb71bc338e14"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.types.ts",
+        "sha256": "a0e302894ae255ad98abbae76adde158a4eaadfebded4970c0cee1e2cc39f013"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\flow.validators.ts",
+        "sha256": "22752d35f8e827704b6d265d901fe3863ae4f49e8c95e7acf4ec4953b95965e6"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\tests\\flow.data.spec.ts",
+        "sha256": "4e95338377a967492ee486440e2ed96eb91bc83a0d270f4031c3051d5f646be6"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\tests\\flow.integration.spec.ts",
+        "sha256": "6dbbba1c970055921f3d7a9d55eafb4492f9863dc37864e624cffdeab19eeb14"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\tests\\flow.rbac.spec.ts",
+        "sha256": "176ee6c3380ce009958a4a138c4474fadeb0e877ff99380138c9eb50eeb99c78"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\tests\\flow.unit.spec.ts",
+        "sha256": "05c80e5c549de7ba9e8e808e8973fb7d3544e906c7fe38a66420a43772c00a23"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.6-ghost-mode\\tests\\flow.ux.spec.ts",
+        "sha256": "2d73da94f8963ad80bf51bbd377e5dff6b9b73f710e6608948e1ff56b931911c"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.contract.json",
+        "sha256": "0cc8e22cfb423be185d2d9e08fbb04441333abc7e53adb0483e3b1edd4102204"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.docs.md",
+        "sha256": "16c8ae94dd1461dd38632e017f04261507449b472da9d62cfb660d9b93735e7a"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.handler.ts",
+        "sha256": "5302b7375609eb828e96b8ed80325b639fb43816cd51d9bc25627f98f377a4ef"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.keyboard.ts",
+        "sha256": "0fca8571361338e8bfd4a5dcf376037e95b2e62b76605f22e1bb4993590ee227"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.messages.ts",
+        "sha256": "7dd2410bc8d45a1b0dccdc47dbd45be25574b21f76980e5ee34358c5cb221fbc"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.repository.ts",
+        "sha256": "199bc3e36fe34af3c42581189ac852c52be2bd6df2a5a7650b0204ebc69e95ba"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.service.ts",
+        "sha256": "847b0c3fc7ae18910229061b16c73174e8b9e2348348905455de2a0821212db9"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.telemetry.ts",
+        "sha256": "bfee1b0144962a0b6d2fbf360bf942d1f657697e207ad7751d945bf9844db7d6"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.types.ts",
+        "sha256": "ac3ec15f62f12eb5106fa7a171f52cc7c1318c4d577e2007ff2590d50d15f1c5"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\flow.validators.ts",
+        "sha256": "f8fb6af21daf80c5bea2a42f813c789c80c6dc38d50b6edc0a6ac79dd4accf0c"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\tests\\flow.data.spec.ts",
+        "sha256": "7ca08ca1bcf8723f826c1b3fd54a68fe8fa0c99434fececd6857d117ed69a2b1"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\tests\\flow.integration.spec.ts",
+        "sha256": "c0ecb665ee63c58e52893ae17eb6a1aff699262e9352f87d9a04cb9ad7de5572"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\tests\\flow.rbac.spec.ts",
+        "sha256": "c98ae90f6c0867c004d5b5a7a62586d7723073de9caac2951ef67d3b19fa5038"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\tests\\flow.unit.spec.ts",
+        "sha256": "1ec5c39cfc4d76224ad67d9121bb9b8a04f9a2f646886001ea7713d990dc231d"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.7-audit-incident-vault\\tests\\flow.ux.spec.ts",
+        "sha256": "d1ad75de3444470ccf6a246f9ea026135523b6dd5f2c488b11094ae616d31b46"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.contract.json",
+        "sha256": "8e2177ace097cb6c3c54cd5e59c79aa0d6d4a4257b48a7af306e2c63e38e913b"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.docs.md",
+        "sha256": "341fd02ab031ee20a95e0c0ba4c9897fe825abba906a1b310d608012e670b529"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.handler.ts",
+        "sha256": "8fd06030fc6b021e885c1da318ac51b80eee2c595999391f36c7654dc5d5a462"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.keyboard.ts",
+        "sha256": "30c0fd81278afd96645fccb31d0e85c27c6aedac92b13cb75c84f7905cf27d89"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.messages.ts",
+        "sha256": "cd22dffa47d023109ac10b90a1a2e9272bbbbe1666983831d1bb89d034e4210c"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.repository.ts",
+        "sha256": "1f192a15660b3475824a3c481e16c979038456e23bd2deef8c192d3562910d08"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.service.ts",
+        "sha256": "7f94cc7d6becc1b17107e73043622f2eef79915db6269474f2ad45b2d92fea31"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.telemetry.ts",
+        "sha256": "098a06eca7f9f06805f22cfbbc371b4171e8994732ffa9012bd10dc47bf2a46b"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.types.ts",
+        "sha256": "81b972623706155146ae8b91d08930e12b6f4929062dde97d9cdae5809f86f74"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\flow.validators.ts",
+        "sha256": "f3115b65a99b72761498aecfcdcd33123355a1ce53e7574ef43a4c9df727ac2b"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\tests\\flow.data.spec.ts",
+        "sha256": "98769910fbd1fac49ba21011b5cbfecd7261be808ed0c9fa874437e9935e0028"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\tests\\flow.integration.spec.ts",
+        "sha256": "55789645151f2d8c4ed25a3e039538f623b0ece4d096126cf0c78762cd623e38"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\tests\\flow.rbac.spec.ts",
+        "sha256": "f25bd35ee6864112d4520a8a2692ccb95d157c61900d357c0f708dcede1594df"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\tests\\flow.unit.spec.ts",
+        "sha256": "4a32dc4f712e9dbdd97dd7543469120a6886b04bd83857df75f078576514256d"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.8-apm-telemetry\\tests\\flow.ux.spec.ts",
+        "sha256": "6b79f873ac2db9ac989fa20df7de9927c649266f2dfd87ebacbfe05ce0067b3d"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.contract.json",
+        "sha256": "a4eaa9b20e963795e381c4c4afab9f9ad7129d56b39ed8294612e3c338cfff17"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.docs.md",
+        "sha256": "cb7240fb0054d7929c5b77d1bfd2e90b07981a9a3708014efb1eebdacc0d9b84"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.handler.ts",
+        "sha256": "92039b33613e75f975a58db5e95ca7748c1aad18236ec021597ab70e448a0f79"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.keyboard.ts",
+        "sha256": "9c729423c1aa33920e3a4c3c86cc951430a9353f4711c1981e874957ef28c371"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.messages.ts",
+        "sha256": "f410c7e1c46ed5815bbd0fc2f8722e06b0b86a4861cb1eabb9bbf0098128016f"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.repository.ts",
+        "sha256": "48fc557eb4e083ba76b76bc25a857769a22e90502448d6a43ec9c2facdb43a94"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.service.ts",
+        "sha256": "1d7ccabcb8cb35018004ecaf3d126c294c93f222198296f4cf6fd096c4558a17"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.telemetry.ts",
+        "sha256": "29fbe939518ac9b625099623369577dacb42a7fab07fe31096025e54c7a66ffe"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.types.ts",
+        "sha256": "e0f9c52b70510d726f1df2ebe6b78d5885457fc445b2772f4d5f254118c0d473"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\flow.validators.ts",
+        "sha256": "27fbcf34946ffca1a31a3684f678fff43cee501d8c838b56832f2dcef05e65f3"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\tests\\flow.data.spec.ts",
+        "sha256": "155ccd786688d723bb1e1e4f6834f8d153be5b52c4188527e45d9344316c56cf"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\tests\\flow.integration.spec.ts",
+        "sha256": "c7f444a0f3d842b06ef73c65dbe3bd828ef09b700898dc940e8b403102ec7251"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\tests\\flow.rbac.spec.ts",
+        "sha256": "21fc7d2cce81b63b5804db7c41d820ea48c4213c9281732c9e0a051f863a3b80"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\tests\\flow.unit.spec.ts",
+        "sha256": "1cbd2a1dc2bc6892dd4192fb09f63aee3b36ec2f334f801f99f34f7263ff9c90"
+      },
+      {
+        "path": "modules\\settings\\src\\flows\\00.9-emergency-cache\\tests\\flow.ux.spec.ts",
+        "sha256": "0be95c20b03884d780aac5148d3b94f4c8d97fffa3fc0f4a9d2f3531a5f291aa"
+      },
+      {
+        "path": "modules\\settings\\src\\index.ts",
+        "sha256": "e630cdaaaa6f9040ab6501292c29369e60de7927b9b3d9c2785e41549b489e0e"
+      },
+      {
+        "path": "modules\\settings\\src\\module.register.ts",
+        "sha256": "920b68c101db3606856d1af024fc068cd6ec3a1b5fd13c36994256b2c7dc353d"
+      },
+      {
+        "path": "modules\\settings\\src\\module.routes.ts",
+        "sha256": "f7e126caf4108d92db372dff295205fe33ded5ad7b145ad31c322e71eee15ab1"
+      },
+      {
+        "path": "modules\\settings\\src\\shared\\module.constants.ts",
+        "sha256": "10444776d15784e7e77371dcbe0e8e619a60c07fc42db13c84e288aa11c321d6"
+      },
+      {
+        "path": "modules\\settings\\src\\shared\\module.types.ts",
+        "sha256": "7167a84c2956f06dfd31ea4fdc13cb9f7ae4f0c9fa81a42502b19b8520f2a386"
+      },
+      {
+        "path": "modules\\settings\\src\\shared\\settings-hub.ts",
+        "sha256": "2fc3a73238e90e93c3007895ff0e5dc0f446ae5fe15013ce805fc8064203ee40"
+      },
+      {
+        "path": "modules\\settings\\tsconfig.json",
+        "sha256": "a95f48424ac5a495c1bb010253c399908f8fe010eae9a90c7ea54174d551ea48"
+      },
+      {
+        "path": "modules\\workforce\\index.ts",
+        "sha256": "31d05deea3ee1778f4feaed2d07e432a9599ec37d2abeea0e4d1a248199f45c0"
+      },
+      {
+        "path": "modules\\workforce\\module.contract.json",
+        "sha256": "793c8698ebb33992e4d7760be58b3e8cc945450ac9fb2c967e759d819c0f0ec2"
+      },
+      {
+        "path": "modules\\workforce\\package.json",
+        "sha256": "6d796bd1ecf558193e200a799be06b78455501bc459e5ede2ac9eb4e7486949f"
+      },
+      {
+        "path": "modules\\workforce\\README.md",
+        "sha256": "bec0e290f7fd6ddc917ed1662c90957c7537165421ff11a07d2e7b2b35fc4316"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.contract.json",
+        "sha256": "3dfa948476fdf55e79649ebaeb5a724e053ce4d17a3d7b4d7018e2b9b15ab378"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.docs.md",
+        "sha256": "f56265e839db5b7ed326780586a02632bdcbcb3070e3c9044ad6912d48e06c44"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.handler.ts",
+        "sha256": "e5c1c9b2ef0bfbc8c2120683741526b4de8482d9923c375ddbf8ab8c84e6384c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.keyboard.ts",
+        "sha256": "e6b673436556e2d260acaffff60156fa2f61edff7366a1a2a6af6c4048f5ee71"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.messages.ts",
+        "sha256": "83cd96a6e68081bbbc86c45909e30737eaf3245f1f00955502fd3fc03c73644c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.repository.ts",
+        "sha256": "195a6cb9fab709499e0a48ff603ff1a89ea1a3ec7817b618a1a4225c23066ed1"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.service.ts",
+        "sha256": "2ebd4fdf0dbfa0c660ba28e60049af3bb0ddb33f49d0320a74091d8bc372587d"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.telemetry.ts",
+        "sha256": "7147a7851d288f63743a1c92816c4410d27a4edbf6fd290baf39d15e7437aeda"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.types.ts",
+        "sha256": "ac0b83a3b15a683e816de1cbfabe2dd6a152f9694a9f2afd3a3059a531cb1994"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\flow.validators.ts",
+        "sha256": "e21a25ee4dd6025e6ec7aa3c26e6924a990508b7d90e5c0653acec7919aad5b7"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\tests\\flow.data.spec.ts",
+        "sha256": "cd0162acfd659181804211714b486dc45a122a862fbf05a38207467c3ab820d0"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\tests\\flow.integration.spec.ts",
+        "sha256": "a2a8eb6b26b08fe56c9af7e2832f08ca7c1a9851c14558da0747836a5fb23864"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\tests\\flow.rbac.spec.ts",
+        "sha256": "497120447ecffe9bae87c465ba2c5f3f7642852e872c291d4c7387072194e1a1"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\tests\\flow.unit.spec.ts",
+        "sha256": "7ddadeab6cbde9a3ff7148f7c225f9001d441a6ac6e20baa67b92723921ed6d2"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.1-worker-registration\\tests\\flow.ux.spec.ts",
+        "sha256": "4eba17a5a90049a0c9199acaa4633636e6da727accf1cb429a564cf973771445"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.contract.json",
+        "sha256": "20b2180719e4b86bd97e86afab2d3d2a8282106dc01543d879ac17b865c0f101"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.docs.md",
+        "sha256": "3a4d5b1e6dec154748847e15c033b1919ee7a677079d7d2d84aa9bd0abf1e535"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.handler.ts",
+        "sha256": "351f9f893d5148ecf724984be03e50427bc8f06c3e6fa764b37fcd4995c3cc94"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.keyboard.ts",
+        "sha256": "a3ef6ebaf32b866fc99587e855f639c1fa64ea1b590b72127cfeaad79c61608d"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.messages.ts",
+        "sha256": "0d9ecfb4ed2f730c27ba6cd81e5cc088adcfffba9df34e365ac6c6e946e6dabc"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.repository.ts",
+        "sha256": "aa0a36afb94540d70d0d1fed1d65cbac92d118e9965a8ec3317a4112b7eb012f"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.service.ts",
+        "sha256": "c31231d4dd6eefaf95315ceb14ba20044e6b9d6ac226c13376aaa421e61dc64f"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.telemetry.ts",
+        "sha256": "73f367e6dc869ec1daff42a27fdf490e85c92d4a04cfbf1b75b22c3b565b5726"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.types.ts",
+        "sha256": "4d57085104275d92d77271bc59b8bc594c82e8db88401df4dd0047808e9e105d"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\flow.validators.ts",
+        "sha256": "6d3ec8642ed1807def91c433fdc5c78da7e1b0b65a9a129674ce778894427db1"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\tests\\flow.data.spec.ts",
+        "sha256": "b3fd2e896f605bcb0cc479c180c396c7ce48f999886334047d6115f6c7566182"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\tests\\flow.integration.spec.ts",
+        "sha256": "7a77fc2b52e60289d34deb34e5d2762c81709ac7e8d12189a607cc2829107ee0"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\tests\\flow.rbac.spec.ts",
+        "sha256": "d2d4ebb2c9e833ca0a8c2c8ed7a1ce54145881ed5dfc3d9838cdfb5806be8f2c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\tests\\flow.unit.spec.ts",
+        "sha256": "20ad684d5cdb2a4e597c8df1ca7f0ede510ce8c53bf906a55cf74cf5db10ffb5"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.2.D-worker-edit\\tests\\flow.ux.spec.ts",
+        "sha256": "6e1ef08291650af71c5d1a46867289190a2adeb575782274f8358c4d79a1766c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.contract.json",
+        "sha256": "6892c2ed1d0f70f2c516f327292bc717fd0a57150999c5892da3bcb9d0c977ff"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.docs.md",
+        "sha256": "ff5923f810228b530f602b7084be0ab1a6172a80d097ebdde8310b9f0eb66dc0"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.handler.ts",
+        "sha256": "643c67a02b8e86dc25dd1c69dfb1a4fbd1ce77951f948f109e19744311dcb9b0"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.keyboard.ts",
+        "sha256": "4460f7365977d871d9bf1d46baa547ee0f6c4eff021a00cf76466045ef6c9c5c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.messages.ts",
+        "sha256": "2ba8c83fec282361871daececc70143212140c5cc8abceeced89238afc565d0a"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.repository.ts",
+        "sha256": "15774bc5c3be38b8d2c7134762b7093065849885896a088711807617ea0a88f0"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.service.ts",
+        "sha256": "133aa74ef922f24e1d196cfcb00ed4d1b2d08168265bbe504d15db6f9b4c69ef"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.telemetry.ts",
+        "sha256": "e19f4b46490c83b2180098a4bff066e179a85abe01267c1636f30b79f7465c39"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.types.ts",
+        "sha256": "c70b86afc34401b1f4c6e93526e71190075ad572ebdf647069cd84cd1ba6fbe0"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\flow.validators.ts",
+        "sha256": "3740c6e783e6db8d7e88b9e66589fa7a2e907f1c8e7bfd1eb693c20b80d15768"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\tests\\flow.data.spec.ts",
+        "sha256": "767f3c3161e3c10b2a963fa1a0558f0b59e266bac97303e5826e09a358b37673"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\tests\\flow.integration.spec.ts",
+        "sha256": "e08c8e17be2d825cbc58d0e40f1d8f7d2599c37ac79e13276a8603a058a66957"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\tests\\flow.rbac.spec.ts",
+        "sha256": "d74bf508fc2c21980f0151a9ca291b1c7db052e8ccbb560697bc0d072ecc77ff"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\tests\\flow.unit.spec.ts",
+        "sha256": "462d9280d54565fb8dd5c49e49b49427400446b158e11dca87119fb94ec0be42"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.4-worker-export\\tests\\flow.ux.spec.ts",
+        "sha256": "7b1e0386806509a155fc29c1fa0f1e365fb312ad5ccb70b4acd50367cf52520c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.contract.json",
+        "sha256": "e6ecbc605e421ae9a5ba741f8a2d3b6b02d36d7c40742ade744c9bcba954ff71"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.docs.md",
+        "sha256": "a6bdba1c63aafc4d6181c18cb2fcac32219ddbe126f212826e01204853d477fa"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.handler.ts",
+        "sha256": "d3bf8e97e4f0c2ecd204423977fe272ff412ce807f8917b845c25ccf4bb80129"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.keyboard.ts",
+        "sha256": "d927d18fdd5c2e8eab366c8afdca5d8798a1b2487c6f63e173084377bd851d14"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.messages.ts",
+        "sha256": "ff65e30e033bc2978da3e75bd84b8367c261dfd13149a883a57ddb9cbe8f4f3c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.repository.ts",
+        "sha256": "4e3aa4fe2917cdff2fddb7ace15a069f3ed5b7382daf304d9fc1c6537579f72c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.service.ts",
+        "sha256": "4bc5f278f5d038aec6d66e95401d51104d9fe3b68b6615e578f98374a9c45a9b"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.telemetry.ts",
+        "sha256": "bfb4cb4069d0bb69c6dadc88ef5bdd887332ccba4a4ae895b608e727530c6518"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.types.ts",
+        "sha256": "5793119db6be8c797da06edb7ffa1dd4ddd661076a920a11358d9497e87ac743"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\flow.validators.ts",
+        "sha256": "af9f4d50b164e68343ec19010a4f5f93e4d03181a388d95b1ab8a22cc2e10672"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\tests\\flow.data.spec.ts",
+        "sha256": "f8f024dbeb3a7ff6f8b480f330aa92cca296616143454c523df4372d11b37d3d"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\tests\\flow.integration.spec.ts",
+        "sha256": "3bfdf04bb1c0217b9bb171d1bdadd597e64549a10354436862ed89f7f47d7d40"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\tests\\flow.rbac.spec.ts",
+        "sha256": "2f48aee9f4c825f8e3bb5a8f6eaac63c6f909cada5e7014f956cf0953a024338"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\tests\\flow.unit.spec.ts",
+        "sha256": "5302170ce6928b0e9bdf9d25a56038f83592cf6e9092743feb971d06873f990c"
+      },
+      {
+        "path": "modules\\workforce\\src\\flows\\01.5-worker-directory\\tests\\flow.ux.spec.ts",
+        "sha256": "07c9860dbc95d936a85382ed4e4eafcf919952be51c37c212cbb732a6c3e8345"
+      },
+      {
+        "path": "modules\\workforce\\src\\hub\\hr-hub.handler.ts",
+        "sha256": "7e71e4835455a3cce0f9d5f1979aa275aa2b9c11d72a297ff6944f7e97ea67d7"
+      },
+      {
+        "path": "modules\\workforce\\src\\hub\\hub.routes.ts",
+        "sha256": "a0543a6746cd7d1f637bd75c2c97a0253cbbef0e57290ef96630d0048e41299e"
+      },
+      {
+        "path": "modules\\workforce\\src\\hub\\identity-switch.handler.ts",
+        "sha256": "427d024d6991c31b55fdef420014f2a350343cd333633d9be4987ab8a8617351"
+      },
+      {
+        "path": "modules\\workforce\\src\\index.ts",
+        "sha256": "266f828a66fddbe1d40bcefe268e9e061a5325d71c2817ea207378bd46472fc3"
+      },
+      {
+        "path": "modules\\workforce\\src\\module.permissions.ts",
+        "sha256": "8913d2cf95d0703c08869ccc1e861616ca573bc0b6455910120843b98d5fb78b"
+      },
+      {
+        "path": "modules\\workforce\\src\\module.register.ts",
+        "sha256": "599c2929016d573581243afc52dd0cdc2bd77dfc6bd5d707257ea1d4e7743250"
+      },
+      {
+        "path": "modules\\workforce\\src\\module.routes.ts",
+        "sha256": "9a094e66884a19988ede566212ae12b722241e5fe0c3023f93ff77103c0c368a"
+      },
+      {
+        "path": "modules\\workforce\\src\\module.telemetry.ts",
+        "sha256": "e125098ed4de5f71e190498ca3fba1328c65990a6919e346409809c2f87741ed"
+      },
+      {
+        "path": "modules\\workforce\\src\\services\\ai-vision-id.service.ts",
+        "sha256": "474940cd128038859ea135ea97858347be761b33c7d9f98724943b15468f8a51"
+      },
+      {
+        "path": "modules\\workforce\\src\\services\\worker-expiry-alert.service.ts",
+        "sha256": "622d6336e89744ca667c921630ffbcb059ce60dc0afacfa3ca4627c10cd86956"
+      },
+      {
+        "path": "modules\\workforce\\src\\services\\worker-storage.service.ts",
+        "sha256": "b145ddba06c914967700a532087708a2097b1c0e823d96078a5ef5c0edb743ec"
+      },
+      {
+        "path": "modules\\workforce\\src\\shared\\module.errors.ts",
+        "sha256": "38a4f4aaa5d533af78aed875c84215d9db249aaa23c38cea4e38029159c15000"
+      },
+      {
+        "path": "modules\\workforce\\src\\shared\\module.messages.ts",
+        "sha256": "196a04ba7e7a42df59a1612d18c938f1816763c762e10985e2a70afdebae4b24"
+      },
+      {
+        "path": "modules\\workforce\\src\\shared\\module.types.ts",
+        "sha256": "b9b58b60c7ea8183f1ccea39a4e9262fc45d811e6f4ab9217f3606ae153d2bff"
+      },
+      {
+        "path": "modules\\workforce\\src\\shared\\module.validators.ts",
+        "sha256": "3f650d5228caf000485da3f5f6dda543675bf8d7cd1cb524dc435f0cd484bfe8"
+      },
+      {
+        "path": "modules\\workforce\\tsconfig.json",
+        "sha256": "a95f48424ac5a495c1bb010253c399908f8fe010eae9a90c7ea54174d551ea48"
+      },
+      {
+        "path": "package.json",
+        "sha256": "f1e572d8378609201ef6952c2f7c5c33965e464f802bfc6c7785559ba4b5fbbc"
+      },
+      {
+        "path": "packages\\core-components\\package.json",
+        "sha256": "98f318cac35c68c0de7c70b2e9a31be0a184c063ee91d82f7b08b014e8fbc6a3"
+      },
+      {
+        "path": "packages\\core-components\\src\\amount-picker\\keyboard.ts",
+        "sha256": "66d4fbd3bb18ca571b349726a79f04ac36b9d3e5f151bf452edceb05faaa3bf0"
+      },
+      {
+        "path": "packages\\core-components\\src\\amount-picker\\validator.ts",
+        "sha256": "55c099d019ff486498ec8a1eac35bf155dcd97f3d348e84f7680f51283c7b284"
+      },
+      {
+        "path": "packages\\core-components\\src\\approval-workflow\\types.ts",
+        "sha256": "9caeefbcabbce16738ad05e5ff3858edd3677dd164b6e48ef8f3c8b91d34dbca"
+      },
+      {
+        "path": "packages\\core-components\\src\\approval-workflow\\workflow.ts",
+        "sha256": "20d329791bbdfb04305971d3fb63cc037c1a4697f8f868ec3782dd026a9192ae"
+      },
+      {
+        "path": "packages\\core-components\\src\\attachment-pipeline\\pipeline.ts",
+        "sha256": "e6429010bd3194c78986eddf5880c66a405c9a0267a31e6c2becb0a89a497307"
+      },
+      {
+        "path": "packages\\core-components\\src\\attachment-pipeline\\types.ts",
+        "sha256": "da2006beaa67e8ddaa5d61459702b00dc01db661897779d34250ebbbce7fd4e1"
+      },
+      {
+        "path": "packages\\core-components\\src\\clearing-engine\\clearing.ts",
+        "sha256": "917df8425f51a09f78eddecfa4dbd25e7b93b3d42bb9add33d4c15659820051e"
+      },
+      {
+        "path": "packages\\core-components\\src\\clearing-engine\\types.ts",
+        "sha256": "b3517ebab9456fa3de03b55288737807210cd6365d3d00a369fbda09b6b79cd8"
+      },
+      {
+        "path": "packages\\core-components\\src\\completion-card\\keyboard.ts",
+        "sha256": "6919ea587d6134e0f521b6830880bd7c6cf1829a671ce1f949181672b26618fa"
+      },
+      {
+        "path": "packages\\core-components\\src\\completion-card\\whatsapp.ts",
+        "sha256": "dec14a1805e89747ae7b9013c46cdaca3492e509749a1f2e224116299315d7c2"
+      },
+      {
+        "path": "packages\\core-components\\src\\confirmation-card\\formatter.ts",
+        "sha256": "706b48e0e5fe8d9a33ed9637fba94d4fedf0639c3341ca8e803114b15f62f85a"
+      },
+      {
+        "path": "packages\\core-components\\src\\confirmation-card\\keyboard.ts",
+        "sha256": "3414a1a1e66e84255ff0c91b95be3e291d0b8118669676673faa628261b60c40"
+      },
+      {
+        "path": "packages\\core-components\\src\\custody-gate\\gate.ts",
+        "sha256": "ac2852e4c964a7c026958d11b9a77966419c5acae73266436ad5e8b06af0ee2a"
+      },
+      {
+        "path": "packages\\core-components\\src\\custody-gate\\types.ts",
+        "sha256": "224004c552b354e00a4aefb447fd51b9c854018259d93b8234655c99568b2d10"
+      },
+      {
+        "path": "packages\\core-components\\src\\date-picker\\keyboard.ts",
+        "sha256": "8b96299ee4a5208d58802016a2c8572e4fe9241ab035877015074cc2b08fbfbc"
+      },
+      {
+        "path": "packages\\core-components\\src\\date-picker\\parser.ts",
+        "sha256": "fe20a6cf3ddbae3453c63a822820f8666a12face43695a474745c9e6fb52f890"
+      },
+      {
+        "path": "packages\\core-components\\src\\formatting\\telegram-formatters.ts",
+        "sha256": "f90fb292b80caae3e5394f9e373641f6aac6fa8658149d391860a792190088fe"
+      },
+      {
+        "path": "packages\\core-components\\src\\index.ts",
+        "sha256": "20473f17fd23e574e56ef18b5b5abb81d588e82f461026111f4b41bfab270093"
+      },
+      {
+        "path": "packages\\core-components\\src\\installment-engine\\engine.ts",
+        "sha256": "4ea3e68b76d91726fef0843e71364f04e06c74d4a1842e1e91ac007b84edd93a"
+      },
+      {
+        "path": "packages\\core-components\\src\\installment-engine\\types.ts",
+        "sha256": "6f1557375fa74edb37ff165979f80d11a813dde9a90ce94e0146c9ab4b77010e"
+      },
+      {
+        "path": "packages\\core-components\\src\\multi-channel\\topic-router.ts",
+        "sha256": "a31d97bb81a5da1e5219350efb2496a6d5565a0ec77b4e6251722833879dcd24"
+      },
+      {
+        "path": "packages\\core-components\\src\\outbox-queue\\types.ts",
+        "sha256": "ab7aabbef2adcdde8b84b6fa6e766d1f9a7c506a6396e70f442306ace54d5365"
+      },
+      {
+        "path": "packages\\core-components\\src\\outbox-queue\\worker.ts",
+        "sha256": "78c78d39fa15c2bd62788ab49e2b556de7e8f7062541b79137c3a7817ca711fb"
+      },
+      {
+        "path": "packages\\core-components\\src\\purchase-picker\\suggestions.ts",
+        "sha256": "4572cd4b624617bce3d91c1defb165ad9b23d0ccf52a08d54acedf6673f2e667"
+      },
+      {
+        "path": "packages\\core-components\\src\\quantity-picker\\keyboard.ts",
+        "sha256": "bd790a70a6869fb2f63352446dd1a264ca6bd41c21672deaa5b364e18e9cdba8"
+      },
+      {
+        "path": "packages\\core-components\\src\\quantity-picker\\validator.ts",
+        "sha256": "65aa33db3170a8ae3dcd4b141f2974bbb66f614600b4c6a0f150205b657a4df2"
+      },
+      {
+        "path": "packages\\core-components\\src\\shift-accrual\\engine.ts",
+        "sha256": "6b5c5fc368d1291d02b07cacd9902ebceff0ae2194da1f7a07e7460f5efa0c49"
+      },
+      {
+        "path": "packages\\core-components\\src\\shift-accrual\\types.ts",
+        "sha256": "f72011e57000adeb31515872b0e29f334ba4c5bfc2506a3d0e71c72e69c046e8"
+      },
+      {
+        "path": "packages\\core-components\\src\\source-picker\\keyboard.ts",
+        "sha256": "b98e81e7d62aaab0ca3739e36233f47f73c272cb81f041a1ddab3716db0ffddb"
+      },
+      {
+        "path": "packages\\core-components\\src\\source-picker\\types.ts",
+        "sha256": "d7c158ac89e8f4e0e6a5a82f5e84ce8102e11631ebca9411e45450b10ffce4fa"
+      },
+      {
+        "path": "packages\\core-components\\src\\source-picker\\validator.ts",
+        "sha256": "7ba4f4456e84dce2a49d54a3b059db5523cb7f2e89e27deeeda82035f7564fb1"
+      },
+      {
+        "path": "packages\\core-components\\src\\types.ts",
+        "sha256": "a3a51ab52e258e7a83b38082a5e48afb3aca7b02038a8d3e8d0c8a51db1c0c3a"
+      },
+      {
+        "path": "packages\\core-components\\src\\worker-picker\\filter.ts",
+        "sha256": "4032e07a66da002927234f81cf6e8234c3bc51bc77b067cb027a92c91689ce9f"
+      },
+      {
+        "path": "packages\\core-components\\src\\worker-picker\\keyboard.ts",
+        "sha256": "ab4b78abb54e0bff293b862e164f056671246a8906566e3d33142939c89cda20"
+      },
+      {
+        "path": "packages\\core-components\\tests\\amount-picker.spec.ts",
+        "sha256": "f6d69cb01c1ecf4e2c8d3abb7ba397a9d08746bae0c84fc46acf5df94698bafe"
+      },
+      {
+        "path": "packages\\core-components\\tests\\approval-workflow.spec.ts",
+        "sha256": "d5349cdcde04923fef8873c7a637fd4935094dc296a7576160b7a46198ce0983"
+      },
+      {
+        "path": "packages\\core-components\\tests\\attachment-pipeline.spec.ts",
+        "sha256": "b25707904df248b7308d987af82ceeb6b8580d9be311992f2b2e0ea809ba8118"
+      },
+      {
+        "path": "packages\\core-components\\tests\\clearing-engine.spec.ts",
+        "sha256": "4e572e7c027f7bc29952a79bdd54c60716b38aacb4a490e3dce3e69843a3d168"
+      },
+      {
+        "path": "packages\\core-components\\tests\\completion-card.spec.ts",
+        "sha256": "4c511ae8a840b935336aa915a77ce4a17e651f15a54b711708482d8645499d31"
+      },
+      {
+        "path": "packages\\core-components\\tests\\custody-gate.spec.ts",
+        "sha256": "bef80927e399bd4bddfe70d2e9043dcedf681c80e46db701d62d72744c749397"
+      },
+      {
+        "path": "packages\\core-components\\tests\\date-picker.spec.ts",
+        "sha256": "546d38e6c03ed1996909bf57b37e7f3fe93b4c6560a41374237999fdf1b7250a"
+      },
+      {
+        "path": "packages\\core-components\\tests\\installment-engine.spec.ts",
+        "sha256": "09afbbb682b1979ed290fd58056224e282be5f08135dacafd3019b9e59e98006"
+      },
+      {
+        "path": "packages\\core-components\\tests\\outbox-queue.spec.ts",
+        "sha256": "199944baa197361b09d85a005281bb36ac1edf3fc97ab709722618a739747638"
+      },
+      {
+        "path": "packages\\core-components\\tests\\purchase-picker.spec.ts",
+        "sha256": "9a373cd450fbf7e04eaf764ae074dccc13e06a4c35645e1cef13976c0228df35"
+      },
+      {
+        "path": "packages\\core-components\\tests\\quantity-picker.spec.ts",
+        "sha256": "60822eb8cb9f5f2975f47595c4d1db016cabba11d728b4d30a5f6979b1b920c4"
+      },
+      {
+        "path": "packages\\core-components\\tests\\shift-accrual.spec.ts",
+        "sha256": "3694b82def11e13b3bc7905c4cce0734d9d8f99b04e97d85fb28b3ea51696cb2"
+      },
+      {
+        "path": "packages\\core-components\\tests\\source-picker.spec.ts",
+        "sha256": "1a97ba3cef9064fcb91a6c36c3b21603cc105b375718f0c7d3fd13457c72afbd"
+      },
+      {
+        "path": "packages\\core-components\\tests\\telegram-formatters.spec.ts",
+        "sha256": "c1a8f81c1402ecd0580fb478f34f57e57fef95689b599abbf99b835d7cef7ab3"
+      },
+      {
+        "path": "packages\\core-components\\tests\\topic-router.spec.ts",
+        "sha256": "6ee21fe6fa6175f78643d084263eb8aa6de3fb8b3c085446cdece0fdaf6c4517"
+      },
+      {
+        "path": "packages\\core-components\\tests\\worker-picker.spec.ts",
+        "sha256": "395cec15af09415bb4efae2d976dab50773f47c3af26bdb929a9db00c946082d"
+      },
+      {
+        "path": "packages\\core-components\\tsconfig.json",
+        "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+      },
+      {
+        "path": "packages\\database\\package.json",
+        "sha256": "52760a7c3f9f07f2489e2650a710a859b76dff299a091e6b8f189ee066068abf"
+      },
+      {
+        "path": "packages\\database\\prisma\\seed-data\\company-profile.json",
+        "sha256": "4e71b422ee1038be63bd4a94d88cb02912d35e241a82a6f9b701a3595e852a92"
+      },
+      {
+        "path": "packages\\database\\src\\crypto\\blind-index.ts",
+        "sha256": "2ac9290b9870b11691db875f68c74aa7a77a9b3ba57541ec4c747a9e2457a7c9"
+      },
+      {
+        "path": "packages\\database\\src\\crypto\\cipher.ts",
+        "sha256": "46651d503556a069d7cb60b58e4158ce4d262685e9c93e812ca08abf3ee452d3"
+      },
+      {
+        "path": "packages\\database\\src\\index.ts",
+        "sha256": "dcfd8367e12664baf545dc50c08e4b3effd7e853257fb875dfd0c4b6fee04ddc"
+      },
+      {
+        "path": "packages\\database\\src\\ledger\\hash-chain.ts",
+        "sha256": "5942282cfd989328a02e21199d7966cb89a5ce475cd361d594102adff0468ce2"
+      },
+      {
+        "path": "packages\\database\\src\\scripts\\purge-test-data.ts",
+        "sha256": "3eb9b849847d1fab5317c7dfb649d8a0400667148ce147b6fd5c829ee43040d6"
+      },
+      {
+        "path": "packages\\database\\src\\scripts\\seed-canteen-cigarettes.ts",
+        "sha256": "1d4d459240605ba1b8f57abb59edbb9e0894b681880041ed05c1ccb56853fc40"
+      },
+      {
+        "path": "packages\\database\\src\\scripts\\seed-company-profile.ts",
+        "sha256": "816be27bcfdd3f7b15500436c4fda674d50c4b8e1ebc69f94558cc0e28c0bd7d"
+      },
+      {
+        "path": "packages\\database\\src\\scripts\\seed-hq-site.ts",
+        "sha256": "ce66f0b281bef696f532325b276a8d59ee134cce461326124e018b114aac1f53"
+      },
+      {
+        "path": "packages\\database\\tests\\security.spec.ts",
+        "sha256": "8bf946ae8a43210da72764e0c9d385edaed356672bb87024f635691e5b2164cf"
+      },
+      {
+        "path": "packages\\database\\tsconfig.json",
+        "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+      },
+      {
+        "path": "packages\\national-id-engine\\package.json",
+        "sha256": "caec2297d7d588d3f88497306c574f9b6acc4a3c2901532ee3910d73bf4ef46f"
+      },
+      {
+        "path": "packages\\national-id-engine\\src\\constants.ts",
+        "sha256": "8ea9fce9df9da348f160bcc746275eec782b823a560b40c9fdf7cd8f246e859f"
+      },
+      {
+        "path": "packages\\national-id-engine\\src\\index.ts",
+        "sha256": "4fc137226a22dc920e1ecb7cca79029fcbc6e76a93f8826e9edbca4b2381e81d"
+      },
+      {
+        "path": "packages\\national-id-engine\\src\\parser.ts",
+        "sha256": "2050475b6753b280e308631389cb8dd7a0c550c980d96cc97572a6ceec7b808e"
+      },
+      {
+        "path": "packages\\national-id-engine\\src\\types.ts",
+        "sha256": "abec8751131f48586829ed8802f80864ab835d4ed7a961b9bc003b9f007ae95c"
+      },
+      {
+        "path": "packages\\national-id-engine\\tests\\national-id.spec.ts",
+        "sha256": "06eb5c5d272954a02fc6ca67f28ad82bdbfea8cdeeb1f9c98f650aa5013b78eb"
+      },
+      {
+        "path": "packages\\national-id-engine\\tsconfig.json",
+        "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+      },
+      {
+        "path": "packages\\regional-engine\\package.json",
+        "sha256": "95652eccfaa97ee73d67d8370161bd2a081535a44105199021dc771dd768d4e2"
+      },
+      {
+        "path": "packages\\regional-engine\\src\\currency.ts",
+        "sha256": "00d6652f91c7e90a172f0312bee8ded69e67b067d77e3a7942cadc8f6603256e"
+      },
+      {
+        "path": "packages\\regional-engine\\src\\datetime.ts",
+        "sha256": "a5429beb43831cc267ec1d49901f63a1fd2cd011bdccd5dc05b71447c4e61570"
+      },
+      {
+        "path": "packages\\regional-engine\\src\\index.ts",
+        "sha256": "fd04aa90fc3af16fcdde9d6828401b4543f0e1d74f371facddccf8595f366484"
+      },
+      {
+        "path": "packages\\regional-engine\\src\\names.ts",
+        "sha256": "0ef58213331591e8bb2d58e41a54e8b4d4ff66714fdc2f2c6c4374087a525d67"
+      },
+      {
+        "path": "packages\\regional-engine\\src\\numbers.ts",
+        "sha256": "1404ccbe2c6f37dbc3823b1f4dc28b5a69d5e6bfa2d3558b0ed91610d0e8c5e9"
+      },
+      {
+        "path": "packages\\regional-engine\\tests\\names.spec.ts",
+        "sha256": "1c98444e8e2454f9016178fcada49d875caaa5ad1e0d0b35c17b54eb7bfffa7f"
+      },
+      {
+        "path": "packages\\regional-engine\\tests\\regional.spec.ts",
+        "sha256": "168fdb37c0a40187165421cbfc084a055b9b8a84e893e0c5c6bf8d68f1eb02ed"
+      },
+      {
+        "path": "packages\\regional-engine\\tsconfig.json",
+        "sha256": "e4ed044d99005d1d36c726849468ff721d4fd6ed12967cc420470a4d9f690004"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "fbd8573653703dd102931007a94c9fdbcb1be20928bee9397bdbab0c3580b23c"
+      },
+      {
+        "path": "tools\\governance\\common.ts",
+        "sha256": "b0683271fb7b87c44e2e854ce2c9e6847473882831f0bd40e3cfece798bba679"
+      },
+      {
+        "path": "tools\\governance\\tests\\governance-verifiers.spec.ts",
+        "sha256": "00aa224a24a458941369b493d9f367af001d33df6402d54603aeb8a6941f4c47"
+      },
+      {
+        "path": "tools\\governance\\verify-ai-compliance.ts",
+        "sha256": "794f1d8ac96d3eb6f743cb1b94da39769dab52bc42de2beac1a688b24f07e9cb"
+      },
+      {
+        "path": "tools\\governance\\verify-architecture.ts",
+        "sha256": "04e0db327f66577c20135815a567321ddfb549297eb65f5d221909c5faa4c581"
+      },
+      {
+        "path": "tools\\governance\\verify-docs-audit.ts",
+        "sha256": "436b44d8a95c300f6f256e48b8bd58a9738852cec612cf541d2a5bf168d842f2"
+      },
+      {
+        "path": "tools\\governance\\verify-docs-parity.ts",
+        "sha256": "0e949d4daa25f5b44ce117d6c129c37b2862da64455c4f80baae3c4b9881c9af"
+      },
+      {
+        "path": "tools\\governance\\verify-flow-contracts.ts",
+        "sha256": "198cbd7a7fdf67e437f6101d23e92c42749b3460c6746239b0484024a8ebbca1"
+      },
+      {
+        "path": "tools\\governance\\verify-flow-fast.ts",
+        "sha256": "f5e4c08c19d76ae250ff596d5673c713fd53a776d2ac206d6385d6ce22f17315"
+      },
+      {
+        "path": "tools\\governance\\verify-governance-lock.ts",
+        "sha256": "95abd18252e95cf152aef3cfc99e3b6634a00a5a3e918dcbc6fb6a800a8860e0"
+      },
+      {
+        "path": "tools\\governance\\verify-governance-tamper.ts",
+        "sha256": "20209b7e39f0c7053fd441c9903b5fda62246999bfd40d6b8389d32178e26da2"
+      },
+      {
+        "path": "tools\\governance\\verify-migration-registry.ts",
+        "sha256": "5ee27fdddbd23a04b7ebe3eab44caeac36ba6a8c19478ba35661b2dbe135919f"
+      },
+      {
+        "path": "tools\\governance\\verify-telegram-contracts.ts",
+        "sha256": "313921dc01513ff1544dea36b221ddfb37b959b28639655e229c510ab4ba89f7"
+      },
+      {
+        "path": "tools\\scaffold\\finish-flow.ts",
+        "sha256": "c9459bfba037423d170b4eb2d0a517275166f66bdb1a93086e7c3b526bc008e9"
+      },
+      {
+        "path": "tools\\scaffold\\scaffold-flow.ts",
+        "sha256": "e75a2dfd788e94428ead3648c5759f76d4d8b5b99441bdf275fbeb853314a241"
+      },
+      {
+        "path": "tsconfig.json",
+        "sha256": "da39b3c6192e45956aebf97f7c80aa973e56920f48ae7a5493dd4f506fa749e5"
+      },
+      {
+        "path": "vitest.config.ts",
+        "sha256": "c35c3b972fc10897877cd1086a15e958e2d1acc9402397f5bda14ec8dc01b592"
+      }
+    ]
+  },
+  "sourceDriftBeforeReport": [],
+  "commands": [
+    {
+      "command": "pnpm build",
+      "exitCode": 2,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/build.log"
+    },
+    {
+      "command": "pnpm lint",
+      "exitCode": 2,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/lint.log",
+      "summary": [
+        "modules/workforce/src/hub/hr-hub.handler.ts(24,50): error TS2339: Property 'prisma' does not exist on type 'WorkforceModuleContext'.",
+        "modules/workforce/src/hub/hr-hub.handler.ts(146,40): error TS2339: Property 'prisma' does not exist on type 'WorkforceModuleContext'.",
+        "modules/workforce/src/services/worker-expiry-alert.service.ts(20,7): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.",
+        "modules/workforce/src/services/worker-expiry-alert.service.ts(21,7): error TS2412: Type 'bigint | undefined' is not assignable to type 'bigint' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.",
+        "modules/workforce/src/services/worker-expiry-alert.service.ts(27,5): error TS2412: Type 'string | undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target."
+      ]
+    },
+    {
+      "command": "pnpm arch:verify",
+      "exitCode": 1,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/arch-verify.log",
+      "summary": [
+        "arch:verify: FAIL",
+        "Checked: 13",
+        "Failures:",
+        "[ELIFECYCLE] Command failed with exit code 1."
+      ]
+    },
+    {
+      "command": "pnpm migration:verify",
+      "exitCode": 0,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/migration-verify.log",
+      "summary": [
+        "migration:verify: PASS",
+        "Checked: 156"
+      ]
+    },
+    {
+      "command": "pnpm flow-contracts:verify",
+      "exitCode": 0,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/flow-contracts-verify.log",
+      "summary": [
+        "flow-contracts:verify: PASS",
+        "Checked: 13"
+      ]
+    },
+    {
+      "command": "pnpm telegram-contracts:verify",
+      "exitCode": 0,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/telegram-contracts-verify.log",
+      "summary": [
+        "Telegram Bot API Contract Guard (<= 512 URL, <= 64 Callback): PASS",
+        "Checked: 213"
+      ]
+    },
+    {
+      "command": "pnpm docs:audit",
+      "exitCode": 0,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/docs-audit.log",
+      "summary": [
+        "docs:audit: PASS",
+        "Checked: 41"
+      ]
+    },
+    {
+      "command": "pnpm docs:parity",
+      "exitCode": 0,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/docs-parity.log",
+      "summary": [
+        "docs:parity: PASS",
+        "Checked: 19"
+      ]
+    },
+    {
+      "command": "pnpm governance:tamper-check",
+      "exitCode": 0,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/governance-tamper-check.log",
+      "summary": [
+        "governance:tamper-check: PASS",
+        "Checked: 42"
+      ]
+    },
+    {
+      "command": "pnpm ai-compliance:verify",
+      "exitCode": 1,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/ai-compliance-verify.log",
+      "summary": [
+        "ai-compliance:verify: FAIL",
+        "Checked: 15",
+        "Failures:",
+        "- Working tree is not clean:",
+        "[ELIFECYCLE] Command failed with exit code 1."
+      ]
+    },
+    {
+      "command": "pnpm test modules/settings tools/governance",
+      "exitCode": 0,
+      "testFiles": 46,
+      "tests": 101,
+      "log": "C:/Users/saleh/.codex/visualizations/2026/09/08/01a08171-1d00-7a43-bfe4-b2a242d5b4bd/status-review-10-09-2026-3c0494d3/selected-tests.log"
+    },
+    {
+      "command": "git status --short",
+      "exitCode": 0,
+      "entriesBeforeReport": 31
+    }
+  ],
+  "fullSuite": {
+    "command": "pnpm test",
+    "status": "NOT_RUN",
+    "reason": "Only inspected isolated settings/governance scope executed; application environment loading remains unisolated."
+  },
+  "github": {
+    "repository": "SalehOsman/Alsaada-Smart-Bot",
+    "mainProtected": false,
+    "mainSha": "d03b30d013928e50448a4add875585fb908beeb3",
+    "workflowCount": 0,
+    "rulesetsHttpStatus": 403,
+    "rulesetsMessage": "Upgrade to GitHub Pro or make this repository public to enable this feature."
+  },
+  "logs": [
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\ai-compliance-verify.log",
+      "sha256": "d21ba1f7fdb08ab64e1117a23fe9c05973c3fa35fb6ce8b187f781e11f3a5e3f"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\arch-verify.log",
+      "sha256": "b06bbe5eb840d87a9b2db35c765388ccaa85e39eb6734201b9378a4594b288a4"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\build.log",
+      "sha256": "de4edccea79618ae1e0e3a28428d2d89af396c179c4473dd1f8b9bfb9b97ecaa"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\docs-audit.log",
+      "sha256": "23ff173786b5983bfe64b45ce3ef8aec01a523f40ba67e54a2a166e17a18dbba"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\docs-parity.log",
+      "sha256": "2149256c4e666ab0b476a3b0c84f88f458d5aca1891e702ac4d55f7ccddfa2a3"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\flow-contracts-verify.log",
+      "sha256": "993fe44a1480e79270e381a940725f3dd44e1785410e5bf99e67ea7d3a90356b"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\governance-tamper-check.log",
+      "sha256": "7576f488f9e015479fdad64bca05d0a04752dcc572d4cfb5c57c511631b470b9"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\lint.log",
+      "sha256": "c869012969a5ab54ebcf1d676591f2b25bdf773f9cc9c5ff1d26aee5f81cd656"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\migration-verify.log",
+      "sha256": "e895c6104177fb6598f6df4f9f7c01a65522d6dec641170492eb91e9c9558e0b"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\selected-tests.log",
+      "sha256": "d75e9319ee6c4cc294ff5a5bf8a2c74963aac3f158cf3200ca7d611aab45d58a"
+    },
+    {
+      "path": "C:\\Users\\saleh\\.codex\\visualizations\\2026\\09\\08\\01a08171-1d00-7a43-bfe4-b2a242d5b4bd\\status-review-10-09-2026-3c0494d3\\telegram-contracts-verify.log",
+      "sha256": "b59b3071bd9954a5de12204539c20b67c957e257563aa9fb2ef695540c6e18f8"
+    }
+  ]
+}

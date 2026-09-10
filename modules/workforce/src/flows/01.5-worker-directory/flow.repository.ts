@@ -72,4 +72,14 @@ export class WorkerDirectoryRepository {
       },
     });
   }
+
+  async getWorkersSummary(): Promise<{ totalActive: number; egyptianCount: number; foreignCount: number }> {
+    const [totalActive, egyptianCount, foreignCount] = await Promise.all([
+      this.prisma.worker.count({ where: { isDeleted: false, status: 'ACTIVE' } }),
+      this.prisma.worker.count({ where: { isDeleted: false, status: 'ACTIVE', idType: 'NATIONAL_ID' } }),
+      this.prisma.worker.count({ where: { isDeleted: false, status: 'ACTIVE', idType: 'PASSPORT' } }),
+    ]);
+    return { totalActive, egyptianCount, foreignCount };
+  }
 }
+

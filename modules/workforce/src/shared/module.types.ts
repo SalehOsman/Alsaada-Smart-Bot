@@ -11,9 +11,14 @@ export type UserRole =
   | 'GUEST';
 
 export interface WorkforceModuleContext extends Context {
-  effectiveRole?: UserRole;
-  isRealSuperAdmin?: boolean;
-  isImpersonating?: boolean;
-  assignedSiteId?: string | null;
-  adminSites?: string[];
+  effectiveRole?: UserRole | string | undefined;
+  isRealSuperAdmin?: boolean | undefined;
+  isImpersonating?: boolean | undefined;
+  assignedSiteId?: string | null | undefined;
+  adminSites?: string[] | undefined;
+  session?: {
+    userMode?: string | undefined;
+    [key: string]: any;
+  } | undefined;
 }
+

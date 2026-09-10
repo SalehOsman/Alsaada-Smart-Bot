@@ -1,17 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHrHub, renderHrSubHub } from '../src/handlers/hr-hub.handler.js';
+import { renderHrHub, renderHrSubHub } from '@alsaada/workforce';
 import { MyContext } from '../src/types/context.js';
-
-vi.mock('../src/services/worker.service.js', () => ({
-  workerService: {
-    getWorkersSummary: vi.fn().mockResolvedValue({
-      totalActive: 42,
-      egyptianCount: 38,
-      foreignCount: 4,
-    }),
-    getRecentWorkers: vi.fn().mockResolvedValue([]),
-  },
-}));
 
 vi.mock('../src/services/screen-flow.service.js', () => ({
   screenFlowService: {

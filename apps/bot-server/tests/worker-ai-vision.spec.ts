@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { aiVisionIdService } from '../src/services/ai-vision-id.service.js';
+import { aiVisionIdService } from '@alsaada/workforce';
 import { extractFirstTwoNames } from '@alsaada/regional-engine';
 
 describe('AI Vision ID Service & Document Verification Engine', () => {

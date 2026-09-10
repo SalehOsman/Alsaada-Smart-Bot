@@ -46,3 +46,13 @@ export * from './flows/01.2.D-worker-edit/flow.validators.js';
 export * from './flows/01.2.D-worker-edit/flow.messages.js';
 export { WorkerEditTelemetry } from './flows/01.2.D-worker-edit/flow.telemetry.js';
 
+// Export workforce domain services & hub
+export * from './services/worker-facade.service.js';
+export * from './services/ai-vision-id.service.js';
+export * from './services/worker-storage.service.js';
+export * from './services/worker-expiry-alert.service.js';
+export * from './hub/hr-hub.handler.js';
+export * from './hub/identity-switch.handler.js';
+export * from './hub/hub.routes.js';
+
+

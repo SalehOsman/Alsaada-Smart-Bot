@@ -181,6 +181,7 @@ export interface AiVisionScanResult {
   gender?: 'MALE' | 'FEMALE' | undefined;
   governorateNameAr?: string | undefined;
   userErrorMessage?: string | undefined;
+  rawJson?: Record<string, unknown> | undefined;
 }
 
 export interface AiVisionScanner {

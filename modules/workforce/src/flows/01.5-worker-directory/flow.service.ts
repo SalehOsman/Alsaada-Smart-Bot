@@ -31,6 +31,10 @@ export class WorkerDirectoryService {
     return this.repository.findWorkers(query);
   }
 
+  async getWorkersSummary(): Promise<{ totalActive: number; egyptianCount: number; foreignCount: number }> {
+    return this.repository.getWorkersSummary();
+  }
+
   async getWorkerProfile360(workerId: string, viewerRole = 'GUEST'): Promise<WorkerProfile360 | null> {
     const worker = await this.repository.findWorkerById(workerId);
     if (!worker || worker.isDeleted) {

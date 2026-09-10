@@ -80,3 +80,4 @@ export function loadConfig(): AppConfig {
 }
 
 export const config = loadConfig();
+(globalThis as any).config = config;

@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { workerService } from '../src/services/worker.service.js';
+import { workerService, setWorkforcePrisma } from '@alsaada/workforce';
+import { prisma } from '../src/db.js';
 
 vi.mock('../src/db.js', () => {
   return {
     prisma: {
       worker: {
-        findFirst: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue(null),
         findMany: vi.fn().mockResolvedValue([]),
         create: vi.fn(),
         count: vi.fn().mockResolvedValue(0),
@@ -25,6 +26,10 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 }));
 
 describe('Worker Identification Engine — Egyptian NID & Foreign Passport', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setWorkforcePrisma(prisma);
+  });
   describe('Egyptian National ID Validation & Extraction', () => {
     it('should accurately parse and extract info from valid 14-digit Egyptian NID', () => {
       // 29001010101234 -> Born 1990-01-01, Cairo (01), Male

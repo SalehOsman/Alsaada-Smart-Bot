@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { workerEditService } from '../src/services/worker-edit.service.js';
-import { workerExpiryAlertService } from '../src/services/worker-expiry-alert.service.js';
+import {
+  workerEditService,
+  workerExpiryAlertService,
+  setWorkforcePrisma,
+  FIELD_KEY_SHORT_MAP,
+  FIELD_TO_SHORT_MAP,
+} from '@alsaada/workforce';
 import { prisma } from '../src/db.js';
-import { FIELD_KEY_SHORT_MAP, FIELD_TO_SHORT_MAP } from '@alsaada/workforce';
 import { EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
 
 vi.mock('../src/db.js', () => ({
@@ -34,6 +38,7 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 describe('Worker Edit Governance & Expiry Alerts Engine', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setWorkforcePrisma(prisma);
   });
 
   describe('Super Admin Direct Worker Profile Editing', () => {

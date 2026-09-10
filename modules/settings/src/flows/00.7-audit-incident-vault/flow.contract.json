@@ -1,0 +1,71 @@
+{
+  "flowCode": "00.7",
+  "flowName": "وحدة التحقيق الجنائي وسجل الحركات الميدانية",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "entryPoints": [
+    "action:settings:audit_vault"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "التحكم الفني والصيانة",
+    "التحقيق وسجل الحركات"
+  ],
+  "buttons": [
+    "action:settings:audit_vault",
+    "action:audit:journey_prompt",
+    "action:audit:unresolved",
+    "action:audit:resolve",
+    "action:audit:purge_prompt",
+    "action:audit:purge_confirm"
+  ],
+  "inputs": [
+    "text:user_identifier"
+  ],
+  "outputs": [
+    "card:audit_hub",
+    "card:journey_steps",
+    "card:error_detail"
+  ],
+  "dataImpact": {
+    "database": [
+      "BotPerformanceLog",
+      "SystemErrorLog",
+      "Worker"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": [
+      "topic:system_governance"
+    ]
+  },
+  "linkedFlows": [
+    "00.8"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

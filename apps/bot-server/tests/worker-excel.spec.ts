@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { workerExcelService } from '../src/services/worker-excel.service.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { workerExcelService, setWorkforcePrisma } from '@alsaada/workforce';
+import { prisma } from '../src/db.js';
 import ExcelJS from 'exceljs';
 
 const mockWorkersList = [
@@ -181,6 +182,10 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 }));
 
 describe('Worker Excel Service — Template Generation & Bulk Import', () => {
+  beforeEach(() => {
+    setWorkforcePrisma(prisma);
+  });
+
   it('should generate template buffer with 2 sheets (Workers Entry and Reference Codes)', async () => {
     const buffer = await workerExcelService.generateTemplateBuffer();
     expect(buffer).toBeDefined();

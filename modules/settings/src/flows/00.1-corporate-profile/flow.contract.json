@@ -1,0 +1,71 @@
+{
+  "flowCode": "00.1",
+  "flowName": "الملف التعريفي وبيانات الشركة",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT"
+  ],
+  "entryPoints": [
+    "action:settings:company_profile",
+    "/company",
+    "/org"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "الهيكل المؤسسي والمواقع",
+    "الملف التعريفي للشركة"
+  ],
+  "buttons": [
+    "action:settings:company_profile",
+    "action:edit_comp:tradeName",
+    "action:edit_comp:legalName",
+    "action:edit_comp:taxNumber",
+    "action:edit_comp:commercialReg",
+    "action:edit_comp:address",
+    "action:edit_comp:phone",
+    "action:edit_comp:email"
+  ],
+  "inputs": [
+    "text:field_value"
+  ],
+  "outputs": [
+    "card:company_profile"
+  ],
+  "dataImpact": {
+    "database": [
+      "CompanyProfile"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": [
+      "topic:system_governance"
+    ]
+  },
+  "linkedFlows": [
+    "00.2",
+    "00.3"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

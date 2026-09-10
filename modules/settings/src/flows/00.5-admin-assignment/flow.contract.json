@@ -1,0 +1,66 @@
+{
+  "flowCode": "00.5",
+  "flowName": "تعيين وتوزيع مدراء ومشرفي المواقع",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT"
+  ],
+  "entryPoints": [
+    "action:settings:admin_assignments"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "إدارة الهويات والصلاحيات",
+    "توزيع مدراء المواقع"
+  ],
+  "buttons": [
+    "action:settings:admin_assignments",
+    "action:admin_assign:user",
+    "action:admin_assign:set"
+  ],
+  "inputs": [
+    "select:site_id"
+  ],
+  "outputs": [
+    "card:assignments_list",
+    "card:user_assignment"
+  ],
+  "dataImpact": {
+    "database": [
+      "User",
+      "Site"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": [
+      "topic:system_governance"
+    ]
+  },
+  "linkedFlows": [
+    "00.2",
+    "00.4"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

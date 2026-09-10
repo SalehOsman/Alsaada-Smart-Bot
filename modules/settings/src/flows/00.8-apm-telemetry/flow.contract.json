@@ -1,0 +1,67 @@
+{
+  "flowCode": "00.8",
+  "flowName": "رادار الأداء وسرعة الاستجابة ومراقبة الخدمات",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "entryPoints": [
+    "action:settings:apm_dashboard"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "التحكم الفني والصيانة",
+    "رادار الأداء والمراقبة"
+  ],
+  "buttons": [
+    "action:settings:apm_dashboard",
+    "action:apm:slow_ops",
+    "action:apm:health_check",
+    "action:apm:alert_policy",
+    "action:apm:set_policy"
+  ],
+  "inputs": [
+    "select:policy_type"
+  ],
+  "outputs": [
+    "card:apm_dashboard",
+    "card:slow_operations",
+    "card:health_check",
+    "card:alert_policy"
+  ],
+  "dataImpact": {
+    "database": [
+      "BotPerformanceLog"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "00.7"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

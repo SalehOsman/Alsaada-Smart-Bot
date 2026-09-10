@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { extractFirstTwoNames } from '@alsaada/regional-engine';
-import { workerService } from '../src/services/worker.service.js';
+import { workerService, setWorkforcePrisma } from '@alsaada/workforce';
+import { prisma } from '../src/db.js';
 
-vi.mock('../src/db.js', () => ({
-  prisma: {
+vi.mock('../src/db.js', () => {
+  const mockPrisma: any = {
     worker: {
       findFirst: vi.fn(),
       findMany: vi.fn().mockResolvedValue([]),
@@ -35,8 +36,10 @@ vi.mock('../src/db.js', () => ({
         name: 'محجر الفوسفات',
       }),
     },
-  },
-}));
+    $transaction: vi.fn().mockImplementation((fn) => fn(mockPrisma)),
+  };
+  return { prisma: mockPrisma };
+});
 
 vi.mock('../src/services/fast-cache.service.js', () => ({
   fastCache: {
@@ -46,6 +49,10 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 }));
 
 describe('Worker Full 19-Step Wizard & Compound Nickname Engine', () => {
+  beforeEach(() => {
+    setWorkforcePrisma(prisma);
+  });
+
   describe('Compound Name & Auto-Nickname Engine', () => {
     it('should correctly handle compound prefix (عبد الله محمد محمود -> عبد الله محمد)', () => {
       const nick = extractFirstTwoNames('عبد الله محمد محمود خليل');

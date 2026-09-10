@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { generateWorkerInviteToken, verifyWorkerInviteToken, workerService } from '../src/services/worker.service.js';
-import { workerEditService } from '../src/services/worker-edit.service.js';
+import {
+  generateWorkerInviteToken,
+  verifyWorkerInviteToken,
+  workerService,
+  workerEditService,
+} from '@alsaada/workforce';
 import { config } from '../src/config/env.js';
 import { getScopedSiteId, buildSiteScopeWhere } from '../src/services/scope.service.js';
 import { MyContext } from '../src/types/context.js';

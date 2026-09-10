@@ -21,101 +21,23 @@ export const undiciDispatcher = new UndiciAgent({
   },
 });
 setGlobalDispatcher(undiciDispatcher);
-import { clearAllPendingUserActions } from './redis.js';
+import { clearAllPendingUserActions, redis, safeRedisGet } from './redis.js';
 import { screenFlowService } from './services/screen-flow.service.js';
 import { authMiddleware } from './middlewares/auth.middleware.js';
 import { telemetryMiddleware } from './middlewares/telemetry.middleware.js';
 import { errorVaultService } from './services/error-vault.service.js';
-import {
-  renderErrorLogsList,
-  renderErrorLogDetail,
-  handleResolveError,
-  renderPerformanceDashboard,
-} from './handlers/error-console.handler.js';
 import { handleStart, renderRoleHome, handleClaimWorker } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
-import {
-  handleSettings,
-  handleSettingsSubCorporate,
-  handleSettingsSubIdentity,
-  handleSettingsSubSystem,
-  handleGhostModeMenu,
-  handleImpersonateRole,
-  handleExitImpersonate,
-  handleExitGhostCommand,
-} from './handlers/settings.handler.js';
 import { handleMenuPlaceholder } from './handlers/placeholder.handler.js';
 import {
-  renderCompanyProfileCard,
-  handleStartEditCompanyField,
-  handleCompanyFieldTextInput,
-} from './handlers/company-profile.handler.js';
-import {
-  renderAdminProfileCard,
-  renderFieldAdminProfileCard,
-  handleStartEditAdminField,
-  handleAdminFieldTextInput,
+  registerWorkforceModule,
   handleSwitchToWorker,
   handleSwitchToFieldAdmin,
-  handleSwitchRoleCommand,
-} from './handlers/admin-profile.handler.js';
-import {
-  renderSitesHub,
-  renderSiteDetail,
-  renderSiteEditMenu,
-  handleToggleSiteStatus,
-  handleStartAddSite,
-  handleSiteTextInput,
-  handleSiteLocationInput,
-  handleStartEditSiteField,
-  handleSelectSiteProject,
-  handleSetSiteGeofence,
-  handleConfirmSiteCode,
-  handleSelectSiteGov,
-} from './handlers/sites-hub.handler.js';
-import {
-  renderAdminAssignmentsHub,
-  renderUserAssignmentCard,
-  handleSetUserSiteAssignment,
-} from './handlers/admin-assignment.handler.js';
-import {
-  renderDepartmentsHub,
-  renderDepartmentDetail,
-  renderJobDetail,
-  handleJobHeadcountDelta,
-  handleJobToggleCycle,
-  handleDownloadJobMatrixTemplate,
-  handleStartUploadExcel,
-  handleJobMatrixDocumentInput,
-  handleStartAddDepartment,
-  handleStartAddJob,
-  handleStartEditJobSalary,
-  handleStartEditJobTitle,
-  handleStartEditJobCode,
-  handleToggleJobActive,
-  handlePromptDeleteJob,
-  handleConfirmDeleteJob,
-  handleStartEditDeptName,
-  handleStartEditDeptCode,
-  handleToggleDeptActive,
-  handlePromptDeleteDept,
-  handleConfirmDeleteDept,
-  handleStartEditJobCycle,
-  handleQuickPresetCycle,
-  handleSetWorkDays,
-  handleSetRestDays,
-  handleApplyCyclePolicy,
-  handlePromptCustomDate,
-  handleJobMatrixTextInput,
-} from './handlers/job-matrix.handler.js';
-import {
-  renderHrHub,
-  renderHrSubHub,
-  handleHrPlaceholder,
-} from './handlers/hr-hub.handler.js';
-import { registerWorkforceModule, type WorkforceModuleContext } from '@alsaada/workforce';
-import { workerExpiryAlertService } from './services/worker-expiry-alert.service.js';
+  type WorkforceModuleContext,
+} from '@alsaada/workforce';
+import { registerSettingsModule, handleSettingsHub, type SettingsModuleContext } from '@alsaada/settings';
 import { prisma } from './db.js';
+
 
 export function createBot(): Bot<MyContext> {
   const token = config.botToken;
@@ -161,6 +83,30 @@ export function createBot(): Bot<MyContext> {
   // 4.0. ⚡ APM Performance & User Breadcrumbs Telemetry Middleware
   bot.use(telemetryMiddleware);
 
+  // 4.0.1. 🚧 Emergency Maintenance Mode Guard (Super Admin bypass)
+  bot.use(async (ctx, next) => {
+    const isMaintenance = await safeRedisGet('system:maintenance_mode');
+    if (isMaintenance === '1' || isMaintenance === 'true') {
+      const isSuperAdmin =
+        ctx.effectiveRole === 'SUPER_ADMIN' ||
+        (ctx.from && BigInt(ctx.from.id) === config.superAdminTelegramId);
+      if (!isSuperAdmin) {
+        const maintenanceMsg =
+          '🚧 *النظام في وضع الصيانة والتحديث الفوري*\n\n' +
+          'عزيزي المستخدم، تجري إدارة المنظومة أعمال صيانة وتحديث مجدولة لرفع كفاءة الخدمة واستقرار العمليات.\n' +
+          'سيعود البوت للعمل تلقائياً فور انتهاء التحديث خلال دقائق.\n\n' +
+          'نشكر حسن تعاونكم وتفهمكم.';
+        if (ctx.callbackQuery) {
+          await ctx.answerCallbackQuery({ text: '🚧 النظام في وضع الصيانة المجدولة حالياً.', show_alert: true }).catch(() => {});
+        } else {
+          await ctx.reply(maintenanceMsg, { parse_mode: 'Markdown' }).catch(() => {});
+        }
+        return;
+      }
+    }
+    return next();
+  });
+
   // 4.1. 🧹 Universal Main Menu Invalidation & Automatic Deletion Interceptor
   // When user clicks ANY section from the main menu, delete the main menu message immediately
   // and ensure destination screens are sent cleanly as separate standalone cards.
@@ -178,22 +124,24 @@ export function createBot(): Bot<MyContext> {
     return next();
   });
 
-  // 5. Register Workforce Domain Module (Doc 21 Modular Monolith)
+  // 5. Register Domain Modules (Doc 21 Modular Monolith)
   registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
     prisma,
     encryptionKey: config.databaseEncryptionKey,
   });
 
-  // 6. Pending Input Interceptors (Job Matrix Document, Sites Location, Text Inputs)
-  bot.on(['message:photo', 'message:document'], async (ctx, next) => {
-    if (ctx.message?.document) {
-      if (await handleJobMatrixDocumentInput(ctx)) return;
+  const settingsHandlers = registerSettingsModule(
+    bot as unknown as Bot<SettingsModuleContext>,
+    {
+      prisma,
+      redis,
+      encryptionKey: config.databaseEncryptionKey,
     }
-    return next();
-  });
+  );
 
+  // 6. Pending Input Interceptors (Location, Text Inputs)
   bot.on('message:location', async (ctx, next) => {
-    if (await handleSiteLocationInput(ctx)) return;
+    if (await settingsHandlers.handleLocationInput(ctx as any)) return;
     return next();
   });
 
@@ -211,17 +159,14 @@ export function createBot(): Bot<MyContext> {
       return next();
     }
 
-    if (await handleJobMatrixTextInput(ctx)) return;
-    if (await handleCompanyFieldTextInput(ctx)) return;
-    if (await handleAdminFieldTextInput(ctx)) return;
-    if (await handleSiteTextInput(ctx)) return;
+    if (await settingsHandlers.handleTextInput(ctx as any)) return;
 
     // Silent user message deletion for unrecognized text to keep chat clean
     await screenFlowService.cleanupIncomingUserMessage(ctx);
     return next();
   });
 
-  // 4. Base Commands
+  // 7. Base Commands
   bot.command('start', handleStart);
   bot.command(['cancel', 'abort', 'clear'], async (ctx) => {
     if (!ctx.from) return;
@@ -241,35 +186,26 @@ export function createBot(): Bot<MyContext> {
     }
   });
   bot.command(['ping', 'health', 'speed'], handlePing);
-  bot.command(['settings', 'admin'], handleSettings);
-  bot.command(['switch_role', 'switch_mode'], handleSwitchRoleCommand);
-  bot.command(['company', 'org'], async (ctx) => {
-    await renderCompanyProfileCard(ctx, false);
-  });
-  bot.command(['me', 'profile'], async (ctx) => {
-    await renderAdminProfileCard(ctx, false);
-  });
-  bot.command(['sites', 'projects'], async (ctx) => {
-    await renderSitesHub(ctx, false);
-  });
-  bot.command(['jobs', 'departments', 'matrix'], async (ctx) => {
-    await renderDepartmentsHub(ctx, false);
-  });
-  bot.command(['exit_ghost', 'exit_impersonate', 'exit_simulation'], handleExitGhostCommand);
 
-  // 4.5. Persistent Bottom Reply Keyboard Button Handlers
+  // 8. Persistent Bottom Reply Keyboard Button Handlers
   bot.hears(/القائمة الرئيسية/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
     await renderRoleHome(ctx, false);
   });
-  bot.hears(/إعدادات النظام/, handleSettings);
+  bot.hears(/إعدادات النظام/, async (ctx) => {
+    await handleSettingsHub(ctx as any);
+  });
   bot.hears(/ملفي (الشخصي|وإعداداتي)/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
-    await renderAdminProfileCard(ctx, false);
+    await settingsHandlers.adminProfileHandler.renderAdminProfile(ctx as any, false);
   });
   bot.hears(/فحص الكفاءة/, handlePing);
-  bot.hears(/التبديل لحسابي كعامل/, handleSwitchToWorker);
-  bot.hears(/العودة لبوابة الإشراف/, handleSwitchToFieldAdmin);
+  bot.hears(/التبديل لحسابي كعامل/, async (ctx) => {
+    await handleSwitchToWorker(ctx as unknown as WorkforceModuleContext);
+  });
+  bot.hears(/العودة لبوابة الإشراف/, async (ctx) => {
+    await handleSwitchToFieldAdmin(ctx as unknown as WorkforceModuleContext);
+  });
   bot.hears(/بطاقة معرفي/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
     await ctx.reply(
@@ -295,240 +231,15 @@ export function createBot(): Bot<MyContext> {
     await ctx.reply('🧾 *بوابة مستخلصات الموردين*\nعرض الفواتير المعتمدة تحت التجهيز.', { parse_mode: 'Markdown' });
   });
 
-
-  // 5. Navigation & Main Settings Callbacks
+  // 9. Navigation Callbacks
   bot.callbackQuery('action:main_menu', async (ctx) => {
     await ctx.answerCallbackQuery();
     const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
     await renderRoleHome(ctx, inPlace);
   });
   bot.callbackQuery(/^action:claim_worker:(.+)$/, handleClaimWorker);
-  bot.callbackQuery('menu:super_admin_settings', handleSettings);
 
-  // 6. Settings Sub-Category Callbacks
-  bot.callbackQuery('action:settings_sub:corporate', handleSettingsSubCorporate);
-  bot.callbackQuery('action:settings_sub:identity', handleSettingsSubIdentity);
-  bot.callbackQuery('action:settings_sub:system', handleSettingsSubSystem);
-
-  // 7. Corporate & Company Profile Callbacks
-  bot.callbackQuery('action:settings:company_profile', async (ctx) => {
-    await renderCompanyProfileCard(ctx, true);
-  });
-  bot.callbackQuery(/^action:edit_comp:(.+)$/, async (ctx) => {
-    const fieldKey = ctx.match[1]!;
-    await handleStartEditCompanyField(ctx, fieldKey);
-  });
-
-  // 8. Sites & Projects Hub Callbacks
-  bot.callbackQuery('action:settings:sites_hub', async (ctx) => {
-    await renderSitesHub(ctx, true);
-  });
-  bot.callbackQuery(/^action:site:view:(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1]!;
-    await renderSiteDetail(ctx, siteCode, true);
-  });
-  bot.callbackQuery(/^action:site:toggle:(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1]!;
-    await handleToggleSiteStatus(ctx, siteCode);
-  });
-  bot.callbackQuery('action:site:add_new', handleStartAddSite);
-  bot.callbackQuery(/^action:site:edit:(.+):(.+)$/, async (ctx) => {
-    const fieldKey = ctx.match[1]!;
-    const siteCode = ctx.match[2]!;
-    await handleStartEditSiteField(ctx, fieldKey, siteCode);
-  });
-  bot.callbackQuery(/^action:site:set_geo(?:fence)?:(.+):(\d+)$/, async (ctx) => {
-    const siteCode = ctx.match[1]!;
-    const radius = parseInt(ctx.match[2]!, 10);
-    await handleSetSiteGeofence(ctx, siteCode, radius);
-  });
-  bot.callbackQuery(/^action:site:confirm_code:(.+)$/, async (ctx) => {
-    const confirmedCode = ctx.match[1]!;
-    await handleConfirmSiteCode(ctx, confirmedCode);
-  });
-  bot.callbackQuery(/^action:site:edit_menu:(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1]!;
-    await renderSiteEditMenu(ctx, siteCode, true);
-  });
-  bot.callbackQuery(/^action:site:sp:(.+):(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1]!;
-    const projectRef = ctx.match[2]!;
-    await handleSelectSiteProject(ctx, siteCode, projectRef);
-  });
-  bot.callbackQuery(/^action:site:set_project:(.+):(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1]!;
-    const projectRef = ctx.match[2]!;
-    await handleSelectSiteProject(ctx, siteCode, projectRef);
-  });
-  bot.callbackQuery(/^action:site:set_gov:(.+):(.+)$/, async (ctx) => {
-    const siteCode = ctx.match[1]!;
-    const govName = ctx.match[2]!;
-    await handleSelectSiteGov(ctx, siteCode, govName);
-  });
-
-  // 9. Admin Personal Profile Callbacks
-  bot.callbackQuery('action:settings:admin_profile', async (ctx) => {
-    await renderAdminProfileCard(ctx, true);
-  });
-  bot.callbackQuery('menu:field_admin_settings', async (ctx) => {
-    await renderFieldAdminProfileCard(ctx, true);
-  });
-  bot.callbackQuery('action:switch_identity:worker', handleSwitchToWorker);
-  bot.callbackQuery('action:switch_identity:field_admin', handleSwitchToFieldAdmin);
-  bot.callbackQuery(/^action:edit_admin:(.+)$/, async (ctx) => {
-    const fieldKey = ctx.match[1]!;
-    await handleStartEditAdminField(ctx, fieldKey);
-  });
-
-
-  // 10. Admin Site Assignments & Scoping Callbacks
-  bot.callbackQuery('action:settings:admin_assignments', async (ctx) => {
-    await renderAdminAssignmentsHub(ctx, true);
-  });
-  bot.callbackQuery(/^action:admin_assign:user:(\d+)$/, async (ctx) => {
-    const targetTelegramId = BigInt(ctx.match[1]!);
-    await renderUserAssignmentCard(ctx, targetTelegramId, true);
-  });
-  bot.callbackQuery(/^action:admin_assign:set:(\d+):(.+)$/, async (ctx) => {
-    const targetTelegramId = BigInt(ctx.match[1]!);
-    const siteIdOrGlobal = ctx.match[2]!;
-    await handleSetUserSiteAssignment(ctx, targetTelegramId, siteIdOrGlobal);
-  });
-
-  // 11. System Health, APM & Error Console Callbacks
-  bot.callbackQuery('action:settings:ghost_mode', handleGhostModeMenu);
-  bot.callbackQuery('action:settings:ping', handlePing);
-  bot.callbackQuery('action:exit_impersonate', handleExitImpersonate);
-  bot.callbackQuery('action:settings:error_logs', async (ctx) => {
-    await renderErrorLogsList(ctx, 1, true);
-  });
-  bot.callbackQuery(/^action:error_log:page:(\d+)$/, async (ctx) => {
-    const page = parseInt(ctx.match[1]!, 10);
-    await renderErrorLogsList(ctx, page, true);
-  });
-  bot.callbackQuery(/^action:error_log:view:(.+)$/, async (ctx) => {
-    const errorId = ctx.match[1]!;
-    await renderErrorLogDetail(ctx, errorId, true);
-  });
-  bot.callbackQuery(/^action:error_log:resolve:(.+)$/, async (ctx) => {
-    const errorId = ctx.match[1]!;
-    await handleResolveError(ctx, errorId);
-  });
-  bot.callbackQuery('action:settings:perf_logs', async (ctx) => {
-    await renderPerformanceDashboard(ctx, true);
-  });
-
-  // 12. Dynamic Impersonation Callbacks (Regex)
-  bot.callbackQuery(/^action:impersonate:(.+)$/, async (ctx) => {
-    const role = ctx.match[1]!;
-    await handleImpersonateRole(ctx, role);
-  });
-
-  // 13. Job Matrix & Functional Departments Callbacks
-  bot.callbackQuery('action:settings:job_matrix', async (ctx) => {
-    await renderDepartmentsHub(ctx, true);
-  });
-  bot.callbackQuery('action:dept:download_excel', handleDownloadJobMatrixTemplate);
-  bot.callbackQuery('action:dept:upload_excel', handleStartUploadExcel);
-  bot.callbackQuery('action:dept:add', handleStartAddDepartment);
-  bot.callbackQuery(/^action:dept:view:(.+)$/, async (ctx) => {
-    await renderDepartmentDetail(ctx, ctx.match[1]!, true);
-  });
-  bot.callbackQuery(/^action:dept:edit_name:(.+)$/, async (ctx) => {
-    await handleStartEditDeptName(ctx, ctx.match[1]!);
-  });
-  bot.callbackQuery(/^action:dept:edit_code:(.+)$/, async (ctx) => {
-    await handleStartEditDeptCode(ctx, ctx.match[1]!);
-  });
-  bot.callbackQuery(/^action:dept:toggle_active:(.+)$/, async (ctx) => {
-    await handleToggleDeptActive(ctx, ctx.match[1]!);
-  });
-  bot.callbackQuery(/^action:dept:delete_prompt:(.+)$/, async (ctx) => {
-    await handlePromptDeleteDept(ctx, ctx.match[1]!);
-  });
-  bot.callbackQuery(/^action:dept:delete_confirm:(.+)$/, async (ctx) => {
-    await handleConfirmDeleteDept(ctx, ctx.match[1]!);
-  });
-  bot.callbackQuery(/^action:job:add:(.+)$/, async (ctx) => {
-    await handleStartAddJob(ctx, ctx.match[1]!);
-  });
-  bot.callbackQuery(/^action:job:edit_code:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobCode(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:toggle_active:(.+):(.+)$/, async (ctx) => {
-    await handleToggleJobActive(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:delete_prompt:(.+):(.+)$/, async (ctx) => {
-    await handlePromptDeleteJob(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:delete_confirm:(.+):(.+)$/, async (ctx) => {
-    await handleConfirmDeleteJob(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:view:(.+):(.+)$/, async (ctx) => {
-    await renderJobDetail(ctx, ctx.match[1]!, ctx.match[2]!, true);
-  });
-  bot.callbackQuery(/^action:job:headcount:(.+):(.+):(inc|dec)$/, async (ctx) => {
-    await handleJobHeadcountDelta(ctx, ctx.match[1]!, ctx.match[2]!, ctx.match[3] as 'inc' | 'dec');
-  });
-  bot.callbackQuery(/^action:job:toggle_cycle:(.+):(.+)$/, async (ctx) => {
-    await handleJobToggleCycle(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:edit_salary:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobSalary(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:edit_title:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobTitle(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:edit_cycle:(.+):(.+)$/, async (ctx) => {
-    await handleStartEditJobCycle(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-  bot.callbackQuery(/^action:job:quick_preset:(.+):(.+):(\d+):(\d+)$/, async (ctx) => {
-    await handleQuickPresetCycle(
-      ctx,
-      ctx.match[1]!,
-      ctx.match[2]!,
-      parseInt(ctx.match[3]!, 10),
-      parseInt(ctx.match[4]!, 10)
-    );
-  });
-  bot.callbackQuery(/^action:job:set_wd:(.+):(.+):(\d+)$/, async (ctx) => {
-    await handleSetWorkDays(ctx, ctx.match[1]!, ctx.match[2]!, parseInt(ctx.match[3]!, 10));
-  });
-  bot.callbackQuery(/^action:job:set_rd:(.+):(.+):(\d+)$/, async (ctx) => {
-    await handleSetRestDays(ctx, ctx.match[1]!, ctx.match[2]!, parseInt(ctx.match[3]!, 10));
-  });
-  bot.callbackQuery(/^action:job:apply_policy:(.+):(.+):(.+)$/, async (ctx) => {
-    await handleApplyCyclePolicy(ctx, ctx.match[1]!, ctx.match[2]!, ctx.match[3] as any);
-  });
-  bot.callbackQuery(/^action:job:prompt_custom_date:(.+):(.+)$/, async (ctx) => {
-    await handlePromptCustomDate(ctx, ctx.match[1]!, ctx.match[2]!);
-  });
-
-  // 14. HR & Workforce Management Callbacks
-  bot.callbackQuery('menu:domain:hr', async (ctx) => {
-    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
-    await renderHrHub(ctx, inPlace);
-  });
-  bot.callbackQuery(/^menu:hr_sub:(.+)$/, async (ctx) => {
-    const subKey = ctx.match[1]!;
-    const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);
-    await renderHrSubHub(ctx, subKey, inPlace);
-  });
-  bot.callbackQuery(/^(?:action:advances:|action:leaves:|action:payroll:|action:admin_affairs:)/, handleHrPlaceholder);
-
-  // 15. Automated Expiry Alerts Daily Scheduler
-  setTimeout(() => {
-    workerExpiryAlertService.checkAndDispatchExpiryAlerts(bot.api).catch((err) => {
-      console.warn('⚠️ Expiry alert startup check failed:', err);
-    });
-  }, 10000);
-  setInterval(() => {
-    workerExpiryAlertService.checkAndDispatchExpiryAlerts(bot.api).catch((err) => {
-      console.warn('⚠️ Daily expiry alert scheduler failed:', err);
-    });
-  }, 24 * 60 * 60 * 1000);
-
-  // 16. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
+  // 10. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);
 
   return bot;

@@ -1,0 +1,66 @@
+{
+  "flowCode": "00.4",
+  "flowName": "الملف الشخصي للمسؤول وإعدادات الحساب",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "FIELD_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "action:settings:admin_profile",
+    "menu:field_admin_settings",
+    "/me",
+    "/profile"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "إدارة الهويات والصلاحيات",
+    "الملف الشخصي للمسؤول"
+  ],
+  "buttons": [
+    "action:settings:admin_profile",
+    "action:edit_admin:fullName",
+    "action:edit_admin:phone",
+    "action:switch_identity:worker"
+  ],
+  "inputs": [
+    "text:full_name",
+    "text:phone"
+  ],
+  "outputs": [
+    "card:admin_profile"
+  ],
+  "dataImpact": {
+    "database": [
+      "User"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "00.5",
+    "00.6"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

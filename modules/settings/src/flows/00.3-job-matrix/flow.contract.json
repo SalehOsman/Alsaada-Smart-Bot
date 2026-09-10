@@ -1,0 +1,77 @@
+{
+  "flowCode": "00.3",
+  "flowName": "مصفوفة الأقسام والوظائف ودورات الورديات",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT"
+  ],
+  "entryPoints": [
+    "action:settings:job_matrix",
+    "/jobs",
+    "/departments"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "الهيكل المؤسسي والمواقع",
+    "مصفوفة المهن والورديات"
+  ],
+  "buttons": [
+    "action:settings:job_matrix",
+    "action:dept:view",
+    "action:dept:toggle_active",
+    "action:dept:download_excel",
+    "action:job:headcount",
+    "action:job:edit_cycle"
+  ],
+  "inputs": [
+    "document:excel_matrix",
+    "text:job_title",
+    "text:base_salary",
+    "select:shift_cycle"
+  ],
+  "outputs": [
+    "card:departments_list",
+    "card:job_detail",
+    "file:excel_template"
+  ],
+  "dataImpact": {
+    "database": [
+      "Department",
+      "JobTitle"
+    ],
+    "googleSheets": [],
+    "exports": [
+      "file:job_matrix_template"
+    ],
+    "notifications": [
+      "topic:hr_operations"
+    ]
+  },
+  "linkedFlows": [
+    "00.1",
+    "01.1"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

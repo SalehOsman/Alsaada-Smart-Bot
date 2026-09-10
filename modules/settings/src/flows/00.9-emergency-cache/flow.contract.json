@@ -1,0 +1,72 @@
+{
+  "flowCode": "00.9",
+  "flowName": "صمامات التحكم الإداري وحالات الطوارئ والذاكرة",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "entryPoints": [
+    "action:settings:emergency_cache"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "التحكم الفني والصيانة",
+    "صمامات الطوارئ والذاكرة"
+  ],
+  "buttons": [
+    "action:settings:emergency_cache",
+    "action:emergency:confirm_maintenance_prompt",
+    "action:emergency:toggle_maintenance",
+    "action:emergency:prewarm"
+  ],
+  "inputs": [
+    "confirm:toggle"
+  ],
+  "outputs": [
+    "card:emergency_hub",
+    "notice:maintenance_toggled",
+    "notice:prewarm_complete"
+  ],
+  "dataImpact": {
+    "database": [
+      "Tenant",
+      "Site",
+      "Department",
+      "JobTitle",
+      "User"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": [
+      "topic:system_governance"
+    ]
+  },
+  "linkedFlows": [
+    "00.7",
+    "00.8"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

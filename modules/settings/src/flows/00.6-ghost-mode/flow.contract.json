@@ -1,0 +1,62 @@
+{
+  "flowCode": "00.6",
+  "flowName": "محاكاة وتقمص الأدوار للمدير العام (Ghost Mode)",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "entryPoints": [
+    "action:settings:ghost_mode",
+    "/exit_ghost"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "إدارة الهويات والصلاحيات",
+    "محاكاة الأدوار"
+  ],
+  "buttons": [
+    "action:settings:ghost_mode",
+    "action:impersonate",
+    "action:exit_impersonate"
+  ],
+  "inputs": [
+    "select:role_target"
+  ],
+  "outputs": [
+    "card:ghost_menu",
+    "notice:role_switched"
+  ],
+  "dataImpact": {
+    "database": [],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "00.4"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

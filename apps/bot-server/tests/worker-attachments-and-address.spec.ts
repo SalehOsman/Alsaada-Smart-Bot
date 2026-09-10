@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { workerEditService } from '../src/services/worker-edit.service.js';
-import { googleDriveService } from '../src/services/google-drive.service.js';
+import { workerEditService, googleDriveService, setWorkforcePrisma } from '@alsaada/workforce';
 import { prisma } from '../src/db.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,6 +37,7 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 describe('Worker Dedicated Folder Storage & Address Extraction / Editing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setWorkforcePrisma(prisma);
   });
 
   describe('Address Profile Editing', () => {

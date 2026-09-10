@@ -1,0 +1,73 @@
+{
+  "flowCode": "00.2",
+  "flowName": "إدارة وتكويد المواقع والمشاريع",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT"
+  ],
+  "entryPoints": [
+    "action:settings:sites_hub",
+    "/sites",
+    "/projects"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "الهيكل المؤسسي والمواقع",
+    "دليل المواقع والمشاريع"
+  ],
+  "buttons": [
+    "action:settings:sites_hub",
+    "action:site:add_new",
+    "action:site:view",
+    "action:site:toggle"
+  ],
+  "inputs": [
+    "text:site_name",
+    "text:site_code",
+    "location:gps",
+    "select:gov",
+    "select:geofence"
+  ],
+  "outputs": [
+    "card:sites_list",
+    "card:site_detail"
+  ],
+  "dataImpact": {
+    "database": [
+      "Site",
+      "Project"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": [
+      "topic:operations"
+    ]
+  },
+  "linkedFlows": [
+    "00.1",
+    "00.5"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}
