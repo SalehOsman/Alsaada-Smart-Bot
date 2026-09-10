@@ -21,7 +21,8 @@ export class WorkerExportHandler {
       await ctx.answerCallbackQuery({ text: FLOW_MESSAGES.TEMPLATE_DOWNLOADING });
     }
 
-    if (!ctx.isRealSuperAdmin) {
+    const isSuperAdmin = ctx.isImpersonating ? ctx.effectiveRole === 'SUPER_ADMIN' : Boolean(ctx.isRealSuperAdmin);
+    if (!isSuperAdmin) {
       await ctx.reply(FLOW_MESSAGES.UNAUTHORIZED_SUPER_ADMIN);
       return;
     }
@@ -46,7 +47,8 @@ export class WorkerExportHandler {
       await ctx.answerCallbackQuery();
     }
 
-    if (!ctx.isRealSuperAdmin) {
+    const isSuperAdmin = ctx.isImpersonating ? ctx.effectiveRole === 'SUPER_ADMIN' : Boolean(ctx.isRealSuperAdmin);
+    if (!isSuperAdmin) {
       await ctx.reply(FLOW_MESSAGES.UNAUTHORIZED_SUPER_ADMIN);
       return;
     }
@@ -77,7 +79,8 @@ export class WorkerExportHandler {
       this.pendingUploads.delete(String(ctx.from.id));
     }
 
-    if (!ctx.isRealSuperAdmin) {
+    const isSuperAdmin = ctx.isImpersonating ? ctx.effectiveRole === 'SUPER_ADMIN' : Boolean(ctx.isRealSuperAdmin);
+    if (!isSuperAdmin) {
       await ctx.reply(FLOW_MESSAGES.UNAUTHORIZED_SUPER_ADMIN);
       return false;
     }
@@ -151,7 +154,7 @@ export class WorkerExportHandler {
       await ctx.answerCallbackQuery({ text: FLOW_MESSAGES.EXPORT_GENERATING });
     }
 
-    const isSuperAdmin = Boolean(ctx.isRealSuperAdmin);
+    const isSuperAdmin = ctx.isImpersonating ? ctx.effectiveRole === 'SUPER_ADMIN' : Boolean(ctx.isRealSuperAdmin);
     try {
       const exportResult = await WorkerExportTelemetry.measure('generate_export', () =>
         this.service.generateWorkersExportBuffer(filter, isSuperAdmin)

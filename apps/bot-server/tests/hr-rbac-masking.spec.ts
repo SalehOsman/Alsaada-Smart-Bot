@@ -118,4 +118,32 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب!
   });
+
+  it('should STRICTLY MASK Payroll and Excel upload in Ghost Mode when Super Admin simulates FIELD_ADMIN', async () => {
+    let sentMarkup: any = null;
+    const mockCtx = {
+      from: { id: 7594239391 },
+      chat: { id: 7594239391 },
+      effectiveRole: 'FIELD_ADMIN',
+      isRealSuperAdmin: true,
+      isImpersonating: true,
+      callbackQuery: null,
+      reply: vi.fn().mockImplementation(async (_text, opts) => {
+        sentMarkup = opts?.reply_markup;
+        return { message_id: 123 };
+      }),
+    } as unknown as MyContext;
+
+    // 1. فحص حجب قسم الرواتب تماماً أثناء محاكاة المشرف الميداني
+    await renderHrHub(mockCtx, false);
+    expect(mockCtx.reply).toHaveBeenCalled();
+    const hubButtons = sentMarkup.inline_keyboard.flat();
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(false); // محجوب بالمحاكاة!
+
+    // 2. فحص حجب رفع الإكسيل أثناء محاكاة المشرف الميداني
+    await renderHrSubHub(mockCtx, 'worker_excel', false);
+    const excelSubButtons = sentMarkup.inline_keyboard.flat();
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker_export:start')).toBe(true);
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب بالمحاكاة!
+  });
 });

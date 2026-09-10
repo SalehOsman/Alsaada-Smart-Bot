@@ -13,6 +13,7 @@ export type UserRole =
 export interface WorkforceModuleContext extends Context {
   effectiveRole?: UserRole;
   isRealSuperAdmin?: boolean;
+  isImpersonating?: boolean;
   assignedSiteId?: string | null;
   adminSites?: string[];
 }

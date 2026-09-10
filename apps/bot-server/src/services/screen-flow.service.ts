@@ -187,6 +187,29 @@ export class ScreenFlowService {
   async isStaleCallback(ctx: MyContext): Promise<{ isStale: boolean; reason?: string }> {
     if (!ctx.callbackQuery || !ctx.from) return { isStale: false };
 
+    const data = ctx.callbackQuery.data || '';
+
+    // 🛡️ Sovereign Navigation Immunity:
+    // Top-level navigation buttons (domain menus, sub-domain menus, main menu, exit impersonation, and identity switching)
+    // are navigation actions that MUST NEVER be rejected as stale.
+    const isNavigationCallback =
+      data === 'action:main_menu' ||
+      data === 'action:exit_impersonate' ||
+      data.startsWith('action:switch_identity:') ||
+      data.startsWith('menu:') ||
+      data.startsWith('action:settings') ||
+      data.startsWith('action:worker') ||
+      data.startsWith('action:advances') ||
+      data.startsWith('action:leaves') ||
+      data.startsWith('action:payroll') ||
+      data.startsWith('action:admin_affairs') ||
+      data.startsWith('action:dept:') ||
+      data.startsWith('action:site:');
+
+    if (isNavigationCallback) {
+      return { isStale: false };
+    }
+
     const clickedMsgId = ctx.callbackQuery.message?.message_id;
     if (!clickedMsgId) return { isStale: false };
 

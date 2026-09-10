@@ -154,6 +154,20 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     );
   });
 
+  it('should grant navigation immunity to domain menu and hub navigation buttons even on older messages', async () => {
+    const service = new ScreenFlowService();
+    const mockCtx = {
+      from: { id: 123456 },
+      callbackQuery: {
+        message: { message_id: 111 }, // clicked on message 111 while active could be anything
+        data: 'menu:domain:hr',
+      },
+    } as unknown as MyContext;
+
+    const check = await service.isStaleCallback(mockCtx);
+    expect(check.isStale).toBe(false);
+  });
+
   it('should delete main menu message and set ctx.fromMainMenu when cleanupMainMenuIfActive is invoked', async () => {
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);

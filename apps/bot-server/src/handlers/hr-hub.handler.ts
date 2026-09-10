@@ -21,7 +21,7 @@ export async function renderHrHub(ctx: MyContext, inPlace = false): Promise<void
   const telegramId = BigInt(ctx.from.id);
 
   const role = ctx.effectiveRole || 'GUEST';
-  const isSuperAdmin = role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin;
+  const isSuperAdmin = ctx.isImpersonating ? role === 'SUPER_ADMIN' : Boolean(role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin);
 
   // جلب إحصائيات سريعة من الكاش
   const summary = await workerService.getWorkersSummary().catch(() => ({
@@ -98,7 +98,7 @@ export async function renderHrSubHub(ctx: MyContext, subKey: string, inPlace = t
   const telegramId = BigInt(ctx.from.id);
 
   const role = ctx.effectiveRole || 'GUEST';
-  const isSuperAdmin = role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin;
+  const isSuperAdmin = ctx.isImpersonating ? role === 'SUPER_ADMIN' : Boolean(role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin);
 
   let text = '';
   const keyboard = new InlineKeyboard();

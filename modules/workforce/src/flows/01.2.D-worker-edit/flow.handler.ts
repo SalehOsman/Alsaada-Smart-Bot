@@ -30,7 +30,7 @@ export class WorkerEditHandler {
   }
 
   private isSuperAdmin(ctx: WorkforceModuleContext): boolean {
-    return ctx.effectiveRole === 'SUPER_ADMIN' || Boolean(ctx.isRealSuperAdmin);
+    return ctx.isImpersonating ? ctx.effectiveRole === 'SUPER_ADMIN' : (ctx.effectiveRole === 'SUPER_ADMIN' || Boolean(ctx.isRealSuperAdmin));
   }
 
   private async replyOrEdit(ctx: Context, text: string, keyboard?: InlineKeyboard): Promise<void> {
