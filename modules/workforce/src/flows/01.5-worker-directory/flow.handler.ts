@@ -121,6 +121,8 @@ export class WorkerDirectoryHandler {
       hasMissingData: !profile.isProfileComplete,
       canRevealId: profile.canRevealId,
       isIdRevealed,
+      idNumber: profile.idNumberFull || profile.idNumberMasked,
+      phone: profile.phone || undefined,
     });
 
     await this.replyOrEdit(ctx, text, keyboard);

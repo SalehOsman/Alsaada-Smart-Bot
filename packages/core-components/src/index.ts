@@ -16,6 +16,7 @@ export * from './source-picker/types.js';
 export * from './source-picker/validator.js';
 export * from './source-picker/keyboard.js';
 export * from './purchase-picker/suggestions.js';
+export * from './formatting/telegram-formatters.js';
 
 // Enterprise Shared Engines
 export * from './clearing-engine/types.js';

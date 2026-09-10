@@ -27,6 +27,10 @@ export class WorkerExportHandler {
       return;
     }
 
+    if (typeof ctx.replyWithChatAction === 'function') {
+      await ctx.replyWithChatAction('upload_document').catch(() => {});
+    }
+
     try {
       const buffer = await WorkerExportTelemetry.measure('download_template', () =>
         this.service.generateTemplateBuffer()
@@ -152,6 +156,10 @@ export class WorkerExportHandler {
   ): Promise<void> {
     if (ctx.callbackQuery) {
       await ctx.answerCallbackQuery({ text: FLOW_MESSAGES.EXPORT_GENERATING });
+    }
+
+    if (typeof ctx.replyWithChatAction === 'function') {
+      await ctx.replyWithChatAction('upload_document').catch(() => {});
     }
 
     const isSuperAdmin = ctx.isImpersonating ? ctx.effectiveRole === 'SUPER_ADMIN' : Boolean(ctx.isRealSuperAdmin);

@@ -11,6 +11,7 @@ function formatDate(d?: Date | string | null): string {
 }
 
 import { formatShiftSystem, cleanMd } from '../../shared/module.messages.js';
+import { formatSpoiler, formatExpandableQuote } from '@alsaada/core-components';
 
 export const CIGARETTE_POLICY_LABELS: Record<string, string> = {
   ONE_PACK_DAILY: 'علبة واحدة يومياً',
@@ -78,6 +79,13 @@ export const WorkerEditMessages = {
     const policyLabel = CIGARETTE_POLICY_LABELS[worker.canteenCigarettePolicy || 'NONE'] || cleanMd(worker.canteenCigarettePolicy) || 'بدون مخصص';
     const brandLabel = cleanMd(worker.cigaretteBrand || (worker.canteenItem ? worker.canteenItem.name : 'غير محدد'));
 
+    const basicSalDisplay = worker.basicSalary
+      ? (isSuperAdmin ? `\`${worker.basicSalary} ج.م\`` : formatSpoiler(`\`${worker.basicSalary} ج.م\``, 'markdown'))
+      : '`غير محدد`';
+    const allowancesDisplay = worker.fixedAllowances
+      ? (isSuperAdmin ? `\`${worker.fixedAllowances} ج.م\`` : formatSpoiler(`\`${worker.fixedAllowances} ج.م\``, 'markdown'))
+      : '`0 ج.م`';
+
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -87,8 +95,8 @@ export const WorkerEditMessages = {
       `• *رقم الحساب / المحفظة:* \`${worker.accountNumber || 'غير مسجل'}\`\n` +
       `• *اسم صاحب المحفظة:* ${cleanMd(worker.walletOwnerName) || 'مسجل باسم العامل'}\n` +
       `• *معرف إنستاباي:* \`${worker.instaPayHandle || 'لا يوجد'}\`\n` +
-      `• *الراتب الأساسي الشهري:* \`${worker.basicSalary ? String(worker.basicSalary) + ' ج.م' : 'غير محدد'}\`\n` +
-      `• *البدلات الثابتة الشهرية:* \`${worker.fixedAllowances ? String(worker.fixedAllowances) + ' ج.م' : '0 ج.م'}\`\n` +
+      `• *الراتب الأساسي الشهري:* ${basicSalDisplay}\n` +
+      `• *البدلات الثابتة الشهرية:* ${allowancesDisplay}\n` +
       `• *الرقم التأميني:* \`${worker.insuranceNumber || 'غير مسجل'}\`\n` +
       `• *الموقف من التأمينات:* ${cleanMd(worker.insuranceStatus) || 'غير مؤمن عليه'}\n` +
       `• *سياسة مخصص السجائر:* ${policyLabel}\n` +
@@ -102,6 +110,9 @@ export const WorkerEditMessages = {
     const title = isSuperAdmin ? '✏️ *بطاقة العامل — 📞 الاتصال والسلامة والمستندات*' : '📋 *ملف العامل — 📞 الاتصال والسلامة والمستندات*';
     const phoneVal = worker.phone ? `\`${worker.phone}\`` : '`غير مسجل`';
     const emVal = worker.emergencyPhone ? `\`${worker.emergencyPhone}\`` : '`غير مسجل`';
+    const medVal = worker.medicalNotes
+      ? `\n${formatExpandableQuote(cleanMd(worker.medicalNotes), 'markdown')}`
+      : 'لا توجد ملاحظات طبية خاصة';
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -112,7 +123,7 @@ export const WorkerEditMessages = {
       `• *اسم جهة الطوارئ:* ${cleanMd(worker.emergencyContactName) || 'غير مسجل'}\n` +
       `• *مقاس حذاء السيفتي:* \`${worker.ppeShoeSize || 'غير محدد'}\`\n` +
       `• *مقاس زي العمل (اليونيفورم):* \`${worker.ppeUniformSize || 'غير محدد'}\`\n` +
-      `• *الملاحظات الطبية والحساسية:* ${cleanMd(worker.medicalNotes) || 'لا توجد ملاحظات طبية خاصة'}\n` +
+      `• *الملاحظات الطبية والحساسية:* ${medVal}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `💡 _اضغط على أي حقل بالأسفل لتعديله مباشرة:_`
     );

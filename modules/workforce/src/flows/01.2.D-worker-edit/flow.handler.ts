@@ -49,7 +49,7 @@ export class WorkerEditHandler {
   private renderTab(worker: WorkerCardView, tab: WorkerProfileTab, isSuperAdmin: boolean): { text: string; kb: InlineKeyboard } {
     const textMap = { PERSONAL: WorkerEditMessages.tab1PersonalCard, JOB: WorkerEditMessages.tab2JobCard, FINANCE: WorkerEditMessages.tab3FinanceCard, DOCS: WorkerEditMessages.tab4DocsCard };
     const text = (textMap[tab] || WorkerEditMessages.tab1PersonalCard)(worker, isSuperAdmin);
-    const kb = WorkerEditKeyboards.workerProfileTabsKeyboard(worker.id, tab, isSuperAdmin);
+    const kb = WorkerEditKeyboards.workerProfileTabsKeyboard(worker.id, tab, isSuperAdmin, worker);
     return { text, kb };
   }
 

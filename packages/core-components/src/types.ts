@@ -22,3 +22,10 @@ export interface CustomActionButton {
   text: string;
   callbackData: string;
 }
+
+export interface CopyTextButton {
+  text: string;
+  copy_text: {
+    text: string;
+  };
+}

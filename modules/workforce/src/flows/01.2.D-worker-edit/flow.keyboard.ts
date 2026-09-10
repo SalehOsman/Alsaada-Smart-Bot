@@ -1,7 +1,7 @@
 import { InlineKeyboard } from 'grammy';
 import { buildCompletionKeyboard } from '@alsaada/core-components';
 import { FIELD_LABELS, FIELD_TO_SHORT_MAP } from './flow.validators.js';
-import type { EditableWorkerField, PendingEditTicket, WorkerProfileTab } from './flow.types.js';
+import type { EditableWorkerField, PendingEditTicket, WorkerProfileTab, WorkerCardView } from './flow.types.js';
 
 export const POLICY_SHORT_TO_CODE: Record<string, string> = {
   '1P': 'ONE_PACK_DAILY',
@@ -99,7 +99,8 @@ export class WorkerEditKeyboards {
   static workerProfileTabsKeyboard(
     workerId: string,
     activeTab: WorkerProfileTab = 'PERSONAL',
-    isSuperAdmin: boolean = false
+    isSuperAdmin: boolean = false,
+    workerData?: WorkerCardView
   ): InlineKeyboard {
     const kb = new InlineKeyboard();
 
@@ -123,6 +124,9 @@ export class WorkerEditKeyboards {
 
     // Contextual Action Buttons per Tab
     if (activeTab === 'PERSONAL') {
+      if (workerData?.nationalId && workerData.nationalId !== 'غير مسجل') {
+        kb.copyText('📋 نسخ الرقم القومي', workerData.nationalId).row();
+      }
       kb.text('✏️ الاسم الكامل', `action:w_edit:f:name:${workerId}`)
         .text('🏷️ اسم الشهرة', `action:w_edit:f:nick:${workerId}`)
         .row();
@@ -145,6 +149,15 @@ export class WorkerEditKeyboards {
       kb.text('🚪 رقم السرير / الغرفة', `action:w_edit:f:bed:${workerId}`)
         .row();
     } else if (activeTab === 'FINANCE') {
+      if (workerData?.instaPayHandle && workerData.instaPayHandle !== 'لا يوجد') {
+        kb.copyText('⚡ نسخ إنستاباي', workerData.instaPayHandle);
+      }
+      if (workerData?.accountNumber && workerData.accountNumber !== 'غير مسجل') {
+        kb.copyText('💳 نسخ المحفظة/الحساب', workerData.accountNumber);
+      }
+      if ((workerData?.instaPayHandle && workerData.instaPayHandle !== 'لا يوجد') || (workerData?.accountNumber && workerData.accountNumber !== 'غير مسجل')) {
+        kb.row();
+      }
       kb.text('🚬 تحديد مخصص السجائر المعتمد', `action:w_edit:cg_start:${workerId}`).row();
       kb.text('🛡️ الرقم التأميني', `action:w_edit:f:insno:${workerId}`)
         .text('📋 موقف التأمينات', `action:w_edit:pk:insts:${workerId}`)
@@ -159,6 +172,9 @@ export class WorkerEditKeyboards {
         .text('➕ البدلات الثابتة', `action:w_edit:f:fall:${workerId}`)
         .row();
     } else if (activeTab === 'DOCS') {
+      if (workerData?.phone && workerData.phone !== 'غير مسجل') {
+        kb.copyText('📞 نسخ رقم الهاتف', workerData.phone).row();
+      }
       kb.text('📱 رقم الهاتف والواتساب', `action:w_edit:f:phone:${workerId}`)
         .text('🆘 هاتف الطوارئ', `action:w_edit:f:emPhone:${workerId}`)
         .row();

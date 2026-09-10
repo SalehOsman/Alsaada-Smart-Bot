@@ -12,6 +12,8 @@ export interface Profile360ActionsOptions {
   hasMissingData?: boolean | undefined;
   canRevealId?: boolean | undefined;
   isIdRevealed?: boolean | undefined;
+  idNumber?: string | undefined;
+  phone?: string | undefined;
 }
 
 export class WorkerDirectoryKeyboards {
@@ -73,6 +75,11 @@ export class WorkerDirectoryKeyboards {
     // 2. Direct WhatsApp messaging (lightweight URL <= 45 bytes)
     if (opts.whatsAppUrl) {
       kb.url('💬 مراسلة العامل عبر واتساب', opts.whatsAppUrl).row();
+    }
+
+    // 3. Native 1-Tap Copy Buttons (Bot API 7.10+)
+    if (opts.idNumber && opts.idNumber !== 'غير مسجل') {
+      kb.copyText('📋 نسخ الرقم القومي / الإثبات', opts.idNumber).row();
     }
 
     // 4. Edit worker
