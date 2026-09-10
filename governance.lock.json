@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-10T08:55:58.458Z",
+  "generatedAt": "2026-09-10T14:32:31.331Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -26,7 +26,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "1721f6dc7d7011b995603dc15654756b33c469465fb131fb628377e299ea7b54"
+      "sha256": "66cf7f49ce1d0a767ac482e23fcff53b7f78e39734c6f4473da857fb859b839c"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
@@ -46,7 +46,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "6381ce9a175207519f0a8ea14e2d4f6305173fdb6b72cba503405aa2e1e9802c"
+      "sha256": "6a519de27b9af81276fa8335e6c1637e9cfd9003deadc8aa33f652e72dfc6687"
     },
     {
       "path": "package.json",
