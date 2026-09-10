@@ -10,10 +10,15 @@ export const FIELD_LABELS: Record<EditableWorkerField, string> = {
   governorateCode: 'محافظة العامل',
   address: 'محل الإقامة / العنوان',
   idCardExpiryDate: 'تاريخ انتهاء سريان البطاقة',
-  bloodType: 'فصيلة الدم',
   militaryStatus: 'الموقف التجنيدي',
   maritalStatus: 'الحالة الاجتماعية',
+  nationalId: 'الرقم القومي / إثبات الشخصية',
   // Job & Operations
+  jobTitleId: 'المسمى الوظيفي والمهنة',
+  siteId: 'الموقع الميداني للعمليات',
+  departmentId: 'الإدارة / القسم',
+  hireDate: 'تاريخ التعيين والمباشرة',
+  status: 'حالة العامل والتشغيل',
   shiftSystem: 'نظام الوردية والعمل',
   contractType: 'نوع التعاقد الوظيفي',
   drivingLicense: 'رخصة القيادة',
@@ -22,7 +27,7 @@ export const FIELD_LABELS: Record<EditableWorkerField, string> = {
   // Financial & Quotas
   dailyWage: 'اليومية الميدانية التعاقدية',
   basicSalary: 'الراتب الأساسي الشهري',
-  fixedAllowances: 'البدلات الثابتة الشهرية',
+  fixedAllowances: 'الراتب الإضافي الشهري',
   paymentMethod: 'طريقة صرف المستحقات',
   walletNumber: 'رقم المحفظة / الحساب البنكي',
   walletOwnerName: 'اسم صاحب المحفظة المسجل',
@@ -47,9 +52,14 @@ export const FIELD_KEY_SHORT_MAP: Record<string, EditableWorkerField> = {
   gov: 'governorateCode',
   addr: 'address',
   exp: 'idCardExpiryDate',
-  bld: 'bloodType',
   mil: 'militaryStatus',
   mar: 'maritalStatus',
+  nid: 'nationalId',
+  job: 'jobTitleId',
+  site: 'siteId',
+  dept: 'departmentId',
+  hire: 'hireDate',
+  sts: 'status',
   shft: 'shiftSystem',
   cntr: 'contractType',
   lic: 'drivingLicense',
@@ -81,9 +91,14 @@ export const FIELD_TO_SHORT_MAP: Record<EditableWorkerField, string> = {
   governorateCode: 'gov',
   address: 'addr',
   idCardExpiryDate: 'exp',
-  bloodType: 'bld',
   militaryStatus: 'mil',
   maritalStatus: 'mar',
+  nationalId: 'nid',
+  jobTitleId: 'job',
+  siteId: 'site',
+  departmentId: 'dept',
+  hireDate: 'hire',
+  status: 'sts',
   shiftSystem: 'shft',
   contractType: 'cntr',
   drivingLicense: 'lic',
@@ -108,41 +123,48 @@ export const FIELD_TO_SHORT_MAP: Record<EditableWorkerField, string> = {
   medicalNotes: 'med',
 };
 
-export function validateFieldValue(
-  fieldKey: EditableWorkerField,
-  rawValue: string
-): { isValid: boolean; cleanValue?: string; error?: string } {
-  const clean = rawValue.trim();
-  if (!clean) {
-    return { isValid: false, error: 'القيمة الجديدة لا يمكن أن تكون فارغة.' };
-  }
+export function validateFieldValue(fieldKey: EditableWorkerField, value: string): { isValid: boolean; error?: string; cleanValue?: string } {
+  const clean = value.trim();
 
-  if (fieldKey === 'phone' || fieldKey === 'emergencyPhone' || fieldKey === 'walletNumber') {
+  if (fieldKey === 'phone' || fieldKey === 'emergencyPhone') {
     const digits = normalizeDigits(clean.replace(/[\s-]/g, ''));
-    if (fieldKey === 'phone') {
-      const normalized = normalizeEgyptianPhone(digits);
-      if (!normalized) {
-        return { isValid: false, error: 'رقم الهاتف غير صالح. يرجى إدخال رقم مصري صحيح (مثال: 01012345678).' };
-      }
+    if (!/^(010|011|012|015)\d{8}$/.test(digits)) {
+      return { isValid: false, error: 'رقم الهاتف يجب أن يكون رقم مصري مكون من 11 رقم ويبدأ بـ (010, 011, 012, 015).' };
     }
     return { isValid: true, cleanValue: digits };
+  }
+
+  if (fieldKey === 'nationalId') {
+    const digits = normalizeDigits(clean.replace(/[\s-]/g, ''));
+    if (!/^\d{14}$/.test(digits)) {
+      return { isValid: false, error: 'الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً.' };
+    }
+    return { isValid: true, cleanValue: digits };
+  }
+
+  if (fieldKey === 'hireDate') {
+    const parsed = parseFlexibleDate(clean);
+    if (!parsed.isValid || !parsed.date) {
+      return { isValid: false, error: 'صيغة تاريخ التعيين غير صالحة. يرجى إدخال التاريخ بصيغة يوم-شهر-سنة (مثال: 01-09-2026).' };
+    }
+    return { isValid: true, cleanValue: clean };
+  }
+
+  if (fieldKey === 'dailyWage' || fieldKey === 'basicSalary' || fieldKey === 'fixedAllowances') {
+    const digits = normalizeDigits(clean.replace(/,/g, ''));
+    const num = parseFloat(digits);
+    if (isNaN(num) || num < 0) {
+      return { isValid: false, error: 'يرجى إدخال قيمة عددية صحيحة أكبر من أو تساوي الصفر.' };
+    }
+    return { isValid: true, cleanValue: String(num) };
   }
 
   if (fieldKey === 'insuranceNumber') {
     const digits = normalizeDigits(clean.replace(/[\s-]/g, ''));
-    if (!/^\d{7,10}$/.test(digits)) {
-      return { isValid: false, error: 'الرقم التأميني يجب أن يتكون من 7 إلى 10 أرقام.' };
+    if (!/^\d{8,10}$/.test(digits)) {
+      return { isValid: false, error: 'الرقم التأميني يجب أن يتكون من 8 إلى 10 أرقام.' };
     }
     return { isValid: true, cleanValue: digits };
-  }
-
-  if (fieldKey === 'dailyWage' || fieldKey === 'basicSalary' || fieldKey === 'fixedAllowances') {
-    const normalized = normalizeDigits(clean.replace(/,/g, ''));
-    const num = parseFloat(normalized);
-    if (isNaN(num) || num < 0) {
-      return { isValid: false, error: 'المبلغ المالي يجب أن يكون رقماً موجباً.' };
-    }
-    return { isValid: true, cleanValue: String(num) };
   }
 
   if (fieldKey === 'idCardExpiryDate') {
@@ -161,22 +183,12 @@ export function validateFieldValue(
     return { isValid: true, cleanValue: clean };
   }
 
-  if (fieldKey === 'bloodType') {
-    const upper = clean.toUpperCase().replace(/\s+/g, '');
-    const valid = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-    if (!valid.includes(upper)) {
-      return { isValid: false, error: 'فصيلة الدم غير صالحة. الفصائل المقبولة: A+, A-, B+, B-, AB+, AB-, O+, O-' };
-    }
-    return { isValid: true, cleanValue: upper };
-  }
-
   return { isValid: true, cleanValue: clean };
 }
 
 export function getReturnTab(fieldShort: string): import('./flow.types.js').WorkerProfileTab {
-  if (['shft', 'cntr', 'lic', 'barr', 'bed'].includes(fieldShort)) return 'JOB';
+  if (['job', 'site', 'dept', 'hire', 'sts', 'shft', 'cntr', 'lic', 'barr', 'bed'].includes(fieldShort)) return 'JOB';
   if (['wage', 'bsal', 'fall', 'pmth', 'wallet', 'wown', 'inst', 'insno', 'insts', 'cgpol', 'cgbrd'].includes(fieldShort)) return 'FINANCE';
   if (['phone', 'emPhone', 'emName', 'ppes', 'ppeu', 'med'].includes(fieldShort)) return 'DOCS';
   return 'PERSONAL';
 }
-

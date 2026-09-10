@@ -27,7 +27,12 @@ export interface WorkerProfile360 {
   siteName?: string | undefined;
   hireDate: Date;
   shiftSystem?: string | undefined;
+  contractTypeAr?: string | undefined;
+  governorateName?: string | undefined;
   dailyWageMasked?: string | undefined;
+  basicSalaryMasked?: string | undefined;
+  additionalSalaryMasked?: string | undefined;
+  totalSalaryMasked?: string | undefined;
   paymentMethod?: string | undefined;
   accountNumberMasked?: string | undefined;
   drivingLicense?: string | undefined;

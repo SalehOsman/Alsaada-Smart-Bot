@@ -74,6 +74,16 @@ export async function safeRedisDel(key: string): Promise<void> {
 }
 
 const IMPERSONATE_PREFIX = 'impersonate:user:';
+const IMPERSONATE_ENTITY_PREFIX = 'impersonate:entity:';
+
+export interface ImpersonatedEntityStored {
+  type: 'WORKER' | 'SUPPLIER' | 'SITE';
+  id: string;
+  name: string;
+  code?: string;
+  siteId?: string;
+  siteName?: string;
+}
 
 /**
  * Get the actively impersonated role for a given user (if any)
@@ -99,15 +109,52 @@ export async function setImpersonatedRole(telegramId: bigint, role: string): Pro
 }
 
 /**
+ * Get the actively impersonated entity data for a given user (if any)
+ */
+export async function getImpersonatedEntity(telegramId: bigint): Promise<ImpersonatedEntityStored | null> {
+  try {
+    const raw = await safeRedisGet(`${IMPERSONATE_ENTITY_PREFIX}${telegramId}`);
+    return raw ? (JSON.parse(raw) as ImpersonatedEntityStored) : null;
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error getting impersonated entity:', error);
+    return null;
+  }
+}
+
+/**
+ * Set the actively impersonated entity data for a user
+ */
+export async function setImpersonatedEntity(telegramId: bigint, entity: ImpersonatedEntityStored): Promise<void> {
+  try {
+    await safeRedisSet(`${IMPERSONATE_ENTITY_PREFIX}${telegramId}`, JSON.stringify(entity), 86400);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error setting impersonated entity:', error);
+  }
+}
+
+/**
+ * Clear the impersonated entity data
+ */
+export async function clearImpersonatedEntity(telegramId: bigint): Promise<void> {
+  try {
+    await safeRedisDel(`${IMPERSONATE_ENTITY_PREFIX}${telegramId}`);
+  } catch (error) {
+    console.error('⚠️ [REDIS] Error clearing impersonated entity:', error);
+  }
+}
+
+/**
  * Clear the impersonated role, returning the user to their true identity
  */
 export async function clearImpersonatedRole(telegramId: bigint): Promise<void> {
   try {
     await safeRedisDel(`${IMPERSONATE_PREFIX}${telegramId}`);
+    await safeRedisDel(`${IMPERSONATE_ENTITY_PREFIX}${telegramId}`);
   } catch (error) {
     console.error('⚠️ [REDIS] Error clearing impersonated role:', error);
   }
 }
+
 
 const PENDING_EDIT_PREFIX = 'pending:company_edit:user:';
 

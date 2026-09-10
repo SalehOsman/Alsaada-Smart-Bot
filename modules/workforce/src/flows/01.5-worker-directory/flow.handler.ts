@@ -119,6 +119,7 @@ export class WorkerDirectoryHandler {
       whatsAppUrl: profile.directWhatsAppUrl,
       hasPhone: Boolean(profile.phone),
       hasMissingData: !profile.isProfileComplete,
+      missingDataWhatsAppUrl: profile.missingDataWhatsAppUrl,
       canRevealId: profile.canRevealId,
       isIdRevealed,
       idNumber: profile.idNumberFull || profile.idNumberMasked,

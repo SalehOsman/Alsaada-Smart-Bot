@@ -31,4 +31,6 @@ export interface SettingsModuleOptions {
   prisma: PrismaClient;
   redis?: Redis | null;
   encryptionKey?: string;
+  onImpersonationChange?: (telegramId: bigint) => Promise<void>;
 }
+

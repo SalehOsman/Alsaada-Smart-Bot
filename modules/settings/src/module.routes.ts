@@ -99,9 +99,9 @@ export function registerSettingsRoutes(
   const adminAssignmentHandler = new AdminAssignmentHandler(adminAssignmentService);
 
   // 00.6 Ghost Mode
-  const ghostRepo = new GhostModeRepository(redis);
+  const ghostRepo = new GhostModeRepository(redis, prisma);
   const ghostService = new GhostModeService(ghostRepo);
-  const ghostModeHandler = new GhostModeHandler(ghostService);
+  const ghostModeHandler = new GhostModeHandler(ghostService, options.onImpersonationChange);
 
   // 00.7 Audit Incident Vault
   const auditRepo = new AuditIncidentVaultRepository(prisma);
@@ -239,8 +239,17 @@ export function registerSettingsRoutes(
 
   // --- Flow 00.6 Ghost Mode ---
   bot.callbackQuery('action:settings:ghost_mode', (ctx) => ghostModeHandler.renderGhostModeMenu(ctx));
+  bot.callbackQuery('action:ghost_mode:menu', (ctx) => ghostModeHandler.renderGhostModeMenu(ctx));
   bot.command(['exit_ghost', 'exit_impersonate'], (ctx) => ghostModeHandler.handleExitImpersonate(ctx));
   bot.callbackQuery('action:exit_impersonate', (ctx) => ghostModeHandler.handleExitImpersonate(ctx));
+  bot.callbackQuery('action:impersonate:pick_worker', (ctx) => ghostModeHandler.handlePickWorker(ctx));
+  bot.callbackQuery(/^action:impersonate:worker:(.+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await ghostModeHandler.handleSelectWorker(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery('action:impersonate:pick_supplier', (ctx) => ghostModeHandler.handlePickSupplier(ctx));
+  bot.callbackQuery(/^action:impersonate:supplier:(.+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await ghostModeHandler.handleSelectSupplier(ctx, ctx.match[1]);
+  });
   bot.callbackQuery(/^action:impersonate:(.+)$/, async (ctx) => {
     if (ctx.match?.[1]) await ghostModeHandler.handleImpersonateRole(ctx, ctx.match[1]);
   });

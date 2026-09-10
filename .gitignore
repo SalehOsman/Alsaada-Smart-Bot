@@ -7,6 +7,7 @@ dist/
 build/
 .turbo/
 out/
+packages/database/src/generated/
 
 # Environment and Secret files
 .env

@@ -64,12 +64,12 @@ describe('Flow 01.2.D Unit Tests — Worker Edit Governance & Short Mappings', (
     expect(invalid.isValid).toBe(false);
   });
 
-  it('should validate bloodType against allowed blood types', () => {
-    const valid = validateFieldValue('bloodType', 'o+');
+  it('should validate nationalId requiring 14 digits', () => {
+    const valid = validateFieldValue('nationalId', '29801011234567');
     expect(valid.isValid).toBe(true);
-    expect(valid.cleanValue).toBe('O+');
+    expect(valid.cleanValue).toBe('29801011234567');
 
-    const invalid = validateFieldValue('bloodType', 'XYZ');
+    const invalid = validateFieldValue('nationalId', '12345');
     expect(invalid.isValid).toBe(false);
   });
 
@@ -83,11 +83,10 @@ describe('Flow 01.2.D Unit Tests — Worker Edit Governance & Short Mappings', (
       legacyCode: 'LEG-101',
       nationalId: '29801011234567',
       idCardExpiryDate: new Date('2028-05-26'),
-      governorateCode: 'الجيزة',
+      governorateCode: '21',
       address: 'فيصل - الجيزة',
       militaryStatus: 'أدى الخدمة العسكرية',
       maritalStatus: 'متزوج',
-      bloodType: 'O+',
       jobTitle: 'عامل تشغيل موقع',
       jobRef: { title: 'عامل تشغيل موقع' },
       site: { name: 'محطة معالجة الصالحية' },

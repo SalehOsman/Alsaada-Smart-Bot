@@ -23,7 +23,7 @@ export const undiciDispatcher = new UndiciAgent({
 setGlobalDispatcher(undiciDispatcher);
 import { clearAllPendingUserActions, redis, safeRedisGet } from './redis.js';
 import { screenFlowService } from './services/screen-flow.service.js';
-import { authMiddleware } from './middlewares/auth.middleware.js';
+import { authMiddleware, invalidateUserCache } from './middlewares/auth.middleware.js';
 import { telemetryMiddleware } from './middlewares/telemetry.middleware.js';
 import { errorVaultService } from './services/error-vault.service.js';
 import { handleStart, renderRoleHome, handleClaimWorker } from './handlers/start.handler.js';
@@ -52,6 +52,25 @@ export function createBot(): Bot<MyContext> {
         dispatcher: undiciDispatcher,
       } as any,
     },
+  });
+
+  // 0. ⚡ Automatic Screen Tracking API Transformer
+  bot.api.config.use(async (prev, method, payload, signal) => {
+    const res = await prev(method, payload, signal);
+    if (res && typeof res === 'object' && 'message_id' in res && 'chat' in res) {
+      const msg = res as { message_id: number; chat: { id: number } };
+      const pl = payload as { reply_markup?: { inline_keyboard?: unknown } };
+      if (pl?.reply_markup?.inline_keyboard && msg.chat.id > 0) {
+        void screenFlowService.trackActiveScreen(
+          BigInt(msg.chat.id),
+          msg.chat.id,
+          msg.message_id,
+          method === 'editMessageText' ? 'edited_screen' : 'screen',
+          false
+        );
+      }
+    }
+    return res;
   });
 
   // 1. Centralized Error Vault & Early Warning Crash Dispatcher
@@ -107,23 +126,6 @@ export function createBot(): Bot<MyContext> {
     return next();
   });
 
-  // 4.1. 🧹 Universal Main Menu Invalidation & Automatic Deletion Interceptor
-  // When user clicks ANY section from the main menu, delete the main menu message immediately
-  // and ensure destination screens are sent cleanly as separate standalone cards.
-  bot.use(async (ctx, next) => {
-    if (ctx.callbackQuery && ctx.from) {
-      const active = await screenFlowService.getActiveScreen(BigInt(ctx.from.id));
-      if (
-        active &&
-        active.flowType === 'main_menu' &&
-        ctx.callbackQuery.message?.message_id === active.messageId
-      ) {
-        await screenFlowService.cleanupMainMenuIfActive(ctx);
-      }
-    }
-    return next();
-  });
-
   // 5. Register Domain Modules (Doc 21 Modular Monolith)
   registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
     prisma,
@@ -136,8 +138,12 @@ export function createBot(): Bot<MyContext> {
       prisma,
       redis,
       encryptionKey: config.databaseEncryptionKey,
+      onImpersonationChange: async (telegramId: bigint) => {
+        await invalidateUserCache(telegramId);
+      },
     }
   );
+
 
   // 6. Pending Input Interceptors (Location, Text Inputs)
   bot.on('message:location', async (ctx, next) => {
@@ -152,7 +158,7 @@ export function createBot(): Bot<MyContext> {
     }
 
     // If message is a persistent keyboard navigation button, clean up unfinished flow & ephemeral inputs
-    const isNav = /القائمة الرئيسية|إعدادات النظام|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي/.test(ctx.message.text);
+    const isNav = /القائمة الرئيسية|إعدادات النظام|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي|إنهاء وضع المحاكاة|العودة كمدير عام/.test(ctx.message.text);
     if (isNav) {
       await screenFlowService.cleanupIncomingUserMessage(ctx);
       await screenFlowService.cleanupUnfinishedFlow(ctx);
@@ -188,6 +194,9 @@ export function createBot(): Bot<MyContext> {
   bot.command(['ping', 'health', 'speed'], handlePing);
 
   // 8. Persistent Bottom Reply Keyboard Button Handlers
+  bot.hears(/إنهاء وضع المحاكاة|العودة كمدير عام/, async (ctx) => {
+    await settingsHandlers.ghostModeHandler.handleExitImpersonate(ctx as any);
+  });
   bot.hears(/القائمة الرئيسية/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
     await renderRoleHome(ctx, false);

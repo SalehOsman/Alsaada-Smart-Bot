@@ -136,7 +136,7 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     expect(refSheet?.getCell('D2').value).toBe('SBY-01');
   });
 
-  it('should generate FULL workers export with 33 columns for Super Admin', async () => {
+  it('should generate FULL workers export with 43 columns for Super Admin', async () => {
     const result = await service.generateWorkersExportBuffer({ type: 'ALL' }, true);
     expect(result.workerCount).toBe(2);
     expect(result.fileName).toBe('كشف_العاملين_الشامل.xlsx');
@@ -150,15 +150,18 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     const headers: string[] = [];
     headerRow?.eachCell((cell) => headers.push(cell.text));
 
-    expect(headers.length).toBe(33);
+    expect(headers.length).toBe(43);
     expect(headers).toContain('الأجر اليومي (ج.م)');
     expect(headers).toContain('الراتب الأساسي (ج.م)');
-    expect(headers).toContain('البدلات الثابتة (ج.م)');
+    expect(headers).toContain('الراتب الإضافي (ج.م)');
     expect(headers).toContain('إجمالي الاستحقاق الشهري (ج.م)');
     expect(headers).toContain('رقم الحساب / المحفظة');
+    expect(headers).toContain('اسم صاحب المحفظة');
+    expect(headers).toContain('معرف إنستاباي');
+    expect(headers).toContain('صنف السجائر المعتمد');
   });
 
-  it('should STRICTLY MASK and OMIT all financial columns (25 columns) for regular Admin', async () => {
+  it('should STRICTLY MASK and OMIT all financial columns (32 columns) for regular Admin', async () => {
     const result = await service.generateWorkersExportBuffer({ type: 'ALL' }, false);
     expect(result.workerCount).toBe(2);
 
@@ -171,7 +174,13 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     const headers: string[] = [];
     headerRow?.eachCell((cell) => headers.push(cell.text));
 
-    expect(headers.length).toBe(25);
+    expect(headers.length).toBe(32);
+    expect(headers).toContain('وحدة السكن / العنبر');
+    expect(headers).toContain('الرقم التأميني');
+    expect(headers).toContain('الموقف التأميني');
+    expect(headers).toContain('مقاس السيفتي');
+    expect(headers).toContain('مقاس الزي');
+    expect(headers).toContain('ملاحظات طبية');
     expect(headers.some((h) => h.includes('الراتب'))).toBe(false);
     expect(headers.some((h) => h.includes('الأجر'))).toBe(false);
     expect(headers.some((h) => h.includes('البدلات'))).toBe(false);

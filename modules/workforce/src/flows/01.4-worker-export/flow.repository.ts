@@ -116,7 +116,7 @@ export class WorkerExportRepository {
     };
 
     if (typeof this.prisma.$transaction === 'function') {
-      return this.prisma.$transaction(async (tx) => execute(tx as PrismaClient));
+      return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => execute(tx as unknown as PrismaClient));
     }
     return execute(this.prisma);
   }

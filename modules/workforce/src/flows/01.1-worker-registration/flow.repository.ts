@@ -192,6 +192,57 @@ export class WorkerRegistrationRepository {
         };
       }>;
 
+      // Record Opening Salary History (القيد الافتتاحي لتدرج الرواتب من أول يوم عمل)
+      if (tx.salaryHistory) {
+        const hireDate = worker.hireDate || new Date();
+        const hireMonth = `${hireDate.getFullYear()}-${String(hireDate.getMonth() + 1).padStart(2, '0')}`;
+        const basicSal = new Prisma.Decimal(payload.input.basicSalary || 0);
+        const addSal = new Prisma.Decimal(payload.input.fixedAllowances || 0);
+        const grossSal = basicSal.plus(addSal);
+        const changeId = `SAL-${hireMonth.replace('-', '')}-${worker.code}`;
+
+        await tx.salaryHistory.create({
+          data: {
+            changeId,
+            workerId: worker.id,
+            previousBasicSalary: new Prisma.Decimal(0),
+            previousAdditionalSalary: new Prisma.Decimal(0),
+            previousGrossSalary: new Prisma.Decimal(0),
+            newBasicSalary: basicSal,
+            newAdditionalSalary: addSal,
+            newGrossSalary: grossSal,
+            effectiveMonth: hireMonth,
+            effectiveDate: hireDate,
+            reason: 'بداية التعاقد وتسجيل العامل بالمنظومة',
+            approvedByTelegramId: payload.actorTelegramId || null,
+            approvedByName: payload.actorRole || 'مسؤول النظام',
+            notes: 'القيد الافتتاحي للراتب وتدرج الأجور عند التعيين',
+          },
+        });
+      }
+
+      // Record Worker Creation in WorkerChangeLog (توثيق قيد التعيين في سجل التعديلات)
+      if (tx.workerChangeLog) {
+        await tx.workerChangeLog.create({
+          data: {
+            changeId: `WCL-${worker.code}-INIT`,
+            workerId: worker.id,
+            workerCode: worker.code,
+            category: 'STRUCTURAL',
+            fieldKey: 'status',
+            fieldNameAr: 'حالة العامل والتعيين',
+            oldValue: null,
+            newValue: 'ACTIVE',
+            oldDisplayValue: null,
+            newDisplayValue: 'نشط ميدانياً (تعيين جديد)',
+            reason: 'تسجيل العامل الجديد بالمنظومة',
+            actorTelegramId: payload.actorTelegramId || BigInt(0),
+            actorName: payload.actorRole || 'مسؤول النظام',
+            actorRole: payload.actorRole || 'SUPER_ADMIN',
+          },
+        });
+      }
+
       // Audit Log
       if (tx.auditLog) {
         await tx.auditLog.create({

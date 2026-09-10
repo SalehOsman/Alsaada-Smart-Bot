@@ -5,6 +5,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
 datasource db {
@@ -279,7 +280,7 @@ model Worker {
   paymentMethod          String    @default("CASH_SITE") // CASH_SITE, VODAFONE_CASH, INSTAPAY, BANK_TRANSFER
   accountNumberEncrypted String?
   walletType             String?   // e.g. "محفظة فودافون كاش", "إنستاباي"
-  canteenCigarettePolicy String    @default("ONE_PACK_DAILY") // ONE_PACK_DAILY, FULL_COVERAGE, NONE, CUSTOM
+  canteenCigarettePolicy String    @default("NONE") // ONE_PACK_DAILY, FULL_COVERAGE, NONE, CUSTOM
   cigaretteBrand         String?   // نوع / صنف السجائر المعتمد للعامل
   canteenItemId          String?   // معرف صنف السجائر من جدول مخزن الكانتين
   walletOwnerName        String?   // اسم صاحب المحفظة
@@ -303,7 +304,6 @@ model Worker {
   idCardBackPath         String?   // صورة ظهر البطاقة
   idCardExpiryDate       DateTime? // تاريخ انتهاء سريان البطاقة (مستخرج بالذكاء الاصطناعي من ظهر البطاقة)
   idCardExpiryAlertSentAt DateTime? // تاريخ إرسال إشعار التنبيه قبل الانتهاء بشهر
-  bloodType              String?
   address                String?   // محل الإقامة / العنوان المستخرج بالذكاء الاصطناعي أو المسجل يدوياً
   telegramId             BigInt?   @unique
   status                 String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RESIGNED
@@ -322,6 +322,7 @@ model Worker {
   canteenItem            CanteenItem?                 @relation("WorkerCigaretteItem", fields: [canteenItemId], references: [id])
   user                   User?
   salaryHistories        SalaryHistory[]
+  changeLogs             WorkerChangeLog[]
   customAllowances       WorkerCustomAllowance[]
   ppeAssets              PPEAsset[]
   disciplinaryAndBonuses DisciplinaryAndBonus[]
@@ -406,18 +407,54 @@ model WorkerEditRequest {
 }
 
 model SalaryHistory {
+  id                       String    @id @default(uuid())
+  changeId                 String    @unique // e.g. SAL-2609-0042
+  workerId                 String
+  previousBasicSalary      Decimal   @default(0) @db.Decimal(12, 2)
+  previousAdditionalSalary Decimal   @default(0) @db.Decimal(12, 2)
+  previousGrossSalary      Decimal   @default(0) @db.Decimal(12, 2)
+  newBasicSalary           Decimal   @db.Decimal(12, 2)
+  newAdditionalSalary      Decimal   @db.Decimal(12, 2)
+  newGrossSalary           Decimal   @db.Decimal(12, 2)
+  effectiveMonth           String    // YYYY-MM
+  effectiveDate            DateTime
+  reason                   String    // مبرر الزيادة/التعديل
+  approvedByTelegramId     BigInt?
+  approvedByName           String?
+  notes                    String?
+  createdAt                DateTime  @default(now())
+
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([workerId, effectiveDate])
+  @@index([effectiveMonth])
+  @@map("salary_histories")
+}
+
+model WorkerChangeLog {
   id              String   @id @default(uuid())
+  changeId        String   @unique // e.g. WCL-260910-001
   workerId        String
-  previousWage    Decimal  @db.Decimal(12, 2)
-  newWage         Decimal  @db.Decimal(12, 2)
-  effectiveDate   DateTime
-  reason          String
-  approvedByUserId BigInt?
+  workerCode      String
+  category        String   // STRUCTURAL, PERSONAL, CONTACT_PAYOUT, STATUS
+  fieldKey        String   // siteId, jobTitle, phone, contractType, status, etc.
+  fieldNameAr     String   // "الموقع الميداني", "المسمى الوظيفي", "رقم الهاتف", إلخ
+  oldValue        String?  // القيمة السابقة الصريحة
+  newValue        String?  // القيمة الجديدة المحدثة
+  oldDisplayValue String?  // الاسم المقروء السابق
+  newDisplayValue String?  // الاسم المقروء الجديد
+  reason          String?  // مبرر التعديل
+  actorTelegramId BigInt   // هوية المسؤول المعدل
+  actorName       String?  // اسم السوبر أدمن
+  actorRole       String   // SUPER_ADMIN
   createdAt       DateTime @default(now())
 
-  worker Worker @relation(fields: [workerId], references: [id])
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
-  @@map("salary_histories")
+  @@index([workerId, createdAt])
+  @@index([category])
+  @@index([fieldKey])
+  @@map("worker_change_logs")
 }
 
 model WorkerCustomAllowance {

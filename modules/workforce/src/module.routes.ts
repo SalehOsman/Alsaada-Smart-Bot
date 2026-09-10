@@ -93,6 +93,65 @@ export function registerWorkforceRoutes(
     }
   });
 
+  // Salary Wizard & Timelines
+  bot.callbackQuery(/^action:w_edit:sal_wiz:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleSalaryWizardStart(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:sal_eff:([A-Z]+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) {
+      await editHandler.handleSalaryEffectiveDate(ctx, match[1], match[2]);
+    }
+  });
+
+  bot.callbackQuery(/^action:w_edit:sal_conf:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleSalaryConfirm(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:sal_hist:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleSalaryHistory(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:chg_hist:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleWorkerChangeLog(ctx, match[1]);
+  });
+
+  // Entity Pickers: Job, Site, Department
+  bot.callbackQuery(/^action:w_edit:pk_job:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleOpenJobPicker(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:set_job:(.+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) await editHandler.handleSetJob(ctx, match[1], match[2]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:pk_site:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleOpenSitePicker(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:set_site:(.+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) await editHandler.handleSetSite(ctx, match[1], match[2]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:pk_dept:(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1]) await editHandler.handleOpenDeptPicker(ctx, match[1]);
+  });
+
+  bot.callbackQuery(/^action:w_edit:set_dept:(.+):(.+)$/, async (ctx) => {
+    const match = ctx.match;
+    if (match?.[1] && match?.[2]) await editHandler.handleSetDept(ctx, match[1], match[2]);
+  });
+
   bot.callbackQuery('action:w_edit:cancel', async (ctx) => {
     await editHandler.handleCancel(ctx);
   });

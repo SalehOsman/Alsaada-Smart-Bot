@@ -1,12 +1,13 @@
 import type { UserRole } from '../../shared/module.types.js';
 
 const ALLOWED_IMPERSONATION_ROLES = new Set<UserRole>([
-  'EXECUTIVE',
+  'GENERAL_ADMIN',
   'FIELD_ADMIN',
-  'ACCOUNTANT',
   'WORKER',
   'SUPPLIER',
   'GUEST',
+  'EXECUTIVE',
+  'ACCOUNTANT',
 ]);
 
 export function validateImpersonationRole(role: string): { isValid: boolean; role?: UserRole } {

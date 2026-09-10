@@ -154,18 +154,25 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     );
   });
 
-  it('should grant navigation immunity to domain menu and hub navigation buttons even on older messages', async () => {
+  it('should strictly invalidate navigation buttons on older messages without immunity', async () => {
     const service = new ScreenFlowService();
+    vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce({
+      chatId: 1001,
+      messageId: 999,
+      flowType: 'hr_hub',
+      isCompleted: false,
+      updatedAt: Date.now(),
+    });
     const mockCtx = {
       from: { id: 123456 },
       callbackQuery: {
-        message: { message_id: 111 }, // clicked on message 111 while active could be anything
+        message: { message_id: 111 }, // clicked on older message 111 while active is 999
         data: 'menu:domain:hr',
       },
     } as unknown as MyContext;
 
     const check = await service.isStaleCallback(mockCtx);
-    expect(check.isStale).toBe(false);
+    expect(check.isStale).toBe(true);
   });
 
   it('should delete main menu message and set ctx.fromMainMenu when cleanupMainMenuIfActive is invoked', async () => {
@@ -196,7 +203,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     expect((mockCtx as any).fromMainMenu).toBe(true);
   });
 
-  it('should prevent in-place rendering when clicked from main menu screen', async () => {
+  it('should allow in-place rendering when clicked and not from a completed screen', async () => {
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValue({
       chatId: 1001,
@@ -214,10 +221,10 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     } as unknown as MyContext;
 
     const inPlace = await service.shouldRenderInPlace(mockCtx, true);
-    expect(inPlace).toBe(false);
+    expect(inPlace).toBe(true);
   });
 
-  it('should prevent in-place rendering when ctx.fromMainMenu flag is set even if active screen is already cleared', async () => {
+  it('should allow in-place rendering when requested even if active screen is cleared', async () => {
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce(null);
 
@@ -230,7 +237,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     } as unknown as MyContext;
 
     const inPlace = await service.shouldRenderInPlace(mockCtx, true);
-    expect(inPlace).toBe(false);
+    expect(inPlace).toBe(true);
   });
 
   it('should ensure persistent reply keyboard anchor is sent and recorded in redis', async () => {

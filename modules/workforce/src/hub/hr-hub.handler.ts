@@ -22,7 +22,7 @@ function getDefaultPrisma(): PrismaClient {
  */
 export async function renderHrHub(
   ctx: WorkforceModuleContext,
-  inPlace = false,
+  inPlace = true,
   prisma?: PrismaClient
 ): Promise<void> {
   if (ctx.callbackQuery) {
@@ -160,16 +160,15 @@ export async function renderHrSubHub(
         .text('📋 دليل وسجل العاملين (360°)', 'action:worker:directory')
         .row();
 
-      if (isSuperAdmin) {
-        keyboard.text('✏️ تعديل بيانات عامل (تنفيذ فوري)', 'action:worker_edit:pick').row();
+      keyboard.text('✏️ تعديل بيانات عامل', 'action:worker_edit:pick').row();
 
+      if (isSuperAdmin) {
         const pendingCount = await activePrisma.workerEditRequest.count({ where: { status: 'PENDING' } }).catch(() => 0);
         if (pendingCount > 0) {
           keyboard.text(`📨 مراجعة طلبات التعديل المعلقة (${pendingCount})`, 'action:worker_edit:pending_list').row();
         }
-      } else {
-        keyboard.text('📝 طلب تعديل بيانات عامل', 'action:worker_edit:pick').row();
       }
+
 
       keyboard
         .text('📥📤 استيراد وتصدير كشف العمال', 'menu:hr_sub:worker_excel')

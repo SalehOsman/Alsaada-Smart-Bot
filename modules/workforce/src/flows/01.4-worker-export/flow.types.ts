@@ -36,10 +36,20 @@ export interface WorkerRowData {
   emergencyPhone?: string | undefined;
   previousInsuranceStatus?: string | undefined;
   maritalStatus?: string | undefined;
+  barracksUnit?: string | undefined;
+  bedNumber?: string | undefined;
+  insuranceNumber?: string | undefined;
+  insuranceStatus?: string | undefined;
+  walletOwnerName?: string | undefined;
+  instaPayHandle?: string | undefined;
+  ppeShoeSize?: string | undefined;
+  ppeUniformSize?: string | undefined;
+  medicalNotes?: string | undefined;
   notes?: string | undefined;
 }
 
 export interface WorkerImportResult {
+
   success: boolean;
   totalRowsProcessed: number;
   workersCreated: number;
@@ -98,6 +108,16 @@ export interface WorkerExportEntity {
   drivingLicense: string | null;
   militaryStatus: string | null;
   maritalStatus: string | null;
+  barracksUnit?: string | null;
+  bedNumber?: string | null;
+  insuranceNumber?: string | null;
+  insuranceStatus?: string | null;
+  walletOwnerName?: string | null;
+  instaPayHandle?: string | null;
+  cigaretteBrand?: string | null;
+  ppeShoeSize?: string | null;
+  ppeUniformSize?: string | null;
+  medicalNotes?: string | null;
   idCardExpiryDate: Date | null;
   address: string | null;
   status: string;
@@ -105,3 +125,4 @@ export interface WorkerExportEntity {
   department: { id: string; name: string } | null;
   jobRef: { id: string; name: string } | null;
 }
+

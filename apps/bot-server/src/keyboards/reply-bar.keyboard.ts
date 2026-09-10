@@ -10,6 +10,10 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
   const keyboard = new Keyboard();
   const role = ctx.effectiveRole || 'GUEST';
 
+  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    keyboard.text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)').row();
+  }
+
   if (role === 'SUPER_ADMIN') {
     keyboard
       .text('🏠 القائمة الرئيسية')

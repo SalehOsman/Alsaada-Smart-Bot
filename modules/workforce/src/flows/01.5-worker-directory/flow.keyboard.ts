@@ -10,6 +10,7 @@ export interface Profile360ActionsOptions {
   whatsAppUrl?: string | undefined;
   hasPhone?: boolean | undefined;
   hasMissingData?: boolean | undefined;
+  missingDataWhatsAppUrl?: string | undefined;
   canRevealId?: boolean | undefined;
   isIdRevealed?: boolean | undefined;
   idNumber?: string | undefined;
@@ -64,28 +65,26 @@ export class WorkerDirectoryKeyboards {
         whatsAppUrl: legacyWhatsAppUrl,
         hasPhone: legacyHasPhone,
         hasMissingData: Boolean(legacyMissingDataWhatsAppUrl),
+        missingDataWhatsAppUrl: legacyMissingDataWhatsAppUrl,
       };
     }
 
-    // 1. Missing data request (opens dedicated message with 1-tap copy text and WhatsApp button)
-    if (opts.hasMissingData) {
+    // 1. Direct WhatsApp Missing Data (1-tap direct chat with pre-encoded message - no intermediate screen)
+    if (opts.missingDataWhatsAppUrl) {
+      kb.url('📲 طلب استكمال النواقص عبر واتساب', opts.missingDataWhatsAppUrl).row();
+    } else if (opts.hasMissingData) {
       kb.text('📲 طلب استكمال النواقص عبر واتساب', `action:worker:mwa:${opts.workerId}`).row();
     }
 
-    // 2. Direct WhatsApp messaging (lightweight URL <= 45 bytes)
+    // 2. Direct WhatsApp messaging (general chat)
     if (opts.whatsAppUrl) {
       kb.url('💬 مراسلة العامل عبر واتساب', opts.whatsAppUrl).row();
     }
 
-    // 3. Native 1-Tap Copy Buttons (Bot API 7.10+)
-    if (opts.idNumber && opts.idNumber !== 'غير مسجل') {
-      kb.copyText('📋 نسخ الرقم القومي / الإثبات', opts.idNumber).row();
-    }
-
-    // 4. Edit worker
+    // 3. Edit worker
     kb.text('✏️ تعديل بيانات العامل', `action:worker_edit:pick:${opts.workerId}`).row();
 
-    // 6. Navigation
+    // 4. Navigation
     kb.text('◀️ العودة لدليل العاملين', 'action:worker:directory').row();
     kb.text('🏠 القائمة الرئيسية', 'action:main_menu');
 

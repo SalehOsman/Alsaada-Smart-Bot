@@ -5,6 +5,7 @@ import { parseEgyptianNationalId, EGYPTIAN_GOVERNORATES } from '@alsaada/nationa
 import { normalizeDigits, formatDateDMY } from '@alsaada/regional-engine';
 import { WorkerExportRepository } from './flow.repository.js';
 import { WorkerExportValidators } from './flow.validators.js';
+import { generateWorkerTemplateBuffer } from './flow.template.js';
 import type {
   WorkerExportFilter,
   WorkerExportResult,
@@ -30,110 +31,7 @@ export class WorkerExportService {
   }
 
   async generateTemplateBuffer(): Promise<Buffer> {
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'شركة السعادة للمقاولات العامة والتعدين';
-    workbook.lastModifiedBy = 'منظومة السعادة الذكية';
-    workbook.created = new Date();
-
-    const dataSheet = workbook.addWorksheet('بيانات العمال الجدد', {
-      views: [{ rightToLeft: true }],
-    });
-
-    dataSheet.columns = [
-      { header: 'الاسم الرباعي *', key: 'fullName', width: 30 }, { header: 'اسم الشهرة', key: 'nickname', width: 18 },
-      { header: 'كود العامل القديم / الأرشيفي (إن وجد)', key: 'legacyCode', width: 26 },
-      { header: 'نوع الإثبات (رقم قومي / جواز سفر) *', key: 'idType', width: 28 },
-      { header: 'رقم الإثبات (القومي أو الجواز) *', key: 'idNumber', width: 28 },
-      { header: 'الجنسية', key: 'nationality', width: 18 },
-      { header: 'تاريخ الميلاد (للجواز YYYY-MM-DD)', key: 'birthDate', width: 26 },
-      { header: 'النوع (ذكر / أنثى)', key: 'gender', width: 18 },
-      { header: 'رقم الهاتف والواتساب *', key: 'phone', width: 22 },
-      { header: 'كود الوظيفة *', key: 'jobCode', width: 16 }, { header: 'كود الموقع *', key: 'siteCode', width: 16 },
-      { header: 'تاريخ المباشرة (YYYY-MM-DD)', key: 'hireDate', width: 24 },
-      { header: 'طريقة استلام الراتب', key: 'paymentMethod', width: 22 },
-      { header: 'نوع المحفظة / القناة', key: 'walletType', width: 22 },
-      { header: 'رقم المحفظة / الحساب', key: 'accountNumber', width: 24 },
-      { header: 'رخصة القيادة', key: 'drivingLicense', width: 22 },
-      { header: 'الموقف التجنيدي', key: 'militaryStatus', width: 26 },
-      { header: 'هاتف الطوارئ', key: 'emergencyPhone', width: 20 },
-      { header: 'التأمين السابق', key: 'previousInsuranceStatus', width: 22 },
-      { header: 'الحالة الاجتماعية', key: 'maritalStatus', width: 20 },
-      { header: 'ملاحظات', key: 'notes', width: 28 },
-    ];
-
-    const headerRow = dataSheet.getRow(1);
-    headerRow.height = 32;
-    headerRow.eachCell((cell) => {
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E79' } };
-      cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-      cell.border = {
-        top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
-        bottom: { style: 'medium', color: { argb: 'FF0D233A' } },
-        left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
-        right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
-      };
-    });
-
-    const exampleRow = dataSheet.getRow(2);
-    exampleRow.values = [
-      'محمود السيد أحمد علي',
-      'حودة',
-      'LEG-1002',
-      'رقم قومي',
-      '29508202801234',
-      'مصري',
-      '',
-      'ذكر',
-      '01012345678',
-      'JOB-01',
-      'SITE-01',
-      '2026-01-01',
-      'كاش بالموقع',
-      '',
-      '',
-      'درجة ثانية',
-      'إعفاء نهائي',
-      '01098765432',
-      'ساري',
-      'متزوج',
-      'مثال توضيحي لكيفية ملء القالب',
-    ];
-    exampleRow.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FF7F8C8D' } };
-
-    const refSheet = workbook.addWorksheet('دليل الأكواد المعتمدة', {
-      views: [{ rightToLeft: true }],
-    });
-
-    const activeJobs = await this.repository.getActiveJobs();
-    const activeSites = await this.repository.getActiveSites();
-
-    refSheet.getCell('A1').value = 'كود الوظيفة';
-    refSheet.getCell('B1').value = 'مسمى الوظيفة';
-    refSheet.getCell('D1').value = 'كود الموقع';
-    refSheet.getCell('E1').value = 'اسم الموقع';
-
-    ['A1', 'B1', 'D1', 'E1'].forEach((cellRef) => {
-      const cell = refSheet.getCell(cellRef);
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2A4B7C' } };
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.alignment = { horizontal: 'center' };
-    });
-
-    activeJobs.forEach((job, idx) => {
-      refSheet.getCell(`A${idx + 2}`).value = job.code;
-      refSheet.getCell(`B${idx + 2}`).value = job.name;
-    });
-
-    activeSites.forEach((site, idx) => {
-      refSheet.getCell(`D${idx + 2}`).value = site.code;
-      refSheet.getCell(`E${idx + 2}`).value = site.name;
-    });
-
-    refSheet.columns = [{ width: 16 }, { width: 30 }, { width: 6 }, { width: 16 }, { width: 30 }];
-
-    const rawBuffer = await workbook.xlsx.writeBuffer();
-    return Buffer.from(rawBuffer);
+    return generateWorkerTemplateBuffer(this.repository);
   }
 
   async parseAndImportExcel(buffer: Buffer): Promise<WorkerImportResult> {
@@ -189,11 +87,21 @@ export class WorkerExportService {
         paymentMethod: row.getCell(13).text.trim() || 'CASH_SITE',
         walletType: row.getCell(14).text.trim() || undefined,
         accountNumber: row.getCell(15).text.trim() || undefined,
-        drivingLicense: row.getCell(16).text.trim() || undefined,
-        militaryStatus: row.getCell(17).text.trim() || undefined,
-        emergencyPhone: row.getCell(18).text.trim() || undefined,
-        maritalStatus: row.getCell(20).text.trim() || undefined,
-        notes: row.getCell(21).text.trim() || undefined,
+        walletOwnerName: row.getCell(16).text.trim() || undefined,
+        instaPayHandle: row.getCell(17).text.trim() || undefined,
+        drivingLicense: row.getCell(18).text.trim() || undefined,
+        militaryStatus: row.getCell(19).text.trim() || undefined,
+        emergencyPhone: row.getCell(20).text.trim() || undefined,
+        previousInsuranceStatus: row.getCell(21).text.trim() || undefined,
+        maritalStatus: row.getCell(22).text.trim() || undefined,
+        barracksUnit: row.getCell(23).text.trim() || undefined,
+        bedNumber: row.getCell(24).text.trim() || undefined,
+        insuranceNumber: row.getCell(25).text.trim() || undefined,
+        insuranceStatus: row.getCell(26).text.trim() || undefined,
+        ppeShoeSize: row.getCell(27).text.trim() || undefined,
+        ppeUniformSize: row.getCell(28).text.trim() || undefined,
+        medicalNotes: row.getCell(29).text.trim() || undefined,
+        notes: row.getCell(30).text.trim() || undefined,
       };
 
       const rowErrors = WorkerExportValidators.validateWorkerRow(rowData, validJobCodes, validSiteCodes);
@@ -262,10 +170,19 @@ export class WorkerExportService {
           paymentMethod: r.paymentMethod,
           walletType: r.walletType ?? null,
           accountNumberEncrypted: r.accountNumber ?? null,
+          walletOwnerName: r.walletOwnerName ?? null,
+          instaPayHandle: r.instaPayHandle ?? null,
           drivingLicense: r.drivingLicense ?? null,
           militaryStatus: r.militaryStatus ?? null,
           emergencyPhoneEncrypted: r.emergencyPhone ?? null,
           maritalStatus: r.maritalStatus ?? null,
+          barracksUnit: r.barracksUnit ?? null,
+          bedNumber: r.bedNumber ?? null,
+          insuranceNumber: r.insuranceNumber ?? null,
+          insuranceStatus: r.insuranceStatus ?? null,
+          ppeShoeSize: r.ppeShoeSize ?? null,
+          ppeUniformSize: r.ppeUniformSize ?? null,
+          medicalNotes: r.medicalNotes ?? null,
         },
         auditPayload: {
           source: 'EXCEL_IMPORT',
@@ -346,18 +263,28 @@ export class WorkerExportService {
       { header: 'رخصة القيادة', key: 'drivingLicense', width: 18 }, { header: 'الموقف التجنيدي', key: 'militaryStatus', width: 18 },
       { header: 'الحالة الاجتماعية', key: 'maritalStatus', width: 16 }, { header: 'تاريخ انتهاء البطاقة', key: 'idExpiryDate', width: 18 },
       { header: 'حالة القيد', key: 'status', width: 14 },
+      { header: 'وحدة السكن / العنبر', key: 'barracksUnit', width: 20 },
+      { header: 'رقم السرير', key: 'bedNumber', width: 14 },
+      { header: 'الرقم التأميني', key: 'insuranceNumber', width: 20 },
+      { header: 'الموقف التأميني', key: 'insuranceStatus', width: 20 },
+      { header: 'مقاس السيفتي', key: 'ppeShoeSize', width: 16 },
+      { header: 'مقاس الزي', key: 'ppeUniformSize', width: 16 },
+      { header: 'ملاحظات طبية', key: 'medicalNotes', width: 26 },
     ];
 
     if (isSuperAdmin) {
       columns.push(
         { header: 'الأجر اليومي (ج.م)', key: 'dailyWage', width: 18 },
         { header: 'الراتب الأساسي (ج.م)', key: 'basicSalary', width: 18 },
-        { header: 'البدلات الثابتة (ج.م)', key: 'fixedAllowances', width: 18 },
+        { header: 'الراتب الإضافي (ج.م)', key: 'fixedAllowances', width: 18 },
         { header: 'إجمالي الاستحقاق الشهري (ج.م)', key: 'totalSalary', width: 22 },
         { header: 'طريقة صرف الراتب', key: 'paymentMethod', width: 20 },
         { header: 'نوع المحفظة / القناة', key: 'walletType', width: 20 },
         { header: 'رقم الحساب / المحفظة', key: 'accountNumber', width: 24 },
-        { header: 'سياسة مسحوبات الكانتين', key: 'canteenPolicy', width: 22 }
+        { header: 'اسم صاحب المحفظة', key: 'walletOwnerName', width: 22 },
+        { header: 'معرف إنستاباي', key: 'instaPayHandle', width: 22 },
+        { header: 'سياسة مسحوبات الكانتين', key: 'canteenPolicy', width: 22 },
+        { header: 'صنف السجائر المعتمد', key: 'cigaretteBrand', width: 20 }
       );
     }
 
@@ -385,7 +312,7 @@ export class WorkerExportService {
     columns.forEach((col, idx) => {
       const cell = dataSheet.getCell(4, idx + 1);
       cell.value = col.header;
-      const isFinancial = isSuperAdmin && idx >= 25;
+      const isFinancial = isSuperAdmin && idx >= 32;
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -455,6 +382,13 @@ export class WorkerExportService {
         w.maritalStatus || '-',
         expiryDateStr,
         statusStr,
+        w.barracksUnit || '-',
+        w.bedNumber || '-',
+        w.insuranceNumber || '-',
+        w.insuranceStatus || '-',
+        w.ppeShoeSize || '-',
+        w.ppeUniformSize || '-',
+        w.medicalNotes || '-',
       ];
 
       if (isSuperAdmin) {
@@ -468,6 +402,8 @@ export class WorkerExportService {
             ? 'علبة يومياً'
             : w.canteenCigarettePolicy === 'FULL_COVERAGE'
             ? 'تغطية كاملة'
+            : w.canteenCigarettePolicy === 'NONE'
+            ? 'بدون مخصص'
             : w.canteenCigarettePolicy || '-';
 
         rowValues.push(
@@ -478,7 +414,10 @@ export class WorkerExportService {
           w.paymentMethod || '-',
           w.walletType || '-',
           this.safeDecrypt(w.accountNumberEncrypted) || '-',
-          canteenPolicyStr
+          w.walletOwnerName || '-',
+          w.instaPayHandle || '-',
+          canteenPolicyStr,
+          w.cigaretteBrand || '-'
         );
       }
 

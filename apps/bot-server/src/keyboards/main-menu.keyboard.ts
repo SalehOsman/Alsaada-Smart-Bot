@@ -11,8 +11,9 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
 
   switch (role) {
     case 'SUPER_ADMIN':
+    case 'GENERAL_ADMIN':
       keyboard
-        .text('👥 الموارد البشرية والرواتب', 'menu:domain:hr')
+        .text('👥 الموارد البشرية والعمالة', 'menu:domain:hr')
         .row()
         .text('💰 المالية والخزينة', 'menu:domain:finance')
         .row()
@@ -38,16 +39,17 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
 
     case 'FIELD_ADMIN':
       keyboard
-        .text('👥 الموارد البشرية والعمال', 'menu:domain:hr')
+        .text('👥 الموارد البشرية والعمالة', 'menu:domain:hr')
         .row()
-        .text('💰 المالية والعهد الميدانية', 'menu:domain:finance')
+        .text('💰 المالية والخزينة', 'menu:domain:finance')
         .row()
         .text('🚜 تشغيل المواقع والإنتاج', 'menu:domain:operations')
         .row()
         .text('⛽ التعيينات والمخازن', 'menu:domain:logistics')
         .row()
-        .text('🏛️ السلامة وإدارة المخاطر', 'menu:domain:governance');
+        .text('🏛️ الحوكمة وإدارة المخاطر', 'menu:domain:governance');
       break;
+
 
     case 'WORKER':
       keyboard

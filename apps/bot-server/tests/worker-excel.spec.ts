@@ -309,19 +309,19 @@ describe('Worker Excel Service — Template Generation & Bulk Import', () => {
       // Financial columns must be PRESENT for Super Admin
       expect(headerValues).toContain('الأجر اليومي (ج.م)');
       expect(headerValues).toContain('الراتب الأساسي (ج.م)');
-      expect(headerValues).toContain('البدلات الثابتة (ج.م)');
+      expect(headerValues).toContain('الراتب الإضافي (ج.م)');
       expect(headerValues).toContain('إجمالي الاستحقاق الشهري (ج.م)');
       expect(headerValues).toContain('رقم الحساب / المحفظة');
-      expect(headerValues.length).toBe(33);
+      expect(headerValues.length).toBe(43);
 
       // Check row 5 (Worker 1) financial values
       const worker1Row = sheet!.getRow(5);
       expect(worker1Row.getCell(2).text).toBe('OP-DRV-0001');
       expect(worker1Row.getCell(4).text).toBe('أحمد محمود علي إبراهيم');
-      expect(worker1Row.getCell(26).value).toBe(250); // Daily wage
-      expect(worker1Row.getCell(27).value).toBe(7500); // Basic salary
-      expect(worker1Row.getCell(28).value).toBe(1500); // Fixed allowances
-      expect(worker1Row.getCell(29).value).toBe(9000); // Total salary
+      expect(worker1Row.getCell(33).value).toBe(250); // Daily wage
+      expect(worker1Row.getCell(34).value).toBe(7500); // Basic salary
+      expect(worker1Row.getCell(35).value).toBe(1500); // Additional salary
+      expect(worker1Row.getCell(36).value).toBe(9000); // Total salary
     });
 
     it('should STRICTLY MASK and OMIT all FINANCIAL columns for regular Admin (isSuperAdmin = false)', async () => {
@@ -347,17 +347,17 @@ describe('Worker Excel Service — Template Generation & Bulk Import', () => {
       const headerValues: string[] = [];
       headerRow.eachCell((cell) => headerValues.push(cell.text));
 
-      // Exactly 25 administrative columns — ZERO financial columns!
-      expect(headerValues.length).toBe(25);
+      // Exactly 32 administrative columns — ZERO financial columns!
+      expect(headerValues.length).toBe(32);
       expect(headerValues.some((h) => h.includes('الراتب'))).toBe(false);
       expect(headerValues.some((h) => h.includes('الأجر'))).toBe(false);
       expect(headerValues.some((h) => h.includes('البدلات'))).toBe(false);
       expect(headerValues.some((h) => h.includes('المحفظة'))).toBe(false);
 
-      // Verify Worker 1 row does not exceed 25 columns
+      // Verify Worker 1 row does not exceed 32 columns
       const worker1Row = sheet!.getRow(5);
       expect(worker1Row.getCell(2).text).toBe('OP-DRV-0001');
-      expect(worker1Row.getCell(26).value).toBeNull();
+      expect(worker1Row.getCell(33).value).toBeNull();
     });
 
     it('should filter workers export by DEPARTMENT', async () => {

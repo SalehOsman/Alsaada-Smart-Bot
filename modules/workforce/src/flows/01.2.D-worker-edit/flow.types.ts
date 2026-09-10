@@ -8,10 +8,15 @@ export type EditableWorkerField =
   | 'governorateCode'
   | 'address'
   | 'idCardExpiryDate'
-  | 'bloodType'
   | 'militaryStatus'
   | 'maritalStatus'
+  | 'nationalId'
   // Job & Operations
+  | 'jobTitleId'
+  | 'siteId'
+  | 'departmentId'
+  | 'hireDate'
+  | 'status'
   | 'shiftSystem'
   | 'contractType'
   | 'drivingLicense'
@@ -90,6 +95,7 @@ export interface PendingWorkerEditState {
   isSuperAdmin: boolean;
   step?: 'SELECT_POLICY' | 'SELECT_BRAND';
   selectedPolicy?: string;
+  promptMsgId?: number;
 }
 
 export interface WorkerCardView {
@@ -104,13 +110,17 @@ export interface WorkerCardView {
   address?: string | null;
   militaryStatus?: string | null;
   maritalStatus?: string | null;
-  bloodType?: string | null;
+  governorateName?: string | null;
   jobTitle?: string | null;
+  jobTitleId?: string | null;
   jobRef?: { id?: string; name?: string | null; title?: string | null } | null;
-  site?: { name?: string | null } | null;
-  department?: { name?: string | null } | null;
+  siteId?: string | null;
+  site?: { id?: string; name?: string | null } | null;
+  departmentId?: string | null;
+  department?: { id?: string; name?: string | null } | null;
   shiftSystem?: string | null;
   contractType?: string | null;
+  contractTypeAr?: string | null;
   hireDate?: Date | string | null;
   status?: string | null;
   drivingLicense?: string | null;
@@ -139,3 +149,101 @@ export interface WorkerCardView {
   medicalNotes?: string | null;
 }
 
+export interface SalaryAdjustmentWizardState {
+  workerId: string;
+  workerCode: string;
+  workerName: string;
+  currentBase: number;
+  currentAdditional: number;
+  currentAdd: number;
+  currentGross: number;
+  newBase?: number;
+  newAdditional?: number;
+  effectiveMonth?: string;
+  effectiveDate?: Date;
+  reason?: string;
+  step: 'NEW_BASE' | 'NEW_ADDITIONAL' | 'EFFECTIVE_DATE' | 'REASON' | 'CONFIRM';
+}
+
+export interface SalaryHistoryRecord {
+  id: string;
+  changeId: string;
+  workerId: string;
+  previousBasicSalary: number;
+  previousAdditionalSalary: number;
+  previousGrossSalary: number;
+  newBasicSalary: number;
+  newAdditionalSalary: number;
+  newGrossSalary: number;
+  effectiveMonth: string;
+  effectiveDate: Date;
+  reason: string;
+  approvedByName?: string | null;
+  createdAt: Date;
+}
+
+export interface WorkerChangeLogRecord {
+  id: string;
+  changeId: string;
+  workerId: string;
+  workerCode: string;
+  category: string;
+  fieldKey: string;
+  fieldNameAr: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  oldDisplayValue?: string | null;
+  newDisplayValue?: string | null;
+  reason?: string | null;
+  actorName?: string | null;
+  actorRole: string;
+  createdAt: Date;
+}
+
+export interface TicketCreationData {
+  requestId: string;
+  workerId: string;
+  workerCode: string;
+  workerName: string;
+  requesterTelegramId: bigint;
+  requesterName: string;
+  requesterRole: string;
+  fieldKey: string;
+  fieldName: string;
+  oldValue: string;
+  newValue: string;
+  reason: string;
+}
+
+export interface WorkerAuditInput {
+  category: string;
+  fieldKey: string;
+  fieldNameAr: string;
+  oldValue?: string | null | undefined;
+  newValue?: string | null | undefined;
+  oldDisplayValue?: string | null | undefined;
+  newDisplayValue?: string | null | undefined;
+  reason?: string | null | undefined;
+  actorTelegramId?: bigint | undefined;
+  actorName?: string | null | undefined;
+  actorRole?: string | undefined;
+}
+
+export interface SalaryAdjustmentData {
+  changeId: string;
+  workerId: string;
+  workerCode: string;
+  workerName: string;
+  previousBasicSalary: number;
+  previousAdditionalSalary: number;
+  previousGrossSalary: number;
+  newBasicSalary: number;
+  newAdditionalSalary: number;
+  newGrossSalary: number;
+  effectiveMonth: string;
+  effectiveDate: Date;
+  reason: string;
+  approvedByTelegramId?: bigint | undefined;
+  approvedByName?: string | null | undefined;
+  notes?: string | null | undefined;
+}

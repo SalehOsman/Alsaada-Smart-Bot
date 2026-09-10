@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-10T06:22:15.131Z",
+  "generatedAt": "2026-09-10T08:55:58.458Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -22,7 +22,7 @@
   "files": [
     {
       "path": ".gitignore",
-      "sha256": "f862166923b80e384949716740e86462eb5ee164d6c1ea88462b88c789225b8b"
+      "sha256": "045b8e95190626347ecc42ef61b45d4dbd1d7369ec0102d7ee3820585b050588"
     },
     {
       "path": "AGENTS.md",

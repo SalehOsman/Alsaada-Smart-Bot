@@ -1,14 +1,16 @@
 import { createHash } from 'node:crypto';
 import { encryptField, decryptField, createBlindIndex, Prisma } from '@alsaada/database';
 import { normalizeDigits, parseFlexibleDate } from '@alsaada/regional-engine';
-import { detectGovernorateFromAddress, getGovernorateCodeByName } from '@alsaada/national-id-engine';
-import { WorkerEditRepository } from './flow.repository.js';
+import { detectGovernorateFromAddress, getGovernorateCodeByName, EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
+import { WorkerEditRepository, type WorkerAuditInput } from './flow.repository.js';
 import { FIELD_LABELS, validateFieldValue } from './flow.validators.js';
 import type {
   EditableWorkerField,
   CreateEditRequestInput,
   EditExecutionResult,
   PendingEditTicket,
+  SalaryHistoryRecord,
+  WorkerChangeLogRecord,
 } from './flow.types.js';
 
 function normalizeKeyToHex(key: string): string {
@@ -42,7 +44,8 @@ export class WorkerEditService {
     workerId: string,
     fieldKey: EditableWorkerField,
     newValue: string,
-    actorTelegramId?: bigint
+    actorTelegramId?: bigint,
+    actorName?: string
   ): Promise<EditExecutionResult> {
     const val = validateFieldValue(fieldKey, newValue);
     if (!val.isValid || !val.cleanValue) {
@@ -56,34 +59,52 @@ export class WorkerEditService {
     }
 
     const dataToUpdate: Prisma.WorkerUpdateInput = {};
+    let oldDisplayVal = '';
+    let newDisplayVal = cleanValue;
 
     if (fieldKey === 'name') {
+      oldDisplayVal = worker.name;
       dataToUpdate.name = cleanValue;
     } else if (fieldKey === 'nickname') {
+      oldDisplayVal = worker.nickname || '';
       dataToUpdate.nickname = cleanValue;
-      const aliases = (worker.aliases || []).filter((a) => a !== cleanValue);
+      const aliases = (worker.aliases || []).filter((a: string) => a !== cleanValue);
       aliases.push(cleanValue);
       dataToUpdate.aliases = aliases;
+    } else if (fieldKey === 'nationalId') {
+      const cleanNatId = normalizeDigits(cleanValue.replace(/[\s-]/g, ''));
+      oldDisplayVal = '••••••••••••';
+      newDisplayVal = cleanNatId;
+      dataToUpdate.nationalIdBlindIndex = createBlindIndex(cleanNatId, this.blindIndexSalt);
+      dataToUpdate.nationalIdEncrypted = encryptField(cleanNatId, this.normalizedKeyHex);
     } else if (fieldKey === 'phone') {
       const cleanPhone = normalizeDigits(cleanValue.replace(/[\s-]/g, ''));
+      oldDisplayVal = this.decryptFieldSafe(worker.phoneEncrypted);
       dataToUpdate.phoneBlindIndex = createBlindIndex(cleanPhone, this.blindIndexSalt);
       dataToUpdate.phoneEncrypted = encryptField(cleanPhone, this.normalizedKeyHex);
     } else if (fieldKey === 'emergencyPhone') {
       const cleanEm = normalizeDigits(cleanValue.replace(/[\s-]/g, ''));
+      oldDisplayVal = this.decryptFieldSafe(worker.emergencyPhoneEncrypted);
       dataToUpdate.emergencyPhoneEncrypted = encryptField(cleanEm, this.normalizedKeyHex);
     } else if (fieldKey === 'walletNumber') {
       const cleanWallet = normalizeDigits(cleanValue.replace(/[\s-]/g, ''));
+      oldDisplayVal = this.decryptFieldSafe(worker.accountNumberEncrypted);
       dataToUpdate.accountNumberEncrypted = encryptField(cleanWallet, this.normalizedKeyHex);
     } else if (fieldKey === 'drivingLicense') {
+      oldDisplayVal = worker.drivingLicense || '';
       dataToUpdate.drivingLicense = cleanValue;
     } else if (fieldKey === 'militaryStatus') {
+      oldDisplayVal = worker.militaryStatus || '';
       dataToUpdate.militaryStatus = cleanValue;
     } else if (fieldKey === 'maritalStatus') {
+      oldDisplayVal = worker.maritalStatus || '';
       dataToUpdate.maritalStatus = cleanValue;
     } else if (fieldKey === 'idCardExpiryDate') {
+      oldDisplayVal = worker.idCardExpiryDate ? worker.idCardExpiryDate.toISOString().slice(0, 10) : '';
       const parsedExp = parseFlexibleDate(cleanValue);
       dataToUpdate.idCardExpiryDate = parsedExp.isValid && parsedExp.date ? parsedExp.date : new Date(cleanValue);
     } else if (fieldKey === 'address') {
+      oldDisplayVal = worker.address || '';
       dataToUpdate.address = cleanValue;
       const detectedGov = detectGovernorateFromAddress(cleanValue);
       if (detectedGov) {
@@ -94,58 +115,117 @@ export class WorkerEditService {
       }
     } else if (fieldKey === 'governorateCode') {
       const govCode = getGovernorateCodeByName(cleanValue) || cleanValue;
+      oldDisplayVal = EGYPTIAN_GOVERNORATES[worker.governorateCode || '']?.nameAr || worker.governorateCode || '';
+      newDisplayVal = EGYPTIAN_GOVERNORATES[govCode]?.nameAr || govCode;
       dataToUpdate.governorateCode = govCode;
     } else if (fieldKey === 'legacyCode') {
+      oldDisplayVal = worker.legacyCode || '';
       dataToUpdate.legacyCode = cleanValue;
-      const aliases = (worker.aliases || []).filter((a) => a !== cleanValue);
+      const aliases = (worker.aliases || []).filter((a: string) => a !== cleanValue);
       aliases.push(cleanValue);
       dataToUpdate.aliases = aliases;
-    } else if (fieldKey === 'bloodType') {
-      dataToUpdate.bloodType = cleanValue;
+    } else if (fieldKey === 'jobTitleId') {
+      oldDisplayVal = worker.jobRef?.name || worker.jobTitle || '';
+      dataToUpdate.jobRef = { connect: { id: cleanValue } };
+    } else if (fieldKey === 'siteId') {
+      oldDisplayVal = worker.site?.name || '';
+      dataToUpdate.site = { connect: { id: cleanValue } };
+    } else if (fieldKey === 'departmentId') {
+      oldDisplayVal = worker.department?.name || '';
+      dataToUpdate.department = { connect: { id: cleanValue } };
+    } else if (fieldKey === 'hireDate') {
+      oldDisplayVal = worker.hireDate ? worker.hireDate.toISOString().slice(0, 10) : '';
+      const parsedHire = parseFlexibleDate(cleanValue);
+      dataToUpdate.hireDate = parsedHire.isValid && parsedHire.date ? parsedHire.date : new Date(cleanValue);
+    } else if (fieldKey === 'status') {
+      oldDisplayVal = worker.status || '';
+      dataToUpdate.status = cleanValue;
     } else if (fieldKey === 'shiftSystem') {
+      oldDisplayVal = worker.shiftSystem || '';
       dataToUpdate.shiftSystem = cleanValue;
     } else if (fieldKey === 'contractType') {
+      oldDisplayVal = worker.contractType || '';
       dataToUpdate.contractType = cleanValue;
     } else if (fieldKey === 'barracksUnit') {
+      oldDisplayVal = worker.barracksUnit || '';
       dataToUpdate.barracksUnit = cleanValue;
     } else if (fieldKey === 'bedNumber') {
+      oldDisplayVal = worker.bedNumber || '';
       dataToUpdate.bedNumber = cleanValue;
     } else if (fieldKey === 'dailyWage') {
+      oldDisplayVal = String(worker.dailyWage || 0);
       dataToUpdate.dailyWage = new Prisma.Decimal(cleanValue);
     } else if (fieldKey === 'basicSalary') {
+      oldDisplayVal = String(worker.basicSalary || 0);
       dataToUpdate.basicSalary = new Prisma.Decimal(cleanValue);
     } else if (fieldKey === 'fixedAllowances') {
+      oldDisplayVal = String(worker.fixedAllowances || 0);
       dataToUpdate.fixedAllowances = new Prisma.Decimal(cleanValue);
     } else if (fieldKey === 'paymentMethod') {
+      oldDisplayVal = worker.paymentMethod || '';
       dataToUpdate.paymentMethod = cleanValue;
     } else if (fieldKey === 'walletOwnerName') {
+      oldDisplayVal = worker.walletOwnerName || '';
       dataToUpdate.walletOwnerName = cleanValue;
     } else if (fieldKey === 'instaPayHandle') {
+      oldDisplayVal = worker.instaPayHandle || '';
       dataToUpdate.instaPayHandle = cleanValue;
     } else if (fieldKey === 'insuranceNumber') {
+      oldDisplayVal = worker.insuranceNumber || '';
       dataToUpdate.insuranceNumber = cleanValue;
     } else if (fieldKey === 'insuranceStatus') {
+      oldDisplayVal = worker.insuranceStatus || '';
       dataToUpdate.insuranceStatus = cleanValue;
     } else if (fieldKey === 'canteenCigarettePolicy') {
+      oldDisplayVal = worker.canteenCigarettePolicy || '';
       dataToUpdate.canteenCigarettePolicy = cleanValue;
       if (cleanValue === 'NONE') {
         dataToUpdate.cigaretteBrand = null;
         dataToUpdate.canteenItem = { disconnect: true };
       }
     } else if (fieldKey === 'cigaretteBrand') {
+      oldDisplayVal = worker.cigaretteBrand || '';
       dataToUpdate.cigaretteBrand = cleanValue;
     } else if (fieldKey === 'emergencyContactName') {
+      oldDisplayVal = worker.emergencyContactName || '';
       dataToUpdate.emergencyContactName = cleanValue;
     } else if (fieldKey === 'ppeShoeSize') {
+      oldDisplayVal = worker.ppeShoeSize || '';
       dataToUpdate.ppeShoeSize = cleanValue;
     } else if (fieldKey === 'ppeUniformSize') {
+      oldDisplayVal = worker.ppeUniformSize || '';
       dataToUpdate.ppeUniformSize = cleanValue;
     } else if (fieldKey === 'medicalNotes') {
+      oldDisplayVal = worker.medicalNotes || '';
       dataToUpdate.medicalNotes = cleanValue;
     }
 
-    const updated = await this.repository.updateWorkerDirect(workerId, dataToUpdate, actorTelegramId);
+    let category = 'FINANCIAL';
+    if (['name', 'nickname', 'nationalId', 'idCardExpiryDate', 'governorateCode', 'address', 'militaryStatus', 'maritalStatus', 'legacyCode'].includes(fieldKey)) {
+      category = 'PERSONAL';
+    } else if (['jobTitleId', 'siteId', 'departmentId', 'hireDate', 'status', 'shiftSystem', 'contractType', 'drivingLicense', 'barracksUnit', 'bedNumber'].includes(fieldKey)) {
+      category = 'JOB';
+    } else if (['phone', 'emergencyPhone', 'emergencyContactName', 'ppeShoeSize', 'ppeUniformSize', 'medicalNotes'].includes(fieldKey)) {
+      category = 'CONTACT';
+    }
+
     const fieldName = FIELD_LABELS[fieldKey] || fieldKey;
+
+    const audit: WorkerAuditInput = {
+      category,
+      fieldKey,
+      fieldNameAr: fieldName,
+      oldValue: oldDisplayVal,
+      newValue: cleanValue,
+      oldDisplayValue: oldDisplayVal,
+      newDisplayValue: newDisplayVal,
+      reason: 'تعديل مباشر من إدارة المنظومة',
+      actorTelegramId: actorTelegramId ?? 0n,
+      actorName: actorName || 'المدير العام',
+      actorRole: 'SUPER_ADMIN',
+    };
+
+    const updated = await this.repository.updateWorkerDirect(workerId, dataToUpdate, actorTelegramId, audit);
 
     return {
       success: true,
@@ -155,6 +235,68 @@ export class WorkerEditService {
       isDirectExecution: true,
       worker: updated,
     };
+  }
+
+  async applySalaryAdjustment(params: {
+    workerId: string;
+    newBase: number;
+    newAdd: number;
+    effectiveMonth: string;
+    effectiveDate: Date;
+    reason: string;
+    approvedByTelegramId?: bigint;
+    approvedByName?: string;
+  }): Promise<{ success: boolean; error?: string; changeId?: string }> {
+    const worker = await this.repository.findWorkerForEdit(params.workerId);
+    if (!worker) {
+      return { success: false, error: 'العامل غير موجود.' };
+    }
+
+    const prevBase = Number(worker.basicSalary || 0);
+    const prevAdd = Number(worker.fixedAllowances || 0);
+    const prevGross = prevBase + prevAdd;
+    const newGross = params.newBase + params.newAdd;
+    const changeId = `SAL-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    await this.repository.createSalaryAdjustment({
+      changeId,
+      workerId: worker.id,
+      workerCode: worker.code,
+      workerName: worker.name,
+      previousBasicSalary: prevBase,
+      previousAdditionalSalary: prevAdd,
+      previousGrossSalary: prevGross,
+      newBasicSalary: params.newBase,
+      newAdditionalSalary: params.newAdd,
+      newGrossSalary: newGross,
+      effectiveMonth: params.effectiveMonth,
+      effectiveDate: params.effectiveDate,
+      reason: params.reason,
+      approvedByTelegramId: params.approvedByTelegramId ?? 0n,
+      approvedByName: params.approvedByName || null,
+    });
+
+    return { success: true, changeId };
+  }
+
+  async getSalaryHistory(workerId: string): Promise<SalaryHistoryRecord[]> {
+    return this.repository.getSalaryHistory(workerId);
+  }
+
+  async getWorkerChangeLog(workerId: string): Promise<WorkerChangeLogRecord[]> {
+    return this.repository.getWorkerChangeLog(workerId);
+  }
+
+  async getAllSites(): Promise<Array<{ id: string; name: string }>> {
+    return this.repository.getAllSites();
+  }
+
+  async getAllJobTitles(): Promise<Array<{ id: string; name: string }>> {
+    return this.repository.getAllJobTitles();
+  }
+
+  async getAllDepartments(): Promise<Array<{ id: string; name: string }>> {
+    return this.repository.getAllDepartments();
   }
 
   async submitEditTicket(input: CreateEditRequestInput): Promise<EditExecutionResult> {
@@ -248,7 +390,17 @@ export class WorkerEditService {
       dataToUpdate.canteenItem = { disconnect: true };
     }
 
-    const updated = await this.repository.updateWorkerDirect(workerId, dataToUpdate, actorTelegramId);
+    const updated = await this.repository.updateWorkerDirect(workerId, dataToUpdate, actorTelegramId, {
+      category: 'FINANCIAL',
+      fieldKey: 'canteenCigarettePolicy',
+      fieldNameAr: 'مخصص السجائر المعتمد',
+      oldValue: worker.canteenCigarettePolicy || 'بدون مخصص',
+      newValue: policy === 'NONE' ? 'بدون مخصص' : `${policy} (${brandName || 'غير محدد'})`,
+      reason: 'تعديل مخصص السجائر',
+      actorTelegramId: actorTelegramId ?? 0n,
+      actorRole: 'SUPER_ADMIN',
+    });
+
     return {
       success: true,
       workerCode: updated.code,

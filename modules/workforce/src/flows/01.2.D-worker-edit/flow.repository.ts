@@ -1,20 +1,14 @@
 import { PrismaClient, Prisma } from '@alsaada/database';
-import type { PendingEditTicket } from './flow.types.js';
+import type {
+  PendingEditTicket,
+  SalaryHistoryRecord,
+  WorkerChangeLogRecord,
+  TicketCreationData,
+  WorkerAuditInput,
+  SalaryAdjustmentData,
+} from './flow.types.js';
 
-export interface TicketCreationData {
-  requestId: string;
-  workerId: string;
-  workerCode: string;
-  workerName: string;
-  requesterTelegramId: bigint;
-  requesterName: string;
-  requesterRole: string;
-  fieldKey: string;
-  fieldName: string;
-  oldValue: string;
-  newValue: string;
-  reason: string;
-}
+export type { TicketCreationData, WorkerAuditInput, SalaryAdjustmentData };
 
 export class WorkerEditRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -83,7 +77,8 @@ export class WorkerEditRepository {
   async updateWorkerDirect(
     workerId: string,
     data: Prisma.WorkerUpdateInput,
-    actorTelegramId?: bigint
+    actorTelegramId?: bigint,
+    audit?: WorkerAuditInput
   ) {
     const execute = async (tx: Prisma.TransactionClient) => {
       const updated = await tx.worker.update({
@@ -91,6 +86,28 @@ export class WorkerEditRepository {
         data,
         include: { site: true, jobRef: true, department: true },
       });
+
+      if (audit && 'workerChangeLog' in tx && typeof tx.workerChangeLog?.create === 'function') {
+        const changeId = `CHG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        await tx.workerChangeLog.create({
+          data: {
+            changeId,
+            workerId,
+            workerCode: updated.code,
+            category: audit.category,
+            fieldKey: audit.fieldKey,
+            fieldNameAr: audit.fieldNameAr,
+            oldValue: audit.oldValue ?? null,
+            newValue: audit.newValue ?? null,
+            oldDisplayValue: audit.oldDisplayValue ?? null,
+            newDisplayValue: audit.newDisplayValue ?? null,
+            reason: audit.reason || 'تعديل مباشر من إدارة المنظومة',
+            actorTelegramId: audit.actorTelegramId ?? actorTelegramId ?? BigInt(0),
+            actorName: audit.actorName || 'إدارة النظام',
+            actorRole: audit.actorRole || 'SUPER_ADMIN',
+          },
+        });
+      }
 
       if (tx.auditLog) {
         await tx.auditLog.create({
@@ -115,6 +132,143 @@ export class WorkerEditRepository {
       return this.prisma.$transaction(execute);
     }
     return execute(this.prisma as unknown as Prisma.TransactionClient);
+  }
+
+  async createSalaryAdjustment(adj: SalaryAdjustmentData) {
+    const execute = async (tx: Prisma.TransactionClient) => {
+      // 1. Immutable SalaryHistory entry (Append-Only)
+      let record: unknown = null;
+      if ('salaryHistory' in tx && typeof tx.salaryHistory?.create === 'function') {
+        record = await tx.salaryHistory.create({
+          data: {
+            changeId: adj.changeId,
+            workerId: adj.workerId,
+            previousBasicSalary: new Prisma.Decimal(adj.previousBasicSalary),
+            previousAdditionalSalary: new Prisma.Decimal(adj.previousAdditionalSalary),
+            previousGrossSalary: new Prisma.Decimal(adj.previousGrossSalary),
+            newBasicSalary: new Prisma.Decimal(adj.newBasicSalary),
+            newAdditionalSalary: new Prisma.Decimal(adj.newAdditionalSalary),
+            newGrossSalary: new Prisma.Decimal(adj.newGrossSalary),
+            effectiveMonth: adj.effectiveMonth,
+            effectiveDate: adj.effectiveDate,
+            reason: adj.reason,
+            approvedByTelegramId: adj.approvedByTelegramId ?? null,
+            approvedByName: adj.approvedByName ?? null,
+            notes: adj.notes ?? null,
+          },
+        });
+      }
+
+      // 2. Atomic update to current Worker fields
+      const updatedWorker = await tx.worker.update({
+        where: { id: adj.workerId },
+        data: {
+          basicSalary: new Prisma.Decimal(adj.newBasicSalary),
+          fixedAllowances: new Prisma.Decimal(adj.newAdditionalSalary),
+          dailyWage: new Prisma.Decimal((adj.newGrossSalary / 30).toFixed(2)),
+        },
+      });
+
+      // 3. Isolated WorkerChangeLog entry
+      await tx.workerChangeLog.create({
+        data: {
+          changeId: adj.changeId,
+          workerId: adj.workerId,
+          workerCode: adj.workerCode,
+          category: 'FINANCIAL',
+          fieldKey: 'salary',
+          fieldNameAr: 'تعديل الراتب (الأساسي والإضافي)',
+          oldValue: `${adj.previousBasicSalary}+${adj.previousAdditionalSalary}=${adj.previousGrossSalary}`,
+          newValue: `${adj.newBasicSalary}+${adj.newAdditionalSalary}=${adj.newGrossSalary}`,
+          oldDisplayValue: `${adj.previousGrossSalary} ج.م`,
+          newDisplayValue: `${adj.newGrossSalary} ج.م`,
+          reason: adj.reason,
+          actorTelegramId: adj.approvedByTelegramId || BigInt(0),
+          actorName: adj.approvedByName || 'المدير العام',
+          actorRole: 'SUPER_ADMIN',
+        },
+      });
+
+      return { record, updatedWorker };
+    };
+
+    if (typeof this.prisma.$transaction === 'function') {
+      return this.prisma.$transaction(execute);
+    }
+    return execute(this.prisma as unknown as Prisma.TransactionClient);
+  }
+
+  async getSalaryHistory(workerId: string): Promise<SalaryHistoryRecord[]> {
+    const raw = await this.prisma.salaryHistory.findMany({
+      where: { workerId },
+      orderBy: { effectiveDate: 'desc' },
+      take: 30,
+    });
+    return raw.map((r) => ({
+      id: r.id,
+      changeId: r.changeId,
+      workerId: r.workerId,
+      previousBasicSalary: Number(r.previousBasicSalary || 0),
+      previousAdditionalSalary: Number(r.previousAdditionalSalary || 0),
+      previousGrossSalary: Number(r.previousGrossSalary || 0),
+      newBasicSalary: Number(r.newBasicSalary || 0),
+      newAdditionalSalary: Number(r.newAdditionalSalary || 0),
+      newGrossSalary: Number(r.newGrossSalary || 0),
+      effectiveMonth: r.effectiveMonth,
+      effectiveDate: r.effectiveDate,
+      reason: r.reason,
+      approvedByName: r.approvedByName,
+      createdAt: r.createdAt,
+    }));
+  }
+
+  async getWorkerChangeLog(workerId: string): Promise<WorkerChangeLogRecord[]> {
+    const raw = await this.prisma.workerChangeLog.findMany({
+      where: { workerId },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    });
+    return raw.map((r) => ({
+      id: r.id,
+      changeId: r.changeId,
+      workerId: r.workerId,
+      workerCode: r.workerCode,
+      category: r.category,
+      fieldKey: r.fieldKey,
+      fieldNameAr: r.fieldNameAr,
+      oldValue: r.oldValue,
+      newValue: r.newValue,
+      oldDisplayValue: r.oldDisplayValue,
+      newDisplayValue: r.newDisplayValue,
+      reason: r.reason,
+      actorName: r.actorName,
+      actorRole: r.actorRole,
+      createdAt: r.createdAt,
+    }));
+  }
+
+  async getAllSites(): Promise<Array<{ id: string; name: string }>> {
+    return this.prisma.site.findMany({
+      where: { status: 'ACTIVE' },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    });
+  }
+
+  async getAllJobTitles(): Promise<Array<{ id: string; name: string }>> {
+    return this.prisma.jobTitle.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    });
+  }
+
+  async getAllDepartments(): Promise<Array<{ id: string; name: string }>> {
+    return this.prisma.department.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    });
   }
 
   async findTicketByRequestId(requestId: string) {

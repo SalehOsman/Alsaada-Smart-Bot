@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { decryptField } from '@alsaada/database';
 import { normalizeDigits, formatCurrency } from '@alsaada/regional-engine';
 import { normalizeEgyptianPhone } from '@alsaada/core-components';
+import { EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
 import { WorkerDirectoryRepository } from './flow.repository.js';
 import { WorkerDirectoryMessages } from './flow.messages.js';
 import type {
@@ -98,12 +99,27 @@ export class WorkerDirectoryService {
 
     // Financial RBAC masking (Strict Pre-Render RBAC Masking: completely undefined if not authorized)
     const canViewFinances = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'ACCOUNTANT'].includes(viewerRole);
-    const salaryVal = Number(worker.basicSalary || 0) > 0
-      ? Number(worker.basicSalary)
-      : Number(worker.dailyWage || 0);
-    const dailyWageMasked = canViewFinances
-      ? (salaryVal > 0 ? formatCurrency(salaryVal) : 'غير محدد')
-      : undefined;
+    const basicSal = Number(worker.basicSalary || 0);
+    const addSal = Number(worker.fixedAllowances || 0);
+    const totalSal = basicSal + addSal > 0 ? basicSal + addSal : Number(worker.dailyWage || 0) * 30;
+    const dailyWageVal = Number(worker.dailyWage || 0) > 0 ? Number(worker.dailyWage) : (totalSal > 0 ? totalSal / 30 : 0);
+    const basicSalaryMasked = canViewFinances && basicSal > 0 ? formatCurrency(basicSal) : undefined;
+    const additionalSalaryMasked = canViewFinances && addSal > 0 ? formatCurrency(addSal) : undefined;
+    const totalSalaryMasked = canViewFinances && totalSal > 0 ? formatCurrency(totalSal) : undefined;
+    const dailyWageMasked = canViewFinances && dailyWageVal > 0 ? formatCurrency(dailyWageVal) : undefined;
+
+    // Governorate Name & Contract Type mapping
+    const govCode = worker.governorateCode || '88';
+    const governorateName = EGYPTIAN_GOVERNORATES[govCode]?.nameAr || govCode;
+
+    const CONTRACT_TYPE_MAP: Record<string, string> = {
+      DAILY_LABOR: 'عمالة يومية / مؤقتة',
+      PERMANENT: 'عقد عمل دائم',
+      SEASONAL: 'عقد عمل موسمي',
+      FIXED_TERM: 'محدد المدة',
+      PROBATION: 'تحت الاختبار',
+    };
+    const contractTypeAr = CONTRACT_TYPE_MAP[worker.contractType] || worker.contractType || 'عمالة يومية / مؤقتة';
 
     // WhatsApp Direct Chat URL (strictly <= 50 ASCII bytes, 100% Telegram compliant)
     let directWhatsAppUrl: string | undefined;
@@ -239,7 +255,12 @@ export class WorkerDirectoryService {
       siteName: worker.site?.name,
       hireDate: worker.hireDate,
       shiftSystem: worker.shiftSystem,
+      contractTypeAr,
+      governorateName,
       dailyWageMasked,
+      basicSalaryMasked,
+      additionalSalaryMasked,
+      totalSalaryMasked,
       paymentMethod: worker.paymentMethod,
       drivingLicense: worker.drivingLicense || undefined,
       militaryStatus: worker.militaryStatus || undefined,

@@ -1,7 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import { buildCompletionKeyboard } from '@alsaada/core-components';
-import { FIELD_LABELS, FIELD_TO_SHORT_MAP } from './flow.validators.js';
-import type { EditableWorkerField, PendingEditTicket, WorkerProfileTab, WorkerCardView } from './flow.types.js';
+import type { PendingEditTicket, WorkerProfileTab, WorkerCardView } from './flow.types.js';
 
 export const POLICY_SHORT_TO_CODE: Record<string, string> = {
   '1P': 'ONE_PACK_DAILY',
@@ -26,16 +25,6 @@ export const PICKER_OPTIONS: Record<string, Array<{ label: string; value: string
     { label: '⏳ بانتظار إنهاء الإجراءات', value: 'بانتظار إنهاء الإجراءات' },
     { label: '📜 معاش / متقاعد', value: 'معاش / متقاعد' },
   ],
-  bld: [
-    { label: '🩸 A+', value: 'A+' },
-    { label: '🩸 A-', value: 'A-' },
-    { label: '🩸 B+', value: 'B+' },
-    { label: '🩸 B-', value: 'B-' },
-    { label: '🩸 AB+', value: 'AB+' },
-    { label: '🩸 AB-', value: 'AB-' },
-    { label: '🩸 O+', value: 'O+' },
-    { label: '🩸 O-', value: 'O-' },
-  ],
   shft: [
     { label: '☀️ وردية نهارية (12 ساعة)', value: 'وردية نهارية (12 ساعة)' },
     { label: '🌙 وردية ليلية (12 ساعة)', value: 'وردية ليلية (12 ساعة)' },
@@ -43,10 +32,17 @@ export const PICKER_OPTIONS: Record<string, Array<{ label: string; value: string
     { label: '🔄 تشغيل 24 ساعة (مناوبة)', value: 'تشغيل 24 ساعة (مناوبة)' },
   ],
   cntr: [
-    { label: '📋 يومية حرة', value: 'يومية حرة' },
-    { label: '📄 محدد المدة', value: 'محدد المدة' },
-    { label: '📑 دائم / سنوي', value: 'دائم / سنوي' },
-    { label: '⏳ تحت الاختبار', value: 'تحت الاختبار' },
+    { label: '📋 عمالة يومية / مؤقتة', value: 'DAILY_LABOR' },
+    { label: '📄 عقد عمل دائم', value: 'PERMANENT' },
+    { label: '🌴 عقد عمل موسمي', value: 'SEASONAL' },
+    { label: '📑 محدد المدة', value: 'FIXED_TERM' },
+    { label: '⏳ تحت الاختبار', value: 'PROBATION' },
+  ],
+  sts: [
+    { label: '🟢 نشط ميدانياً', value: 'ACTIVE' },
+    { label: '🏖️ إجازة سنوية / مرضية', value: 'VACATION' },
+    { label: '⏸️ موقوف مؤقتاً', value: 'SUSPENDED' },
+    { label: '🔴 إنهاء خدمة / مستقيل', value: 'TERMINATED' },
   ],
   pmth: [
     { label: '📱 محفظة إلكترونية', value: 'محفظة إلكترونية' },
@@ -65,6 +61,35 @@ export const PICKER_OPTIONS: Record<string, Array<{ label: string; value: string
     { label: '👤 أعزب', value: 'أعزب' },
     { label: '💍 متزوج', value: 'متزوج' },
     { label: '👨‍👩‍👧‍👦 متزوج ويعول', value: 'متزوج ويعول' },
+  ],
+  gov: [
+    { label: 'القاهرة', value: '01' },
+    { label: 'الإسكندرية', value: '02' },
+    { label: 'بورسعيد', value: '03' },
+    { label: 'السويس', value: '04' },
+    { label: 'دمياط', value: '11' },
+    { label: 'الدقهلية', value: '12' },
+    { label: 'الشرقية', value: '13' },
+    { label: 'القليوبية', value: '14' },
+    { label: 'كفر الشيخ', value: '15' },
+    { label: 'الغربية', value: '16' },
+    { label: 'المنوفية', value: '17' },
+    { label: 'البحيرة', value: '18' },
+    { label: 'الإسماعيلية', value: '19' },
+    { label: 'الجيزة', value: '21' },
+    { label: 'بني سويف', value: '22' },
+    { label: 'الفيوم', value: '23' },
+    { label: 'المنيا', value: '24' },
+    { label: 'أسيوط', value: '25' },
+    { label: 'سوهاج', value: '26' },
+    { label: 'قنا', value: '27' },
+    { label: 'أسوان', value: '28' },
+    { label: 'الأقصر', value: '29' },
+    { label: 'البحر الأحمر', value: '31' },
+    { label: 'الوادي الجديد', value: '32' },
+    { label: 'مطروح', value: '33' },
+    { label: 'شمال سيناء', value: '34' },
+    { label: 'جنوب سيناء', value: '35' },
   ],
   lic: [
     { label: '🚫 بدون رخصة', value: 'بدون رخصة' },
@@ -100,7 +125,7 @@ export class WorkerEditKeyboards {
     workerId: string,
     activeTab: WorkerProfileTab = 'PERSONAL',
     isSuperAdmin: boolean = false,
-    workerData?: WorkerCardView
+    _workerData?: WorkerCardView
   ): InlineKeyboard {
     const kb = new InlineKeyboard();
 
@@ -124,8 +149,10 @@ export class WorkerEditKeyboards {
 
     // Contextual Action Buttons per Tab
     if (activeTab === 'PERSONAL') {
-      if (workerData?.nationalId && workerData.nationalId !== 'غير مسجل') {
-        kb.copyText('📋 نسخ الرقم القومي', workerData.nationalId).row();
+      if (isSuperAdmin) {
+        kb.text('🪪 تعديل الرقم القومي', `action:w_edit:f:nid:${workerId}`)
+          .text('📍 المحافظة', `action:w_edit:pk:gov:${workerId}`)
+          .row();
       }
       kb.text('✏️ الاسم الكامل', `action:w_edit:f:name:${workerId}`)
         .text('🏷️ اسم الشهرة', `action:w_edit:f:nick:${workerId}`)
@@ -136,28 +163,29 @@ export class WorkerEditKeyboards {
       kb.text('🪖 الموقف التجنيدي', `action:w_edit:pk:mil:${workerId}`)
         .text('💍 الحالة الاجتماعية', `action:w_edit:pk:mar:${workerId}`)
         .row();
-      kb.text('🩸 فصيلة الدم', `action:w_edit:pk:bld:${workerId}`)
-        .text('🔢 الكود الأرشيفي', `action:w_edit:f:leg:${workerId}`)
-        .row();
+      kb.text('🔢 الكود الأرشيفي', `action:w_edit:f:leg:${workerId}`).row();
     } else if (activeTab === 'JOB') {
+      if (isSuperAdmin) {
+        kb.text('💼 المسمى الوظيفي', `action:w_edit:pk_job:${workerId}`)
+          .text('📍 الموقع الميداني', `action:w_edit:pk_site:${workerId}`)
+          .row();
+        kb.text('🏢 الإدارة / القسم', `action:w_edit:pk_dept:${workerId}`)
+          .text('📅 تاريخ التعيين', `action:w_edit:f:hire:${workerId}`)
+          .row();
+        kb.text('🔄 حالة العامل', `action:w_edit:pk:sts:${workerId}`).row();
+      }
       kb.text('⏱️ نظام الوردية', `action:w_edit:pk:shft:${workerId}`)
         .text('📜 نوع التعاقد', `action:w_edit:pk:cntr:${workerId}`)
         .row();
       kb.text('🚗 رخصة القيادة', `action:w_edit:pk:lic:${workerId}`)
         .text('🛏️ عنبر السكن', `action:w_edit:f:barr:${workerId}`)
         .row();
-      kb.text('🚪 رقم السرير / الغرفة', `action:w_edit:f:bed:${workerId}`)
-        .row();
+      kb.text('🚪 رقم السرير / الغرفة', `action:w_edit:f:bed:${workerId}`).row();
     } else if (activeTab === 'FINANCE') {
-      if (workerData?.instaPayHandle && workerData.instaPayHandle !== 'لا يوجد') {
-        kb.copyText('⚡ نسخ إنستاباي', workerData.instaPayHandle);
-      }
-      if (workerData?.accountNumber && workerData.accountNumber !== 'غير مسجل') {
-        kb.copyText('💳 نسخ المحفظة/الحساب', workerData.accountNumber);
-      }
-      if ((workerData?.instaPayHandle && workerData.instaPayHandle !== 'لا يوجد') || (workerData?.accountNumber && workerData.accountNumber !== 'غير مسجل')) {
-        kb.row();
-      }
+      kb.text('💰 تعديل الراتب (الأساسي والإضافي)', `action:w_edit:sal_wiz:${workerId}`).row();
+      kb.text('📊 سجل تدرج الرواتب', `action:w_edit:sal_hist:${workerId}`)
+        .text('📜 سجل تعديلات الملف', `action:w_edit:chg_hist:${workerId}`)
+        .row();
       kb.text('🚬 تحديد مخصص السجائر المعتمد', `action:w_edit:cg_start:${workerId}`).row();
       kb.text('🛡️ الرقم التأميني', `action:w_edit:f:insno:${workerId}`)
         .text('📋 موقف التأمينات', `action:w_edit:pk:insts:${workerId}`)
@@ -168,13 +196,7 @@ export class WorkerEditKeyboards {
       kb.text('👤 اسم صاحب المحفظة', `action:w_edit:f:wown:${workerId}`)
         .text('⚡ معرف إنستاباي', `action:w_edit:f:inst:${workerId}`)
         .row();
-      kb.text('💰 الراتب الأساسي الشهري', `action:w_edit:f:bsal:${workerId}`)
-        .text('➕ البدلات الثابتة', `action:w_edit:f:fall:${workerId}`)
-        .row();
     } else if (activeTab === 'DOCS') {
-      if (workerData?.phone && workerData.phone !== 'غير مسجل') {
-        kb.copyText('📞 نسخ رقم الهاتف', workerData.phone).row();
-      }
       kb.text('📱 رقم الهاتف والواتساب', `action:w_edit:f:phone:${workerId}`)
         .text('🆘 هاتف الطوارئ', `action:w_edit:f:emPhone:${workerId}`)
         .row();
@@ -248,6 +270,54 @@ export class WorkerEditKeyboards {
     return kb;
   }
 
+  static entityPickerKeyboard(
+    items: Array<{ id: string; name: string }>,
+    actionPrefix: string,
+    workerId: string,
+    returnTab: WorkerProfileTab
+  ): InlineKeyboard {
+    const kb = new InlineKeyboard();
+    for (let i = 0; i < items.length; i += 2) {
+      const item1 = items[i];
+      const item2 = items[i + 1];
+      if (item1) {
+        kb.text(item1.name, `action:w_edit:${actionPrefix}:${item1.id}:${workerId}`);
+      }
+      if (item2) {
+        kb.text(item2.name, `action:w_edit:${actionPrefix}:${item2.id}:${workerId}`);
+      }
+      kb.row();
+    }
+    kb.text('◀️ رجوع لبطاقة العامل', `action:w_edit:tab:${returnTab}:${workerId}`).row();
+    kb.text('🏠 القائمة الرئيسية', 'action:main_menu');
+    return kb;
+  }
+
+  static salaryEffectiveDateKeyboard(workerId: string): InlineKeyboard {
+    return new InlineKeyboard()
+      .text('📅 من بداية الشهر الجاري', `action:w_edit:sal_eff:CUR:${workerId}`)
+      .row()
+      .text('📅 بدءاً من الشهر القادم', `action:w_edit:sal_eff:NXT:${workerId}`)
+      .row()
+      .text('✏️ إدخال تاريخ مخصص', `action:w_edit:sal_eff:CST:${workerId}`)
+      .row()
+      .text('◀️ إلغاء والرجوع لبطاقة العامل', `action:w_edit:tab:FINANCE:${workerId}`);
+  }
+
+  static salaryConfirmKeyboard(workerId: string): InlineKeyboard {
+    return new InlineKeyboard()
+      .text('✅ تأكيد واعتماد تعديل الراتب', `action:w_edit:sal_conf:${workerId}`)
+      .row()
+      .text('◀️ إلغاء والتراجع', `action:w_edit:tab:FINANCE:${workerId}`);
+  }
+
+  static timelineBackKeyboard(workerId: string, returnTab: WorkerProfileTab = 'FINANCE'): InlineKeyboard {
+    return new InlineKeyboard()
+      .text('◀️ رجوع لبطاقة العامل', `action:w_edit:tab:${returnTab}:${workerId}`)
+      .row()
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
+  }
+
   static fieldsSelectionKeyboard(workerId: string): InlineKeyboard {
     return WorkerEditKeyboards.workerProfileTabsKeyboard(workerId, 'PERSONAL');
   }
@@ -294,3 +364,4 @@ export class WorkerEditKeyboards {
     });
   }
 }
+

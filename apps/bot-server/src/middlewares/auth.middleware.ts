@@ -2,7 +2,7 @@ import { NextFunction } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { config } from '../config/env.js';
-import { redis, getImpersonatedRole, getAdminDualMode } from '../redis.js';
+import { redis, getImpersonatedRole, getImpersonatedEntity, getAdminDualMode } from '../redis.js';
 import { fastCache } from '../services/fast-cache.service.js';
 
 export const USER_CACHE_PREFIX = 'cache:user:';
@@ -11,12 +11,14 @@ export async function invalidateUserCache(telegramId: bigint): Promise<void> {
   try {
     await fastCache.invalidate(`auth:user:${telegramId}`);
     await fastCache.invalidate(`auth:imp:${telegramId}`);
+    await fastCache.invalidate(`auth:ent:${telegramId}`);
     await fastCache.invalidate(`auth:dual:${telegramId}`);
     if (!redis.status || redis.status === 'ready') {
       await redis.del(`${USER_CACHE_PREFIX}${telegramId}`);
     }
   } catch {}
 }
+
 
 export async function authMiddleware(ctx: MyContext, next: NextFunction): Promise<void> {
   const from = ctx.from;
@@ -68,11 +70,25 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
       if (impRole) {
         ctx.effectiveRole = impRole;
         ctx.isImpersonating = true;
+        const impEntity = await fastCache.rememberSWR(`auth:ent:${telegramId}`, 120, async () => {
+          return getImpersonatedEntity(telegramId);
+        });
+        if (impEntity) {
+          ctx.impersonatedEntity = impEntity;
+          if (impEntity.type === 'WORKER') {
+            ctx.workerId = impEntity.id;
+            if (impEntity.code) ctx.workerCode = impEntity.code;
+            if (impEntity.siteId) ctx.assignedSiteId = impEntity.siteId;
+          } else if (impEntity.type === 'SITE') {
+            if (impEntity.siteId) ctx.assignedSiteId = impEntity.siteId;
+          }
+        }
       } else {
         ctx.effectiveRole = 'SUPER_ADMIN';
         ctx.isImpersonating = false;
       }
     } else {
+
       if (user && !user.isActive) {
         ctx.effectiveRole = 'GUEST';
       } else {
