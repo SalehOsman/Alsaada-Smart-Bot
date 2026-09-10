@@ -1,8 +1,28 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
-// Load environment variables from .env
-dotenv.config();
+// Locate root .env and load with override: true so root values always take precedence
+function findRootEnv(): string | null {
+  let dir = process.cwd();
+  for (let i = 0; i < 5; i++) {
+    const candidate = path.join(dir, '.env');
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+const rootEnvPath = findRootEnv();
+if (rootEnvPath) {
+  dotenv.config({ path: rootEnvPath, override: true });
+} else {
+  dotenv.config({ override: true });
+}
 
 export interface AppConfig {
   appVersion: string;
