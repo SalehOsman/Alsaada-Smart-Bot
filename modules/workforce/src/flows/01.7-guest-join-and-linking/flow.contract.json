@@ -1,0 +1,79 @@
+{
+  "flowCode": "01.7",
+  "flowName": "محرك طلبات انضمام الزوار والربط المشفر عبر الواتساب",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "GUEST",
+    "SUPER_ADMIN",
+    "FIELD_ADMIN",
+    "GENERAL_ADMIN"
+  ],
+  "blockedRoles": [
+    "SUPPLIER"
+  ],
+  "entryPoints": [
+    "wizard:guest_join:start",
+    "action:guest_join:status",
+    "action:guest_join:generate_link",
+    "action:guest_join:cancel"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "بوابة الزوار والمستخدمين الجدد",
+    "طلب تسجيل وربط حساب",
+    "المصادقة المشفرة عبر واتساب"
+  ],
+  "buttons": [
+    "wizard:guest_join:start",
+    "action:guest_join:status",
+    "action:guest_join:confirm",
+    "action:guest_join:generate_link",
+    "action:guest_join:cancel",
+    "action:guest_join:back"
+  ],
+  "inputs": [
+    "text:worker_code_or_nid",
+    "text:applicant_phone"
+  ],
+  "outputs": [
+    "card:guest_join_submitted",
+    "card:admin_approval_card",
+    "link:whatsapp_verification",
+    "event:guest_linking_completed"
+  ],
+  "dataImpact": {
+    "database": [
+      "User",
+      "Worker",
+      "ApprovalTicket",
+      "AuditLog",
+      "OutboxEvent"
+    ],
+    "googleSheets": [
+      "sync:workers_roster"
+    ],
+    "exports": [],
+    "notifications": [
+      "topic:admin_alerts",
+      "whatsapp:worker_official_phone"
+    ]
+  },
+  "linkedFlows": [
+    "01.1",
+    "01.5"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 120,
+    "stepP95": 250,
+    "commitP95": 400
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false
+}

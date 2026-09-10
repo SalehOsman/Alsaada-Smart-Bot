@@ -1,0 +1,79 @@
+{
+  "flowCode": "01.8",
+  "flowName": "إنهاء خدمة عامل ومخالصة والتحول اللحظي لزائر",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "GENERAL_ADMIN",
+    "FIELD_ADMIN",
+    "ACCOUNTANT"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "wizard:worker_offboard:start",
+    "action:worker_offboard:pick",
+    "action:worker_offboard:confirm",
+    "action:worker_offboard:cancel"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "الموارد البشرية",
+    "شؤون العاملين والتعيينات",
+    "إنهاء خدمة وتصفية عامل"
+  ],
+  "buttons": [
+    "wizard:worker_offboard:start",
+    "action:worker_offboard:pick",
+    "action:worker_offboard:confirm",
+    "action:worker_offboard:cancel",
+    "action:worker_offboard:back"
+  ],
+  "inputs": [
+    "select:worker_id",
+    "select:termination_reason",
+    "text:termination_notes"
+  ],
+  "outputs": [
+    "card:worker_offboard_summary",
+    "card:worker_clearance_receipt",
+    "event:worker_offboarded"
+  ],
+  "dataImpact": {
+    "database": [
+      "Worker",
+      "User",
+      "AuditLog",
+      "OutboxEvent"
+    ],
+    "googleSheets": [
+      "sync:workers_roster",
+      "sync:clearance_ledger"
+    ],
+    "exports": [],
+    "notifications": [
+      "topic:admin_alerts"
+    ]
+  },
+  "linkedFlows": [
+    "01.1",
+    "01.5"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 120,
+    "stepP95": 250,
+    "commitP95": 400
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false
+}

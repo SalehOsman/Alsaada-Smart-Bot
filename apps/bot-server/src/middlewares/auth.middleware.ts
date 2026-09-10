@@ -83,16 +83,47 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
             if (impEntity.siteId) ctx.assignedSiteId = impEntity.siteId;
           }
         }
+        if (ctx.effectiveRole === 'FIELD_ADMIN' && !ctx.assignedSiteId) {
+          let activeSite = await prisma.site.findFirst({
+            where: { status: 'ACTIVE', workers: { some: { isDeleted: false } } },
+            select: { id: true },
+          });
+          if (!activeSite) {
+            activeSite = await prisma.site.findFirst({
+              where: { status: 'ACTIVE' },
+              select: { id: true },
+            });
+          }
+          if (activeSite) ctx.assignedSiteId = activeSite.id;
+        }
       } else {
         ctx.effectiveRole = 'SUPER_ADMIN';
         ctx.isImpersonating = false;
       }
     } else {
-
       if (user && !user.isActive) {
         ctx.effectiveRole = 'GUEST';
       } else {
         ctx.effectiveRole = user?.role || 'GUEST';
+        if (user?.assignedSiteId) {
+          ctx.assignedSiteId = user.assignedSiteId;
+        }
+        if (user?.workerId) {
+          ctx.workerId = user.workerId;
+        }
+        if (ctx.effectiveRole === 'FIELD_ADMIN' && !ctx.assignedSiteId) {
+          let activeSite = await prisma.site.findFirst({
+            where: { status: 'ACTIVE', workers: { some: { isDeleted: false } } },
+            select: { id: true },
+          });
+          if (!activeSite) {
+            activeSite = await prisma.site.findFirst({
+              where: { status: 'ACTIVE' },
+              select: { id: true },
+            });
+          }
+          if (activeSite) ctx.assignedSiteId = activeSite.id;
+        }
       }
       ctx.isImpersonating = false;
     }

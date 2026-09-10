@@ -23,7 +23,7 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
       .text('🏠 القائمة الرئيسية')
       .row()
       .text('👷 التبديل لحسابي كعامل')
-      .text('👤 ملفي وإعداداتي');
+      .text('👤 ملفي الشخصي');
   } else if (role === 'WORKER') {
     if (ctx.isDualWorkerMode) {
       keyboard

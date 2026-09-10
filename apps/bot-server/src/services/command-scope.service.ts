@@ -19,7 +19,7 @@ export const FIELD_ADMIN_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية وبوابة الإشراف' },
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
   { command: 'switch_role', description: '👷 التبديل لحسابي كعامل (بوابة ذاتية)' },
-  { command: 'profile', description: '👤 ملفي وإعداداتي الشخصية' },
+  { command: 'profile', description: '👤 ملفي الشخصي' },
 ];
 
 export const DUAL_WORKER_COMMANDS: BotCommand[] = [
@@ -27,6 +27,8 @@ export const DUAL_WORKER_COMMANDS: BotCommand[] = [
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
   { command: 'switch_role', description: '🛡️ العودة لبوابة الإشراف الميداني' },
   { command: 'profile', description: '👤 ملفي الشخصي' },
+  { command: 'leave', description: '🏖️ طلب إجازة ورصيد الإجازات' },
+  { command: 'advance', description: '💵 طلب سلفة مالية' },
   { command: 'help', description: '❓ دليل الاستخدام والخدمات' },
 ];
 
@@ -34,6 +36,8 @@ export const WORKER_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية وبوابة العامل' },
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
   { command: 'profile', description: '👤 ملفي الشخصي' },
+  { command: 'leave', description: '🏖️ طلب إجازة ورصيد الإجازات' },
+  { command: 'advance', description: '💵 طلب سلفة مالية' },
   { command: 'help', description: '❓ دليل الاستخدام والخدمات' },
 ];
 
@@ -43,7 +47,6 @@ export const EXECUTIVE_COMMANDS: BotCommand[] = [
   { command: 'profile', description: '👤 ملفي الشخصي' },
 ];
 
-
 export const SUPPLIER_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية وبوابة المورد' },
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
@@ -51,10 +54,10 @@ export const SUPPLIER_COMMANDS: BotCommand[] = [
 ];
 
 export const GUEST_COMMANDS: BotCommand[] = [
-  { command: 'start', description: '🏠 البداية وطلب التسجيل' },
-  { command: 'cancel', description: '❌ إلغاء المعاملة الحالية' },
-  { command: 'my_id', description: '🆔 بطاقة معرف حسابي' },
-  { command: 'help', description: '❓ دليل الاستخدام واللوائح' },
+  { command: 'start', description: '🏠 البداية والترحيب' },
+  { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
+  { command: 'apply', description: '📝 تقديم طلب انضمام وربط حساب' },
+  { command: 'status', description: '🔍 متابعة حالة طلب الانضمام' },
 ];
 
 /**

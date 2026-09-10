@@ -10,21 +10,25 @@ export interface WorkforceModuleOptions {
   encryptionKey?: string;
   superAdminTelegramId?: bigint;
   autoStartExpiryAlerts?: boolean;
+  onWorkerDemoted?: (demotedTelegramId: bigint) => Promise<void>;
 }
 
 export function registerWorkforceModule(
   bot: Bot<WorkforceModuleContext>,
   options: WorkforceModuleOptions
-): {
-  expiryAlertService: WorkerExpiryAlertService;
-} {
+) {
   const expiryAlertService = new WorkerExpiryAlertService({
     prisma: options.prisma,
     ...(options.encryptionKey ? { encryptionKey: options.encryptionKey } : {}),
     ...(options.superAdminTelegramId ? { superAdminTelegramId: options.superAdminTelegramId } : {}),
   });
 
-  registerWorkforceRoutes(bot, options.prisma, options.encryptionKey);
+  const routes = registerWorkforceRoutes(
+    bot,
+    options.prisma,
+    options.encryptionKey,
+    options.onWorkerDemoted
+  );
   registerWorkforceHubRoutes(bot, options.prisma);
 
   if (options.autoStartExpiryAlerts !== false) {
@@ -40,6 +44,6 @@ export function registerWorkforceModule(
     }, 24 * 60 * 60 * 1000);
   }
 
-  return { expiryAlertService };
+  return { expiryAlertService, ...routes };
 }
 

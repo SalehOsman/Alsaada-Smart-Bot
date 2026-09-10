@@ -207,7 +207,7 @@ describe('Persistent Bottom Reply Keyboard', () => {
     const buttons = kb.keyboard.flat() as Array<{ text: string }>;
     expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
     expect(buttons.some(b => b.text === '👷 التبديل لحسابي كعامل')).toBe(true);
-    expect(buttons.some(b => b.text === '👤 ملفي وإعداداتي')).toBe(true);
+    expect(buttons.some(b => b.text === '👤 ملفي الشخصي')).toBe(true);
   });
 
   it('should build persistent reply keyboard for WORKER in dual mode with supervisor return button', () => {
@@ -261,8 +261,10 @@ describe('Dynamic Scoped Bot Commands', () => {
 
     const guestCmds = getCommandsForRole('GUEST');
     expect(guestCmds.some(c => c.command === 'settings')).toBe(false);
-    expect(guestCmds.some(c => c.command === 'my_id')).toBe(true);
+    expect(guestCmds.some(c => c.command === 'apply')).toBe(true);
+    expect(guestCmds.some(c => c.command === 'status')).toBe(true);
     expect(guestCmds.some(c => c.command === 'cancel')).toBe(true);
+    expect(guestCmds.length).toBe(4);
   });
 });
 

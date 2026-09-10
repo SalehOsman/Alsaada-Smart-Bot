@@ -53,17 +53,19 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
 
     case 'WORKER':
       keyboard
+        .text('👤 ملفي وبياناتي الشخصية', 'menu:worker_sub:profile')
+        .row()
+        .text('💰 المستحقات والماليات', 'menu:worker_sub:finance')
+        .row()
+        .text('⏱️ الدوام والحضور والإجازات', 'menu:worker_sub:attendance')
+        .row()
+        .text('🦺 العهد ومهمات الوقاية', 'menu:worker_sub:custody')
+        .row()
+        .text('💬 الدعم والشكاوى واللوائح', 'menu:worker_sub:support')
+        .row()
         .text('📊 كشف حسابي ومسحوباتي', 'menu:worker:statement')
         .row()
-        .text('🧾 مفردات قسيمة الراتب', 'menu:worker:payslip')
-        .row()
-        .text('🏖️ طلب إجازة', 'menu:worker:leave_req')
-        .row()
-        .text('💵 طلب سلفة', 'menu:worker:advance_req')
-        .row()
-        .text('🦺 عهدي ومهماتي', 'menu:worker:ppe')
-        .row()
-        .text('💬 استفسار / تظلم', 'menu:worker:ticket');
+        .text('🧾 مفردات قسيمة الراتب', 'menu:worker:payslip');
 
       if (ctx.isDualWorkerMode) {
         keyboard
@@ -87,6 +89,8 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
     default:
       keyboard
         .text('📝 طلب تسجيل وربط حساب', 'menu:guest:register')
+        .row()
+        .text('🔍 الاستعلام عن حالة طلب الانضمام', 'action:guest_join:status')
         .row()
         .text('❓ دليل الاستخدام واللوائح', 'menu:guest:guide')
         .row()

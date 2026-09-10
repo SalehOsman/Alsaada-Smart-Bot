@@ -37,6 +37,15 @@ import {
 } from '@alsaada/workforce';
 import { registerSettingsModule, handleSettingsHub, type SettingsModuleContext } from '@alsaada/settings';
 import { prisma } from './db.js';
+import { syncUserCommandsScope } from './services/command-scope.service.js';
+import { getImpersonatedRole } from './redis.js';
+import { registerPolymorphicCommands } from './routers/command-polymorphic.router.js';
+import {
+  handleWorkerSubHub,
+  handleMyWorkerProfile,
+  handleWorkerIdCard,
+  handleGuestIdentity,
+} from './handlers/worker-portal.handler.js';
 
 
 export function createBot(): Bot<MyContext> {
@@ -127,9 +136,13 @@ export function createBot(): Bot<MyContext> {
   });
 
   // 5. Register Domain Modules (Doc 21 Modular Monolith)
-  registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
+  const workforceHandlers = registerWorkforceModule(bot as unknown as Bot<WorkforceModuleContext>, {
     prisma,
     encryptionKey: config.databaseEncryptionKey,
+    onWorkerDemoted: async (demotedTelegramId: bigint) => {
+      await invalidateUserCache(demotedTelegramId);
+      await syncUserCommandsScope(bot.api, demotedTelegramId, 'GUEST', false);
+    },
   });
 
   const settingsHandlers = registerSettingsModule(
@@ -140,9 +153,25 @@ export function createBot(): Bot<MyContext> {
       encryptionKey: config.databaseEncryptionKey,
       onImpersonationChange: async (telegramId: bigint) => {
         await invalidateUserCache(telegramId);
+        const impRole = await getImpersonatedRole(telegramId);
+        const effectiveRole = impRole || 'SUPER_ADMIN';
+        await syncUserCommandsScope(bot.api, telegramId, effectiveRole, false);
       },
     }
   );
+
+  // 5.1 Register Polymorphic Commands (/profile, /leave, /advance, /help, /apply, /status)
+  registerPolymorphicCommands(bot, {
+    renderAdminProfile: async (ctx, inPlace) => {
+      await settingsHandlers.adminProfileHandler.renderAdminProfile(ctx as any, inPlace);
+    },
+    startGuestJoin: async (ctx) => {
+      await workforceHandlers.guestJoinHandler.handleStartGuestJoin(ctx as any);
+    },
+    checkGuestStatus: async (ctx) => {
+      await workforceHandlers.guestJoinHandler.handleStatusCheck(ctx as any);
+    },
+  });
 
 
   // 6. Pending Input Interceptors (Location, Text Inputs)
@@ -247,6 +276,23 @@ export function createBot(): Bot<MyContext> {
     await renderRoleHome(ctx, inPlace);
   });
   bot.callbackQuery(/^action:claim_worker:(.+)$/, handleClaimWorker);
+
+  // Worker Portal Sub-Hubs & Identity Cards
+  bot.callbackQuery(/^menu:worker_sub:(profile|finance|attendance|custody|support)$/, async (ctx) => {
+    const hub = ctx.match[1] as 'profile' | 'finance' | 'attendance' | 'custody' | 'support';
+    await handleWorkerSubHub(ctx, hub);
+  });
+  bot.callbackQuery('action:worker:my_profile', handleMyWorkerProfile);
+  bot.callbackQuery('action:worker:id_card', handleWorkerIdCard);
+
+  // Guest Actions & Identity
+  bot.callbackQuery(/^(menu|action):guest:identity$/, handleGuestIdentity);
+  bot.callbackQuery('menu:guest:register', async (ctx) => {
+    await workforceHandlers.guestJoinHandler.handleStartGuestJoin(ctx as any);
+  });
+  bot.callbackQuery('action:guest_join:status', async (ctx) => {
+    await workforceHandlers.guestJoinHandler.handleStatusCheck(ctx as any);
+  });
 
   // 10. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);

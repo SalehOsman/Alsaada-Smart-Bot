@@ -74,19 +74,20 @@ export function buildSystemSubKeyboard(isImpersonating?: boolean): InlineKeyboar
 
 export async function handleSettingsHub(ctx: SettingsModuleContext): Promise<void> {
   const isSuper = Boolean(
-    ctx.isRealSuperAdmin ||
-    ctx.effectiveRole === 'SUPER_ADMIN' ||
-    ctx.dbUser?.role === 'SUPER_ADMIN'
+    ctx.isRealSuperAdmin &&
+    ctx.effectiveRole === 'SUPER_ADMIN' &&
+    !ctx.isImpersonating
   );
 
   if (!isSuper) {
+    const alertMsg = '🔒 هذا القسم مخصص حصرياً للمدير العام، ومحجوب أثناء وضع المحاكاة.';
     if (ctx.callbackQuery) {
       await ctx.answerCallbackQuery({
-        text: '🔒 هذا القسم مخصص حصرياً للمدير العام.',
+        text: alertMsg,
         show_alert: true,
       }).catch(() => {});
     } else {
-      await ctx.reply('🔒 هذا القسم مخصص حصرياً للمدير العام.');
+      await ctx.reply(alertMsg);
     }
     return;
   }
@@ -124,7 +125,7 @@ export async function handleSettingsSubCategory(
   ctx: SettingsModuleContext,
   category: 'corporate' | 'identity' | 'system'
 ): Promise<void> {
-  if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') return;
+  if (!ctx.isRealSuperAdmin || ctx.effectiveRole !== 'SUPER_ADMIN' || ctx.isImpersonating) return;
   if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
 
   let text = '';

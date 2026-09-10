@@ -17,6 +17,9 @@
       ],
       "@alsaada/workforce": [
         "modules/workforce/src/index.ts"
+      ],
+      "@alsaada/settings": [
+        "modules/settings/src/index.ts"
       ]
     }
   }

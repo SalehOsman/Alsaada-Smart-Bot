@@ -161,6 +161,7 @@ export async function renderHrSubHub(
         .row();
 
       keyboard.text('✏️ تعديل بيانات عامل', 'action:worker_edit:pick').row();
+      keyboard.text('🚪 إنهاء خدمة عامل', 'wizard:worker_offboard:start').row();
 
       if (isSuperAdmin) {
         const pendingCount = await activePrisma.workerEditRequest.count({ where: { status: 'PENDING' } }).catch(() => 0);

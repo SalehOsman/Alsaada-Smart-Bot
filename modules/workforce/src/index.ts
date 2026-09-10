@@ -46,6 +46,49 @@ export * from './flows/01.2.D-worker-edit/flow.validators.js';
 export * from './flows/01.2.D-worker-edit/flow.messages.js';
 export { WorkerEditTelemetry } from './flows/01.2.D-worker-edit/flow.telemetry.js';
 
+// Export flow 01.6 worker self-edit components
+export * from './flows/01.6-worker-self-edit/flow.types.js';
+export * from './flows/01.6-worker-self-edit/flow.service.js';
+export * from './flows/01.6-worker-self-edit/flow.repository.js';
+export * from './flows/01.6-worker-self-edit/flow.handler.js';
+export {
+  buildFieldPickerKeyboard,
+  buildConfirmKeyboard as buildWorkerSelfEditConfirmKeyboard,
+  buildSuccessKeyboard as buildWorkerSelfEditSuccessKeyboard,
+} from './flows/01.6-worker-self-edit/flow.keyboard.js';
+export {
+  validateWorkerSelfEditField,
+  isForbiddenFinancialField,
+  validateFieldValue as validateWorkerSelfEditFieldValue,
+} from './flows/01.6-worker-self-edit/flow.validators.js';
+export * from './flows/01.6-worker-self-edit/flow.messages.js';
+export * from './flows/01.6-worker-self-edit/flow.telemetry.js';
+
+// Export flow 01.7 guest join and linking components
+export * from './flows/01.7-guest-join-and-linking/flow.types.js';
+export * from './flows/01.7-guest-join-and-linking/flow.service.js';
+export * from './flows/01.7-guest-join-and-linking/flow.repository.js';
+export * from './flows/01.7-guest-join-and-linking/flow.handler.js';
+export * from './flows/01.7-guest-join-and-linking/flow.keyboard.js';
+export * from './flows/01.7-guest-join-and-linking/flow.validators.js';
+export * from './flows/01.7-guest-join-and-linking/flow.messages.js';
+export * from './flows/01.7-guest-join-and-linking/flow.telemetry.js';
+
+// Export flow 01.8 worker offboarding components
+export * from './flows/01.8-worker-offboarding/flow.types.js';
+export * from './flows/01.8-worker-offboarding/flow.service.js';
+export * from './flows/01.8-worker-offboarding/flow.repository.js';
+export * from './flows/01.8-worker-offboarding/flow.handler.js';
+export {
+  buildWorkerPickerKeyboard as buildOffboardWorkerPickerKeyboard,
+  buildReasonKeyboard as buildOffboardReasonKeyboard,
+  buildConfirmKeyboard as buildOffboardConfirmKeyboard,
+  buildSuccessKeyboard as buildOffboardSuccessKeyboard,
+} from './flows/01.8-worker-offboarding/flow.keyboard.js';
+export * from './flows/01.8-worker-offboarding/flow.validators.js';
+export * from './flows/01.8-worker-offboarding/flow.messages.js';
+export * from './flows/01.8-worker-offboarding/flow.telemetry.js';
+
 // Export workforce domain services & hub
 export * from './services/worker-facade.service.js';
 export * from './services/ai-vision-id.service.js';

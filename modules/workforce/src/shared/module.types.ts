@@ -15,10 +15,12 @@ export interface WorkforceModuleContext extends Context {
   isRealSuperAdmin?: boolean | undefined;
   isImpersonating?: boolean | undefined;
   assignedSiteId?: string | null | undefined;
+  workerId?: string | null | undefined;
+  workerCode?: string | null | undefined;
   adminSites?: string[] | undefined;
   session?: {
     userMode?: string | undefined;
-    [key: string]: any;
+    [key: string]: unknown;
   } | undefined;
 }
 

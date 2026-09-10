@@ -13,13 +13,23 @@ import { WorkerEditHandler } from './flows/01.2.D-worker-edit/flow.handler.js';
 import { WorkerEditService } from './flows/01.2.D-worker-edit/flow.service.js';
 import { WorkerEditRepository } from './flows/01.2.D-worker-edit/flow.repository.js';
 import type { WorkerProfileTab } from './flows/01.2.D-worker-edit/flow.types.js';
+import { WorkerSelfEditHandler } from './flows/01.6-worker-self-edit/flow.handler.js';
+import { WorkerSelfEditService } from './flows/01.6-worker-self-edit/flow.service.js';
+import { WorkerSelfEditRepository } from './flows/01.6-worker-self-edit/flow.repository.js';
+import { GuestJoinHandler } from './flows/01.7-guest-join-and-linking/flow.handler.js';
+import { GuestJoinService } from './flows/01.7-guest-join-and-linking/flow.service.js';
+import { GuestJoinRepository } from './flows/01.7-guest-join-and-linking/flow.repository.js';
+import { WorkerOffboardingHandler } from './flows/01.8-worker-offboarding/flow.handler.js';
+import { WorkerOffboardingService } from './flows/01.8-worker-offboarding/flow.service.js';
+import { WorkerOffboardingRepository } from './flows/01.8-worker-offboarding/flow.repository.js';
 import { PrismaClient } from '@alsaada/database';
 
 export function registerWorkforceRoutes(
   bot: Bot<WorkforceModuleContext>,
   prisma: PrismaClient,
-  encryptionKey?: string
-): void {
+  encryptionKey?: string,
+  onWorkerDemoted?: (demotedTelegramId: bigint) => Promise<void>
+) {
   const exportRepo = new WorkerExportRepository(prisma);
   const exportService = new WorkerExportService(exportRepo, encryptionKey);
   const exportHandler = new WorkerExportHandler(exportService);
@@ -35,6 +45,21 @@ export function registerWorkforceRoutes(
   const editRepo = new WorkerEditRepository(prisma);
   const editService = new WorkerEditService(editRepo, encryptionKey);
   const editHandler = new WorkerEditHandler(editService, editRepo);
+
+  const selfEditRepo = new WorkerSelfEditRepository(prisma);
+  const selfEditService = new WorkerSelfEditService(selfEditRepo, encryptionKey);
+  const selfEditHandler = new WorkerSelfEditHandler(selfEditService);
+  selfEditHandler.registerRoutes(bot);
+
+  const guestJoinRepo = new GuestJoinRepository(prisma);
+  const guestJoinService = new GuestJoinService(guestJoinRepo, encryptionKey || 'alsaada-default-key');
+  const guestJoinHandler = new GuestJoinHandler(guestJoinService);
+  guestJoinHandler.registerRoutes(bot);
+
+  const offboardRepo = new WorkerOffboardingRepository(prisma);
+  const offboardService = new WorkerOffboardingService(offboardRepo, onWorkerDemoted);
+  const offboardHandler = new WorkerOffboardingHandler(offboardService);
+  offboardHandler.registerRoutes(bot);
 
   // Flow 01.2.D Worker Edit
   bot.callbackQuery('action:worker_edit:pick', async (ctx) => {
@@ -365,6 +390,14 @@ export function registerWorkforceRoutes(
         await editHandler.handleTextInput(ctx, text);
         return;
       }
+
+      if (await selfEditHandler.handleTextInput(ctx, text)) {
+        return;
+      }
+
+      if (await guestJoinHandler.handleTextInput(ctx, text)) {
+        return;
+      }
     }
     return next();
   });
@@ -413,4 +446,18 @@ export function registerWorkforceRoutes(
     }
     return next();
   });
+
+  return {
+    exportHandler,
+    regHandler,
+    dirHandler,
+    editHandler,
+    selfEditHandler,
+    guestJoinHandler,
+    offboardHandler,
+    guestJoinService,
+    guestJoinRepo,
+    selfEditService,
+    offboardService,
+  };
 }

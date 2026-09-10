@@ -177,6 +177,12 @@ export class ScreenFlowService {
   async isStaleCallback(ctx: MyContext): Promise<{ isStale: boolean; reason?: string }> {
     if (!ctx.callbackQuery || !ctx.from) return { isStale: false };
 
+    const data = ctx.callbackQuery.data || '';
+    // Sovereign navigation immunity: Impersonation escape hatch is never stale
+    if (data === 'action:exit_impersonate') {
+      return { isStale: false };
+    }
+
     const clickedMsgId = ctx.callbackQuery.message?.message_id;
     if (!clickedMsgId) return { isStale: false };
 

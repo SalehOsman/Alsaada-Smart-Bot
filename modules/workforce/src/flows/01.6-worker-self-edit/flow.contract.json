@@ -1,0 +1,77 @@
+{
+  "flowCode": "01.6",
+  "flowName": "طلب تعديل وتحديث بيانات العامل ذاتياً",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "WORKER",
+    "SUPER_ADMIN",
+    "FIELD_ADMIN"
+  ],
+  "blockedRoles": [
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "wizard:worker_self_edit:start",
+    "action:worker_self_edit:field",
+    "action:worker_self_edit:confirm",
+    "action:worker_self_edit:cancel"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "بوابة العامل الذاتية",
+    "ملفي وبياناتي الشخصية",
+    "تحديث بياناتي ذاتياً"
+  ],
+  "buttons": [
+    "wizard:worker_self_edit:start",
+    "action:worker_self_edit:field",
+    "action:worker_self_edit:confirm",
+    "action:worker_self_edit:cancel",
+    "action:worker_self_edit:back"
+  ],
+  "inputs": [
+    "select:field_key",
+    "text:field_value",
+    "text:edit_reason"
+  ],
+  "outputs": [
+    "card:worker_self_edit_summary",
+    "card:worker_self_edit_receipt",
+    "event:worker_self_edit_submitted"
+  ],
+  "dataImpact": {
+    "database": [
+      "Worker",
+      "ApprovalTicket",
+      "AuditLog",
+      "OutboxEvent"
+    ],
+    "googleSheets": [
+      "sync:workers_roster"
+    ],
+    "exports": [],
+    "notifications": [
+      "topic:admin_alerts"
+    ]
+  },
+  "linkedFlows": [
+    "01.1",
+    "01.2.D",
+    "01.5"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 120,
+    "stepP95": 250,
+    "commitP95": 400
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false
+}

@@ -123,6 +123,15 @@ export class GhostModeRepository {
   async getFirstActiveSite(): Promise<{ id: string; name: string } | null> {
     if (!this.prisma) return null;
     try {
+      const siteWithWorkers = await this.prisma.site.findFirst({
+        where: {
+          status: 'ACTIVE',
+          workers: { some: { isDeleted: false } },
+        },
+        select: { id: true, name: true },
+      });
+      if (siteWithWorkers) return siteWithWorkers;
+
       return await this.prisma.site.findFirst({
         where: { status: 'ACTIVE' },
         select: { id: true, name: true },

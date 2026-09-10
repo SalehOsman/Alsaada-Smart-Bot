@@ -7,7 +7,7 @@ import { invalidateUserCache } from '../middlewares/auth.middleware.js';
 import { buildMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 import { screenFlowService } from '../services/screen-flow.service.js';
-import { verifyWorkerInviteToken } from '@alsaada/workforce';
+import { verifyWorkerInviteToken, validateLinkingTokenConsumption, GuestJoinRepository, GuestJoinService } from '@alsaada/workforce';
 import { syncUserCommandsScope } from '../services/command-scope.service.js';
 
 export function getRoleTitle(role: string): string {
@@ -170,8 +170,70 @@ export async function handleStart(ctx: MyContext): Promise<void> {
 
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
 
-  // 1. فحص رابط الدعوة الذكي المشفر (Deep Link: /start inv_CODE_TOKEN)
+  // 1. فحص رابط الربط والمصادقة المشفر عبر واتساب (Deep Link: /start link_CODE_APPLICANTID_EXPIRY_SIGNATURE)
   const startPayload = (ctx.match || '').toString().trim();
+  if (startPayload.startsWith('link_')) {
+    const parts = startPayload.replace(/^link_/, '').split('_');
+    const workerCode = parts[0]?.trim() || '';
+    const applicantTelegramIdStr = parts[1]?.trim() || '';
+    const expiresAt = parseInt(parts[2]?.trim() || '0', 10);
+    const signature = parts[3]?.trim() || '';
+    const applicantTelegramId = BigInt(applicantTelegramIdStr || '0');
+
+    const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
+    const guestJoinRepo = new GuestJoinRepository(prisma);
+    const guestJoinService = new GuestJoinService(guestJoinRepo, secretKey);
+
+    try {
+      const result = await guestJoinService.consumeLinkingToken(
+        workerCode,
+        applicantTelegramId,
+        expiresAt,
+        signature,
+        telegramId,
+        ctx.from?.username
+      );
+
+      await invalidateUserCache(telegramId);
+      await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
+
+      ctx.effectiveRole = 'WORKER';
+      if (ctx.dbUser) {
+        ctx.dbUser.role = 'WORKER';
+        ctx.dbUser.workerId = result.workerId;
+        ctx.dbUser.isActive = true;
+      }
+
+      const successCard =
+        `🎉 *تهانينا يا ${result.workerName}! تم تفعيل وربط حسابك بنجاح!*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `تم التحقق من الختم الرقمي ومطابقة حساب التليجرام الخاص بك بنسبة 100%.\n\n` +
+        `🆔 *كودك الوظيفي:* \`#${result.workerCode}\`\n` +
+        `💼 *الوظيفة:* ${result.jobTitle} | 📍 *الموقع:* ${result.siteName || 'الموقع العام'}\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `أصبحت الآن متصلاً رسمياً بالبوابة الذاتية للعاملين.`;
+
+      await screenFlowService.ensurePersistentKeyboard(ctx);
+
+      await ctx.reply(successCard, {
+        parse_mode: 'Markdown',
+        reply_markup: new InlineKeyboard().text('🚀 فتح البوابة الذاتية', 'action:main_menu'),
+      });
+      return;
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'رابط التفعيل غير صالح.';
+      await ctx.reply(
+        `⚠️ *تنبيه أمني صارم:*\n${errMsg}\nيرجى مراجعة إدارة الموارد البشرية.`,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+        }
+      );
+      return;
+    }
+  }
+
+  // 1.1 فحص رابط الدعوة الذكي المشفر (Deep Link: /start inv_CODE_TOKEN)
   if (startPayload.startsWith('inv_') || startPayload.startsWith('join_') || startPayload.startsWith('worker_')) {
     let workerCode = '';
     let inviteToken = '';
