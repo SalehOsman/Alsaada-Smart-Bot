@@ -84,14 +84,7 @@ export class WorkerDirectoryKeyboards {
       kb.url('💬 مراسلة العامل عبر واتساب', opts.whatsAppUrl).row();
     }
 
-    // 4. Direct phone call button
-    if (opts.hasPhone) {
-      kb.text('📞 اتصال هاتفي مباشر', `action:worker:call:${opts.workerId}`).row();
-    } else {
-      kb.text('📞 لا يوجد هاتف مسجل', `action:worker:nophone:${opts.workerId}`).row();
-    }
-
-    // 5. Edit worker
+    // 4. Edit worker
     kb.text('✏️ تعديل بيانات العامل', `action:worker_edit:pick:${opts.workerId}`).row();
 
     // 6. Navigation

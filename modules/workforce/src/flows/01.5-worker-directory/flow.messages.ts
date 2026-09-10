@@ -53,7 +53,7 @@ export const WorkerDirectoryMessages = {
       `• *نوع الوثيقة:* ${idLabel}`,
       `• *رقم الإثبات:* \`${displayedId}\``,
       formattedExpiryDate ? `• *تاريخ انتهاء الوثيقة:* ${formattedExpiryDate}` : '',
-      p.phone ? `• *رقم الهاتف:* ${p.phone}` : '',
+      p.phone ? `• *رقم الهاتف (اتصال مباشر):* ${p.phone}` : '',
       p.emergencyPhone ? `• *هاتف الطوارئ:* ${p.emergencyPhone}${p.emergencyContactName ? ` (${cleanMd(p.emergencyContactName)})` : ''}` : '',
       p.address ? `• *محل الإقامة:* ${cleanMd(p.address)}` : '',
       `━━━━━━━━━━━━━━━━━━━━━`,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-09T19:46:14.186Z",
+  "generatedAt": "2026-09-10T01:17:01.945Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -50,7 +50,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "f6ddfa860759177cee709b8522ed278ca914408650401023b8c0b2b8f7812296"
+      "sha256": "f1e572d8378609201ef6952c2f7c5c33965e464f802bfc6c7785559ba4b5fbbc"
     },
     {
       "path": "pnpm-workspace.yaml",

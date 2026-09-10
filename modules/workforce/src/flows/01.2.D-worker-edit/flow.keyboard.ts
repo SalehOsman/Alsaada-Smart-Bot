@@ -99,11 +99,11 @@ export class WorkerEditKeyboards {
   static workerProfileTabsKeyboard(
     workerId: string,
     activeTab: WorkerProfileTab = 'PERSONAL',
-    _isSuperAdmin: boolean = false
+    isSuperAdmin: boolean = false
   ): InlineKeyboard {
     const kb = new InlineKeyboard();
 
-    // Top Tab Bar (2x2 Grid)
+    // Top Tab Bar
     const t1 = activeTab === 'PERSONAL' ? '👤 الشخصية 🟢' : '👤 الشخصية';
     const t2 = activeTab === 'JOB' ? '💼 الوظيفة 🟢' : '💼 الوظيفة';
     const t3 = activeTab === 'FINANCE' ? '💰 المالية 🟢' : '💰 المالية';
@@ -111,10 +111,15 @@ export class WorkerEditKeyboards {
 
     kb.text(t1, `action:w_edit:tab:PERSONAL:${workerId}`)
       .text(t2, `action:w_edit:tab:JOB:${workerId}`)
-      .row()
-      .text(t3, `action:w_edit:tab:FINANCE:${workerId}`)
-      .text(t4, `action:w_edit:tab:DOCS:${workerId}`)
       .row();
+
+    if (isSuperAdmin) {
+      kb.text(t3, `action:w_edit:tab:FINANCE:${workerId}`)
+        .text(t4, `action:w_edit:tab:DOCS:${workerId}`)
+        .row();
+    } else {
+      kb.text(t4, `action:w_edit:tab:DOCS:${workerId}`).row();
+    }
 
     // Contextual Action Buttons per Tab
     if (activeTab === 'PERSONAL') {

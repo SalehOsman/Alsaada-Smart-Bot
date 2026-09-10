@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@alsaada/core-components": [
+        "packages/core-components/src/index.ts"
+      ],
+      "@alsaada/database": [
+        "packages/database/src/index.ts"
+      ],
+      "@alsaada/national-id-engine": [
+        "packages/national-id-engine/src/index.ts"
+      ],
+      "@alsaada/regional-engine": [
+        "packages/regional-engine/src/index.ts"
+      ],
+      "@alsaada/workforce": [
+        "modules/workforce/src/index.ts"
+      ]
+    }
+  }
+}

@@ -105,7 +105,8 @@ export class WorkerDirectoryHandler {
       return;
     }
 
-    const role = ctx.effectiveRole || 'GUEST';
+    const isSuper = Boolean(ctx.isRealSuperAdmin || ctx.effectiveRole === 'SUPER_ADMIN');
+    const role = isSuper ? 'SUPER_ADMIN' : (ctx.effectiveRole || 'GUEST');
     const profile = await this.service.getWorkerProfile360(workerId, role);
     if (!profile) {
       await this.replyOrEdit(ctx, WorkerDirectoryMessages.notFound());

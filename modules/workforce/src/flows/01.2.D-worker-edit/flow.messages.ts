@@ -84,7 +84,7 @@ export const WorkerEditMessages = {
       `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
       `• *طريقة الصرف:* ${cleanMd(worker.paymentMethod) || 'نقداً بالخزينة (كاش)'}\n` +
-      `• *رقم الحساب / المحفظة:* \`${worker.accountNumber || (worker.accountNumberEncrypted && !isSuperAdmin ? 'مسجل ومحمي 🔒' : 'غير مسجل')}\`\n` +
+      `• *رقم الحساب / المحفظة:* \`${worker.accountNumber || 'غير مسجل'}\`\n` +
       `• *اسم صاحب المحفظة:* ${cleanMd(worker.walletOwnerName) || 'مسجل باسم العامل'}\n` +
       `• *معرف إنستاباي:* \`${worker.instaPayHandle || 'لا يوجد'}\`\n` +
       `• *الراتب الأساسي الشهري:* \`${worker.basicSalary ? String(worker.basicSalary) + ' ج.م' : 'غير محدد'}\`\n` +
@@ -100,8 +100,8 @@ export const WorkerEditMessages = {
 
   tab4DocsCard(worker: WorkerCardView, isSuperAdmin: boolean): string {
     const title = isSuperAdmin ? '✏️ *بطاقة العامل — 📞 الاتصال والسلامة والمستندات*' : '📋 *ملف العامل — 📞 الاتصال والسلامة والمستندات*';
-    const phoneVal = worker.phone || (worker.phoneEncrypted && !isSuperAdmin ? '`مسجل ومشفر 🔒`' : '`غير مسجل`');
-    const emVal = worker.emergencyPhone || (worker.emergencyPhoneEncrypted && !isSuperAdmin ? '`مسجل ومشفر 🔒`' : '`غير مسجل`');
+    const phoneVal = worker.phone ? `\`${worker.phone}\`` : '`غير مسجل`';
+    const emVal = worker.emergencyPhone ? `\`${worker.emergencyPhone}\`` : '`غير مسجل`';
     return (
       `${title}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +

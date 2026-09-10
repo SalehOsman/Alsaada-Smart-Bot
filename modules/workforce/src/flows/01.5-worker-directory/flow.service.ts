@@ -92,11 +92,14 @@ export class WorkerDirectoryService {
       }
     }
 
-    // Financial RBAC masking
+    // Financial RBAC masking (Strict Pre-Render RBAC Masking: completely undefined if not authorized)
     const canViewFinances = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'ACCOUNTANT'].includes(viewerRole);
+    const salaryVal = Number(worker.basicSalary || 0) > 0
+      ? Number(worker.basicSalary)
+      : Number(worker.dailyWage || 0);
     const dailyWageMasked = canViewFinances
-      ? formatCurrency(Number(worker.dailyWage || 0))
-      : '•••••• ج.م (محجوب)';
+      ? (salaryVal > 0 ? formatCurrency(salaryVal) : 'غير محدد')
+      : undefined;
 
     // WhatsApp Direct Chat URL (strictly <= 50 ASCII bytes, 100% Telegram compliant)
     let directWhatsAppUrl: string | undefined;

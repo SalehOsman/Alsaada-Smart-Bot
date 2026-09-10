@@ -5,9 +5,14 @@
     "type":  "module",
     "packageManager":  "pnpm@11.0.8",
     "engines":  {
-                    "node":  "\u003e=22.12.0"
+                    "node":  ">=22.12.0"
                 },
-    "scripts":  {
+    "scripts": {
+        "dev": "docker compose up -d postgres redis && docker compose stop bot && tsx watch --clear-screen=false --tsconfig tsconfig.dev.json apps/bot-server/src/index.ts",
+        "dev:bot": "tsx watch --clear-screen=false --tsconfig tsconfig.dev.json apps/bot-server/src/index.ts",
+        "docker:up": "docker compose up -d",
+        "docker:bot": "docker compose build --no-cache bot && docker compose up -d bot",
+        "docker:stop:bot": "docker compose stop bot",
                     "build":  "pnpm -r run build",
                     "test":  "vitest run",
                     "test:watch":  "vitest",

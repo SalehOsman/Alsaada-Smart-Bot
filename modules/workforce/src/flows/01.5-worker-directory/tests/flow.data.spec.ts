@@ -27,9 +27,9 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const repo = new WorkerDirectoryRepository(mockPrisma);
     const service = new WorkerDirectoryService(repo);
 
-    // FIELD_ADMIN should have wage masked
+    // FIELD_ADMIN should have wage completely omitted (Strict Pre-Render RBAC Masking)
     const fieldAdminProfile = await service.getWorkerProfile360('wrk-1', 'FIELD_ADMIN');
-    expect(fieldAdminProfile?.dailyWageMasked).toContain('محجوب');
+    expect(fieldAdminProfile?.dailyWageMasked).toBeUndefined();
 
     // SUPER_ADMIN should see full wage
     const superAdminProfile = await service.getWorkerProfile360('wrk-1', 'SUPER_ADMIN');
@@ -79,13 +79,12 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     expect(guestProfile?.idNumberMasked).toBe('**********0332');
   });
 
-  it('should include phone call button in profile360ActionsKeyboard', async () => {
+  it('should omit separate call button since phone is clickable in the profile card directly', async () => {
     const { WorkerDirectoryKeyboards } = await import('../flow.keyboard.js');
     const kb = WorkerDirectoryKeyboards.profile360ActionsKeyboard('wrk-1', 'https://wa.me/2010', true);
     const flat = kb.inline_keyboard.flat();
     const callBtn = flat.find((b) => 'callback_data' in b && b.callback_data === 'action:worker:call:wrk-1');
-    expect(callBtn).toBeDefined();
-    expect(callBtn?.text).toContain('اتصال هاتفي مباشر');
+    expect(callBtn).toBeUndefined();
   });
 
   it('should detect missing documents/data and generate WhatsApp prompt URL', async () => {

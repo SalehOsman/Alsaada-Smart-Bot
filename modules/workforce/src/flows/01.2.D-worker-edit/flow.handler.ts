@@ -65,8 +65,12 @@ export class WorkerEditHandler {
       return;
     }
     const isSuper = this.isSuperAdmin(ctx);
+    let activeTab = tab;
+    if (activeTab === 'FINANCE' && !isSuper) {
+      activeTab = 'PERSONAL';
+    }
     if (ctx.from) {
-      this.editDrafts.set(String(ctx.from.id), { workerId: worker.id, workerCode: worker.code, workerName: worker.name, currentTab: tab, isSuperAdmin: isSuper });
+      this.editDrafts.set(String(ctx.from.id), { workerId: worker.id, workerCode: worker.code, workerName: worker.name, currentTab: activeTab, isSuperAdmin: isSuper });
     }
     const rawNatId = this.service.decryptFieldSafe(worker.nationalIdEncrypted || worker.passportNumberEncrypted);
     const workerView: WorkerCardView = {
@@ -76,7 +80,7 @@ export class WorkerEditHandler {
       emergencyPhone: this.service.decryptFieldSafe(worker.emergencyPhoneEncrypted),
       accountNumber: this.service.decryptFieldSafe(worker.accountNumberEncrypted),
     };
-    const { text, kb } = this.renderTab(workerView, tab, isSuper);
+    const { text, kb } = this.renderTab(workerView, activeTab, isSuper);
     await this.replyOrEdit(ctx, text, kb);
   }
 
@@ -86,6 +90,11 @@ export class WorkerEditHandler {
 
   async handleSelectField(ctx: WorkforceModuleContext, fieldShort: string, workerId: string): Promise<void> {
     if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
+    const returnTab = getReturnTab(fieldShort);
+    if (returnTab === 'FINANCE' && !this.isSuperAdmin(ctx)) {
+      await this.replyOrEdit(ctx, '⛔ تعديل البيانات المالية مخصص حصرياً للمدير العام.');
+      return;
+    }
     const fieldKey = FIELD_KEY_SHORT_MAP[fieldShort];
     if (!fieldKey) {
       await this.replyOrEdit(ctx, '⚠️ الحقل المطلوب تعديله غير مدعوم.');
@@ -96,7 +105,6 @@ export class WorkerEditHandler {
       await this.replyOrEdit(ctx, '⚠️ لم يتم العثور على العامل.');
       return;
     }
-    const returnTab = getReturnTab(fieldShort);
     const fieldName = FIELD_LABELS[fieldKey];
     if (ctx.from) {
       this.editDrafts.set(String(ctx.from.id), {
@@ -145,32 +153,17 @@ export class WorkerEditHandler {
       return;
     }
     const returnTab = getReturnTab(fieldShort);
-    const superAdmin = this.isSuperAdmin(ctx);
     const actorId = ctx.from ? BigInt(ctx.from.id) : BigInt(0);
-
-    if (superAdmin) {
-      await this.service.applyDirectEdit(workerId, fieldKey, chosen.value, actorId);
-    } else if (ctx.from) {
-      const worker = await this.repository.findWorkerForEdit(workerId);
-      if (worker) {
-        await this.service.submitEditTicket({
-          workerId,
-          workerCode: worker.code,
-          workerName: worker.name,
-          requesterTelegramId: actorId,
-          requesterName: ctx.from.first_name || 'مشرف موقع',
-          requesterRole: ctx.effectiveRole || 'FIELD_ADMIN',
-          fieldKey,
-          fieldName: FIELD_LABELS[fieldKey],
-          newValue: chosen.value,
-        });
-      }
-    }
+    await this.service.applyDirectEdit(workerId, fieldKey, chosen.value, actorId);
     await this.handlePickWorker(ctx, workerId, returnTab);
   }
 
   async handleCigaretteStart(ctx: WorkforceModuleContext, workerId: string): Promise<void> {
     if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
+    if (!this.isSuperAdmin(ctx)) {
+      await this.replyOrEdit(ctx, '⛔ تعديل مخصص السجائر مخصص حصرياً للمدير العام.');
+      return;
+    }
     const worker = await this.repository.findWorkerForEdit(workerId);
     if (!worker) {
       await this.replyOrEdit(ctx, '⚠️ لم يتم العثور على العامل.');
@@ -247,48 +240,19 @@ export class WorkerEditHandler {
     }
 
     const telegramId = BigInt(ctx.from.id);
-    const superAdmin = draft.isSuperAdmin;
-
-    if (superAdmin) {
-      const result = await this.service.applyDirectEdit(draft.workerId, draft.fieldKey, val.cleanValue, telegramId);
-      this.editDrafts.delete(String(ctx.from.id));
-      if (result.success) {
-        const text = WorkerEditMessages.directEditSuccess({
-          workerCode: result.workerCode || draft.workerCode,
-          workerName: draft.workerName,
-          fieldName: draft.fieldName || draft.fieldKey,
-          newValue: val.cleanValue,
-        });
-        await this.replyOrEdit(ctx, text, WorkerEditKeyboards.directEditSuccessKeyboard(draft.workerId, returnTab));
-      } else {
-        const errKb = WorkerEditKeyboards.cancelEditKeyboard(draft.workerId, returnTab);
-        await this.replyOrEdit(ctx, `❌ خطأ أثناء تطبيق التعديل: ${result.error}`, errKb);
-      }
-    } else {
-      const result = await this.service.submitEditTicket({
-        workerId: draft.workerId,
-        workerCode: draft.workerCode,
+    const result = await this.service.applyDirectEdit(draft.workerId, draft.fieldKey, val.cleanValue, telegramId);
+    this.editDrafts.delete(String(ctx.from.id));
+    if (result.success) {
+      const text = WorkerEditMessages.directEditSuccess({
+        workerCode: result.workerCode || draft.workerCode,
         workerName: draft.workerName,
-        requesterTelegramId: telegramId,
-        requesterName: ctx.from.first_name || 'مشرف موقع',
-        requesterRole: ctx.effectiveRole || 'FIELD_ADMIN',
-        fieldKey: draft.fieldKey,
         fieldName: draft.fieldName || draft.fieldKey,
         newValue: val.cleanValue,
       });
-      this.editDrafts.delete(String(ctx.from.id));
-      if (result.success && result.ticketId) {
-        const text = WorkerEditMessages.ticketSubmitted({
-          ticketId: result.ticketId,
-          workerName: draft.workerName,
-          fieldName: draft.fieldName || draft.fieldKey,
-          newValue: val.cleanValue,
-        });
-        await this.replyOrEdit(ctx, text, WorkerEditKeyboards.directEditSuccessKeyboard(draft.workerId, returnTab));
-      } else {
-        const errKb = WorkerEditKeyboards.cancelEditKeyboard(draft.workerId, returnTab);
-        await this.replyOrEdit(ctx, `❌ خطأ أثناء إرسال الطلب: ${result.error}`, errKb);
-      }
+      await this.replyOrEdit(ctx, text, WorkerEditKeyboards.directEditSuccessKeyboard(draft.workerId, returnTab));
+    } else {
+      const errKb = WorkerEditKeyboards.cancelEditKeyboard(draft.workerId, returnTab);
+      await this.replyOrEdit(ctx, `❌ خطأ أثناء تطبيق التعديل: ${result.error}`, errKb);
     }
   }
 
