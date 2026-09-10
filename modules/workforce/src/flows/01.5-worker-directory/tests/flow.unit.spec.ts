@@ -100,12 +100,8 @@ describe('Flow 01.5 Unit Tests — Worker Directory & 360 Profile Validators', (
       missingItems: [],
     };
 
-    const maskedCard = WorkerDirectoryMessages.profile360Card(profile, false);
-    expect(maskedCard).toContain('291••••••••159 🔒');
-    expect(maskedCard).not.toContain('29102052502159');
-
-    const revealedCard = WorkerDirectoryMessages.profile360Card(profile, true);
-    expect(revealedCard).toContain('29102052502159 🔓');
+    const card = WorkerDirectoryMessages.profile360Card(profile);
+    expect(card).toContain('29102052502159');
   });
 
   it('should format missing data WhatsApp message and dispatch card with 1-tap copy', () => {

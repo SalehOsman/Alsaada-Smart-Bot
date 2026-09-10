@@ -30,10 +30,7 @@ export const WorkerDirectoryMessages = {
     const formattedExpiryDate = p.idCardExpiryDate ? formatDateDMY(p.idCardExpiryDate) : undefined;
     const isPassport = p.idType === 'PASSPORT';
     const idLabel = isPassport ? '🌍 جواز السفر' : '🇪🇬 الرقم القومي';
-    const isActuallyMasked = p.idNumberMasked.includes('*') || p.idNumberMasked.includes('•');
-    const displayedId = isIdRevealed && p.idNumberFull
-      ? `${p.idNumberFull} 🔓`
-      : (isActuallyMasked ? `${p.idNumberMasked} 🔒` : p.idNumberMasked);
+    const displayedId = p.idNumberFull || p.idNumberMasked;
 
     const lines = [
       `👤 *بطاقة العامل الشاملة (360°)*`,

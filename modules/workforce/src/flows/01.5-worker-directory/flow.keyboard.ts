@@ -70,16 +70,7 @@ export class WorkerDirectoryKeyboards {
       kb.text('📲 طلب استكمال النواقص عبر واتساب', `action:worker:mwa:${opts.workerId}`).row();
     }
 
-    // 2. National ID toggle (Admin / Super Admin)
-    if (opts.canRevealId) {
-      if (opts.isIdRevealed) {
-        kb.text('🙈 تمويه الرقم القومي', `action:worker:tid:${opts.workerId}:0`).row();
-      } else {
-        kb.text('👁️ كشف الرقم القومي', `action:worker:tid:${opts.workerId}:1`).row();
-      }
-    }
-
-    // 3. Direct WhatsApp messaging (lightweight URL <= 45 bytes)
+    // 2. Direct WhatsApp messaging (lightweight URL <= 45 bytes)
     if (opts.whatsAppUrl) {
       kb.url('💬 مراسلة العامل عبر واتساب', opts.whatsAppUrl).row();
     }
