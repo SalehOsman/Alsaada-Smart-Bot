@@ -22,6 +22,72 @@ export interface TelegramContractViolation {
   maxAllowed: number;
 }
 
+export function resolveSampleCallbackData(raw: string): string {
+  return raw.replace(/\$\{([^}]+)\}/g, (_match, expr: string) => {
+    const trimmed = expr.trim();
+    const lower = trimmed.toLowerCase();
+
+    // 1. Telegram user IDs (10 digits)
+    if (
+      lower.includes('telegram') ||
+      lower.includes('tg') ||
+      lower.includes('chatid') ||
+      lower.includes('from.id') ||
+      lower.endsWith('userid') ||
+      lower.includes('u.telegramid')
+    ) {
+      return '1234567890';
+    }
+
+    // 2. Loop counters, indices, pages, numbers (1-3 chars)
+    if (
+      lower === 'i' ||
+      lower.startsWith('i ') ||
+      lower.startsWith('i+') ||
+      lower.startsWith('i-') ||
+      lower.includes('page') ||
+      lower.includes('idx') ||
+      lower.includes('index') ||
+      lower.includes('offset') ||
+      lower === 'val' ||
+      lower === 'c.value'
+    ) {
+      return '99';
+    }
+
+    // 3. Dates & times (10 chars: YYYY-MM-DD)
+    if (lower.includes('date') || lower.includes('time')) {
+      return '2026-09-11';
+    }
+
+    // 4. Prefixes, short codes, tab names, short field names (3-6 chars)
+    if (
+      lower.includes('prefix') ||
+      lower.includes('code') ||
+      lower.includes('tab') ||
+      lower.includes('field') ||
+      lower.includes('key') ||
+      lower.includes('mode') ||
+      lower.includes('type')
+    ) {
+      return 'SHORT';
+    }
+
+    // 5. Short item tokens in pickers/grids (e.g. item1.id)
+    if (lower.includes('item1') || lower.includes('item2') || lower.includes('item.')) {
+      return '12345';
+    }
+
+    // 6. Database entity IDs and UUIDs (36 chars)
+    if (lower.includes('id') || lower.includes('uuid')) {
+      return '12345678-1234-1234-1234-123456789abc';
+    }
+
+    // Default fallback: 36 chars for unknown dynamic expressions
+    return '12345678-1234-1234-1234-123456789abc';
+  });
+}
+
 export function verifyTelegramContracts(root: string = process.cwd()): VerificationResult {
   const result = createResult();
   const violations: TelegramContractViolation[] = [];
@@ -31,7 +97,12 @@ export function verifyTelegramContracts(root: string = process.cwd()): Verificat
     if (norm.includes('/node_modules/') || norm.includes('/dist/') || norm.includes('/.git/')) {
       return false;
     }
-    return norm.endsWith('.keyboard.ts') || norm.includes('/keyboards/') || norm.endsWith('keyboard.ts');
+    return (
+      norm.endsWith('.keyboard.ts') ||
+      norm.includes('/keyboards/') ||
+      norm.endsWith('keyboard.ts') ||
+      norm.endsWith('settings-hub.ts')
+    );
   });
 
   for (const file of candidateFiles) {
@@ -42,12 +113,25 @@ export function verifyTelegramContracts(root: string = process.cwd()): Verificat
     lines.forEach((lineText, idx) => {
       const lineNum = idx + 1;
 
-      // 1. Check callback_data literals: e.g. 'action:...', callbackData: '...'
-      const callbackMatches = lineText.matchAll(/['](action:[^']+|wizard:[^']+|menu:[^']+)[']/g);
-      for (const match of callbackMatches) {
-        const raw = match[1] ?? '';
-        // Calculate effective length assuming sample 36-character UUID if template is used
-        const sampleResolved = raw.replace(/\$\{[^}]+\}/g, '12345678-1234-1234-1234-123456789abc');
+      // 1. Check callback_data in .text(...) calls and string literals (single quote, double quote, backtick)
+      const scannedCallbacks = new Set<string>();
+
+      // A. Match .text(..., 'cb_data' | "cb_data" | `cb_data`)
+      const textMatches = lineText.matchAll(/\.text\(\s*(?:['"`].*?['"`]|[^,]+)\s*,\s*(['"`])([^'"`]+)\1\s*[,)]/g);
+      for (const match of textMatches) {
+        const raw = match[2] ?? '';
+        scannedCallbacks.add(raw);
+      }
+
+      // B. Match known callback patterns: action:, wizard:, menu:, adm:, w:, site:, dept:
+      const literalMatches = lineText.matchAll(/(['"`])((?:action:|wizard:|menu:|adm:|w:|site:|dept:)[^'"`]+)\1/g);
+      for (const match of literalMatches) {
+        const raw = match[2] ?? '';
+        scannedCallbacks.add(raw);
+      }
+
+      for (const raw of scannedCallbacks) {
+        const sampleResolved = resolveSampleCallbackData(raw);
         const byteLen = Buffer.byteLength(sampleResolved, 'utf8');
         result.checked += 1;
         if (byteLen > MAX_TELEGRAM_CALLBACK_BYTES) {
@@ -55,7 +139,7 @@ export function verifyTelegramContracts(root: string = process.cwd()): Verificat
             file: relativePath,
             line: lineNum,
             type: 'CALLBACK_OVERFLOW',
-            detail: sampleResolved,
+            detail: `${raw} -> resolved as "${sampleResolved}"`,
             byteLength: byteLen,
             maxAllowed: MAX_TELEGRAM_CALLBACK_BYTES,
           });
@@ -63,9 +147,9 @@ export function verifyTelegramContracts(root: string = process.cwd()): Verificat
       }
 
       // 2. Check URL buttons: e.g. .url('...', 'https://...')
-      const urlMatches = lineText.matchAll(/\.url\(\s*['][^']+[']\s*,\s*[']([^']+)[']\s*\)/g);
+      const urlMatches = lineText.matchAll(/\.url\(\s*(?:['"`].*?['"`]|[^,]+)\s*,\s*(['"`])([^'"`]+)\1\s*\)/g);
       for (const match of urlMatches) {
-        const urlStr = match[1] ?? '';
+        const urlStr = match[2] ?? '';
         result.checked += 1;
 
         if (urlStr.startsWith('tel:')) {

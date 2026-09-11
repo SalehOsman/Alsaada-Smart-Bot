@@ -1,7 +1,9 @@
+import { formatBreadcrumbs } from '@alsaada/core-components';
 import type { UserRole } from '../../shared/module.types.js';
 
 export function formatGhostModeMenu(): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '👤 الحساب والأمان والمحاكاة', '🎭 محاكاة الأدوار']) +
     `🎭 *نظام محاكاة وتقمص الأدوار للمدير العام (Ghost Mode)*\n` +
     `────────────────────────────\n` +
     `يتيح لك هذا النظام التحول الفوري لتجربة واجهة وتدفقات أي دور تشغيلي داخل المنظومة وكأنك ذلك المستخدم، للتحقق من دقة الصلاحيات وسلامة الواجهات ميدانياً.\n\n` +
@@ -12,6 +14,7 @@ export function formatGhostModeMenu(): string {
 
 export function formatWorkerPickerHeader(): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '👤 الحساب والأمان والمحاكاة', '🎭 محاكاة الأدوار', '👷 محاكاة العامل']) +
     `👷 *اختيار العامل المراد تقمص دوره (محاكاة العامل)*\n` +
     `────────────────────────────\n` +
     `اختر عاملاً مسجلاً بالمنظومة لتقمص حسابه بالكامل واستعراض كشف حسابه وقسيمة راتبه ومسحوباته الفعلية:`
@@ -20,6 +23,7 @@ export function formatWorkerPickerHeader(): string {
 
 export function formatSupplierPickerHeader(): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '👤 الحساب والأمان والمحاكاة', '🎭 محاكاة الأدوار', '🚚 محاكاة المورد']) +
     `🚚 *اختيار المورد المراد تقمص دوره (محاكاة المورد)*\n` +
     `────────────────────────────\n` +
     `اختر مورداً أو مقاول باطن مسجلاً بالمنظومة لتقمص حسابه واستعراض فواتيره ومستحقاته المالية:`

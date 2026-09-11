@@ -29,3 +29,29 @@ export interface CopyTextButton {
     text: string;
   };
 }
+
+export type TelegramChatAction =
+  | 'typing'
+  | 'upload_document'
+  | 'upload_photo'
+  | 'record_video'
+  | 'upload_video'
+  | 'record_voice'
+  | 'upload_voice'
+  | 'choose_sticker'
+  | 'find_location'
+  | 'record_video_note'
+  | 'upload_video_note';
+
+export interface LinkPreviewOptions {
+  is_disabled?: boolean;
+  url?: string;
+  prefer_small_media?: boolean;
+  prefer_large_media?: boolean;
+  show_above_text?: boolean;
+}
+
+export interface ModalAlertOptions {
+  text: string;
+  show_alert: true;
+}

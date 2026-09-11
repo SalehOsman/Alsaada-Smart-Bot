@@ -43,10 +43,26 @@ export class AdminAssignmentRepository {
   async listActiveSites(): Promise<SiteOptionDto[]> {
     const sites = await this.prisma.site.findMany({
       where: { status: 'ACTIVE' },
-      select: { id: true, code: true, name: true },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        _count: {
+          select: {
+            workers: {
+              where: { isDeleted: false },
+            },
+          },
+        },
+      },
       orderBy: { name: 'asc' },
     });
-    return sites;
+    return sites.map((s) => ({
+      id: s.id,
+      code: s.code,
+      name: s.name,
+      workersCount: s._count?.workers ?? 0,
+    }));
   }
 
   async setAssignment(telegramId: bigint, siteId: string | null): Promise<AdminAssignmentDto> {

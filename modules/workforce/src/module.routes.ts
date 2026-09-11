@@ -316,7 +316,7 @@ export function registerWorkforceRoutes(
   });
 
   // Export Department Execute
-  bot.callbackQuery(/^action:worker_export:do:dept:(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^action:worker_export:do:d(?:ept)?:(.+)$/, async (ctx) => {
     const match = ctx.match;
     const deptId = match?.[1];
     if (deptId) {

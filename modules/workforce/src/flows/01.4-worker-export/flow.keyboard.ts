@@ -40,10 +40,10 @@ export class WorkerExportKeyboards {
       const dept1 = departments[i];
       const dept2 = departments[i + 1];
       if (dept1) {
-        kb.text(dept1.name, `action:worker_export:do:dept:${dept1.id}`);
+        kb.text(dept1.name, `action:worker_export:do:d:${dept1.id}`);
       }
       if (dept2) {
-        kb.text(dept2.name, `action:worker_export:do:dept:${dept2.id}`);
+        kb.text(dept2.name, `action:worker_export:do:d:${dept2.id}`);
       }
       kb.row();
     }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-11T03:05:37.464Z",
+  "generatedAt": "2026-09-11T04:04:29.165Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -26,7 +26,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "54429223ea0e87aab91361f4b16e09006dcc100da0d281d0617f8d981c09d4cb"
+      "sha256": "f8ba9cf8ca41d331176b33a89d19812630be24b84daa796ceaba7998f06b7b70"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
@@ -46,7 +46,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "a9a717361ad7a19879f41e8a83a32fe7255353a34ca2b2832d10703840691046"
+      "sha256": "c9dc7b633990b10ab18977cf422e9b06f5af6d1ed8a8dd2f8b630995f4307600"
     },
     {
       "path": "package.json",
@@ -102,7 +102,7 @@
     },
     {
       "path": "tools/governance/verify-telegram-contracts.ts",
-      "sha256": "313921dc01513ff1544dea36b221ddfb37b959b28639655e229c510ab4ba89f7"
+      "sha256": "c26eaa08cdbc368a4a24c22211679b6df73381f0db1f83471ea7692ab8b9b58e"
     }
   ]
 }

@@ -1,5 +1,6 @@
 import type { SettingsModuleContext } from '../../shared/module.types.js';
 import type { AdminAssignmentService } from './flow.service.js';
+import { showModalAlert } from '@alsaada/core-components';
 import {
   buildAdminAssignmentsHubKeyboard,
   buildUserAssignmentCardKeyboard,
@@ -14,11 +15,7 @@ export class AdminAssignmentHandler {
 
   async renderAdminAssignmentsHub(ctx: SettingsModuleContext, inPlace = false, noticeText?: string): Promise<void> {
     if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') {
-      if (ctx.callbackQuery) {
-        await ctx.answerCallbackQuery({ text: '🔒 هذا القسم مخصص حصرياً للمدير العام.', show_alert: true }).catch(() => {});
-      } else {
-        await ctx.reply('🔒 هذا القسم مخصص حصرياً للمدير العام.');
-      }
+      await showModalAlert(ctx, '🔒 هذا القسم مخصص حصرياً للمدير العام.');
       return;
     }
 
@@ -49,7 +46,7 @@ export class AdminAssignmentHandler {
 
     const user = await this.service.getUserAssignment(targetTelegramId);
     if (!user) {
-      await this.renderAdminAssignmentsHub(ctx, inPlace, '❌ المستخدم المطلوب غير موجود.');
+      await this.renderAdminAssignmentsHub(ctx, inPlace, '❌ المشرف المطلوب غير موجود.');
       return;
     }
 
@@ -77,12 +74,12 @@ export class AdminAssignmentHandler {
 
     const res = await this.service.setAssignment(targetTelegramId, siteIdOrGlobal);
     if (!res.success || !res.user) {
-      await ctx.answerCallbackQuery({ text: `❌ ${res.error || 'فشل التعيين'}`, show_alert: true }).catch(() => {});
+      await showModalAlert(ctx, `❌ ${res.error || 'فشل التعيين'}`);
       return;
     }
 
-    const scopeName = res.user.assignedSiteName ? `موقع (${res.user.assignedSiteName})` : 'صلاحية عامة وشاملة';
-    await ctx.answerCallbackQuery({ text: `✅ تم تعيين المشرف بنجاح على: ${scopeName}` }).catch(() => {});
+    const scopeName = res.user.assignedSiteName ? `موقع (${res.user.assignedSiteName})` : 'صلاحية عامة وشاملة 🌐';
+    await showModalAlert(ctx, `✅ تم تحديث نطاق المشرف بنجاح إلى: ${scopeName}`);
     await this.renderUserAssignmentCard(ctx, targetTelegramId, true, `✅ تم تحديث نطاق الصلاحيات إلى: ${scopeName}`);
   }
 }

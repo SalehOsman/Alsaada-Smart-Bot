@@ -1,3 +1,4 @@
+import { formatBreadcrumbs, formatClickToCopy } from '@alsaada/core-components';
 import type { UserJourneyStep, UnresolvedErrorDto, PurgeResultDto } from './flow.types.js';
 
 export function formatAuditVaultHub(noticeText?: string): string {
@@ -7,6 +8,7 @@ export function formatAuditVaultHub(noticeText?: string): string {
   }
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ أداء وتشغيل المنظومة والرقابة', '🛡️ التحقيق الجنائي وسجل الأعطال']) +
     `${banner}` +
     `🛡️ *وحدة التحقيق الجنائي وسجل الحركات الميدانية*\n` +
     `────────────────────────────\n` +
@@ -22,17 +24,19 @@ export function formatAuditVaultHub(noticeText?: string): string {
 export function formatUserJourneyTimeline(target: string, steps: UserJourneyStep[]): string {
   if (steps.length === 0) {
     return (
+      formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '🛡️ التحقيق الجنائي', '🔍 تتبع مسار']) +
       `🔍 *شريط مسار المستخدم (User Audit Journey)*\n` +
       `────────────────────────────\n` +
-      `المستخدم: \`${target}\`\n\n` +
+      `المستخدم: ${formatClickToCopy(target)}\n\n` +
       `⚠️ لم يتم العثور على أي حركات مسجلة لهذا المستخدم في الـ 24 ساعة الأخيرة.`
     );
   }
 
   let text =
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '🛡️ التحقيق الجنائي', '🔍 تتبع مسار']) +
     `🔍 *شريط مسار المستخدم (User Audit Journey)*\n` +
     `────────────────────────────\n` +
-    `المستخدم المستهدف: \`${target}\`\n` +
+    `المستخدم المستهدف: ${formatClickToCopy(target)}\n` +
     `📊 *آخر ${steps.length} إجراءات مسجلة (مرتبة زمنياً):*\n\n`;
 
   steps.forEach((s, idx) => {
@@ -50,6 +54,7 @@ export function formatUserJourneyTimeline(target: string, steps: UserJourneyStep
 
 export function formatUnresolvedErrorsList(total: number, page: number): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '🛡️ التحقيق الجنائي', '🚨 الأعطال النشطة']) +
     `🚨 *كونسول الأعطال البرمجية النشطة (Unresolved Errors)*\n` +
     `────────────────────────────\n` +
     `إجمالي الأعطال المفتوحة غير المعالجة: *${total} عطل*\n` +
@@ -62,6 +67,7 @@ export function formatErrorDetailCard(err: UnresolvedErrorDto): string {
   const stack = err.stackTrace ? err.stackTrace.slice(0, 600) : 'لا يوجد Stack Trace مسجل';
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '🛡️ التحقيق الجنائي', '🚨 تفاصيل العطل']) +
     `🚨 *تفاصيل العطل الجنائي: ${err.errorReference}*\n` +
     `────────────────────────────\n` +
     `🔹 *الخطورة:* *${err.severity}*\n` +
@@ -79,6 +85,7 @@ export function formatErrorDetailCard(err: UnresolvedErrorDto): string {
 
 export function formatPurgeSummary(res: PurgeResultDto): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '🛡️ التحقيق الجنائي', '🧹 أرشفة السجلات']) +
     `🧹 *تقرير أرشفة وتطهير السجلات القديمة*\n` +
     `────────────────────────────\n` +
     `✅ *تم التطهير بنجاح:*\n` +

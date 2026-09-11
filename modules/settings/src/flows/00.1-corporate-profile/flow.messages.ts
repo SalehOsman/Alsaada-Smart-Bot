@@ -1,3 +1,4 @@
+import { formatBreadcrumbs } from '@alsaada/core-components';
 import type { CompanyProfileDto, CompanyFieldKey } from './flow.types.js';
 
 export const COMPANY_FIELD_LABELS: Record<CompanyFieldKey, string> = {
@@ -18,6 +19,7 @@ export function formatCorporateProfileCard(profile: CompanyProfileDto | null, no
   }
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان المؤسسي والمشاريع', '🏢 الملف التعريفي']) +
     `${banner}` +
     `🏢 *الملف التعريفي والبيانات الرسمية للشركة*\n` +
     `────────────────────────────\n` +
@@ -38,6 +40,7 @@ export function formatCorporateProfileCard(profile: CompanyProfileDto | null, no
 export function formatEditFieldPrompt(fieldKey: CompanyFieldKey, currentValue: string): string {
   const label = COMPANY_FIELD_LABELS[fieldKey] || fieldKey;
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏢 الملف التعريفي', '✏️ تعديل بيان']) +
     `✏️ *تعديل: ${label}*\n` +
     `────────────────────────────\n` +
     `🔹 *القيمة الحالية المعتمدة:*\n\`${currentValue}\`\n\n` +

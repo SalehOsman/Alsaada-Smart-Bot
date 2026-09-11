@@ -19,13 +19,13 @@
   "navigationPath": [
     "القائمة الرئيسية",
     "إعدادات النظام",
-    "إدارة الهويات والصلاحيات",
+    "الكيان المؤسسي والمشاريع",
     "توزيع مدراء المواقع"
   ],
   "buttons": [
     "action:settings:admin_assignments",
-    "action:admin_assign:user",
-    "action:admin_assign:set"
+    "adm:u:",
+    "adm:s:"
   ],
   "inputs": [
     "select:site_id"

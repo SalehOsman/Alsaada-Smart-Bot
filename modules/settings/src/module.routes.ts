@@ -228,10 +228,10 @@ export function registerSettingsRoutes(
 
   // --- Flow 00.5 Admin Assignment ---
   bot.callbackQuery('action:settings:admin_assignments', (ctx) => adminAssignmentHandler.renderAdminAssignmentsHub(ctx, true));
-  bot.callbackQuery(/^action:admin_assign:user:(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:admin_assign:user:|adm:u:)(\d+)$/, async (ctx) => {
     if (ctx.match?.[1]) await adminAssignmentHandler.renderUserAssignmentCard(ctx, BigInt(ctx.match[1]), true);
   });
-  bot.callbackQuery(/^action:admin_assign:set:(\d+):(.+)$/, async (ctx) => {
+  bot.callbackQuery(/^(?:action:admin_assign:set:|adm:s:)(\d+):(.+)$/, async (ctx) => {
     if (ctx.match?.[1] && ctx.match?.[2]) {
       await adminAssignmentHandler.handleSetUserSiteAssignment(ctx, BigInt(ctx.match[1]), ctx.match[2]);
     }

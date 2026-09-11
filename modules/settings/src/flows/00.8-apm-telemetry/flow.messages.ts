@@ -1,3 +1,4 @@
+import { formatBreadcrumbs, formatClickToCopy } from '@alsaada/core-components';
 import type { SlowOperationDto, ServicesHealthDto, ApmSummaryDto, AlertPolicyType } from './flow.types.js';
 
 export function formatApmDashboard(summary: ApmSummaryDto, noticeText?: string): string {
@@ -7,6 +8,7 @@ export function formatApmDashboard(summary: ApmSummaryDto, noticeText?: string):
   }
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ أداء وتشغيل المنظومة والرقابة', '⚡ رادار الأداء والسرعة الفائقة']) +
     `${banner}` +
     `📊 *رادار قياس الأداء والسرعة الفائقة (APM Telemetry)*\n` +
     `────────────────────────────\n` +
@@ -24,6 +26,7 @@ export function formatApmDashboard(summary: ApmSummaryDto, noticeText?: string):
 export function formatSlowOperationsList(ops: SlowOperationDto[]): string {
   if (ops.length === 0) {
     return (
+      formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '⚡ رادار APM', '🐢 العمليات البطيئة']) +
       `⚡ *كاشف العمليات البطيئة (Slow Operations Radar)*\n` +
       `────────────────────────────\n` +
       `🟢 *ممتاز!* لم تسجل المنظومة أي عملية تجاوزت سقف 250ms خلال آخر 24 ساعة.`
@@ -31,6 +34,7 @@ export function formatSlowOperationsList(ops: SlowOperationDto[]): string {
   }
 
   let text =
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '⚡ رادار APM', '🐢 العمليات البطيئة']) +
     `⚡ *كاشف العمليات البطيئة (أبطأ ${ops.length} عمليات > 250ms)*\n` +
     `────────────────────────────\n`;
 
@@ -40,7 +44,7 @@ export function formatSlowOperationsList(ops: SlowOperationDto[]): string {
 
     text +=
       `*${idx + 1}.* 🔴 \`${op.action}\`\n` +
-      `   ⏱️ الزمن: *${op.executionTimeMs}ms* | الوقت: \`${timeStr}\` | المستخدم: \`${op.actorTelegramId}\`${err}\n\n`;
+      `   ⏱️ الزمن: *${op.executionTimeMs}ms* | الوقت: \`${timeStr}\` | المستخدم: ${formatClickToCopy(op.actorTelegramId)}${err}\n\n`;
   });
 
   return text;
@@ -53,6 +57,7 @@ export function formatServicesHealthCard(health: ServicesHealthDto): string {
   const geminiIcon = health.geminiStatus === 'HEALTHY' ? '🟢 متصل' : '⚠️ غير متاح';
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '⚡ رادار APM', '🔌 فحص الخدمات الخارجية']) +
     `📊 *لوحة مراقبة الربط والخدمات الخارجية (Services Health)*\n` +
     `────────────────────────────\n` +
     `نتائج الفحص الحي بنقرة واحدة:\n\n` +
@@ -73,6 +78,7 @@ export function formatAlertPolicyCard(currentPolicy: AlertPolicyType): string {
   };
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '⚡ رادار APM', '🔔 سياسة الإنذارات']) +
     `🔔 *ضبط حساسية وتوجيه إنذارات الأعطال*\n` +
     `────────────────────────────\n` +
     `السياسة المعتمدة حالياً: *${currentPolicy}*\n\n` +

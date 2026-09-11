@@ -1,3 +1,4 @@
+import { formatBreadcrumbs } from '@alsaada/core-components';
 import type { MaintenanceStatusDto, PrewarmResultDto } from './flow.types.js';
 
 export function formatEmergencyCacheHub(status: MaintenanceStatusDto, noticeText?: string): string {
@@ -11,6 +12,7 @@ export function formatEmergencyCacheHub(status: MaintenanceStatusDto, noticeText
     : '🟢 *غير مفعل (البوت متاح ويعمل لجميع المستخدمين طبيعياً)*';
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ أداء وتشغيل المنظومة والرقابة', '🛑 صمامات الطوارئ والذاكرة']) +
     `${banner}` +
     `🛑 *صمامات التحكم الإداري وحالات الطوارئ*\n` +
     `────────────────────────────\n` +
@@ -25,6 +27,7 @@ export function formatEmergencyCacheHub(status: MaintenanceStatusDto, noticeText
 
 export function formatMaintenancePromptCard(): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '🛑 وضع الصيانة الطارئ']) +
     `🛑 *تأكيد تفعيل وضع الصيانة الطارئ (Emergency Maintenance)*\n` +
     `────────────────────────────\n` +
     `⚠️ *هل أنت متأكد من رغبتك في إغلاق البوت فوراً أمام كافة المستخدمين الميدانيين؟*\n\n` +
@@ -34,6 +37,7 @@ export function formatMaintenancePromptCard(): string {
 
 export function formatPrewarmSummary(res: PrewarmResultDto): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء', '🔄 إعادة تدفئة الذاكرة']) +
     `🔄 *تقرير إعادة تدفئة الذاكرة اللحظية (Cache Pre-Warm)*\n` +
     `────────────────────────────\n` +
     `✅ *تم تفريغ وإعادة شحن الذاكرة اللحظية بنجاح:*\n` +

@@ -11,4 +11,5 @@ export interface SiteOptionDto {
   id: string;
   code: string;
   name: string;
+  workersCount?: number;
 }

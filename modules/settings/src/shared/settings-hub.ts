@@ -1,4 +1,5 @@
 import { InlineKeyboard } from 'grammy';
+import { formatBreadcrumbs } from '@alsaada/core-components';
 import type { SettingsModuleContext } from './module.types.js';
 
 export function buildSettingsMainKeyboard(isImpersonating?: boolean): InlineKeyboard {
@@ -24,6 +25,8 @@ export function buildCorporateSubKeyboard(isImpersonating?: boolean): InlineKeyb
     .row()
     .text('🏗️ مصفوفة المشاريع والمواقع الميدانية', 'action:settings:sites_hub')
     .row()
+    .text('👥 تعيين وتوزيع مشرفي المواقع', 'action:settings:admin_assignments')
+    .row()
     .text('💼 الأقسام الوظيفية ومصفوفة المهن', 'action:settings:job_matrix')
     .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
@@ -39,8 +42,6 @@ export function buildCorporateSubKeyboard(isImpersonating?: boolean): InlineKeyb
 export function buildIdentitySubKeyboard(isImpersonating?: boolean): InlineKeyboard {
   const kb = new InlineKeyboard()
     .text('👤 ملفي الشخصي (حساب المدير العام)', 'action:settings:admin_profile')
-    .row()
-    .text('👥 تعيين وتوزيع مشرفي المواقع', 'action:settings:admin_assignments')
     .row()
     .text('🎭 محاكاة وتقمص الأدوار الميدانية', 'action:settings:ghost_mode')
     .row()
@@ -98,9 +99,9 @@ export async function handleSettingsHub(ctx: SettingsModuleContext): Promise<voi
 
   const keyboard = buildSettingsMainKeyboard(ctx.isImpersonating);
   const text =
+    formatBreadcrumbs(['⚙️ الإعدادات السيادية']) +
     `⚙️ *مركز إعدادات النظام والتحكم السيادي*\n` +
     `────────────────────────────\n` +
-    `📍 *المسار:* ⚙️ الإعدادات السيادية\n\n` +
     `لوحة التحكم المركزية لإدارة الكيان المؤسسي، المشاريع والمواقع الميدانية، وضبط صلاحيات الإشراف والأمان والرقابة الجنائية.\n\n` +
     `👇 *اختر القسم الإداري المطلوب:*`;
 
@@ -135,25 +136,25 @@ export async function handleSettingsSubCategory(
   if (category === 'corporate') {
     keyboard = buildCorporateSubKeyboard(ctx.isImpersonating);
     text =
+      formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع']) +
       `🏢 *إعدادات الكيان المؤسسي والمشاريع والمواقع*\n` +
       `────────────────────────────\n` +
-      `📍 *المسار:* ⚙️ الإعدادات ❯ 🏢 الكيان والمشاريع\n\n` +
-      `إدارة بيانات شركة السعادة الرسمية، السجل التجاري والضريبي، مصفوفة المشاريع والمواقع، والهيكل الوظيفي ومصفوفة المهن والورديات.\n\n` +
+      `إدارة بيانات شركة السعادة الرسمية، السجل التجاري والضريبي، مصفوفة المشاريع والمواقع، تعيين وتوزيع مشرفي المواقع، والهيكل الوظيفي ومصفوفة المهن والورديات.\n\n` +
       `اختر الإجراء المطلوب:`;
   } else if (category === 'identity') {
     keyboard = buildIdentitySubKeyboard(ctx.isImpersonating);
     text =
+      formatBreadcrumbs(['⚙️ الإعدادات', '👤 الحساب والأمان والمحاكاة']) +
       `👤 *إعدادات الحساب الشخصي والأمان والمحاكاة*\n` +
       `────────────────────────────\n` +
-      `📍 *المسار:* ⚙️ الإعدادات ❯ 👤 الحساب والأمان والمحاكاة\n\n` +
-      `تعديل بيانات حسابك الشخصي كمدير عام، تعيين وتوزيع مشرفي المواقع الميدانية، أو محاكاة واجهات الأدوار التشغيلية لاختبار المنظومة.\n\n` +
+      `تعديل بيانات حسابك الشخصي كمدير عام، أو محاكاة واجهات الأدوار التشغيلية لاختبار المنظومة.\n\n` +
       `اختر الإجراء المطلوب:`;
   } else {
     keyboard = buildSystemSubKeyboard(ctx.isImpersonating);
     text =
+      formatBreadcrumbs(['⚙️ الإعدادات', '⚡ الرقابة والأداء والتشغيل']) +
       `⚡ *أداء وتشغيل المنظومة والرقابة الجنائية*\n` +
       `────────────────────────────\n` +
-      `📍 *المسار:* ⚙️ الإعدادات ❯ ⚡ الرقابة والأداء والتشغيل\n\n` +
       `وحدة التحقيق الجنائي وتتبع مسار العمليات، كونسول الأعطال النشطة، رادار APM وسرعة الخدمات الخارجية، وصمامات الصيانة والذاكرة اللحظية.\n\n` +
       `اختر الإجراء المطلوب:`;
   }

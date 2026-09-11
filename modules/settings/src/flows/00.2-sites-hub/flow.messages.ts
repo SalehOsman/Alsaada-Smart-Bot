@@ -1,3 +1,4 @@
+import { formatBreadcrumbs } from '@alsaada/core-components';
 import type { SiteDto } from './flow.types.js';
 
 export function formatSitesListCard(sites: SiteDto[], noticeText?: string): string {
@@ -7,6 +8,7 @@ export function formatSitesListCard(sites: SiteDto[], noticeText?: string): stri
   }
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان المؤسسي والمشاريع', '🏗️ مصفوفة المواقع']) +
     `${banner}` +
     `🏗️ *مصفوفة المشاريع والفروع والمواقع الميدانية*\n` +
     `────────────────────────────\n` +
@@ -29,6 +31,7 @@ export function formatSiteDetailCard(site: SiteDto, noticeText?: string): string
       : 'غير محدد';
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ المواقع', site.name]) +
     `${banner}` +
     `🏗️ *بطاقة الموقع الميداني: ${site.name}*\n` +
     `────────────────────────────\n` +
@@ -46,6 +49,7 @@ export function formatSiteDetailCard(site: SiteDto, noticeText?: string): string
 
 export function formatAddSiteNamePrompt(): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع']) +
     `➕ *إضافة موقع ميداني جديد — الخطوة 1 من 4*\n` +
     `────────────────────────────\n` +
     `💬 *أرسل اسم الموقع أو الفرع الجديد الآن في رسالة نصية:*\n` +
@@ -55,6 +59,7 @@ export function formatAddSiteNamePrompt(): string {
 
 export function formatConfirmCodePrompt(name: string, suggestedCode: string): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'كود الموقع']) +
     `➕ *تأكيد كود الموقع — الخطوة 2 من 4*\n` +
     `────────────────────────────\n` +
     `اسم الموقع: *${name}*\n` +
@@ -65,6 +70,7 @@ export function formatConfirmCodePrompt(name: string, suggestedCode: string): st
 
 export function formatSelectGovPrompt(name: string): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'المحافظة']) +
     `➕ *تحديد المحافظة — الخطوة 3 من 4*\n` +
     `────────────────────────────\n` +
     `موقع: *${name}*\n\n` +
@@ -74,6 +80,7 @@ export function formatSelectGovPrompt(name: string): string {
 
 export function formatSelectGeofencePrompt(name: string): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'السياج الجغرافي']) +
     `➕ *تحديد السياج الجغرافي (Geofence) — الخطوة 4 من 4*\n` +
     `────────────────────────────\n` +
     `موقع: *${name}*\n\n` +

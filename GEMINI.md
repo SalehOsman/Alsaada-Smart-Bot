@@ -75,6 +75,7 @@
      * **الرقم القومي المصري:** يجب استيراد `parseEgyptianNationalId` من `@alsaada/national-id-engine`.
      * **الأرقام المشرقية والعملة والتوقيت:** يجب استيراد `normalizeDigits`, `formatCurrency`, `formatDateTime` من `@alsaada/regional-engine`.
      * **أمان البيانات والهاش الجنائي:** يجب استيراد أدوات التشفير والهاش التراكمي من `@alsaada/database`.
+     * **شريط مسار التتبع ومكونات تليجرام التفاعلية المتقدمة:** يجب استيراد واستخدام `formatBreadcrumbs`, `formatClickToCopy`, `formatSpoiler`, `formatExpandableQuote`, `formatMonospace`, `showModalAlert`, `buildModalAlertOptions`, `DISABLED_LINK_PREVIEWS`, `sendChatActionSafe`, و `withChatAction` من `@alsaada/core-components`. يُحظر تماماً بناء مسارات تتبع يدوية أو إظهار تنبيهات نافذة منبثقة أو مؤشرات انتظار Telegram دون استخدام هذه المكونات المعيارية.
    - **معيار الرفض الفوري (Automatic Rejection Gate):** أي مساهمة كودية تحتوي على كتابة يدوية لمنطق متوفر في الحزم المشتركة تُصنف كـ **عيب برمجي جسيم (Anti-pattern / Code Duplication)** وتُرفض تلقائياً.
 6. **بروتوكول الفحص المسبق واستدعاء النواة عند نقل أو بناء أي وظيفة (Pre-Flight Documentation & Component Audit Protocol):**
    - **القاعدة الذهبية:** يُحظر تماماً على أي أداة ذكاء اصطناعي (AI Agent) الشروع في كتابة أي كود أو نقل وظيفة من المشروع القديم (`F:\HR`) إلى هذا المشروع دون تنفيذ الخطوات الثلاث التالية بالترتيب:
@@ -195,6 +196,14 @@
 13. **الاتصال المباشر وحصانة أزرار الكيبورد السفلي (Native One-Tap Dial & Global Nav Bypass):**
     - كتابة أرقام الهواتف حرة بصيغة دولية بدون أقواس كود لتفعيل رابط الاتصال التلقائي بالهاتف، وإلغاء رسائل كروت الاتصال الوسيطة (`vCard`).
     - حصانة أزرار الكيبورد السفلي الدائمة (`navButtons`) وتمريرها فوراً للبوت الرئيسي عبر `next()` مع تنظيف المسودات المعلقة ومنع أي تدفق من ابتلاعها.
+14. **معيار مسار التتبع البصري ومكونات تليجرام التفاعلية المتقدمة (Universal Breadcrumbs & Telegram Formatting Standard):**
+    - تصدير شريط مسار التتبع الهرمي (`formatBreadcrumbs`) في رأس كافة الرسائل والقوائم والمعالجات بصيغة:
+      `🏠 الرئيسية ‹ ⚙️ الإعدادات ‹ 👥 المشرفين`
+    - حظر وضع أقواس الكود حول أرقام الهواتف واستخدام النسخ بنقرة واحدة (`formatClickToCopy`) للمعرفات والرموز الرقمية المخصصة للنسخ فقط.
+    - استخدام حجب النصوص الحساسة (`formatSpoiler`)، والاقتباسات القابلة للطي (`formatExpandableQuote`), والنصوص أحادية المسافة (`formatMonospace`).
+    - استخدام النوافذ المنبثقة التفاعلية (`showModalAlert` / `buildModalAlertOptions`) للتنبيهات الفورية وإشعارات الحفظ السريع بدلاً من رسائل الدردشة المؤقتة.
+    - تعطيل معاينة الروابط تلقائياً (`DISABLED_LINK_PREVIEWS`) لمنع تشتيت واجهة البوت.
+    - استخدام مؤشرات انتظار تليجرام الآمنة (`withChatAction` / `sendChatActionSafe`) للعمليات التي تتطلب أكثر من 500ms.
 
 ---
 

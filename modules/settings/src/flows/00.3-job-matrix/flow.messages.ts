@@ -1,3 +1,4 @@
+import { formatBreadcrumbs } from '@alsaada/core-components';
 import type { DepartmentDto, JobTitleDto } from './flow.types.js';
 
 export function formatDepartmentsListCard(depts: DepartmentDto[], noticeText?: string): string {
@@ -7,6 +8,7 @@ export function formatDepartmentsListCard(depts: DepartmentDto[], noticeText?: s
   }
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان المؤسسي والمشاريع', '💼 مصفوفة المهن']) +
     `${banner}` +
     `💼 *الهيكل الوظيفي ومصفوفة الأقسام والمهن*\n` +
     `────────────────────────────\n` +
@@ -25,6 +27,7 @@ export function formatDepartmentDetailCard(dept: DepartmentDto, jobs: JobTitleDt
   const statusText = dept.isActive ? '🟢 نشط' : '🔴 مجمد';
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '💼 الأقسام', dept.name]) +
     `${banner}` +
     `💼 *قسم: ${dept.name} (${dept.code})*\n` +
     `────────────────────────────\n` +
@@ -43,6 +46,7 @@ export function formatJobDetailCard(job: JobTitleDto, noticeText?: string): stri
   const statusText = job.isActive ? '🟢 نشطة ومعتمدة' : '🔴 مجمدة مؤقتاً';
 
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '💼 المهن', job.title]) +
     `${banner}` +
     `👷 *بطاقة المهنة: ${job.title}*\n` +
     `────────────────────────────\n` +
@@ -60,6 +64,7 @@ export function formatJobDetailCard(job: JobTitleDto, noticeText?: string): stri
 
 export function formatCyclePresetsPrompt(job: JobTitleDto): string {
   return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '💼 المهن', job.title, '⏱️ دورة العمل']) +
     `⏱️ *إعداد دورة العمل والورديات للمهنة*\n` +
     `────────────────────────────\n` +
     `المهنة: *${job.title}*\n` +

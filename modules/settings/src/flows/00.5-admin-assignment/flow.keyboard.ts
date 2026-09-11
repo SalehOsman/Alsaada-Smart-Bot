@@ -5,14 +5,16 @@ export function buildAdminAssignmentsHubKeyboard(users: AdminAssignmentDto[], is
   const keyboard = new InlineKeyboard();
 
   users.forEach((u) => {
-    const scopeLabel = u.assignedSiteName ? `📍 ${u.assignedSiteName}` : '🌐 وصول عام وشامل';
+    const isGlobal = !u.assignedSiteId;
+    const badge = isGlobal ? '🌟' : '🛡️';
+    const scopeLabel = u.assignedSiteName ? `📍 ${u.assignedSiteName}` : '🌐 وصول عام';
     keyboard
-      .text(`👤 ${u.fullName} — [${scopeLabel}]`, `action:admin_assign:user:${u.telegramId}`)
+      .text(`${badge} ${u.fullName} — [${scopeLabel}]`, `adm:u:${u.telegramId}`)
       .row();
   });
 
   keyboard
-    .text('🔙 العودة للحساب والأمان', 'action:settings_sub:identity')
+    .text('🔙 العودة للكيان والمشاريع', 'action:settings_sub:corporate')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
   if (isImpersonating) {
@@ -27,14 +29,17 @@ export function buildUserAssignmentCardKeyboard(user: AdminAssignmentDto, sites:
 
   const isGlobal = !user.assignedSiteId;
   keyboard
-    .text(isGlobal ? '🔘 🌐 صلاحية عامة وشاملة (الحالي)' : '⚪ 🌐 صلاحية عامة وشاملة (إلغاء التقييد)', `action:admin_assign:set:${user.telegramId}:GLOBAL`)
+    .text(isGlobal ? '🔘 🌐 صلاحية عامة وشاملة (الحالي)' : '⚪ 🌐 صلاحية عامة وشاملة (إلغاء التقييد)', `adm:s:${user.telegramId}:GLOBAL`)
     .row();
 
   sites.forEach((s) => {
     const isCurrent = user.assignedSiteId === s.id;
     const prefix = isCurrent ? '🔘' : '⚪';
+    const countText = typeof s.workersCount === 'number' ? ` — 👥 ${s.workersCount}` : '';
+    // Formatted label under 34 chars to prevent truncation on mobile screens
+    const siteLabel = `${prefix} (${s.code}) ${s.name.slice(0, 14)}${countText}`;
     keyboard
-      .text(`${prefix} 📍 ${s.name} (${s.code})`, `action:admin_assign:set:${user.telegramId}:${s.id}`)
+      .text(siteLabel, `adm:s:${user.telegramId}:${s.id}`)
       .row();
   });
 

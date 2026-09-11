@@ -30,28 +30,16 @@ export class WorkerRegistrationHandler {
     text: string,
     keyboard?: ReturnType<typeof WorkerRegistrationKeyboards.docTypeKeyboard>
   ): Promise<void> {
+    const extra = keyboard ? { parse_mode: 'Markdown' as const, reply_markup: keyboard } : { parse_mode: 'Markdown' as const };
     if (ctx.callbackQuery?.message) {
       try {
-        if (keyboard) {
-          await ctx.editMessageText(text, {
-            parse_mode: 'Markdown',
-            reply_markup: keyboard,
-          });
-        } else {
-          await ctx.editMessageText(text, {
-            parse_mode: 'Markdown',
-          });
-        }
+        await ctx.editMessageText(text, extra);
         return;
       } catch {
-        // Fallback to sending new message if edit fails
+        // Fallback to reply
       }
     }
-    if (keyboard) {
-      await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
-    } else {
-      await ctx.reply(text, { parse_mode: 'Markdown' });
-    }
+    await ctx.reply(text, extra);
   }
 
   async handleStart(ctx: WorkforceModuleContext): Promise<void> {
@@ -236,6 +224,22 @@ export class WorkerRegistrationHandler {
 
     const jobs = await this.repository.listActiveJobs();
     const job = jobs.find((j) => j.id === jobId);
+
+    if (ctx.effectiveRole === 'FIELD_ADMIN' && ctx.assignedSiteId) {
+      const sites = await this.repository.listActiveSites();
+      const site = sites.find((s) => s.id === ctx.assignedSiteId);
+      await this.service.pushStep(telegramId, WorkerWizardStep.START_DATE_CHOICE, {
+        jobTitleId: jobId,
+        jobTitleName: job?.name || 'عامل',
+        siteId: ctx.assignedSiteId,
+        siteName: site?.name || 'الموقع الميداني',
+      });
+
+      const prompt = WorkerRegistrationMessages.startDatePrompt();
+      await this.replyOrEdit(ctx, prompt, WorkerRegistrationKeyboards.photoPromptKeyboard(true));
+      return;
+    }
+
     await this.service.pushStep(telegramId, WorkerWizardStep.SITE_CHOICE, {
       jobTitleId: jobId,
       jobTitleName: job?.name || 'عامل',
