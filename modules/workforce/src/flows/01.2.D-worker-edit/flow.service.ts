@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { encryptField, decryptField, createBlindIndex, Prisma } from '@alsaada/database';
+import { encryptField, decryptField, createBlindIndex, normalizeKeyToHex, Prisma } from '@alsaada/database';
 import { normalizeDigits, parseFlexibleDate } from '@alsaada/regional-engine';
 import { detectGovernorateFromAddress, getGovernorateCodeByName, EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
 import { WorkerEditRepository, type WorkerAuditInput } from './flow.repository.js';
@@ -12,13 +11,6 @@ import type {
   SalaryHistoryRecord,
   WorkerChangeLogRecord,
 } from './flow.types.js';
-
-function normalizeKeyToHex(key: string): string {
-  if (key.length === 64 && /^[0-9a-fA-F]+$/.test(key)) {
-    return key;
-  }
-  return createHash('sha256').update(key).digest('hex');
-}
 
 export class WorkerEditService {
   private readonly normalizedKeyHex: string;

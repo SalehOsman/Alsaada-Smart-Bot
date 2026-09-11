@@ -49,10 +49,11 @@ export class AdminProfileService {
     const val = validateAdminPhone(phone);
     if (!val.isValid || !val.normalized) return { success: false, error: val.error ?? 'رقم الهاتف غير صالح' };
 
-
-    const key = this.encryptionKey || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-    const encrypted = encryptField(val.normalized, key);
-    const hash = createBlindIndex(val.normalized, key);
+    if (!this.encryptionKey) {
+      throw new Error('DATABASE_ENCRYPTION_KEY is required to update phone number.');
+    }
+    const encrypted = encryptField(val.normalized, this.encryptionKey);
+    const hash = createBlindIndex(val.normalized, this.encryptionKey);
 
     await this.repository.updateEncryptedPhone(telegramId, encrypted, hash);
     return { success: true };

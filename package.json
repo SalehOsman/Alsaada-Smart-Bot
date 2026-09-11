@@ -36,7 +36,12 @@
                     "docs:audit":  "tsx tools/governance/verify-docs-audit.ts",
                     "docs:parity":  "tsx tools/governance/verify-docs-parity.ts",
                     "governance:lock":  "tsx tools/governance/verify-governance-lock.ts --write",
-                    "governance:tamper-check":  "tsx tools/governance/verify-governance-tamper.ts"
+                    "governance:tamper-check":  "tsx tools/governance/verify-governance-tamper.ts",
+                    "ssot:index": "tsx tools/governance/rag-engine.ts index",
+                    "ssot:query": "tsx tools/governance/rag-engine.ts query",
+                    "ssot:sync": "tsx tools/governance/rag-engine.ts index",
+                    "agent:check": "tsx tools/governance/agent-dispatcher.ts check",
+                    "agent:audit": "tsx tools/governance/agent-dispatcher.ts audit"
                 },
     "devDependencies":  {
                             "@types/node":  "^22.13.9",

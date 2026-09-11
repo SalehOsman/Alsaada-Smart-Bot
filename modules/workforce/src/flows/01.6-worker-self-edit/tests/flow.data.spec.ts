@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { WorkerSelfEditRepository } from '../flow.repository.js';
+import { WorkerSelfEditService } from '../flow.service.js';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
@@ -55,7 +56,6 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
   });
 
   it('should encrypt phone and compute blind index during phone update in service', async () => {
-    const { WorkerSelfEditService } = await import('../flow.service.js');
     const mockPrisma = {
       worker: {
         findUnique: vi.fn().mockResolvedValue({ id: 'w-1', code: 'OP-01' }),
@@ -91,7 +91,6 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
   });
 
   it('should encrypt accountNumber into accountNumberEncrypted column', async () => {
-    const { WorkerSelfEditService } = await import('../flow.service.js');
     const mockPrisma = {
       worker: {
         findUnique: vi.fn().mockResolvedValue({ id: 'w-1', code: 'OP-01' }),

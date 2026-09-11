@@ -54,4 +54,15 @@ describe('Flow 00.4 Unit Tests — AdminProfile', () => {
     expect(res.error).toContain('رقماً مصرياً صحيحاً');
     expect(mockRepo.updateEncryptedPhone).not.toHaveBeenCalled();
   });
+
+  it('should throw error when encryption key is missing during phone update', async () => {
+    const mockRepo = {
+      updateEncryptedPhone: vi.fn(),
+    } as unknown as AdminProfileRepository;
+
+    const service = new AdminProfileService(mockRepo);
+    await expect(service.updatePhone(123456n, '01012345678')).rejects.toThrow(
+      'DATABASE_ENCRYPTION_KEY is required to update phone number.'
+    );
+  });
 });

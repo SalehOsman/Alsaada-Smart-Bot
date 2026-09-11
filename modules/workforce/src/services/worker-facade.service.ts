@@ -1,4 +1,4 @@
-import { prisma as centralizedPrisma, type PrismaClient, encryptField, createBlindIndex } from '@alsaada/database';
+import { prisma as centralizedPrisma, type PrismaClient, encryptField, createBlindIndex, normalizeKeyToHex } from '@alsaada/database';
 import { normalizeDigits, extractFirstTwoNames } from '@alsaada/regional-engine';
 import { WorkerRegistrationRepository } from '../flows/01.1-worker-registration/flow.repository.js';
 import { WorkerRegistrationService } from '../flows/01.1-worker-registration/flow.service.js';
@@ -58,12 +58,18 @@ export class WorkerService {
   }
 
   private get encryptionKey(): string {
-    if (this.customEncryptionKey !== undefined) return this.customEncryptionKey;
-    if (activeEncryptionKey !== undefined) return activeEncryptionKey;
-    if ((globalThis as any).config?.databaseEncryptionKey !== undefined) {
-      return (globalThis as any).config.databaseEncryptionKey;
+    const raw =
+      this.customEncryptionKey !== undefined
+        ? this.customEncryptionKey
+        : activeEncryptionKey !== undefined
+        ? activeEncryptionKey
+        : (globalThis as any).config?.databaseEncryptionKey !== undefined
+        ? (globalThis as any).config.databaseEncryptionKey
+        : process.env.DATABASE_ENCRYPTION_KEY;
+    if (!raw) {
+      throw new Error('DATABASE_ENCRYPTION_KEY is required');
     }
-    return process.env.DATABASE_ENCRYPTION_KEY || '';
+    return normalizeKeyToHex(raw);
   }
 
   private get blindIndexSalt(): string {
@@ -335,12 +341,15 @@ export class WorkerEditFacade {
   }
 
   private get encryptionKey(): string {
-    if (this.customEncryptionKey !== undefined) return this.customEncryptionKey;
-    if (activeEncryptionKey !== undefined) return activeEncryptionKey;
-    if ((globalThis as any).config?.databaseEncryptionKey !== undefined) {
-      return (globalThis as any).config.databaseEncryptionKey;
-    }
-    return process.env.DATABASE_ENCRYPTION_KEY || '';
+    const raw =
+      this.customEncryptionKey !== undefined
+        ? this.customEncryptionKey
+        : activeEncryptionKey !== undefined
+        ? activeEncryptionKey
+        : (globalThis as any).config?.databaseEncryptionKey !== undefined
+        ? (globalThis as any).config.databaseEncryptionKey
+        : process.env.DATABASE_ENCRYPTION_KEY || 'alsaada-default-key-min-32-chars-long!';
+    return normalizeKeyToHex(raw);
   }
 
   private get prisma(): PrismaClient {
@@ -449,14 +458,21 @@ export class WorkerEditFacade {
  */
 export class WorkerExcelService {
   private readonly customPrisma?: PrismaClient | undefined;
-  private readonly encryptionKey: string;
+  private readonly customEncryptionKey?: string | undefined;
 
   constructor(prisma?: PrismaClient | undefined, encryptionKey?: string | undefined) {
     this.customPrisma = prisma;
-    this.encryptionKey =
-      encryptionKey ||
+    this.customEncryptionKey = encryptionKey;
+  }
+
+  private get encryptionKey(): string {
+    const key =
+      this.customEncryptionKey ||
+      activeEncryptionKey ||
+      (globalThis as any).config?.databaseEncryptionKey ||
       process.env.DATABASE_ENCRYPTION_KEY ||
       'alsaada-default-key-min-32-chars-long!';
+    return normalizeKeyToHex(key);
   }
 
   private get service(): WorkerExportService {

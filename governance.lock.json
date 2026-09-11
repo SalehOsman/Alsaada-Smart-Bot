@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-11T08:39:12.688Z",
+  "generatedAt": "2026-09-11T15:45:29.690Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -26,7 +26,7 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "75061238a6e1c1ba371fa66a9a3ef6bf0f3c5d63f7bebfc02edccadaa6941773"
+      "sha256": "76dc04b86c7985e1b51bb1618dff581095e0f719e2aa6fd56d08e48f69074f0d"
     },
     {
       "path": "AGENTS.md",
@@ -54,19 +54,35 @@
     },
     {
       "path": "package.json",
-      "sha256": "38773eae0be74b1ce89582faba0723656c99c5f183edb28c1285324224c4582d"
+      "sha256": "1d68276ece3c74cedc389636877dbc75437f270e23c4b43938cbb6583d1ad1a4"
     },
     {
       "path": "pnpm-workspace.yaml",
       "sha256": "52b6e9eff4103583156c8fd18a6fc9d57d382d09ae4aa59f552702da242b2b18"
     },
     {
+      "path": "tools/governance/agent-dispatcher.ts",
+      "sha256": "f9dc92058b625070c4e308080c5ba9dd5b269b0c52892324b09bcc3d3b5f0875"
+    },
+    {
       "path": "tools/governance/common.ts",
       "sha256": "b0683271fb7b87c44e2e854ce2c9e6847473882831f0bd40e3cfece798bba679"
     },
     {
+      "path": "tools/governance/rag-engine.ts",
+      "sha256": "b7fe6c2367294846c600d6a95b6f3c1c378a2b5cb27c83bba97da186ce2e7bb6"
+    },
+    {
+      "path": "tools/governance/tests/agent-dispatcher.spec.ts",
+      "sha256": "b2756057377940ed7ed7d28ea0d9cd0bf40636e54e0ff67628fbf0a0c99a22df"
+    },
+    {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
       "sha256": "1b1e3ed46ddbded1dd10e8eee203262bf62371b2828594fb2dc3a09e06244539"
+    },
+    {
+      "path": "tools/governance/tests/rag-engine.spec.ts",
+      "sha256": "4b0ac353964ac5d9c01afa10265fe50384643a60de0ac341c01ba7997ec05b75"
     },
     {
       "path": "tools/governance/verify-ai-compliance.ts",

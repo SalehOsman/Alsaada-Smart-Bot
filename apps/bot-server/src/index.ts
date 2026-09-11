@@ -6,7 +6,7 @@ dns.setDefaultResultOrder('ipv4first');
 import { run } from '@grammyjs/runner';
 import { connectDatabase, disconnectDatabase } from './db.js';
 import { createBot } from './bot.js';
-import { config } from './config/env.js';
+import { config, validateStartupEnv } from './config/env.js';
 import { systemDataService } from './services/system-data.service.js';
 
 async function bootstrap() {
@@ -16,7 +16,15 @@ async function bootstrap() {
   console.log(`🔌 HTTP Port: ${config.port}`);
   console.log('================================================================');
 
-  // 1. Connect to PostgreSQL
+  // 1. Strict Fail-Fast Environment Validation
+  try {
+    validateStartupEnv(config);
+  } catch (error: any) {
+    console.error(error.message || error);
+    process.exit(1);
+  }
+
+  // 2. Connect to PostgreSQL
   try {
     await connectDatabase();
     // ⚡ Prime L1 in-memory RAM cache for instant sub-millisecond responses
@@ -24,23 +32,6 @@ async function bootstrap() {
   } catch (error) {
     console.error('❌ [FATAL] Failed to connect to PostgreSQL database:', error);
     process.exit(1);
-  }
-
-  // 2. Validate Telegram Bot Credentials
-  if (!config.botToken || config.botToken === 'YOUR_NEW_BOT_TOKEN_HERE') {
-    console.warn('\n================================================================');
-    console.warn('⚠️ [ACTION REQUIRED] BOT_TOKEN is not yet set in .env!');
-    console.warn('Please open F:\\Alsaada-Smart-Bot\\.env and paste your bot token');
-    console.warn('and SUPER_ADMIN_TELEGRAM_ID to activate the Telegram listener.');
-    console.warn('================================================================\n');
-
-    // Keep process alive to service database healthcheck
-    const keepAliveInterval = setInterval(() => {}, 60000);
-    process.on('SIGINT', () => {
-      clearInterval(keepAliveInterval);
-      disconnectDatabase().then(() => process.exit(0));
-    });
-    return;
   }
 
   // 3. Initialize & Start Telegram Bot

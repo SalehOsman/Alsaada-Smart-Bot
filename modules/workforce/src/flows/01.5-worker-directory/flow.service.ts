@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { decryptField } from '@alsaada/database';
+import { decryptField, normalizeKeyToHex } from '@alsaada/database';
 import { normalizeDigits, formatCurrency } from '@alsaada/regional-engine';
 import { normalizeEgyptianPhone } from '@alsaada/core-components';
 import { EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
@@ -10,13 +9,6 @@ import type {
   WorkerDirectoryResult,
   WorkerProfile360,
 } from './flow.types.js';
-
-function normalizeKeyToHex(key: string): string {
-  if (key.length === 64 && /^[0-9a-fA-F]+$/.test(key)) {
-    return key;
-  }
-  return createHash('sha256').update(key).digest('hex');
-}
 
 export class WorkerDirectoryService {
   private readonly normalizedKeyHex: string;

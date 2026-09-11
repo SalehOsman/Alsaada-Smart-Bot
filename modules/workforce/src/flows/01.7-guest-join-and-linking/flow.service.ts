@@ -1,5 +1,4 @@
-import { decryptField } from '@alsaada/database';
-import { createHash } from 'node:crypto';
+import { decryptField, normalizeKeyToHex } from '@alsaada/database';
 import type { GuestJoinRepository } from './flow.repository.js';
 import type { GuestJoinApplicationResult, ConsumeLinkingTokenResult } from './flow.types.js';
 import {
@@ -7,13 +6,6 @@ import {
   validateLinkingTokenConsumption,
 } from './flow.validators.js';
 import { formatWhatsAppMessageText } from './flow.messages.js';
-
-function normalizeKeyToHex(key: string): string {
-  if (key.length === 64 && /^[0-9a-fA-F]+$/.test(key)) {
-    return key;
-  }
-  return createHash('sha256').update(key).digest('hex');
-}
 
 export class GuestJoinService {
   private readonly normalizedKeyHex: string;

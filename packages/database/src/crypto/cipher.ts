@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+﻿import crypto from 'node:crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // Standard 96-bit IV for AES-GCM
@@ -47,4 +47,19 @@ export function decryptField(payload: string, keyHex: string): string {
   decrypted += decipher.final('utf8');
 
   return decrypted;
+}
+
+/**
+ * Normalizes any key string into a 64-character hexadecimal key (32 bytes).
+ * If already a 64-character hex string, returns it as-is.
+ * Otherwise, hashes it using SHA-256 to produce a valid 64-character hex key.
+ */
+export function normalizeKeyToHex(key: string): string {
+  if (!key) {
+    throw new Error('DATABASE_ENCRYPTION_KEY is required: Cannot normalize empty encryption key.');
+  }
+  if (key.length === 64 && /^[0-9a-fA-F]+$/.test(key)) {
+    return key;
+  }
+  return crypto.createHash('sha256').update(key).digest('hex');
 }

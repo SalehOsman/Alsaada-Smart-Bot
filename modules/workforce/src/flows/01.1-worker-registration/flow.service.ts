@@ -1,5 +1,5 @@
-import { createHmac, createHash } from 'node:crypto';
-import { encryptField, createBlindIndex } from '@alsaada/database';
+import { createHmac } from 'node:crypto';
+import { encryptField, createBlindIndex, normalizeKeyToHex } from '@alsaada/database';
 import { normalizeDigits, formatDateDMY, extractFirstTwoNames } from '@alsaada/regional-engine';
 import { normalizeEgyptianPhone } from '@alsaada/core-components';
 import { WorkerRegistrationRepository } from './flow.repository.js';
@@ -13,13 +13,6 @@ import type {
   WorkerWizardStep,
   WorkerDuplicateCheckResult,
 } from './flow.types.js';
-
-function normalizeKeyToHex(key: string): string {
-  if (key.length === 64 && /^[0-9a-fA-F]+$/.test(key)) {
-    return key;
-  }
-  return createHash('sha256').update(key).digest('hex');
-}
 
 export function generateWorkerInviteToken(workerCode: string, secretKey: string): string {
   return createHmac('sha256', secretKey)

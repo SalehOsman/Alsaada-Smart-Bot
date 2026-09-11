@@ -52,7 +52,7 @@ export function registerWorkforceRoutes(
   selfEditHandler.registerRoutes(bot);
 
   const guestJoinRepo = new GuestJoinRepository(prisma);
-  const guestJoinService = new GuestJoinService(guestJoinRepo, encryptionKey || 'alsaada-default-key');
+  const guestJoinService = new GuestJoinService(guestJoinRepo, encryptionKey);
   const guestJoinHandler = new GuestJoinHandler(guestJoinService);
   guestJoinHandler.registerRoutes(bot);
 

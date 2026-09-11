@@ -115,6 +115,8 @@ F:\Alsaada-Smart-Bot/
 * [19. السجل المرجعي الشامل لحصر وترحيل وظائف المنظومة والوظائف المستحدثة](./docs/19-legacy-to-enterprise-master-feature-migration-registry.md)
 * [20. دليل وحدة التحكم وإعدادات السوبر أدمن والتحكم السيادي](./docs/20-super-admin-settings-and-control-hub-guide.md)
 * [21. معيار الموديولات الإلزامي وبوابات الاعتماد الصارمة](./docs/21-mandatory-module-architecture-and-gates.md)
+* [22. معايير تصميم تجربة وواجهة المستخدم على تليجرام](./docs/22-telegram-ux-ui-design-system-and-ergonomics.md)
+* [23. ميثاق تشكيل الفرق الهندسية المستقلة ومحرك المعرفة المرجعية المحلي](./docs/23-autonomous-agent-roster-and-rag.md)
 
 ---
 

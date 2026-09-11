@@ -1,5 +1,4 @@
-import { encryptField, decryptField, createBlindIndex } from '@alsaada/database';
-import { createHash } from 'node:crypto';
+import { encryptField, decryptField, createBlindIndex, normalizeKeyToHex } from '@alsaada/database';
 import type { WorkerSelfEditRepository } from './flow.repository.js';
 import type { WorkerSelfEditInput, WorkerSelfEditResult } from './flow.types.js';
 import {
@@ -7,13 +6,6 @@ import {
   isForbiddenFinancialField,
   validateFieldValue,
 } from './flow.validators.js';
-
-function normalizeKeyToHex(key: string): string {
-  if (key.length === 64 && /^[0-9a-fA-F]+$/.test(key)) {
-    return key;
-  }
-  return createHash('sha256').update(key).digest('hex');
-}
 
 export class WorkerSelfEditService {
   private readonly normalizedKeyHex: string;

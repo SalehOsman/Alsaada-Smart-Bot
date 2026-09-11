@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import {
   encryptField,
   decryptField,
+  normalizeKeyToHex,
   createBlindIndex,
   computeTransactionHash,
   verifyLedgerChain,
@@ -43,6 +44,18 @@ describe('@alsaada/database security', () => {
       const tampered = parts.join(':');
 
       expect(() => decryptField(tampered, testKey)).toThrow();
+    });
+
+    it('normalizes 64-hex keys and passphrase keys properly', () => {
+      const hexKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+      expect(normalizeKeyToHex(hexKey)).toBe(hexKey);
+
+      const passphrase = 'my-secret-passphrase';
+      const expectedSha256 = crypto.createHash('sha256').update(passphrase).digest('hex');
+      expect(normalizeKeyToHex(passphrase)).toBe(expectedSha256);
+      expect(normalizeKeyToHex(passphrase)).toHaveLength(64);
+
+      expect(() => normalizeKeyToHex('')).toThrow('Cannot normalize empty encryption key.');
     });
   });
 

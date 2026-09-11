@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import type { Prisma } from '@alsaada/database';
-import { decryptField } from '@alsaada/database';
+import { decryptField, normalizeKeyToHex } from '@alsaada/database';
 import { parseEgyptianNationalId, EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
 import { normalizeDigits, formatDateDMY } from '@alsaada/regional-engine';
 import { WorkerExportRepository } from './flow.repository.js';
@@ -15,16 +15,20 @@ import type {
 } from './flow.types.js';
 
 export class WorkerExportService {
+  private readonly normalizedKeyHex?: string | undefined;
+
   constructor(
     private readonly repository: WorkerExportRepository,
     private readonly encryptionKey?: string
-  ) {}
+  ) {
+    this.normalizedKeyHex = this.encryptionKey ? normalizeKeyToHex(this.encryptionKey) : undefined;
+  }
 
   private safeDecrypt(value: string | null | undefined): string {
     if (!value) return '';
-    if (!this.encryptionKey) return value;
+    if (!this.normalizedKeyHex) return value;
     try {
-      return decryptField(value, this.encryptionKey);
+      return decryptField(value, this.normalizedKeyHex);
     } catch {
       return value;
     }

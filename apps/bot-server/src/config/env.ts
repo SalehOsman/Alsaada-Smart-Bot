@@ -81,3 +81,42 @@ export function loadConfig(): AppConfig {
 
 export const config = loadConfig();
 (globalThis as any).config = config;
+
+export function validateStartupEnv(cfg: AppConfig = config): void {
+  const errors: string[] = [];
+
+  // 1. Validate BOT_TOKEN
+  const botToken = cfg.botToken ? cfg.botToken.trim() : '';
+  if (
+    !botToken ||
+    botToken === 'YOUR_NEW_BOT_TOKEN_HERE' ||
+    botToken === 'your_telegram_bot_token_here'
+  ) {
+    errors.push('BOT_TOKEN is missing or set to placeholder in environment (.env).');
+  }
+
+  // 2. Validate DATABASE_ENCRYPTION_KEY
+  const encKey = cfg.databaseEncryptionKey ? cfg.databaseEncryptionKey.trim() : '';
+  if (!encKey) {
+    errors.push('DATABASE_ENCRYPTION_KEY is missing or empty in environment (.env).');
+  } else if (!/^[0-9a-fA-F]{64}$/.test(encKey)) {
+    errors.push(
+      `DATABASE_ENCRYPTION_KEY is invalid: expected 64 hexadecimal characters (32 bytes AES-256), got ${encKey.length} characters.`
+    );
+  } else if (
+    encKey.toLowerCase() === '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' &&
+    cfg.nodeEnv === 'production'
+  ) {
+    errors.push('DATABASE_ENCRYPTION_KEY is using insecure example key from .env.example in production.');
+  }
+
+  if (errors.length > 0) {
+    const banner = [
+      '================================================================',
+      '❌ [FATAL CONFIG ERROR] Al-Saada Bot Server Startup Aborted:',
+      ...errors.map((e) => `   • ${e}`),
+      '================================================================',
+    ].join('\n');
+    throw new Error(banner);
+  }
+}

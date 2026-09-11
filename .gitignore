@@ -37,11 +37,13 @@ coverage/
 .nyc_output/
 
 # Temporary and Scratch files
+.cache/
 .scratch/
 scratch/
 tmp/
 temp/
-.agents/
+.agents/*
+!.agents/skills/
 
 # OS metadata
 .DS_Store

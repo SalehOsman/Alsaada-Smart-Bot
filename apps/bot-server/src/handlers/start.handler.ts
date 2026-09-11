@@ -79,9 +79,9 @@ export async function handleStart(ctx: MyContext): Promise<void> {
     const signature = parts[3]?.trim() || '';
     const applicantTelegramId = BigInt(applicantTelegramIdStr || '0');
 
-    const secretKey = config.databaseEncryptionKey || config.botToken;
+    const secretKey = config.databaseEncryptionKey;
     if (!secretKey) {
-      throw new Error('Missing encryption key or bot token in configuration.');
+      throw new Error('DATABASE_ENCRYPTION_KEY is required in configuration.');
     }
     const guestJoinRepo = new GuestJoinRepository(prisma);
     const guestJoinService = new GuestJoinService(guestJoinRepo, secretKey);
@@ -148,9 +148,9 @@ export async function handleStart(ctx: MyContext): Promise<void> {
       workerCode = startPayload.replace(/^(join_|worker_)/, '').trim();
     }
 
-    const secretKey = config.databaseEncryptionKey || config.botToken;
+    const secretKey = config.databaseEncryptionKey;
     if (!secretKey) {
-      throw new Error('Missing encryption key or bot token in configuration.');
+      throw new Error('DATABASE_ENCRYPTION_KEY is required in configuration.');
     }
     const isTokenValid = inviteToken ? verifyWorkerInviteToken(workerCode, inviteToken, secretKey) : false;
 
@@ -258,9 +258,9 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const secretKey = config.databaseEncryptionKey || config.botToken;
+  const secretKey = config.databaseEncryptionKey;
   if (!secretKey) {
-    throw new Error('Missing encryption key or bot token in configuration.');
+    throw new Error('DATABASE_ENCRYPTION_KEY is required in configuration.');
   }
   if (!verifyWorkerInviteToken(workerCode, token, secretKey)) {
     await ctx.reply('⚠️ *تنبيه أمني:* رمز توثيق الدعوة غير مطابق أو تم التلاعب به.', {
