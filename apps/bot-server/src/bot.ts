@@ -46,6 +46,7 @@ import {
   handleWorkerIdCard,
   handleGuestIdentity,
 } from './handlers/worker-portal.handler.js';
+import { registerGroupManagerHandlers } from './handlers/group-manager.handler.js';
 
 
 export function createBot(): Bot<MyContext> {
@@ -172,6 +173,9 @@ export function createBot(): Bot<MyContext> {
       await workforceHandlers.guestJoinHandler.handleStatusCheck(ctx as any);
     },
   });
+
+  // 5.2 Register Group Management & Dynamic Binding Handlers
+  registerGroupManagerHandlers(bot);
 
 
   // 6. Pending Input Interceptors (Location, Text Inputs)

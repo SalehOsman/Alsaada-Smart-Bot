@@ -29,6 +29,8 @@ export function buildCorporateSubKeyboard(isImpersonating?: boolean): InlineKeyb
     .row()
     .text('💼 الأقسام الوظيفية ومصفوفة المهن', 'action:settings:job_matrix')
     .row()
+    .text('🏛️ ربط وإدارة مجموعات تيليجرام', 'action:settings:telegram_groups')
+    .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -62,6 +64,8 @@ export function buildSystemSubKeyboard(isImpersonating?: boolean): InlineKeyboar
     .text('⚡ رادار الأداء والسرعة الفائقة (APM)', 'action:settings:apm_dashboard')
     .row()
     .text('🛑 صمامات الطوارئ والذاكرة', 'action:settings:emergency_cache')
+    .row()
+    .text('🔔 حوكمة وضبط إشعارات المنظومة', 'action:settings:notification_policies')
     .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');

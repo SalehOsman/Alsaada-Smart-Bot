@@ -4,10 +4,11 @@ import type { AdminAssignmentDto, SiteOptionDto } from './flow.types.js';
 export class AdminAssignmentRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async listAdminUsers(): Promise<AdminAssignmentDto[]> {
+  async listAdminUsers(excludeTelegramId?: bigint): Promise<AdminAssignmentDto[]> {
     const users = await this.prisma.user.findMany({
       where: {
         role: { in: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN', 'ACCOUNTANT', 'EXECUTIVE'] },
+        ...(excludeTelegramId ? { telegramId: { not: excludeTelegramId } } : {}),
       },
       include: { assignedSite: true },
       orderBy: { fullName: 'asc' },
@@ -21,6 +22,15 @@ export class AdminAssignmentRepository {
       assignedSiteId: u.assignedSiteId,
       assignedSiteName: u.assignedSite?.name ?? null,
     }));
+  }
+
+  async countActiveSuperAdmins(): Promise<number> {
+    return this.prisma.user.count({
+      where: {
+        role: 'SUPER_ADMIN',
+        isActive: true,
+      },
+    });
   }
 
   async getUserAssignment(telegramId: bigint): Promise<AdminAssignmentDto | null> {

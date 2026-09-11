@@ -44,23 +44,28 @@ export function formatExpandableQuote(text: string, mode: 'html' | 'markdown' = 
 }
 
 /**
- * Wraps text in Telegram monospace code tag (<code>).
+ * Wraps text in Telegram monospace formatting.
  * Enables native 1-tap direct copy on mobile devices.
+ * Supports Markdown (`text`) by default, or HTML (<code>text</code>).
  */
-export function formatMonospace(text: string): string {
+export function formatMonospace(text: string, mode: 'markdown' | 'html' = 'markdown'): string {
   if (!text || text.trim() === '') return '';
-  return `<code>${text}</code>`;
+  return mode === 'html' ? `<code>${text}</code>` : `\`${text}\``;
 }
 
 /**
  * Formats codes, IDs, and tokens for 1-tap direct copy on mobile devices.
  * Semantic alias to formatMonospace that supports strings, numbers, and BigInts.
+ * Defaults to Markdown backticks (`code`) for clean rendering without raw HTML tag leakage.
  */
-export function formatClickToCopy(code: string | number | bigint): string {
+export function formatClickToCopy(
+  code: string | number | bigint,
+  mode: 'markdown' | 'html' = 'markdown'
+): string {
   if (code === undefined || code === null) return '';
   const str = String(code).trim();
   if (str === '') return '';
-  return `<code>${str}</code>`;
+  return mode === 'html' ? `<code>${str}</code>` : `\`${str}\``;
 }
 
 /**

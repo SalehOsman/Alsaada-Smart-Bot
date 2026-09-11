@@ -1,0 +1,66 @@
+{
+  "flowCode": "00.10",
+  "flowName": "حوكمة وضبط سياسات إشعارات المنظومة",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT"
+  ],
+  "entryPoints": [
+    "action:settings:notification_policies"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "الرقابة والأداء",
+    "حوكمة وضبط الإشعارات"
+  ],
+  "buttons": [
+    "action:settings:notification_policies",
+    "pol:site",
+    "pol:hq",
+    "pol:c:",
+    "pol:t:",
+    "pol:s:",
+    "pol:res:"
+  ],
+  "inputs": [
+    "select:scope",
+    "toggle:feature"
+  ],
+  "outputs": [
+    "card:policies_hub",
+    "card:scope_departments",
+    "card:department_detail"
+  ],
+  "dataImpact": {
+    "database": [],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "00.11"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

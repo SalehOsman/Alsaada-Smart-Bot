@@ -24,7 +24,8 @@ export class AdminAssignmentHandler {
     }
 
     if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
-    const users = await this.service.listAdminUsers();
+    const callerId = ctx.from?.id ? BigInt(ctx.from.id) : undefined;
+    const users = await this.service.listAdminUsers(callerId);
     const keyboard = buildAdminAssignmentsHubKeyboard(users, ctx.isImpersonating);
     const text = formatAdminAssignmentsHub(noticeText);
 
@@ -46,6 +47,13 @@ export class AdminAssignmentHandler {
     noticeText?: string
   ): Promise<void> {
     if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') return;
+
+    // Self-modification guard
+    if (ctx.from?.id && targetTelegramId === BigInt(ctx.from.id)) {
+      await showModalAlert(ctx, '🚫 أمان النظام: لا يمكنك تعديل صلاحيات أو نطاق إشراف حسابك الشخصي بنفسك.');
+      return;
+    }
+
     if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
 
     const user = await this.service.getUserAssignment(targetTelegramId);
@@ -76,9 +84,10 @@ export class AdminAssignmentHandler {
   ): Promise<void> {
     if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') return;
 
-    const res = await this.service.setAssignment(targetTelegramId, siteIdOrGlobal);
+    const actorTelegramId = ctx.from?.id ? BigInt(ctx.from.id) : undefined;
+    const res = await this.service.setAssignment(targetTelegramId, siteIdOrGlobal, actorTelegramId);
     if (!res.success || !res.user) {
-      await showModalAlert(ctx, `❌ ${res.error || 'فشل التعيين'}`);
+      await showModalAlert(ctx, res.error || 'فشل التعيين');
       return;
     }
 

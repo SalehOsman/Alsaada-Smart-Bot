@@ -28,6 +28,8 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
 
   it('should set global assignment when GLOBAL passed', async () => {
     const mockRepo = {
+      getUserAssignment: vi.fn().mockResolvedValue(sampleUser),
+      countActiveSuperAdmins: vi.fn().mockResolvedValue(2),
       setAssignment: vi.fn().mockResolvedValue({
         ...sampleUser,
         assignedSiteId: null,
@@ -45,6 +47,8 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
 
   it('should set site assignment for specific site ID', async () => {
     const mockRepo = {
+      getUserAssignment: vi.fn().mockResolvedValue(sampleUser),
+      countActiveSuperAdmins: vi.fn().mockResolvedValue(2),
       setAssignment: vi.fn().mockResolvedValue({
         ...sampleUser,
         assignedSiteId: 'site-xyz',
@@ -59,4 +63,44 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
     expect(res.user?.assignedSiteId).toBe('site-xyz');
     expect(mockRepo.setAssignment).toHaveBeenCalledWith(111222333n, 'site-xyz');
   });
+
+  it('should reject self-modification with security error', async () => {
+    const mockRepo = {
+      getUserAssignment: vi.fn().mockResolvedValue(sampleUser),
+      countActiveSuperAdmins: vi.fn().mockResolvedValue(2),
+      setAssignment: vi.fn(),
+    } as unknown as AdminAssignmentRepository;
+
+    const service = new AdminAssignmentService(mockRepo);
+    // Actor is trying to modify their own assignment
+    const res = await service.setAssignment(111222333n, 'site-xyz', 111222333n);
+
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('أمان النظام');
+    expect(mockRepo.setAssignment).not.toHaveBeenCalled();
+  });
+
+  it('should reject restricting the last standing Super Admin', async () => {
+    const superAdminUser = {
+      ...sampleUser,
+      id: 'u-super',
+      telegramId: 999888777n,
+      role: 'SUPER_ADMIN',
+    };
+
+    const mockRepo = {
+      getUserAssignment: vi.fn().mockResolvedValue(superAdminUser),
+      // Only 1 active super admin exists!
+      countActiveSuperAdmins: vi.fn().mockResolvedValue(1),
+      setAssignment: vi.fn(),
+    } as unknown as AdminAssignmentRepository;
+
+    const service = new AdminAssignmentService(mockRepo);
+    const res = await service.setAssignment(999888777n, 'site-xyz', 111222333n);
+
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('المشرف العام الوحيد');
+    expect(mockRepo.setAssignment).not.toHaveBeenCalled();
+  });
 });
+

@@ -66,14 +66,16 @@ describe('Telegram UX Formatters & Components', () => {
   });
 
   describe('formatMonospace & formatClickToCopy', () => {
-    it('wraps text in <code> tags for 1-tap copying', () => {
-      expect(formatMonospace('29901011234567')).toBe('<code>29901011234567</code>');
+    it('wraps text in markdown backticks by default for 1-tap copying without raw tags', () => {
+      expect(formatMonospace('29901011234567')).toBe('`29901011234567`');
+      expect(formatMonospace('29901011234567', 'html')).toBe('<code>29901011234567</code>');
     });
 
-    it('formatClickToCopy supports strings, numbers and BigInts', () => {
-      expect(formatClickToCopy('OP-DRV-0042')).toBe('<code>OP-DRV-0042</code>');
-      expect(formatClickToCopy(12345)).toBe('<code>12345</code>');
-      expect(formatClickToCopy(7594239391n)).toBe('<code>7594239391</code>');
+    it('formatClickToCopy supports strings, numbers and BigInts with markdown default', () => {
+      expect(formatClickToCopy('OP-DRV-0042')).toBe('`OP-DRV-0042`');
+      expect(formatClickToCopy(12345)).toBe('`12345`');
+      expect(formatClickToCopy(7594239391n)).toBe('`7594239391`');
+      expect(formatClickToCopy(7594239391n, 'html')).toBe('<code>7594239391</code>');
     });
 
     it('returns empty string for empty or nullish inputs', () => {

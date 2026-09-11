@@ -53,6 +53,15 @@ import { EmergencyCacheRepository } from './flows/00.9-emergency-cache/flow.repo
 import { EmergencyCacheService } from './flows/00.9-emergency-cache/flow.service.js';
 import { EmergencyCacheHandler } from './flows/00.9-emergency-cache/flow.handler.js';
 
+// Flow 00.10 Notification Policies
+import { NotificationPoliciesService } from './flows/00.10-notification-policies/flow.service.js';
+import { NotificationPoliciesHandler } from './flows/00.10-notification-policies/flow.handler.js';
+
+// Flow 00.11 Telegram Groups
+import { TelegramGroupsRepository } from './flows/00.11-telegram-groups/flow.repository.js';
+import { TelegramGroupsService } from './flows/00.11-telegram-groups/flow.service.js';
+import { TelegramGroupsHandler } from './flows/00.11-telegram-groups/flow.handler.js';
+
 export interface SettingsModuleHandlers {
   corporateHandler: CorporateProfileHandler;
   sitesHandler: SitesHubHandler;
@@ -63,6 +72,8 @@ export interface SettingsModuleHandlers {
   auditVaultHandler: AuditIncidentVaultHandler;
   apmHandler: ApmTelemetryHandler;
   emergencyCacheHandler: EmergencyCacheHandler;
+  notificationPoliciesHandler: NotificationPoliciesHandler;
+  telegramGroupsHandler: TelegramGroupsHandler;
   handleTextInput: (ctx: SettingsModuleContext) => Promise<boolean>;
   handleLocationInput: (ctx: SettingsModuleContext) => Promise<boolean>;
 }
@@ -117,6 +128,15 @@ export function registerSettingsRoutes(
   const emergencyRepo = new EmergencyCacheRepository(prisma, redis);
   const emergencyService = new EmergencyCacheService(emergencyRepo);
   const emergencyCacheHandler = new EmergencyCacheHandler(emergencyService);
+
+  // 00.10 Notification Policies
+  const notifPoliciesService = new NotificationPoliciesService(redis ?? undefined);
+  const notifPoliciesHandler = new NotificationPoliciesHandler(notifPoliciesService);
+
+  // 00.11 Telegram Groups
+  const telegramGroupsRepo = new TelegramGroupsRepository(prisma, redis);
+  const telegramGroupsService = new TelegramGroupsService(telegramGroupsRepo);
+  const telegramGroupsHandler = new TelegramGroupsHandler(telegramGroupsService, telegramGroupsRepo);
 
   // --- Central Hub & Navigation Routes ---
   bot.command(['settings', 'admin'], handleSettingsHub);
@@ -284,12 +304,58 @@ export function registerSettingsRoutes(
   bot.callbackQuery('action:emergency:toggle_maintenance', (ctx) => emergencyCacheHandler.handleToggleMaintenance(ctx));
   bot.callbackQuery('action:emergency:prewarm', (ctx) => emergencyCacheHandler.handlePrewarm(ctx));
 
+  // --- Flow 00.10 Notification Policies ---
+  bot.callbackQuery('action:settings:notification_policies', (ctx) => notifPoliciesHandler.renderPoliciesHub(ctx, true));
+  bot.callbackQuery('pol:site', (ctx) => notifPoliciesHandler.renderScopeDepartments(ctx, 'site', true));
+  bot.callbackQuery('pol:hq', (ctx) => notifPoliciesHandler.renderScopeDepartments(ctx, 'hq', true));
+  bot.callbackQuery(/^pol:c:(site|hq):(.+)$/, async (ctx) => {
+    const scope = ctx.match?.[1] as 'site' | 'hq';
+    const deptKey = ctx.match?.[2];
+    if (scope && deptKey) await notifPoliciesHandler.renderDepartmentDetail(ctx, scope, deptKey, true);
+  });
+  bot.callbackQuery(/^pol:t:(site|hq):(.+)$/, async (ctx) => {
+    const scope = ctx.match?.[1] as 'site' | 'hq';
+    const featureKey = ctx.match?.[2];
+    if (scope && featureKey) await notifPoliciesHandler.handleToggleFeature(ctx, scope, featureKey);
+  });
+  bot.callbackQuery(/^pol:s:(site|hq):(.+)$/, async (ctx) => {
+    const scope = ctx.match?.[1] as 'site' | 'hq';
+    const featureKey = ctx.match?.[2];
+    if (scope && featureKey) await notifPoliciesHandler.handleToggleSilent(ctx, scope, featureKey);
+  });
+  bot.callbackQuery(/^pol:res:(site|hq)$/, async (ctx) => {
+    const scope = ctx.match?.[1] as 'site' | 'hq';
+    if (scope) await notifPoliciesHandler.handleResetScope(ctx, scope);
+  });
+
+  // --- Flow 00.11 Telegram Groups ---
+  bot.callbackQuery('action:settings:telegram_groups', (ctx) => telegramGroupsHandler.renderGroupsHub(ctx, true));
+  bot.callbackQuery('grp:hq', (ctx) => telegramGroupsHandler.renderHqDetail(ctx, true));
+  bot.callbackQuery('grp:hq:edit', (ctx) => telegramGroupsHandler.handlePromptEditHqChatId(ctx));
+  bot.callbackQuery('grp:hq:init', (ctx) => telegramGroupsHandler.handleCreateHqTopics(ctx));
+  bot.callbackQuery('grp:hq:test', (ctx) => telegramGroupsHandler.handleDiagnoseHqGroup(ctx));
+  bot.callbackQuery('grp:hq:del', (ctx) => telegramGroupsHandler.handleUnbindHqGroup(ctx));
+  bot.callbackQuery('grp:s:list', (ctx) => telegramGroupsHandler.renderSitesMatrix(ctx, true));
+  bot.callbackQuery(/^grp:s:v:(.+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await telegramGroupsHandler.renderSiteDetail(ctx, ctx.match[1], true);
+  });
+  bot.callbackQuery(/^grp:s:e:(.+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await telegramGroupsHandler.handlePromptEditSiteChatId(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^grp:s:t:(.+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await telegramGroupsHandler.handleDiagnoseSiteGroup(ctx, ctx.match[1]);
+  });
+  bot.callbackQuery(/^grp:s:d:(.+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await telegramGroupsHandler.handleUnbindSiteGroup(ctx, ctx.match[1]);
+  });
+
   // Text input multiplexer
   const handleTextInput = async (ctx: SettingsModuleContext): Promise<boolean> => {
     if (await corporateHandler.handleTextInput(ctx)) return true;
     if (await sitesHandler.handleTextInput(ctx)) return true;
     if (await adminProfileHandler.handleTextInput(ctx)) return true;
     if (await auditVaultHandler.handleJourneyInput(ctx)) return true;
+    if (await telegramGroupsHandler.handleTextInput(ctx)) return true;
     return false;
   };
 
@@ -308,6 +374,8 @@ export function registerSettingsRoutes(
     auditVaultHandler,
     apmHandler,
     emergencyCacheHandler,
+    notificationPoliciesHandler: notifPoliciesHandler,
+    telegramGroupsHandler,
     handleTextInput,
     handleLocationInput,
   };

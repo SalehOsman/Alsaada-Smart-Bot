@@ -102,13 +102,14 @@ export class ErrorVaultService {
   /**
    * 🚨 إرسال إنذار فوري ومباشر لحساب السوبر أدمن على تليجرام
    */
+  /**
+   * 🚨 إرسال إنذار فوري ومباشر لحسابات السوبر أدمنز على تليجرام في الخاص حصراً (Zero Data Leak)
+   */
   async dispatchSuperAdminAlert(
     log: SystemErrorLog,
     api: Api,
     isRecurrent = false
   ): Promise<void> {
-    if (!config.superAdminTelegramId || config.superAdminTelegramId === 0n) return;
-
     const titlePrefix = isRecurrent
       ? `🚨 *[تكرار عطل برمجي متكرر (${log.occurrenceCount}x)]*`
       : `⚠️ *[إنذار أمني وعطل برمجي جديد في البوت]*`;
@@ -136,31 +137,90 @@ export class ErrorVaultService {
       .row()
       .text('✅ اعتماد حل المشكلة', `action:error_log:resolve:${log.id}`);
 
-    try {
-      await api.sendMessage(Number(config.superAdminTelegramId), alertText, {
-        parse_mode: 'Markdown',
-        reply_markup: keyboard,
-      });
-    } catch {
-      // Non-blocking catch
+    // Fetch all active Super Admins to send private DMs
+    const superAdmins = await prisma.user.findMany({
+      where: { role: 'SUPER_ADMIN', isActive: true },
+      select: { telegramId: true },
+    });
+
+    const targetTelegramIds = new Set<number>();
+    for (const sa of superAdmins) {
+      if (sa.telegramId) targetTelegramIds.add(Number(sa.telegramId));
+    }
+    if (config.superAdminTelegramId && config.superAdminTelegramId !== 0n) {
+      targetTelegramIds.add(Number(config.superAdminTelegramId));
+    }
+
+    for (const tgId of targetTelegramIds) {
+      try {
+        await api.sendMessage(tgId, alertText, {
+          parse_mode: 'Markdown',
+          reply_markup: keyboard,
+        });
+      } catch {
+        // Safe non-blocking catch per super admin
+      }
     }
   }
 
   /**
-   * 🛠️ بطاقة الخطأ التفاعلية للمستخدم مع رمز البلاغ وأزرار الرجوع (Rule 5.5)
+   * 🛠️ بطاقة الخطأ التفاعلية للمستخدم مع رمز البلاغ وأزرار الواتساب المباشرة لكافة السوبر أدمنز
    */
-  buildUserErrorResponse(errorReference: string): {
+  async buildUserErrorResponse(
+    errorReference: string,
+    actorContext?: {
+      actorName?: string | undefined;
+      actorTelegramId?: bigint | undefined;
+      siteName?: string | undefined;
+    }
+  ): Promise<{
     text: string;
     keyboard: InlineKeyboard;
-  } {
+  }> {
     const text =
       `⚠️ *عذراً، حدث خطأ غير متوقع أثناء معالجة طلبك*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `تم توثيق وتمرير تقرير العطل تلقائياً لغرفة العمليات المركزية للمراجعة.\n` +
       `🔹 *رمز البلاغ المرجعي:* \`${errorReference}\`\n\n` +
-      `يرجى إعادة المحاولة أو العودة للقائمة الرئيسية:`;
+      `يمكنك إرسال تفاصيل البلاغ مباشرة لإدارة الشركة عبر واتساب، أو العودة للقائمة الرئيسية:`;
 
-    const keyboard = new InlineKeyboard()
+    const keyboard = new InlineKeyboard();
+
+    // Query active Super Admins to generate personalized WhatsApp buttons
+    try {
+      const superAdmins = await prisma.user.findMany({
+        where: { role: 'SUPER_ADMIN', isActive: true },
+        select: { fullName: true, phoneEncrypted: true },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      for (const admin of superAdmins) {
+        if (admin.phoneEncrypted && config.databaseEncryptionKey) {
+          try {
+            const { decryptField } = await import('@alsaada/database');
+            const phone = decryptField(admin.phoneEncrypted, config.databaseEncryptionKey);
+            const { buildWhatsAppErrorUrl } = await import('@alsaada/core-components');
+            const waUrl = buildWhatsAppErrorUrl(phone, {
+              errorReference,
+              actorName: actorContext?.actorName,
+              actorTelegramId: actorContext?.actorTelegramId,
+              siteName: actorContext?.siteName,
+            });
+
+            if (waUrl) {
+              const adminLabel = admin.fullName ? ` (${admin.fullName})` : '';
+              keyboard.url(`📲 إرسال العطل للمدير العام${adminLabel} عبر واتساب`, waUrl).row();
+            }
+          } catch {
+            // Safe fallback if decrypt fails
+          }
+        }
+      }
+    } catch {
+      // Safe fallback if DB query fails during crash
+    }
+
+    keyboard
       .text('🔄 إعادة المحاولة', 'action:main_menu')
       .row()
       .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -198,7 +258,12 @@ export class ErrorVaultService {
 
       // If chat is available, send user-facing error response card
       if (ctx?.chat) {
-        const { text, keyboard } = this.buildUserErrorResponse(savedLog.errorReference);
+        const actorName = ctx.from?.first_name ? `${ctx.from.first_name} ${ctx.from.last_name || ''}`.trim() : undefined;
+        const actorTelegramId = ctx.from?.id ? BigInt(ctx.from.id) : undefined;
+        const { text, keyboard } = await this.buildUserErrorResponse(savedLog.errorReference, {
+          actorName,
+          actorTelegramId,
+        });
         await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard }).catch(() => {});
       }
     } catch (vaultErr) {

@@ -65,3 +65,56 @@ export function buildWhatsAppLink(data: WhatsAppReceiptData): string | null {
   const text = formatWhatsAppReceiptText(data);
   return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(text)}`;
 }
+
+export interface WhatsAppErrorReportData {
+  errorReference: string;
+  actorName?: string | undefined;
+  actorTelegramId?: string | number | bigint | undefined;
+  companyName?: string | undefined;
+  occurredAt?: Date | undefined;
+  siteName?: string | undefined;
+}
+
+/**
+ * Formats standard error escalation report text for WhatsApp messaging to Super Admins.
+ */
+export function formatWhatsAppErrorReportText(data: WhatsAppErrorReportData): string {
+  const dtStr = formatDate(data.occurredAt ?? new Date());
+  const lines: string[] = [
+    `🚨 *بلاغ عطل تشغيلي — منظومة السعادة سمارت بوت*`,
+    `━━━━━━━━━━━━━━━━━━━━━`,
+    `السلام عليكم ورحمة الله وبركاته،`,
+    `تم اعتراض عطل فني في المنظومة ويتطلب إشعار الإدارة العليا:`,
+    ``,
+    `🔖 *رمز البلاغ المرجعي:* ${data.errorReference}`,
+    `👤 *القائم بالعملية:* ${data.actorName || 'مستخدم ميداني'}`,
+  ];
+
+  if (data.actorTelegramId) {
+    lines.push(`🆔 *المعرف الرقمي:* ${String(data.actorTelegramId)}`);
+  }
+
+  if (data.siteName) {
+    lines.push(`📍 *الموقع الميداني:* ${data.siteName}`);
+  }
+
+  lines.push(`📅 *توقيت الحادثة:* ${dtStr}`);
+  lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
+  lines.push(`📌 إشعار رسمي آلي موجه للمدير العام للمتابعة الميدانية.`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Builds direct WhatsApp URL for escalating an error to a specific Super Admin.
+ */
+export function buildWhatsAppErrorUrl(
+  phone: string | null | undefined,
+  data: WhatsAppErrorReportData
+): string | null {
+  const normalizedPhone = normalizeEgyptianPhone(phone);
+  if (!normalizedPhone) return null;
+  const text = formatWhatsAppErrorReportText(data);
+  return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(text)}`;
+}
+

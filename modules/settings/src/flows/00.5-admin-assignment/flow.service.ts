@@ -5,8 +5,8 @@ import { validateSiteScope } from './flow.validators.js';
 export class AdminAssignmentService {
   constructor(private readonly repository: AdminAssignmentRepository) {}
 
-  async listAdminUsers(): Promise<AdminAssignmentDto[]> {
-    return this.repository.listAdminUsers();
+  async listAdminUsers(excludeTelegramId?: bigint): Promise<AdminAssignmentDto[]> {
+    return this.repository.listAdminUsers(excludeTelegramId);
   }
 
   async getUserAssignment(telegramId: bigint): Promise<AdminAssignmentDto | null> {
@@ -19,10 +19,36 @@ export class AdminAssignmentService {
 
   async setAssignment(
     telegramId: bigint,
-    siteIdOrGlobal: string
+    siteIdOrGlobal: string,
+    actorTelegramId?: bigint
   ): Promise<{ success: boolean; user?: AdminAssignmentDto; error?: string }> {
+    // 1. Guard against Self-Modification
+    if (actorTelegramId !== undefined && actorTelegramId === telegramId) {
+      return {
+        success: false,
+        error: 'أمان النظام: لا يمكنك تعديل صلاحيات أو نطاق إشراف حسابك الشخصي بنفسك.',
+      };
+    }
+
     if (!validateSiteScope(siteIdOrGlobal)) {
       return { success: false, error: 'معرف الموقع غير صالح.' };
+    }
+
+    // 2. Guard against Restricting or Demoting the Sole/Last Standing Super Admin
+    const targetUser = await this.repository.getUserAssignment(telegramId);
+    if (!targetUser) {
+      return { success: false, error: 'المشرف المطلوب غير موجود.' };
+    }
+
+    if (targetUser.role === 'SUPER_ADMIN') {
+      const activeSuperCount = await this.repository.countActiveSuperAdmins();
+      if (activeSuperCount <= 1) {
+        return {
+          success: false,
+          error:
+            'أمان الحوكمة: لا يمكن تقييد أو تعديل صلاحيات المشرف العام الوحيد بالمنظومة. يجب تعيين سوبر أدمن آخر أولاً لضمان وجود إدارة عليا.',
+        };
+      }
     }
 
     const siteId = siteIdOrGlobal === 'GLOBAL' ? null : siteIdOrGlobal;

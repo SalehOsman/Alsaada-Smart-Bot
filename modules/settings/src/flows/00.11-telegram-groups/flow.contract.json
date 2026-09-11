@@ -1,0 +1,74 @@
+{
+  "flowCode": "00.11",
+  "flowName": "ربط وإدارة مجموعات تيليجرام للعمليات والإدارة",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT"
+  ],
+  "entryPoints": [
+    "action:settings:telegram_groups"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "الكيان المؤسسي والمشاريع",
+    "ربط وإدارة مجموعات تيليجرام"
+  ],
+  "buttons": [
+    "action:settings:telegram_groups",
+    "grp:hq",
+    "grp:hq:edit",
+    "grp:hq:init",
+    "grp:hq:test",
+    "grp:hq:del",
+    "grp:s:list",
+    "grp:s:v:",
+    "grp:s:e:",
+    "grp:s:t:",
+    "grp:s:d:"
+  ],
+  "inputs": [
+    "text:chat_id"
+  ],
+  "outputs": [
+    "card:groups_hub",
+    "card:hq_detail",
+    "card:sites_matrix",
+    "card:site_detail",
+    "card:group_health"
+  ],
+  "dataImpact": {
+    "database": [
+      "Site"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "00.2",
+    "00.10"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}
