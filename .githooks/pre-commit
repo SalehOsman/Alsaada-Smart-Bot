@@ -17,5 +17,15 @@ pnpm arch:verify || {
   exit 1
 }
 
+pnpm migration:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Migration registry verification failed. Check docs/19 parity."
+  exit 1
+}
+
+pnpm flow-contracts:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Flow contracts verification failed."
+  exit 1
+}
+
 echo "✅ [PRE-COMMIT] All pre-commit checks passed successfully."
 exit 0

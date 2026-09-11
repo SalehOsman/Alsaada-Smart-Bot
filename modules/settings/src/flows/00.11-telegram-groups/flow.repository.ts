@@ -124,7 +124,36 @@ export class TelegramGroupsRepository {
       governorate: site.governorateCode || '-',
       telegramGroupId: site.telegramGroupId ? site.telegramGroupId.toString() : null,
       isBound: Boolean(site.telegramGroupId),
-      workersCount: site._count.workers,
+      workersCount: (site as { _count?: { workers?: number } })._count?.workers ?? 0,
+    };
+  }
+
+  async getSiteByCode(code: string): Promise<SiteGroupItemDto | null> {
+    const site = await this.prisma.site.findUnique({
+      where: { code: code.trim().toUpperCase() },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        governorateCode: true,
+        status: true,
+        telegramGroupId: true,
+        _count: {
+          select: { workers: { where: { isDeleted: false } } },
+        },
+      },
+    });
+
+    if (!site || site.status === 'ARCHIVED') return null;
+
+    return {
+      id: site.id,
+      code: site.code,
+      name: site.name,
+      governorate: site.governorateCode || '-',
+      telegramGroupId: site.telegramGroupId ? site.telegramGroupId.toString() : null,
+      isBound: Boolean(site.telegramGroupId),
+      workersCount: (site as { _count?: { workers?: number } })._count?.workers ?? 0,
     };
   }
 

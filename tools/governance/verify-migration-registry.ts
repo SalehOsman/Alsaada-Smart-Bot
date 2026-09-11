@@ -1,6 +1,6 @@
-﻿import { existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { createResult, fail, isCliEntrypoint, printAndExit, readUtf8, type VerificationResult } from './common.js';
+import { createResult, fail, isCliEntrypoint, listFlowDirs, printAndExit, readUtf8, toRepoPath, type VerificationResult } from './common.js';
 
 interface RegistryEntry {
   flowCode: string;
@@ -69,6 +69,24 @@ export function verifyMigrationRegistry(root = process.cwd()): VerificationResul
 
     if (isPending(entry.status) && entry.path.startsWith('modules/') && existsSync(join(root, entry.path))) {
       fail(result, `Flow ${entry.flowCode} is pending but has an existing module path: ${entry.path}`);
+    }
+  }
+
+  // Bidirectional verification: every flow on disk must be registered as completed in docs/19
+  const diskFlows = listFlowDirs(root);
+  const completedPaths = new Set(
+    entries
+      .filter((e) => isCompleted(e.status))
+      .map((e) => e.path.replace(/\\/g, '/').replace(/\/$/, ''))
+  );
+
+  for (const flowDir of diskFlows) {
+    const repoFlowPath = toRepoPath(root, flowDir).replace(/\\/g, '/');
+    if (!completedPaths.has(repoFlowPath)) {
+      fail(
+        result,
+        `Flow directory on disk is not registered as completed in docs/19: ${repoFlowPath}`
+      );
     }
   }
 

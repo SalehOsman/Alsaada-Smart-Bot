@@ -22,6 +22,23 @@ export class GuestJoinRepository {
     });
   }
 
+  async findWorkerProfile(workerId?: string, telegramId?: bigint) {
+    if (workerId) {
+      const worker = await this.prisma.worker.findUnique({
+        where: { id: workerId },
+        include: { site: true, department: true },
+      });
+      if (worker) return worker;
+    }
+    if (telegramId && telegramId > 0n) {
+      return this.prisma.worker.findFirst({
+        where: { telegramId, isDeleted: false },
+        include: { site: true, department: true },
+      });
+    }
+    return null;
+  }
+
   async findPendingApplication(applicantTelegramId: bigint) {
     return this.prisma.approvalTicket.findFirst({
       where: {

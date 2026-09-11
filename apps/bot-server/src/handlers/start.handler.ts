@@ -10,109 +10,8 @@ import { screenFlowService } from '../services/screen-flow.service.js';
 import { verifyWorkerInviteToken, validateLinkingTokenConsumption, GuestJoinRepository, GuestJoinService } from '@alsaada/workforce';
 import { syncUserCommandsScope } from '../services/command-scope.service.js';
 
-export function getRoleTitle(role: string): string {
-  switch (role) {
-    case 'SUPER_ADMIN':
-      return '👑 مدير عام (سوبر أدمن)';
-    case 'EXECUTIVE':
-      return '👔 إدارة تنفيذية ومالية';
-    case 'FIELD_ADMIN':
-      return '🛡️ مشرف موقع وميداني';
-    case 'ACCOUNTANT':
-      return '💼 محاسب مالي';
-    case 'WORKER':
-      return '👷 عامل مسجل (بوابة الخدمة الذاتية)';
-    case 'SUPPLIER':
-      return '🚚 مورد / مقاول باطن';
-    case 'GUEST':
-    default:
-      return '👤 زائر (بانتظار الربط والاعتماد)';
-  }
-}
-
-export function buildWelcomeMessage(ctx: MyContext): string {
-  const name = ctx.from?.first_name || 'أهلاً بك';
-  const role = ctx.effectiveRole || 'GUEST';
-  const roleTitle = getRoleTitle(role);
-
-  let simulationBanner = '';
-  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
-    simulationBanner =
-      `🎭 *[ وضع المحاكاة النشط — GHOST MODE ]*\n` +
-      `أنت تستعرض وتختبر النظام الآن بهوية: *${roleTitle}*\n` +
-      `لإنهاء المحاكاة والعودة لصلاحيات المدير العام، اضغط زر الإنهاء بالأسفل.\n` +
-      `────────────────────────\n\n`;
-  }
-
-  switch (role) {
-    case 'SUPER_ADMIN':
-      return (
-        `${simulationBanner}` +
-        `🏢 *منظومة شركة السعادة للمقاولات العامة*\n` +
-        `🤖 *محرك البوت المؤسسي الجديد (Al-Saada Enterprise Engine \`v${config.appVersion}\`)*\n\n` +
-        `مرحباً بك يا *${name}* 👋\n\n` +
-        `🔹 *المعرف الرقمي:* \`${ctx.from?.id}\`\n` +
-        `🔹 *الصلاحية المعتمدة:* ${roleTitle}\n` +
-        `🔹 *حالة الحساب:* 🟢 نشط ومعتمد\n` +
-        `🔹 *محرك البيانات:* PostgreSQL 16 (مشفر وموثق جنائياً)\n\n` +
-        `اختر القسم المطلوب من لوحة التحكم أدناه:`
-      );
-
-    case 'EXECUTIVE':
-      return (
-        `${simulationBanner}` +
-        `👔 *بوابة الإدارة التنفيذية والمالية*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
-        `مرحباً بك يا *${name}* 👋\n\n` +
-        `هنا يمكنك متابعة لوحات المؤشرات التشغيلية، السيولة النقدية، والموقف المالي للمشاريع.\n\n` +
-        `اختر التقرير أو الإجراء المطلوب من القائمة أدناه:`
-      );
-
-    case 'FIELD_ADMIN':
-      return (
-        `${simulationBanner}` +
-        `🛡️ *بوابة المشرف الميداني وإدارة المواقع*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
-        `مرحباً بك يا *${name}* 👋\n\n` +
-        `🔹 *المعرف الرقمي:* \`${ctx.from?.id}\`\n` +
-        `🔹 *الصلاحية المعتمدة:* ${roleTitle}\n` +
-        `🔹 *حالة الحساب:* 🟢 نشط ومعتمد ميدانياً\n\n` +
-        `اختر القسم التشغيلي المطلوب من لوحة التحكم أدناه:`
-      );
-
-    case 'WORKER':
-      return (
-        `${simulationBanner}` +
-        `👷 *بوابة الخدمة الذاتية للعاملين*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
-        `مرحباً بك يا *${name}* 👋\n\n` +
-        `هنا يمكنك الاستعلام عن كشف حسابك، مفردات قسيمة راتبك، وتقديم طلبات الإجازات والسلف.\n\n` +
-        `اختر الخدمة المطلوبة من القائمة أدناه:`
-      );
-
-    case 'SUPPLIER':
-      return (
-        `${simulationBanner}` +
-        `🚚 *بوابة الموردين ومقاولي الباطن*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
-        `مرحباً بك يا *${name}* 👋\n\n` +
-        `هنا يمكنك استعراض الفواتير المعتمدة، دفعاتك المالية، وتصدير كشوف الحساب الرسمية.\n\n` +
-        `اختر الإجراء المطلوب من القائمة أدناه:`
-      );
-
-    case 'GUEST':
-    default:
-      return (
-        `${simulationBanner}` +
-        `👤 *بوابة الزوار والمستخدمين الجدد*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
-        `مرحباً بك يا *${name}* 👋\n\n` +
-        `حسابك غير مرتبط حالياً بأي سجل وظيفي أو مالي معتمد في المنظومة.\n` +
-        `🔹 *معرفك الرقمي:* \`${ctx.from?.id}\`\n\n` +
-        `يمكنك تزويد الإدارة بمعرفك لربط حسابك أو تقديم طلب تسجيل جديد من الخيارات أدناه:`
-      );
-  }
-}
+import { getRoleTitle, buildWelcomeMessage } from './start.helpers.js';
+export { getRoleTitle, buildWelcomeMessage };
 
 /**
  * Render the main role interface in-place or via a new message
@@ -180,7 +79,10 @@ export async function handleStart(ctx: MyContext): Promise<void> {
     const signature = parts[3]?.trim() || '';
     const applicantTelegramId = BigInt(applicantTelegramIdStr || '0');
 
-    const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
+    const secretKey = config.databaseEncryptionKey || config.botToken;
+    if (!secretKey) {
+      throw new Error('Missing encryption key or bot token in configuration.');
+    }
     const guestJoinRepo = new GuestJoinRepository(prisma);
     const guestJoinService = new GuestJoinService(guestJoinRepo, secretKey);
 
@@ -246,7 +148,10 @@ export async function handleStart(ctx: MyContext): Promise<void> {
       workerCode = startPayload.replace(/^(join_|worker_)/, '').trim();
     }
 
-    const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
+    const secretKey = config.databaseEncryptionKey || config.botToken;
+    if (!secretKey) {
+      throw new Error('Missing encryption key or bot token in configuration.');
+    }
     const isTokenValid = inviteToken ? verifyWorkerInviteToken(workerCode, inviteToken, secretKey) : false;
 
     // رفض الروابط غير الموقعة أو المخمنة لمنع اختطاف الحسابات
@@ -261,17 +166,8 @@ export async function handleStart(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const worker = await prisma.worker.findFirst({
-      where: {
-        OR: [
-          { code: workerCode },
-          { legacyCode: workerCode },
-          { aliases: { has: workerCode } },
-        ],
-        isDeleted: false,
-      },
-      include: { site: true, department: true },
-    });
+    const guestJoinRepo = new GuestJoinRepository(prisma);
+    const worker = await guestJoinRepo.findWorkerByCodeOrSearch(workerCode);
 
     if (worker) {
       // إذا كان العامل مرتبطاً بالفعل بهذا الحساب
@@ -362,7 +258,10 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const secretKey = config.databaseEncryptionKey || config.botToken || 'alsaada-default-key';
+  const secretKey = config.databaseEncryptionKey || config.botToken;
+  if (!secretKey) {
+    throw new Error('Missing encryption key or bot token in configuration.');
+  }
   if (!verifyWorkerInviteToken(workerCode, token, secretKey)) {
     await ctx.reply('⚠️ *تنبيه أمني:* رمز توثيق الدعوة غير مطابق أو تم التلاعب به.', {
       reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
@@ -370,91 +269,38 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
     return;
   }
 
-  const worker = await prisma.worker.findFirst({
-    where: {
-      OR: [
-        { code: workerCode },
-        { legacyCode: workerCode },
-        { aliases: { has: workerCode } },
-      ],
-      isDeleted: false,
-    },
-    include: { site: true },
-  });
+  try {
+    const guestJoinRepo = new GuestJoinRepository(prisma);
+    const linkResult = await guestJoinRepo.linkWorkerAccount(
+      workerCode,
+      telegramId,
+      ctx.from.username || undefined,
+      token
+    );
 
-  if (!worker) {
-    await ctx.reply('❌ تعذر العثور على سجل العامل المطلوب.', {
+    await invalidateUserCache(telegramId);
+    await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
+
+    const successText =
+      `🎉 *تهانينا يا ${linkResult.workerName}! تم تفعيل وربط حسابك بنجاح 100%!*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `أصبحت الآن متصلاً رسمياً ببوابة الخدمة الذاتية للعاملين بشركة السعادة.\n\n` +
+      `🆔 *كودك الوظيفي:* \`#${linkResult.workerCode}\`\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `يمكنك الآن متابعة كافة مستحقاتك، طلبات الإجازات، والسلف المالية مباشرة.`;
+
+    ctx.effectiveRole = 'WORKER';
+    await ctx.reply(successText, {
+      parse_mode: 'Markdown',
+      reply_markup: buildMainMenuKeyboard(ctx),
+    });
+    return;
+  } catch (err: any) {
+    await ctx.reply(`⚠️ *تنبيه أمني:* ${err.message || 'تعذر إتمام عملية ربط وتفعيل الحساب.'}`, {
+      parse_mode: 'Markdown',
       reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
     });
     return;
-  }
-
-  if (worker.telegramId && worker.telegramId !== telegramId) {
-    await ctx.reply(
-      '⚠️ *تنبيه أمني:* هذا السجل الوظيفي مرتبط بالفعل بحساب تليجرام آخر.\nيرجى مراجعة إدارة الموارد البشرية لنقل أو تحديث الربط.',
-      {
-        parse_mode: 'Markdown',
-        reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
-      }
-    );
-    return;
-  }
-
-  // ربط العامل وتحديث حسابه في قاعدة البيانات ضمن معاملة ذرية موحدة (Atomic Transaction)
-  await prisma.$transaction([
-    prisma.worker.update({
-      where: { id: worker.id },
-      data: { telegramId },
-    }),
-    prisma.user.upsert({
-      where: { telegramId },
-      update: {
-        role: 'WORKER',
-        workerId: worker.id,
-        isActive: true,
-      },
-      create: {
-        telegramId,
-        username: ctx.from.username || null,
-        fullName: worker.name,
-        role: 'WORKER',
-        workerId: worker.id,
-        isActive: true,
-      },
-    }),
-  ]);
-
-  await invalidateUserCache(telegramId);
-  await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
-
-  const successText =
-    `🎉 *تهانينا يا ${worker.name}! تم تفعيل وربط حسابك بنجاح 100%!*\n` +
-    `━━━━━━━━━━━━━━━━━━━━━\n` +
-    `أصبحت الآن متصلاً رسمياً ببوابة الخدمة الذاتية للعاملين بشركة السعادة.\n\n` +
-    `🆔 *كودك الوظيفي:* \`#${worker.code}\`\n` +
-    `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'الموقع العام'}\n` +
-    `━━━━━━━━━━━━━━━━━━━━━\n` +
-    `يمكنك الآن متابعة كافة مستحقاتك، طلبات الإجازات، والسلف المالية مباشرة.`;
-
-  ctx.effectiveRole = 'WORKER';
-  if (ctx.dbUser) {
-    ctx.dbUser.role = 'WORKER';
-    ctx.dbUser.workerId = worker.id;
-    ctx.dbUser.isActive = true;
-  }
-
-  await screenFlowService.ensurePersistentKeyboard(ctx);
-
-  try {
-    await ctx.editMessageText(successText, {
-      parse_mode: 'Markdown',
-      reply_markup: new InlineKeyboard().text('🏠 الانتقال للخدمة الذاتية', 'action:main_menu'),
-    });
-  } catch {
-    await ctx.reply(successText, {
-      parse_mode: 'Markdown',
-      reply_markup: new InlineKeyboard().text('🏠 الانتقال للخدمة الذاتية', 'action:main_menu'),
-    });
   }
 }
 

@@ -20,6 +20,7 @@ COPY packages/regional-engine/package.json packages/regional-engine/
 COPY packages/national-id-engine/package.json packages/national-id-engine/
 COPY packages/core-components/package.json packages/core-components/
 COPY modules/workforce/package.json modules/workforce/
+COPY modules/settings/package.json modules/settings/
 COPY apps/bot-server/package.json apps/bot-server/
 
 # Install all dependencies (including devDependencies for build)
@@ -40,6 +41,7 @@ RUN pnpm --filter @alsaada/national-id-engine build
 RUN pnpm --filter @alsaada/database build
 RUN pnpm --filter @alsaada/core-components build
 RUN pnpm --filter @alsaada/workforce build
+RUN pnpm --filter @alsaada/settings build
 RUN pnpm --filter @alsaada/bot-server build
 
 # -------------------------------------------------------------
@@ -55,8 +57,10 @@ RUN apk add --no-cache openssl dumb-init
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy node_modules & build artifacts from builder
-COPY --from=builder /app /app
+# Copy node_modules & build artifacts from builder with node ownership
+COPY --from=builder --chown=node:node /app /app
+
+USER node
 
 EXPOSE 3000
 

@@ -1,4 +1,4 @@
-import type { PrismaClient, Prisma } from '@alsaada/database';
+import type { PrismaClient } from '@alsaada/database';
 import type { Redis } from 'ioredis';
 import type {
   UserListItemDto,
@@ -9,12 +9,72 @@ import type {
 } from './flow.types.js';
 
 export class UserRbacRepository {
-  private localPending = new Map<string, PendingUserRbacAction>();
+  private readonly localPending = new Map<string, PendingUserRbacAction>();
+  private readonly userInclude = {
+    worker: { select: { id: true, code: true, name: true, nickname: true } },
+    assignedSite: { select: { id: true, name: true } },
+  } as const;
+  private readonly siteSelect = { site: { select: { id: true, name: true } } } as const;
 
   constructor(
     private readonly prisma: PrismaClient,
     private readonly redis?: Redis | null
   ) {}
+
+  private toUserListItem(r: {
+    id: string;
+    telegramId: bigint;
+    fullName: string;
+    username: string | null;
+    role: string;
+    isActive: boolean;
+    isBanned: boolean;
+    workerId: string | null;
+    assignedSiteId: string | null;
+    createdAt: Date;
+    worker?: { code: string; name: string; nickname?: string | null } | null;
+    assignedSite?: { name: string } | null;
+  }): UserListItemDto {
+    return {
+      id: r.id,
+      telegramId: r.telegramId,
+      fullName: r.fullName,
+      username: r.username,
+      role: r.role,
+      isActive: r.isActive,
+      isBanned: r.isBanned,
+      workerId: r.workerId,
+      workerCode: r.worker?.code ?? undefined,
+      workerName: r.worker?.nickname || r.worker?.name || undefined,
+      assignedSiteId: r.assignedSiteId,
+      assignedSiteName: r.assignedSite?.name ?? undefined,
+      createdAt: r.createdAt,
+    };
+  }
+
+  private toWorkerCandidate(w: {
+    id: string;
+    code: string;
+    name: string;
+    nickname?: string | null;
+    telegramId?: bigint | null;
+    siteId?: string | null;
+    site?: { name: string } | null;
+  }): WorkerCandidateDto {
+    return {
+      id: w.id,
+      code: w.code,
+      name: w.name,
+      nickname: w.nickname,
+      telegramId: w.telegramId,
+      siteId: w.siteId,
+      siteName: w.site?.name ?? undefined,
+    };
+  }
+
+  private pendingKey(id: bigint): string {
+    return `user_rbac:pending:${id.toString()}`;
+  }
 
   private async invalidateUserCache(telegramId: bigint): Promise<void> {
     if (this.redis) {
@@ -30,14 +90,16 @@ export class UserRbacRepository {
     }
   }
 
+  private async finishUserMutation(telegramId: bigint): Promise<UserDetailDto> {
+    await this.invalidateUserCache(telegramId);
+    const user = await this.getUserByTelegramId(telegramId);
+    if (!user) throw new Error('المستخدم غير موجود.');
+    return user;
+  }
+
   async countActiveSuperAdmins(): Promise<number> {
     return this.prisma.user.count({
-      where: {
-        role: 'SUPER_ADMIN',
-        isActive: true,
-        isBanned: false,
-        isDeleted: false,
-      },
+      where: { role: 'SUPER_ADMIN', isActive: true, isBanned: false, isDeleted: false },
     });
   }
 
@@ -50,34 +112,15 @@ export class UserRbacRepository {
       this.prisma.user.count({ where: { isDeleted: false } }),
       this.prisma.user.findMany({
         where: { isDeleted: false },
-        include: {
-          worker: { select: { id: true, code: true, name: true, nickname: true } },
-          assignedSite: { select: { id: true, name: true } },
-        },
+        include: this.userInclude,
         orderBy: [{ role: 'asc' }, { createdAt: 'desc' }],
         skip,
         take: limit,
       }),
     ]);
 
-    const users: UserListItemDto[] = records.map((r) => ({
-      id: r.id,
-      telegramId: r.telegramId,
-      fullName: r.fullName,
-      username: r.username,
-      role: r.role,
-      isActive: r.isActive,
-      isBanned: r.isBanned,
-      workerId: r.workerId,
-      workerCode: r.worker?.code ?? undefined,
-      workerName: r.worker?.nickname || r.worker?.name || undefined,
-      assignedSiteId: r.assignedSiteId,
-      assignedSiteName: r.assignedSite?.name ?? undefined,
-      createdAt: r.createdAt,
-    }));
-
     return {
-      users,
+      users: records.map((r) => this.toUserListItem(r)),
       total,
       totalPages: Math.max(1, Math.ceil(total / limit)),
     };
@@ -98,56 +141,24 @@ export class UserRbacRepository {
           { worker: { name: { contains: clean, mode: 'insensitive' } } },
         ],
       },
-      include: {
-        worker: { select: { id: true, code: true, name: true, nickname: true } },
-        assignedSite: { select: { id: true, name: true } },
-      },
+      include: this.userInclude,
       take: 10,
     });
 
-    return records.map((r) => ({
-      id: r.id,
-      telegramId: r.telegramId,
-      fullName: r.fullName,
-      username: r.username,
-      role: r.role,
-      isActive: r.isActive,
-      isBanned: r.isBanned,
-      workerId: r.workerId,
-      workerCode: r.worker?.code ?? undefined,
-      workerName: r.worker?.nickname || r.worker?.name || undefined,
-      assignedSiteId: r.assignedSiteId,
-      assignedSiteName: r.assignedSite?.name ?? undefined,
-      createdAt: r.createdAt,
-    }));
+    return records.map((r) => this.toUserListItem(r));
   }
 
   async getUserByTelegramId(telegramId: bigint): Promise<UserDetailDto | null> {
     const r = await this.prisma.user.findUnique({
       where: { telegramId },
-      include: {
-        worker: { select: { id: true, code: true, name: true, nickname: true } },
-        assignedSite: { select: { id: true, name: true } },
-      },
+      include: this.userInclude,
     });
     if (!r || r.isDeleted) return null;
 
     return {
-      id: r.id,
-      telegramId: r.telegramId,
-      fullName: r.fullName,
-      username: r.username,
-      role: r.role,
-      isActive: r.isActive,
-      isBanned: r.isBanned,
-      workerId: r.workerId,
-      workerCode: r.worker?.code ?? undefined,
-      workerName: r.worker?.nickname || r.worker?.name || undefined,
-      assignedSiteId: r.assignedSiteId,
-      assignedSiteName: r.assignedSite?.name ?? undefined,
+      ...this.toUserListItem(r),
       phoneEncrypted: r.phoneEncrypted,
       approvedBySuperAdminId: r.approvedBySuperAdminId,
-      createdAt: r.createdAt,
     };
   }
 
@@ -164,26 +175,15 @@ export class UserRbacRepository {
         isActive: true,
       },
     });
-
-    await this.invalidateUserCache(telegramId);
-    const user = await this.getUserByTelegramId(telegramId);
-    if (!user) throw new Error('المستخدم غير موجود.');
-    return user;
+    return this.finishUserMutation(telegramId);
   }
 
   async toggleUserBan(telegramId: bigint, isBanned: boolean): Promise<UserDetailDto> {
     await this.prisma.user.update({
       where: { telegramId },
-      data: {
-        isBanned,
-        isActive: !isBanned,
-      },
+      data: { isBanned, isActive: !isBanned },
     });
-
-    await this.invalidateUserCache(telegramId);
-    const user = await this.getUserByTelegramId(telegramId);
-    if (!user) throw new Error('المستخدم غير موجود.');
-    return user;
+    return this.finishUserMutation(telegramId);
   }
 
   async revokeUser(telegramId: bigint): Promise<void> {
@@ -192,20 +192,11 @@ export class UserRbacRepository {
 
     await this.prisma.$transaction(async (tx) => {
       if (user.workerId) {
-        await tx.worker.update({
-          where: { id: user.workerId },
-          data: { telegramId: null },
-        });
+        await tx.worker.update({ where: { id: user.workerId }, data: { telegramId: null } });
       }
-
       await tx.user.update({
         where: { telegramId },
-        data: {
-          role: 'GUEST',
-          workerId: null,
-          assignedSiteId: null,
-          isActive: false,
-        },
+        data: { role: 'GUEST', workerId: null, assignedSiteId: null, isActive: false },
       });
     });
   }
@@ -213,57 +204,27 @@ export class UserRbacRepository {
   async findWorkerById(workerId: string): Promise<WorkerCandidateDto | null> {
     const w = await this.prisma.worker.findUnique({
       where: { id: workerId },
-      include: { site: { select: { id: true, name: true } } },
+      include: this.siteSelect,
     });
-    if (!w || w.isDeleted) return null;
-    return {
-      id: w.id,
-      code: w.code,
-      name: w.name,
-      nickname: w.nickname,
-      telegramId: w.telegramId,
-      siteId: w.siteId,
-      siteName: w.site?.name ?? undefined,
-    };
+    return !w || w.isDeleted ? null : this.toWorkerCandidate(w);
   }
 
   async findWorkerByTelegramId(telegramId: bigint): Promise<WorkerCandidateDto | null> {
     const w = await this.prisma.worker.findFirst({
       where: { telegramId, isDeleted: false },
-      include: { site: { select: { id: true, name: true } } },
+      include: this.siteSelect,
     });
-    if (!w) return null;
-    return {
-      id: w.id,
-      code: w.code,
-      name: w.name,
-      nickname: w.nickname,
-      telegramId: w.telegramId,
-      siteId: w.siteId,
-      siteName: w.site?.name ?? undefined,
-    };
+    return w ? this.toWorkerCandidate(w) : null;
   }
 
   async listUnlinkedWorkers(): Promise<WorkerCandidateDto[]> {
     const records = await this.prisma.worker.findMany({
-      where: {
-        isDeleted: false,
-        telegramId: null,
-        status: 'ACTIVE',
-      },
-      include: { site: { select: { id: true, name: true } } },
+      where: { isDeleted: false, telegramId: null, status: 'ACTIVE' },
+      include: this.siteSelect,
       orderBy: { code: 'asc' },
       take: 50,
     });
-    return records.map((w) => ({
-      id: w.id,
-      code: w.code,
-      name: w.name,
-      nickname: w.nickname,
-      telegramId: w.telegramId,
-      siteId: w.siteId,
-      siteName: w.site?.name ?? undefined,
-    }));
+    return records.map((w) => this.toWorkerCandidate(w));
   }
 
   async atomicDirectLinkWorker(
@@ -282,64 +243,40 @@ export class UserRbacRepository {
       };
     }
 
-    // 1. Conflict Check: Is this telegramId already bound to another worker?
     const conflictWorker = await this.findWorkerByTelegramId(telegramId);
-    if (conflictWorker && conflictWorker.id !== workerId) {
-      if (!options?.confirmConflict) {
-        return {
-          success: false,
-          workerCode: worker.code,
-          workerName: worker.nickname || worker.name,
-          telegramId,
-          reboundFromOldUser: true,
-          oldWorkerName: conflictWorker.nickname || conflictWorker.name,
-          error: `معرف التليجرام مربوط بالفعل بالعامل (${conflictWorker.nickname || conflictWorker.name} - كود: ${conflictWorker.code}).`,
-        };
-      }
+    if (conflictWorker && conflictWorker.id !== workerId && !options?.confirmConflict) {
+      const conflictName = conflictWorker.nickname || conflictWorker.name;
+      return {
+        success: false,
+        workerCode: worker.code,
+        workerName: worker.nickname || worker.name,
+        telegramId,
+        reboundFromOldUser: true,
+        oldWorkerName: conflictName,
+        error: `معرف التليجرام مربوط بالفعل بالعامل (${conflictName} - كود: ${conflictWorker.code}).`,
+      };
     }
 
-    // 2. Atomic DB Transaction
     await this.prisma.$transaction(async (tx) => {
-      // Clean transfer if rebinding from old worker
       if (conflictWorker && conflictWorker.id !== workerId) {
-        await tx.worker.update({
-          where: { id: conflictWorker.id },
-          data: { telegramId: null },
-        });
+        await tx.worker.update({ where: { id: conflictWorker.id }, data: { telegramId: null } });
       }
+      await tx.worker.update({ where: { id: worker.id }, data: { telegramId } });
 
-      // Bind worker
-      await tx.worker.update({
-        where: { id: worker.id },
-        data: { telegramId },
-      });
-
-      // Upsert User record
       const existingUser = await tx.user.findUnique({ where: { telegramId } });
+      const userData = {
+        fullName: worker.name,
+        role: 'WORKER',
+        workerId: worker.id,
+        assignedSiteId: worker.siteId ?? null,
+        isActive: true,
+        isBanned: false,
+      };
+
       if (existingUser) {
-        await tx.user.update({
-          where: { telegramId },
-          data: {
-            fullName: worker.name,
-            role: 'WORKER',
-            workerId: worker.id,
-            assignedSiteId: worker.siteId ?? null,
-            isActive: true,
-            isBanned: false,
-          },
-        });
+        await tx.user.update({ where: { telegramId }, data: userData });
       } else {
-        await tx.user.create({
-          data: {
-            telegramId,
-            fullName: worker.name,
-            role: 'WORKER',
-            workerId: worker.id,
-            assignedSiteId: worker.siteId ?? null,
-            isActive: true,
-            isBanned: false,
-          },
-        });
+        await tx.user.create({ data: { telegramId, ...userData } });
       }
     });
 
@@ -357,17 +294,15 @@ export class UserRbacRepository {
   }
 
   async setPendingAction(actorTelegramId: bigint, action: PendingUserRbacAction): Promise<void> {
-    const key = `user_rbac:pending:${actorTelegramId.toString()}`;
     if (this.redis) {
-      await this.redis.set(key, JSON.stringify(action), 'EX', 900);
+      await this.redis.set(this.pendingKey(actorTelegramId), JSON.stringify(action), 'EX', 900);
     }
     this.localPending.set(actorTelegramId.toString(), action);
   }
 
   async getPendingAction(actorTelegramId: bigint): Promise<PendingUserRbacAction | null> {
-    const key = `user_rbac:pending:${actorTelegramId.toString()}`;
     if (this.redis) {
-      const raw = await this.redis.get(key);
+      const raw = await this.redis.get(this.pendingKey(actorTelegramId));
       if (raw) {
         try {
           return JSON.parse(raw) as PendingUserRbacAction;
@@ -378,9 +313,8 @@ export class UserRbacRepository {
   }
 
   async clearPendingAction(actorTelegramId: bigint): Promise<void> {
-    const key = `user_rbac:pending:${actorTelegramId.toString()}`;
     if (this.redis) {
-      await this.redis.del(key);
+      await this.redis.del(this.pendingKey(actorTelegramId));
     }
     this.localPending.delete(actorTelegramId.toString());
   }

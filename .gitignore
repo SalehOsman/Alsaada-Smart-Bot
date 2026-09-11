@@ -41,6 +41,7 @@ coverage/
 scratch/
 tmp/
 temp/
+.agents/
 
 # OS metadata
 .DS_Store

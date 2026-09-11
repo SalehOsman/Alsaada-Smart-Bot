@@ -4,6 +4,7 @@ import type { WorkforceModuleContext } from './shared/module.types.js';
 import { registerWorkforceRoutes } from './module.routes.js';
 import { registerWorkforceHubRoutes } from './hub/hub.routes.js';
 import { WorkerExpiryAlertService } from './services/worker-expiry-alert.service.js';
+import { setWorkforcePrisma, setWorkforceEncryptionKey } from './services/worker-facade.service.js';
 
 export interface WorkforceModuleOptions {
   prisma: PrismaClient;
@@ -17,6 +18,12 @@ export function registerWorkforceModule(
   bot: Bot<WorkforceModuleContext>,
   options: WorkforceModuleOptions
 ) {
+  // Wire centralized prisma singleton and encryption key into workforce facade
+  setWorkforcePrisma(options.prisma);
+  if (options.encryptionKey) {
+    setWorkforceEncryptionKey(options.encryptionKey);
+  }
+
   const expiryAlertService = new WorkerExpiryAlertService({
     prisma: options.prisma,
     ...(options.encryptionKey ? { encryptionKey: options.encryptionKey } : {}),

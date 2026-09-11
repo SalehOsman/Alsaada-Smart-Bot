@@ -1,4 +1,4 @@
-﻿import { join } from 'node:path';
+import { join } from 'node:path';
 import { createResult, countLines, fail, fileIsNonEmpty, isCliEntrypoint, listFilesRecursive, listFlowDirs, printAndExit, readUtf8, toRepoPath, type VerificationResult } from './common.js';
 
 const REQUIRED_FLOW_FILES = [
@@ -62,6 +62,20 @@ export function verifyArchitecture(root = process.cwd()): VerificationResult {
       const repoFilePath = toRepoPath(root, file);
       if (isCompleted && /placeholder/i.test(text)) fail(result, `${repoFilePath} contains placeholder text in a completed flow`);
       if (!contract.allowAny && /\bany\b/.test(text) && file.endsWith('.ts')) fail(result, `${repoFilePath} uses any without a documented exception`);
+    }
+  }
+
+  // Gateway Layer Hardening: Forbid direct database calls via prisma.* inside bot-server handlers
+  const botHandlersDir = join(root, 'apps', 'bot-server', 'src', 'handlers');
+  const handlerFiles = listFilesRecursive(botHandlersDir).filter((file) => file.endsWith('.ts'));
+  for (const file of handlerFiles) {
+    const text = readUtf8(file);
+    const repoFilePath = toRepoPath(root, file);
+    if (/\bprisma\s*\.\s*(\$|[a-zA-Z])/.test(text)) {
+      fail(
+        result,
+        `${repoFilePath} makes direct database calls via prisma.* (gateway handlers must delegate to module repositories/services)`
+      );
     }
   }
 

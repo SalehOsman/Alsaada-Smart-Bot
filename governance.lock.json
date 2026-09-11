@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-11T04:23:12.883Z",
+  "generatedAt": "2026-09-11T08:39:12.688Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -21,8 +21,12 @@
   },
   "files": [
     {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "b7a5b39188381be4b8088e6802ae9c9b449c697f8472e3da2e63fb92c748710a"
+    },
+    {
       "path": ".gitignore",
-      "sha256": "045b8e95190626347ecc42ef61b45d4dbd1d7369ec0102d7ee3820585b050588"
+      "sha256": "75061238a6e1c1ba371fa66a9a3ef6bf0f3c5d63f7bebfc02edccadaa6941773"
     },
     {
       "path": "AGENTS.md",
@@ -50,7 +54,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "f1e572d8378609201ef6952c2f7c5c33965e464f802bfc6c7785559ba4b5fbbc"
+      "sha256": "38773eae0be74b1ce89582faba0723656c99c5f183edb28c1285324224c4582d"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -70,7 +74,7 @@
     },
     {
       "path": "tools/governance/verify-architecture.ts",
-      "sha256": "04e0db327f66577c20135815a567321ddfb549297eb65f5d221909c5faa4c581"
+      "sha256": "97f78c7299534f4046c13315d7405b981f0b9d2be85ae310e3c5e81499622e25"
     },
     {
       "path": "tools/governance/verify-docs-audit.ts",
@@ -98,7 +102,7 @@
     },
     {
       "path": "tools/governance/verify-migration-registry.ts",
-      "sha256": "5ee27fdddbd23a04b7ebe3eab44caeac36ba6a8c19478ba35661b2dbe135919f"
+      "sha256": "efa3633d49939030af70906c02a43f6ba16713645f21390dab66e273e10bc72b"
     },
     {
       "path": "tools/governance/verify-telegram-contracts.ts",

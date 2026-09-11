@@ -2,6 +2,7 @@ import { InlineKeyboard } from 'grammy';
 import type { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { formatDate } from '@alsaada/regional-engine';
+import { GuestJoinRepository } from '@alsaada/workforce';
 
 export async function handleWorkerSubHub(
   ctx: MyContext,
@@ -108,17 +109,8 @@ export async function handleMyWorkerProfile(ctx: MyContext): Promise<void> {
   if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
 
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
-  let worker = ctx.workerId ? await prisma.worker.findUnique({
-    where: { id: ctx.workerId },
-    include: { site: true, department: true },
-  }) : null;
-
-  if (!worker && telegramId > 0n) {
-    worker = await prisma.worker.findFirst({
-      where: { telegramId, isDeleted: false },
-      include: { site: true, department: true },
-    });
-  }
+  const guestJoinRepo = new GuestJoinRepository(prisma);
+  const worker = await guestJoinRepo.findWorkerProfile(ctx.workerId, telegramId);
 
   if (!worker) {
     await ctx.reply('❌ تعذر العثور على سجل العامل المرتبط بحسابك.');
@@ -157,17 +149,8 @@ export async function handleWorkerIdCard(ctx: MyContext): Promise<void> {
   if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
 
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
-  let worker = ctx.workerId ? await prisma.worker.findUnique({
-    where: { id: ctx.workerId },
-    include: { site: true },
-  }) : null;
-
-  if (!worker && telegramId > 0n) {
-    worker = await prisma.worker.findFirst({
-      where: { telegramId, isDeleted: false },
-      include: { site: true },
-    });
-  }
+  const guestJoinRepo = new GuestJoinRepository(prisma);
+  const worker = await guestJoinRepo.findWorkerProfile(ctx.workerId, telegramId);
 
   const workerCode = worker?.code || ctx.workerCode || 'N/A';
   const workerName = worker?.nickname || worker?.name || ctx.from?.first_name || 'عامل';

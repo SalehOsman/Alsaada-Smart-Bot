@@ -1,6 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
-import { prisma } from '../db.js';
+import { pingDatabase } from '../db.js';
 import { config } from '../config/env.js';
 
 export async function handlePing(ctx: MyContext): Promise<void> {
@@ -13,9 +13,7 @@ export async function handlePing(ctx: MyContext): Promise<void> {
   let dbStatus = '🟢 متصل';
 
   try {
-    const dbStart = Date.now();
-    await prisma.$queryRaw`SELECT 1`;
-    dbLatency = Date.now() - dbStart;
+    dbLatency = await pingDatabase();
   } catch (error) {
     dbStatus = '🔴 تعذر الاتصال';
   }

@@ -1,0 +1,25 @@
+{
+  "moduleName": "settings",
+  "displayName": "قطاع الإعدادات السيادية والإدارة العامة",
+  "version": "1.0.0",
+  "owner": "Executive & General Administration",
+  "flows": [
+    "00.1-corporate-profile",
+    "00.2-sites-hub",
+    "00.3-job-matrix",
+    "00.4-admin-profile",
+    "00.5-admin-assignment",
+    "00.6-ghost-mode",
+    "00.7-audit-incident-vault",
+    "00.8-apm-telemetry",
+    "00.9-emergency-cache",
+    "00.10-notification-policies",
+    "00.11-telegram-groups",
+    "00.12-user-rbac-management"
+  ],
+  "dependencies": [
+    "@alsaada/core-components",
+    "@alsaada/database",
+    "@alsaada/regional-engine"
+  ]
+}

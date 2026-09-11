@@ -1,6 +1,7 @@
 import type { Bot } from 'grammy';
 import { InlineKeyboard } from 'grammy';
 import { formatBreadcrumbs, formatClickToCopy } from '@alsaada/core-components';
+import { TelegramGroupsRepository, UserRbacRepository } from '@alsaada/settings';
 import type { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { redis } from '../redis.js';
@@ -23,9 +24,8 @@ export function registerGroupManagerHandlers(bot: Bot<MyContext>): void {
       const actorTelegramId = BigInt(ctx.from.id);
       const isSuperAdminEnv = actorTelegramId === config.superAdminTelegramId;
 
-      const user = await prisma.user.findUnique({
-        where: { telegramId: actorTelegramId },
-      });
+      const userRbacRepo = new UserRbacRepository(prisma);
+      const user = await userRbacRepo.getUserByTelegramId(actorTelegramId);
 
       const isSuperAdmin = isSuperAdminEnv || user?.role === 'SUPER_ADMIN';
       if (!isSuperAdmin) return;
@@ -114,11 +114,8 @@ export function registerGroupManagerHandlers(bot: Bot<MyContext>): void {
     const chatId = ctx.match?.[1];
     if (!chatId) return;
 
-    const sites = await prisma.site.findMany({
-      where: { status: { not: 'ARCHIVED' } },
-      select: { id: true, name: true, code: true },
-      orderBy: { name: 'asc' },
-    });
+    const telegramGroupsRepo = new TelegramGroupsRepository(prisma, redis);
+    const sites = await telegramGroupsRepo.listSites();
 
     const text =
       formatBreadcrumbs(['⚙️ الإعدادات', '🏛️ المجموعات', '🏗️ اختيار الموقع']) +
@@ -156,20 +153,15 @@ export function registerGroupManagerHandlers(bot: Bot<MyContext>): void {
     const siteId = ctx.match?.[2];
     if (!chatId || !siteId) return;
 
-    const site = await prisma.site.findUnique({
-      where: { id: siteId },
-      select: { id: true, name: true, code: true },
-    });
+    const telegramGroupsRepo = new TelegramGroupsRepository(prisma, redis);
+    const site = await telegramGroupsRepo.getSiteById(siteId);
 
     if (!site) {
       await ctx.answerCallbackQuery({ text: '❌ الموقع غير موجود.', show_alert: true }).catch(() => {});
       return;
     }
 
-    await prisma.site.update({
-      where: { id: siteId },
-      data: { telegramGroupId: BigInt(chatId.trim()) },
-    });
+    await telegramGroupsRepo.updateSiteTelegramGroupId(siteId, chatId.trim());
 
     await ctx.answerCallbackQuery({ text: `✅ تم ربط موقع ${site.name}.` }).catch(() => {});
 
@@ -203,9 +195,8 @@ export function registerGroupManagerHandlers(bot: Bot<MyContext>): void {
     const actorTelegramId = BigInt(ctx.from.id);
     const isSuperAdminEnv = actorTelegramId === config.superAdminTelegramId;
 
-    const user = await prisma.user.findUnique({
-      where: { telegramId: actorTelegramId },
-    });
+    const userRbacRepo = new UserRbacRepository(prisma);
+    const user = await userRbacRepo.getUserByTelegramId(actorTelegramId);
 
     if (!isSuperAdminEnv && user?.role !== 'SUPER_ADMIN') {
       await ctx.reply('🔒 هذا الإجراء مخصص حصرياً للمدير العام (Super Admin).');
@@ -263,9 +254,8 @@ export function registerGroupManagerHandlers(bot: Bot<MyContext>): void {
     const actorTelegramId = BigInt(ctx.from.id);
     const isSuperAdminEnv = actorTelegramId === config.superAdminTelegramId;
 
-    const user = await prisma.user.findUnique({
-      where: { telegramId: actorTelegramId },
-    });
+    const userRbacRepo = new UserRbacRepository(prisma);
+    const user = await userRbacRepo.getUserByTelegramId(actorTelegramId);
 
     if (!isSuperAdminEnv && user?.role !== 'SUPER_ADMIN') {
       await ctx.reply('🔒 هذا الإجراء مخصص حصرياً للمدير العام (Super Admin).');
@@ -278,20 +268,15 @@ export function registerGroupManagerHandlers(bot: Bot<MyContext>): void {
       return;
     }
 
-    const site = await prisma.site.findUnique({
-      where: { code },
-      select: { id: true, name: true, code: true },
-    });
+    const telegramGroupsRepo = new TelegramGroupsRepository(prisma, redis);
+    const site = await telegramGroupsRepo.getSiteByCode(code);
 
     if (!site) {
       await ctx.reply(`❌ الموقع بالكود \`${code}\` غير مسجل بالمنظومة.`, { parse_mode: 'Markdown' });
       return;
     }
 
-    await prisma.site.update({
-      where: { id: site.id },
-      data: { telegramGroupId: BigInt(ctx.chat.id) },
-    });
+    await telegramGroupsRepo.updateSiteTelegramGroupId(site.id, ctx.chat.id.toString());
 
     const text =
       formatBreadcrumbs(['🏗️ الموقع الميداني', site.name, '✅ تم الربط']) +

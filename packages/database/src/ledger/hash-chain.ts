@@ -1,5 +1,15 @@
 import crypto from 'node:crypto';
 
+export const GENESIS_HASH = 'GENESIS_ALSAADA_LEDGER_2026';
+
+export interface RecordHashPayload {
+  previousHash: string;
+  model: string;
+  amount: number | string;
+  actorId: string | number | bigint;
+  timestamp: string | Date;
+}
+
 export interface TransactionHashPayload {
   id: string;
   previousHash: string;
@@ -17,7 +27,23 @@ export interface ChainedRecord extends TransactionHashPayload {
 }
 
 /**
- * Computes the SHA-256 cryptographic hash for a transaction.
+ * Computes canonical SHA-256 hash according to Plan 13 & enterprise integrity mandate:
+ * recordHash = SHA-256(previousHash + ":" + model + ":" + amount + ":" + actorId + ":" + timestamp)
+ */
+export function computeRecordHash(payload: RecordHashPayload): string {
+  const ts = payload.timestamp instanceof Date ? payload.timestamp.toISOString() : String(payload.timestamp);
+  const normalizedAmount = typeof payload.amount === 'number'
+    ? payload.amount.toFixed(2)
+    : Number(payload.amount || 0).toFixed(2);
+  const normalizedActor = String(payload.actorId);
+  const normalizedPrev = payload.previousHash || GENESIS_HASH;
+
+  const canonicalString = `${normalizedPrev}:${payload.model}:${normalizedAmount}:${normalizedActor}:${ts}`;
+  return crypto.createHash('sha256').update(canonicalString).digest('hex');
+}
+
+/**
+ * Legacy / In-memory transaction hash computation (preserved for backward compatibility).
  */
 export function computeTransactionHash(payload: TransactionHashPayload): string {
   const ts = payload.timestamp instanceof Date ? payload.timestamp.toISOString() : payload.timestamp;
@@ -44,10 +70,13 @@ export interface VerificationResult {
 }
 
 /**
- * Verifies a sequential chain of transaction records.
+ * Verifies an in-memory sequential chain of transaction records.
  * Returns valid if every record's hash matches and correctly points to its predecessor.
  */
-export function verifyLedgerChain(records: ChainedRecord[], genesisHash = 'GENESIS_ALSAADA_LEDGER_2026'): VerificationResult {
+export function verifyLedgerChainMemory(
+  records: ChainedRecord[],
+  genesisHash = GENESIS_HASH
+): VerificationResult {
   if (records.length === 0) {
     return { isValid: true, totalVerified: 0 };
   }

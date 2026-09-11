@@ -1,15 +1,7 @@
 import { InlineKeyboard } from 'grammy';
-import { PrismaClient } from '@alsaada/database';
+import { prisma as defaultPrisma, type PrismaClient } from '@alsaada/database';
 import type { WorkforceModuleContext } from '../shared/module.types.js';
 import { WorkerDirectoryRepository } from '../flows/01.5-worker-directory/flow.repository.js';
-
-let defaultPrismaInstance: PrismaClient | null = null;
-function getDefaultPrisma(): PrismaClient {
-  if (!defaultPrismaInstance) {
-    defaultPrismaInstance = new PrismaClient();
-  }
-  return defaultPrismaInstance;
-}
 
 /**
  * 👥 تصيير بوابة قطاع الموارد البشرية والعمالة (HR Domain Hub)
@@ -33,7 +25,7 @@ export async function renderHrHub(
   const role = ctx.effectiveRole || 'GUEST';
   const isSuperAdmin = ctx.isImpersonating ? role === 'SUPER_ADMIN' : Boolean(role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin);
 
-  const activePrisma = prisma || (ctx as any).prisma || getDefaultPrisma();
+  const activePrisma = prisma || (ctx as any).prisma || (defaultPrisma as unknown as PrismaClient);
   // جلب إحصائيات سريعة من قاعدة البيانات عبر المستودع
   const repo = new WorkerDirectoryRepository(activePrisma);
   const summary = await repo.getWorkersSummary().catch(() => ({
@@ -104,7 +96,7 @@ export async function renderHrSubHub(
   const role = ctx.effectiveRole || 'GUEST';
   const isSuperAdmin = ctx.isImpersonating ? role === 'SUPER_ADMIN' : Boolean(role === 'SUPER_ADMIN' || ctx.isRealSuperAdmin);
 
-  const activePrisma = prisma || (ctx as any).prisma || getDefaultPrisma();
+  const activePrisma = prisma || (ctx as any).prisma || (defaultPrisma as unknown as PrismaClient);
   let text = '';
   const keyboard = new InlineKeyboard();
 

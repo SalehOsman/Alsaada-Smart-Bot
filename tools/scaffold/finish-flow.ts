@@ -89,6 +89,13 @@ export function finishFlow(
       return line;
     });
 
+    if (!updated) {
+      // Flow is novel or missing from legacy registry table. Append to Novel Enterprise Features section.
+      const novelTableRow = `| **\`${flowKey}\`** | **${titleArabic || flowSlug || flowKey}** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | \`${relativeFlowPath}\` | \`${today}\` (\`${commitRef}\`) |`;
+      newLines.push(novelTableRow);
+      updated = true;
+    }
+
     if (updated) {
       writeFileSync(registryPath, newLines.join('\n'), 'utf8');
     }

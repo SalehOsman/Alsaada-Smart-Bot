@@ -717,10 +717,16 @@ model CustodyExpenseItem {
   sha256Checksum  String?
   ocrExtractedData Json?
   isApproved      Boolean  @default(true)
+  recordHash      String   @default("") @map("record_hash")
+  previousHash    String?  @map("previous_hash")
+  hashTimestamp   DateTime @default(now()) @map("hash_timestamp")
   createdAt       DateTime @default(now())
 
   custody FinancialCustody @relation(fields: [custodyId], references: [id])
 
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
   @@map("custody_expense_items")
 }
 
@@ -736,11 +742,17 @@ model CustodySettlement {
   status                 String    @default("PENDING_AUDIT") // PENDING_AUDIT, APPROVED, REJECTED
   auditedByUserId        BigInt?
   settledAt              DateTime?
+  recordHash             String    @default("") @map("record_hash")
+  previousHash           String?   @map("previous_hash")
+  hashTimestamp          DateTime  @default(now()) @map("hash_timestamp")
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
   custody FinancialCustody @relation(fields: [custodyId], references: [id])
 
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
   @@map("custody_settlements")
 }
 
@@ -755,12 +767,18 @@ model HospitalityExpense {
   disbursedByWorkerId String?
   receiptPhotoUri    String?
   sha256Checksum     String?
+  recordHash         String   @default("") @map("record_hash")
+  previousHash       String?  @map("previous_hash")
+  hashTimestamp      DateTime @default(now()) @map("hash_timestamp")
   createdAt          DateTime @default(now())
 
   site    Site              @relation(fields: [siteId], references: [id])
   custody FinancialCustody? @relation(fields: [sourceCustodyId], references: [id])
   worker  Worker?           @relation(fields: [disbursedByWorkerId], references: [id])
 
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
   @@map("hospitality_expenses")
 }
 
@@ -783,6 +801,9 @@ model WorkerExpenseClaim {
   rejectionReason                 String?
   approvedByUserId                BigInt?
   settledAt                       DateTime?
+  recordHash                      String    @default("") @map("record_hash")
+  previousHash                    String?   @map("previous_hash")
+  hashTimestamp                   DateTime  @default(now()) @map("hash_timestamp")
   notes                           String?
   createdAt                       DateTime  @default(now())
   updatedAt                       DateTime  @updatedAt
@@ -797,6 +818,9 @@ model WorkerExpenseClaim {
   @@index([siteId])
   @@index([status])
   @@index([settlementType])
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
   @@map("worker_expense_claims")
 }
 
@@ -827,32 +851,33 @@ model AdvanceRequest {
 model FinancialLedger {
   id                 String    @id @default(uuid())
   voucherNumber      String    @unique // e.g. #ADV-YYYY-XXXX, #PAY-YYYY-XXXX
-  previousHash       String
-  recordHash         String
-  transactionType    String    // ADVANCE_CASH, WITHDRAWAL_CIGARETTES, WITHDRAWAL_PURCHASES, SALARY_PAYOUT, SUPPLIER_PAYMENT, CUSTODY_DISBURSEMENT, CUSTODY_REFUND, GENERAL_EXPENSE
-  amount             Decimal   @db.Decimal(14, 2)
-  currency           String    @default("EGP")
-  sourceAccount      String
-  destinationAccount String
-  sourceCustodyId    String?   // Populated for cash advances disbursed from a site custody
-  workerId           String?
-  supplierId         String?
-  canteenItemId      String?
-  inKindDetails      Json?     // In-kind purchase/cigarette item breakdown
-  description        String?
-  accountingMonth    String?   // YYYY-MM
-  isReversal         Boolean   @default(false)
+  recordHash          String    @default("") @map("record_hash")
+  previousHash        String?   @map("previous_hash")
+  hashTimestamp       DateTime  @default(now()) @map("hash_timestamp")
+  transactionType     String    // ADVANCE_CASH, WITHDRAWAL_CIGARETTES, WITHDRAWAL_PURCHASES, SALARY_PAYOUT, SUPPLIER_PAYMENT, CUSTODY_DISBURSEMENT, CUSTODY_REFUND, GENERAL_EXPENSE
+  amount              Decimal   @db.Decimal(14, 2)
+  currency            String    @default("EGP")
+  sourceAccount       String
+  destinationAccount  String
+  sourceCustodyId     String?   // Populated for cash advances disbursed from a site custody
+  workerId            String?
+  supplierId          String?
+  canteenItemId       String?
+  inKindDetails       Json?     // In-kind purchase/cigarette item breakdown
+  description         String?
+  accountingMonth     String?   // YYYY-MM
+  isReversal          Boolean   @default(false)
   reversalOfVoucherId String?
-  actorTelegramId    BigInt
-  receiptPhotoUri    String?
-  sha256Checksum     String?
-  isDeleted          Boolean   @default(false)
-  deletedAt          DateTime?
-  deletedBy          BigInt?
-  deletionReason     String?
-  createdAt          DateTime  @default(now())
-  syncedToSheets     Boolean   @default(false)
-  syncedAt           DateTime?
+  actorTelegramId     BigInt
+  receiptPhotoUri     String?
+  sha256Checksum      String?
+  isDeleted           Boolean   @default(false)
+  deletedAt           DateTime?
+  deletedBy           BigInt?
+  deletionReason      String?
+  createdAt           DateTime  @default(now())
+  syncedToSheets      Boolean   @default(false)
+  syncedAt            DateTime?
 
   worker        Worker?             @relation(fields: [workerId], references: [id])
   sourceCustody FinancialCustody?   @relation(fields: [sourceCustodyId], references: [id])
@@ -865,6 +890,9 @@ model FinancialLedger {
   @@index([sourceCustodyId])
   @@index([destinationAccount])
   @@index([syncedToSheets])
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
   @@map("financial_ledgers")
 }
 
@@ -981,6 +1009,9 @@ model SupplierPayment {
   transactionReference   String?
   receiptPhotoUri        String?
   sha256Checksum         String?
+  recordHash             String    @default("") @map("record_hash")
+  previousHash           String?   @map("previous_hash")
+  hashTimestamp          DateTime  @default(now()) @map("hash_timestamp")
   paymentDate            DateTime  @default(now())
   createdAt              DateTime  @default(now())
 
@@ -989,6 +1020,9 @@ model SupplierPayment {
   treasury  CompanyTreasury?  @relation(fields: [disbursedFromTreasuryId], references: [id])
   custody   FinancialCustody? @relation(fields: [disbursedFromCustodyId], references: [id])
 
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
   @@map("supplier_payments")
 }
 

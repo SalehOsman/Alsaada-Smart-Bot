@@ -1,0 +1,46 @@
+name: CI / Enterprise Quality & Governance Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  verify:
+    name: Verify TypeScript, Tests, Governance & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.0.8
+
+      - name: Setup Node.js v22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @alsaada/database db:generate
+
+      - name: Compile TypeScript Across Monorepo
+        run: pnpm typecheck
+
+      - name: Run Automated Test Suites
+        run: pnpm test
+
+      - name: Run Full Enterprise Governance Gate
+        run: pnpm governance:verify
+
+      - name: Build Docker Container
+        run: docker build -f docker/Dockerfile .

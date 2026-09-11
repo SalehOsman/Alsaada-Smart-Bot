@@ -1,4 +1,4 @@
-import { PrismaClient, encryptField, createBlindIndex } from '@alsaada/database';
+import { prisma as centralizedPrisma, type PrismaClient, encryptField, createBlindIndex } from '@alsaada/database';
 import { normalizeDigits, extractFirstTwoNames } from '@alsaada/regional-engine';
 import { WorkerRegistrationRepository } from '../flows/01.1-worker-registration/flow.repository.js';
 import { WorkerRegistrationService } from '../flows/01.1-worker-registration/flow.service.js';
@@ -19,14 +19,6 @@ import type {
 
 import { WorkerDirectoryRepository } from '../flows/01.5-worker-directory/flow.repository.js';
 
-let defaultPrismaInstance: PrismaClient | null = null;
-function getDefaultPrisma(): PrismaClient {
-  if (!defaultPrismaInstance) {
-    defaultPrismaInstance = new PrismaClient();
-  }
-  return defaultPrismaInstance;
-}
-
 let activePrismaInstance: PrismaClient | null = null;
 
 export function setWorkforcePrisma(p: PrismaClient | any): void {
@@ -40,7 +32,7 @@ export function setWorkforceEncryptionKey(key: string): void {
 }
 
 export function getWorkforcePrisma(): PrismaClient {
-  return activePrismaInstance || (globalThis as any).prisma || getDefaultPrisma();
+  return (activePrismaInstance || (globalThis as any).prisma || centralizedPrisma) as unknown as PrismaClient;
 }
 
 /**
