@@ -337,7 +337,8 @@ export async function handleStart(ctx: MyContext): Promise<void> {
     );
   }
 
-  await screenFlowService.ensurePersistentKeyboard(ctx);
+  // 4. ضمان فرض تثبيت كيبورد الرد السريع الدائم في أسفل الشات وإظهاره فوراً
+  await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
 
   await renderRoleHome(ctx, false);
 }

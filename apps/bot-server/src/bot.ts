@@ -225,9 +225,11 @@ export function createBot(): Bot<MyContext> {
   // 8. Persistent Bottom Reply Keyboard Button Handlers
   bot.hears(/إنهاء وضع المحاكاة|العودة كمدير عام/, async (ctx) => {
     await settingsHandlers.ghostModeHandler.handleExitImpersonate(ctx as any);
+    await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
   });
   bot.hears(/القائمة الرئيسية/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
+    await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
     await renderRoleHome(ctx, false);
   });
   bot.hears(/إعدادات النظام/, async (ctx) => {
