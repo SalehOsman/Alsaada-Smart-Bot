@@ -1,4 +1,4 @@
-﻿import { execFileSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createResult, fail, isCliEntrypoint, listFilesRecursive, printAndExit, readUtf8, warn, type VerificationResult } from './common.js';
@@ -24,9 +24,12 @@ function gitStatusPaths(root: string): string[] | null {
   try {
     const topLevel = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: root, encoding: 'utf8' }).trim();
     if (normalizePath(topLevel) !== normalizePath(root)) return null;
-    const output = execFileSync('git', ['status', '--short'], { cwd: root, encoding: 'utf8' }).trim();
-    if (output.length === 0) return [];
-    return output.split(/\r?\n/).map((line) => line.slice(3).trim().replace(/\\/g, '/'));
+    const output = execFileSync('git', ['status', '--short'], { cwd: root, encoding: 'utf8' });
+    if (output.trim().length === 0) return [];
+    return output
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0)
+      .map((line) => line.slice(2).trim().replace(/\\/g, '/'));
   } catch {
     return null;
   }

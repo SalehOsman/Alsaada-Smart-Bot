@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-11T04:04:29.165Z",
+  "generatedAt": "2026-09-11T04:23:12.883Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -94,7 +94,7 @@
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
-      "sha256": "20209b7e39f0c7053fd441c9903b5fda62246999bfd40d6b8389d32178e26da2"
+      "sha256": "b7c162774a5ac3b3cc67b8e10e8ac77054717a4f48ebd07145737c6334d3f902"
     },
     {
       "path": "tools/governance/verify-migration-registry.ts",
@@ -102,7 +102,7 @@
     },
     {
       "path": "tools/governance/verify-telegram-contracts.ts",
-      "sha256": "c26eaa08cdbc368a4a24c22211679b6df73381f0db1f83471ea7692ab8b9b58e"
+      "sha256": "24db36ca0f712862bb116fa46191f806d8090b9716b5eb3b80fa5b27d33c04d2"
     }
   ]
 }

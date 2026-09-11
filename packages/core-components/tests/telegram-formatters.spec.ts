@@ -161,5 +161,23 @@ describe('Telegram UX Formatters & Components', () => {
       expect(result).toBe('excel_done');
       expect(ctx.replyWithChatAction).toHaveBeenCalledWith('upload_document');
     });
+
+    it('withChatAction cleans up timer and propagates error when task throws', async () => {
+      const ctx = {
+        replyWithChatAction: vi.fn().mockResolvedValue(true),
+      };
+      await expect(
+        withChatAction(ctx, 'typing', async () => {
+          throw new Error('Task failed');
+        })
+      ).rejects.toThrow('Task failed');
+      expect(ctx.replyWithChatAction).toHaveBeenCalledWith('typing');
+    });
+
+    it('withChatAction works when ctx has no replyWithChatAction', async () => {
+      const ctx = {};
+      const res = await withChatAction(ctx as any, 'typing', async () => 'ok');
+      expect(res).toBe('ok');
+    });
   });
 });

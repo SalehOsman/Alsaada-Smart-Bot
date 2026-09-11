@@ -8,7 +8,7 @@ export function formatAdminAssignmentsHub(noticeText?: string): string {
   }
 
   return (
-    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان المؤسسي والمشاريع', '👥 تعيين وتوزيع مشرفي المواقع']) +
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '👥 تعيين وتوزيع مشرفي المواقع']) +
     `${banner}` +
     `👥 *لوحة تعيين وتوزيع مدراء المواقع والفروع (Admin Site Scoping)*\n` +
     `────────────────────────────\n` +

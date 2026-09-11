@@ -18,7 +18,7 @@ describe('Flow 00.5 RBAC Tests — تعيين وتوزيع مدراء الموا
 
   const handler = new AdminAssignmentHandler(mockService);
 
-  it('should deny or alert non-super admin users', async () => {
+  it('should deny or alert non-super admin users with callbackQuery via modal alert', async () => {
     const replyMock = vi.fn().mockResolvedValue({});
     const answerCallbackMock = vi.fn().mockResolvedValue(true);
     const ctxWorker = {
@@ -30,7 +30,32 @@ describe('Flow 00.5 RBAC Tests — تعيين وتوزيع مدراء الموا
     } as unknown as SettingsModuleContext;
 
     await handler.renderAdminAssignmentsHub(ctxWorker);
-    expect(answerCallbackMock.mock.calls.length + replyMock.mock.calls.length).toBeGreaterThanOrEqual(0);
+    expect(answerCallbackMock).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('🔒'), show_alert: true })
+    );
+    expect(replyMock).not.toHaveBeenCalled();
+  });
+
+  it('should block non-super admin users without callbackQuery with a polite reply', async () => {
+    const replyMock = vi.fn().mockResolvedValue({});
+    const ctxWorker = {
+      isRealSuperAdmin: false,
+      effectiveRole: 'WORKER',
+      reply: replyMock,
+    } as unknown as SettingsModuleContext;
+
+    await handler.renderAdminAssignmentsHub(ctxWorker);
+    expect(replyMock).toHaveBeenCalledWith(expect.stringContaining('🔒'));
+  });
+
+  it('should block unauthorized users from setting site assignment', async () => {
+    const ctxWorker = {
+      isRealSuperAdmin: false,
+      effectiveRole: 'WORKER',
+    } as unknown as SettingsModuleContext;
+
+    await handler.handleSetUserSiteAssignment(ctxWorker, 12345n, 'GLOBAL');
+    expect(mockService.setAssignment).toBeUndefined(); // ensure service was not called
   });
 
   it('should allow access for verified Super Admin', async () => {

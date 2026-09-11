@@ -50,6 +50,11 @@ export function resolveSampleCallbackData(raw: string): string {
       lower.includes('index') ||
       lower.includes('offset') ||
       lower === 'val' ||
+      lower.startsWith('val') ||
+      lower.includes('amount') ||
+      lower.includes('count') ||
+      lower.includes('qty') ||
+      lower.includes('num') ||
       lower === 'c.value'
     ) {
       return '99';
@@ -94,13 +99,26 @@ export function verifyTelegramContracts(root: string = process.cwd()): Verificat
 
   const candidateFiles = listFilesRecursive(root).filter((file) => {
     const norm = file.replace(/\\/g, '/');
-    if (norm.includes('/node_modules/') || norm.includes('/dist/') || norm.includes('/.git/')) {
+    if (
+      norm.includes('/node_modules/') ||
+      norm.includes('/dist/') ||
+      norm.includes('/.git/') ||
+      norm.includes('/tests/') ||
+      norm.includes('.spec.') ||
+      norm.includes('.test.')
+    ) {
       return false;
     }
     return (
       norm.endsWith('.keyboard.ts') ||
       norm.includes('/keyboards/') ||
       norm.endsWith('keyboard.ts') ||
+      norm.endsWith('.handler.ts') ||
+      norm.includes('/handlers/') ||
+      norm.endsWith('.service.ts') ||
+      norm.includes('/services/') ||
+      norm.endsWith('hub.ts') ||
+      norm.endsWith('bot.ts') ||
       norm.endsWith('settings-hub.ts')
     );
   });
@@ -113,18 +131,25 @@ export function verifyTelegramContracts(root: string = process.cwd()): Verificat
     lines.forEach((lineText, idx) => {
       const lineNum = idx + 1;
 
-      // 1. Check callback_data in .text(...) calls and string literals (single quote, double quote, backtick)
+      // 1. Check callback_data in .text(...) calls, object literals, and string literals
       const scannedCallbacks = new Set<string>();
 
       // A. Match .text(..., 'cb_data' | "cb_data" | `cb_data`)
-      const textMatches = lineText.matchAll(/\.text\(\s*(?:['"`].*?['"`]|[^,]+)\s*,\s*(['"`])([^'"`]+)\1\s*[,)]/g);
+      const textMatches = lineText.matchAll(/\.text\s*\((?:(?!,\s*['"`]).)*?,\s*(['"`])([^'"`]+?)\1\s*[,)]/g);
       for (const match of textMatches) {
         const raw = match[2] ?? '';
         scannedCallbacks.add(raw);
       }
 
-      // B. Match known callback patterns: action:, wizard:, menu:, adm:, w:, site:, dept:
-      const literalMatches = lineText.matchAll(/(['"`])((?:action:|wizard:|menu:|adm:|w:|site:|dept:)[^'"`]+)\1/g);
+      // B. Match callback property in object literals: callbackData: '...' or callback_data: '...'
+      const propMatches = lineText.matchAll(/(?:callbackData|callback_data)\s*:\s*(['"`])([^'"`]+?)\1/g);
+      for (const match of propMatches) {
+        const raw = match[2] ?? '';
+        scannedCallbacks.add(raw);
+      }
+
+      // C. Match known callback patterns: action:, wizard:, menu:, adm:, w:, site:, dept:, qty_val:, amount_val:
+      const literalMatches = lineText.matchAll(/(['"`])((?:action:|wizard:|menu:|adm:|w:|site:|dept:|qty_val:|amount_val:)[^'"`]+)\1/g);
       for (const match of literalMatches) {
         const raw = match[2] ?? '';
         scannedCallbacks.add(raw);

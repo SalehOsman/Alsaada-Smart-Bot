@@ -160,6 +160,9 @@ export async function withChatAction<T>(
     timer = setInterval(() => {
       void sendChatActionSafe(ctx, action);
     }, intervalMs);
+    if (timer && typeof timer.unref === 'function') {
+      timer.unref();
+    }
   }
 
   try {

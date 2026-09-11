@@ -15,7 +15,11 @@ export class AdminAssignmentHandler {
 
   async renderAdminAssignmentsHub(ctx: SettingsModuleContext, inPlace = false, noticeText?: string): Promise<void> {
     if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') {
-      await showModalAlert(ctx, '🔒 هذا القسم مخصص حصرياً للمدير العام.');
+      if (ctx.callbackQuery) {
+        await showModalAlert(ctx, '🔒 هذا القسم مخصص حصرياً للمدير العام.');
+      } else {
+        await ctx.reply('🔒 هذا القسم مخصص حصرياً للمدير العام.');
+      }
       return;
     }
 
