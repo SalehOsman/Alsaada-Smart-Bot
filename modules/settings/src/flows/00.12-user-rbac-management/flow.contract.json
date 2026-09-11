@@ -1,0 +1,80 @@
+{
+  "flowCode": "00.12",
+  "flowName": "إدارة المستخدمين وتفويض الأدوار وربط العاملين",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "entryPoints": [
+    "action:settings:user_rbac"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "الهوية وإدارة الصلاحيات",
+    "إدارة المستخدمين وتفويض الأدوار"
+  ],
+  "buttons": [
+    "action:settings:user_rbac",
+    "urb:p:",
+    "urb:u:",
+    "urb:r:",
+    "urb:sr:",
+    "urb:tb:",
+    "urb:rv:",
+    "urb:lw:",
+    "urb:ap:",
+    "urb:s",
+    "urb:cp:",
+    "urb:cc:"
+  ],
+  "inputs": [
+    "text:search_query",
+    "text:telegram_id"
+  ],
+  "outputs": [
+    "card:users_list",
+    "card:user_card",
+    "card:link_success"
+  ],
+  "dataImpact": {
+    "database": [
+      "User",
+      "Worker"
+    ],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": [
+      "topic:system_governance"
+    ]
+  },
+  "linkedFlows": [
+    "00.5",
+    "01.7",
+    "01.1",
+    "01.2.D"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 800,
+    "commitP95": 1000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false
+}

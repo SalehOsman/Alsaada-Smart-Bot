@@ -43,6 +43,7 @@ export const FIELD_LABELS: Record<EditableWorkerField, string> = {
   ppeShoeSize: 'مقاس حذاء السلامة (السيفتي)',
   ppeUniformSize: 'مقاس زي العمل (اليونيفورم)',
   medicalNotes: 'الملاحظات الطبية والحساسية',
+  telegramId: 'معرف التليجرام الرقمي',
 };
 
 export const FIELD_KEY_SHORT_MAP: Record<string, EditableWorkerField> = {
@@ -82,6 +83,7 @@ export const FIELD_KEY_SHORT_MAP: Record<string, EditableWorkerField> = {
   ppes: 'ppeShoeSize',
   ppeu: 'ppeUniformSize',
   med: 'medicalNotes',
+  tgid: 'telegramId',
 };
 
 export const FIELD_TO_SHORT_MAP: Record<EditableWorkerField, string> = {
@@ -121,6 +123,7 @@ export const FIELD_TO_SHORT_MAP: Record<EditableWorkerField, string> = {
   ppeShoeSize: 'ppes',
   ppeUniformSize: 'ppeu',
   medicalNotes: 'med',
+  telegramId: 'tgid',
 };
 
 export function validateFieldValue(fieldKey: EditableWorkerField, value: string): { isValid: boolean; error?: string; cleanValue?: string } {
@@ -138,6 +141,14 @@ export function validateFieldValue(fieldKey: EditableWorkerField, value: string)
     const digits = normalizeDigits(clean.replace(/[\s-]/g, ''));
     if (!/^\d{14}$/.test(digits)) {
       return { isValid: false, error: 'الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً.' };
+    }
+    return { isValid: true, cleanValue: digits };
+  }
+
+  if (fieldKey === 'telegramId') {
+    const digits = normalizeDigits(clean.replace(/[\s-]/g, ''));
+    if (!/^\d{6,15}$/.test(digits)) {
+      return { isValid: false, error: 'معرف التليجرام يجب أن يكون رقماً صحيحاً مكوناً من 6 إلى 15 خانة.' };
     }
     return { isValid: true, cleanValue: digits };
   }
@@ -189,6 +200,6 @@ export function validateFieldValue(fieldKey: EditableWorkerField, value: string)
 export function getReturnTab(fieldShort: string): import('./flow.types.js').WorkerProfileTab {
   if (['job', 'site', 'dept', 'hire', 'sts', 'shft', 'cntr', 'lic', 'barr', 'bed'].includes(fieldShort)) return 'JOB';
   if (['wage', 'bsal', 'fall', 'pmth', 'wallet', 'wown', 'inst', 'insno', 'insts', 'cgpol', 'cgbrd'].includes(fieldShort)) return 'FINANCE';
-  if (['phone', 'emPhone', 'emName', 'ppes', 'ppeu', 'med'].includes(fieldShort)) return 'DOCS';
+  if (['phone', 'emPhone', 'emName', 'ppes', 'ppeu', 'med', 'tgid'].includes(fieldShort)) return 'DOCS';
   return 'PERSONAL';
 }

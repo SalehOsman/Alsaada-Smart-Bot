@@ -318,4 +318,31 @@ export class WorkerEditRepository {
       createdAt: r.createdAt,
     }));
   }
+
+  async syncWorkerUser(workerId: string, telegramId: bigint, workerName: string, siteId?: string | null): Promise<void> {
+    const existing = await this.prisma.user.findUnique({ where: { telegramId } });
+    if (existing) {
+      await this.prisma.user.update({
+        where: { telegramId },
+        data: {
+          fullName: workerName,
+          role: 'WORKER',
+          workerId,
+          assignedSiteId: siteId ?? null,
+          isActive: true,
+        },
+      });
+    } else {
+      await this.prisma.user.create({
+        data: {
+          telegramId,
+          fullName: workerName,
+          role: 'WORKER',
+          workerId,
+          assignedSiteId: siteId ?? null,
+          isActive: true,
+        },
+      });
+    }
+  }
 }

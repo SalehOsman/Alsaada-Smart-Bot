@@ -45,6 +45,8 @@ export function buildIdentitySubKeyboard(isImpersonating?: boolean): InlineKeybo
   const kb = new InlineKeyboard()
     .text('👤 ملفي الشخصي (حساب المدير العام)', 'action:settings:admin_profile')
     .row()
+    .text('👥 إدارة المستخدمين وتفويض الأدوار', 'action:settings:user_rbac')
+    .row()
     .text('🎭 محاكاة وتقمص الأدوار الميدانية', 'action:settings:ghost_mode')
     .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')

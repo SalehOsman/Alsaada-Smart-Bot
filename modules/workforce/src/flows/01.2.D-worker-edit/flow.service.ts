@@ -198,6 +198,11 @@ export class WorkerEditService {
     } else if (fieldKey === 'medicalNotes') {
       oldDisplayVal = worker.medicalNotes || '';
       dataToUpdate.medicalNotes = cleanValue;
+    } else if (fieldKey === 'telegramId') {
+      oldDisplayVal = worker.telegramId ? String(worker.telegramId) : '';
+      const tgBigInt = BigInt(cleanValue);
+      dataToUpdate.telegramId = tgBigInt;
+      await this.repository.syncWorkerUser(worker.id, tgBigInt, worker.name, worker.siteId);
     }
 
     let category = 'FINANCIAL';
@@ -205,7 +210,7 @@ export class WorkerEditService {
       category = 'PERSONAL';
     } else if (['jobTitleId', 'siteId', 'departmentId', 'hireDate', 'status', 'shiftSystem', 'contractType', 'drivingLicense', 'barracksUnit', 'bedNumber'].includes(fieldKey)) {
       category = 'JOB';
-    } else if (['phone', 'emergencyPhone', 'emergencyContactName', 'ppeShoeSize', 'ppeUniformSize', 'medicalNotes'].includes(fieldKey)) {
+    } else if (['phone', 'emergencyPhone', 'emergencyContactName', 'ppeShoeSize', 'ppeUniformSize', 'medicalNotes', 'telegramId'].includes(fieldKey)) {
       category = 'CONTACT';
     }
 

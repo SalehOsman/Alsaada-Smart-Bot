@@ -172,7 +172,7 @@
 | **`09.8`** | تقديم تظلم أو طعن إداري/مالي من العامل | الرواتب والتقارير | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/worker-portal/appeal.ts` | — |
 | **`09.9`** | مراجعة واعتماد الطعون والتظلمات الإدارية | الرواتب والتقارير | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/admin/appeals-review.ts` | — |
 | **`10.1`** | لوحة المؤشرات الذكية والتحليلات التنفيذية | إدارة النظام والتنفيذي | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/executive/dashboard.ts` | — |
-| **`10.2`** | إدارة المستخدمين وتفويض الصلاحيات (RBAC) | إدارة النظام والتنفيذي | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/executive/manage-users.ts` | — |
+| **`10.2`** | إدارة المستخدمين وتفويض الصلاحيات (RBAC) وربط العاملين المباشر | إدارة النظام والتنفيذي | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.12-user-rbac-management` | `2026-09-11` (`Plan-12-Completion`) |
 | **`10.3`** | لوحة التحكم بالإشعارات وتوجيه التنبيهات | إدارة النظام والتنفيذي | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/executive/alerts-hub.ts` | — |
 | **`10.4`** | الأرشيف الرقمي وخزانة الوثائق والتراخيص | إدارة النظام والتنفيذي | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/executive/documents-hub.ts` | — |
 | **`10.5`** | رادار قياس سرعة واستجابة البوت (APM) | إدارة النظام والتنفيذي | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.8-apm-telemetry` | `2026-09-10` (`Settings-Decomposition`) |
@@ -230,6 +230,8 @@
 | **`NEW-38`** | **التحديث والتصحيح الذاتي لبيانات العامل الشخصية** (`Worker Self-Service Personal Data Edit`) تعديل رقم الهاتف، الواتساب، المحفظة، العنوان، وحظر التعديل المالي التام | شؤون العاملين وبوابة العامل | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.6-worker-self-edit` | `2026-09-10` (`Workforce-P07-Completion`) |
 | **`NEW-39`** | **بوابة العامل المعمارية المفككة إلى 5 بوابات فرعية** (`Worker 5-Sub-Hubs Portal & Digital ID`) تفكيك القائمة إلى: الملف الشخصي، المستحقات والماليات، الدوام والإجازات، العهد وPPE، والدعم والشكاوى مع بطاقة الهوية الرقمية | بوابة العامل وتجربة المستخدم | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/hub` | `2026-09-10` (`Workforce-P07-Completion`) |
 | **`NEW-40`** | **محرك الأوامر البوليمورفية والتوجيه الديناميكي الميداني** (`Polymorphic Command Router & Dynamic Scope Sync`) توجيه الأوامر المشتركة حسب الدور (/profile, /status, /apply) وتقييد أوامر الزائر الصارم إلى 4 أوامر حصراً مع المزامنة اللحظية | إدارة النظام والتحكم السيادي | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.7-guest-join-and-linking` | `2026-09-10` (`Workforce-P07-Completion`) |
+| **`NEW-41`** | **المساعد الموحد لإشعارات التدفقات وطابور المزامنة الصامتة** (`Universal Flow Notification Helper & Silent Outbox Enqueue`) إرسال إشعارات موحدة لمجموعات المواقع والتوبيكات التنفيذية وتدوين أحداث الأوتبوكس بدون تأخير (< 15ms) وبدون كود مكرر | النواة المشتركة والإشعارات | 🟢 **مفعل بالنواة وموثق 100%** | `packages/core-components/src/multi-channel/notification-helper.ts` | `2026-09-11` (`Plan-12-Completion`) |
+| **`NEW-42`** | **الربط المباشر لحساب تليجرام العامل مع المعاينة الحية وكشف النزاعات** (`Direct Worker Telegram Linking with Live Preview & Conflict Radar`) إدخال المعرف الرقمي، المعاينة بالاسم الحقيقي عبر Telegram API، النقل النظيف للحسابات المتنازع عليها، وإنشاء العضوية التلقائية | إدارة الهوية وشؤون العاملين | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.12-user-rbac-management` | `2026-09-11` (`Plan-12-Completion`) |
 
 
 

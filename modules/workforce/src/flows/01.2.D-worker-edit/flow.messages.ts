@@ -135,6 +135,7 @@ export const WorkerEditMessages = {
     const title = '✏️ *بطاقة العامل — 📞 الاتصال والسلامة والمستندات*';
     const phoneVal = worker.phone ? `\`${worker.phone}\`` : '`غير مسجل`';
     const emVal = worker.emergencyPhone ? `\`${worker.emergencyPhone}\`` : '`غير مسجل`';
+    const tgVal = worker.telegramId ? `\`${worker.telegramId}\`` : '`غير مربوط`';
     const medVal = worker.medicalNotes
       ? `\n${formatExpandableQuote(cleanMd(worker.medicalNotes), 'markdown')}`
       : 'لا توجد ملاحظات طبية خاصة';
@@ -145,6 +146,7 @@ export const WorkerEditMessages = {
       `• *الاسم:* ${cleanMd(worker.name)} (${cleanMd(worker.nickname) || 'بدون شهرة'})\n` +
       `• *كود العامل:* \`#${worker.code}\`\n` +
       `• *رقم الهاتف والواتساب:* ${phoneVal}\n` +
+      `• *معرف التليجرام المرتبط:* ${tgVal}\n` +
       `• *هاتف الطوارئ البديل:* ${emVal}\n` +
       `• *اسم جهة الطوارئ:* ${cleanMd(worker.emergencyContactName) || 'غير مسجل'}\n` +
       `• *مقاس حذاء السيفتي:* \`${worker.ppeShoeSize || 'غير محدد'}\`\n` +

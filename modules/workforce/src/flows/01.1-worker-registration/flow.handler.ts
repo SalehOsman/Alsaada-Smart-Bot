@@ -12,6 +12,7 @@ import {
   validateWorkerHireDate,
 } from './flow.validators.js';
 import { extractFirstTwoNames } from '@alsaada/regional-engine';
+import { notifyFlowOperation } from '@alsaada/core-components';
 
 export class WorkerRegistrationHandler {
   constructor(
@@ -278,34 +279,34 @@ export class WorkerRegistrationHandler {
     }
 
     try {
-      const result = await this.service.registerWorker(
-        {
-          name: draft.name,
-          nickname: draft.nickname,
-          idType: draft.idType || 'NATIONAL_ID',
-          idNumber: draft.idNumber,
-          phone: draft.phone,
-          jobTitleId: draft.jobTitleId,
-          jobTitleName: draft.jobTitleName || 'عامل',
-          siteId: draft.siteId,
-          siteName: draft.siteName,
-          paymentMethod: draft.paymentMethod || 'CASH_SITE',
-          hireDate: draft.hireDate ? new Date() : new Date(),
-        },
-        telegramId,
-        ctx.effectiveRole || 'ADMIN'
-      );
+      const result = await this.service.registerWorker({
+        name: draft.name,
+        nickname: draft.nickname,
+        idType: draft.idType || 'NATIONAL_ID',
+        idNumber: draft.idNumber,
+        phone: draft.phone,
+        jobTitleId: draft.jobTitleId,
+        jobTitleName: draft.jobTitleName || 'عامل',
+        siteId: draft.siteId,
+        siteName: draft.siteName,
+        paymentMethod: draft.paymentMethod || 'CASH_SITE',
+        hireDate: draft.hireDate ? new Date() : new Date(),
+      }, telegramId, ctx.effectiveRole || 'ADMIN');
 
       await this.service.clearDraft(telegramId);
-      const text = WorkerRegistrationMessages.registrationSuccess({
-        code: result.code,
-        name: result.name,
-        jobTitle: result.jobTitle,
-        siteName: result.siteName,
-        hireDate: result.hireDate,
-      });
+      const text = WorkerRegistrationMessages.registrationSuccess(result);
       const kb = WorkerRegistrationKeyboards.completionKeyboard(result.welcomeWhatsAppUrl);
       await this.replyOrEdit(ctx, text, kb);
+
+      // Safe, non-blocking flow notification
+      const notifText = WorkerRegistrationMessages.registrationNotification(result);
+      await notifyFlowOperation({
+        featureKey: 'WORKER_REGISTRATION',
+        siteId: draft.siteId || undefined,
+        siteCardText: notifText,
+        hqCategory: 'WORKFORCE',
+        hqCardText: notifText,
+      }).catch(() => {});
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'تعذر حفظ ملف العامل';
       await this.replyOrEdit(ctx, `❌ خطأ أثناء التسجيل: ${msg}`, WorkerRegistrationKeyboards.interactiveErrorKeyboard('confirm'));

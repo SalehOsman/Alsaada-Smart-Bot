@@ -190,6 +190,19 @@ export const WorkerRegistrationMessages = {
     );
   },
 
+  registrationNotification(data: { code: string; name: string; jobTitle: string; siteName?: string | undefined; hireDate: Date }): string {
+    const formattedDate = formatDateDMY(data.hireDate);
+    return (
+      `👤 *تعيين عامل جديد في المنظومة*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `• *الاسم:* ${data.name}\n` +
+      `• *الكود:* \`#${data.code}\`\n` +
+      `• *الوظيفة:* ${data.jobTitle}\n` +
+      `• *الموقع:* ${data.siteName || 'الموقع العام'}\n` +
+      `• *تاريخ المباشرة:* ${formattedDate}`
+    );
+  },
+
   cancelled(): string {
     return `❌ تم إلغاء عملية تسجيل العامل. يمكنك البدء من جديد في أي وقت.`;
   },

@@ -13,9 +13,11 @@ import {
   formatReasonSelectHeader,
   formatConfirmationCard,
   formatSuccessCard,
+  formatOffboardingNotification,
 } from './flow.messages.js';
 import { validateTerminationReason } from './flow.validators.js';
 import { logWorkerOffboardingTelemetry } from './flow.telemetry.js';
+import { notifyFlowOperation } from '@alsaada/core-components';
 
 export class WorkerOffboardingHandler {
   private activeStates = new Map<string, WorkerOffboardingState>();
@@ -124,6 +126,7 @@ export class WorkerOffboardingHandler {
     state.workerTelegramId = worker.telegramId;
     state.jobTitle = worker.jobTitle;
     state.siteName = worker.site?.name;
+    state.siteId = worker.siteId || worker.site?.id || undefined;
     state.step = 'REASON_SELECT';
     this.activeStates.set(telegramId.toString(), state);
 
@@ -199,6 +202,10 @@ export class WorkerOffboardingHandler {
         actorTelegramId: telegramId,
       });
 
+      const savedReason = state.reason;
+      const savedSiteName = state.siteName;
+      const savedSiteId = state.siteId;
+
       this.activeStates.delete(telegramId.toString());
       logWorkerOffboardingTelemetry({
         workerId: state.workerId,
@@ -221,10 +228,29 @@ export class WorkerOffboardingHandler {
       if (ctx.callbackQuery) {
         try {
           await ctx.editMessageText(successText, { parse_mode: 'Markdown', reply_markup: keyboard });
-          return;
-        } catch {}
+        } catch {
+          await ctx.reply(successText, { parse_mode: 'Markdown', reply_markup: keyboard });
+        }
+      } else {
+        await ctx.reply(successText, { parse_mode: 'Markdown', reply_markup: keyboard });
       }
-      await ctx.reply(successText, { parse_mode: 'Markdown', reply_markup: keyboard });
+
+      // Safe, non-blocking flow notification
+      const notifText = formatOffboardingNotification(
+        res.workerName,
+        res.workerCode,
+        savedReason,
+        res.clearanceReferenceId,
+        savedSiteName
+      );
+
+      await notifyFlowOperation({
+        featureKey: 'WORKER_OFFBOARDING',
+        siteId: savedSiteId || undefined,
+        siteCardText: notifText,
+        hqCategory: 'WORKFORCE',
+        hqCardText: notifText,
+      }).catch(() => {});
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'تعذر إتمام المخالصة.';
       if (ctx.callbackQuery) {

@@ -49,6 +49,13 @@ import {
 import { registerGroupManagerHandlers } from './handlers/group-manager.handler.js';
 
 
+import {
+  configureNotificationHelper,
+  UnifiedNotificationDispatcher,
+  NotificationPolicyEngine,
+  type ForumTopicConfig,
+} from '@alsaada/core-components';
+
 export function createBot(): Bot<MyContext> {
   const token = config.botToken;
   if (!token || token === 'YOUR_NEW_BOT_TOKEN_HERE') {
@@ -61,6 +68,46 @@ export function createBot(): Bot<MyContext> {
         compress: true,
         dispatcher: undiciDispatcher,
       } as any,
+    },
+  });
+
+  // Configure Global Multi-Channel Notification Dispatcher & Helper
+  const policyEngine = new NotificationPolicyEngine({
+    async get(key: string) {
+      return safeRedisGet(key);
+    },
+    async set(key: string, val: string) {
+      if (redis && redis.status === 'ready') {
+        await redis.set(key, val);
+      }
+    },
+  });
+
+  const notificationDispatcher = new UnifiedNotificationDispatcher({
+    policyEngine,
+    api: bot.api,
+    async hqGroupId() {
+      return safeRedisGet('system:hq_telegram_group_id');
+    },
+    async forumConfig() {
+      const raw = await safeRedisGet('system:hq_topics_config');
+      if (raw) {
+        try {
+          return JSON.parse(raw) as ForumTopicConfig;
+        } catch {}
+      }
+      return undefined;
+    },
+  });
+
+  configureNotificationHelper({
+    dispatcher: notificationDispatcher,
+    async resolveSiteGroup(siteId: string) {
+      const site = await prisma.site.findUnique({
+        where: { id: siteId },
+        select: { telegramGroupId: true },
+      });
+      return site?.telegramGroupId ?? null;
     },
   });
 

@@ -154,4 +154,32 @@ describe('Flow 01.2.D Unit Tests — Worker Edit Governance & Short Mappings', (
     const brdKb = WorkerEditKeyboards.cigaretteBrandKeyboard('wrk-1', items);
     expect(brdKb.inline_keyboard.length).toBeGreaterThanOrEqual(2);
   });
+
+  it('should validate and support Telegram ID field in worker edit', async () => {
+    const { validateFieldValue, FIELD_KEY_SHORT_MAP, getReturnTab } = await import('../flow.validators.js');
+    const { WorkerEditKeyboards } = await import('../flow.keyboard.js');
+    const { WorkerEditMessages } = await import('../flow.messages.js');
+
+    expect(FIELD_KEY_SHORT_MAP.tgid).toBe('telegramId');
+    expect(getReturnTab('tgid')).toBe('DOCS');
+
+    const validRes = validateFieldValue('telegramId', ' 123456789 ');
+    expect(validRes.isValid).toBe(true);
+    expect(validRes.cleanValue).toBe('123456789');
+
+    const invalidRes = validateFieldValue('telegramId', 'abc123');
+    expect(invalidRes.isValid).toBe(false);
+
+    const kb = WorkerEditKeyboards.workerProfileTabsKeyboard('wrk-1', 'DOCS', true);
+    const hasTgButton = kb.inline_keyboard.some(row => row.some(b => b.text.includes('معرف تليجرام')));
+    expect(hasTgButton).toBe(true);
+
+    const card = WorkerEditMessages.tab4DocsCard({
+      id: 'wrk-1',
+      code: 'EMP-01',
+      name: 'أحمد محمود',
+      telegramId: 987654321n,
+    }, true);
+    expect(card).toContain('987654321');
+  });
 });

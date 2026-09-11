@@ -14,6 +14,7 @@ export * from './completion-card/keyboard.js';
 export * from './multi-channel/topic-router.js';
 export * from './multi-channel/notification-policy.js';
 export * from './multi-channel/notification-dispatcher.js';
+export * from './multi-channel/notification-helper.js';
 export * from './source-picker/types.js';
 export * from './source-picker/validator.js';
 export * from './source-picker/keyboard.js';

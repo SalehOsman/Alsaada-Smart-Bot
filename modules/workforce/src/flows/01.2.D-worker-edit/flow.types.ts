@@ -40,7 +40,8 @@ export type EditableWorkerField =
   | 'emergencyContactName'
   | 'ppeShoeSize'
   | 'ppeUniformSize'
-  | 'medicalNotes';
+  | 'medicalNotes'
+  | 'telegramId';
 
 export interface CreateEditRequestInput {
   workerId: string;
@@ -147,6 +148,7 @@ export interface WorkerCardView {
   ppeShoeSize?: string | null;
   ppeUniformSize?: string | null;
   medicalNotes?: string | null;
+  telegramId?: bigint | string | null;
 }
 
 export interface SalaryAdjustmentWizardState {

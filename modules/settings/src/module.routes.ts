@@ -62,6 +62,11 @@ import { TelegramGroupsRepository } from './flows/00.11-telegram-groups/flow.rep
 import { TelegramGroupsService } from './flows/00.11-telegram-groups/flow.service.js';
 import { TelegramGroupsHandler } from './flows/00.11-telegram-groups/flow.handler.js';
 
+// Flow 00.12 User RBAC Management
+import { UserRbacRepository } from './flows/00.12-user-rbac-management/flow.repository.js';
+import { UserRbacService } from './flows/00.12-user-rbac-management/flow.service.js';
+import { UserRbacHandler } from './flows/00.12-user-rbac-management/flow.handler.js';
+
 export interface SettingsModuleHandlers {
   corporateHandler: CorporateProfileHandler;
   sitesHandler: SitesHubHandler;
@@ -74,6 +79,7 @@ export interface SettingsModuleHandlers {
   emergencyCacheHandler: EmergencyCacheHandler;
   notificationPoliciesHandler: NotificationPoliciesHandler;
   telegramGroupsHandler: TelegramGroupsHandler;
+  userRbacHandler: UserRbacHandler;
   handleTextInput: (ctx: SettingsModuleContext) => Promise<boolean>;
   handleLocationInput: (ctx: SettingsModuleContext) => Promise<boolean>;
 }
@@ -137,6 +143,12 @@ export function registerSettingsRoutes(
   const telegramGroupsRepo = new TelegramGroupsRepository(prisma, redis);
   const telegramGroupsService = new TelegramGroupsService(telegramGroupsRepo);
   const telegramGroupsHandler = new TelegramGroupsHandler(telegramGroupsService, telegramGroupsRepo);
+
+  // 00.12 User RBAC Management
+  const userRbacRepo = new UserRbacRepository(prisma, redis);
+  const userRbacService = new UserRbacService(userRbacRepo);
+  const userRbacHandler = new UserRbacHandler(userRbacService);
+  userRbacHandler.registerRoutes(bot);
 
   // --- Central Hub & Navigation Routes ---
   bot.command(['settings', 'admin'], handleSettingsHub);
@@ -351,6 +363,7 @@ export function registerSettingsRoutes(
 
   // Text input multiplexer
   const handleTextInput = async (ctx: SettingsModuleContext): Promise<boolean> => {
+    if (ctx.message?.text && (await userRbacHandler.handleTextInput(ctx, ctx.message.text))) return true;
     if (await corporateHandler.handleTextInput(ctx)) return true;
     if (await sitesHandler.handleTextInput(ctx)) return true;
     if (await adminProfileHandler.handleTextInput(ctx)) return true;
@@ -376,6 +389,7 @@ export function registerSettingsRoutes(
     emergencyCacheHandler,
     notificationPoliciesHandler: notifPoliciesHandler,
     telegramGroupsHandler,
+    userRbacHandler,
     handleTextInput,
     handleLocationInput,
   };

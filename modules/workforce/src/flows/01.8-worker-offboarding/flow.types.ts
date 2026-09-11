@@ -21,6 +21,7 @@ export interface WorkerOffboardingState {
   workerTelegramId?: bigint | null | undefined;
   jobTitle?: string | undefined;
   siteName?: string | undefined;
+  siteId?: string | undefined;
   reason?: TerminationReason | undefined;
   notes?: string | undefined;
   createdAt: number;

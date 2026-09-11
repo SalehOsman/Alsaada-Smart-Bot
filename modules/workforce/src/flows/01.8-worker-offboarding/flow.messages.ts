@@ -61,3 +61,21 @@ export function formatSuccessCard(
     `\n\nتم قيد العملية في السجل الجنائي وترحيلها لطابور المزامنة الخلفية.`
   );
 }
+
+export function formatOffboardingNotification(
+  workerName: string,
+  workerCode: string,
+  reason: TerminationReason,
+  refId: string,
+  siteName?: string
+): string {
+  const reasonText = TERMINATION_REASON_LABELS[reason] || reason;
+  return (
+    `🚨 *إشعار إنهاء خدمة وإخلاء طرف عامل*\n` +
+    `────────────────────────────\n` +
+    `• *العامل:* ${workerName} (\`#${workerCode}\`)\n` +
+    `• *السبب المعتمد:* ${reasonText}\n` +
+    `• *الموقع:* ${siteName || 'الموقع العام'}\n` +
+    `• *رقم سند المخالصة:* \`${refId}\``
+  );
+}

@@ -10,20 +10,29 @@ export interface DispatchNotificationPayload {
 
 export interface DispatchEventOptions {
   featureKey: string;
-  siteId?: string | null;
-  siteGroupId?: bigint | number | string | null;
-  siteNotification?: DispatchNotificationPayload;
+  siteId?: string | null | undefined;
+  siteGroupId?: bigint | number | string | null | undefined;
+  siteNotification?: DispatchNotificationPayload | undefined;
   hqNotification?: {
     category: TransactionCategory;
     text: string;
-    parseMode?: 'Markdown' | 'HTML';
-  };
+    parseMode?: 'Markdown' | 'HTML' | undefined;
+  } | undefined;
 }
 
 export interface DispatcherConfig {
   policyEngine: NotificationPolicyEngine;
-  hqGroupId?: bigint | number | string | null;
-  forumConfig?: ForumTopicConfig;
+  hqGroupId?:
+    | bigint
+    | number
+    | string
+    | null
+    | (() => Promise<bigint | number | string | null | undefined> | bigint | number | string | null | undefined)
+    | undefined;
+  forumConfig?:
+    | ForumTopicConfig
+    | (() => Promise<ForumTopicConfig | undefined> | ForumTopicConfig | undefined)
+    | undefined;
   api: Api;
 }
 
@@ -60,17 +69,25 @@ export class UnifiedNotificationDispatcher {
     }
 
     // 2. Dispatch to HQ Executive Group Topic
-    if (this.config.hqGroupId && options.hqNotification) {
+    let resolvedHqId: bigint | number | string | null | undefined =
+      typeof this.config.hqGroupId === 'function' ? await this.config.hqGroupId() : this.config.hqGroupId;
+
+    if (resolvedHqId && options.hqNotification) {
       try {
         const isHqEnabled = await this.config.policyEngine.isHqNotificationEnabled(options.featureKey);
         if (isHqEnabled) {
-          const threadId = this.config.forumConfig
-            ? resolveTopicId(options.hqNotification.category, this.config.forumConfig)
+          const resolvedForum =
+            typeof this.config.forumConfig === 'function'
+              ? await this.config.forumConfig()
+              : this.config.forumConfig;
+
+          const threadId = resolvedForum
+            ? resolveTopicId(options.hqNotification.category, resolvedForum)
             : undefined;
 
-          const hqChatId = typeof this.config.hqGroupId === 'bigint' ? Number(this.config.hqGroupId) : this.config.hqGroupId;
+          const hqChatId = typeof resolvedHqId === 'bigint' ? Number(resolvedHqId) : resolvedHqId;
 
-          const sendOptions: Record<string, any> = {
+          const sendOptions: Record<string, unknown> = {
             parse_mode: options.hqNotification.parseMode ?? 'Markdown',
             disable_notification: false,
             link_preview_options: DISABLED_LINK_PREVIEWS,
@@ -79,11 +96,11 @@ export class UnifiedNotificationDispatcher {
             sendOptions.message_thread_id = threadId;
           }
 
-          await this.config.api.sendMessage(hqChatId, options.hqNotification.text, sendOptions);
+          await this.config.api.sendMessage(hqChatId, options.hqNotification.text, sendOptions as any);
           hqSent = true;
         }
       } catch (err) {
-        console.warn(`⚠️ [NOTIF DISPATCHER] Failed to send to HQ group ${this.config.hqGroupId}:`, err);
+        console.warn(`⚠️ [NOTIF DISPATCHER] Failed to send to HQ group ${resolvedHqId}:`, err);
       }
     }
 
