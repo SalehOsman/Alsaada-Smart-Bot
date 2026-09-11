@@ -40,9 +40,9 @@ export function buildIdentitySubKeyboard(isImpersonating?: boolean): InlineKeybo
   const kb = new InlineKeyboard()
     .text('👤 ملفي الشخصي (حساب المدير العام)', 'action:settings:admin_profile')
     .row()
-    .text('👥 تعيين وتوزيع مدراء المواقع', 'action:settings:admin_assignments')
+    .text('👥 تعيين وتوزيع مشرفي المواقع', 'action:settings:admin_assignments')
     .row()
-    .text('🎭 محاكاة وتقمص الأدوار (Ghost Mode)', 'action:settings:ghost_mode')
+    .text('🎭 محاكاة وتقمص الأدوار الميدانية', 'action:settings:ghost_mode')
     .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -56,11 +56,11 @@ export function buildIdentitySubKeyboard(isImpersonating?: boolean): InlineKeybo
 
 export function buildSystemSubKeyboard(isImpersonating?: boolean): InlineKeyboard {
   const kb = new InlineKeyboard()
-    .text('🔍 التحقيق الجنائي والأعطال النشطة', 'action:settings:audit_vault')
+    .text('🔍 التحقيق الجنائي وسجل الأعطال', 'action:settings:audit_vault')
     .row()
     .text('⚡ رادار الأداء والسرعة الفائقة (APM)', 'action:settings:apm_dashboard')
     .row()
-    .text('🛑 صمامات الطوارئ والذاكرة اللحظية', 'action:settings:emergency_cache')
+    .text('🛑 صمامات الطوارئ والذاكرة', 'action:settings:emergency_cache')
     .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -100,7 +100,8 @@ export async function handleSettingsHub(ctx: SettingsModuleContext): Promise<voi
   const text =
     `⚙️ *مركز إعدادات النظام والتحكم السيادي*\n` +
     `────────────────────────────\n` +
-    `لوحة التحكم المركزية لإدارة الكيان المؤسسي، الفروع والمواقع الميدانية، وضبط صلاحيات الإشراف والأمان والرقابة الجنائية.\n\n` +
+    `📍 *المسار:* ⚙️ الإعدادات السيادية\n\n` +
+    `لوحة التحكم المركزية لإدارة الكيان المؤسسي، المشاريع والمواقع الميدانية، وضبط صلاحيات الإشراف والأمان والرقابة الجنائية.\n\n` +
     `👇 *اختر القسم الإداري المطلوب:*`;
 
   if (ctx.callbackQuery) {
@@ -136,20 +137,23 @@ export async function handleSettingsSubCategory(
     text =
       `🏢 *إعدادات الكيان المؤسسي والمشاريع والمواقع*\n` +
       `────────────────────────────\n` +
-      `إدارة بيانات شركة السعادة الرسمية، السجل التجاري والضريبي، مصفوفة الفروع والمواقع، والهيكل الوظيفي ومصفوفة المهن والورديات.\n\n` +
+      `📍 *المسار:* ⚙️ الإعدادات ❯ 🏢 الكيان والمشاريع\n\n` +
+      `إدارة بيانات شركة السعادة الرسمية، السجل التجاري والضريبي، مصفوفة المشاريع والمواقع، والهيكل الوظيفي ومصفوفة المهن والورديات.\n\n` +
       `اختر الإجراء المطلوب:`;
   } else if (category === 'identity') {
     keyboard = buildIdentitySubKeyboard(ctx.isImpersonating);
     text =
       `👤 *إعدادات الحساب الشخصي والأمان والمحاكاة*\n` +
       `────────────────────────────\n` +
-      `تعديل بيانات حسابك الشخصي كمدير عام، تعيين مدراء الفروع، أو تقمص واجهات الأدوار التشغيلية لاختبار المنظومة ميدانياً.\n\n` +
+      `📍 *المسار:* ⚙️ الإعدادات ❯ 👤 الحساب والأمان والمحاكاة\n\n` +
+      `تعديل بيانات حسابك الشخصي كمدير عام، تعيين وتوزيع مشرفي المواقع الميدانية، أو محاكاة واجهات الأدوار التشغيلية لاختبار المنظومة.\n\n` +
       `اختر الإجراء المطلوب:`;
   } else {
     keyboard = buildSystemSubKeyboard(ctx.isImpersonating);
     text =
       `⚡ *أداء وتشغيل المنظومة والرقابة الجنائية*\n` +
       `────────────────────────────\n` +
+      `📍 *المسار:* ⚙️ الإعدادات ❯ ⚡ الرقابة والأداء والتشغيل\n\n` +
       `وحدة التحقيق الجنائي وتتبع مسار العمليات، كونسول الأعطال النشطة، رادار APM وسرعة الخدمات الخارجية، وصمامات الصيانة والذاكرة اللحظية.\n\n` +
       `اختر الإجراء المطلوب:`;
   }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-10T20:02:29.117Z",
+  "generatedAt": "2026-09-11T03:05:37.464Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -26,15 +26,15 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "66cf7f49ce1d0a767ac482e23fcff53b7f78e39734c6f4473da857fb859b839c"
+      "sha256": "54429223ea0e87aab91361f4b16e09006dcc100da0d281d0617f8d981c09d4cb"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
-      "sha256": "11015f664636ed01f55084383180e415cb5dce39ae8eded4c3d95d2a00c6604d"
+      "sha256": "794afbe78666a3e115e694f86cf1b2d901db41ddcd29151d1f21c1fa7e0fee3d"
     },
     {
       "path": "docs/15-universal-module-and-flow-standard.md",
-      "sha256": "35ee111ca50bb409ec94a73cd0dced4baa468f004733545a49aab3cdc800c1b7"
+      "sha256": "257502508402797fcc70e727459d87f1037a3d1a2f39c0abfff4a5e8e67f1eb2"
     },
     {
       "path": "docs/21-mandatory-module-architecture-and-gates.md",
@@ -46,7 +46,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "6a519de27b9af81276fa8335e6c1637e9cfd9003deadc8aa33f652e72dfc6687"
+      "sha256": "a9a717361ad7a19879f41e8a83a32fe7255353a34ca2b2832d10703840691046"
     },
     {
       "path": "package.json",
@@ -62,7 +62,7 @@
     },
     {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
-      "sha256": "00aa224a24a458941369b493d9f367af001d33df6402d54603aeb8a6941f4c47"
+      "sha256": "1b1e3ed46ddbded1dd10e8eee203262bf62371b2828594fb2dc3a09e06244539"
     },
     {
       "path": "tools/governance/verify-ai-compliance.ts",
@@ -86,7 +86,7 @@
     },
     {
       "path": "tools/governance/verify-flow-fast.ts",
-      "sha256": "f5e4c08c19d76ae250ff596d5673c713fd53a776d2ac206d6385d6ce22f17315"
+      "sha256": "47985eff3732520bc6a19cb8074ce5091000e6dbdb810cb062cd1be4e9fad5c7"
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
