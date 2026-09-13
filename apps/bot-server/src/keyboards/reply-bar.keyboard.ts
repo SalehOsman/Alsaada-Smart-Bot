@@ -14,7 +14,7 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
     keyboard.text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)').row();
   }
 
-  if (role === 'SUPER_ADMIN') {
+  if (role === 'SUPER_ADMIN' || role === 'GENERAL_ADMIN') {
     keyboard
       .text('🏠 القائمة الرئيسية')
       .text('⚙️ إعدادات النظام');
@@ -23,6 +23,12 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
       .text('🏠 القائمة الرئيسية')
       .row()
       .text('👷 التبديل لحسابي كعامل')
+      .text('👤 ملفي الشخصي');
+  } else if (role === 'WORKER_SUPERVISOR') {
+    keyboard
+      .text('🏠 القائمة الرئيسية')
+      .row()
+      .text('🚜 تسجيل منسوب')
       .text('👤 ملفي الشخصي');
   } else if (role === 'WORKER') {
     if (ctx.isDualWorkerMode) {
@@ -40,12 +46,6 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
         .row()
         .text('👤 ملفي الشخصي');
     }
-  } else if (role === 'EXECUTIVE') {
-    keyboard
-      .text('🏠 القائمة الرئيسية')
-      .row()
-      .text('📊 لوحة المؤشرات')
-      .text('👤 ملفي الشخصي');
   } else if (role === 'SUPPLIER') {
     keyboard
       .text('🏠 القائمة الرئيسية')

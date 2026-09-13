@@ -20,6 +20,9 @@
       ],
       "@alsaada/settings": [
         "modules/settings/src/index.ts"
+      ],
+      "@alsaada/telemetry": [
+        "packages/telemetry/src/index.ts"
       ]
     }
   }

@@ -38,14 +38,14 @@ export function formatWhatsAppReceiptText(data: WhatsAppReceiptData): string {
   const dtStr = formatDate(data.date ?? new Date());
   const lines: string[] = [
     `*إشعار مالي معتمد — ${data.companyName}*`,
-    `━━━━━━━━━━━━━━━━━━━━━`,
+    `----------------------------------------`,
     `أهلاً بك يا ${data.workerName}،`,
     `تم قيد معاملة (${data.operationType}) بنجاح.`,
-    `🔖 *رقم السند:* ${data.voucherNumber}`,
-    `💰 *المبلغ:* ${formatCurrency(data.amount)}`,
-    `📅 *التاريخ:* ${dtStr}`,
-    `━━━━━━━━━━━━━━━━━━━━━`,
-    `📌 هذا إشعار رسمي آلي مسجل في المنظومة.`,
+    `• *رقم السند:* ${data.voucherNumber}`,
+    `• *المبلغ:* ${formatCurrency(data.amount)}`,
+    `• *التاريخ:* ${dtStr}`,
+    `----------------------------------------`,
+    `• هذا إشعار رسمي آلي مسجل في المنظومة.`,
   ];
 
   if (data.supportContact) {
@@ -81,26 +81,26 @@ export interface WhatsAppErrorReportData {
 export function formatWhatsAppErrorReportText(data: WhatsAppErrorReportData): string {
   const dtStr = formatDate(data.occurredAt ?? new Date());
   const lines: string[] = [
-    `🚨 *بلاغ عطل تشغيلي — منظومة السعادة سمارت بوت*`,
-    `━━━━━━━━━━━━━━━━━━━━━`,
+    `[!] *بلاغ عطل تشغيلي — منظومة السعادة سمارت بوت*`,
+    `----------------------------------------`,
     `السلام عليكم ورحمة الله وبركاته،`,
     `تم اعتراض عطل فني في المنظومة ويتطلب إشعار الإدارة العليا:`,
     ``,
-    `🔖 *رمز البلاغ المرجعي:* ${data.errorReference}`,
-    `👤 *القائم بالعملية:* ${data.actorName || 'مستخدم ميداني'}`,
+    `• *رمز البلاغ المرجعي:* ${data.errorReference}`,
+    `• *القائم بالعملية:* ${data.actorName || 'مستخدم ميداني'}`,
   ];
 
   if (data.actorTelegramId) {
-    lines.push(`🆔 *المعرف الرقمي:* ${String(data.actorTelegramId)}`);
+    lines.push(`# *المعرف الرقمي:* ${String(data.actorTelegramId)}`);
   }
 
   if (data.siteName) {
-    lines.push(`📍 *الموقع الميداني:* ${data.siteName}`);
+    lines.push(`• *الموقع الميداني:* ${data.siteName}`);
   }
 
-  lines.push(`📅 *توقيت الحادثة:* ${dtStr}`);
-  lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
-  lines.push(`📌 إشعار رسمي آلي موجه للمدير العام للمتابعة الميدانية.`);
+  lines.push(`• *توقيت الحادثة:* ${dtStr}`);
+  lines.push(`----------------------------------------`);
+  lines.push(`[*] إشعار رسمي آلي موجه للمدير العام للمتابعة الميدانية.`);
 
   return lines.join('\n');
 }

@@ -14,5 +14,11 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "apps/admin-dashboard",
+    ".next"
+  ]
 }

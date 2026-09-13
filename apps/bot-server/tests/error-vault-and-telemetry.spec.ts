@@ -172,6 +172,60 @@ describe('🛡️ Centralized Error Vault Service', () => {
     vault = new ErrorVaultService();
   });
 
+  it('persists only a normalized sanitized incident with a full fingerprint', async () => {
+    mockPrisma.systemErrorLog.findFirst.mockResolvedValue(null);
+    mockPrisma.systemErrorLog.create.mockResolvedValue({
+      id: 'err-sanitized',
+      errorReference: '#ERR-SAFE',
+      occurrenceCount: 1,
+      severity: 'ERROR',
+      errorMessage: 'sanitized',
+      breadcrumbs: [],
+    });
+
+    await vault.recordError({
+      error: new Error(
+        'Authorization: Bearer raw-secret password=database-secret 29801011234567',
+      ),
+      sourceLocation: 'test:sanitize',
+      traceId: 'a1b2c3d4-e5f6-4789-abcd-ef0123456789',
+    });
+
+    const createCall = mockPrisma.systemErrorLog.create.mock.calls[0]?.[0];
+    expect(createCall).toBeDefined();
+    const data = createCall?.data as Record<string, unknown>;
+    expect(data.errorHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(data.traceId).toBe('a1b2c3d4-e5f6-4789-abcd-ef0123456789');
+    expect(String(data.errorMessage)).not.toContain('raw-secret');
+    expect(String(data.errorMessage)).not.toContain('database-secret');
+    expect(String(data.errorMessage)).not.toContain('29801011234567');
+    expect(String(data.stackTrace)).not.toContain('raw-secret');
+  });
+
+  it('uses the bounded emergency sink when incident persistence is unavailable', async () => {
+    mockPrisma.systemErrorLog.findFirst.mockRejectedValueOnce(
+      new Error('password=database-secret token=raw-token'),
+    );
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const traceId = 'b1b2c3d4-e5f6-4789-abcd-ef0123456789';
+
+    await expect(
+      vault.recordError({
+        error: new Error('Authorization: Bearer raw-secret'),
+        sourceLocation: 'test:persistence-failure',
+        traceId,
+      }),
+    ).rejects.toThrow();
+
+    const output = stderrSpy.mock.calls.map((call) => String(call[0])).join('');
+    expect(output).toContain('telemetry-emergency-sink');
+    expect(output).toContain(traceId);
+    expect(output).not.toContain('database-secret');
+    expect(output).not.toContain('raw-token');
+    expect(output).not.toContain('raw-secret');
+    stderrSpy.mockRestore();
+  });
+
   it('should record new error and alert super admin', async () => {
     mockPrisma.systemErrorLog.findFirst.mockResolvedValue(null);
     mockPrisma.systemErrorLog.create.mockResolvedValue({
@@ -224,9 +278,78 @@ describe('🛡️ Centralized Error Vault Service', () => {
     expect(mockCtx.reply).toHaveBeenCalledWith(
       expect.stringContaining('عذراً، حدث خطأ غير متوقع'),
       expect.objectContaining({
+        parse_mode: 'HTML',
         reply_markup: expect.any(Object),
       })
     );
+  });
+
+  it('should send plain-text fallback when rich HTML card reply fails', async () => {
+    mockPrisma.systemErrorLog.findFirst.mockResolvedValue(null);
+    mockPrisma.systemErrorLog.create.mockResolvedValue({
+      id: 'err-row-fallback',
+      errorReference: '#ERR-FB01',
+      occurrenceCount: 1,
+      severity: 'CRITICAL',
+      actorTelegramId: 777n,
+      actorRole: 'ADMIN',
+      actionTrigger: 'action:crash',
+      sourceLocation: 'bot.catch:global',
+      errorMessage: 'HTML parsing simulated failure',
+      breadcrumbs: [],
+    });
+
+    const mockApi = { sendMessage: vi.fn().mockResolvedValue({}) };
+    const mockCtx = {
+      chat: { id: 777 },
+      from: { id: 777, first_name: 'TestUser' },
+      reply: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Bad Request: can\'t parse entities in HTML'))
+        .mockResolvedValueOnce({ message_id: 1000 }),
+    };
+
+    const error = new Error('HTML parsing simulated failure');
+    await vault.handleGlobalBotError({ ctx: mockCtx as unknown as MyContext, error } as any, mockApi as any);
+
+    // First call failed (rich HTML card), second call is plain-text fallback
+    expect(mockCtx.reply).toHaveBeenCalledTimes(2);
+    expect(mockCtx.reply).toHaveBeenLastCalledWith(
+      expect.stringContaining('⚠️ حدث خطأ غير متوقع أثناء معالجة طلبك.\nرمز البلاغ: #ERR-FB01\nيرجى إبلاغ الدعم الفني.')
+    );
+  });
+
+  it('should write to process.stderr if even the plain-text fallback fails', async () => {
+    mockPrisma.systemErrorLog.findFirst.mockResolvedValue(null);
+    mockPrisma.systemErrorLog.create.mockResolvedValue({
+      id: 'err-row-fatal',
+      errorReference: '#ERR-FATAL',
+      occurrenceCount: 1,
+      severity: 'CRITICAL',
+      actorTelegramId: 777n,
+      actorRole: 'ADMIN',
+      actionTrigger: 'action:crash',
+      sourceLocation: 'bot.catch:global',
+      errorMessage: 'Complete connection failure',
+      breadcrumbs: [],
+    });
+
+    const mockApi = { sendMessage: vi.fn().mockResolvedValue({}) };
+    const mockCtx = {
+      chat: { id: 777 },
+      from: { id: 777, first_name: 'TestUser' },
+      reply: vi.fn().mockRejectedValue(new Error('Network disconnected')),
+    };
+
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    const error = new Error('Complete connection failure');
+    await vault.handleGlobalBotError({ ctx: mockCtx as unknown as MyContext, error } as any, mockApi as any);
+
+    const emergencyOutput = stderrSpy.mock.calls.map((call) => String(call[0])).join('');
+    expect(emergencyOutput).toContain('telemetry-emergency-sink');
+    expect(emergencyOutput).not.toContain('Network disconnected');
+    stderrSpy.mockRestore();
   });
 
   it('should deduplicate and throttle alerts on recurring errors', async () => {

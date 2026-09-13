@@ -1,0 +1,128 @@
+import { createHash, randomUUID } from 'node:crypto';
+import { afterAll, describe, expect, it } from 'vitest';
+import { PrismaClient } from '../src/generated/client/index.js';
+
+const prisma = new PrismaClient();
+const canConnect = async () => {
+  try {
+    await prisma.$queryRawUnsafe('SELECT 1');
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+describe('Database RBAC, Sessions & Delegation Schema Contract', () => {
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('verifies the existence of new migration tables in postgres', async () => {
+    const isConnected = await canConnect();
+    if (!isConnected) {
+      console.warn('Postgres not connected, skipping live DB query test');
+      return;
+    }
+
+    type TableRow = { table_name: string };
+    const tables = await prisma.$queryRawUnsafe<TableRow[]>(
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('dashboard_auth_links', 'dashboard_sessions', 'worker_delegations')"
+    );
+
+    const tableNames = new Set(tables.map((t) => t.table_name));
+    expect(tableNames.has('dashboard_auth_links')).toBe(true);
+    expect(tableNames.has('dashboard_sessions')).toBe(true);
+    expect(tableNames.has('worker_delegations')).toBe(true);
+  });
+
+  it('creates a dashboard auth link and enforces unique jtiHash constraint', async () => {
+    const isConnected = await canConnect();
+    if (!isConnected) return;
+
+    const jti = randomUUID();
+    const jtiHash = createHash('sha256').update(jti).digest('hex');
+    const testTelegramId = 888777666n;
+
+    // Clean up if existing
+    await prisma.dashboardAuthLink.deleteMany({ where: { jtiHash } });
+
+    const link = await prisma.dashboardAuthLink.create({
+      data: {
+        jtiHash,
+        actorTelegramId: testTelegramId,
+        targetOrigin: 'LOCAL',
+        expiresAt: new Date(Date.now() + 300_000),
+      },
+    });
+
+    expect(link.id).toBeDefined();
+    expect(link.jtiHash).toBe(jtiHash);
+    expect(link.claimedAt).toBeNull();
+
+    // Duplicate creation must fail
+    await expect(
+      prisma.dashboardAuthLink.create({
+        data: {
+          jtiHash,
+          actorTelegramId: testTelegramId,
+          targetOrigin: 'LOCAL',
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      })
+    ).rejects.toThrow();
+
+    // Cleanup
+    await prisma.dashboardAuthLink.delete({ where: { id: link.id } });
+  });
+
+  it('persists a durable 8-hour dashboard session and allows atomic revocation', async () => {
+    const isConnected = await canConnect();
+    if (!isConnected) return;
+
+    const sessionRaw = randomUUID();
+    const sessionHash = createHash('sha256').update(sessionRaw).digest('hex');
+    const testTelegramId = 999111222n;
+
+    // Ensure a test user exists
+    let testUser = await prisma.user.findFirst({ where: { telegramId: testTelegramId } });
+    if (!testUser) {
+      testUser = await prisma.user.create({
+        data: {
+          telegramId: testTelegramId,
+          fullName: 'Test Dashboard Session User',
+          role: 'SUPER_ADMIN',
+          isActive: true,
+        },
+      });
+    }
+
+    const session = await prisma.dashboardSession.create({
+      data: {
+        sessionHash,
+        userId: testUser.id,
+        actorTelegramId: testTelegramId,
+        originKind: 'TUNNEL',
+        deviceSummary: 'Mozilla/5.0 Windows NT 10.0',
+        expiresAt: new Date(Date.now() + 8 * 3600 * 1000),
+      },
+    });
+
+    expect(session.id).toBeDefined();
+    expect(session.revokedAt).toBeNull();
+
+    const revoked = await prisma.dashboardSession.update({
+      where: { sessionHash },
+      data: {
+        revokedAt: new Date(),
+        revocationReason: 'USER_LOGOUT',
+      },
+    });
+
+    expect(revoked.revokedAt).not.toBeNull();
+    expect(revoked.revocationReason).toBe('USER_LOGOUT');
+
+    // Cleanup
+    await prisma.dashboardSession.delete({ where: { id: session.id } });
+    await prisma.user.delete({ where: { id: testUser.id } });
+  });
+});

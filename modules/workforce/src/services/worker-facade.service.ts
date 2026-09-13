@@ -77,7 +77,7 @@ export class WorkerService {
   }
 
   private get botUsername(): string {
-    return this.customBotUsername || process.env.BOT_USERNAME || 'Alsaada_HRtest_Bot';
+    return this.customBotUsername || process.env.BOT_USERNAME || 'Al_Saada_smart_bot';
   }
 
   private get prisma(): PrismaClient {

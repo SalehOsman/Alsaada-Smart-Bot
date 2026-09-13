@@ -6,6 +6,78 @@ import { prisma } from '../db.js';
 import { config } from '../config/env.js';
 import { telemetryService } from './telemetry.service.js';
 import type { SystemErrorLog } from '@alsaada/database';
+import {
+  normalizeIncident,
+  writeEmergencyIncident,
+  type IncidentEnvironment,
+} from '@alsaada/telemetry';
+
+/**
+ * Robust HTML escaping for dynamic variables in Telegram HTML messages
+ */
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function resolveTraceId(
+  ctx: MyContext | undefined,
+  error: unknown,
+  explicitTraceId: string | undefined,
+): string {
+  if (explicitTraceId) return explicitTraceId;
+
+  if (ctx) {
+    const contextTraceId = Reflect.get(ctx, 'traceId');
+    if (typeof contextTraceId === 'string' && contextTraceId.length > 0) {
+      return contextTraceId;
+    }
+
+    const session = Reflect.get(ctx, 'session');
+    if (session && typeof session === 'object') {
+      const sessionTraceId = Reflect.get(session, 'traceId');
+      if (typeof sessionTraceId === 'string' && sessionTraceId.length > 0) {
+        return sessionTraceId;
+      }
+    }
+  }
+
+  if (error && typeof error === 'object') {
+    const errorTraceId = Reflect.get(error, 'traceId');
+    if (typeof errorTraceId === 'string' && errorTraceId.length > 0) {
+      return errorTraceId;
+    }
+  }
+
+  return crypto.randomUUID();
+}
+
+function resolveEnvironment(value: string | undefined): IncidentEnvironment {
+  if (value === 'development' || value === 'test' || value === 'staging') {
+    return value;
+  }
+  return 'production';
+}
+
+function formatBreadcrumbSnippet(value: unknown): string {
+  if (!Array.isArray(value) || value.length === 0) {
+    return '  <i>لا توجد خطوات مسجلة</i>';
+  }
+
+  const actions = value
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const action = Reflect.get(entry, 'action');
+      return typeof action === 'string' ? action : null;
+    })
+    .filter((action): action is string => action !== null);
+
+  return actions.length > 0
+    ? actions.map((action, index) => `  ${index + 1}. <code>${escapeHtml(action)}</code>`).join('\n')
+    : '  <i>لا توجد خطوات مسجلة</i>';
+}
 
 export class ErrorVaultService {
   /**
@@ -17,11 +89,10 @@ export class ErrorVaultService {
     sourceLocation?: string | undefined;
     severity?: 'WARNING' | 'ERROR' | 'CRITICAL' | 'FATAL' | undefined;
     api?: Api | undefined;
+    traceId?: string | undefined;
   }): Promise<SystemErrorLog> {
     const { ctx, error, sourceLocation = 'unknown_source', severity = 'ERROR', api } = params;
 
-    const rawErrorMsg = error instanceof Error ? error.message : String(error);
-    const stackTrace = error instanceof Error ? error.stack || '' : '';
     const telegramId = ctx?.from ? BigInt(ctx.from.id) : null;
     const actorRole = ctx?.effectiveRole || 'GUEST';
 
@@ -32,76 +103,97 @@ export class ErrorVaultService {
       actionTrigger = `msg:${ctx.message.text.slice(0, 50)}`;
     }
 
-    // Flight recorder breadcrumbs
+    const traceId = resolveTraceId(ctx, error, params.traceId);
     const breadcrumbs = telegramId ? await telemetryService.getBreadcrumbs(telegramId) : [];
-
-    // Calculate deterministic error hash for deduplication
-    const errorHash = crypto
-      .createHash('sha256')
-      .update(`${sourceLocation}:${rawErrorMsg}`)
-      .digest('hex')
-      .slice(0, 16);
-
-    // Look for recent identical unresolved error within the last 1 hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const existing = await prisma.systemErrorLog.findFirst({
-      where: {
-        errorHash,
-        isResolved: false,
-        lastSeenAt: { gte: oneHourAgo },
-      },
-      orderBy: { createdAt: 'desc' },
+    const incident = normalizeIncident({
+      traceId,
+      source: 'bot',
+      service: 'bot-server',
+      severity,
+      action: actionTrigger,
+      sourceLocation,
+      error,
+      ...(telegramId !== null ? { actorTelegramId: telegramId } : {}),
+      actorRole,
+      breadcrumbs,
+      release: process.env.npm_package_version,
+      environment: resolveEnvironment(process.env.NODE_ENV),
     });
+    const breadcrumbPayload = incident.breadcrumbs.map((breadcrumb) => ({
+      action: breadcrumb.action,
+      ...(breadcrumb.timestamp !== undefined ? { timestamp: breadcrumb.timestamp } : {}),
+    }));
 
-    let savedLog: SystemErrorLog;
-
-    if (existing) {
-      savedLog = await prisma.systemErrorLog.update({
-        where: { id: existing.id },
-        data: {
-          occurrenceCount: { increment: 1 },
-          lastSeenAt: new Date(),
-          stackTrace,
-          breadcrumbs: breadcrumbs.length > 0 ? (breadcrumbs as any) : existing.breadcrumbs,
-        },
-      });
-
-      // Throttled notification: notify Super Admin only on recurrent milestones (e.g. 5th, 10th occurrence)
-      if (savedLog.occurrenceCount % 5 === 0 && api) {
-        await this.dispatchSuperAdminAlert(savedLog, api, true).catch(() => {});
-      }
-    } else {
-      const errorReference = `#ERR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
-      savedLog = await prisma.systemErrorLog.create({
-        data: {
-          errorReference,
-          errorHash,
-          occurrenceCount: 1,
-          actorTelegramId: telegramId,
-          actorRole,
-          actionTrigger,
-          sourceLocation,
-          errorMessage: rawErrorMsg.slice(0, 1000),
-          stackTrace: stackTrace.slice(0, 4000),
-          breadcrumbs: breadcrumbs.length > 0 ? (breadcrumbs as any) : undefined,
-          severity,
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const existing = await prisma.systemErrorLog.findFirst({
+        where: {
+          errorHash: incident.fingerprint,
           isResolved: false,
+          lastSeenAt: { gte: oneHourAgo },
         },
+        orderBy: { createdAt: 'desc' },
       });
 
-      // Dispatch alert to Super Admin on new error
-      if (api) {
-        await this.dispatchSuperAdminAlert(savedLog, api, false).catch(() => {});
-      }
-    }
+      let savedLog: SystemErrorLog;
 
-    return savedLog;
+      if (existing) {
+        savedLog = await prisma.systemErrorLog.update({
+          where: { id: existing.id },
+          data: {
+            traceId: existing.traceId || incident.traceId,
+            occurrenceCount: { increment: 1 },
+            lastSeenAt: new Date(),
+            stackTrace: incident.stack ?? null,
+            ...(breadcrumbPayload.length > 0 ? { breadcrumbs: breadcrumbPayload } : {}),
+          },
+        });
+
+        if (savedLog.occurrenceCount % 5 === 0 && api) {
+          try {
+            await this.dispatchSuperAdminAlert(savedLog, api, true);
+          } catch {
+            writeEmergencyIncident(incident.traceId, 'INCIDENT_RECURRENT_ALERT_FAILURE');
+          }
+        }
+      } else {
+        const errorReference = `#ERR-${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+
+        savedLog = await prisma.systemErrorLog.create({
+          data: {
+            traceId: incident.traceId,
+            service: incident.service,
+            errorReference,
+            errorHash: incident.fingerprint,
+            occurrenceCount: 1,
+            actorTelegramId: incident.actorTelegramId ?? null,
+            actorRole: incident.actorRole ?? null,
+            actionTrigger: incident.action,
+            sourceLocation: incident.sourceLocation,
+            errorMessage: incident.message,
+            stackTrace: incident.stack ?? null,
+            ...(breadcrumbPayload.length > 0 ? { breadcrumbs: breadcrumbPayload } : {}),
+            severity: incident.severity,
+            isResolved: false,
+          },
+        });
+
+        if (api) {
+          try {
+            await this.dispatchSuperAdminAlert(savedLog, api, false);
+          } catch {
+            writeEmergencyIncident(incident.traceId, 'INCIDENT_NEW_ALERT_FAILURE');
+          }
+        }
+      }
+
+      return savedLog;
+    } catch (persistenceError) {
+      writeEmergencyIncident(incident.traceId, 'INCIDENT_PERSISTENCE_FAILURE');
+      throw persistenceError;
+    }
   }
 
-  /**
-   * 🚨 إرسال إنذار فوري ومباشر لحساب السوبر أدمن على تليجرام
-   */
   /**
    * 🚨 إرسال إنذار فوري ومباشر لحسابات السوبر أدمنز على تليجرام في الخاص حصراً (Zero Data Leak)
    */
@@ -111,26 +203,24 @@ export class ErrorVaultService {
     isRecurrent = false
   ): Promise<void> {
     const titlePrefix = isRecurrent
-      ? `🚨 *[تكرار عطل برمجي متكرر (${log.occurrenceCount}x)]*`
-      : `⚠️ *[إنذار أمني وعطل برمجي جديد في البوت]*`;
+      ? `🚨 <b>[تكرار عطل برمجي متكرر (${log.occurrenceCount}x)]</b>`
+      : `⚠️ <b>[إنذار أمني وعطل برمجي جديد في البوت]</b>`;
 
-    const breadcrumbSnippet = Array.isArray(log.breadcrumbs) && log.breadcrumbs.length > 0
-      ? log.breadcrumbs.map((b: any, i: number) => `  ${i + 1}. \`${b.action}\``).join('\n')
-      : '  _لا توجد خطوات مسجلة_';
+    const breadcrumbSnippet = formatBreadcrumbSnippet(log.breadcrumbs);
 
     const alertText =
       `${titlePrefix}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `🔹 *رمز البلاغ:* \`${log.errorReference}\`\n` +
-      `🔹 *الخطورة:* \`${log.severity}\`\n` +
-      `🔹 *المستخدم المتأثر:* \`${log.actorTelegramId || 'غير معروف'}\` (${log.actorRole || 'GUEST'})\n` +
-      `🔹 *الإجراء المسبب:* \`${log.actionTrigger}\`\n` +
-      `🔹 *الموقع:* \`${log.sourceLocation}\`\n\n` +
-      `💬 *نص الخطأ:* \`${log.errorMessage.slice(0, 200)}\`\n\n` +
-      `✈️ *شريط خطوات المستخدم الأخيرة (Breadcrumbs):*\n` +
+      `🔹 <b>رمز البلاغ:</b> <code>${escapeHtml(log.errorReference)}</code>\n` +
+      `🔹 <b>الخطورة:</b> <code>${escapeHtml(log.severity)}</code>\n` +
+      `🔹 <b>المستخدم المتأثر:</b> <code>${escapeHtml(String(log.actorTelegramId || 'غير معروف'))}</code> (${escapeHtml(log.actorRole || 'GUEST')})\n` +
+      `🔹 <b>الإجراء المسبب:</b> <code>${escapeHtml(log.actionTrigger || 'غير محدد')}</code>\n` +
+      `🔹 <b>الموقع:</b> <code>${escapeHtml(log.sourceLocation || 'غير محدد')}</code>\n\n` +
+      `💬 <b>نص الخطأ:</b> <code>${escapeHtml(log.errorMessage.slice(0, 200))}</code>\n\n` +
+      `✈️ <b>شريط خطوات المستخدم الأخيرة (Breadcrumbs):</b>\n` +
       `${breadcrumbSnippet}\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `_يمكنك استعراض تفاصيل الخطأ كاملة وحله من مركز الإعدادات._`;
+      `<i>يمكنك استعراض تفاصيل الخطأ كاملة وحله من مركز الإعدادات.</i>`;
 
     const keyboard = new InlineKeyboard()
       .text('🔍 فحص تفاصيل الخطأ', `action:error_log:view:${log.id}`)
@@ -154,11 +244,20 @@ export class ErrorVaultService {
     for (const tgId of targetTelegramIds) {
       try {
         await api.sendMessage(tgId, alertText, {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: keyboard,
         });
       } catch {
-        // Safe non-blocking catch per super admin
+        // Fallback to plain text if HTML formatting or keyboard fails
+        try {
+          const plainAlert = `⚠️ إنذار عطل برمجي: رمز البلاغ ${log.errorReference} - ${log.errorMessage.slice(0, 100)}`;
+          await api.sendMessage(tgId, plainAlert);
+        } catch {
+          writeEmergencyIncident(
+            log.traceId || crypto.randomUUID(),
+            'INCIDENT_ADMIN_ALERT_DELIVERY_FAILURE',
+          );
+        }
       }
     }
   }
@@ -178,10 +277,10 @@ export class ErrorVaultService {
     keyboard: InlineKeyboard;
   }> {
     const text =
-      `⚠️ *عذراً، حدث خطأ غير متوقع أثناء معالجة طلبك*\n` +
+      `⚠️ <b>عذراً، حدث خطأ غير متوقع أثناء معالجة طلبك</b>\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `تم توثيق وتمرير تقرير العطل تلقائياً لغرفة العمليات المركزية للمراجعة.\n` +
-      `🔹 *رمز البلاغ المرجعي:* \`${errorReference}\`\n\n` +
+      `🔹 <b>رمز البلاغ المرجعي:</b> <code>${escapeHtml(errorReference)}</code>\n\n` +
       `يمكنك إرسال تفاصيل البلاغ مباشرة لإدارة الشركة عبر واتساب، أو العودة للقائمة الرئيسية:`;
 
     const keyboard = new InlineKeyboard();
@@ -212,12 +311,12 @@ export class ErrorVaultService {
               keyboard.url(`📲 إرسال العطل للمدير العام${adminLabel} عبر واتساب`, waUrl).row();
             }
           } catch {
-            // Safe fallback if decrypt fails
+            writeEmergencyIncident(errorReference, 'INCIDENT_WHATSAPP_LINK_FAILURE');
           }
         }
       }
     } catch {
-      // Safe fallback if DB query fails during crash
+      writeEmergencyIncident(errorReference, 'INCIDENT_ADMIN_LOOKUP_FAILURE');
     }
 
     keyboard
@@ -234,8 +333,7 @@ export class ErrorVaultService {
   async handleGlobalBotError(botError: BotError<MyContext>, api: Api): Promise<void> {
     const ctx = botError.ctx;
     const err = botError.error;
-
-    console.error(`❌ [BOT ERROR VAULT] Intercepted update ${ctx?.update?.update_id}:`, err);
+    const traceId = resolveTraceId(ctx, err, undefined);
 
     try {
       const savedLog = await this.recordError({
@@ -244,16 +342,19 @@ export class ErrorVaultService {
         sourceLocation: 'bot.catch:global',
         severity: 'CRITICAL',
         api,
+        traceId,
       });
 
       // If update was callback query, answer with friendly alert containing reference
       if (ctx?.callbackQuery) {
-        await ctx
-          .answerCallbackQuery({
+        try {
+          await ctx.answerCallbackQuery({
             text: `⚠️ عطل غير متوقع (${savedLog.errorReference}). تم إخطار الإدارة.`,
             show_alert: true,
-          })
-          .catch(() => {});
+          });
+        } catch {
+          writeEmergencyIncident(traceId, 'INCIDENT_CALLBACK_ALERT_FAILURE');
+        }
       }
 
       // If chat is available, send user-facing error response card
@@ -264,10 +365,30 @@ export class ErrorVaultService {
           actorName,
           actorTelegramId,
         });
-        await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard }).catch(() => {});
+
+        try {
+          await ctx.reply(text, { parse_mode: 'HTML', reply_markup: keyboard });
+        } catch {
+          try {
+            const fallbackText = `⚠️ حدث خطأ غير متوقع أثناء معالجة طلبك.\nرمز البلاغ: ${savedLog.errorReference}\nيرجى إبلاغ الدعم الفني.`;
+            await ctx.reply(fallbackText);
+          } catch {
+            writeEmergencyIncident(traceId, 'INCIDENT_USER_FALLBACK_DELIVERY_FAILURE');
+          }
+        }
       }
-    } catch (vaultErr) {
-      console.error('❌ [BOT ERROR VAULT FAILURE] Failed to record error to DB:', vaultErr);
+    } catch {
+      writeEmergencyIncident(traceId, 'INCIDENT_PIPELINE_FAILURE');
+      if (ctx?.chat) {
+        try {
+          await ctx.reply(
+            `⚠️ تعذر تسجيل تفاصيل العطل مؤقتاً. الرقم المرجعي: ${traceId}\nيمكنك إعادة المحاولة أو العودة للقائمة الرئيسية.`,
+            { reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu') },
+          );
+        } catch {
+          writeEmergencyIncident(traceId, 'INCIDENT_PIPELINE_USER_RESPONSE_FAILURE');
+        }
+      }
     }
   }
 
@@ -312,6 +433,7 @@ export class ErrorVaultService {
         },
       });
     } catch {
+      writeEmergencyIncident(crypto.randomUUID(), 'INCIDENT_RESOLUTION_FAILURE');
       return null;
     }
   }

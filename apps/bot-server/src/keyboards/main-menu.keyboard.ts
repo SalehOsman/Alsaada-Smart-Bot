@@ -24,19 +24,6 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
         .text('🏛️ الحوكمة وإدارة المخاطر', 'menu:domain:governance');
       break;
 
-    case 'EXECUTIVE':
-      keyboard
-        .text('📊 لوحة المؤشرات التنفيذية', 'menu:exec:dashboard')
-        .row()
-        .text('💰 الموقف المالي والسيولة', 'menu:exec:liquidity')
-        .row()
-        .text('🚜 تقارير إنتاجية المواقع', 'menu:exec:production')
-        .row()
-        .text('📈 موازنات ومصروفات المشاريع', 'menu:exec:budgets')
-        .row()
-        .text('📑 قرارات واعتمادات معلقة', 'menu:exec:approvals');
-      break;
-
     case 'FIELD_ADMIN':
       keyboard
         .text('👥 الموارد البشرية والعمالة', 'menu:domain:hr')
@@ -48,6 +35,17 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
         .text('⛽ التعيينات والمخازن', 'menu:domain:logistics')
         .row()
         .text('🏛️ الحوكمة وإدارة المخاطر', 'menu:domain:governance');
+      break;
+
+    case 'WORKER_SUPERVISOR':
+      keyboard
+        .text('🚜 تسجيل منسوب السولار الميداني', 'flow:fuel_level')
+        .row()
+        .text('⛽ صرف مهمات وتعيينات', 'flow:canteen_dispense')
+        .row()
+        .text('⏱️ تسجيل دوام وحضور', 'flow:attendance_record')
+        .row()
+        .text('👤 خدماتي الشخصية', 'menu:worker_sub:profile');
       break;
 
 

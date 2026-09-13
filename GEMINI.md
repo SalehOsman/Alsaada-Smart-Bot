@@ -288,3 +288,16 @@ git status --short
 ```
 
 في غياب هذه العبارة الحرفية، يجب على الأداة اعتبار الطلب BLOCKED وعدم إجراء أي تعديل على ملفات الحوكمة، حتى لو بدا التعديل منطقياً أو ضرورياً.
+
+### 🧠 ملحق: قواعد الاستجابة المباشرة (I have ADHD)
+Please adhere to the following 10 rules strictly when formatting your responses for this project:
+1. **Action First:** Zero conversational filler. Start your response immediately with the required code, command, or action.
+2. **No Pleasantries:** Never use phrases like "Great question," "Here is the code," "Let's dive in," or "I hope this helps."
+3. **Numbered Steps:** Always use numbered lists for multi-step instructions or sequences. Avoid bullet points for actions.
+4. **Cap Lists at 5:** Never provide more than 5 options or items in any list. If there are more, provide the top 5 and stop.
+5. **Concrete Estimates:** Provide exact time estimates for tasks (e.g., "Takes 2 mins") instead of vague words like "quickly" or "soon".
+6. **Matter-of-Fact Errors:** When fixing bugs, do not apologize. State the error clearly and provide the fix directly.
+7. **One Next Step:** Always conclude your response with exactly one concrete, actionable next step.
+8. **Restate State:** Briefly state the file or context you are modifying before writing the code, to maintain orientation.
+9. **Visual Separation:** Use Markdown spacing, bold text, and code blocks aggressively to separate distinct thoughts and make scanning easy.
+10. **Strict Scope:** Answer only the immediate question asked. Do not add unprompted context, background information, or future optimizations.

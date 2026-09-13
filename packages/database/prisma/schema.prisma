@@ -113,8 +113,9 @@ model Site {
   tasks            SiteTask[]
   hospitality      HospitalityExpense[]
   supplierInvoices SupplierInvoice[]
-  users            User[]
-  expenseClaims    WorkerExpenseClaim[]
+  users             User[]
+  expenseClaims     WorkerExpenseClaim[]
+  workerDelegations WorkerDelegation[]
 
   @@map("sites")
 }
@@ -328,6 +329,7 @@ model Worker {
   ppeAssets              PPEAsset[]
   disciplinaryAndBonuses DisciplinaryAndBonus[]
   clearance              WorkerClearance?
+  delegations            WorkerDelegation[]
   balanceSnapshot        WorkerBalanceSnapshot?
   leaves                 Leave[]
   leaveAllowances        LeaveAllowance[]
@@ -1427,8 +1429,10 @@ model User {
   tenant        Tenant?             @relation(fields: [tenantId], references: [id])
   worker        Worker?             @relation(fields: [workerId], references: [id])
   supplier      Supplier?           @relation(fields: [supplierId], references: [id])
-  assignedSite  Site?               @relation(fields: [assignedSiteId], references: [id])
-  notifications NotificationQueue[]
+  assignedSite      Site?               @relation(fields: [assignedSiteId], references: [id])
+  notifications     NotificationQueue[]
+  dashboardSessions DashboardSession[]
+  workerDelegations WorkerDelegation[]
 
   @@index([phoneBlindIndex])
   @@index([role])
@@ -1450,6 +1454,7 @@ model BotMenuPermission {
 
 model AuditLog {
   id              String   @id @default(uuid())
+  traceId         String?  @db.VarChar(36)
   actorTelegramId BigInt
   action          String
   entityType      String
@@ -1553,6 +1558,8 @@ model OutboxEvent {
 
 model SystemErrorLog {
   id              String    @id @default(uuid())
+  traceId         String?   @db.VarChar(36)
+  service         String    @default("bot-server")
   errorReference  String    @unique // e.g. ERR-7A3F
   errorHash       String
   occurrenceCount Int       @default(1)
@@ -1574,4 +1581,76 @@ model SystemErrorLog {
   @@index([errorHash, isResolved])
   @@index([actorTelegramId, createdAt])
   @@map("system_error_logs")
+}
+
+// -------------------------------------------------------------
+// 14. Dashboard Authentication, Sessions & RBAC Delegations
+// -------------------------------------------------------------
+
+model DashboardAuthLink {
+  id              String    @id @default(uuid())
+  jtiHash         String    @unique @db.VarChar(64)
+  actorTelegramId BigInt
+  targetOrigin    String    @default("LOCAL") // LOCAL, TUNNEL
+  expiresAt       DateTime
+  claimedAt       DateTime?
+  claimTraceId    String?   @db.VarChar(36)
+  createdAt       DateTime  @default(now())
+
+  @@index([expiresAt])
+  @@index([actorTelegramId])
+  @@map("dashboard_auth_links")
+}
+
+model DashboardSession {
+  id                 String    @id @default(uuid())
+  sessionHash        String    @unique @db.VarChar(64)
+  userId             String
+  actorTelegramId    BigInt
+  originKind         String    @default("LOCAL") // LOCAL, TUNNEL
+  deviceSummary      String?   @db.VarChar(255)
+  userAgentHash      String?   @db.VarChar(64)
+  lastSeenAt         DateTime  @default(now())
+  expiresAt          DateTime
+  noticeSentAt       DateTime?
+  revokedAt          DateTime?
+  revocationReason   String?   @db.VarChar(100)
+  permissionsVersion Int       @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([actorTelegramId])
+  @@index([expiresAt])
+  @@map("dashboard_sessions")
+}
+
+model WorkerDelegation {
+  id                    String    @id @default(uuid())
+  userId                String
+  workerId              String
+  permissionKey         String    @db.VarChar(100)
+  siteId                String
+  resourceId            String?
+  startsAt              DateTime  @default(now())
+  endsAt                DateTime?
+  status                String    @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
+  requestedByTelegramId BigInt
+  approvedByTelegramId  BigInt
+  revokedByTelegramId   BigInt?
+  reason                String?   @db.VarChar(255)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([workerId, status])
+  @@index([siteId, status])
+  @@index([permissionKey])
+  @@map("worker_delegations")
 }

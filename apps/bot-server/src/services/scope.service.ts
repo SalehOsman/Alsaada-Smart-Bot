@@ -1,11 +1,14 @@
-﻿import { MyContext } from '../types/context.js';
+import { MyContext } from '../types/context.js';
 
 /**
  * Returns the site ID that the current user is restricted to.
  * Returns null if the user has unrestricted global access (Super Admin, Executive, or unassigned Admin).
  */
 export function getScopedSiteId(ctx: MyContext): string | null {
-  if (ctx.effectiveRole === 'SUPER_ADMIN' || ctx.effectiveRole === 'EXECUTIVE') {
+  if (
+    ctx.effectiveRole === 'SUPER_ADMIN' ||
+    ctx.effectiveRole === 'GENERAL_ADMIN'
+  ) {
     return null;
   }
   return ctx.dbUser?.assignedSiteId || null;

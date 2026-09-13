@@ -28,6 +28,7 @@ import { telemetryMiddleware } from './middlewares/telemetry.middleware.js';
 import { errorVaultService } from './services/error-vault.service.js';
 import { handleStart, renderRoleHome, handleClaimWorker } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
+import { handleDashboardCommand, handleSessionCallbacks } from './handlers/dashboard.handler.js';
 import { handleMenuPlaceholder } from './handlers/placeholder.handler.js';
 import {
   registerWorkforceModule,
@@ -238,7 +239,7 @@ export function createBot(): Bot<MyContext> {
     }
 
     // If message is a persistent keyboard navigation button, clean up unfinished flow & ephemeral inputs
-    const isNav = /القائمة الرئيسية|إعدادات النظام|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي|إنهاء وضع المحاكاة|العودة كمدير عام/.test(ctx.message.text);
+    const isNav = /القائمة الرئيسية|إعدادات النظام|لوحة التحكم|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي|إنهاء وضع المحاكاة|العودة كمدير عام/.test(ctx.message.text);
     if (isNav) {
       await screenFlowService.cleanupIncomingUserMessage(ctx);
       await screenFlowService.cleanupUnfinishedFlow(ctx);
@@ -272,6 +273,7 @@ export function createBot(): Bot<MyContext> {
     }
   });
   bot.command(['ping', 'health', 'speed'], handlePing);
+  bot.command(['dashboard', 'admin_dashboard', 'panel'], handleDashboardCommand);
 
   // 8. Persistent Bottom Reply Keyboard Button Handlers
   bot.hears(/إنهاء وضع المحاكاة|العودة كمدير عام/, async (ctx) => {
@@ -321,8 +323,11 @@ export function createBot(): Bot<MyContext> {
   bot.hears(/فواتيري ومستخلصاتي/, async (ctx) => {
     await ctx.reply('🧾 *بوابة مستخلصات الموردين*\nعرض الفواتير المعتمدة تحت التجهيز.', { parse_mode: 'Markdown' });
   });
+  bot.hears(/لوحة التحكم/, handleDashboardCommand);
 
   // 9. Navigation Callbacks
+  bot.callbackQuery(/^sess_/, handleSessionCallbacks);
+  bot.callbackQuery('menu:exec:dashboard', handleDashboardCommand);
   bot.callbackQuery('action:main_menu', async (ctx) => {
     await ctx.answerCallbackQuery();
     const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);

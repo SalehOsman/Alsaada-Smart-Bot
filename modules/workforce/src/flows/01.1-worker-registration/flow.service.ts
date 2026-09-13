@@ -51,7 +51,7 @@ export class WorkerRegistrationService {
     private readonly stateStore: WorkerWizardStateStore = new InMemoryWorkerWizardStateStore(),
     private readonly encryptionKey: string = 'alsaada-default-key-min-32-chars-long!',
     private readonly blindIndexSalt: string = 'alsaada-blind-index-salt-secret',
-    private readonly botUsername: string = 'Alsaada_HRtest_Bot'
+    private readonly botUsername: string = 'Al_Saada_smart_bot'
   ) {
     this.normalizedKeyHex = normalizeKeyToHex(this.encryptionKey);
   }

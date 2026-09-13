@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { getScopedSiteId, buildSiteScopeWhere } from '../src/services/scope.service.js';
 import { MyContext } from '../src/types/context.js';
 
@@ -13,9 +13,9 @@ describe('Site-Scoped Authorization Service (RBAC Isolation)', () => {
     expect(buildSiteScopeWhere(mockCtx)).toEqual({});
   });
 
-  it('should grant global access (null scope) to Executive', () => {
+  it('should grant global access (null scope) to General Admin', () => {
     const mockCtx = {
-      effectiveRole: 'EXECUTIVE',
+      effectiveRole: 'GENERAL_ADMIN',
       dbUser: { assignedSiteId: 'site-abc-123' },
     } as unknown as MyContext;
 
@@ -35,7 +35,7 @@ describe('Site-Scoped Authorization Service (RBAC Isolation)', () => {
 
   it('should support custom field name for scoping', () => {
     const mockCtx = {
-      effectiveRole: 'SITE_ENGINEER',
+      effectiveRole: 'FIELD_ADMIN',
       dbUser: { assignedSiteId: 'site-seb-02' },
     } as unknown as MyContext;
 

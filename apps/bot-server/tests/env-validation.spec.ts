@@ -17,6 +17,14 @@ describe('Startup Environment Fail-Fast Validation (validateStartupEnv)', () => 
     googleDriveFolderId: '',
     googleServiceAccountEmail: '',
     googlePrivateKey: '',
+    dashboardUrl: 'http://localhost:3002',
+    dashboardLocalUrl: 'http://localhost:3002',
+    dashboardTunnelUrl: 'https://dashboard.example.com',
+    dashboardAuthLinkSecret: 'super-secret-dashboard-auth-key-12345',
+    dashboardAuthLinkTtlMinutes: 10,
+    dashboardSessionTtlHours: 8,
+    dashboardSessionNoticeMinutes: 15,
+    dashboardSessionExtensionHours: 8,
   };
 
   it('passes with valid BOT_TOKEN and 64-char hex DATABASE_ENCRYPTION_KEY', () => {
@@ -88,6 +96,26 @@ describe('Startup Environment Fail-Fast Validation (validateStartupEnv)', () => 
         nodeEnv: 'test',
         databaseEncryptionKey: exampleKey,
       })
+    ).not.toThrow();
+  });
+
+  it('rejects a non-HTTPS dashboard URL in production', () => {
+    expect(() =>
+      validateStartupEnv({
+        ...baseValidConfig,
+        nodeEnv: 'production',
+        dashboardUrl: 'http://dashboard.internal:3002',
+      }),
+    ).toThrow(/DASHBOARD_URL.*HTTPS/i);
+  });
+
+  it('allows an HTTP localhost dashboard URL outside production', () => {
+    expect(() =>
+      validateStartupEnv({
+        ...baseValidConfig,
+        nodeEnv: 'development',
+        dashboardUrl: 'http://localhost:3002',
+      }),
     ).not.toThrow();
   });
 

@@ -398,14 +398,32 @@ export function registerWorkforceRoutes(
       if (await guestJoinHandler.handleTextInput(ctx, text)) {
         return;
       }
+
+      if (offboardHandler.isWaitingForText(uid)) {
+        await offboardHandler.handleTextInput(ctx, text);
+        return;
+      }
     }
     return next();
   });
 
-  // Photo input routing for worker registration
+  // Photo input routing for worker registration & offboarding damaged PPE
   bot.on('message:photo', async (ctx, next) => {
     if (ctx.from) {
       const telegramId = BigInt(ctx.from.id);
+      const uid = String(ctx.from.id);
+
+      if (offboardHandler.isWaitingForPhoto(uid)) {
+        const photos = ctx.message?.photo;
+        if (photos && photos.length > 0) {
+          const fileId = photos[photos.length - 1]?.file_id;
+          if (fileId) {
+            await offboardHandler.handlePhotoInput(ctx, fileId);
+            return;
+          }
+        }
+      }
+
       const draft = await regService.getDraft(telegramId);
       if (draft && (draft.currentStep === 'PHOTO_FRONT' || draft.currentStep === 'PHOTO_BACK')) {
         const photos = ctx.message?.photo;

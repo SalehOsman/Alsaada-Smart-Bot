@@ -4,13 +4,13 @@ import { config } from '../config/env.js';
 export function getRoleTitle(role: string): string {
   switch (role) {
     case 'SUPER_ADMIN':
-      return '👑 مدير عام (سوبر أدمن)';
-    case 'EXECUTIVE':
-      return '👔 إدارة تنفيذية ومالية';
+      return '👑 مدير عام المنظومة (سوبر أدمن)';
+    case 'GENERAL_ADMIN':
+      return '👑 المدير العام التشغيلي (جينرال أدمن)';
     case 'FIELD_ADMIN':
-      return '🛡️ مشرف موقع وميداني';
-    case 'ACCOUNTANT':
-      return '💼 محاسب مالي';
+      return '🛡️ مشرف موقع ميداني';
+    case 'WORKER_SUPERVISOR':
+      return '👷 العامل المشرف المفوض';
     case 'WORKER':
       return '👷 عامل مسجل (بوابة الخدمة الذاتية)';
     case 'SUPPLIER':
@@ -49,13 +49,13 @@ export function buildWelcomeMessage(ctx: MyContext): string {
         `اختر القسم المطلوب من لوحة التحكم أدناه:`
       );
 
-    case 'EXECUTIVE':
+    case 'GENERAL_ADMIN':
       return (
         `${simulationBanner}` +
-        `👔 *بوابة الإدارة التنفيذية والمالية*\n` +
+        `🏢 *بوابة الإدارة العامة والتشغيل*\n` +
         `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
-        `هنا يمكنك متابعة لوحات المؤشرات التشغيلية، السيولة النقدية، والموقف المالي للمشاريع.\n\n` +
+        `هنا يمكنك متابعة لوحات المؤشرات التشغيلية، السيولة النقدية، والموقف المالي لكافة المشاريع.\n\n` +
         `اختر التقرير أو الإجراء المطلوب من القائمة أدناه:`
       );
 
@@ -69,6 +69,16 @@ export function buildWelcomeMessage(ctx: MyContext): string {
         `🔹 *الصلاحية المعتمدة:* ${roleTitle}\n` +
         `🔹 *حالة الحساب:* 🟢 نشط ومعتمد ميدانياً\n\n` +
         `اختر القسم التشغيلي المطلوب من لوحة التحكم أدناه:`
+      );
+
+    case 'WORKER_SUPERVISOR':
+      return (
+        `${simulationBanner}` +
+        `👷 *بوابة العامل المشرف المفوض*\n` +
+        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
+        `مرحباً بك يا *${name}* 👋\n\n` +
+        `لديك صلاحيات تشغيلية مفوضة داخل موقعك لتسجيل العمليات اليومية المعتمدة.\n\n` +
+        `اختر العملية المطلوبة من القائمة أدناه:`
       );
 
     case 'WORKER':

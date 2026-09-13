@@ -1,0 +1,37 @@
+{
+  "name": "@alsaada/telemetry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./adapters/grammy": {
+      "types": "./dist/adapters/grammy.d.ts",
+      "import": "./dist/adapters/grammy.js",
+      "default": "./dist/adapters/grammy.js"
+    },
+    "./adapters/next": {
+      "types": "./dist/adapters/next.d.ts",
+      "import": "./dist/adapters/next.js",
+      "default": "./dist/adapters/next.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "grammy": "^1.35.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.0.8"
+  }
+}

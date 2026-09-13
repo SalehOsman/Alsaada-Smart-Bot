@@ -26,9 +26,9 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
 
-  it('should render executive buttons for EXECUTIVE role', () => {
+  it('should render delegated operational buttons for WORKER_SUPERVISOR role', () => {
     const mockCtx = {
-      effectiveRole: 'EXECUTIVE',
+      effectiveRole: 'WORKER_SUPERVISOR',
       isRealSuperAdmin: false,
       isImpersonating: false,
     } as unknown as MyContext;
@@ -36,8 +36,8 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     const keyboard = buildMainMenuKeyboard(mockCtx);
     const buttons = keyboard.inline_keyboard.flat() as Array<{ text: string; callback_data?: string }>;
 
-    expect(buttons.some(b => b.callback_data === 'menu:exec:dashboard')).toBe(true);
-    expect(buttons.some(b => b.callback_data === 'menu:exec:liquidity')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'flow:fuel_level')).toBe(true);
+    expect(buttons.some(b => b.callback_data === 'flow:canteen_dispense')).toBe(true);
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
 
@@ -155,8 +155,9 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
 describe('Start Handler & Welcome Messages', () => {
   it('should return correct role titles', () => {
     expect(getRoleTitle('SUPER_ADMIN')).toContain('سوبر أدمن');
-    expect(getRoleTitle('EXECUTIVE')).toContain('إدارة تنفيذية');
+    expect(getRoleTitle('GENERAL_ADMIN')).toContain('جينرال أدمن');
     expect(getRoleTitle('FIELD_ADMIN')).toContain('مشرف موقع');
+    expect(getRoleTitle('WORKER_SUPERVISOR')).toContain('العامل المشرف');
     expect(getRoleTitle('WORKER')).toContain('عامل مسجل');
     expect(getRoleTitle('SUPPLIER')).toContain('مورد');
     expect(getRoleTitle('GUEST')).toContain('زائر');

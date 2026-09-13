@@ -1,8 +1,9 @@
 {
   "flowCode": "01.8",
-  "flowName": "إنهاء خدمة عامل ومخالصة والتحول اللحظي لزائر",
+  "flowName": "إنهاء خدمة عامل ومخالصة وتصفية المستحقات والتحول اللحظي لزائر",
   "module": "workforce",
   "status": "Implemented",
+  "allowAny": false,
   "allowedRoles": [
     "SUPER_ADMIN",
     "GENERAL_ADMIN",
@@ -16,9 +17,9 @@
   ],
   "entryPoints": [
     "wizard:worker_offboard:start",
-    "action:worker_offboard:pick",
-    "action:worker_offboard:confirm",
-    "action:worker_offboard:cancel"
+    "action:wob:hub:new",
+    "action:wob:hub:pending_clearance",
+    "action:wob:hub:pending_decisions"
   ],
   "navigationPath": [
     "القائمة الرئيسية",
@@ -28,25 +29,47 @@
   ],
   "buttons": [
     "wizard:worker_offboard:start",
-    "action:worker_offboard:pick",
-    "action:worker_offboard:confirm",
-    "action:worker_offboard:cancel",
-    "action:worker_offboard:back"
+    "action:wob:hub:new",
+    "action:wob:hub:pending_clearance",
+    "action:wob:hub:pending_decisions",
+    "action:wob:pick:*",
+    "action:wob:radar:*",
+    "action:wob:r:*",
+    "action:wob:ppe:*",
+    "action:wob:days:*",
+    "action:wob:payout:*",
+    "action:wob:neg:*",
+    "action:wob:confirm",
+    "action:wob:field:submit",
+    "action:wob:dec:*",
+    "action:wob:back",
+    "action:wob:cancel"
   ],
   "inputs": [
     "select:worker_id",
     "select:termination_reason",
-    "text:termination_notes"
+    "select:ppe_audit",
+    "photo:ppe_damage",
+    "select:worked_days",
+    "select:payout_option",
+    "select:negative_balance_action",
+    "text:worked_days_manual"
   ],
   "outputs": [
-    "card:worker_offboard_summary",
-    "card:worker_clearance_receipt",
+    "card:super_admin_settlement_card",
+    "card:field_admin_review_card",
+    "card:negative_balance_alert",
+    "card:pending_decisions_inbox",
+    "receipt:clearance_whatsapp_slip",
     "event:worker_offboarded"
   ],
   "dataImpact": {
     "database": [
       "Worker",
       "User",
+      "DisciplinaryAndBonus",
+      "WorkerClearance",
+      "FinancialTransaction",
       "AuditLog",
       "OutboxEvent"
     ],
@@ -56,12 +79,15 @@
     ],
     "exports": [],
     "notifications": [
-      "topic:admin_alerts"
+      "topic:admin_alerts",
+      "topic:workforce"
     ]
   },
   "linkedFlows": [
     "01.1",
-    "01.5"
+    "01.5",
+    "01.2.D",
+    "01.7"
   ],
   "performanceSlaMs": {
     "buttonP95": 120,

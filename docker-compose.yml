@@ -101,6 +101,39 @@ services:
     networks:
       - alsaada-enterprise-internal
 
+  # -------------------------------------------------------------
+  # 5. Alsaada Enterprise Admin Dashboard Web UI
+  # -------------------------------------------------------------
+  dashboard:
+    container_name: alsaada_enterprise_dashboard
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-3002}:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3002
+      DATABASE_URL: postgresql://${DB_USER:-alsaada_admin}:${DB_PASSWORD:-alsaada_secure_pass_2026}@postgres:5432/${DB_NAME:-alsaada_db}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD:-alsaada_redis_secure_2026}@redis:6379
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    networks:
+      - alsaada-enterprise-internal
+      - alsaada-enterprise-public
+
 volumes:
   postgres_data:
     name: alsaada_enterprise_postgres_data

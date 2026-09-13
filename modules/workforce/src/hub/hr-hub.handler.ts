@@ -156,9 +156,15 @@ export async function renderHrSubHub(
       keyboard.text('🚪 إنهاء خدمة عامل', 'wizard:worker_offboard:start').row();
 
       if (isSuperAdmin) {
-        const pendingCount = await activePrisma.workerEditRequest.count({ where: { status: 'PENDING' } }).catch(() => 0);
+        const [pendingCount, pendingDecisionsCount] = await Promise.all([
+          activePrisma.workerEditRequest.count({ where: { status: 'PENDING' } }).catch(() => 0),
+          activePrisma.disciplinaryAndBonus.count({ where: { approvedByUserId: null } }).catch(() => 0),
+        ]);
         if (pendingCount > 0) {
           keyboard.text(`📨 مراجعة طلبات التعديل المعلقة (${pendingCount})`, 'action:worker_edit:pending_list').row();
+        }
+        if (pendingDecisionsCount > 0) {
+          keyboard.text(`⚖️ صندوق القرارات المعلقة (${pendingDecisionsCount})`, 'action:wob:hub:pending_decisions').row();
         }
       }
 

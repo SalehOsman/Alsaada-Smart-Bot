@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-11T15:45:29.690Z",
+  "generatedAt": "2026-09-13T08:43:42.955Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -50,11 +50,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "c9dc7b633990b10ab18977cf422e9b06f5af6d1ed8a8dd2f8b630995f4307600"
+      "sha256": "1ba3edad7f3154e62ffa25659f3d4a1be5aadfc1d9b15bd96a7e6fd18f70d481"
     },
     {
       "path": "package.json",
-      "sha256": "1d68276ece3c74cedc389636877dbc75437f270e23c4b43938cbb6583d1ad1a4"
+      "sha256": "14e7251e73a4e31d167f314da417c6ee2e99cdea8fbdd491abc14158392c274c"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -101,6 +101,10 @@
       "sha256": "0e949d4daa25f5b44ce117d6c129c37b2862da64455c4f80baae3c4b9881c9af"
     },
     {
+      "path": "tools/governance/verify-field-masking.ts",
+      "sha256": "f77b9d6a515bae22a87a5775d390685087ef05e020adc315d847036c2bf183d4"
+    },
+    {
       "path": "tools/governance/verify-flow-contracts.ts",
       "sha256": "198cbd7a7fdf67e437f6101d23e92c42749b3460c6746239b0484024a8ebbca1"
     },
@@ -119,6 +123,14 @@
     {
       "path": "tools/governance/verify-migration-registry.ts",
       "sha256": "efa3633d49939030af70906c02a43f6ba16713645f21390dab66e273e10bc72b"
+    },
+    {
+      "path": "tools/governance/verify-observability-contract.ts",
+      "sha256": "92d8a19e3f8d73151c70c74f082bc74d795689f3796edf4af5d8c9c790d729df"
+    },
+    {
+      "path": "tools/governance/verify-rbac-matrix.ts",
+      "sha256": "2ad7ecfa43c2bca64b0482e52ad2cb5cd161d1deab07d097e61fd187630e85cd"
     },
     {
       "path": "tools/governance/verify-telegram-contracts.ts",

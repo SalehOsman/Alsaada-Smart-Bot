@@ -49,7 +49,7 @@ describe('Security Hardening Suite (R07, R08, R09 Verification)', () => {
       expect(buildSiteScopeWhere(ctx)).toEqual({ siteId: 'site-alamein-01' });
     });
 
-    it('should grant global scope to Super Admin and Executive', () => {
+    it('should grant global scope to Super Admin and General Admin', () => {
       const adminCtx = {
         effectiveRole: 'SUPER_ADMIN',
         dbUser: { assignedSiteId: 'site-alamein-01' },
@@ -57,12 +57,12 @@ describe('Security Hardening Suite (R07, R08, R09 Verification)', () => {
       expect(getScopedSiteId(adminCtx)).toBeNull();
       expect(buildSiteScopeWhere(adminCtx)).toEqual({});
 
-      const execCtx = {
-        effectiveRole: 'EXECUTIVE',
+      const genAdminCtx = {
+        effectiveRole: 'GENERAL_ADMIN',
         dbUser: { assignedSiteId: 'site-alamein-01' },
       } as unknown as MyContext;
-      expect(getScopedSiteId(execCtx)).toBeNull();
-      expect(buildSiteScopeWhere(execCtx)).toEqual({});
+      expect(getScopedSiteId(genAdminCtx)).toBeNull();
+      expect(buildSiteScopeWhere(genAdminCtx)).toEqual({});
     });
   });
 

@@ -69,8 +69,14 @@ export async function handleStart(ctx: MyContext): Promise<void> {
 
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
 
-  // 1. فحص رابط الربط والمصادقة المشفر عبر واتساب (Deep Link: /start link_CODE_APPLICANTID_EXPIRY_SIGNATURE)
+  // 1. فحص رابط الربط والمصادقة المشفر أو رابط الوصول للوحة التحكم
   const startPayload = (ctx.match || '').toString().trim();
+  if (startPayload === 'dashboard_access') {
+    const { handleDashboardCommand } = await import('./dashboard.handler.js');
+    await handleDashboardCommand(ctx);
+    return;
+  }
+
   if (startPayload.startsWith('link_')) {
     const parts = startPayload.replace(/^link_/, '').split('_');
     const workerCode = parts[0]?.trim() || '';
