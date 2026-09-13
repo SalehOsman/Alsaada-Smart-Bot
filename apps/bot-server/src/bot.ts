@@ -29,6 +29,7 @@ import { errorVaultService } from './services/error-vault.service.js';
 import { handleStart, renderRoleHome, handleClaimWorker } from './handlers/start.handler.js';
 import { handlePing } from './handlers/ping.handler.js';
 import { handleDashboardCommand, handleSessionCallbacks } from './handlers/dashboard.handler.js';
+import { DASHBOARD_REPLY_BUTTON_TEXT } from '@alsaada/rbac';
 import { handleMenuPlaceholder } from './handlers/placeholder.handler.js';
 import {
   registerWorkforceModule,
@@ -348,11 +349,10 @@ export function createBot(): Bot<MyContext> {
   bot.hears(/فواتيري ومستخلصاتي/, async (ctx) => {
     await ctx.reply('🧾 *بوابة مستخلصات الموردين*\nعرض الفواتير المعتمدة تحت التجهيز.', { parse_mode: 'Markdown' });
   });
-  bot.hears('🖥️ فتح لوحة التحكم', handleDashboardCommand);
+  bot.hears(DASHBOARD_REPLY_BUTTON_TEXT, handleDashboardCommand);
 
   // 9. Navigation Callbacks
   bot.callbackQuery(/^sess_/, handleSessionCallbacks);
-  bot.callbackQuery('menu:exec:dashboard', handleDashboardCommand);
   bot.callbackQuery('action:main_menu', async (ctx) => {
     await ctx.answerCallbackQuery();
     const inPlace = await screenFlowService.shouldRenderInPlace(ctx, true);

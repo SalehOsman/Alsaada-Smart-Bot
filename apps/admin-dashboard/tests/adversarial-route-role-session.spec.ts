@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { middleware } from '../src/middleware';
-import { createSessionToken, verifySessionToken, type SessionPayload } from '../src/lib/session';
+import { generateOpaqueSessionToken } from '../src/lib/session';
 import { POST as logoutPost, GET as logoutGet } from '../src/app/api/auth/logout/route';
 import { getCurrentUser } from '../src/lib/auth';
 import { prisma } from '@alsaada/database';
@@ -23,8 +23,19 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(),
 }));
 
+interface TestSessionPayload {
+  userId: string;
+  telegramId: string;
+  role: string;
+  name: string;
+  assignedSiteId?: string;
+  assignedSiteName?: string;
+  isRealSuperAdmin: boolean;
+  createdAt: number;
+}
+
 describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Session Termination', () => {
-  const superAdminPayload: SessionPayload = {
+  const superAdminPayload: TestSessionPayload = {
     userId: 'usr-super-admin-001',
     telegramId: '123456789',
     role: 'SUPER_ADMIN',
@@ -33,7 +44,7 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
     createdAt: Date.now(),
   };
 
-  const fieldAdminPayload: SessionPayload = {
+  const fieldAdminPayload: TestSessionPayload = {
     userId: 'usr-field-admin-002',
     telegramId: '987654321',
     role: 'FIELD_ADMIN',
@@ -146,15 +157,8 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
       }
     });
 
-    it('rejects forged token where attacker modifies payload to SUPER_ADMIN with old signature', async () => {
-      const validToken = await createSessionToken(fieldAdminPayload);
-      const [dataB64, signature] = validToken.split('.');
-
-      // Attacker attempts privilege escalation by decoding and changing role to SUPER_ADMIN
-      const tamperedPayload = { ...fieldAdminPayload, role: 'SUPER_ADMIN', isRealSuperAdmin: true };
-      const tamperedB64 = Buffer.from(JSON.stringify(tamperedPayload)).toString('base64url');
-      const forgedToken = `${tamperedB64}.${signature}`;
-
+    it('rejects legacy HMAC tokens containing dot separator at Edge boundary', async () => {
+      const forgedToken = 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4ifQ.invalid_sig';
       const req = new NextRequest('http://localhost:3000/admin', {
         headers: { cookie: `alsaada_session=${forgedToken}` },
       });
@@ -163,22 +167,8 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
       expect(res.headers.get('location')).toContain('start=dashboard_access');
     });
 
-    it('rejects token signed with an unauthorized external HMAC secret', async () => {
-      // Craft a token manually with a wrong HMAC secret
-      const enc = new TextEncoder();
-      const wrongKey = await crypto.subtle.importKey(
-        'raw',
-        enc.encode('attacker-rogue-secret-key-that-does-not-match'),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-      );
-      const dataStr = JSON.stringify(superAdminPayload);
-      const dataB64 = Buffer.from(dataStr).toString('base64url');
-      const sigBuf = await crypto.subtle.sign('HMAC', wrongKey, enc.encode(dataB64));
-      const rogueSig = Buffer.from(new Uint8Array(sigBuf)).toString('base64url');
-      const rogueToken = `${dataB64}.${rogueSig}`;
-
+    it('rejects malformed non-hex tokens at Edge boundary', async () => {
+      const rogueToken = 'non-hex-token-with-special-chars!@#$%^&*()';
       const req = new NextRequest('http://localhost:3000/admin', {
         headers: { cookie: `alsaada_session=${rogueToken}` },
       });
@@ -187,16 +177,10 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
       expect(res.headers.get('location')).toContain('start=dashboard_access');
     });
 
-    it('rejects session token older than 7 days (604,800 seconds)', async () => {
-      const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
-      const expiredPayload: SessionPayload = {
-        ...superAdminPayload,
-        createdAt: eightDaysAgo,
-      };
-      const expiredToken = await createSessionToken(expiredPayload);
-
+    it('rejects invalid-length tokens at Edge boundary', async () => {
+      const shortToken = 'a'.repeat(32);
       const req = new NextRequest('http://localhost:3000/admin', {
-        headers: { cookie: `alsaada_session=${expiredToken}` },
+        headers: { cookie: `alsaada_session=${shortToken}` },
       });
       const res = await middleware(req);
       expect(res.status).toBe(302);
@@ -216,7 +200,7 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
     });
 
     it('getCurrentUser prevents non-superadmin from privilege escalation via alsaada_admin_role cookie', async () => {
-      const validFieldAdminToken = await createSessionToken(fieldAdminPayload);
+      const validFieldAdminToken = 'f1e1d1a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d';
 
       // Authenticated as FIELD_ADMIN, but attempts to spoof alsaada_admin_role=superadmin
       vi.mocked(cookies).mockResolvedValueOnce({
@@ -227,14 +211,26 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
         },
       } as any);
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: fieldAdminPayload.userId,
-        telegramId: BigInt(fieldAdminPayload.telegramId),
-        fullName: fieldAdminPayload.name,
-        role: 'FIELD_ADMIN',
-        assignedSiteId: 'site-alamein',
-        assignedSite: { name: 'مشروع العلمين' },
-        deletedAt: null,
+      vi.mocked(prisma.dashboardSession.findUnique).mockResolvedValueOnce({
+        id: 'sess-field-admin',
+        sessionHash: 'hash',
+        userId: fieldAdminPayload.userId,
+        actorTelegramId: BigInt(fieldAdminPayload.telegramId),
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 8 * 3600 * 1000),
+        maxExpiresAt: new Date(Date.now() + 16 * 3600 * 1000),
+        user: {
+          id: fieldAdminPayload.userId,
+          telegramId: BigInt(fieldAdminPayload.telegramId),
+          fullName: fieldAdminPayload.name,
+          role: 'FIELD_ADMIN',
+          isActive: true,
+          isBanned: false,
+          isDeleted: false,
+          deletedAt: null,
+          assignedSiteId: 'site-alamein',
+          assignedSite: { name: 'مشروع العلمين' },
+        },
       } as any);
 
       const user = await getCurrentUser({ nullable: true });
@@ -244,6 +240,7 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
       expect(user?.isRealSuperAdmin).toBe(false);
       expect(user?.id).toBe(fieldAdminPayload.userId);
     });
+
   });
 
   // ==========================================================================
@@ -290,7 +287,7 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
 
     it('full lifecycle: authenticated session is allowed, logout clears session, subsequent access is blocked', async () => {
       // Step 1: User has valid session token -> allowed through
-      const validToken = await createSessionToken(superAdminPayload);
+      const validToken = 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90';
       const authenticatedReq = new NextRequest('http://localhost:3000/admin', {
         headers: { cookie: `alsaada_session=${validToken}` },
       });

@@ -69,8 +69,6 @@ function resolveTraceId(ctx: MyContext): string {
 
 function buildDashboardRecoveryKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text('🔄 إعادة المحاولة', 'menu:exec:dashboard')
-    .row()
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 }
 
@@ -109,11 +107,6 @@ async function replyWithDashboardFailure(
         actorTelegramId,
       },
     );
-
-    // Prepend dashboard-specific retry button to recovery options
-    keyboard.inline_keyboard.unshift([
-      { text: '🔄 إعادة المحاولة', callback_data: 'menu:exec:dashboard' },
-    ]);
 
     await ctx.reply(text, {
       parse_mode: 'HTML',
@@ -206,8 +199,6 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
 
         maxKb
           .text('🛑 إنهاء جميع الجلسات', 'sess_rev_all')
-          .row()
-          .text('🔄 إعادة المحاولة', 'menu:exec:dashboard')
           .row()
           .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -416,8 +407,6 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
       const kb = new InlineKeyboard()
         .text('📋 قائمة الجلسات النشطة', 'sess_list')
         .row()
-        .text('🔙 العودة لرابط لوحة التحكم', 'menu:exec:dashboard')
-        .row()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
       await renderScreen(text, kb);
     } else {
@@ -459,8 +448,6 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     const sessions = Array.isArray(rawSessions) ? rawSessions : [];
     if (sessions.length === 0) {
       const emptyKeyboard = new InlineKeyboard()
-        .text('🔙 العودة لرابط لوحة التحكم', 'menu:exec:dashboard')
-        .row()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
       await renderScreen(`${statusHeader}ℹ️ <b>لا توجد أي جلسات نشطة حالياً لحسابك.</b>`, emptyKeyboard);
       return true;
@@ -490,7 +477,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     keyboard
       .text('🛑 إنهاء جميع الجلسات', 'sess_rev_all')
       .row()
-      .text('🔙 العودة', 'menu:exec:dashboard');
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
     await renderScreen(text, keyboard);
     return true;
@@ -505,8 +492,6 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     const sessions = await dashboardAuthService.getActiveSessions(telegramId);
     if (sessions.length === 0) {
       const emptyKeyboard = new InlineKeyboard()
-        .text('🔙 العودة لرابط لوحة التحكم', 'menu:exec:dashboard')
-        .row()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
       await renderScreen('ℹ️ <b>لا توجد أي جلسات نشطة حالياً لحسابك.</b>', emptyKeyboard);
       return true;
@@ -536,7 +521,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     keyboard
       .text('🛑 إنهاء جميع الجلسات', 'sess_rev_all')
       .row()
-      .text('🔙 العودة', 'menu:exec:dashboard');
+      .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
     await renderScreen(text, keyboard);
     return true;
@@ -550,13 +535,12 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     } catch {}
 
     const emptyKeyboard = new InlineKeyboard()
-      .text('🔙 العودة لرابط لوحة التحكم', 'menu:exec:dashboard')
-      .row()
       .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
     await renderScreen('🛑 <b>تم إنهاء كافة جلساتك النشطة في لوحة التحكم بنجاح.</b>', emptyKeyboard);
     return true;
   }
+
 
   return false;
 }

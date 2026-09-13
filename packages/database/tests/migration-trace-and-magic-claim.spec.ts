@@ -81,20 +81,25 @@ describe.runIf(integrationEnabled)('PLAN-20 database migration contract', () => 
       },
     });
 
+    const groupId = randomUUID();
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
         jtiHash,
         actorTelegramId: 1n,
-        targetOrigin: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         expiresAt: new Date(Date.now() + 60_000),
       },
     });
     await expect(
       prisma.dashboardAuthLink.create({
         data: {
+          groupId,
+          originKind: 'LOCAL',
           jtiHash,
           actorTelegramId: 1n,
-          targetOrigin: 'LOCAL',
+          targetOrigin: 'http://localhost:3002',
           expiresAt: new Date(Date.now() + 60_000),
         },
       }),

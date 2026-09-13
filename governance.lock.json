@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-13T08:43:42.955Z",
+  "generatedAt": "2026-09-13T19:09:46.349Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -26,7 +26,7 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "76dc04b86c7985e1b51bb1618dff581095e0f719e2aa6fd56d08e48f69074f0d"
+      "sha256": "17892892a6232abcb36aa1c2943a1e1fc99fa68e53c66e5267f41afb39bf1200"
     },
     {
       "path": "AGENTS.md",
@@ -54,7 +54,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "14e7251e73a4e31d167f314da417c6ee2e99cdea8fbdd491abc14158392c274c"
+      "sha256": "d50d8ddf3c66acbbfcd12d3a8929ad868a1b3976c42020427f68ffd4b2e17732"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -91,6 +91,10 @@
     {
       "path": "tools/governance/verify-architecture.ts",
       "sha256": "97f78c7299534f4046c13315d7405b981f0b9d2be85ae310e3c5e81499622e25"
+    },
+    {
+      "path": "tools/governance/verify-dashboard-auth-contract.ts",
+      "sha256": "62affbd1f111f01ee6fedcdb04a0eea4803ff56dcf3185d3f47c82f2066027f6"
     },
     {
       "path": "tools/governance/verify-docs-audit.ts",

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { prisma } from '@alsaada/database';
-import { verifySessionToken } from '../../../../lib/session';
 import { envConfig } from '../../../../lib/env';
 import { extractTraceId } from '@alsaada/telemetry';
 
@@ -29,23 +28,26 @@ async function revokeSessionFromDb(req?: NextRequest, traceId?: string): Promise
 
   try {
     const sessionHash = crypto.createHash('sha256').update(sessionCookie.trim()).digest('hex');
-    await prisma.dashboardSession.updateMany({
+    const session = await prisma.dashboardSession.findUnique({
       where: { sessionHash },
-      data: {
-        revokedAt: new Date(),
-        revocationReason: 'USER_LOGOUT',
-      },
     });
 
-    const payload = await verifySessionToken(sessionCookie);
-    if (payload?.userId) {
+    if (session) {
+      await prisma.dashboardSession.update({
+        where: { id: session.id },
+        data: {
+          revokedAt: new Date(),
+          revocationReason: 'USER_LOGOUT',
+        },
+      });
+
       try {
         await prisma.auditLog.create({
           data: {
-            actorTelegramId: BigInt(payload.telegramId || '0'),
+            actorTelegramId: session.actorTelegramId,
             action: 'USER_LOGOUT',
             entityType: 'DashboardSession',
-            entityId: payload.sessionId || sessionHash,
+            entityId: session.id,
             afterPayload: {
               traceId: traceId || 'logout-trace',
               source: 'api/auth/logout',
@@ -53,15 +55,14 @@ async function revokeSessionFromDb(req?: NextRequest, traceId?: string): Promise
           },
         });
       } catch (auditErr) {
-        // Log audit persistence error with trace context
         console.warn(`[LogoutAuditError] traceId=${traceId}:`, auditErr);
       }
     }
   } catch (err) {
-    // Log unexpected revocation error with trace context
     console.warn(`[LogoutRevokeError] traceId=${traceId}:`, err);
   }
 }
+
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const traceId = extractTraceId(req);

@@ -1,36 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { prisma } from '@alsaada/database';
-import { canAccessDashboard, type CanonicalRole } from '@alsaada/rbac';
-import { createSessionToken, verifySessionToken } from '../../../../lib/session';
+import { canAccessDashboardRole, normalizeOrigin, isExactOriginMatch, isValidOpaqueTokenFormat } from '@alsaada/rbac';
 import { envConfig } from '../../../../lib/env';
 
 export async function GET(request: NextRequest) {
   return handleClaim(request);
 }
 
-export async function POST(request: NextRequest) {
-  return handleClaim(request);
+export async function POST() {
+  return NextResponse.json(
+    { success: false, error: 'METHOD_NOT_ALLOWED' },
+    { status: 405, headers: { Allow: 'GET' } }
+  );
 }
 
 async function handleClaim(request: NextRequest): Promise<NextResponse> {
   const url = request.nextUrl;
-  let token = url.searchParams.get('token');
+  const token = url.searchParams.get('token');
   const traceId = url.searchParams.get('traceId') || crypto.randomUUID();
-
-  // Also check JSON body if POST
-  if (!token && request.method === 'POST') {
-    try {
-      const body = await request.json();
-      token = body?.token;
-    } catch {
-      // Ignore JSON parse error
-    }
-  }
 
   const botUsername = envConfig.TELEGRAM_BOT_USERNAME || 'Al_Saada_smart_bot';
   const botFallbackUrl = `https://t.me/${botUsername}?start=dashboard_access`;
-  const isApiRequest = request.headers.get('accept')?.includes('application/json') || request.method === 'POST';
+  const isApiRequest = request.headers.get('accept')?.includes('application/json');
 
   if (!token || typeof token !== 'string' || token.trim().length === 0) {
     if (isApiRequest) {
@@ -43,11 +35,22 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
   }
 
   const rawToken = token.trim();
+
+  if (!isValidOpaqueTokenFormat(rawToken)) {
+    if (isApiRequest) {
+      return NextResponse.json(
+        { success: false, error: 'INVALID_TOKEN_FORMAT', traceId },
+        { status: 400 }
+      );
+    }
+    return renderFailureHtml('INVALID_OR_EXPIRED_TOKEN', botFallbackUrl, traceId);
+  }
+
   const jtiHash = crypto.createHash('sha256').update(rawToken).digest('hex');
 
   try {
-    // 1. Single-use atomic consumption in a PostgreSQL transaction
-    const link = await prisma.$transaction(async (tx) => {
+    // Single-use atomic consumption inside a single PostgreSQL transaction
+    const claimResult = await prisma.$transaction(async (tx) => {
       const candidate = await tx.dashboardAuthLink.findUnique({
         where: { jtiHash },
       });
@@ -63,6 +66,62 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
 
       if (candidate.claimedAt) {
         throw new Error('TOKEN_ALREADY_CLAIMED');
+      }
+
+      // Exact-origin allowlist verification against stored targetOrigin
+      const requestOrigin = normalizeOrigin(request.nextUrl.origin);
+      if (!isExactOriginMatch(requestOrigin, candidate.targetOrigin)) {
+        throw new Error('ORIGIN_MISMATCH');
+      }
+
+      // Serialize concurrent claims for the same user via row-level lock
+      await tx.$queryRaw`SELECT id FROM "users" WHERE "telegramId" = ${candidate.actorTelegramId} FOR UPDATE`;
+
+      // Fetch user and verify active status & RBAC role
+      const user = await tx.user.findFirst({
+        where: {
+          telegramId: candidate.actorTelegramId,
+          isDeleted: false,
+        },
+        include: {
+          assignedSite: true,
+        },
+      });
+
+      if (!user || !user.isActive || user.isBanned || !canAccessDashboardRole(user.role)) {
+        await tx.auditLog.create({
+          data: {
+            actorTelegramId: candidate.actorTelegramId,
+            action: 'DASHBOARD_CLAIM_REJECTED_UNAUTHORIZED',
+            entityType: 'User',
+            entityId: user?.id || String(candidate.actorTelegramId),
+            afterPayload: {
+              traceId,
+              reason: !user
+                ? 'USER_NOT_FOUND'
+                : !user.isActive
+                ? 'ACCOUNT_INACTIVE'
+                : user.isBanned
+                ? 'ACCOUNT_BANNED'
+                : 'UNAUTHORIZED_ROLE',
+              role: user?.role || 'NONE',
+            },
+          },
+        });
+        throw new Error('FORBIDDEN_ROLE_OR_STATUS');
+      }
+
+      // Check active concurrent sessions limit (<= 3)
+      const activeSessionsCount = await tx.dashboardSession.count({
+        where: {
+          actorTelegramId: candidate.actorTelegramId,
+          revokedAt: null,
+          expiresAt: { gt: now },
+        },
+      });
+
+      if (activeSessionsCount >= 3) {
+        throw new Error('MAX_CONCURRENT_SESSIONS_REACHED');
       }
 
       // Atomic conditional update: strictly matching claimedAt: null to prevent race condition
@@ -82,7 +141,7 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         throw new Error('TOKEN_ALREADY_CLAIMED');
       }
 
-      // Atomic sibling link invalidation: invalidate sibling link with the same groupId in the same transaction
+      // Atomic sibling link invalidation: invalidate sibling link with the same groupId
       if (candidate.groupId) {
         await tx.dashboardAuthLink.updateMany({
           where: {
@@ -97,182 +156,107 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         });
       }
 
-      // Check active concurrent sessions limit (<= 3)
-      const activeSessionsCount = await tx.dashboardSession.count({
-        where: {
-          actorTelegramId: candidate.actorTelegramId,
-          revokedAt: null,
-          expiresAt: { gt: now },
+      // Create durable 8-hour session in database with raw Opaque Token
+      const sessionTtlHours = envConfig.DASHBOARD_SESSION_TTL_HOURS || 8;
+      const expiresAt = new Date(Date.now() + sessionTtlHours * 3600 * 1000);
+      const maxExpiresAt = new Date(Date.now() + 16 * 3600 * 1000); // 16h total ceiling
+
+      const opaqueToken = crypto.randomBytes(32).toString('hex');
+      const sessionHash = crypto.createHash('sha256').update(opaqueToken).digest('hex');
+      const userAgent = request.headers.get('user-agent') || 'Unknown';
+      const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
+
+      const createdSession = await tx.dashboardSession.create({
+        data: {
+          sessionHash,
+          userId: user.id,
+          actorTelegramId: user.telegramId,
+          originKind: candidate.originKind,
+          deviceSummary: userAgent.slice(0, 255),
+          userAgentHash,
+          expiresAt,
+          maxExpiresAt,
+          extensionCount: 0,
         },
       });
 
-      if (activeSessionsCount >= 3) {
-        throw new Error('MAX_CONCURRENT_SESSIONS_REACHED');
-      }
-
-      return candidate;
-    });
-
-    // 2. Fetch user and verify active status & RBAC role
-    const user = await prisma.user.findFirst({
-      where: {
-        telegramId: link.actorTelegramId,
-        isDeleted: false,
-      },
-      include: {
-        assignedSite: true,
-      },
-    });
-
-    if (!user || !user.isActive || user.isBanned || !canAccessDashboard(user.role as CanonicalRole)) {
-      await prisma.auditLog.create({
+      // Forensic audit log on new session creation
+      await tx.auditLog.create({
         data: {
-          actorTelegramId: link.actorTelegramId,
-          action: 'DASHBOARD_CLAIM_REJECTED_UNAUTHORIZED',
-          entityType: 'User',
-          entityId: user?.id || String(link.actorTelegramId),
+          actorTelegramId: user.telegramId,
+          action: 'DASHBOARD_AUTH_CLAIMED_SUCCESS',
+          entityType: 'DashboardSession',
+          entityId: createdSession.id,
           afterPayload: {
             traceId,
-            reason: !user
-              ? 'USER_NOT_FOUND'
-              : !user.isActive
-              ? 'ACCOUNT_INACTIVE'
-              : user.isBanned
-              ? 'ACCOUNT_BANNED'
-              : 'UNAUTHORIZED_ROLE',
-            role: user?.role || 'NONE',
+            userId: user.id,
+            role: user.role,
+            originKind: candidate.originKind,
+            targetOrigin: candidate.targetOrigin,
+            groupId: candidate.groupId,
+            expiresAt: expiresAt.toISOString(),
+            maxExpiresAt: maxExpiresAt.toISOString(),
           },
         },
       });
 
-      if (isApiRequest) {
-        return NextResponse.json(
-          { success: false, error: 'FORBIDDEN_ROLE_OR_STATUS', traceId },
-          { status: 403 }
-        );
-      }
-      return renderFailureHtml('FORBIDDEN_ROLE_OR_STATUS', botFallbackUrl, traceId);
-    }
-
-    // 3. Create durable 8-hour session in database with raw Opaque Token
-    const sessionTtlHours = envConfig.DASHBOARD_SESSION_TTL_HOURS || 8;
-    const expiresAt = new Date(Date.now() + sessionTtlHours * 3600 * 1000);
-    const maxExpiresAt = new Date(Date.now() + 16 * 3600 * 1000); // 16h total ceiling
-
-    // Raw unguessable cryptographically secure opaque token
-    const opaqueToken = crypto.randomBytes(32).toString('hex');
-    const sessionHash = crypto.createHash('sha256').update(opaqueToken).digest('hex');
-    const userAgent = request.headers.get('user-agent') || 'Unknown';
-    const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
-
-    const createdSession = await prisma.dashboardSession.create({
-      data: {
-        sessionHash,
-        userId: user.id,
-        actorTelegramId: user.telegramId,
-        originKind: link.targetOrigin,
-        deviceSummary: userAgent.slice(0, 255),
-        userAgentHash,
+      return {
+        opaqueToken,
+        targetOrigin: candidate.targetOrigin,
         expiresAt,
-        maxExpiresAt,
-        extensionCount: 0,
-      },
-    });
-
-    // Forensic audit log on new session creation
-    await prisma.auditLog.create({
-      data: {
-        actorTelegramId: user.telegramId,
-        action: 'DASHBOARD_AUTH_CLAIMED_SUCCESS',
-        entityType: 'DashboardSession',
-        entityId: createdSession.id,
-        afterPayload: {
-          traceId,
-          userId: user.id,
-          role: user.role,
-          originKind: link.targetOrigin,
-          groupId: link.groupId,
-          expiresAt: expiresAt.toISOString(),
-          maxExpiresAt: maxExpiresAt.toISOString(),
-        },
-      },
-    });
-
-    // 4. The raw opaque token itself is the cookie payload
-    const sessionToken = opaqueToken;
-
-    // 5. Build response with secure cookie
-    // Dynamic host and scheme determination
-    const forwardedHost = request.headers.get('x-forwarded-host');
-    const forwardedProto = request.headers.get('x-forwarded-proto');
-    const incomingHost = forwardedHost || request.headers.get('host');
-
-    let trustedBase: string;
-    // Host-header injection prevention: verify host doesn't contain disallowed external attacker domains
-    if (
-      incomingHost &&
-      !incomingHost.includes('evil.attacker') &&
-      !incomingHost.includes('example.com') &&
-      !incomingHost.includes('example')
-    ) {
-      const proto =
-        forwardedProto ||
-        (request.nextUrl.protocol.replace(':', '') ||
-          (link.targetOrigin === 'TUNNEL' ? 'https' : 'http'));
-      trustedBase = `${proto}://${incomingHost}`;
-    } else if (
-      link.targetOrigin === 'TUNNEL' &&
-      envConfig.DASHBOARD_TUNNEL_URL &&
-      !envConfig.DASHBOARD_TUNNEL_URL.includes('example')
-    ) {
-      trustedBase = envConfig.DASHBOARD_TUNNEL_URL;
-    } else {
-      trustedBase = envConfig.DASHBOARD_LOCAL_URL || 'http://localhost:3002';
-    }
-
-    const isHttps =
-      trustedBase.startsWith('https:') ||
-      request.nextUrl.protocol === 'https:' ||
-      forwardedProto === 'https' ||
-      link.targetOrigin === 'TUNNEL';
-    const isSecure = isHttps;
-    const maxAge = sessionTtlHours * 3600;
-
-    if (isApiRequest) {
-      const res = NextResponse.json({
-        success: true,
         user: {
           id: user.id,
           telegramId: user.telegramId.toString(),
           role: user.role,
           name: user.fullName,
         },
-        expiresAt: expiresAt.getTime(),
+      };
+    });
+
+    const isHttps = claimResult.targetOrigin.startsWith('https:');
+    // Cookie maxAge is set to 16 hours so extending session in DB keeps cookie alive
+    const cookieMaxAge = 16 * 3600;
+
+    if (isApiRequest) {
+      const res = NextResponse.json({
+        success: true,
+        user: claimResult.user,
+        expiresAt: claimResult.expiresAt.getTime(),
       });
-      res.cookies.set('alsaada_session', sessionToken, {
+      res.cookies.set('alsaada_session', claimResult.opaqueToken, {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
-        secure: isSecure,
-        maxAge,
+        secure: isHttps,
+        maxAge: cookieMaxAge,
       });
       return res;
     }
 
-    // Direct browser redirect to /admin matching the exact origin host used by claimant
-    const redirectUrl = new URL('/admin', trustedBase);
+    // Direct browser redirect derived purely from stored targetOrigin
+    const redirectUrl = new URL('/admin', claimResult.targetOrigin);
     const redirectRes = NextResponse.redirect(redirectUrl, { status: 302 });
-    redirectRes.cookies.set('alsaada_session', sessionToken, {
+    redirectRes.cookies.set('alsaada_session', claimResult.opaqueToken, {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',
-      secure: isSecure,
-      maxAge,
+      secure: isHttps,
+      maxAge: cookieMaxAge,
     });
 
     return redirectRes;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'CLAIM_FAILED';
+
+    if (errorMsg === 'ORIGIN_MISMATCH') {
+      if (isApiRequest) {
+        return NextResponse.json(
+          { success: false, error: 'ORIGIN_MISMATCH', traceId },
+          { status: 403 }
+        );
+      }
+      return renderFailureHtml('ORIGIN_MISMATCH', botFallbackUrl, traceId);
+    }
 
     if (errorMsg === 'TOKEN_ALREADY_CLAIMED') {
       if (isApiRequest) {
@@ -281,25 +265,6 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
           { status: 409 }
         );
       }
-
-      // If claimant browser already has a valid active session cookie, smoothly redirect to /admin!
-      const existingCookie = request.cookies.get('alsaada_session')?.value;
-      if (existingCookie) {
-        const verified = await verifySessionToken(existingCookie);
-        if (verified && canAccessDashboard(verified.role as CanonicalRole)) {
-          const forwardedHost = request.headers.get('x-forwarded-host');
-          const forwardedProto = request.headers.get('x-forwarded-proto');
-          const incomingHost = forwardedHost || request.headers.get('host') || 'localhost:3002';
-          const proto =
-            forwardedProto ||
-            (request.nextUrl.protocol.replace(':', '') || 'https');
-          return NextResponse.redirect(
-            new URL('/admin', `${proto}://${incomingHost}`),
-            { status: 302 }
-          );
-        }
-      }
-
       return renderFailureHtml('TOKEN_ALREADY_CLAIMED', botFallbackUrl, traceId);
     }
 
@@ -323,6 +288,16 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       return renderFailureHtml('MAX_CONCURRENT_SESSIONS_REACHED', botFallbackUrl, traceId);
     }
 
+    if (errorMsg === 'FORBIDDEN_ROLE_OR_STATUS') {
+      if (isApiRequest) {
+        return NextResponse.json(
+          { success: false, error: 'FORBIDDEN_ROLE_OR_STATUS', traceId },
+          { status: 403 }
+        );
+      }
+      return renderFailureHtml('FORBIDDEN_ROLE_OR_STATUS', botFallbackUrl, traceId);
+    }
+
     if (isApiRequest) {
       return NextResponse.json(
         { success: false, error: 'INVALID_OR_EXPIRED_TOKEN', traceId },
@@ -340,17 +315,21 @@ function renderFailureHtml(
   traceId: string,
 ): NextResponse {
   const titles: Record<string, { title: string; desc: string }> = {
+    ORIGIN_MISMATCH: {
+      title: 'رابط الدخول غير مخصص لهذا النطاق',
+      desc: 'تم استخدام رابط مخصص لنطاق وصول آخر (محلي أو عبر النفق). يرجى التأكد من الدخول عبر الرابط المطابق للعنوان المفتوح.',
+    },
     MAX_CONCURRENT_SESSIONS_REACHED: {
       title: 'تم الوصول إلى الحد الأقصى للجلسات النشطة',
       desc: 'لديك 3 جلسات نشطة بالفعل. يرجى العودة إلى البوت لإدارة جلساتك النشطة أو إنهاء إحداها لإتاحة فتح جلسة جديدة.',
     },
     TOKEN_ALREADY_CLAIMED: {
       title: 'تم استخدام رابط الدخول مسبقاً',
-      desc: 'روابط الدخول المؤسسية صالحة للاستخدام لمرة واحدة فقط حفاظاً على أمان النظام. للحصول على رابط جديد، يرجى العودة إلى البوت والضغط على «🖥️ لوحة التحكم».',
+      desc: 'روابط الدخول المؤسسية صالحة للاستخدام لمرة واحدة فقط حفاظاً على أمان النظام. للحصول على رابط جديد، يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم».',
     },
     TOKEN_EXPIRED: {
       title: 'انتهت صلاحية رابط الدخول',
-      desc: 'صلاحية روابط الدخول محددة بـ 5 دقائق فقط لضمان الحماية. يرجى العودة إلى البوت والضغط على «🖥️ لوحة التحكم» لإصدار رابط جديد.',
+      desc: 'صلاحية روابط الدخول محددة بـ 5 دقائق فقط لضمان الحماية. يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم» لإصدار رابط جديد.',
     },
     FORBIDDEN_ROLE_OR_STATUS: {
       title: 'الوصول غير مصرح به',
@@ -358,7 +337,7 @@ function renderFailureHtml(
     },
     INVALID_OR_EXPIRED_TOKEN: {
       title: 'رابط الدخول غير صالح',
-      desc: 'تعذر التحقق من رمز الدخول. يرجى العودة إلى البوت والضغط على «🖥️ لوحة التحكم» لإصدار رابط جديد صالح.',
+      desc: 'تعذر التحقق من رمز الدخول. يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم» لإصدار رابط جديد صالح.',
     },
   };
 
@@ -400,3 +379,4 @@ function renderFailureHtml(
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   });
 }
+

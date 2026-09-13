@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 import { prisma } from '@alsaada/database';
@@ -31,11 +31,14 @@ describe('Auth Claim Concurrency & Anti-Race Safety Gate', () => {
     const rawToken = randomBytes(32).toString('hex');
     const jtiHash = createHash('sha256').update(rawToken).digest('hex');
 
+    const groupId = randomUUID();
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
-        targetOrigin: 'TUNNEL',
         expiresAt: new Date(Date.now() + 300_000),
       },
     });

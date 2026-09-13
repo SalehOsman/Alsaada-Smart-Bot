@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 import { middleware } from '../src/middleware';
-import { createSessionToken } from '../src/lib/session';
 import { envConfig } from '../src/lib/env';
 
 describe('Middleware Session Guard & Bot Redirect Gate', () => {
@@ -18,42 +17,29 @@ describe('Middleware Session Guard & Bot Redirect Gate', () => {
     expect(location).not.toContain('/login');
   });
 
-  it('permits authorized roles (SUPER_ADMIN, GENERAL_ADMIN, FIELD_ADMIN) with valid session cookie', async () => {
-    const authorizedRoles = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'] as const;
+  it('permits valid 64-hex opaque session cookie to pass through to Server Component', async () => {
+    const validOpaqueToken = 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90';
 
-    for (const role of authorizedRoles) {
-      const token = await createSessionToken({
-        userId: `usr-${role.toLowerCase()}`,
-        telegramId: '123456789',
-        role,
-        name: `Test ${role}`,
-        createdAt: Date.now(),
-      });
+    const req = new NextRequest('http://localhost:3002/admin', {
+      headers: {
+        cookie: `alsaada_session=${validOpaqueToken}`,
+      },
+    });
 
-      const req = new NextRequest('http://localhost:3002/admin', {
-        headers: {
-          cookie: `alsaada_session=${token}`,
-        },
-      });
-
-      const res = await middleware(req);
-      // NextResponse.next() passes through (status 200 or no redirect location)
-      expect(res.headers.get('location')).toBeNull();
-    }
+    const res = await middleware(req);
+    // NextResponse.next() passes through (no redirect location)
+    expect(res.headers.get('location')).toBeNull();
   });
 
-  it('strictly redirects unauthorized roles (e.g. WORKER, SUPPLIER, GUEST) to bot deep-link', async () => {
-    const unauthorizedRoles = ['WORKER', 'WORKER_SUPERVISOR', 'SUPPLIER', 'GUEST', 'EXECUTIVE'];
+  it('strictly rejects invalid, non-hex, or legacy HMAC token formats at Edge boundary', async () => {
+    const invalidTokens = [
+      'invalid-short-token',
+      'z'.repeat(64), // non-hex
+      'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMjMifQ.signature', // legacy HMAC
+      '12345',
+    ];
 
-    for (const role of unauthorizedRoles) {
-      const token = await createSessionToken({
-        userId: `usr-${role.toLowerCase()}`,
-        telegramId: '123456789',
-        role: role as any,
-        name: `Test ${role}`,
-        createdAt: Date.now(),
-      });
-
+    for (const token of invalidTokens) {
       const req = new NextRequest('http://localhost:3002/admin', {
         headers: {
           cookie: `alsaada_session=${token}`,
@@ -63,8 +49,10 @@ describe('Middleware Session Guard & Bot Redirect Gate', () => {
       const res = await middleware(req);
       expect(res.status).toBe(302);
       expect(res.headers.get('location')).toBe(expectedBotRedirect);
+      expect(res.cookies.get('alsaada_session')?.maxAge).toBe(0);
     }
   });
+
 
   it('attaches traceId header to all requests', async () => {
     const req = new NextRequest('http://localhost:3002/admin');

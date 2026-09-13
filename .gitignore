@@ -7,6 +7,12 @@ dist/
 build/
 .turbo/
 out/
+.next/
+.next-dev/
+**/.next/
+**/.next-dev/
+*.tsbuildinfo
+**/*.tsbuildinfo
 packages/database/src/generated/
 
 # Environment and Secret files

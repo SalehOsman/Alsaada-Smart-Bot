@@ -2,17 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
 import { extractTraceId, createTraceHeaders, isValidTraceId } from '@alsaada/telemetry';
 import { middleware } from '../src/middleware';
-import { createSessionToken, type SessionPayload } from '../src/lib/session';
 
 describe('Admin Dashboard Middleware & Trace ID Propagation', () => {
-  const samplePayload: SessionPayload = {
-    userId: 'usr-admin-trace-01',
-    telegramId: '987654321',
-    role: 'SUPER_ADMIN',
-    name: 'المهندس صالح عثمان',
-    isRealSuperAdmin: true,
-    createdAt: Date.now(),
-  };
+  const validOpaqueToken = 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90';
 
   describe('extractTraceId & Header Creation', () => {
     it('extracts traceId from query param (?traceId=...)', () => {
@@ -87,11 +79,10 @@ describe('Admin Dashboard Middleware & Trace ID Propagation', () => {
     });
 
     it('injects trace headers into response and downstream request for authenticated requests', async () => {
-      const token = await createSessionToken(samplePayload);
       const customTraceId = 'b2c3d4e5-f6a7-4890-8bcd-ef1234567890';
       const req = new NextRequest(`http://localhost:3002/admin?traceId=${customTraceId}`, {
         headers: {
-          cookie: `alsaada_session=${token}`,
+          cookie: `alsaada_session=${validOpaqueToken}`,
         },
       });
 
@@ -114,11 +105,10 @@ describe('Admin Dashboard Middleware & Trace ID Propagation', () => {
     });
 
     it('preserves existing traceId from incoming x-trace-id header in authenticated flow', async () => {
-      const token = await createSessionToken(samplePayload);
       const customTraceId = 'c3d4e5f6-a7b8-4901-9cde-f12345678901';
       const req = new NextRequest('http://localhost:3002/admin', {
         headers: {
-          cookie: `alsaada_session=${token}`,
+          cookie: `alsaada_session=${validOpaqueToken}`,
           'x-trace-id': customTraceId,
         },
       });

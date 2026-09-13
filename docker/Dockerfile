@@ -7,6 +7,13 @@
 # -------------------------------------------------------------
 FROM node:22-alpine AS builder
 
+ARG APP_VERSION=2.0.0-alpha.1
+ARG GIT_COMMIT_SHA=unknown
+ARG BUILD_TIME=unknown
+ENV APP_VERSION=$APP_VERSION
+ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
+ENV BUILD_TIME=$BUILD_TIME
+
 WORKDIR /app
 
 # Install pnpm & necessary build tools
@@ -75,6 +82,13 @@ RUN pnpm --filter @alsaada/bot-server build
 # Stage 2: Production Runner
 # -------------------------------------------------------------
 FROM node:22-alpine AS runner
+
+ARG APP_VERSION=2.0.0-alpha.1
+ARG GIT_COMMIT_SHA=unknown
+ARG BUILD_TIME=unknown
+ENV APP_VERSION=$APP_VERSION
+ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
+ENV BUILD_TIME=$BUILD_TIME
 
 WORKDIR /app
 

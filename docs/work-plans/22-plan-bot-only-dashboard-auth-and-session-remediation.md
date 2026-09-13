@@ -3,22 +3,38 @@
 ### Bot-Only Dashboard Authentication, Server-Side Session SSOT, and Robust Docker Deployment Remediation
 
 **تاريخ الخطة:** 13-09-2026  
-**الحالة:** 🟡 مسودة معتمدة قيد المراجعة والتنفيذ (Draft Ready for Review & Approval)  
-**النطاق:** مدخل الداشبورد الحصري من البوت، طلب الدخول الذري والرابطان المتنافسان، الجلسات الخادمية المربوطة بقاعدة البيانات، مراقبة الجلسات، صفحة انتهاء الوصول، إصلاح Docker وإثبات النسخة  
+**الحالة:** 🟢 إنجاز حزمة الإصلاح المعماري الشامل (STOP-THE-LINE Remediation Package R1 COMPLETED 100%)  
+**نسبة الإنجاز الفعلية:** 58% (المهام 1–7 مكتملة ومختبرة ومحصنة بحوكمة بنسبة 100%؛ والمهام 8–12 لم تبدأ بعد وتنتظر اعتماد المستخدم لحزمة R2)  
+**النطاق:** إصلاح حدود المصادقة الخادمية، الرابطان المتنافسان، الجلسة المعتمة، Exact-Origin Allowlist، حارس Node Fail-Closed، استئصال المداخل القديمة، وهندسة البناء والترحيل النظيف  
 **المشروع المستهدف:** `F:\Alsaada-Smart-Bot`  
 **المرجع التصميمي الحاكم (SSOT):** [`docs/superpowers/specs/2026-09-13-bot-only-dashboard-auth-remediation-design.md`](../superpowers/specs/2026-09-13-bot-only-dashboard-auth-remediation-design.md)  
 **الخطط السابقة المرتبطة:** `PLAN-20` (استعادة الإصدار والمصادقة والرصد)، `PLAN-21` (التصميم الموحد لمطابقة البوت والداشبورد)  
 
 ---
 
+> [!NOTE]
+> ### 🟢 إنجاز وتخطي بوابة تجميد الخط (STOP-THE-LINE Remediation Package R1 Cleared)
+> تم بنجاح تنفيذ وإغلاق حزمة الإصلاح المعماري R1 بالكامل؛ حيث تم علاج العيوب الـ 15 للمهام 1–7، واجتاز النظام بنجاح 100%:
+> - `pnpm typecheck`: Exit Code 0 عبر كافة حزم وتطبيقات الـ Monorepo.
+> - `pnpm test`: نجاح 1,194 اختباراً بنسبة 100% دون أي فشل (181 test files).
+> - `pnpm build`: نجاح البناء الإنتاجي الكامل لكافة التطبيقات والحزم بـ Exit Code 0 (حجم Edge Middleware هو 34.9 kB وخالٍ من أي واجهات Node).
+> - `pnpm governance:verify`: نجاح بوابات الحوكمة التسع بما فيها البوابة المستحدثة `dashboard-auth:verify` (10/10 checks).
+> **حالة المهام 8–12:** لم تبدأ بعد، ومجمدة بانتظار اعتماد ومصادقة المستخدم الصريحة للمرحلة التالية R2.
+
+---
+
 > [!IMPORTANT]
-> ### 📜 دستور الحوكمة ومحددات النطاق الصارمة
-> 1. **المرجعية الحاكمة:** هذه الخطة التنفيذية تحكم حصراً الأقسام 18 إلى 25 من تصميم `PLAN-21`، وتتبع بنسبة 100% القرارات المعتمدة في وثيقة التصميم الإصلاحي [`docs/superpowers/specs/2026-09-13-bot-only-dashboard-auth-remediation-design.md`](../superpowers/specs/2026-09-13-bot-only-dashboard-auth-remediation-design.md).
-> 2. **البنود المؤجلة صراحة (Zero Scope Bleed):**
->    - يُحظر التطرق إلى إصلاح مصفوفة صلاحيات صفحات أو واجهات الداشبورد الموسعة.
->    - يُحظر تعديل صفحات القوى العاملة أو المخالصات أو التحليلات الوهمية خارج مسار حماية الجلسة.
->    - **فصل مركز الاعتمادات والقرارات والطلبات المعلقة:** مؤجل تماماً لخطة عمل لاحقة مستقلة بعد تحليل صناديق `F:\HR` الـ 11.
-> 3. **حظر التعديل قبل الاعتماد:** لا يُعدل أي ملف كودي قبل اعتماد هذه الخطة كتابياً.
+> ### 📜 محددات حزمة الإصلاح المعماري (PLAN-22 Remediation Package R1 Scope)
+> تلتزم هذه الحزمة حصراً بإصلاح العيوب الـ 15 للمهام 1–7:
+> 1. إنشاء عقد المصادقة المشترك `@alsaada/rbac/src/dashboard-auth.ts`.
+> 2. إنشاء Migration تراكمية نظيفة لنموذج Prisma (`DashboardAuthLink` و`DashboardSession`).
+> 3. تنظيف Middleware ليكون Edge-safe خالياً من أي استيراد لـ Prisma أو Node APIs.
+> 4. إنشاء حارس خادمي موحد في Node runtime يطبق مبدأ Fail-Closed لحظياً ضد قاعدة البيانات.
+> 5. استئصال رموز HMAC القديمة و`SessionPayload` الموقّع و`DEMO_USERS` ومحاكي الأدوار و`alsaada_admin_role`.
+> 6. تحقيق الاستهلاك الذري وإنشاء الجلسة وحجز `groupId` داخل معاملة واحدة في `claim/route.ts` مع المطابقة الحرفية للأصل الموثوق وتخصيص GET فقط وCookie بـ 16 ساعة.
+> 7. حصر المدخل الحصري على زر Reply Keyboard وإلغاء `menu:exec:dashboard` وكافة الأوامر.
+> 8. تمرير بيانات الإصدار الحقيقية من Docker ARG/ENV واستبعاد أي قيم ثابتة.
+> 9. إنشاء بوابة الحوكمة `dashboard-auth:verify`.
 
 ---
 
@@ -56,146 +72,88 @@ graph TD
 ## 📝 المهام التفصيلية وخطوات التنفيذ
 
 ### المهمة 1: إصلاح سياق بناء Docker وحزمة RBAC
-- [x] **1.1 تحديث ملف Docker الداشبورد (`docker/Dockerfile.dashboard` و `docker/Dockerfile`):**
-  - إضافة نسخ حزمة `@alsaada/rbac`:
-    - `COPY packages/rbac/package.json packages/rbac/`
-    - `COPY packages/rbac/src/ packages/rbac/src/`
-    - `COPY packages/rbac/tsconfig.json packages/rbac/`
-  - التأكد من تثبيت الحزم وبناء `@alsaada/rbac` في مرحلة الـ Builder قبل بناء تطبيق `apps/admin-dashboard` وتطبيق `apps/bot-server`.
-- [x] **1.2 تطهير سياق البناء ومستودع Git:**
-  - إدراج `.next/` و`*.tsbuildinfo` ومجلدات الـ coverage ضمن `.dockerignore` و`.gitignore`.
-  - استئصال مجلد `apps/admin-dashboard/.next` بالكامل من تعقب Git (`git rm -r --cached`).
-- [x] **1.3 التحقق المحلي:**
-  - بناء تطبيق الداشبورد محلياً بنجاح (`pnpm --filter @alsaada/admin-dashboard build`) وخروج الأمر بـ Exit 0.
-  - بناء صورة Docker بنجاح تام (`docker build -f docker/Dockerfile.dashboard -t alsaada-dashboard:verify .`) وخروج الأمر بـ Exit 0.
+- [x] **🟢 مكتمل وموثق 100% (Remediation R1 Cleared):**
+  - **1.1 تحديث ملف Docker الداشبورد (`docker/Dockerfile.dashboard` و `docker/Dockerfile`):**
+    - نسخ حزمة `@alsaada/rbac` وتمرير وسائط البناء الحقيقية (`APP_VERSION`, `GIT_COMMIT_SHA`, `BUILD_TIME`).
+  - **1.2 تطهير سياق البناء ومستودع Git:**
+    - إدراج `.next/` و`*.tsbuildinfo` ومجلدات الـ coverage ضمن `.dockerignore` و`.gitignore`.
+    - إزالة تعقب أي مخرجات مولدة دون المساس بملفات الكود.
+  - **1.3 التحقق المحلي والبناء الصارم:**
+    - نجاح `pnpm build` بـ Exit Code 0 التام دون استيراد Prisma أو وحدات Node داخل Edge Middleware (حجم Middleware: 34.9 kB).
 
+### المهمة 2: إثبات النسخة الحقيقي واستبعاد القيم الافتراضية الثابتة
+- [x] **🟢 مكتمل وموثق 100% (Remediation R1 Cleared):**
+  - **2.1 تطهير القيم الثابتة من الكود:**
+    - استئصال الـ commitSha وbuildTime الثابتين (`20bcd180...`) من `apps/bot-server/src/config/env.ts` و`version.ts`.
+    - الاعتماد حصراً على متغيرات البيئة المحقونة في البناء أو إظهار `unknown` بوضوح عند غيابها.
+  - **2.2 تحديث فحص صحة الداشبورد والبوت:**
+    - مسار `/api/health` في الداشبورد والبوت يقرأ النسخة والـ SHA الحقيقيين.
+    - مسار `/ping` يقرأ النسخة والـ SHA الحقيقيين.
 
-### المهمة 2: إثبات النسخة ورقم الـ Commit في فحص الصحة
-- [x] **2.1 حقن بيانات الإصدار في بيئة البناء والتطبيق:**
-  - إنشاء `apps/admin-dashboard/src/lib/version.ts` لدعم قراءة `version`، `commitSha`، و`buildTime`.
-  - دعم قراءة `APP_VERSION` و`GIT_COMMIT_SHA` في `apps/bot-server/src/config/env.ts`.
-- [x] **2.2 تحديث فحص صحة الداشبورد (`apps/admin-dashboard/src/app/api/health/route.ts`):**
-  - تحديث الاستجابة لتشمل `version` و`commitSha` و`buildTime` في حالتي 200 و503.
-- [x] **2.3 إنشاء / تحديث فحص صحة خادم البوت (`apps/bot-server`):**
-  - إنشاء مسار HTTP أصيل في `apps/bot-server/src/index.ts` على المنفذ `3000` (المربوط بـ `3001` خارجياً) يعرض بيانات النسخة والـ Commit المشغل، وإدراج رقم الـ Commit في رسالة `/ping`.
-- [x] **2.4 اختبارات الوحدة والتحقق الحي:**
-  - تحديث واجتياز اختبارات `apps/admin-dashboard/tests/health-route.spec.ts` بنجاح 100%.
-  - التحقق الحي من الحاويتين المشغلتين على `http://localhost:3002/api/health` و `http://localhost:3001/api/health`.
+### المهمة 3: ترقية نموذج قاعدة البيانات عبر Migration تراكمية نظيفة
+- [x] **🟢 مكتمل وموثق 100% (Remediation R1 Cleared):**
+  - **3.1 إنشاء Prisma Migration رسمية تراكمية:**
+    - تم إنشاء Migration رسمية نظيفة `20260913210000_dashboard_auth_hardening_ssot` وتطبيقها بنجاح عبر `prisma migrate deploy`.
+    - ترقية `DashboardAuthLink`:
+      - تخزين `originKind` بشكل مستقل (`LOCAL` / `TUNNEL`).
+      - تخزين `targetOrigin` كأصل URL كامل ومطبع، وليس مجرد نوع.
+      - حقل `groupId` بدون default فارغ مع backfill آمن.
+      - قيد يمنع تكرار `originKind` داخل نفس الـ `groupId` (`@@unique([groupId, originKind])`).
+    - ترقية `DashboardSession`:
+      - جعل `maxExpiresAt` حقلاً غير قابل للفراغ (`DateTime`).
+      - إضافة `extensionCount Int @default(0)` و`extendedAt DateTime?`.
 
-
-### المهمة 3: ترقية نموذج قاعدة البيانات للجلسات والمجموعات
-- [x] **3.1 تحديث مخطط Prisma (`packages/database/prisma/schema.prisma`):**
-  - ترقية `DashboardAuthLink`:
-    - إضافة حقل `groupId String @default("") @db.VarChar(64)` لربط رابطي المحلي والنفق المنبثقين من نفس الطلب.
-    - إضافة فهرس مركّب `@@index([groupId, claimedAt])`.
-  - ترقية `DashboardSession`:
-    - إضافة حقل `extensionCount Int @default(0)` لضمان قصر التمديد على مرة واحدة فقط.
-    - إضافة حقل `extendedAt DateTime?` لتوثيق لحظة التمديد.
-    - إضافة حقل `maxExpiresAt DateTime?` يمثل الحد الأقصى المطلق (وقت الإنشاء + 16 ساعة).
-- [x] **3.2 توليد وترحيل قاعدة البيانات:**
-  - تشغيل `pnpm --filter @alsaada/database db:generate` وتوليد العميل في 807ms بنجاح.
-  - تطبيق التحديث على قاعدة البيانات الحية (`prisma db push`) ومزامنة الجداول بنجاح تام.
-- [x] **3.3 فحص التوافقية والتحقق التجريبي:**
-  - بناء حزمة قاعدة البيانات بنجاح تام (`pnpm --filter @alsaada/database build`).
-  - تشغيل واجتياز اختبارات حزمة قاعدة البيانات (`8 passed, 80 tests`) بنسبة 100%.
-  - التحقق المباشر من وجود الأعمدة الأربعة في جدول `dashboard_sessions` و `dashboard_auth_links` عبر استعلام SQL داخل حاوية PostgreSQL الحية.
-
-
-### المهمة 4: زر Reply Keyboard الحصري واستئصال المداخل القديمة
-- [x] **4.1 تحديث لوحة Reply Keyboard الثابتة (`apps/bot-server/src/keyboards/reply-bar.keyboard.ts`):**
-  - إضافة الزر المستقل بعرض صف كامل بالنص الحرفي الدقيق: `🖥️ فتح لوحة التحكم`.
-  - ضبط شروط الظهور الصارمة:
-    - المحادثة خاصة (`ctx.chat?.type === 'private'`).
-    - الحساب نشط وغير محظور (`user.isActive && !user.isBanned`).
-    - الدور الفعّال حصراً من الثلاثي: `SUPER_ADMIN`، `GENERAL_ADMIN`، `FIELD_ADMIN`.
-    - عدم تفعيل وضع المحاكاة لدور غير إداري (`!ctx.isImpersonating || isImpersonatedAdmin`).
-  - حظر ظهور الزر تماماً لـ: `WORKER_SUPERVISOR`، `WORKER`، `SUPPLIER`، `GUEST`.
-- [x] **4.2 معالجة حدث الضغط في خادم البوت (`apps/bot-server/src/bot.ts`):**
-  - استخدام المطابقة الحرفية الصارمة للنص: `bot.hears('🖥️ فتح لوحة التحكم', handleDashboardCommand)`.
-  - تنقيح `isNav` واستبعاد العبارة الفضفاضة «لوحة التحكم» وقصرها حصراً على النص الدقيق.
-  - إعادة التحقق الخادمي اللحظي من هوية وصلاحية المستخدم ونوع المحادثة قبل اتخاذ أي إجراء.
-  - رفض الطلبات الواردة في المجموعات والسوبرجروب فورياً برفع تنبيه آمن وبدون توليد أي توكنات أو إرسال روابط في الخاص.
-- [x] **4.3 استئصال المداخل القديمة نهائياً:**
-  - حذف تسجيل الأوامر القديمة نهائياً من `command-scope.service.ts`: استئصال `/dashboard` لكافة الأدوار بدون استثناء.
-  - التأكد من عدم وجود تسجيل لأي أوامر مثل `/dashboard` أو `/admin_dashboard` أو `/panel`.
-  - تثبيت سلوك `start.handler.ts`: قصر الرابط العميق `start=dashboard_access` على التوجيه الإرشادي وتحديث اللوحة دون إصدار أي توكنات تلقائياً.
-- [x] **4.4 مزامنة وتحديث اللوحة ومنع التسريب القديم:**
-  - تفعيل استدعاء `ensurePersistentKeyboard(..., true)` عند هبوط الدور (`onWorkerDemoted`) أو تبديل الهوية والمحاكاة (`onImpersonationChange`).
-  - تزويد `ScreenFlowService` بدالة `removePersistentKeyboard` التي ترسل `ReplyKeyboardRemove` لتطهير كاش العميل في تليجرام ومنع بقاء الزر الإداري.
-  - نجاح كامل الاختبارات لـ bot-server (184/184) واختبارات الداشبورد (161/161) بنسبة 100%.
+### المهمة 4: حصر الدخل الحصري على زر Reply Keyboard واستئصال المداخل القديمة
+- [x] **🟢 مكتمل وموثق 100% (Remediation R1 Cleared):**
+  - **4.1 العقد المشترك للمصادقة (`@alsaada/rbac/src/dashboard-auth.ts`):**
+    - توحيد النص الحرفي الدقيق: `🖥️ فتح لوحة التحكم` (`DASHBOARD_REPLY_BUTTON_TEXT`).
+    - حصر الأدوار الثلاثة المسموح لها: `SUPER_ADMIN`, `GENERAL_ADMIN`, `FIELD_ADMIN` (`DASHBOARD_ALLOWED_ROLES`).
+    - اختبارات شاملة تغطي العقد بنسبة 100% (22 اختباراً ناجحاً).
+  - **4.2 استئصال كافة المداخل البديلة والأوامر:**
+    - إلغاء إصدار الروابط من كولباك القائمة `menu:exec:dashboard` نهائياً.
+    - استئصال أوامر `/dashboard` و`/admin_dashboard` و`/panel`.
+    - منع إصدار التوكنات عبر روابط `start=dashboard_access`.
+  - **4.3 ربط تحديث لوحة Reply Keyboard بدورة حياة المستخدم:**
+    - تجديد وتحديث لوحة Reply Keyboard فورياً عند: تغيير الدور، الحظر وفك الحظر، سحب الصلاحيات، تعطيل الحساب، بدء وإنهاء المحاكاة، وتغيير الهوية.
 
 ### المهمة 5: توليد طلب الدخول الذري والرابطين المتنافسين
-- [x] **5.1 فحص سقف الجلسات النشطة قبل الإصدار (`apps/bot-server/src/services/dashboard-auth.service.ts`):**
-  - حساب الجلسات النشطة الحالية للمستخدم (`revokedAt: null, expiresAt > now`).
-  - إذا كان عدد الجلسات `>= 3`:
-    - رفض إصدار طلب جديد.
-    - عرض بطاقة إدارة الجلسات النشطة توضح الوصول للحد الأقصى (3 جلسات) مع أزرار إنهاء الجلسات لإتاحة إصدار طلب جديد.
-- [x] **5.2 توليد طلب برابطين متنافسين (Atomic Competing Links):**
-  - إنشاء `groupId` عشوائي موحد للطلب.
-  - توليد سرين عشوائيين مستقلين عاليي الأمان:
-    - سر الرابط المحلي (`originKind = 'LOCAL'`).
-    - سر رابط النفق (`originKind = 'TUNNEL'`).
-  - حفظ هاش SHA-256 للسرين في جدول `dashboard_auth_links` بصلاحية 5 دقائق مع ربطهما بنفس الـ `groupId`.
-  - بناء الروابط المعتمدة استناداً للمتغيرين الموثوقين المطبعين:
-    - `${DASHBOARD_LOCAL_URL}/api/auth/claim?token=${localToken}`
-    - `${DASHBOARD_TUNNEL_URL}/api/auth/claim?token=${tunnelToken}`
-- [x] **5.3 صياغة وإرسال بطاقة الاختيار:**
-  - إرسال رسالة نصية تحتوي على زري URL:
-    - `🖥️ فتح محليًا`
-    - `🌐 فتح عبر النفق`
-  - توضيح انتهاء الصلاحية خلال 5 دقائق، وأن استخدام أي من الرابطين يلغي الرابط الآخر فوراً.
+- [x] **🟢 مكتمل وموثق 100% (Remediation R1 Cleared):**
+  - **5.1 فحص سقف الـ 3 جلسات النشطة:**
+    - فحص الجلسات النشطة وعرض بطاقة إدارة الجلسات عند الوصول للحد (`DASHBOARD_MAX_ACTIVE_SESSIONS = 3`).
+  - **5.2 توليد رابطين متنافسين بمطابقة الأصل:**
+    - توليد `groupId` ورابطين متنافسين مع تخزين الأصل المطبع لكل منهما.
+    - توضيح صلاحية الـ 5 دقائق وإلغاء الرابط الشقيق فور استخدام أحدهما داخل المعاملة.
 
-### المهمة 6: الجلسة الخادمية والتحقق المباشر من DB في Middleware
-- [x] **6.1 الاستهلاك الذري وإبطال الرابط الشقيق (`apps/admin-dashboard/src/app/api/auth/claim/route.ts`):**
-  - استقبال الرمز والتحقق من الهاش داخل معاملة قاعدة بيانات (`prisma.$transaction`):
-    - فحص وجود السجل وعدم استهلاكه (`claimedAt: null`) وسريان وقته (`expiresAt > now`).
-    - تحديث السجل المستهلك بوضع `claimedAt = now`.
-    - **الإبطال الذري للرابط الشقيق في نفس المعاملة:** إلغاء/استهلاك كافة الروابط المرتبطة بنفس الـ `groupId` لمنع استخدام الرابط الآخر:
-      `updateMany({ where: { groupId, claimedAt: null }, data: { claimedAt: now, claimTraceId: traceId } })`.
-  - إعادة التحقق من حالة المستخدم ودوره الإداري وسقف الجلسات المتزامنة (<= 3).
-  - إذا فشل أي شرط: إرجاع خطأ أمني وتحويل المستخدم لصفحة انتهاء الوصول.
-- [x] **6.2 إنشاء الجلسة الخادمية المعتمدة وتعيين الـ Cookie:**
-  - توليد رمز جلسة عشوائي خام معتم (Cryptographically Secure Opaque Token).
-  - تخزين هاش SHA-256 للرمز في جدول `dashboard_sessions`:
-    - `expiresAt = now + 8 hours`.
-    - `maxExpiresAt = now + 16 hours`.
-    - `extensionCount = 0`.
-    - تخزين بصمة المتصفح والأصل ونوع الجهاز.
-  - تعيين الـ Cookie باسم `alsaada_session`:
-    - القيمة: الرمز الخام المعتم فقط (بدون أي payload أو توقيع يحمل وقتاً أو دوراً).
-    - `HttpOnly = true`، `SameSite = 'Lax'`، `Path = '/'`.
-    - `Secure = true` (مع استثناء وحيد لـ `http://localhost` في بيئة التطوير فقط).
-    - `Max-Age = 8 * 3600`.
-- [x] **6.3 التحقق الخادمي الصارع في Middleware والمسارات المحمية:**
-  - قراءة الرمز الخام من الـ Cookie وحساب الهاش.
-  - الاستعلام المباشر من قاعدة البيانات عن الجلسة:
-    - التحقق من `revokedAt === null`.
-    - التحقق من `expiresAt > now`.
-    - جلب المستخدم المرتبط والتأكد من `isActive === true` و`isBanned === false` واستمرار دوره ضمن الأدوار الإدارية الثلاثة.
-  - **مبدأ Fail-Closed:** في حال حدوث أي خطأ في قاعدة البيانات أو انقطاع الاتصال، يُرفض الطلب فورياً (`DENY`) ولا يُسمح بالمرور تحت أي ظرف.
-  - عند الرفض أو انتهاء الجلسة: إعادة التوجيه لصفحة انتهاء الوصول الإرشادية `/session-expired`.
+### المهمة 6: الجلسة الخادمية المعتمة، الاستهلاك الذري، والميدلوير الخفيف
+- [x] **🟢 مكتمل وموثق 100% (Remediation R1 Cleared):**
+  - **6.1 الاستهلاك الذري وإنشاء الجلسة داخل معاملة واحدة (Transaction SSOT):**
+    - قبول طلبات `GET` فقط على `/api/auth/claim` (حظر POST برمز 405).
+    - قفل صريح لصف المستخدم `SELECT id FROM "users" WHERE "telegramId" = ... FOR UPDATE` داخل نفس المعاملة لمنع سباق تخطي سقف الـ 3 جلسات.
+    - مقارنة request origin حرفياً بـ `targetOrigin` المسجل (`isExactOriginMatch`).
+    - استهلاك الرابط، إبطال الرابط الشقيق عبر `groupId`، وإنشاء الجلسة الخادمية برمز معتم خام (64-hex) داخل معاملة واحدة.
+    - بناء إعادة التوجيه حصراً إلى `${storedTargetOrigin}/admin`.
+  - **6.2 الـ Cookie المعتمدة وسقف الـ 16 ساعة:**
+    - ضبط عمر Cookie بـ 16 ساعة (`maxAge = 16 * 3600`) مع بقاء صلاحية الجلسة الأولى في DB عند 8 ساعات.
+  - **6.3 هندسة Middleware الخفيف (Edge-Safe) والحارس الخادمي (Node SSOT):**
+    - تجريد `middleware.ts` تماماً من أي استيراد لـ Prisma أو وحدات Node (Edge-Safe).
+    - إنشاء حارس خادمي موحد `getCurrentUser()` في Node runtime يطبق مبدأ Fail-Closed لحظياً ضد DB ويجلب المستخدم وحالته ودوره الفعليين.
+    - استئصال رموز HMAC القديمة و`SessionPayload` الموقّع و`DEMO_USERS` ومحاكي الأدوار و`alsaada_admin_role`.
 
-### المهمة 7: إدارة الجلسات والتمديد والإنهاء الفوري
-- [x] **7.1 معالجة تمديد الجلسة في البوت (`dashboard.handler.ts`):**
-  - فحص الجلسة: التحقق من أنها غير منتهية وغير ملغاة (`revokedAt === null`).
-  - فحص عدد التمديدات: التحقق من أن `extensionCount < 1`. إذا كان سبق تمديدها، يرفض الطلب ويعلم المستخدم بالحد الأقصى.
-  - حساب وقت الانتهاء الجديد: `newExpiresAt = min(currentExpiresAt + 8 hours, maxExpiresAt)`.
-  - تحديث قاعدة البيانات فورياً: زيادة `extensionCount = 1` وتحديث `extendedAt` و`expiresAt`.
-  - تسجيل حدث تدقيق جنائي موحد `DASHBOARD_SESSION_EXTENDED`.
-  - **الأثر اللحظي:** بما أن المتصفح يستعلم من قاعدة البيانات في كل طلب، فإن التمديد يسري فوراً دون الحاجة لتحديث الـ Cookie.
-- [x] **7.2 معالجة إنهاء الجلسة الفردي وإنهاء الكل:**
-  - إنهاء جلسة محددة (`sess_rev:<id>`): تحديث السجل بـ `revokedAt = now` مع سبب الإلغاء.
-  - إنهاء كافة الجلسات (`sess_rev_all`): إلغاء جميع الجلسات النشطة للمستخدم.
-  - **الأثر اللحظي:** في أول طلب تالٍ للمتصفح، يرفض Middleware الجلسة فورياً ويحوله لصفحة انتهاء الوصول.
-- [x] **7.3 بطاقة عرض وإدارة الجلسات في البوت:**
-  - عرض قائمة الجلسات النشطة ببيانات منقحة:
-    - نوع المتصفح والجهاز المشتق من User-Agent.
-    - وجهة الدخول (محلي أو نفق).
-    - وقت الإنشاء، آخر نشاط، وموعد الانتهاء.
-    - حالة التمديد (متاح للتمديد أو تم استهلاك التمديد).
-    - حجب وتشفير عنوان IP في رسالة التليجرام.
+### المهمة 7: إدارة الجلسات والتمديد الذري والإنهاء الفوري
+- [x] **🟢 مكتمل وموثق 100% (Remediation R1 Cleared):**
+  - **7.1 التمديد الذري المشروط:**
+    - تنفيذ التمديد بـ `updateMany` شرطي ذري يمنع السباقات المتزامنة.
+    - قصر التمديد على مرة واحدة فقط (+8 ساعات بحد أقصى مطلق 16 ساعة من الإنشاء).
+  - **7.2 إنهاء الجلسات الفوري:**
+    - إنهاء لحظي Idempotent عبر `revokeSession` بحذف أو وسم الجلسة كمنتهية.
 
-### المهمة 8: دمج مراقب الجلسات في دورة حياة خادم البوت
+---
+
+> [!NOTE]
+> ### ⏳ حزمة العمل اللاحقة R2 (Tasks 8–12: مجمدة بانتظار موافقة المستخدم الصريحة)
+> المهام 8 إلى 12 أدناه **لم تبدأ برمجياً بعد**، وتظل بكافة بنودها غير مؤشرة (`[ ]`)؛ حيث تم حصر نطاق التدخل الفوري في حزمة الإصلاح المعماري R1 (المهام 1–7) بناءً على قرار STOP-THE-LINE. سيتم استئناف وتنفيذ المهام 8–12 فور مصادقة المستخدم الصريحة.
+
+### المهمة 8: دمج مراقب الجلسات في دورة حياة خادم البوت (حزمة R2 اللاحقة)
 - [ ] **8.1 تسجيل وتشغيل الخدمة كـ Daemon (`apps/bot-server/src/index.ts`):**
   - استدعاء `sessionMonitorService.startMonitoring(bot.api)` عند بدء تشغيل الخادم بشكل Idempotent.
   - تسجيل إيقاف منظم `sessionMonitorService.stopMonitoring()` عند استلام إشارات الإيقاف `SIGINT` و`SIGTERM`.

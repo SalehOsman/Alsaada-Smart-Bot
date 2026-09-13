@@ -3,9 +3,8 @@
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Shield, User, Radio, Menu, LogOut, Search } from 'lucide-react';
+import { User, Radio, Menu, LogOut, Search } from 'lucide-react';
 import type { DashboardUser } from '@/lib/rbac';
-import { DEMO_USERS } from '@/lib/users';
 import { useSidebar } from './sidebar-context';
 
 interface HeaderProps {
@@ -17,19 +16,10 @@ export function Header({ user, onOpenCommandPalette }: HeaderProps) {
   const router = useRouter();
   const { toggle } = useSidebar();
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedKey = e.target.value;
-    document.cookie = `alsaada_admin_role=${selectedKey}; path=/; max-age=86400`;
-    router.refresh();
-  };
-
   const handleLogout = () => {
-    document.cookie = 'alsaada_admin_role=; path=/; max-age=0';
     document.cookie = 'alsaada_session=; path=/; max-age=0';
     window.location.href = '/api/auth/logout';
   };
-
-  const isSuperAdmin = user.role === 'SUPER_ADMIN' || user.isRealSuperAdmin;
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -77,31 +67,6 @@ export function Header({ user, onOpenCommandPalette }: HeaderProps) {
           </kbd>
         </button>
 
-        {/* Role Simulator (Super Admin Only) */}
-        {isSuperAdmin && (
-          <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-            <Shield className="w-4 h-4 text-orange-600 shrink-0" />
-            <span className="hidden sm:inline text-xs font-medium text-slate-700">
-              المحاكاة واختبار الصلاحيات:
-            </span>
-            <select
-              defaultValue={
-                Object.entries(DEMO_USERS).find(([_, u]) => u.role === user.role)?.[0] || 'superadmin'
-              }
-              onChange={handleRoleChange}
-              className="text-xs bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-orange-500 cursor-pointer"
-            >
-              <option value="superadmin">👑 المدير العام (Super Admin)</option>
-              <option value="generaladmin">🏢 جينرال أدمن (General Admin)</option>
-              <option value="executive">💼 الإدارة العليا (Executive)</option>
-              <option value="projectmanager">🏗️ مدير المشروع (Project Manager)</option>
-              <option value="siteengineer">👷 مهندس الموقع (Site Engineer)</option>
-              <option value="accountant">📊 المحاسب المالي (Accountant)</option>
-              <option value="fieldadmin">🛡️ مشرف الموقع (Field Admin)</option>
-              <option value="worker">👤 عامل (Worker)</option>
-            </select>
-          </div>
-        )}
 
         <div className="hidden xl:flex items-center gap-2 text-xs text-slate-500">
           <Radio className="w-3.5 h-3.5 text-orange-500 animate-pulse" />

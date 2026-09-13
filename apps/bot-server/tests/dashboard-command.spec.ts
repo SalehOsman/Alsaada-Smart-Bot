@@ -1,11 +1,14 @@
+import crypto from 'node:crypto';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  generateMagicToken,
-  verifyMagicToken,
   dashboardAuthService,
   AUTHORIZED_DASHBOARD_ROLES,
-  type MagicTokenPayload,
 } from '../src/services/dashboard-auth.service.js';
+import {
+  isValidOpaqueTokenFormat,
+  normalizeOrigin,
+  isExactOriginMatch,
+} from '@alsaada/rbac';
 import {
   handleDashboardCommand,
   handleSessionCallbacks,
@@ -63,92 +66,24 @@ vi.mock('../src/redis.js', () => ({
 }));
 
 describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token Engine', () => {
-  const testSecret = '123456789:ABCdefGHIjklMNOpqrsTUVwxyz12345678';
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('1. Cryptographic HMAC-SHA256 Magic Token Engine', () => {
-    const validPayload: MagicTokenPayload = {
-      userId: 'usr-admin-uuid-001',
-      telegramId: '987654321',
-      role: 'SUPER_ADMIN',
-      name: 'مهندس أحمد السعادة',
-      assignedSiteId: 'site-alamein-01',
-      assignedSiteName: 'مشروع العلمين الجديدة',
-      jti: 'e2b3c4d5-0000-4000-8000-112233445566',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 300,
-    };
-
-    it('should generate a two-part base64url HMAC-SHA256 signed token', () => {
-      const token = generateMagicToken(validPayload, testSecret);
-      expect(typeof token).toBe('string');
-      const parts = token.split('.');
-      expect(parts).toHaveLength(2);
-      expect(parts[0]!.length).toBeGreaterThan(20);
-      expect(parts[1]!.length).toBeGreaterThan(20);
+  describe('1. Cryptographic Opaque Token & SSOT Security Standards', () => {
+    it('generates strict 64-hex opaque tokens conforming to security specifications', () => {
+      const token = crypto.randomBytes(32).toString('hex');
+      expect(token).toMatch(/^[0-9a-f]{64}$/i);
+      expect(isValidOpaqueTokenFormat(token)).toBe(true);
+      expect(isValidOpaqueTokenFormat('invalid-token')).toBe(false);
+      expect(isValidOpaqueTokenFormat('header.payload.signature')).toBe(false);
     });
 
-    it('should strictly verify an authentic token with the correct secret', () => {
-      const token = generateMagicToken(validPayload, testSecret);
-      const result = verifyMagicToken(token, testSecret);
-      expect(result.valid).toBe(true);
-      expect(result.payload?.userId).toBe(validPayload.userId);
-      expect(result.payload?.telegramId).toBe(validPayload.telegramId);
-      expect(result.payload?.role).toBe(validPayload.role);
-      expect(result.payload?.jti).toBe(validPayload.jti);
-      expect(result.payload?.exp).toBe(validPayload.exp);
-    });
-
-    it('should enforce strict 5-minute (300 seconds) lifespan', () => {
-      const now = Math.floor(Date.now() / 1000);
-      const payload: MagicTokenPayload = {
-        ...validPayload,
-        iat: now,
-        exp: now + 300,
-      };
-      expect(payload.exp - payload.iat).toBe(300);
-      const token = generateMagicToken(payload, testSecret);
-      const decoded = verifyMagicToken(token, testSecret);
-      expect(decoded.valid).toBe(true);
-      expect(decoded.payload!.exp - decoded.payload!.iat).toBe(300);
-    });
-
-    it('should reject tokens with signature mismatch (wrong secret or tampering)', () => {
-      const token = generateMagicToken(validPayload, testSecret);
-      const invalidVerification = verifyMagicToken(token, 'wrong-secret-token');
-      expect(invalidVerification.valid).toBe(false);
-      expect(invalidVerification.error).toBe('SIGNATURE_MISMATCH');
-
-      // Tampered payload
-      const parts = token.split('.');
-      const tamperedData = Buffer.from(
-        JSON.stringify({ ...validPayload, role: 'SUPER_ADMIN_HACKED' })
-      ).toString('base64url');
-      const tamperedToken = `${tamperedData}.${parts[1]}`;
-      const tamperedResult = verifyMagicToken(tamperedToken, testSecret);
-      expect(tamperedResult.valid).toBe(false);
-      expect(tamperedResult.error).toBe('SIGNATURE_MISMATCH');
-    });
-
-    it('should reject expired tokens with TOKEN_EXPIRED', () => {
-      const expiredPayload: MagicTokenPayload = {
-        ...validPayload,
-        iat: Math.floor(Date.now() / 1000) - 400,
-        exp: Math.floor(Date.now() / 1000) - 100, // expired 100s ago
-      };
-      const token = generateMagicToken(expiredPayload, testSecret);
-      const result = verifyMagicToken(token, testSecret);
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('TOKEN_EXPIRED');
-    });
-
-    it('should reject malformed token strings', () => {
-      expect(verifyMagicToken('not-a-token', testSecret).valid).toBe(false);
-      expect(verifyMagicToken('part1.part2.part3', testSecret).valid).toBe(false);
-      expect(verifyMagicToken('', testSecret).valid).toBe(false);
+    it('verifies exact origin normalization and matching', () => {
+      expect(normalizeOrigin('http://localhost:3002/')).toBe('http://localhost:3002');
+      expect(normalizeOrigin('http://localhost:3002')).toBe('http://localhost:3002');
+      expect(isExactOriginMatch('http://localhost:3002', 'http://localhost:3002')).toBe(true);
+      expect(isExactOriginMatch('http://localhost:3002', 'http://127.0.0.1:3002')).toBe(false);
     });
   });
 
@@ -442,7 +377,6 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       const fallbackButtons = fallbackOptions.reply_markup.inline_keyboard.flat();
       expect(fallbackButtons).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ callback_data: 'menu:exec:dashboard' }),
           expect.objectContaining({ callback_data: 'action:main_menu' }),
         ]),
       );
@@ -753,7 +687,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(editedText).toContain('جلسات لوحة التحكم النشطة لحسابك (1)');
       expect(editedText).toContain('Chrome on Windows');
       expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'sess_rev:sess-active-01')).toBe(true);
-      expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'menu:exec:dashboard')).toBe(true);
+      expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
     });
 
     it('revokes session, answers callback without alert, and updates list in-place', async () => {
@@ -805,7 +739,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
 
       const [editedText, editedOptions] = vi.mocked(mockCtx.editMessageText).mock.calls[0] as [string, any];
       expect(editedText).toContain('تم إنهاء كافة جلساتك النشطة في لوحة التحكم بنجاح');
-      expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'menu:exec:dashboard')).toBe(true);
+      expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
     });
 
     it('returns to dashboard card in-place via editMessageText when invoked from callback', async () => {
@@ -823,7 +757,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         from: { id: 12345678, first_name: 'حسام' },
         chat: { id: 9988, type: 'private' },
         callbackQuery: {
-          data: 'menu:exec:dashboard',
+          data: 'refresh_dashboard',
           message: { message_id: 5544 },
         },
         answerCallbackQuery: vi.fn().mockResolvedValue(true),

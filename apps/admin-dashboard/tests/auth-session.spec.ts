@@ -1,58 +1,43 @@
 import { describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
-import { createSessionToken, verifySessionToken, type SessionPayload } from '../src/lib/session';
+import {
+  generateOpaqueSessionToken,
+  hashSessionToken,
+  isValidOpaqueTokenFormat,
+} from '../src/lib/session';
 import { middleware } from '../src/middleware';
 
 describe('Admin Dashboard Session & Auth Token Security', () => {
-  const samplePayload: SessionPayload = {
-    userId: 'usr-super-admin-001',
-    telegramId: '123456789',
-    role: 'SUPER_ADMIN',
-    name: 'المهندس صالح عثمان',
-    isRealSuperAdmin: true,
-    createdAt: Date.now(),
-  };
+  it('generates a 64-character unguessable hex opaque session token and SHA-256 hash', async () => {
+    const { rawToken, tokenHash } = await generateOpaqueSessionToken();
+    expect(rawToken).toBeDefined();
+    expect(rawToken).toHaveLength(64);
+    expect(/^[0-9a-f]{64}$/i.test(rawToken)).toBe(true);
+    expect(tokenHash).toBeDefined();
+    expect(tokenHash).toHaveLength(64);
 
-  it('creates and verifies a valid cryptographic HMAC-SHA256 session token', async () => {
-    const token = await createSessionToken(samplePayload);
-    expect(token).toBeDefined();
-    expect(token).toContain('.');
-
-    const verified = await verifySessionToken(token);
-    expect(verified).not.toBeNull();
-    expect(verified?.userId).toBe(samplePayload.userId);
-    expect(verified?.role).toBe('SUPER_ADMIN');
-    expect(verified?.name).toBe(samplePayload.name);
-    expect(verified?.isRealSuperAdmin).toBe(true);
+    const recomputedHash = await hashSessionToken(rawToken);
+    expect(recomputedHash).toBe(tokenHash);
   });
 
-  it('rejects tampered or forged tokens with invalid HMAC signatures', async () => {
-    const token = await createSessionToken(samplePayload);
-    const [dataB64, signature] = token.split('.');
+  it('isValidOpaqueTokenFormat strictly validates 64-hex opaque tokens and rejects invalid formats', () => {
+    expect(isValidOpaqueTokenFormat('a'.repeat(64))).toBe(true);
+    expect(isValidOpaqueTokenFormat('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')).toBe(true);
 
-    // Tamper with data payload
-    const tamperedPayload = { ...samplePayload, role: 'ATTACKER' };
-    const tamperedB64 = Buffer.from(JSON.stringify(tamperedPayload)).toString('base64url');
-    const forgedToken = `${tamperedB64}.${signature}`;
+    // Rejects empty, null, undefined
+    expect(isValidOpaqueTokenFormat('')).toBe(false);
+    expect(isValidOpaqueTokenFormat(null)).toBe(false);
+    expect(isValidOpaqueTokenFormat(undefined)).toBe(false);
 
-    expect(await verifySessionToken(forgedToken)).toBeNull();
-  });
+    // Rejects non-hex characters
+    expect(isValidOpaqueTokenFormat('z'.repeat(64))).toBe(false);
 
-  it('rejects corrupted or malformed tokens', async () => {
-    expect(await verifySessionToken('')).toBeNull();
-    expect(await verifySessionToken('invalid-token')).toBeNull();
-    expect(await verifySessionToken('a.b.c')).toBeNull();
-  });
+    // Rejects legacy HMAC tokens with '.'
+    expect(isValidOpaqueTokenFormat('eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMjMifQ.signature')).toBe(false);
 
-  it('rejects expired session tokens older than 7 days', async () => {
-    const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
-    const expiredPayload: SessionPayload = {
-      ...samplePayload,
-      createdAt: eightDaysAgo,
-    };
-
-    const expiredToken = await createSessionToken(expiredPayload);
-    expect(await verifySessionToken(expiredToken)).toBeNull();
+    // Rejects incorrect length
+    expect(isValidOpaqueTokenFormat('a'.repeat(63))).toBe(false);
+    expect(isValidOpaqueTokenFormat('a'.repeat(65))).toBe(false);
   });
 
   it('middleware strictly redirects unauthenticated requests on /admin routes to bot deep-link', async () => {
@@ -62,7 +47,7 @@ describe('Admin Dashboard Session & Auth Token Security', () => {
     expect(res.headers.get('location')).toContain('start=dashboard_access');
   });
 
-  it('middleware rejects plain simulation cookie (alsaada_admin_role) without valid cryptographic session', async () => {
+  it('middleware rejects plain simulation cookie (alsaada_admin_role) without valid session', async () => {
     const req = new NextRequest('http://localhost:3000/admin', {
       headers: {
         cookie: 'alsaada_admin_role=superadmin',
@@ -73,14 +58,30 @@ describe('Admin Dashboard Session & Auth Token Security', () => {
     expect(res.headers.get('location')).toContain('start=dashboard_access');
   });
 
-  it('middleware allows access when valid cryptographic session token is provided', async () => {
-    const token = await createSessionToken(samplePayload);
+  it('middleware strictly rejects legacy HMAC tokens and clears the cookie', async () => {
+    const legacyToken = 'eyJkYXRhIjoiMTIzIn0.signature_part';
     const req = new NextRequest('http://localhost:3000/admin', {
       headers: {
-        cookie: `alsaada_session=${token}`,
+        cookie: `alsaada_session=${legacyToken}`,
+      },
+    });
+    const res = await middleware(req);
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toContain('start=dashboard_access');
+    const clearedCookie = res.cookies.get('alsaada_session');
+    expect(clearedCookie).toBeDefined();
+    expect(clearedCookie?.maxAge).toBe(0);
+  });
+
+  it('middleware allows access when valid opaque 64-hex session token is provided', async () => {
+    const { rawToken } = await generateOpaqueSessionToken();
+    const req = new NextRequest('http://localhost:3000/admin', {
+      headers: {
+        cookie: `alsaada_session=${rawToken}`,
       },
     });
     const res = await middleware(req);
     expect(res.headers.get('location')).toBeNull();
   });
 });
+

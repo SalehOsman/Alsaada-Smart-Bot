@@ -46,26 +46,49 @@ describe('Database RBAC, Sessions & Delegation Schema Contract', () => {
     // Clean up if existing
     await prisma.dashboardAuthLink.deleteMany({ where: { jtiHash } });
 
+    const groupId = randomUUID();
     const link = await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
-        targetOrigin: 'LOCAL',
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
 
     expect(link.id).toBeDefined();
+    expect(link.groupId).toBe(groupId);
+    expect(link.originKind).toBe('LOCAL');
+    expect(link.targetOrigin).toBe('http://localhost:3002');
     expect(link.jtiHash).toBe(jtiHash);
     expect(link.claimedAt).toBeNull();
 
-    // Duplicate creation must fail
+    // Duplicate creation with same jtiHash must fail
     await expect(
       prisma.dashboardAuthLink.create({
         data: {
+          groupId: randomUUID(),
+          originKind: 'LOCAL',
+          targetOrigin: 'http://localhost:3002',
           jtiHash,
           actorTelegramId: testTelegramId,
-          targetOrigin: 'LOCAL',
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      })
+    ).rejects.toThrow();
+
+    // Duplicate creation with same groupId and originKind must fail (unique [groupId, originKind])
+    const secondJti = createHash('sha256').update(randomUUID()).digest('hex');
+    await expect(
+      prisma.dashboardAuthLink.create({
+        data: {
+          groupId,
+          originKind: 'LOCAL', // Duplicate originKind in same group!
+          targetOrigin: 'http://localhost:3002',
+          jtiHash: secondJti,
+          actorTelegramId: testTelegramId,
           expiresAt: new Date(Date.now() + 300_000),
         },
       })
@@ -104,11 +127,14 @@ describe('Database RBAC, Sessions & Delegation Schema Contract', () => {
         originKind: 'TUNNEL',
         deviceSummary: 'Mozilla/5.0 Windows NT 10.0',
         expiresAt: new Date(Date.now() + 8 * 3600 * 1000),
+        maxExpiresAt: new Date(Date.now() + 16 * 3600 * 1000),
+        extensionCount: 0,
       },
     });
 
     expect(session.id).toBeDefined();
     expect(session.revokedAt).toBeNull();
+    expect(session.maxExpiresAt).toBeDefined();
 
     const revoked = await prisma.dashboardSession.update({
       where: { sessionHash },

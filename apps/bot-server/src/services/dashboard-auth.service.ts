@@ -6,6 +6,7 @@ import { TelemetryLogger } from '@alsaada/telemetry';
 import {
   canAccessDashboard,
   DASHBOARD_AUTHORIZED_ROLES,
+  normalizeOrigin,
   type CanonicalRole,
 } from '@alsaada/rbac';
 
@@ -17,76 +18,6 @@ const logger = new TelemetryLogger({
 export const AUTHORIZED_DASHBOARD_ROLES = DASHBOARD_AUTHORIZED_ROLES;
 export type AuthorizedDashboardRole = (typeof DASHBOARD_AUTHORIZED_ROLES)[number];
 
-export interface MagicTokenPayload {
-  userId: string;
-  telegramId: string;
-  role: string;
-  name: string;
-  assignedSiteId: string | null;
-  assignedSiteName: string | null;
-  jti: string;
-  iat: number;
-  exp: number;
-}
-
-/**
- * Generate a cryptographically signed HMAC-SHA256 Magic Token
- * Format: ${base64url(payload)}.${hmacSignature}
- */
-export function generateMagicToken(
-  payload: MagicTokenPayload,
-  botToken: string = config.botToken
-): string {
-  const dataB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const signature = crypto.createHmac('sha256', botToken).update(dataB64).digest('base64url');
-  return `${dataB64}.${signature}`;
-}
-
-/**
- * Verify and decode an HMAC-SHA256 Magic Token
- */
-export function verifyMagicToken(
-  token: string,
-  botToken: string = config.botToken
-): { valid: boolean; payload?: MagicTokenPayload; error?: string } {
-  if (!token || typeof token !== 'string') {
-    return { valid: false, error: 'INVALID_TOKEN_FORMAT' };
-  }
-
-  const parts = token.split('.');
-  if (parts.length !== 2) {
-    return { valid: false, error: 'INVALID_TOKEN_FORMAT' };
-  }
-
-  const dataB64 = parts[0];
-  const providedSig = parts[1];
-  if (!dataB64 || !providedSig) {
-    return { valid: false, error: 'INVALID_TOKEN_FORMAT' };
-  }
-
-  const expectedSig = crypto.createHmac('sha256', botToken).update(dataB64).digest('base64url');
-  const providedSigBuf = Buffer.from(providedSig, 'utf8');
-  const expectedSigBuf = Buffer.from(expectedSig, 'utf8');
-
-  if (
-    providedSigBuf.length !== expectedSigBuf.length ||
-    !crypto.timingSafeEqual(providedSigBuf, expectedSigBuf)
-  ) {
-    return { valid: false, error: 'SIGNATURE_MISMATCH' };
-  }
-
-  try {
-    const rawJson = Buffer.from(dataB64, 'base64url').toString('utf8');
-    const payload = JSON.parse(rawJson) as MagicTokenPayload;
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp && now > payload.exp) {
-      return { valid: false, payload, error: 'TOKEN_EXPIRED' };
-    }
-    return { valid: true, payload };
-  } catch {
-    return { valid: false, error: 'MALFORMED_PAYLOAD' };
-  }
-}
 
 export type DashboardAccessRejectionReason =
   | 'USER_NOT_FOUND'
@@ -312,32 +243,34 @@ export class DashboardAuthService {
     const ttlMinutes = config.dashboardAuthLinkTtlMinutes || 5;
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
+    const localBase = normalizeOrigin(config.dashboardLocalUrl || 'http://localhost:3002');
+    const tunnelBase = normalizeOrigin(config.dashboardTunnelUrl || localBase);
+
     // 4. Save both auth links into dashboard_auth_links table with shared groupId
     await prisma.$transaction([
       prisma.dashboardAuthLink.create({
         data: {
           groupId,
+          originKind: 'LOCAL',
+          targetOrigin: localBase,
           jtiHash: localHash,
           actorTelegramId: user.telegramId,
-          targetOrigin: 'LOCAL',
           expiresAt,
         },
       }),
       prisma.dashboardAuthLink.create({
         data: {
           groupId,
+          originKind: 'TUNNEL',
+          targetOrigin: tunnelBase,
           jtiHash: tunnelHash,
           actorTelegramId: user.telegramId,
-          targetOrigin: 'TUNNEL',
           expiresAt,
         },
       }),
     ]);
 
     // 5. Construct direct URLs
-    const localBase = config.dashboardLocalUrl || 'http://localhost:3002';
-    const tunnelBase = config.dashboardTunnelUrl || localBase;
-
     const localUrl = `${localBase}/api/auth/claim?token=${localToken}`;
     const tunnelUrl = `${tunnelBase}/api/auth/claim?token=${tunnelToken}`;
 
@@ -449,16 +382,25 @@ export class DashboardAuthService {
     const newExpiresAt =
       candidateExpiresAt > maxExpiresAt ? maxExpiresAt : candidateExpiresAt;
 
-    await prisma.dashboardSession.update({
-      where: { id: sessionId },
+    const updated = await prisma.dashboardSession.updateMany({
+      where: {
+        id: sessionId,
+        revokedAt: null,
+        extensionCount: 0,
+        expiresAt: { gt: new Date() },
+      },
       data: {
-        extensionCount: session.extensionCount + 1,
+        extensionCount: 1,
         extendedAt: new Date(),
         expiresAt: newExpiresAt,
         maxExpiresAt,
         noticeSentAt: null,
       },
     });
+
+    if (updated.count === 0) {
+      return { success: false, reason: 'MAX_EXTENSIONS_REACHED' };
+    }
 
     await prisma.auditLog.create({
       data: {

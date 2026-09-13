@@ -3,7 +3,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 import { prisma } from '@alsaada/database';
 import { GET, POST } from '../src/app/api/auth/claim/route';
-import { verifySessionToken } from '../src/lib/session';
 
 describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
   const testTelegramId = 9988776655n;
@@ -32,6 +31,14 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     await prisma.user.deleteMany({ where: { telegramId: testTelegramId } });
   });
 
+  it('strictly rejects POST requests with 405 Method Not Allowed', async () => {
+    const res = await POST();
+    expect(res.status).toBe(405);
+    expect(res.headers.get('Allow')).toBe('GET');
+    const data = await res.json();
+    expect(data.error).toBe('METHOD_NOT_ALLOWED');
+  });
+
   it('rejects claim request when token is missing', async () => {
     const req = new NextRequest('http://localhost:3002/api/auth/claim', {
       method: 'GET',
@@ -55,15 +62,18 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     expect(data.error).toBe('INVALID_OR_EXPIRED_TOKEN');
   });
 
-  it('successfully claims a valid token, creates 8-hour DB session, and sets cookie', async () => {
+  it('successfully claims a valid token, creates 8-hour DB session, and sets 16h cookie', async () => {
     const rawToken = randomBytes(32).toString('hex');
     const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+    const groupId = randomUUID();
 
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
-        targetOrigin: 'LOCAL',
         expiresAt: new Date(Date.now() + 300_000), // 5 min
       },
     });
@@ -80,10 +90,13 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     expect(data.user.id).toBe(testUserId);
     expect(data.user.role).toBe('SUPER_ADMIN');
 
-    // Verify cookie was set
+    // Verify cookie was set with 16-hour maxAge
     const setCookie = res.cookies.get('alsaada_session');
     expect(setCookie).toBeDefined();
     expect(setCookie?.value).toBeDefined();
+    expect(setCookie?.maxAge).toBe(16 * 3600);
+    expect(setCookie?.httpOnly).toBe(true);
+    expect(setCookie?.sameSite).toBe('lax');
 
     // Verify link is marked claimed in DB
     const updatedLink = await prisma.dashboardAuthLink.findUnique({
@@ -91,29 +104,57 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     });
     expect(updatedLink?.claimedAt).not.toBeNull();
 
-    // Verify session was created in DB
-    const sessionTokenPayload = await verifySessionToken(setCookie!.value);
-    expect(sessionTokenPayload).not.toBeNull();
-    expect(sessionTokenPayload?.sessionId).toBeDefined();
-
-    const sessionHash = createHash('sha256').update(sessionTokenPayload!.sessionId!).digest('hex');
+    // Verify session was created in DB with 8h initial expiresAt and 16h maxExpiresAt
+    const sessionHash = createHash('sha256').update(setCookie!.value).digest('hex');
     const dbSession = await prisma.dashboardSession.findUnique({
       where: { sessionHash },
     });
     expect(dbSession).toBeDefined();
     expect(dbSession?.userId).toBe(testUserId);
     expect(dbSession?.revokedAt).toBeNull();
+    expect(dbSession?.extensionCount).toBe(0);
+    expect(dbSession?.maxExpiresAt).toBeDefined();
+  });
+
+  it('strictly rejects claim when request origin does not match targetOrigin (ORIGIN_MISMATCH)', async () => {
+    const rawToken = randomBytes(32).toString('hex');
+    const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+    const groupId = randomUUID();
+
+    await prisma.dashboardAuthLink.create({
+      data: {
+        groupId,
+        originKind: 'TUNNEL',
+        targetOrigin: 'https://alsaada-tunnel.ngrok-free.app',
+        jtiHash,
+        actorTelegramId: testTelegramId,
+        expiresAt: new Date(Date.now() + 300_000),
+      },
+    });
+
+    // Request comes from localhost instead of the tunnel targetOrigin
+    const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    });
+    const res = await GET(req);
+    expect(res.status).toBe(403);
+    const data = await res.json();
+    expect(data.error).toBe('ORIGIN_MISMATCH');
   });
 
   it('strictly denies second claim attempt with the same token (single-use atomic)', async () => {
     const rawToken = randomBytes(32).toString('hex');
     const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+    const groupId = randomUUID();
 
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
-        targetOrigin: 'LOCAL',
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
@@ -140,12 +181,15 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
   it('rejects expired token', async () => {
     const rawToken = randomBytes(32).toString('hex');
     const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+    const groupId = randomUUID();
 
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
-        targetOrigin: 'LOCAL',
         expiresAt: new Date(Date.now() - 10_000), // Expired 10s ago
       },
     });
@@ -176,12 +220,15 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
 
     const rawToken = randomBytes(32).toString('hex');
     const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+    const groupId = randomUUID();
 
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash,
         actorTelegramId: workerTelegramId,
-        targetOrigin: 'LOCAL',
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
@@ -200,15 +247,18 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     await prisma.dashboardAuthLink.deleteMany({ where: { actorTelegramId: workerTelegramId } });
   });
 
-  it('performs direct browser redirect (302) to /admin on trusted local origin and sets cookie', async () => {
+  it('performs direct browser redirect (302) to /admin on targetOrigin and sets cookie', async () => {
     const rawToken = randomBytes(32).toString('hex');
     const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+    const groupId = randomUUID();
 
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
-        targetOrigin: 'LOCAL',
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
@@ -220,38 +270,13 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toBe('http://localhost:3002/admin');
     expect(res.cookies.get('alsaada_session')?.value).toBeDefined();
-  });
-
-  it('performs direct browser redirect (302) to /admin on trusted tunnel origin and prevents host header injection', async () => {
-    const rawToken = randomBytes(32).toString('hex');
-    const jtiHash = createHash('sha256').update(rawToken).digest('hex');
-
-    // Clean up sessions before tunnel test to stay below 3-session limit
-    await prisma.dashboardSession.deleteMany({ where: { actorTelegramId: testTelegramId } });
-
-    await prisma.dashboardAuthLink.create({
-      data: {
-        jtiHash,
-        actorTelegramId: testTelegramId,
-        targetOrigin: 'TUNNEL',
-        expiresAt: new Date(Date.now() + 300_000),
-      },
-    });
-
-    // Adversarial: simulate attacker injecting Host: evil.attacker.com
-    const req = new NextRequest(`https://evil.attacker.com/api/auth/claim?token=${rawToken}`, {
-      method: 'GET',
-      headers: { host: 'evil.attacker.com' },
-    });
-    const res = await GET(req);
-    expect(res.status).toBe(302);
-    const location = res.headers.get('location');
-    // Location must redirect to trusted tunnel origin, NEVER to evil.attacker.com
-    expect(location).toContain('/admin');
-    expect(location).not.toContain('evil.attacker.com');
+    expect(res.cookies.get('alsaada_session')?.maxAge).toBe(16 * 3600);
   });
 
   it('atomically invalidates sibling link sharing the same groupId upon claiming', async () => {
+    // Clear sessions before testing sibling claim
+    await prisma.dashboardSession.deleteMany({ where: { actorTelegramId: testTelegramId } });
+
     const groupId = randomUUID();
     const localToken = randomBytes(32).toString('hex');
     const localJtiHash = createHash('sha256').update(localToken).digest('hex');
@@ -264,15 +289,17 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
         {
           jtiHash: localJtiHash,
           groupId,
+          originKind: 'LOCAL',
+          targetOrigin: 'http://localhost:3002',
           actorTelegramId: testTelegramId,
-          targetOrigin: 'LOCAL',
           expiresAt: new Date(Date.now() + 300_000),
         },
         {
           jtiHash: tunnelJtiHash,
           groupId,
+          originKind: 'TUNNEL',
+          targetOrigin: 'http://localhost:3002',
           actorTelegramId: testTelegramId,
-          targetOrigin: 'TUNNEL',
           expiresAt: new Date(Date.now() + 300_000),
         },
       ],
@@ -309,7 +336,7 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     // Ensure user already has exactly 3 active sessions
     await prisma.dashboardSession.deleteMany({ where: { actorTelegramId: testTelegramId } });
     for (let i = 0; i < 3; i++) {
-      const { tokenHash } = (await import('../src/lib/session')).generateOpaqueSessionToken();
+      const { tokenHash } = await (await import('../src/lib/session')).generateOpaqueSessionToken();
       await prisma.dashboardSession.create({
         data: {
           sessionHash: tokenHash,
@@ -325,12 +352,15 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
 
     const fourthToken = randomBytes(32).toString('hex');
     const fourthJtiHash = createHash('sha256').update(fourthToken).digest('hex');
+    const groupId = randomUUID();
 
     await prisma.dashboardAuthLink.create({
       data: {
+        groupId,
+        originKind: 'LOCAL',
+        targetOrigin: 'http://localhost:3002',
         jtiHash: fourthJtiHash,
         actorTelegramId: testTelegramId,
-        targetOrigin: 'LOCAL',
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
@@ -344,26 +374,5 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     const fourthData = await fourthRes.json();
     expect(fourthData.error).toBe('MAX_CONCURRENT_SESSIONS_REACHED');
   });
-
-  it('strictly enforces 8-hour session TTL (rejects sessions older than 8 hours)', async () => {
-    const valid8hToken = await (await import('../src/lib/session')).createSessionToken({
-      userId: testUserId,
-      telegramId: testTelegramId.toString(),
-      role: 'SUPER_ADMIN',
-      name: 'Super Admin',
-      createdAt: Date.now() - 7 * 3600 * 1000, // 7 hours ago (still valid < 8h)
-    });
-    const validResult = await verifySessionToken(valid8hToken);
-    expect(validResult).not.toBeNull();
-
-    const expired8hToken = await (await import('../src/lib/session')).createSessionToken({
-      userId: testUserId,
-      telegramId: testTelegramId.toString(),
-      role: 'SUPER_ADMIN',
-      name: 'Super Admin',
-      createdAt: Date.now() - (8 * 3600 * 1000 + 1000), // 8 hours + 1s ago (expired)
-    });
-    const expiredResult = await verifySessionToken(expired8hToken);
-    expect(expiredResult).toBeNull();
-  });
 });
+

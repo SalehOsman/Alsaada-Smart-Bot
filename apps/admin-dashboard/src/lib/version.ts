@@ -18,12 +18,12 @@ export function getVersionInfo(): VersionInfo {
   const commitSha =
     process.env.NEXT_PUBLIC_GIT_COMMIT_SHA ||
     process.env.GIT_COMMIT_SHA ||
-    '20bcd180a05ef25ec9990ad44b9a19f7ce7abff2';
+    'unknown';
 
   const buildTime =
     process.env.NEXT_PUBLIC_BUILD_TIME ||
     process.env.BUILD_TIME ||
-    '2026-09-13T12:00:00.000Z';
+    'unknown';
 
   return { version, commitSha, buildTime };
 }

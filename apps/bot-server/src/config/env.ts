@@ -59,8 +59,8 @@ export interface AppConfig {
 
 export function loadConfig(): AppConfig {
   const appVersion = process.env.APP_VERSION || '2.0.0-alpha.1';
-  const gitCommitSha = process.env.GIT_COMMIT_SHA || '20bcd180a05ef25ec9990ad44b9a19f7ce7abff2';
-  const buildTime = process.env.BUILD_TIME || '2026-09-13T12:00:00.000Z';
+  const gitCommitSha = process.env.GIT_COMMIT_SHA || 'unknown';
+  const buildTime = process.env.BUILD_TIME || 'unknown';
   const nodeEnv = process.env.NODE_ENV || 'development';
   const port = parseInt(process.env.PORT || '3000', 10);
   const botToken = process.env.BOT_TOKEN || '';

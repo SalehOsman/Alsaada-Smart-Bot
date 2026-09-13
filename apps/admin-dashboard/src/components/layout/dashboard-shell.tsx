@@ -11,10 +11,9 @@ interface DashboardShellProps {
 }
 
 export async function DashboardShell({ children }: DashboardShellProps) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({ nullable: true });
   if (!user) {
-    const botUsername = (process.env.TELEGRAM_BOT_USERNAME || 'Al_Saada_smart_bot').replace(/^@/, '');
-    redirect(`https://t.me/${botUsername}?start=dashboard_access`);
+    redirect('/session-expired');
   }
 
   return (
