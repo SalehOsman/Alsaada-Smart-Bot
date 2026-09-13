@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { prisma } from '@alsaada/database';
 import { envConfig } from '../../../../lib/env';
-import { extractTraceId } from '@alsaada/telemetry';
+import { extractTraceId, TelemetryLogger } from '@alsaada/telemetry';
+
+const logger = new TelemetryLogger({
+  service: 'admin-dashboard',
+  defaultComponent: 'auth-logout',
+});
 
 function clearAuthCookies(response: NextResponse): void {
   response.cookies.set('alsaada_session', '', {
@@ -55,11 +60,19 @@ async function revokeSessionFromDb(req?: NextRequest, traceId?: string): Promise
           },
         });
       } catch (auditErr) {
-        console.warn(`[LogoutAuditError] traceId=${traceId}:`, auditErr);
+        logger.warn('Failed to record logout audit log (best-effort)', {
+          traceId,
+          action: 'auth.logout.audit',
+          error: auditErr,
+        });
       }
     }
   } catch (err) {
-    console.warn(`[LogoutRevokeError] traceId=${traceId}:`, err);
+    logger.warn('Failed to revoke session from database during logout (best-effort)', {
+      traceId,
+      action: 'auth.logout.revoke',
+      error: err,
+    });
   }
 }
 

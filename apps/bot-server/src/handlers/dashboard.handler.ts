@@ -9,19 +9,11 @@ import { screenFlowService } from '../services/screen-flow.service.js';
 import { config } from '../config/env.js';
 
 /**
- * Telegram Bot API rejects inline keyboard button URLs with non-FQDN hostnames (like 'localhost' or '127.0.0.1').
- * Maps loopback hosts to the universally resolvable '127.0.0.1.nip.io' which points to 127.0.0.1 on all machines.
+ * Formats a Telegram-safe URL. The canonical local URL (127.0.0.1.nip.io) is configured
+ * at the environment level (DASHBOARD_LOCAL_URL) so no runtime mutation is performed.
  */
 export function formatTelegramSafeUrl(rawUrl: string): string {
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
-      parsed.hostname = '127.0.0.1.nip.io';
-    }
-    return parsed.toString();
-  } catch {
-    return rawUrl;
-  }
+  return rawUrl;
 }
 
 const logger = new TelemetryLogger({
@@ -113,6 +105,11 @@ async function replyWithDashboardFailure(
       reply_markup: keyboard,
     });
   } catch (vaultError) {
+    logger.warn('Failed to record error in ErrorVault, sending fallback response', {
+      traceId,
+      action: 'dashboard.vault-record',
+      error: vaultError,
+    });
     try {
       await ctx.reply(
         '⚠️ <b>تعذر فتح لوحة التحكم</b>\n\nحدث خطأ غير متوقع أثناء معالجة طلب فتح لوحة التحكم. يمكنك إعادة المحاولة أو العودة للقائمة الرئيسية.',
@@ -310,15 +307,28 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
             ctx.callbackQuery.message.message_id,
             'dashboard',
             false,
-          ).catch(() => {});
+          ).catch((trackErr) => {
+            logger.debug('Failed to track active screen in callback edit', {
+              traceId,
+              error: trackErr,
+            });
+          });
         }
         return;
-      } catch {
-        // If edit fails (e.g. message text identical), fall through
+      } catch (editErr) {
+        logger.debug('In-place editMessageText failed or message identical, falling back to reply', {
+          traceId,
+          error: editErr,
+        });
       }
     }
 
-    await screenFlowService.cleanupUnfinishedFlow(ctx, 'dashboard').catch(() => {});
+    await screenFlowService.cleanupUnfinishedFlow(ctx, 'dashboard').catch((cleanupErr) => {
+      logger.debug('Failed to cleanup unfinished flow before sending dashboard card', {
+        traceId,
+        error: cleanupErr,
+      });
+    });
     let sentMsgId: number | undefined;
     await sendDashboardCard(async (text, options) => {
       const sent = await ctx.reply(text, options);
@@ -332,7 +342,12 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
         sentMsgId,
         'dashboard',
         false,
-      ).catch(() => {});
+      ).catch((trackErr) => {
+        logger.debug('Failed to track active screen for reply', {
+          traceId,
+          error: trackErr,
+        });
+      });
     }
   } catch (err: unknown) {
     await replyWithDashboardFailure(ctx, traceId, err);
@@ -366,11 +381,17 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
             ctx.callbackQuery.message.message_id,
             'dashboard_sessions',
             false,
-          ).catch(() => {});
+          ).catch((trackErr) => {
+            logger.debug('Failed to track active screen in session renderScreen edit', {
+              error: trackErr,
+            });
+          });
         }
         return;
-      } catch {
-        // Fallback to reply
+      } catch (editErr) {
+        logger.debug('In-place editMessageText failed in session renderScreen, falling back to reply', {
+          error: editErr,
+        });
       }
     }
     const sent = await ctx.reply(text, {
@@ -385,7 +406,11 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
         sent.message_id,
         'dashboard_sessions',
         false,
-      ).catch(() => {});
+      ).catch((trackErr) => {
+        logger.debug('Failed to track active screen in session renderScreen reply', {
+          error: trackErr,
+        });
+      });
     }
   };
 
@@ -398,7 +423,9 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
       const formatted = formatDateTime(result.newExpiresAt);
       try {
         await ctx.answerCallbackQuery({ text: '⏳ تم تمديد الجلسة بنجاح لمدة 8 ساعات إضافية', show_alert: false });
-      } catch {}
+      } catch (cbErr) {
+        logger.debug('Failed to answerCallbackQuery for sess_ext success', { error: cbErr });
+      }
       const text =
         `✅ <b>تم تمديد الجلسة بنجاح</b>\n\n` +
         `⏳ تم تمديد صلاحية جلستك لمدة 8 ساعات إضافية حتى:\n` +
@@ -416,7 +443,9 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
           : '⚠️ تعذر تمديد الجلسة: الجلسة ملغاة أو منتهية بالفعل.';
       try {
         await ctx.answerCallbackQuery({ text: alertMsg, show_alert: true });
-      } catch {}
+      } catch (cbErr) {
+        logger.debug('Failed to answerCallbackQuery for sess_ext error', { error: cbErr });
+      }
     }
     return true;
   }
@@ -433,18 +462,28 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     if (result.success) {
       try {
         await ctx.answerCallbackQuery({ text: '🛑 تم إنهاء الجلسة فورياً بنجاح', show_alert: false });
-      } catch {}
+      } catch (cbErr) {
+        logger.debug('Failed to answerCallbackQuery for sess_rev success', { error: cbErr });
+      }
     } else {
       try {
         await ctx.answerCallbackQuery({ text: '⚠️ تعذر إنهاء الجلسة: غير موجودة', show_alert: true });
-      } catch {}
+      } catch (cbErr) {
+        logger.debug('Failed to answerCallbackQuery for sess_rev error', { error: cbErr });
+      }
     }
 
     const statusHeader = result.success
       ? `🛑 <b>تم إنهاء الجلسة فورياً بنجاح.</b>\n\n`
       : `⚠️ تعذر إنهاء الجلسة: غير موجودة أو منتهية بالفعل.\n\n`;
 
-    const rawSessions = await dashboardAuthService.getActiveSessions(telegramId).catch(() => []);
+    let rawSessions: any[] = [];
+    try {
+      rawSessions = await dashboardAuthService.getActiveSessions(telegramId);
+    } catch (fetchErr) {
+      logger.warn('Failed to fetch active sessions in sess_rev', { error: fetchErr });
+      rawSessions = [];
+    }
     const sessions = Array.isArray(rawSessions) ? rawSessions : [];
     if (sessions.length === 0) {
       const emptyKeyboard = new InlineKeyboard()
@@ -487,7 +526,9 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
   if (data === 'sess_list') {
     try {
       await ctx.answerCallbackQuery();
-    } catch {}
+    } catch (cbErr) {
+      logger.debug('Failed to answerCallbackQuery for sess_list', { error: cbErr });
+    }
 
     const sessions = await dashboardAuthService.getActiveSessions(telegramId);
     if (sessions.length === 0) {
@@ -532,7 +573,9 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     await dashboardAuthService.revokeAllSessions(telegramId, 'USER_REVOKED_ALL_TELEGRAM');
     try {
       await ctx.answerCallbackQuery({ text: '🛑 تم إنهاء كافة جلساتك النشطة بنجاح', show_alert: true });
-    } catch {}
+    } catch (cbErr) {
+      logger.debug('Failed to answerCallbackQuery for sess_rev_all', { error: cbErr });
+    }
 
     const emptyKeyboard = new InlineKeyboard()
       .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -540,7 +583,6 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     await renderScreen('🛑 <b>تم إنهاء كافة جلساتك النشطة في لوحة التحكم بنجاح.</b>', emptyKeyboard);
     return true;
   }
-
 
   return false;
 }

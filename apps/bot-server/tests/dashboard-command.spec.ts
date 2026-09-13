@@ -291,7 +291,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
   describe('4. Telegram Bot Handler (handleDashboardCommand)', () => {
     it('renders dashboard access card with localized role, site info, and dual links', async () => {
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
-      config.dashboardLocalUrl = 'http://localhost:3002';
+      config.dashboardLocalUrl = 'http://127.0.0.1.nip.io:3002';
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-fa-01',
         telegramId: 12345678n,
@@ -421,7 +421,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
 
     it('should include dual link buttons (Tunnel and Localhost) and session management in keyboard', async () => {
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
-      config.dashboardLocalUrl = 'http://localhost:3002';
+      config.dashboardLocalUrl = 'http://127.0.0.1.nip.io:3002';
 
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-fa-02',
@@ -771,6 +771,122 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(mockCtx.reply).not.toHaveBeenCalled();
       const [editedText] = vi.mocked(mockCtx.editMessageText).mock.calls[0] as [string, any];
       expect(editedText).toContain('لوحة التحكم المؤسسية — رابط الدخول المباشر');
+    });
+  });
+
+  describe('5. R1C-A: Regression, Schema Compatibility & Governance Suite', () => {
+    it('R1C-01: strictly passes distinct originKind (LOCAL and TUNNEL) to prevent Prisma P2002', async () => {
+      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
+        id: 'usr-p2002-test',
+        telegramId: 44556677n,
+        fullName: 'Test Admin P2002',
+        role: 'SUPER_ADMIN',
+        isActive: true,
+        isBanned: false,
+        assignedSite: null,
+      } as any);
+
+      const result = await dashboardAuthService.issueDualDashboardAccess({
+        telegramId: 44556677n,
+      });
+
+      expect(result.success).toBe(true);
+
+      // Verify transaction was called with 2 creates
+      expect(prisma.$transaction).toHaveBeenCalled();
+      const createCalls = vi.mocked(prisma.dashboardAuthLink.create).mock.calls;
+      expect(createCalls.length).toBeGreaterThanOrEqual(2);
+
+      const lastTwoCalls = createCalls.slice(-2);
+      const firstCreateData = (lastTwoCalls[0]![0] as any).data;
+      const secondCreateData = (lastTwoCalls[1]![0] as any).data;
+
+      // Both links must share the same groupId
+      expect(firstCreateData.groupId).toBe(secondCreateData.groupId);
+      // Both links must have different originKind values (LOCAL and TUNNEL)
+      expect(firstCreateData.originKind).toBe('LOCAL');
+      expect(secondCreateData.originKind).toBe('TUNNEL');
+      expect(firstCreateData.originKind).not.toBe(secondCreateData.originKind);
+    });
+
+    it('R1C-01 Characterization: legacy client without originKind collides on (groupId, originKind)', () => {
+      const simulateLegacyInsertion = (links: Array<{ groupId: string; originKind?: string }>) => {
+        const uniqueSet = new Set<string>();
+        for (const link of links) {
+          const kind = link.originKind ?? 'LOCAL'; // Default value in schema
+          const key = `${link.groupId}:${kind}`;
+          if (uniqueSet.has(key)) {
+            const err = new Error(`P2002: Unique constraint failed on (groupId, originKind)`);
+            (err as any).code = 'P2002';
+            throw err;
+          }
+          uniqueSet.add(key);
+        }
+      };
+
+      const testGroupId = 'legacy-group-uuid';
+      // Legacy bot behavior: emits two links without originKind (both become LOCAL)
+      expect(() =>
+        simulateLegacyInsertion([
+          { groupId: testGroupId }, // becomes LOCAL
+          { groupId: testGroupId }, // becomes LOCAL -> collision!
+        ])
+      ).toThrowError(/P2002/);
+
+      // Current compatible bot behavior: passes LOCAL and TUNNEL
+      expect(() =>
+        simulateLegacyInsertion([
+          { groupId: testGroupId, originKind: 'LOCAL' },
+          { groupId: testGroupId, originKind: 'TUNNEL' },
+        ])
+      ).not.toThrow();
+    });
+
+    it('R1C-04: AST / Source check enforces ZERO console.error, operational console.warn, and silent catches in the 5 source files', async () => {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+
+      const filesToCheck = [
+        'apps/admin-dashboard/src/app/api/auth/claim/route.ts',
+        'apps/admin-dashboard/src/app/api/auth/logout/route.ts',
+        'apps/admin-dashboard/src/lib/auth.ts',
+        'apps/bot-server/src/services/dashboard-auth.service.ts',
+        'apps/bot-server/src/handlers/dashboard.handler.ts',
+      ];
+
+      const violations: string[] = [];
+
+      for (const relPath of filesToCheck) {
+        // Resolve absolute path from repo root
+        const absPath = path.resolve(process.cwd(), '..', '..', relPath);
+        if (!fs.existsSync(absPath)) continue;
+
+        const content = fs.readFileSync(absPath, 'utf8');
+        const lines = content.split('\n');
+
+        lines.forEach((line, idx) => {
+          const lineNum = idx + 1;
+          const trimmed = line.trim();
+
+          // Skip comments
+          if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) return;
+
+          if (line.includes('console.error(') || line.includes('console.error`')) {
+            violations.push(`${relPath}:${lineNum} contains forbidden console.error`);
+          }
+          if (line.includes('console.warn(') || line.includes('console.warn`')) {
+            violations.push(`${relPath}:${lineNum} contains forbidden console.warn`);
+          }
+          if (/catch\s*\{\s*\}/.test(line) || /catch\s*\([a-zA-Z0-9_]+\)\s*\{\s*\}/.test(line)) {
+            violations.push(`${relPath}:${lineNum} contains silent catch {}`);
+          }
+          if (/\.catch\(\s*\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line) || /\.catch\(\s*\(\s*\)\s*=>\s*\[\s*\]\s*\)/.test(line)) {
+            violations.push(`${relPath}:${lineNum} contains silent .catch(() => {})`);
+          }
+        });
+      }
+
+      expect(violations, `Found logging/catch violations:\n${violations.join('\n')}`).toEqual([]);
     });
   });
 });

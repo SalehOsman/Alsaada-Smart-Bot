@@ -4,6 +4,12 @@ import type { DashboardUser } from './rbac';
 import { canAccessDashboard, type CanonicalRole } from '@alsaada/rbac';
 import { isValidOpaqueTokenFormat } from './session';
 import { prisma } from '@alsaada/database';
+import { TelemetryLogger } from '@alsaada/telemetry';
+
+const logger = new TelemetryLogger({
+  service: 'admin-dashboard',
+  defaultComponent: 'auth-session',
+});
 
 export async function getCurrentUser(): Promise<DashboardUser>;
 export async function getCurrentUser(opts: { nullable: true }): Promise<DashboardUser | null>;
@@ -61,7 +67,10 @@ export async function getCurrentUser(opts?: { nullable?: boolean }): Promise<Das
     };
   } catch (dbErr) {
     // Fail-Closed principle: any database failure immediately denies access
-    console.error('[Fail-Closed] Database error verifying session in getCurrentUser:', dbErr);
+    logger.error('Database error verifying session in getCurrentUser (Fail-Closed)', {
+      action: 'auth.get-current-user',
+      error: dbErr,
+    });
     return null;
   }
 }

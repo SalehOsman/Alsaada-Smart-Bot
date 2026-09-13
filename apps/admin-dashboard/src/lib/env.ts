@@ -4,10 +4,13 @@
  */
 
 const rawDashboardUrl = process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || '';
-const localUrl = (process.env.DASHBOARD_LOCAL_URL || 'http://localhost:3002').replace(/\/+$/, '');
+const rawLocalUrl = (process.env.DASHBOARD_LOCAL_URL || 'http://127.0.0.1.nip.io:3002').replace(/\/+$/, '');
+const localUrl = rawLocalUrl.startsWith('http://localhost')
+  ? 'http://127.0.0.1.nip.io:3002'
+  : rawLocalUrl;
 const rawTunnelUrl =
   process.env.DASHBOARD_TUNNEL_URL ||
-  (rawDashboardUrl && !rawDashboardUrl.includes('localhost') ? rawDashboardUrl : '') ||
+  (rawDashboardUrl && !rawDashboardUrl.includes('localhost') && !rawDashboardUrl.includes('127.0.0.1') ? rawDashboardUrl : '') ||
   localUrl;
 
 export const envConfig = {

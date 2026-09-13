@@ -374,5 +374,98 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     const fourthData = await fourthRes.json();
     expect(fourthData.error).toBe('MAX_CONCURRENT_SESSIONS_REACHED');
   });
+
+  describe('R1C-03: Reflected XSS Elimination, Security Headers & HTTP Status Matrix', () => {
+    it('strictly prevents Reflected XSS and does not reflect <script>alert(1)</script> raw in HTML (400 on malformed token)', async () => {
+      const maliciousPayload = '<script>alert(1)</script>';
+      const req = new NextRequest(
+        `http://127.0.0.1.nip.io:3002/api/auth/claim?token=malformed-token&traceId=${encodeURIComponent(maliciousPayload)}`,
+        { method: 'GET' }
+      );
+      const res = await GET(req);
+
+      // Status must reflect failure: 400 Bad Request for malformed token
+      expect(res.status).toBe(400);
+
+      // Security headers must be present
+      expect(res.headers.get('content-security-policy')).toBe(
+        "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';"
+      );
+      expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(res.headers.get('x-frame-options')).toBe('DENY');
+
+      const body = await res.text();
+      expect(body).not.toContain('<script>alert(1)</script>');
+    });
+
+    it('strictly prevents Reflected XSS with img onerror payload (401 on valid-format nonexistent token)', async () => {
+      const imgPayload = '"><img src=x onerror=alert(1)>';
+      const fakeValidToken = randomBytes(32).toString('hex');
+      const req = new NextRequest(
+        `http://127.0.0.1.nip.io:3002/api/auth/claim?token=${fakeValidToken}&traceId=${encodeURIComponent(imgPayload)}`,
+        { method: 'GET' }
+      );
+      const res = await GET(req);
+
+      // Status must reflect 401 Unauthorized for nonexistent token
+      expect(res.status).toBe(401);
+      const body = await res.text();
+      expect(body).not.toContain('"><img src=x onerror=alert(1)>');
+    });
+
+    it('returns appropriate HTTP status codes in HTML failure mode (401, 403)', async () => {
+      // 1. Origin mismatch returns 403 in HTML mode
+      const rawToken = randomBytes(32).toString('hex');
+      const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+      const groupId = randomUUID();
+
+      await prisma.dashboardAuthLink.create({
+        data: {
+          groupId,
+          originKind: 'TUNNEL',
+          targetOrigin: 'https://tunnel.alsaada.com',
+          jtiHash,
+          actorTelegramId: testTelegramId,
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      });
+
+      const mismatchReq = new NextRequest(
+        `http://127.0.0.1.nip.io:3002/api/auth/claim?token=${rawToken}`,
+        { method: 'GET' }
+      );
+      const mismatchRes = await GET(mismatchReq);
+      expect(mismatchRes.status).toBe(403);
+      expect(mismatchRes.headers.get('content-security-policy')).toBeDefined();
+    });
+
+    it('verifies standard nip.io local origin against localhost mismatch', async () => {
+      const rawToken = randomBytes(32).toString('hex');
+      const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+      const groupId = randomUUID();
+
+      // Stored with standard local origin http://127.0.0.1.nip.io:3002
+      await prisma.dashboardAuthLink.create({
+        data: {
+          groupId,
+          originKind: 'LOCAL',
+          targetOrigin: 'http://127.0.0.1.nip.io:3002',
+          jtiHash,
+          actorTelegramId: testTelegramId,
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      });
+
+      // Request from localhost:3002 must be rejected with 403 ORIGIN_MISMATCH
+      const localhostReq = new NextRequest(
+        `http://localhost:3002/api/auth/claim?token=${rawToken}`,
+        { method: 'GET', headers: { accept: 'application/json' } }
+      );
+      const localhostRes = await GET(localhostReq);
+      expect(localhostRes.status).toBe(403);
+      const data = await localhostRes.json();
+      expect(data.error).toBe('ORIGIN_MISMATCH');
+    });
+  });
 });
 

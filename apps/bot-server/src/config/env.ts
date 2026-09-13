@@ -74,12 +74,15 @@ export function loadConfig(): AppConfig {
   const googleDriveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
   const googleServiceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
   const googlePrivateKey = (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
-  const dashboardUrl = (process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || 'http://localhost:3002').replace(/\/+$/, '');
-  const dashboardLocalUrl = (process.env.DASHBOARD_LOCAL_URL || 'http://localhost:3002').replace(/\/+$/, '');
+  const dashboardLocalUrlRaw = (process.env.DASHBOARD_LOCAL_URL || 'http://127.0.0.1.nip.io:3002').replace(/\/+$/, '');
+  const dashboardLocalUrl = dashboardLocalUrlRaw.startsWith('http://localhost')
+    ? 'http://127.0.0.1.nip.io:3002'
+    : dashboardLocalUrlRaw;
+  const dashboardUrl = (process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || dashboardLocalUrl).replace(/\/+$/, '');
   const rawTunnelUrl =
     process.env.DASHBOARD_TUNNEL_URL ||
-    (process.env.DASHBOARD_URL && !process.env.DASHBOARD_URL.includes('localhost') ? process.env.DASHBOARD_URL : '') ||
-    (process.env.ADMIN_DASHBOARD_URL && !process.env.ADMIN_DASHBOARD_URL.includes('localhost') ? process.env.ADMIN_DASHBOARD_URL : '') ||
+    (process.env.DASHBOARD_URL && !process.env.DASHBOARD_URL.includes('localhost') && !process.env.DASHBOARD_URL.includes('127.0.0.1') ? process.env.DASHBOARD_URL : '') ||
+    (process.env.ADMIN_DASHBOARD_URL && !process.env.ADMIN_DASHBOARD_URL.includes('localhost') && !process.env.ADMIN_DASHBOARD_URL.includes('127.0.0.1') ? process.env.ADMIN_DASHBOARD_URL : '') ||
     dashboardLocalUrl;
   const dashboardTunnelUrl = rawTunnelUrl.replace(/\/+$/, '');
   const dashboardAuthLinkSecret = process.env.DASHBOARD_AUTH_LINK_SECRET || process.env.DATABASE_ENCRYPTION_KEY || 'sovereign-dashboard-secret-32-chars';

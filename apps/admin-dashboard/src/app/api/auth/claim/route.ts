@@ -3,6 +3,21 @@ import crypto from 'node:crypto';
 import { prisma } from '@alsaada/database';
 import { canAccessDashboardRole, normalizeOrigin, isExactOriginMatch, isValidOpaqueTokenFormat } from '@alsaada/rbac';
 import { envConfig } from '../../../../lib/env';
+import { extractTraceId, TelemetryLogger } from '@alsaada/telemetry';
+
+const logger = new TelemetryLogger({
+  service: 'admin-dashboard',
+  defaultComponent: 'auth-claim',
+});
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
 
 export async function GET(request: NextRequest) {
   return handleClaim(request);
@@ -18,7 +33,7 @@ export async function POST() {
 async function handleClaim(request: NextRequest): Promise<NextResponse> {
   const url = request.nextUrl;
   const token = url.searchParams.get('token');
-  const traceId = url.searchParams.get('traceId') || crypto.randomUUID();
+  const traceId = extractTraceId(request);
 
   const botUsername = envConfig.TELEGRAM_BOT_USERNAME || 'Al_Saada_smart_bot';
   const botFallbackUrl = `https://t.me/${botUsername}?start=dashboard_access`;
@@ -43,7 +58,7 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         { status: 400 }
       );
     }
-    return renderFailureHtml('INVALID_OR_EXPIRED_TOKEN', botFallbackUrl, traceId);
+    return renderFailureHtml('INVALID_TOKEN_FORMAT', botFallbackUrl, traceId);
   }
 
   const jtiHash = crypto.createHash('sha256').update(rawToken).digest('hex');
@@ -247,6 +262,28 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
     return redirectRes;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'CLAIM_FAILED';
+    const isDbError =
+      errorMsg.includes('connect') ||
+      errorMsg.includes('database') ||
+      errorMsg.includes('Prisma') ||
+      (err as any)?.code === 'P1001' ||
+      (err as any)?.code === 'P1002';
+
+    if (isDbError) {
+      logger.error('Database connection error during dashboard auth claim (Fail-Closed)', {
+        traceId,
+        action: 'auth.claim.database-error',
+        error: err,
+      });
+
+      if (isApiRequest) {
+        return NextResponse.json(
+          { success: false, error: 'DATABASE_UNAVAILABLE', traceId },
+          { status: 503 }
+        );
+      }
+      return renderFailureHtml('DATABASE_UNAVAILABLE', botFallbackUrl, traceId);
+    }
 
     if (errorMsg === 'ORIGIN_MISMATCH') {
       if (isApiRequest) {
@@ -298,6 +335,13 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       return renderFailureHtml('FORBIDDEN_ROLE_OR_STATUS', botFallbackUrl, traceId);
     }
 
+    // Uncaught or unexpected error
+    logger.error('Unexpected error during dashboard auth claim', {
+      traceId,
+      action: 'auth.claim.unexpected',
+      error: err,
+    });
+
     if (isApiRequest) {
       return NextResponse.json(
         { success: false, error: 'INVALID_OR_EXPIRED_TOKEN', traceId },
@@ -306,6 +350,29 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
     }
 
     return renderFailureHtml('INVALID_OR_EXPIRED_TOKEN', botFallbackUrl, traceId);
+  }
+}
+
+function getHttpStatusForReason(reason: string): number {
+  switch (reason) {
+    case 'TOKEN_REQUIRED':
+    case 'INVALID_TOKEN_FORMAT':
+      return 400;
+    case 'ORIGIN_MISMATCH':
+    case 'FORBIDDEN_ROLE_OR_STATUS':
+      return 403;
+    case 'TOKEN_ALREADY_CLAIMED':
+      return 401;
+    case 'MAX_CONCURRENT_SESSIONS_REACHED':
+      return 429;
+    case 'DATABASE_UNAVAILABLE':
+      return 503;
+    case 'INTERNAL_ERROR':
+      return 500;
+    case 'TOKEN_EXPIRED':
+    case 'INVALID_OR_EXPIRED_TOKEN':
+    default:
+      return 401;
   }
 }
 
@@ -339,6 +406,14 @@ function renderFailureHtml(
       title: 'رابط الدخول غير صالح',
       desc: 'تعذر التحقق من رمز الدخول. يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم» لإصدار رابط جديد صالح.',
     },
+    INVALID_TOKEN_FORMAT: {
+      title: 'رمز الدخول غير صالح',
+      desc: 'تنسيق رمز الدخول غير صحيح أو تالف. يرجى طلب رابط جديد من البوت.',
+    },
+    DATABASE_UNAVAILABLE: {
+      title: 'الخدمة غير متاحة مؤقتاً',
+      desc: 'تعذر الاتصال بقاعدة البيانات للتحقق من الجلسة. يرجى إعادة المحاولة لاحقاً أو مراجعة الدعم الفني.',
+    },
   };
 
   const info = titles[reason] || {
@@ -346,12 +421,17 @@ function renderFailureHtml(
     desc: 'حدث خطأ أثناء معالجة رابط الدخول. يرجى طلب رابط جديد من البوت.',
   };
 
+  const safeTitle = escapeHtml(info.title);
+  const safeDesc = escapeHtml(info.desc);
+  const safeBotUrl = escapeHtml(botFallbackUrl);
+  const safeTraceId = escapeHtml(traceId);
+
   const html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${info.title}</title>
+  <title>${safeTitle}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
     .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 36px 32px; max-width: 460px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); }
@@ -366,17 +446,25 @@ function renderFailureHtml(
 <body>
   <div class="card">
     <div class="icon">⚠️</div>
-    <h1>${info.title}</h1>
-    <p>${info.desc}</p>
-    <a href="${botFallbackUrl}" class="btn">🤖 العودة إلى بوت السعادة</a>
-    <div class="trace">رمز التتبع: ${traceId}</div>
+    <h1>${safeTitle}</h1>
+    <p>${safeDesc}</p>
+    <a href="${safeBotUrl}" class="btn">🤖 العودة إلى بوت السعادة</a>
+    <div class="trace">رمز التتبع: ${safeTraceId}</div>
   </div>
 </body>
 </html>`;
 
+  const status = getHttpStatusForReason(reason);
+  const responseHeaders = new Headers();
+  responseHeaders.set('Content-Type', 'text/html; charset=utf-8');
+  responseHeaders.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';");
+  responseHeaders.set('X-Content-Type-Options', 'nosniff');
+  responseHeaders.set('X-Frame-Options', 'DENY');
+  responseHeaders.set('X-Trace-Id', traceId);
+
   return new NextResponse(html, {
-    status: 200,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    status,
+    headers: responseHeaders,
   });
 }
 

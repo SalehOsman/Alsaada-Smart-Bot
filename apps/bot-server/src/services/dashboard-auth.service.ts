@@ -300,9 +300,18 @@ export class DashboardAuthService {
 
     // 7. Cache in Redis if connected
     if (redis && redis.status === 'ready') {
-      await redis.set(`auth_link:${localHash}`, user.id, 'EX', ttlMinutes * 60).catch(() => {});
-      await redis.set(`auth_link:${tunnelHash}`, user.id, 'EX', ttlMinutes * 60).catch(() => {});
-      await redis.set(`magic_token:${localHash}:issued`, user.id, 'EX', ttlMinutes * 60).catch(() => {});
+      try {
+        await Promise.all([
+          redis.set(`auth_link:${localHash}`, user.id, 'EX', ttlMinutes * 60),
+          redis.set(`auth_link:${tunnelHash}`, user.id, 'EX', ttlMinutes * 60),
+          redis.set(`magic_token:${localHash}:issued`, user.id, 'EX', ttlMinutes * 60),
+        ]);
+      } catch (redisErr: unknown) {
+        logger.warn('Failed to cache auth link in Redis (best-effort)', {
+          traceId,
+          error: redisErr,
+        });
+      }
     }
 
     return {
