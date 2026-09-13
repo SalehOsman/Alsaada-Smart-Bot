@@ -92,7 +92,8 @@ export type DashboardAccessRejectionReason =
   | 'USER_NOT_FOUND'
   | 'ACCOUNT_INACTIVE'
   | 'ACCOUNT_BANNED'
-  | 'UNAUTHORIZED_ROLE';
+  | 'UNAUTHORIZED_ROLE'
+  | 'MAX_CONCURRENT_SESSIONS_REACHED';
 
 export interface IssueDashboardAccessInput {
   telegramId: bigint;
@@ -114,6 +115,7 @@ export interface IssueDualDashboardAccessSuccess {
     assignedSiteId: string | null;
     assignedSiteName: string | null;
   };
+  groupId: string;
   localToken: string;
   tunnelToken: string;
   localUrl: string;
@@ -137,6 +139,14 @@ export interface IssueDashboardAccessDenied {
     isBanned: boolean;
   } | null;
   telegramId: bigint;
+  activeSessions?: Array<{
+    id: string;
+    originKind: string;
+    deviceSummary: string | null;
+    expiresAt: Date;
+    createdAt: Date;
+    extensionCount: number;
+  }>;
 }
 
 export type IssueDualDashboardAccessResult =
@@ -239,7 +249,60 @@ export class DashboardAuthService {
       };
     }
 
-    // 3. Generate two distinct cryptographically random 32-byte hex tokens
+    // 2.1 Check active sessions limit (Strict ceiling <= 3 concurrent sessions)
+    const activeSessions = await prisma.dashboardSession.findMany({
+      where: {
+        actorTelegramId: user.telegramId,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (activeSessions.length >= 3) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            traceId,
+            actorTelegramId: telegramId,
+            action: 'DASHBOARD_ACCESS_DENIED_MAX_SESSIONS',
+            entityType: 'DashboardAuth',
+            entityId: user.id,
+            afterPayload: {
+              activeCount: activeSessions.length,
+              maxAllowed: 3,
+            },
+          },
+        });
+      } catch (err: unknown) {
+        logger.warn('Failed to log max sessions denial', { traceId, error: err });
+      }
+
+      return {
+        success: false,
+        reason: 'MAX_CONCURRENT_SESSIONS_REACHED',
+        user: {
+          id: user.id,
+          telegramId: user.telegramId,
+          fullName: user.fullName,
+          role: user.role,
+          isActive: user.isActive,
+          isBanned: user.isBanned,
+        },
+        telegramId,
+        activeSessions: activeSessions.map((s) => ({
+          id: s.id,
+          originKind: s.originKind,
+          deviceSummary: s.deviceSummary,
+          expiresAt: s.expiresAt,
+          createdAt: s.createdAt,
+          extensionCount: s.extensionCount,
+        })),
+      };
+    }
+
+    // 3. Generate shared groupId and two distinct cryptographically random 32-byte hex tokens
+    const groupId = crypto.randomUUID();
     const localToken = crypto.randomBytes(32).toString('hex');
     const tunnelToken = crypto.randomBytes(32).toString('hex');
 
@@ -249,10 +312,11 @@ export class DashboardAuthService {
     const ttlMinutes = config.dashboardAuthLinkTtlMinutes || 5;
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-    // 4. Save both auth links into dashboard_auth_links table
+    // 4. Save both auth links into dashboard_auth_links table with shared groupId
     await prisma.$transaction([
       prisma.dashboardAuthLink.create({
         data: {
+          groupId,
           jtiHash: localHash,
           actorTelegramId: user.telegramId,
           targetOrigin: 'LOCAL',
@@ -261,6 +325,7 @@ export class DashboardAuthService {
       }),
       prisma.dashboardAuthLink.create({
         data: {
+          groupId,
           jtiHash: tunnelHash,
           actorTelegramId: user.telegramId,
           targetOrigin: 'TUNNEL',
@@ -288,6 +353,7 @@ export class DashboardAuthService {
           afterPayload: {
             userId: user.id,
             role: user.role,
+            groupId,
             expiresAt: expiresAt.toISOString(),
           },
         },
@@ -318,6 +384,7 @@ export class DashboardAuthService {
         assignedSiteId: user.assignedSiteId || null,
         assignedSiteName: user.assignedSite?.name || null,
       },
+      groupId,
       localToken,
       tunnelToken,
       localUrl,
@@ -345,7 +412,7 @@ export class DashboardAuthService {
   async extendSession(
     sessionId: string,
     actorTelegramId: bigint
-  ): Promise<{ success: boolean; newExpiresAt?: Date; reason?: string }> {
+  ): Promise<{ success: boolean; newExpiresAt?: Date; reason?: string; extensionCount?: number }> {
     const session = await prisma.dashboardSession.findUnique({
       where: { id: sessionId },
     });
@@ -354,19 +421,41 @@ export class DashboardAuthService {
       return { success: false, reason: 'SESSION_NOT_FOUND_OR_REVOKED' };
     }
 
+    if (session.expiresAt <= new Date()) {
+      return { success: false, reason: 'SESSION_EXPIRED' };
+    }
+
     const isOwner = session.actorTelegramId === actorTelegramId;
     const isSuper = config.superAdminTelegramId === actorTelegramId;
     if (!isOwner && !isSuper) {
       return { success: false, reason: 'UNAUTHORIZED' };
     }
 
+    // Strict single extension rule: Max 1 extension per session (Plan 22 Task 7.1)
+    if (session.extensionCount >= 1) {
+      return { success: false, reason: 'MAX_EXTENSIONS_REACHED' };
+    }
+
+    // Strict 16-hour total ceiling from session creation
+    const maxExpiresAt =
+      session.maxExpiresAt ||
+      new Date(session.createdAt.getTime() + 16 * 3600 * 1000);
+
     const extensionHours = config.dashboardSessionExtensionHours || 8;
-    const newExpiresAt = new Date(Date.now() + extensionHours * 3600 * 1000);
+    const candidateExpiresAt = new Date(
+      session.expiresAt.getTime() + extensionHours * 3600 * 1000
+    );
+
+    const newExpiresAt =
+      candidateExpiresAt > maxExpiresAt ? maxExpiresAt : candidateExpiresAt;
 
     await prisma.dashboardSession.update({
       where: { id: sessionId },
       data: {
+        extensionCount: session.extensionCount + 1,
+        extendedAt: new Date(),
         expiresAt: newExpiresAt,
+        maxExpiresAt,
         noticeSentAt: null,
       },
     });
@@ -380,11 +469,13 @@ export class DashboardAuthService {
         afterPayload: {
           newExpiresAt: newExpiresAt.toISOString(),
           extendedHours: extensionHours,
+          extensionCount: session.extensionCount + 1,
+          maxExpiresAt: maxExpiresAt.toISOString(),
         },
       },
     });
 
-    return { success: true, newExpiresAt };
+    return { success: true, newExpiresAt, extensionCount: session.extensionCount + 1 };
   }
 
   /**

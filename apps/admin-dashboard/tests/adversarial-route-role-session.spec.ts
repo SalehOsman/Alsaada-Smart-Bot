@@ -12,6 +12,10 @@ vi.mock('@alsaada/database', () => ({
     user: {
       findUnique: vi.fn(),
     },
+    dashboardSession: {
+      findUnique: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }));
 

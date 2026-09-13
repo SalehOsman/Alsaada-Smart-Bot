@@ -226,6 +226,9 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     const rawToken = randomBytes(32).toString('hex');
     const jtiHash = createHash('sha256').update(rawToken).digest('hex');
 
+    // Clean up sessions before tunnel test to stay below 3-session limit
+    await prisma.dashboardSession.deleteMany({ where: { actorTelegramId: testTelegramId } });
+
     await prisma.dashboardAuthLink.create({
       data: {
         jtiHash,
@@ -246,6 +249,100 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     // Location must redirect to trusted tunnel origin, NEVER to evil.attacker.com
     expect(location).toContain('/admin');
     expect(location).not.toContain('evil.attacker.com');
+  });
+
+  it('atomically invalidates sibling link sharing the same groupId upon claiming', async () => {
+    const groupId = randomUUID();
+    const localToken = randomBytes(32).toString('hex');
+    const localJtiHash = createHash('sha256').update(localToken).digest('hex');
+
+    const tunnelToken = randomBytes(32).toString('hex');
+    const tunnelJtiHash = createHash('sha256').update(tunnelToken).digest('hex');
+
+    await prisma.dashboardAuthLink.createMany({
+      data: [
+        {
+          jtiHash: localJtiHash,
+          groupId,
+          actorTelegramId: testTelegramId,
+          targetOrigin: 'LOCAL',
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+        {
+          jtiHash: tunnelJtiHash,
+          groupId,
+          actorTelegramId: testTelegramId,
+          targetOrigin: 'TUNNEL',
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      ],
+    });
+
+    // Claim local link: must succeed
+    const localReq = new NextRequest(`http://localhost:3002/api/auth/claim?token=${localToken}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    });
+    const localRes = await GET(localReq);
+    expect(localRes.status).toBe(200);
+
+    // Attempt to claim sibling tunnel link: must fail with 409 TOKEN_ALREADY_CLAIMED
+    const tunnelReq = new NextRequest(`http://localhost:3002/api/auth/claim?token=${tunnelToken}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    });
+    const tunnelRes = await GET(tunnelReq);
+    expect(tunnelRes.status).toBe(409);
+    const tunnelData = await tunnelRes.json();
+    expect(tunnelData.error).toBe('TOKEN_ALREADY_CLAIMED');
+
+    // Sibling record in DB must be marked claimed with claim trace
+    const dbSibling = await prisma.dashboardAuthLink.findUnique({
+      where: { jtiHash: tunnelJtiHash },
+    });
+    expect(dbSibling?.claimedAt).not.toBeNull();
+    expect(dbSibling?.claimTraceId).toBeDefined();
+    expect(dbSibling?.claimTraceId?.length).toBeGreaterThan(0);
+  });
+
+  it('strictly rejects claim and returns 429 when user already has 3 active concurrent sessions', async () => {
+    // Ensure user already has exactly 3 active sessions
+    await prisma.dashboardSession.deleteMany({ where: { actorTelegramId: testTelegramId } });
+    for (let i = 0; i < 3; i++) {
+      const { tokenHash } = (await import('../src/lib/session')).generateOpaqueSessionToken();
+      await prisma.dashboardSession.create({
+        data: {
+          sessionHash: tokenHash,
+          userId: testUserId,
+          actorTelegramId: testTelegramId,
+          originKind: 'LOCAL',
+          expiresAt: new Date(Date.now() + 8 * 3600 * 1000),
+          maxExpiresAt: new Date(Date.now() + 16 * 3600 * 1000),
+          extensionCount: 0,
+        },
+      });
+    }
+
+    const fourthToken = randomBytes(32).toString('hex');
+    const fourthJtiHash = createHash('sha256').update(fourthToken).digest('hex');
+
+    await prisma.dashboardAuthLink.create({
+      data: {
+        jtiHash: fourthJtiHash,
+        actorTelegramId: testTelegramId,
+        targetOrigin: 'LOCAL',
+        expiresAt: new Date(Date.now() + 300_000),
+      },
+    });
+
+    const fourthReq = new NextRequest(`http://localhost:3002/api/auth/claim?token=${fourthToken}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    });
+    const fourthRes = await GET(fourthReq);
+    expect(fourthRes.status).toBe(429);
+    const fourthData = await fourthRes.json();
+    expect(fourthData.error).toBe('MAX_CONCURRENT_SESSIONS_REACHED');
   });
 
   it('strictly enforces 8-hour session TTL (rejects sessions older than 8 hours)', async () => {

@@ -28,36 +28,33 @@ async function revokeSessionFromDb(req?: NextRequest, traceId?: string): Promise
   if (!sessionCookie) return;
 
   try {
-    const payload = await verifySessionToken(sessionCookie);
-    if (payload?.sessionId) {
-      const sessionHash = crypto.createHash('sha256').update(payload.sessionId).digest('hex');
-      await prisma.dashboardSession.updateMany({
-        where: { sessionHash },
-        data: {
-          revokedAt: new Date(),
-          revocationReason: 'USER_LOGOUT',
-        },
-      });
+    const sessionHash = crypto.createHash('sha256').update(sessionCookie.trim()).digest('hex');
+    await prisma.dashboardSession.updateMany({
+      where: { sessionHash },
+      data: {
+        revokedAt: new Date(),
+        revocationReason: 'USER_LOGOUT',
+      },
+    });
 
-      // Forensic trace of user logout
-      if (payload.userId) {
-        try {
-          await prisma.auditLog.create({
-            data: {
-              actorTelegramId: BigInt(payload.telegramId || '0'),
-              action: 'USER_LOGOUT',
-              entityType: 'DashboardSession',
-              entityId: payload.sessionId,
-              afterPayload: {
-                traceId: traceId || 'logout-trace',
-                source: 'api/auth/logout',
-              },
+    const payload = await verifySessionToken(sessionCookie);
+    if (payload?.userId) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            actorTelegramId: BigInt(payload.telegramId || '0'),
+            action: 'USER_LOGOUT',
+            entityType: 'DashboardSession',
+            entityId: payload.sessionId || sessionHash,
+            afterPayload: {
+              traceId: traceId || 'logout-trace',
+              source: 'api/auth/logout',
             },
-          });
-        } catch (auditErr) {
-          // Log audit persistence error with trace context
-          console.warn(`[LogoutAuditError] traceId=${traceId}:`, auditErr);
-        }
+          },
+        });
+      } catch (auditErr) {
+        // Log audit persistence error with trace context
+        console.warn(`[LogoutAuditError] traceId=${traceId}:`, auditErr);
       }
     }
   } catch (err) {

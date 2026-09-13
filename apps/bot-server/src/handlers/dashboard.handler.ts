@@ -186,6 +186,35 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
     });
 
     if (!result.success) {
+      if (result.reason === 'MAX_CONCURRENT_SESSIONS_REACHED') {
+        const activeSessions = result.activeSessions || [];
+        let maxText =
+          `⚠️ <b>تم بلوغ الحد الأقصى للجلسات النشطة (3 جلسات)</b>\n\n` +
+          `لديك حالياً <b>${activeSessions.length} جلسات نشطة</b> مفتوحة في لوحة التحكم.\n` +
+          `لحماية أمان حسابك ومنع تشتت الصلاحيات، لا يمكن إصدار رابط دخول جديد حتى تقوم بإنهاء إحدى الجلسات النشطة أدناه:\n` +
+          `────────────────────────────\n`;
+
+        const maxKb = new InlineKeyboard();
+        for (const [i, s] of activeSessions.entries()) {
+          const expiryFormatted = formatDateTime(s.expiresAt);
+          const extStatus = s.extensionCount >= 1 ? ' [مُمددة]' : '';
+          maxText += `\n<b>جلسة #${i + 1}</b> [${s.originKind}]${extStatus}\n`;
+          maxText += `💻 الجهاز: ${escapeHtml(s.deviceSummary || 'غير محدد')}\n`;
+          maxText += `🕒 تنتهي: ${expiryFormatted}\n`;
+          maxKb.text(`🛑 إنهاء جلسة #${i + 1}`, `sess_rev:${s.id}`).row();
+        }
+
+        maxKb
+          .text('🛑 إنهاء جميع الجلسات', 'sess_rev_all')
+          .row()
+          .text('🔄 إعادة المحاولة', 'menu:exec:dashboard')
+          .row()
+          .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+        await ctx.reply(maxText, { parse_mode: 'HTML', reply_markup: maxKb });
+        return;
+      }
+
       const user = result.user;
       const roleDisplay = user ? getRoleTitle(user.role) : 'غير مسجل بالمنظومة';
       const statusDisplay = !user
@@ -216,12 +245,12 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
       : '';
 
     const card =
-      `🚀 <b>لوحة التحكم المؤسسية — رابط الدخول المباشر للوحة التحكم المؤسسية</b>\n` +
+      `🚀 <b>لوحة التحكم المؤسسية — رابط الدخول المباشر</b>\n` +
       `────────────────────────────\n` +
       `مرحباً بك يا <b>${escapeHtml(user.fullName)}</b> (${escapeHtml(roleTitle)}).${siteInfo}\n\n` +
       `🔐 <b>تم إصدار تصريح دخول آمن لحسابك:</b>\n` +
       `⏱️ <b>الصلاحية:</b> صالح للاستخدام لمدة <b>5 دقائق فقط</b>.\n` +
-      `🛡️ <b>الأمان:</b> استخدام لمرة واحدة ذرياً (Single-Use Magic Token).\n\n` +
+      `🛡️ <b>الأمان:</b> استخدام لمرة واحدة ذرياً (استخدام أي من الرابطين يلغي الرابط الشقيق فوراً).\n\n` +
       `👇 <b>اختر طريقة فتح لوحة التحكم عبر الأزرار أدناه:</b>`;
 
     const safeTunnelUrl = formatTelegramSafeUrl(tunnelUrl);
@@ -382,7 +411,8 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
       const text =
         `✅ <b>تم تمديد الجلسة بنجاح</b>\n\n` +
         `⏳ تم تمديد صلاحية جلستك لمدة 8 ساعات إضافية حتى:\n` +
-        `🕒 <b>${escapeHtml(formatted)}</b>`;
+        `🕒 <b>${escapeHtml(formatted)}</b>\n\n` +
+        `ℹ️ <i>ملاحظة: تم استهلاك الحد الأقصى للتمديد لهذه الجلسة (تمديد واحد فقط بسقف 16 ساعة إجمالاً).</i>`;
       const kb = new InlineKeyboard()
         .text('📋 قائمة الجلسات النشطة', 'sess_list')
         .row()
@@ -391,8 +421,12 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
       await renderScreen(text, kb);
     } else {
+      const alertMsg =
+        result.reason === 'MAX_EXTENSIONS_REACHED'
+          ? '⚠️ تم استهلاك حد التمديد (مسموح بتمديد واحد فقط لكل جلسة بـ 8 ساعات إضافية).'
+          : '⚠️ تعذر تمديد الجلسة: الجلسة ملغاة أو منتهية بالفعل.';
       try {
-        await ctx.answerCallbackQuery({ text: '⚠️ تعذر تمديد الجلسة: الجلسة ملغاة أو منتهية بالفعل.', show_alert: true });
+        await ctx.answerCallbackQuery({ text: alertMsg, show_alert: true });
       } catch {}
     }
     return true;
@@ -437,11 +471,20 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
 
     for (const [i, s] of sessions.entries()) {
       const expiryFormatted = formatDateTime(s.expiresAt);
-      text += `\n<b>جلسة #${i + 1}</b> [${s.originKind}]\n`;
+      const isExtended = s.extensionCount >= 1;
+      const extBadge = isExtended ? ' [مُمددة 8س]' : ' [متاح تمديد]';
+      text += `\n<b>جلسة #${i + 1}</b> [${s.originKind}]${extBadge}\n`;
       text += `💻 الجهاز: ${escapeHtml(s.deviceSummary || 'غير محدد')}\n`;
       text += `🕒 تنتهي: ${expiryFormatted}\n`;
 
-      keyboard.text(`🛑 إنهاء جلسة #${i + 1}`, `sess_rev:${s.id}`).row();
+      if (!isExtended) {
+        keyboard
+          .text(`⏳ تمديد 8س #${i + 1}`, `sess_ext:${s.id}`)
+          .text(`🛑 إنهاء #${i + 1}`, `sess_rev:${s.id}`)
+          .row();
+      } else {
+        keyboard.text(`🛑 إنهاء جلسة #${i + 1}`, `sess_rev:${s.id}`).row();
+      }
     }
 
     keyboard
@@ -474,11 +517,20 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
 
     for (const [i, s] of sessions.entries()) {
       const expiryFormatted = formatDateTime(s.expiresAt);
-      text += `\n<b>جلسة #${i + 1}</b> [${s.originKind}]\n`;
+      const isExtended = s.extensionCount >= 1;
+      const extBadge = isExtended ? ' [مُمددة 8س]' : ' [متاح تمديد]';
+      text += `\n<b>جلسة #${i + 1}</b> [${s.originKind}]${extBadge}\n`;
       text += `💻 الجهاز: ${escapeHtml(s.deviceSummary || 'غير محدد')}\n`;
       text += `🕒 تنتهي: ${expiryFormatted}\n`;
 
-      keyboard.text(`🛑 إنهاء جلسة #${i + 1}`, `sess_rev:${s.id}`).row();
+      if (!isExtended) {
+        keyboard
+          .text(`⏳ تمديد 8س #${i + 1}`, `sess_ext:${s.id}`)
+          .text(`🛑 إنهاء #${i + 1}`, `sess_rev:${s.id}`)
+          .row();
+      } else {
+        keyboard.text(`🛑 إنهاء جلسة #${i + 1}`, `sess_rev:${s.id}`).row();
+      }
     }
 
     keyboard

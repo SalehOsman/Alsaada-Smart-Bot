@@ -82,6 +82,34 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         throw new Error('TOKEN_ALREADY_CLAIMED');
       }
 
+      // Atomic sibling link invalidation: invalidate sibling link with the same groupId in the same transaction
+      if (candidate.groupId) {
+        await tx.dashboardAuthLink.updateMany({
+          where: {
+            groupId: candidate.groupId,
+            id: { not: candidate.id },
+            claimedAt: null,
+          },
+          data: {
+            claimedAt: now,
+            claimTraceId: traceId.slice(0, 36),
+          },
+        });
+      }
+
+      // Check active concurrent sessions limit (<= 3)
+      const activeSessionsCount = await tx.dashboardSession.count({
+        where: {
+          actorTelegramId: candidate.actorTelegramId,
+          revokedAt: null,
+          expiresAt: { gt: now },
+        },
+      });
+
+      if (activeSessionsCount >= 3) {
+        throw new Error('MAX_CONCURRENT_SESSIONS_REACHED');
+      }
+
       return candidate;
     });
 
@@ -126,15 +154,18 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       return renderFailureHtml('FORBIDDEN_ROLE_OR_STATUS', botFallbackUrl, traceId);
     }
 
-    // 3. Create durable 8-hour session in database
+    // 3. Create durable 8-hour session in database with raw Opaque Token
     const sessionTtlHours = envConfig.DASHBOARD_SESSION_TTL_HOURS || 8;
     const expiresAt = new Date(Date.now() + sessionTtlHours * 3600 * 1000);
-    const sessionId = crypto.randomUUID();
-    const sessionHash = crypto.createHash('sha256').update(sessionId).digest('hex');
+    const maxExpiresAt = new Date(Date.now() + 16 * 3600 * 1000); // 16h total ceiling
+
+    // Raw unguessable cryptographically secure opaque token
+    const opaqueToken = crypto.randomBytes(32).toString('hex');
+    const sessionHash = crypto.createHash('sha256').update(opaqueToken).digest('hex');
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
 
-    await prisma.dashboardSession.create({
+    const createdSession = await prisma.dashboardSession.create({
       data: {
         sessionHash,
         userId: user.id,
@@ -143,6 +174,8 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         deviceSummary: userAgent.slice(0, 255),
         userAgentHash,
         expiresAt,
+        maxExpiresAt,
+        extensionCount: 0,
       },
     });
 
@@ -152,29 +185,21 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         actorTelegramId: user.telegramId,
         action: 'DASHBOARD_AUTH_CLAIMED_SUCCESS',
         entityType: 'DashboardSession',
-        entityId: sessionId,
+        entityId: createdSession.id,
         afterPayload: {
           traceId,
           userId: user.id,
           role: user.role,
           originKind: link.targetOrigin,
+          groupId: link.groupId,
           expiresAt: expiresAt.toISOString(),
+          maxExpiresAt: maxExpiresAt.toISOString(),
         },
       },
     });
 
-    // 4. Generate signed session token
-    const sessionToken = await createSessionToken({
-      userId: user.id,
-      telegramId: user.telegramId.toString(),
-      role: user.role,
-      name: user.fullName,
-      sessionId,
-      assignedSiteId: user.assignedSiteId || null,
-      assignedSiteName: user.assignedSite?.name || null,
-      isRealSuperAdmin: user.role === 'SUPER_ADMIN',
-      createdAt: Date.now(),
-    });
+    // 4. The raw opaque token itself is the cookie payload
+    const sessionToken = opaqueToken;
 
     // 5. Build response with secure cookie
     // Dynamic host and scheme determination
@@ -288,6 +313,16 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       return renderFailureHtml('TOKEN_EXPIRED', botFallbackUrl, traceId);
     }
 
+    if (errorMsg === 'MAX_CONCURRENT_SESSIONS_REACHED') {
+      if (isApiRequest) {
+        return NextResponse.json(
+          { success: false, error: 'MAX_CONCURRENT_SESSIONS_REACHED', traceId },
+          { status: 429 }
+        );
+      }
+      return renderFailureHtml('MAX_CONCURRENT_SESSIONS_REACHED', botFallbackUrl, traceId);
+    }
+
     if (isApiRequest) {
       return NextResponse.json(
         { success: false, error: 'INVALID_OR_EXPIRED_TOKEN', traceId },
@@ -305,6 +340,10 @@ function renderFailureHtml(
   traceId: string,
 ): NextResponse {
   const titles: Record<string, { title: string; desc: string }> = {
+    MAX_CONCURRENT_SESSIONS_REACHED: {
+      title: 'تم الوصول إلى الحد الأقصى للجلسات النشطة',
+      desc: 'لديك 3 جلسات نشطة بالفعل. يرجى العودة إلى البوت لإدارة جلساتك النشطة أو إنهاء إحداها لإتاحة فتح جلسة جديدة.',
+    },
     TOKEN_ALREADY_CLAIMED: {
       title: 'تم استخدام رابط الدخول مسبقاً',
       desc: 'روابط الدخول المؤسسية صالحة للاستخدام لمرة واحدة فقط حفاظاً على أمان النظام. للحصول على رابط جديد، يرجى العودة إلى البوت والضغط على «🖥️ لوحة التحكم».',
