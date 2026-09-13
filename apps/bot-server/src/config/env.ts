@@ -53,10 +53,14 @@ export interface AppConfig {
   dashboardSessionTtlHours: number;
   dashboardSessionNoticeMinutes: number;
   dashboardSessionExtensionHours: number;
+  gitCommitSha?: string;
+  buildTime?: string;
 }
 
 export function loadConfig(): AppConfig {
   const appVersion = process.env.APP_VERSION || '2.0.0-alpha.1';
+  const gitCommitSha = process.env.GIT_COMMIT_SHA || '20bcd180a05ef25ec9990ad44b9a19f7ce7abff2';
+  const buildTime = process.env.BUILD_TIME || '2026-09-13T12:00:00.000Z';
   const nodeEnv = process.env.NODE_ENV || 'development';
   const port = parseInt(process.env.PORT || '3000', 10);
   const botToken = process.env.BOT_TOKEN || '';
@@ -72,7 +76,12 @@ export function loadConfig(): AppConfig {
   const googlePrivateKey = (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
   const dashboardUrl = (process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || 'http://localhost:3002').replace(/\/+$/, '');
   const dashboardLocalUrl = (process.env.DASHBOARD_LOCAL_URL || 'http://localhost:3002').replace(/\/+$/, '');
-  const dashboardTunnelUrl = (process.env.DASHBOARD_TUNNEL_URL || 'https://tunnel.alsaada.example').replace(/\/+$/, '');
+  const rawTunnelUrl =
+    process.env.DASHBOARD_TUNNEL_URL ||
+    (process.env.DASHBOARD_URL && !process.env.DASHBOARD_URL.includes('localhost') ? process.env.DASHBOARD_URL : '') ||
+    (process.env.ADMIN_DASHBOARD_URL && !process.env.ADMIN_DASHBOARD_URL.includes('localhost') ? process.env.ADMIN_DASHBOARD_URL : '') ||
+    dashboardLocalUrl;
+  const dashboardTunnelUrl = rawTunnelUrl.replace(/\/+$/, '');
   const dashboardAuthLinkSecret = process.env.DASHBOARD_AUTH_LINK_SECRET || process.env.DATABASE_ENCRYPTION_KEY || 'sovereign-dashboard-secret-32-chars';
   const dashboardAuthLinkTtlMinutes = parseInt(process.env.DASHBOARD_AUTH_LINK_TTL_MINUTES || '5', 10);
   const dashboardSessionTtlHours = parseInt(process.env.DASHBOARD_SESSION_TTL_HOURS || '8', 10);
@@ -108,6 +117,8 @@ export function loadConfig(): AppConfig {
     dashboardSessionTtlHours,
     dashboardSessionNoticeMinutes,
     dashboardSessionExtensionHours,
+    gitCommitSha,
+    buildTime,
   };
 }
 

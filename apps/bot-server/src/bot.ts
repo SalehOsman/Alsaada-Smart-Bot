@@ -191,6 +191,18 @@ export function createBot(): Bot<MyContext> {
     onWorkerDemoted: async (demotedTelegramId: bigint) => {
       await invalidateUserCache(demotedTelegramId);
       await syncUserCommandsScope(bot.api, demotedTelegramId, 'GUEST', false);
+      try {
+        const fakeCtx = {
+          from: { id: Number(demotedTelegramId) },
+          chat: { id: Number(demotedTelegramId), type: 'private' },
+          api: bot.api,
+          effectiveRole: 'GUEST',
+          isImpersonating: false,
+          isRealSuperAdmin: false,
+          dbUser: await prisma.user.findUnique({ where: { telegramId: demotedTelegramId } }),
+        } as unknown as MyContext;
+        await screenFlowService.ensurePersistentKeyboard(fakeCtx, undefined, true);
+      } catch {}
     },
   });
 
@@ -205,6 +217,18 @@ export function createBot(): Bot<MyContext> {
         const impRole = await getImpersonatedRole(telegramId);
         const effectiveRole = impRole || 'SUPER_ADMIN';
         await syncUserCommandsScope(bot.api, telegramId, effectiveRole, false);
+        try {
+          const fakeCtx = {
+            from: { id: Number(telegramId) },
+            chat: { id: Number(telegramId), type: 'private' },
+            api: bot.api,
+            effectiveRole,
+            isImpersonating: Boolean(impRole),
+            isRealSuperAdmin: true,
+            dbUser: await prisma.user.findUnique({ where: { telegramId } }),
+          } as unknown as MyContext;
+          await screenFlowService.ensurePersistentKeyboard(fakeCtx, undefined, true);
+        } catch {}
       },
     }
   );
@@ -239,7 +263,7 @@ export function createBot(): Bot<MyContext> {
     }
 
     // If message is a persistent keyboard navigation button, clean up unfinished flow & ephemeral inputs
-    const isNav = /القائمة الرئيسية|إعدادات النظام|لوحة التحكم|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي|إنهاء وضع المحاكاة|العودة كمدير عام/.test(ctx.message.text);
+    const isNav = /القائمة الرئيسية|إعدادات النظام|🖥️ فتح لوحة التحكم|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي|إنهاء وضع المحاكاة|العودة كمدير عام/.test(ctx.message.text);
     if (isNav) {
       await screenFlowService.cleanupIncomingUserMessage(ctx);
       await screenFlowService.cleanupUnfinishedFlow(ctx);
@@ -273,7 +297,6 @@ export function createBot(): Bot<MyContext> {
     }
   });
   bot.command(['ping', 'health', 'speed'], handlePing);
-  bot.command(['dashboard', 'admin_dashboard', 'panel'], handleDashboardCommand);
 
   // 8. Persistent Bottom Reply Keyboard Button Handlers
   bot.hears(/إنهاء وضع المحاكاة|العودة كمدير عام/, async (ctx) => {
@@ -295,9 +318,11 @@ export function createBot(): Bot<MyContext> {
   bot.hears(/فحص الكفاءة/, handlePing);
   bot.hears(/التبديل لحسابي كعامل/, async (ctx) => {
     await handleSwitchToWorker(ctx as unknown as WorkforceModuleContext);
+    await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
   });
   bot.hears(/العودة لبوابة الإشراف/, async (ctx) => {
     await handleSwitchToFieldAdmin(ctx as unknown as WorkforceModuleContext);
+    await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
   });
   bot.hears(/بطاقة معرفي/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
@@ -323,7 +348,7 @@ export function createBot(): Bot<MyContext> {
   bot.hears(/فواتيري ومستخلصاتي/, async (ctx) => {
     await ctx.reply('🧾 *بوابة مستخلصات الموردين*\nعرض الفواتير المعتمدة تحت التجهيز.', { parse_mode: 'Markdown' });
   });
-  bot.hears(/لوحة التحكم/, handleDashboardCommand);
+  bot.hears('🖥️ فتح لوحة التحكم', handleDashboardCommand);
 
   // 9. Navigation Callbacks
   bot.callbackQuery(/^sess_/, handleSessionCallbacks);

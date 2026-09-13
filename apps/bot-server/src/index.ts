@@ -1,4 +1,5 @@
 import dns from 'node:dns';
+import http from 'node:http';
 
 // Fix for Egyptian ISP IPv6 routing blackhole: prioritize IPv4 to eliminate 1.5s - 3s DNS timeouts
 dns.setDefaultResultOrder('ipv4first');
@@ -61,11 +62,37 @@ async function bootstrap() {
       },
     });
 
-    console.log('🤖 [TELEGRAM] Bot runner started successfully with Long Polling.');
-    console.log(`👑 [AUTH] Designated Super Admin ID: ${config.superAdminTelegramId}`);
+    // 4. Lightweight Native HTTP Health Endpoint (for Docker Healthcheck & Provenance Verification)
+    const healthServer = http.createServer((req, res) => {
+      const url = req.url || '';
+      if (url === '/api/health' || url === '/health' || url === '/ping') {
+        const body = JSON.stringify({
+          status: 'ready',
+          service: 'bot-server',
+          version: config.appVersion,
+          commitSha: config.gitCommitSha,
+          buildTime: config.buildTime,
+          timestamp: new Date().toISOString(),
+        });
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store',
+        });
+        res.end(body);
+        return;
+      }
+
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not Found');
+    });
+
+    healthServer.listen(config.port, '0.0.0.0', () => {
+      console.log(`📡 [HEALTH] HTTP Health server listening on 0.0.0.0:${config.port}`);
+    });
 
     const shutdown = async () => {
       console.log('\n🛑 [SHUTDOWN] Received termination signal. Stopping bot...');
+      healthServer.close();
       if (runner.isRunning()) {
         await runner.stop();
       }

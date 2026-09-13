@@ -1,5 +1,8 @@
 import { Keyboard } from 'grammy';
+import { canAccessDashboard, CanonicalRole } from '@alsaada/rbac';
 import { MyContext } from '../types/context.js';
+
+export const DASHBOARD_KEYBOARD_BUTTON_TEXT = '🖥️ فتح لوحة التحكم';
 
 /**
  * Builds the enterprise persistent bottom reply keyboard.
@@ -60,6 +63,20 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
       .text('🆔 بطاقة معرفي');
   }
 
+  // Section 4.2 Visibility Rules (SSOT):
+  // 1. Private chat with bot only
+  // 2. Active, non-banned account
+  // 3. Effective role in ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN']
+  // 4. Not momentarily impersonating a non-admin role
+  // 5. Never visible to WORKER_SUPERVISOR, WORKER, SUPPLIER, GUEST
+  const isPrivate = ctx.chat?.type === 'private';
+  const isAccountActive = ctx.dbUser ? (ctx.dbUser.isActive && !ctx.dbUser.isBanned) : true;
+  const isAuthorizedRole = canAccessDashboard(role as CanonicalRole);
+  const isNotImpersonatingNonAdmin = !ctx.isImpersonating || isAuthorizedRole;
+
+  if (isPrivate && isAccountActive && isAuthorizedRole && isNotImpersonatingNonAdmin) {
+    keyboard.row().text(DASHBOARD_KEYBOARD_BUTTON_TEXT);
+  }
 
   return keyboard.resized().persistent();
 }

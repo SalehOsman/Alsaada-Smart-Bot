@@ -16,6 +16,7 @@ RUN apk add --no-cache openssl git
 # Copy monorepo manifests
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/database/package.json packages/database/
+COPY packages/rbac/package.json packages/rbac/
 COPY packages/regional-engine/package.json packages/regional-engine/
 COPY packages/national-id-engine/package.json packages/national-id-engine/
 COPY packages/core-components/package.json packages/core-components/
@@ -33,6 +34,8 @@ RUN git init --bare "$GIT_DIR" \
 COPY packages/database/prisma/ packages/database/prisma/
 COPY packages/database/src/ packages/database/src/
 COPY packages/database/tsconfig.json packages/database/
+COPY packages/rbac/src/ packages/rbac/src/
+COPY packages/rbac/tsconfig.json packages/rbac/
 COPY packages/regional-engine/src/ packages/regional-engine/src/
 COPY packages/regional-engine/tsconfig.json packages/regional-engine/
 COPY packages/national-id-engine/src/ packages/national-id-engine/src/
@@ -58,6 +61,7 @@ COPY tsconfig.json ./
 RUN pnpm --filter @alsaada/database db:generate
 
 # Compile TypeScript across all packages, modules and the bot server
+RUN pnpm --filter @alsaada/rbac build
 RUN pnpm --filter @alsaada/regional-engine build
 RUN pnpm --filter @alsaada/national-id-engine build
 RUN pnpm --filter @alsaada/database build

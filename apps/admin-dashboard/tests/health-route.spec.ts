@@ -39,6 +39,9 @@ describe('GET /api/health', () => {
     await expect(response.json()).resolves.toEqual({
       status: 'ready',
       service: 'admin-dashboard',
+      version: expect.any(String),
+      commitSha: expect.any(String),
+      buildTime: expect.any(String),
       traceId,
     });
     expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith('SELECT 1');
@@ -64,6 +67,9 @@ describe('GET /api/health', () => {
     expect(response.status).toBe(503);
     expect(body.status).toBe('unavailable');
     expect(body.service).toBe('admin-dashboard');
+    expect(body.version).toBeDefined();
+    expect(body.commitSha).toBeDefined();
+    expect(body.buildTime).toBeDefined();
     expect(body.traceId).toMatch(/^[0-9a-f-]{36}$/i);
     expect(response.headers.get('x-trace-id')).toBe(body.traceId);
     expect(serialized).not.toContain('database-secret');

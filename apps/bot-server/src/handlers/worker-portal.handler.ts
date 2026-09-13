@@ -3,6 +3,7 @@ import type { MyContext } from '../types/context.js';
 import { prisma } from '../db.js';
 import { formatDate } from '@alsaada/regional-engine';
 import { GuestJoinRepository } from '@alsaada/workforce';
+import { systemDataService } from '../services/system-data.service.js';
 
 export async function handleWorkerSubHub(
   ctx: MyContext,
@@ -156,9 +157,10 @@ export async function handleWorkerIdCard(ctx: MyContext): Promise<void> {
   const workerName = worker?.nickname || worker?.name || ctx.from?.first_name || 'عامل';
   const siteName = worker?.site?.name || 'موقع العمل';
 
+  const companyName = await systemDataService.getCompanyTradeName();
   const text =
     `🆔 *بطاقة الهوية الرقمية للعامل*\n` +
-    `🏢 *شركة السعادة للمقاولات العامة والتعدين*\n` +
+    `🏢 *${companyName}*\n` +
     `────────────────────────────\n` +
     `🔹 *الاسم المعتمد:* *${workerName}*\n` +
     `🔹 *الكود المعتمد:* \`#${workerCode}\`\n` +

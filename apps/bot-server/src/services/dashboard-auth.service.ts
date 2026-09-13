@@ -271,7 +271,7 @@ export class DashboardAuthService {
 
     // 5. Construct direct URLs
     const localBase = config.dashboardLocalUrl || 'http://localhost:3002';
-    const tunnelBase = config.dashboardTunnelUrl || 'https://tunnel.alsaada.example';
+    const tunnelBase = config.dashboardTunnelUrl || localBase;
 
     const localUrl = `${localBase}/api/auth/claim?token=${localToken}`;
     const tunnelUrl = `${tunnelBase}/api/auth/claim?token=${tunnelToken}`;

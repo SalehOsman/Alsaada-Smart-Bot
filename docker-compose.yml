@@ -77,6 +77,10 @@ services:
       DATABASE_ENCRYPTION_KEY: ${DATABASE_ENCRYPTION_KEY}
       BLIND_INDEX_SALT: ${BLIND_INDEX_SALT}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      DASHBOARD_URL: ${DASHBOARD_URL}
+      ADMIN_DASHBOARD_URL: ${ADMIN_DASHBOARD_URL}
+      DASHBOARD_TUNNEL_URL: ${DASHBOARD_TUNNEL_URL}
+      DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localhost:3002}
     networks:
       - alsaada-enterprise-internal
       - alsaada-enterprise-public
@@ -124,6 +128,10 @@ services:
       PORT: 3002
       DATABASE_URL: postgresql://${DB_USER:-alsaada_admin}:${DB_PASSWORD:-alsaada_secure_pass_2026}@postgres:5432/${DB_NAME:-alsaada_db}?schema=public
       REDIS_URL: redis://:${REDIS_PASSWORD:-alsaada_redis_secure_2026}@redis:6379
+      DASHBOARD_URL: ${DASHBOARD_URL}
+      ADMIN_DASHBOARD_URL: ${ADMIN_DASHBOARD_URL}
+      DASHBOARD_TUNNEL_URL: ${DASHBOARD_TUNNEL_URL}
+      DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localhost:3002}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s

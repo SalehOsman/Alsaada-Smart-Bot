@@ -9,6 +9,7 @@ import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js
 import { screenFlowService } from '../services/screen-flow.service.js';
 import { verifyWorkerInviteToken, validateLinkingTokenConsumption, GuestJoinRepository, GuestJoinService } from '@alsaada/workforce';
 import { syncUserCommandsScope } from '../services/command-scope.service.js';
+import { systemDataService } from '../services/system-data.service.js';
 
 import { getRoleTitle, buildWelcomeMessage } from './start.helpers.js';
 export { getRoleTitle, buildWelcomeMessage };
@@ -18,7 +19,8 @@ export { getRoleTitle, buildWelcomeMessage };
  */
 export async function renderRoleHome(ctx: MyContext, inPlace = false): Promise<void> {
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
-  const text = buildWelcomeMessage(ctx);
+  const companyName = await systemDataService.getCompanyTradeName();
+  const text = buildWelcomeMessage(ctx, companyName);
   const keyboard = buildMainMenuKeyboard(ctx);
 
   if (inPlace && ctx.callbackQuery?.message && ctx.chat) {
@@ -72,8 +74,16 @@ export async function handleStart(ctx: MyContext): Promise<void> {
   // 1. فحص رابط الربط والمصادقة المشفر أو رابط الوصول للوحة التحكم
   const startPayload = (ctx.match || '').toString().trim();
   if (startPayload === 'dashboard_access') {
-    const { handleDashboardCommand } = await import('./dashboard.handler.js');
-    await handleDashboardCommand(ctx);
+    await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
+    await ctx.reply(
+      '🖥️ *لوحة التحكم المؤسسية*\n\n' +
+      'لإصدار رابط دخول مشفر وجديد إلى لوحة التحكم، يرجى الضغط على زر:\n' +
+      '*«🖥️ فتح لوحة التحكم»* من لوحة الأزرار بالأسفل ⬇️',
+      {
+        parse_mode: 'Markdown',
+        reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+      }
+    );
     return;
   }
 
@@ -174,13 +184,14 @@ export async function handleStart(ctx: MyContext): Promise<void> {
 
     const guestJoinRepo = new GuestJoinRepository(prisma);
     const worker = await guestJoinRepo.findWorkerByCodeOrSearch(workerCode);
+    const companyName = await systemDataService.getCompanyTradeName();
 
     if (worker) {
       // إذا كان العامل مرتبطاً بالفعل بهذا الحساب
       if (worker.telegramId && worker.telegramId === telegramId) {
         await ctx.reply(
           `👋 *أهلاً بك مجدداً يا ${worker.name}!*\n` +
-          `🏢 *شركة السعادة للمقاولات العامة والتعدين*\n` +
+          `🏢 *${companyName}*\n` +
           `━━━━━━━━━━━━━━━━━━━━━\n` +
           `🆔 *كودك الوظيفي المعتمد:* \`#${worker.code}\`\n` +
           `💼 *الوظيفة:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'الموقع العام'}\n` +
@@ -202,7 +213,7 @@ export async function handleStart(ctx: MyContext): Promise<void> {
 
       const welcomeCard =
         `👋 *أهلاً وسهلاً بك زميلنا العزيز/ ${worker.name}*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة والتعدين — البوابة الرقمية للعاملين*\n` +
+        `🏢 *${companyName} — البوابة الرقمية للعاملين*\n` +
         `━━━━━━━━━━━━━━━━━━━━━\n` +
         `🆔 *كودك الوظيفي المعتمد:* \`#${worker.code}\`\n` +
         `💼 *المسمى الوظيفي:* ${worker.jobTitle}\n` +
@@ -287,10 +298,11 @@ export async function handleClaimWorker(ctx: MyContext): Promise<void> {
     await invalidateUserCache(telegramId);
     await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
 
+    const companyName = await systemDataService.getCompanyTradeName();
     const successText =
       `🎉 *تهانينا يا ${linkResult.workerName}! تم تفعيل وربط حسابك بنجاح 100%!*\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `أصبحت الآن متصلاً رسمياً ببوابة الخدمة الذاتية للعاملين بشركة السعادة.\n\n` +
+      `أصبحت الآن متصلاً رسمياً ببوابة الخدمة الذاتية للعاملين بـ ${companyName}.\n\n` +
       `🆔 *كودك الوظيفي:* \`#${linkResult.workerCode}\`\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
       `يمكنك الآن متابعة كافة مستحقاتك، طلبات الإجازات، والسلف المالية مباشرة.`;

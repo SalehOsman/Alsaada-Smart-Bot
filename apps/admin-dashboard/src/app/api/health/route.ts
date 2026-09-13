@@ -1,6 +1,7 @@
 import { prisma } from '@alsaada/database';
 import { extractTraceId, TelemetryLogger } from '@alsaada/telemetry';
 import { NextRequest, NextResponse } from 'next/server';
+import { getVersionInfo } from '../../../lib/version';
 
 const logger = new TelemetryLogger({
   service: 'admin-dashboard',
@@ -16,6 +17,7 @@ function healthHeaders(traceId: string): Record<string, string> {
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const traceId = extractTraceId(request);
+  const versionInfo = getVersionInfo();
 
   try {
     await Promise.all([
@@ -31,7 +33,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     ]);
 
     return NextResponse.json(
-      { status: 'ready', service: 'admin-dashboard', traceId },
+      {
+        status: 'ready',
+        service: 'admin-dashboard',
+        version: versionInfo.version,
+        commitSha: versionInfo.commitSha,
+        buildTime: versionInfo.buildTime,
+        traceId,
+      },
       { status: 200, headers: healthHeaders(traceId) },
     );
   } catch (error) {
@@ -43,7 +52,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
     return NextResponse.json(
-      { status: 'unavailable', service: 'admin-dashboard', traceId },
+      {
+        status: 'unavailable',
+        service: 'admin-dashboard',
+        version: versionInfo.version,
+        commitSha: versionInfo.commitSha,
+        buildTime: versionInfo.buildTime,
+        traceId,
+      },
       { status: 503, headers: healthHeaders(traceId) },
     );
   }

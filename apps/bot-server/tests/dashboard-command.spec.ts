@@ -8,6 +8,7 @@ import {
 } from '../src/services/dashboard-auth.service.js';
 import {
   handleDashboardCommand,
+  handleSessionCallbacks,
   getRoleTitle,
   escapeHtml,
   ROLE_ARABIC_TITLES,
@@ -38,6 +39,11 @@ vi.mock('../src/db.js', () => ({
     auditLog: {
       create: vi.fn().mockResolvedValue({ id: 'audit-log-uuid' }),
     },
+    systemErrorLog: {
+      create: vi.fn().mockResolvedValue({ id: 'err-uuid', errorReference: '#ERR-TEST1234', occurrenceCount: 1 }),
+      findFirst: vi.fn().mockResolvedValue(null),
+      update: vi.fn().mockResolvedValue({ id: 'err-uuid', errorReference: '#ERR-TEST1234', occurrenceCount: 1 }),
+    },
   },
 }));
 
@@ -47,6 +53,13 @@ vi.mock('../src/redis.js', () => ({
     set: vi.fn().mockResolvedValue('OK'),
     get: vi.fn().mockResolvedValue(null),
   },
+  getUserActiveScreen: vi.fn().mockResolvedValue(null),
+  setUserActiveScreen: vi.fn().mockResolvedValue(undefined),
+  clearUserActiveScreen: vi.fn().mockResolvedValue(undefined),
+  clearAllPendingUserActions: vi.fn().mockResolvedValue(undefined),
+  getPersistentKeyboardMsg: vi.fn().mockResolvedValue(null),
+  setPersistentKeyboardMsg: vi.fn().mockResolvedValue(undefined),
+  getPendingWorkerWizard: vi.fn().mockResolvedValue(null),
 }));
 
 describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token Engine', () => {
@@ -327,20 +340,14 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
     });
   });
 
-  describe('3. Dynamic Command Scope Registration', () => {
-    it('should include dashboard command for all 7 authorized roles', () => {
-      for (const role of AUTHORIZED_DASHBOARD_ROLES) {
+  describe('3. Dynamic Command Scope Registration & Legacy Command Purge', () => {
+    it('should strictly PURGE dashboard, admin_dashboard, and panel commands for ALL roles', () => {
+      const allRoles = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN', 'WORKER_SUPERVISOR', 'WORKER', 'SUPPLIER', 'GUEST'];
+      for (const role of allRoles) {
         const commands = getCommandsForRole(role);
-        const hasDashboard = commands.some((cmd) => cmd.command === 'dashboard');
-        expect(hasDashboard).toBe(true);
-      }
-    });
-
-    it('should strictly mask dashboard command for unauthorized roles', () => {
-      const unauthorizedRoles = ['WORKER', 'SUPPLIER', 'GUEST'];
-      for (const role of unauthorizedRoles) {
-        const commands = getCommandsForRole(role);
-        const hasDashboard = commands.some((cmd) => cmd.command === 'dashboard');
+        const hasDashboard = commands.some((cmd) =>
+          cmd.command === 'dashboard' || cmd.command === 'admin_dashboard' || cmd.command === 'panel'
+        );
         expect(hasDashboard).toBe(false);
       }
     });
@@ -378,20 +385,25 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(mockCtx.reply).toHaveBeenCalledTimes(1);
       const [replyText, replyOptions] = vi.mocked(mockCtx.reply).mock.calls[0] as [string, any];
 
-      // 1. Text checks: contains localized role and site
-      expect(replyText).toContain('رابط الدخول المباشر للوحة التحكم المؤسسية');
+      // 1. Text checks: contains localized role and site, and strictly zero in-text links
+      expect(replyText).toContain('لوحة التحكم المؤسسية — رابط الدخول المباشر');
       expect(replyText).toContain('مشرف موقع ميداني');
       expect(replyText).not.toContain('(FIELD_ADMIN)');
       expect(replyText).toContain('برج الأمل');
-      expect(replyText).toContain('/api/auth/claim?token=');
+      expect(replyText).not.toContain('/api/auth/claim?token=');
+      expect(replyText).not.toContain('<a href=');
 
       // 2. Keyboard checks: contains dual URL buttons and session management
       expect(replyOptions.parse_mode).toBe('HTML');
+      expect(replyOptions.link_preview_options?.is_disabled).toBe(true);
       const flatButtons = replyOptions.reply_markup.inline_keyboard.flat();
       const tunnelBtn = flatButtons.find((btn: any) => btn.text === '🌐 فتح عبر النفق (Tunnel)');
       expect(tunnelBtn).toBeDefined();
+      expect(tunnelBtn.url).toContain('/api/auth/claim?token=');
       const localBtn = flatButtons.find((btn: any) => btn.text === '💻 فتح محلياً (Localhost)');
       expect(localBtn).toBeDefined();
+      expect(localBtn.url).toContain('/api/auth/claim?token=');
+      expect(localBtn.url).toContain('127.0.0.1.nip.io');
 
       // 3. Regeneration and main-menu callbacks remain available.
       const sessListBtn = flatButtons.find((btn: any) => btn.callback_data === 'sess_list');
@@ -426,7 +438,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
 
       expect(reply).toHaveBeenCalledTimes(2);
       const [fallbackText, fallbackOptions] = reply.mock.calls[1] as [string, any];
-      expect(fallbackText).toContain('تعذر فتح لوحة التحكم');
+      expect(fallbackText).toContain('رمز البلاغ المرجعي:');
       const fallbackButtons = fallbackOptions.reply_markup.inline_keyboard.flat();
       expect(fallbackButtons).toEqual(
         expect.arrayContaining([
@@ -434,6 +446,43 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
           expect.objectContaining({ callback_data: 'action:main_menu' }),
         ]),
       );
+    });
+
+    it('gracefully recovers when Telegram Bot API rejects localhost button with Wrong HTTP URL', async () => {
+      config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
+      config.dashboardLocalUrl = 'http://localhost:3002';
+
+      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
+        id: 'usr-fa-recovery',
+        telegramId: 55667788n,
+        fullName: 'م. أحمد التعافي',
+        role: 'SUPER_ADMIN',
+        isActive: true,
+        isBanned: false,
+      } as any);
+
+      // First attempt throws Wrong HTTP URL (Telegram API real behavior on localhost), second attempt succeeds
+      const reply = vi
+        .fn()
+        .mockRejectedValueOnce(
+          new Error("Bad Request: inline keyboard button URL 'http://localhost:3002/api/auth/claim?token=xyz' is invalid: Wrong HTTP URL"),
+        )
+        .mockResolvedValueOnce({});
+
+      const mockCtx = {
+        from: { id: 55667788, first_name: 'أحمد' },
+        chat: { type: 'private' },
+        reply,
+      } as unknown as MyContext;
+
+      await handleDashboardCommand(mockCtx);
+
+      expect(reply).toHaveBeenCalledTimes(2);
+      const [retryText, retryOptions] = reply.mock.calls[1] as [string, any];
+      expect(retryText).toContain('لوحة التحكم المؤسسية — رابط الدخول المباشر');
+      const retryButtons = retryOptions.reply_markup.inline_keyboard.flat();
+      expect(retryButtons.find((btn: any) => btn.text === '🌐 فتح عبر النفق (Tunnel)')).toBeDefined();
+      expect(retryButtons.find((btn: any) => btn.text === '💻 فتح محلياً (Localhost)')).toBeUndefined();
     });
 
     it('should include dual link buttons (Tunnel and Localhost) and session management in keyboard', async () => {
@@ -467,12 +516,13 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(mockCtx.reply).toHaveBeenCalledTimes(1);
       const [replyText, replyOptions] = vi.mocked(mockCtx.reply).mock.calls[0] as [string, any];
 
-      // 1. Text checks
-      expect(replyText).toContain('روابط الدخول المباشر للوحة التحكم المؤسسية');
-      expect(replyText).toContain('الرابط المحلي (Localhost)');
-      expect(replyText).toContain('رابط النفق الخارجي (Tunnel)');
+      // 1. Text checks: strictly zero in-text links
+      expect(replyText).toContain('لوحة التحكم المؤسسية — رابط الدخول المباشر');
+      expect(replyText).not.toContain('/api/auth/claim?token=');
+      expect(replyText).not.toContain('<a href=');
 
       // 2. Keyboard checks: MUST contain Tunnel and Local buttons
+      expect(replyOptions.link_preview_options?.is_disabled).toBe(true);
       const flatButtons = replyOptions.reply_markup.inline_keyboard.flat();
       const tunnelBtn = flatButtons.find((btn: any) => btn.text === '🌐 فتح عبر النفق (Tunnel)');
       expect(tunnelBtn).toBeDefined();
@@ -481,6 +531,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       const localBtn = flatButtons.find((btn: any) => btn.text === '💻 فتح محلياً (Localhost)');
       expect(localBtn).toBeDefined();
       expect(localBtn.url).toContain('/api/auth/claim?token=');
+      expect(localBtn.url).toContain('127.0.0.1.nip.io');
 
       const sessListBtn = flatButtons.find((btn: any) => btn.text === '📋 جلساتي النشطة');
       expect(sessListBtn).toBeDefined();
@@ -499,21 +550,12 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       await expect(handleDashboardCommand(mockCtx)).resolves.not.toThrow();
 
       expect(mockCtx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('حدث خطأ غير متوقع أثناء معالجة طلب فتح لوحة التحكم'),
-        expect.objectContaining({ parse_mode: 'HTML' })
+        expect.stringContaining('رمز البلاغ المرجعي:'),
+        expect.objectContaining({ parse_mode: 'HTML' }),
       );
     });
 
-    it('should send direct message (DM) and prevent link leakage in group/supergroup chats', async () => {
-      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
-        id: 'usr-fa-01',
-        telegramId: 87654321n,
-        fullName: 'م. إبراهيم المشرف',
-        role: 'FIELD_ADMIN',
-        isActive: true,
-        isBanned: false,
-      } as any);
-
+    it('should strictly reject invocation in group/supergroup chats without generating tokens or sending DMs', async () => {
       const mockCtx = {
         from: {
           id: 87654321,
@@ -531,33 +573,20 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
 
       await handleDashboardCommand(mockCtx);
 
-      // Sent in DM to user with HTML parse_mode
-      expect(mockCtx.api.sendMessage).toHaveBeenCalledWith(
-        87654321,
-        expect.stringContaining('رابط الدخول المباشر للوحة التحكم المؤسسية'),
-        expect.objectContaining({
-          parse_mode: 'HTML',
-          reply_markup: expect.any(Object),
-        })
-      );
+      // Never sends DM to user
+      expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
 
-      // Sent in group (privacy notice without token)
+      // Zero tokens generated
+      expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
+
+      // Sent in group (polite rejection notice instructing private chat)
       expect(mockCtx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('تم إرسال رابط الدخول المباشر إلى محادثتك الخاصة'),
+        expect.stringContaining('عذراً، الوصول إلى لوحة التحكم متاح حصرياً عبر المحادثة الخاصة مع البوت'),
         expect.objectContaining({ parse_mode: 'HTML' })
       );
     });
 
-    it('should politely inform user in group if DM cannot be sent (bot not started in private)', async () => {
-      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
-        id: 'usr-fa-02',
-        telegramId: 99881122n,
-        fullName: 'م. أحمد مشرف',
-        role: 'FIELD_ADMIN',
-        isActive: true,
-        isBanned: false,
-      } as any);
-
+    it('should strictly reject regular group chats without generating tokens', async () => {
       const mockCtx = {
         from: {
           id: 99881122,
@@ -568,15 +597,17 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
           id: -10011223344,
         },
         api: {
-          sendMessage: vi.fn().mockRejectedValue(new Error('Bot was blocked by the user')),
+          sendMessage: vi.fn().mockResolvedValue({}),
         },
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
       await handleDashboardCommand(mockCtx);
 
+      expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
+      expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
       expect(mockCtx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('تعذر إرسال الرابط في الخاص'),
+        expect.stringContaining('عذراً، الوصول إلى لوحة التحكم متاح حصرياً عبر المحادثة الخاصة مع البوت'),
         expect.objectContaining({ parse_mode: 'HTML' })
       );
     });
@@ -681,6 +712,131 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(replyText).toContain('مشروع البرج &lt;A &amp; B&gt;');
       expect(replyText).toContain('مدير عام المنظومة (سوبر أدمن)');
       expect(replyCall[1]?.parse_mode).toBe('HTML');
+    });
+  });
+
+  describe('6. Session Management Callbacks & In-Place Navigation', () => {
+    it('renders session list in-place via editMessageText without sending a new message', async () => {
+      vi.mocked(prisma.dashboardSession.findMany).mockResolvedValueOnce([
+        {
+          id: 'sess-active-01',
+          userId: 'usr-fa-01',
+          actorTelegramId: 12345678n,
+          originKind: 'LOCAL',
+          deviceSummary: 'Chrome on Windows',
+          expiresAt: new Date(Date.now() + 3600 * 1000),
+          revokedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any,
+      ]);
+
+      const mockCtx = {
+        from: { id: 12345678 },
+        chat: { id: 9988 },
+        callbackQuery: {
+          data: 'sess_list',
+          message: { message_id: 5544 },
+        },
+        answerCallbackQuery: vi.fn().mockResolvedValue(true),
+        editMessageText: vi.fn().mockResolvedValue(true),
+        reply: vi.fn().mockResolvedValue({}),
+      } as unknown as MyContext;
+
+      const handled = await handleSessionCallbacks(mockCtx);
+      expect(handled).toBe(true);
+      expect(mockCtx.answerCallbackQuery).toHaveBeenCalled();
+      expect(mockCtx.editMessageText).toHaveBeenCalledTimes(1);
+      expect(mockCtx.reply).not.toHaveBeenCalled();
+
+      const [editedText, editedOptions] = vi.mocked(mockCtx.editMessageText).mock.calls[0] as [string, any];
+      expect(editedText).toContain('جلسات لوحة التحكم النشطة لحسابك (1)');
+      expect(editedText).toContain('Chrome on Windows');
+      expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'sess_rev:sess-active-01')).toBe(true);
+      expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'menu:exec:dashboard')).toBe(true);
+    });
+
+    it('revokes session, answers callback without alert, and updates list in-place', async () => {
+      // First call inside revokeSession, second call inside getActiveSessions returns empty
+      vi.mocked(prisma.dashboardSession.findMany).mockResolvedValueOnce([]);
+
+      const mockCtx = {
+        from: { id: 12345678 },
+        chat: { id: 9988 },
+        callbackQuery: {
+          data: 'sess_rev:sess-to-terminate',
+          message: { message_id: 5544 },
+        },
+        answerCallbackQuery: vi.fn().mockResolvedValue(true),
+        editMessageText: vi.fn().mockResolvedValue(true),
+        reply: vi.fn().mockResolvedValue({}),
+      } as unknown as MyContext;
+
+      const handled = await handleSessionCallbacks(mockCtx);
+      expect(handled).toBe(true);
+      expect(mockCtx.editMessageText).toHaveBeenCalledTimes(1);
+      expect(mockCtx.reply).not.toHaveBeenCalled();
+
+      const [editedText] = vi.mocked(mockCtx.editMessageText).mock.calls[0] as [string, any];
+      expect(editedText).toContain('لا توجد أي جلسات نشطة حالياً');
+    });
+
+    it('revokes all sessions and renders confirmation in-place with back button', async () => {
+      const mockCtx = {
+        from: { id: 12345678 },
+        chat: { id: 9988 },
+        callbackQuery: {
+          data: 'sess_rev_all',
+          message: { message_id: 5544 },
+        },
+        answerCallbackQuery: vi.fn().mockResolvedValue(true),
+        editMessageText: vi.fn().mockResolvedValue(true),
+        reply: vi.fn().mockResolvedValue({}),
+      } as unknown as MyContext;
+
+      const handled = await handleSessionCallbacks(mockCtx);
+      expect(handled).toBe(true);
+      expect(mockCtx.answerCallbackQuery).toHaveBeenCalledWith({
+        text: '🛑 تم إنهاء كافة جلساتك النشطة بنجاح',
+        show_alert: true,
+      });
+      expect(mockCtx.editMessageText).toHaveBeenCalledTimes(1);
+      expect(mockCtx.reply).not.toHaveBeenCalled();
+
+      const [editedText, editedOptions] = vi.mocked(mockCtx.editMessageText).mock.calls[0] as [string, any];
+      expect(editedText).toContain('تم إنهاء كافة جلساتك النشطة في لوحة التحكم بنجاح');
+      expect(editedOptions.reply_markup.inline_keyboard.flat().some((b: any) => b.callback_data === 'menu:exec:dashboard')).toBe(true);
+    });
+
+    it('returns to dashboard card in-place via editMessageText when invoked from callback', async () => {
+      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
+        id: 'usr-fa-01',
+        telegramId: 12345678n,
+        fullName: 'م. حسام الدين',
+        role: 'FIELD_ADMIN',
+        isActive: true,
+        isBanned: false,
+        assignedSite: { name: 'برج الأمل' },
+      } as any);
+
+      const mockCtx = {
+        from: { id: 12345678, first_name: 'حسام' },
+        chat: { id: 9988, type: 'private' },
+        callbackQuery: {
+          data: 'menu:exec:dashboard',
+          message: { message_id: 5544 },
+        },
+        answerCallbackQuery: vi.fn().mockResolvedValue(true),
+        editMessageText: vi.fn().mockResolvedValue(true),
+        reply: vi.fn().mockResolvedValue({}),
+      } as unknown as MyContext;
+
+      await handleDashboardCommand(mockCtx);
+
+      expect(mockCtx.editMessageText).toHaveBeenCalledTimes(1);
+      expect(mockCtx.reply).not.toHaveBeenCalled();
+      const [editedText] = vi.mocked(mockCtx.editMessageText).mock.calls[0] as [string, any];
+      expect(editedText).toContain('لوحة التحكم المؤسسية — رابط الدخول المباشر');
     });
   });
 });

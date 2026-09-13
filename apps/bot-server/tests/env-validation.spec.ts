@@ -25,6 +25,8 @@ describe('Startup Environment Fail-Fast Validation (validateStartupEnv)', () => 
     dashboardSessionTtlHours: 8,
     dashboardSessionNoticeMinutes: 15,
     dashboardSessionExtensionHours: 8,
+    gitCommitSha: '20bcd180a05ef25ec9990ad44b9a19f7ce7abff2',
+    buildTime: '2026-09-13T12:00:00.000Z',
   };
 
   it('passes with valid BOT_TOKEN and 64-char hex DATABASE_ENCRYPTION_KEY', () => {

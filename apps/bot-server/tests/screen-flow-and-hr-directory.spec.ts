@@ -259,7 +259,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
 
     expect(sendMessageSpy).toHaveBeenCalledWith(
       1001,
-      expect.stringContaining('شركة السعادة للمقاولات العامة والتعدين'),
+      expect.stringContaining('لوحة أزرار التنقل والتحكم الميداني مفعلة ومتاحة بالأسفل دائماً'),
       expect.objectContaining({
         parse_mode: 'Markdown',
         reply_markup: expect.anything(),

@@ -37,6 +37,7 @@ export async function handlePing(ctx: MyContext): Promise<void> {
   const responseText = 
     `⚡ *تقرير فحص أداء وسرعة النظام (System Telemetry & Health)*\n\n` +
     `🏢 *المشروع:* Al-Saada Enterprise System \`v${config.appVersion}\`\n` +
+    `🔖 *إصدار الكود (Commit):* \`${(config.gitCommitSha || 'dev-local').slice(0, 7)}\`\n` +
     `🗄️ *قاعدة البيانات:* ${dbStatus} (${dbLatency}ms)\n` +
     `⏱️ *سرعة استجابة المحرك:* ${totalLatency}ms\n` +
     `💾 *استهلاك الذاكرة:* ${memoryUsageMb} MB\n` +

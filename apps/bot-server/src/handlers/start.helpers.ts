@@ -21,10 +21,11 @@ export function getRoleTitle(role: string): string {
   }
 }
 
-export function buildWelcomeMessage(ctx: MyContext): string {
+export function buildWelcomeMessage(ctx: MyContext, companyName?: string): string {
   const name = ctx.from?.first_name || 'أهلاً بك';
   const role = ctx.effectiveRole || 'GUEST';
   const roleTitle = getRoleTitle(role);
+  const company = companyName || 'المنظومة المؤسسية';
 
   let simulationBanner = '';
   if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
@@ -39,7 +40,7 @@ export function buildWelcomeMessage(ctx: MyContext): string {
     case 'SUPER_ADMIN':
       return (
         `${simulationBanner}` +
-        `🏢 *منظومة شركة السعادة للمقاولات العامة*\n` +
+        `🏢 *منظومة ${company}*\n` +
         `🤖 *محرك البوت المؤسسي الجديد (Al-Saada Enterprise Engine \`v${config.appVersion}\`)*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `🔹 *المعرف الرقمي:* \`${ctx.from?.id}\`\n` +
@@ -53,7 +54,7 @@ export function buildWelcomeMessage(ctx: MyContext): string {
       return (
         `${simulationBanner}` +
         `🏢 *بوابة الإدارة العامة والتشغيل*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
+        `🏢 *${company}*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `هنا يمكنك متابعة لوحات المؤشرات التشغيلية، السيولة النقدية، والموقف المالي لكافة المشاريع.\n\n` +
         `اختر التقرير أو الإجراء المطلوب من القائمة أدناه:`
@@ -63,7 +64,7 @@ export function buildWelcomeMessage(ctx: MyContext): string {
       return (
         `${simulationBanner}` +
         `🛡️ *بوابة المشرف الميداني وإدارة المواقع*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
+        `🏢 *${company}*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `🔹 *المعرف الرقمي:* \`${ctx.from?.id}\`\n` +
         `🔹 *الصلاحية المعتمدة:* ${roleTitle}\n` +
@@ -75,7 +76,7 @@ export function buildWelcomeMessage(ctx: MyContext): string {
       return (
         `${simulationBanner}` +
         `👷 *بوابة العامل المشرف المفوض*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
+        `🏢 *${company}*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `لديك صلاحيات تشغيلية مفوضة داخل موقعك لتسجيل العمليات اليومية المعتمدة.\n\n` +
         `اختر العملية المطلوبة من القائمة أدناه:`
@@ -85,7 +86,7 @@ export function buildWelcomeMessage(ctx: MyContext): string {
       return (
         `${simulationBanner}` +
         `👷 *بوابة الخدمة الذاتية للعاملين*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
+        `🏢 *${company}*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `هنا يمكنك الاستعلام عن كشف حسابك، مفردات قسيمة راتبك، وتقديم طلبات الإجازات والسلف.\n\n` +
         `اختر الخدمة المطلوبة من القائمة أدناه:`
@@ -95,7 +96,7 @@ export function buildWelcomeMessage(ctx: MyContext): string {
       return (
         `${simulationBanner}` +
         `🚚 *بوابة الموردين ومقاولي الباطن*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
+        `🏢 *${company}*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `هنا يمكنك استعراض الفواتير المعتمدة، دفعاتك المالية، وتصدير كشوف الحساب الرسمية.\n\n` +
         `اختر الإجراء المطلوب من القائمة أدناه:`
@@ -106,7 +107,7 @@ export function buildWelcomeMessage(ctx: MyContext): string {
       return (
         `${simulationBanner}` +
         `👤 *بوابة الزوار والمستخدمين الجدد*\n` +
-        `🏢 *شركة السعادة للمقاولات العامة*\n\n` +
+        `🏢 *${company}*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `حسابك غير مرتبط حالياً بأي سجل وظيفي أو مالي معتمد في المنظومة.\n` +
         `🔹 *معرفك الرقمي:* \`${ctx.from?.id}\`\n\n` +

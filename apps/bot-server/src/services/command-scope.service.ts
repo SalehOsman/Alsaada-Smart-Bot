@@ -9,7 +9,6 @@ export const UNIVERSAL_FALLBACK_COMMANDS: BotCommand[] = [
 export const SUPER_ADMIN_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية واللوحة التشغيلية' },
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
-  { command: 'dashboard', description: '🚀 فتح لوحة التحكم المباشرة' },
   { command: 'settings', description: '⚙️ مركز إعدادات النظام والتحكم' },
   { command: 'jobs', description: '💼 الهيكل الوظيفي ومصفوفة المهن' },
   { command: 'sites', description: '🏗️ مصفوفة المشاريع والمواقع الميدانية' },
@@ -19,7 +18,6 @@ export const SUPER_ADMIN_COMMANDS: BotCommand[] = [
 export const GENERAL_ADMIN_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية واللوحة التشغيلية' },
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
-  { command: 'dashboard', description: '🚀 فتح لوحة التحكم المباشرة' },
   { command: 'settings', description: '⚙️ مركز إعدادات النظام والتحكم' },
   { command: 'jobs', description: '💼 الهيكل الوظيفي ومصفوفة المهن' },
   { command: 'sites', description: '🏗️ مصفوفة المشاريع والمواقع الميدانية' },
@@ -29,7 +27,6 @@ export const GENERAL_ADMIN_COMMANDS: BotCommand[] = [
 export const FIELD_ADMIN_COMMANDS: BotCommand[] = [
   { command: 'start', description: '🏠 القائمة الرئيسية وبوابة الإشراف' },
   { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
-  { command: 'dashboard', description: '🚀 فتح لوحة التحكم المباشرة' },
   { command: 'switch_role', description: '👷 التبديل لحسابي كعامل (بوابة ذاتية)' },
   { command: 'profile', description: '👤 ملفي الشخصي' },
 ];

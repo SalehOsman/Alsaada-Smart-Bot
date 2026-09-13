@@ -1,4 +1,5 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
@@ -11,6 +12,10 @@ interface DashboardShellProps {
 
 export async function DashboardShell({ children }: DashboardShellProps) {
   const user = await getCurrentUser();
+  if (!user) {
+    const botUsername = (process.env.TELEGRAM_BOT_USERNAME || 'Al_Saada_smart_bot').replace(/^@/, '');
+    redirect(`https://t.me/${botUsername}?start=dashboard_access`);
+  }
 
   return (
     <SidebarProvider>

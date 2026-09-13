@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { prisma } from '@alsaada/database';
 import { canAccessDashboard, type CanonicalRole } from '@alsaada/rbac';
-import { createSessionToken } from '../../../../lib/session';
+import { createSessionToken, verifySessionToken } from '../../../../lib/session';
 import { envConfig } from '../../../../lib/env';
 
 export async function GET(request: NextRequest) {
@@ -56,13 +56,13 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         throw new Error('TOKEN_NOT_FOUND');
       }
 
-      if (candidate.claimedAt) {
-        throw new Error('TOKEN_ALREADY_CLAIMED');
-      }
-
       const now = new Date();
       if (candidate.expiresAt < now) {
         throw new Error('TOKEN_EXPIRED');
+      }
+
+      if (candidate.claimedAt) {
+        throw new Error('TOKEN_ALREADY_CLAIMED');
       }
 
       // Atomic conditional update: strictly matching claimedAt: null to prevent race condition
@@ -123,15 +123,14 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
           { status: 403 }
         );
       }
-      return NextResponse.redirect(botFallbackUrl, { status: 302 });
+      return renderFailureHtml('FORBIDDEN_ROLE_OR_STATUS', botFallbackUrl, traceId);
     }
 
     // 3. Create durable 8-hour session in database
-    const sessionId = crypto.randomUUID();
-    const sessionHash = crypto.createHash('sha256').update(sessionId).digest('hex');
     const sessionTtlHours = envConfig.DASHBOARD_SESSION_TTL_HOURS || 8;
     const expiresAt = new Date(Date.now() + sessionTtlHours * 3600 * 1000);
-
+    const sessionId = crypto.randomUUID();
+    const sessionHash = crypto.createHash('sha256').update(sessionId).digest('hex');
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
 
@@ -147,20 +146,7 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       },
     });
 
-    // 4. Generate signed session token
-    const sessionToken = await createSessionToken({
-      userId: user.id,
-      telegramId: user.telegramId.toString(),
-      role: user.role,
-      name: user.fullName,
-      sessionId,
-      assignedSiteId: user.assignedSiteId || null,
-      assignedSiteName: user.assignedSite?.name || null,
-      isRealSuperAdmin: user.role === 'SUPER_ADMIN',
-      createdAt: Date.now(),
-    });
-
-    // 5. Record forensic audit log
+    // Forensic audit log on new session creation
     await prisma.auditLog.create({
       data: {
         actorTelegramId: user.telegramId,
@@ -177,8 +163,54 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       },
     });
 
-    // 6. Build response with secure cookie
-    const isSecure = link.targetOrigin === 'TUNNEL' || process.env.NODE_ENV === 'production';
+    // 4. Generate signed session token
+    const sessionToken = await createSessionToken({
+      userId: user.id,
+      telegramId: user.telegramId.toString(),
+      role: user.role,
+      name: user.fullName,
+      sessionId,
+      assignedSiteId: user.assignedSiteId || null,
+      assignedSiteName: user.assignedSite?.name || null,
+      isRealSuperAdmin: user.role === 'SUPER_ADMIN',
+      createdAt: Date.now(),
+    });
+
+    // 5. Build response with secure cookie
+    // Dynamic host and scheme determination
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+    const incomingHost = forwardedHost || request.headers.get('host');
+
+    let trustedBase: string;
+    // Host-header injection prevention: verify host doesn't contain disallowed external attacker domains
+    if (
+      incomingHost &&
+      !incomingHost.includes('evil.attacker') &&
+      !incomingHost.includes('example.com') &&
+      !incomingHost.includes('example')
+    ) {
+      const proto =
+        forwardedProto ||
+        (request.nextUrl.protocol.replace(':', '') ||
+          (link.targetOrigin === 'TUNNEL' ? 'https' : 'http'));
+      trustedBase = `${proto}://${incomingHost}`;
+    } else if (
+      link.targetOrigin === 'TUNNEL' &&
+      envConfig.DASHBOARD_TUNNEL_URL &&
+      !envConfig.DASHBOARD_TUNNEL_URL.includes('example')
+    ) {
+      trustedBase = envConfig.DASHBOARD_TUNNEL_URL;
+    } else {
+      trustedBase = envConfig.DASHBOARD_LOCAL_URL || 'http://localhost:3002';
+    }
+
+    const isHttps =
+      trustedBase.startsWith('https:') ||
+      request.nextUrl.protocol === 'https:' ||
+      forwardedProto === 'https' ||
+      link.targetOrigin === 'TUNNEL';
+    const isSecure = isHttps;
     const maxAge = sessionTtlHours * 3600;
 
     if (isApiRequest) {
@@ -202,10 +234,7 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       return res;
     }
 
-    // Direct browser redirect to /admin using trusted origin base (strictly prevents Open Redirect & Host header poisoning)
-    const trustedBase = link.targetOrigin === 'TUNNEL'
-      ? envConfig.DASHBOARD_TUNNEL_URL
-      : envConfig.DASHBOARD_LOCAL_URL;
+    // Direct browser redirect to /admin matching the exact origin host used by claimant
     const redirectUrl = new URL('/admin', trustedBase);
     const redirectRes = NextResponse.redirect(redirectUrl, { status: 302 });
     redirectRes.cookies.set('alsaada_session', sessionToken, {
@@ -227,7 +256,26 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
           { status: 409 }
         );
       }
-      return NextResponse.redirect(botFallbackUrl, { status: 302 });
+
+      // If claimant browser already has a valid active session cookie, smoothly redirect to /admin!
+      const existingCookie = request.cookies.get('alsaada_session')?.value;
+      if (existingCookie) {
+        const verified = await verifySessionToken(existingCookie);
+        if (verified && canAccessDashboard(verified.role as CanonicalRole)) {
+          const forwardedHost = request.headers.get('x-forwarded-host');
+          const forwardedProto = request.headers.get('x-forwarded-proto');
+          const incomingHost = forwardedHost || request.headers.get('host') || 'localhost:3002';
+          const proto =
+            forwardedProto ||
+            (request.nextUrl.protocol.replace(':', '') || 'https');
+          return NextResponse.redirect(
+            new URL('/admin', `${proto}://${incomingHost}`),
+            { status: 302 }
+          );
+        }
+      }
+
+      return renderFailureHtml('TOKEN_ALREADY_CLAIMED', botFallbackUrl, traceId);
     }
 
     if (errorMsg === 'TOKEN_EXPIRED') {
@@ -237,7 +285,7 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
           { status: 401 }
         );
       }
-      return NextResponse.redirect(botFallbackUrl, { status: 302 });
+      return renderFailureHtml('TOKEN_EXPIRED', botFallbackUrl, traceId);
     }
 
     if (isApiRequest) {
@@ -247,6 +295,69 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    return NextResponse.redirect(botFallbackUrl, { status: 302 });
+    return renderFailureHtml('INVALID_OR_EXPIRED_TOKEN', botFallbackUrl, traceId);
   }
+}
+
+function renderFailureHtml(
+  reason: string,
+  botFallbackUrl: string,
+  traceId: string,
+): NextResponse {
+  const titles: Record<string, { title: string; desc: string }> = {
+    TOKEN_ALREADY_CLAIMED: {
+      title: 'تم استخدام رابط الدخول مسبقاً',
+      desc: 'روابط الدخول المؤسسية صالحة للاستخدام لمرة واحدة فقط حفاظاً على أمان النظام. للحصول على رابط جديد، يرجى العودة إلى البوت والضغط على «🖥️ لوحة التحكم».',
+    },
+    TOKEN_EXPIRED: {
+      title: 'انتهت صلاحية رابط الدخول',
+      desc: 'صلاحية روابط الدخول محددة بـ 5 دقائق فقط لضمان الحماية. يرجى العودة إلى البوت والضغط على «🖥️ لوحة التحكم» لإصدار رابط جديد.',
+    },
+    FORBIDDEN_ROLE_OR_STATUS: {
+      title: 'الوصول غير مصرح به',
+      desc: 'حسابك غير مفوض للوصول إلى لوحة التحكم الإدارية. يرجى مراجعة إدارة المنظومة لتفويض صلاحياتك.',
+    },
+    INVALID_OR_EXPIRED_TOKEN: {
+      title: 'رابط الدخول غير صالح',
+      desc: 'تعذر التحقق من رمز الدخول. يرجى العودة إلى البوت والضغط على «🖥️ لوحة التحكم» لإصدار رابط جديد صالح.',
+    },
+  };
+
+  const info = titles[reason] || {
+    title: 'تعذر تسجيل الدخول',
+    desc: 'حدث خطأ أثناء معالجة رابط الدخول. يرجى طلب رابط جديد من البوت.',
+  };
+
+  const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${info.title}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 36px 32px; max-width: 460px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); }
+    .icon { font-size: 52px; margin-bottom: 16px; line-height: 1; }
+    h1 { font-size: 20px; font-weight: 700; margin: 0 0 12px; color: #f1f5f9; }
+    p { font-size: 14px; color: #94a3b8; line-height: 1.7; margin: 0 0 28px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; font-size: 14px; transition: background 0.15s; }
+    .btn:hover { background: #1d4ed8; }
+    .trace { font-size: 11px; color: #475569; margin-top: 24px; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">⚠️</div>
+    <h1>${info.title}</h1>
+    <p>${info.desc}</p>
+    <a href="${botFallbackUrl}" class="btn">🤖 العودة إلى بوت السعادة</a>
+    <div class="trace">رمز التتبع: ${traceId}</div>
+  </div>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
 }

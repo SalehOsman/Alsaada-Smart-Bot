@@ -164,6 +164,11 @@ describe('⚡ FastCacheService & SystemDataService Architecture', () => {
       expect(fastCache.getMemoryKeys()).not.toContain('company_profile');
     });
 
+    it('should retrieve dynamic company trade name reflecting the database value for any tenant', async () => {
+      const name = await systemDataService.getCompanyTradeName();
+      expect(name).toBe('شركة السعادة');
+    });
+
     it('should invalidate user-related caches in bulk', async () => {
       const tid = 123456789n;
       await systemDataService.getAdminUser(tid);

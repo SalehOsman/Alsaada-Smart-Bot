@@ -10,6 +10,7 @@ import {
   UserActiveScreenState,
 } from '../redis.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
+import { systemDataService } from './system-data.service.js';
 
 export class ScreenFlowService {
   /**
@@ -31,9 +32,10 @@ export class ScreenFlowService {
     }
 
     const replyKeyboard = buildPersistentReplyKeyboard(ctx);
+    const companyName = await systemDataService.getCompanyTradeName();
     const text =
       customText ||
-      `🏢 *شركة السعادة للمقاولات العامة والتعدين* ⚡\n` +
+      `🏢 *${companyName}*\n` +
       `لوحة أزرار التنقل والتحكم الميداني مفعلة ومتاحة بالأسفل دائماً ⬇️`;
 
     try {
@@ -42,6 +44,28 @@ export class ScreenFlowService {
         reply_markup: replyKeyboard,
       });
       await setPersistentKeyboardMsg(telegramId, ctx.chat.id, sent.message_id);
+    } catch {
+      // Fallback
+    }
+  }
+
+  /**
+   * 🛑 إزالة لوحة الأزرار السفلية فوراً وتطهير الكاش في تطبيق تليجرام لمنع تسريب الأزرار الإدارية
+   */
+  async removePersistentKeyboard(ctx: MyContext, customText?: string): Promise<void> {
+    if (!ctx.from || !ctx.chat || !ctx.api) return;
+    const telegramId = BigInt(ctx.from.id);
+    const existing = await getPersistentKeyboardMsg(telegramId);
+    if (existing) {
+      await ctx.api.deleteMessage(existing.chatId, existing.messageId).catch(() => {});
+      await clearUserActiveScreen(telegramId).catch(() => {});
+    }
+    const text = customText || '🔄 تم تحديث واجهة التنقل وتطهير الصلاحيات السابقة.';
+    try {
+      const msg = await ctx.api.sendMessage(ctx.chat.id, text, {
+        reply_markup: { remove_keyboard: true },
+      });
+      await ctx.api.deleteMessage(ctx.chat.id, msg.message_id).catch(() => {});
     } catch {
       // Fallback
     }

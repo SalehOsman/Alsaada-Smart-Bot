@@ -88,6 +88,39 @@ export class SystemDataService {
   }
 
   /**
+   * جلب الاسم التجاري الرسمي للمنظومة من قاعدة البيانات مباشرة (L1 RAM < 0.1ms)
+   * يعتمد حصراً على ما هو مسجل في قواعد البيانات ليدعم أي مستأجر/شركة ديناميكياً
+   */
+  async getCompanyTradeName(): Promise<string> {
+    try {
+      const profile = await this.getCompanyProfile();
+      if (profile?.tradeName && profile.tradeName.trim().length > 0) {
+        return profile.tradeName.trim();
+      }
+      if (profile?.legalName && profile.legalName.trim().length > 0) {
+        return profile.legalName.trim();
+      }
+      if (profile?.tenant?.name && profile.tenant.name.trim().length > 0) {
+        return profile.tenant.name.trim();
+      }
+
+      // فحص جدول tenants مباشرة لأول مستأجر نشط مسجل بقواعد البيانات
+      const tenant = await prisma.tenant.findFirst({
+        where: { isActive: true },
+        select: { name: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (tenant?.name && tenant.name.trim().length > 0) {
+        return tenant.name.trim();
+      }
+
+      return 'المنظومة المؤسسية';
+    } catch {
+      return 'المنظومة المؤسسية';
+    }
+  }
+
+  /**
    * جلب ملف حساب المدير العام (L1 RAM < 0.1ms)
    */
   async getAdminUser(telegramId: bigint) {

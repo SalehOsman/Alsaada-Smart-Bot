@@ -1589,6 +1589,7 @@ model SystemErrorLog {
 
 model DashboardAuthLink {
   id              String    @id @default(uuid())
+  groupId         String    @default("") @db.VarChar(64)
   jtiHash         String    @unique @db.VarChar(64)
   actorTelegramId BigInt
   targetOrigin    String    @default("LOCAL") // LOCAL, TUNNEL
@@ -1597,6 +1598,7 @@ model DashboardAuthLink {
   claimTraceId    String?   @db.VarChar(36)
   createdAt       DateTime  @default(now())
 
+  @@index([groupId, claimedAt])
   @@index([expiresAt])
   @@index([actorTelegramId])
   @@map("dashboard_auth_links")
@@ -1612,6 +1614,9 @@ model DashboardSession {
   userAgentHash      String?   @db.VarChar(64)
   lastSeenAt         DateTime  @default(now())
   expiresAt          DateTime
+  maxExpiresAt       DateTime?
+  extensionCount     Int       @default(0)
+  extendedAt         DateTime?
   noticeSentAt       DateTime?
   revokedAt          DateTime?
   revocationReason   String?   @db.VarChar(100)

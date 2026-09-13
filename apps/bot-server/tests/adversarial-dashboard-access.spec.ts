@@ -245,20 +245,9 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
   // Section 2: Group Chat Privacy Guard (Token Leakage Prevention)
   // ==========================================================================
   describe('2. Group Chat Privacy Guard & Token Leakage Prevention', () => {
-    it('group chat invocation: sends token strictly to user private DM, NEVER in group chat', async () => {
+    it('group chat invocation: strictly rejects group invocation without generating tokens or sending DMs', async () => {
       const userTelegramId = 77665544n;
       const groupChatId = -1001234567890;
-
-      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
-        id: 'usr-fa-001',
-        telegramId: userTelegramId,
-        fullName: 'م. سامح مشرف الموقع',
-        role: 'FIELD_ADMIN',
-        isActive: true,
-        isBanned: false,
-        assignedSiteId: 'site-capital',
-        assignedSite: { name: 'العاصمة الإدارية' },
-      } as any);
 
       const mockCtx = {
         from: {
@@ -276,47 +265,27 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
-      config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
-      config.dashboardLocalUrl = 'http://localhost:3002';
       await handleDashboardCommand(mockCtx);
 
-      // 1. Check private message (DM) was sent to user ID
-      expect(mockCtx.api.sendMessage).toHaveBeenCalledTimes(1);
-      const dmCall = vi.mocked(mockCtx.api.sendMessage).mock.calls[0] as [number, string, any];
-      expect(dmCall[0]).toBe(Number(userTelegramId));
-      const dmText = dmCall[1] as string;
-      expect(dmText).toContain('رابط الدخول المباشر للوحة التحكم المؤسسية');
+      // 1. Zero DMs sent
+      expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
 
-      const dmOptions = dmCall[2] as any;
-      expect(dmOptions.parse_mode).toBe('HTML');
-      const flatButtons = dmOptions.reply_markup.inline_keyboard.flat();
-      const tunnelBtn = flatButtons.find((btn: any) => btn.text === '🌐 فتح عبر النفق (Tunnel)');
-      expect(tunnelBtn).toBeDefined();
-      expect(tunnelBtn.url).toContain('/api/auth/claim?token=');
+      // 2. Zero DB auth links created
+      expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
 
-      // 2. Check group reply: MUST NEVER contain token or URL!
+      // 3. Group reply contains rejection notice strictly without token
       expect(mockCtx.reply).toHaveBeenCalledTimes(1);
       const groupReplyCall = vi.mocked(mockCtx.reply).mock.calls[0] as [string, any];
       const groupReplyText = groupReplyCall[0] as string;
 
-      expect(groupReplyText).toContain('تم إرسال رابط الدخول المباشر إلى محادثتك الخاصة');
+      expect(groupReplyText).toContain('عذراً، الوصول إلى لوحة التحكم متاح حصرياً عبر المحادثة الخاصة مع البوت');
       expect(groupReplyText).not.toContain('/api/auth/claim');
       expect(groupReplyText).not.toContain('token=');
-      expect(groupReplyCall[1]?.reply_markup).toBeUndefined(); // Zero inline buttons in group
     });
 
-    it('supergroup chat invocation: guarantees privacy and zero token leakage in supergroups', async () => {
+    it('supergroup chat invocation: strictly rejects supergroup invocation without generating tokens', async () => {
       const userTelegramId = 66554433n;
       const supergroupId = -1009876543210;
-
-      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
-        id: 'usr-fa-002',
-        telegramId: userTelegramId,
-        fullName: 'مشرف الموقع الميداني',
-        role: 'FIELD_ADMIN',
-        isActive: true,
-        isBanned: false,
-      } as any);
 
       const mockCtx = {
         from: {
@@ -335,47 +304,10 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
 
       await handleDashboardCommand(mockCtx);
 
-      expect(mockCtx.api.sendMessage).toHaveBeenCalledWith(
-        Number(userTelegramId),
-        expect.stringContaining('رابط الدخول المباشر للوحة التحكم المؤسسية'),
-        expect.any(Object)
-      );
-
-      // Group reply contains notice only, zero token
+      expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
+      expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
       const groupText = vi.mocked(mockCtx.reply).mock.calls[0]![0] as string;
-      expect(groupText).not.toContain('token=');
-      expect(groupText).not.toContain('/api/auth/claim');
-    });
-
-    it('handles blocked DM failure gracefully without leaking token in group', async () => {
-      const userTelegramId = 12344321n;
-
-      vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
-        id: 'usr-fa-003',
-        telegramId: userTelegramId,
-        fullName: 'أ. محمود المشرف',
-        role: 'FIELD_ADMIN',
-        isActive: true,
-        isBanned: false,
-      } as any);
-
-      const mockCtx = {
-        from: { id: Number(userTelegramId), first_name: 'محمود' },
-        chat: { id: -10055555, type: 'group' },
-        api: {
-          sendMessage: vi.fn().mockRejectedValue(new Error('Forbidden: bot was blocked by the user')),
-        },
-        reply: vi.fn().mockResolvedValue({}),
-      } as unknown as MyContext;
-
-      await handleDashboardCommand(mockCtx);
-
-      expect(mockCtx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('تعذر إرسال الرابط في الخاص'),
-        expect.objectContaining({ parse_mode: 'HTML' })
-      );
-
-      const groupText = vi.mocked(mockCtx.reply).mock.calls[0]![0] as string;
+      expect(groupText).toContain('عذراً، الوصول إلى لوحة التحكم متاح حصرياً عبر المحادثة الخاصة مع البوت');
       expect(groupText).not.toContain('token=');
       expect(groupText).not.toContain('/api/auth/claim');
     });

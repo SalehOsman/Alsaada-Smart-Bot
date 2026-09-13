@@ -1,4 +1,5 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { getOverviewKpis, getSitesHub, getWorkforceDirectory } from '@/lib/data-fetchers';
 import { SuperAdminOverview } from '@/components/dashboard/super-admin-overview';
@@ -9,6 +10,11 @@ import { FieldAdminOverview } from '@/components/dashboard/field-admin-overview'
 // kpis.activeWorkersCount, kpis.activeSitesCount, kpis.pendingItemsCount, kpis.avgLatencyMs, min-h-[44px]
 export default async function AdminOverviewPage() {
   const user = await getCurrentUser();
+  if (!user) {
+    const botUsername = (process.env.TELEGRAM_BOT_USERNAME || 'Al_Saada_smart_bot').replace(/^@/, '');
+    redirect(`https://t.me/${botUsername}?start=dashboard_access`);
+  }
+
   const [kpis, sites, workers] = await Promise.all([
     getOverviewKpis(user),
     getSitesHub(user),
