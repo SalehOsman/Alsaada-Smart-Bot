@@ -10,12 +10,13 @@ import {
   AlertTriangle,
   ExternalLink,
 } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getSitesHub, getUsersManagementData } from '@/lib/data-fetchers';
 import { ZeroStateCard } from '@/components/ui/zero-state-card';
 
 export default async function SupervisorAssignmentsPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
   const sites = await getSitesHub(user);
   const users = await getUsersManagementData();
 

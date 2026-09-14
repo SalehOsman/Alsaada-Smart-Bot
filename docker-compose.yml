@@ -80,7 +80,7 @@ services:
       DASHBOARD_URL: ${DASHBOARD_URL}
       ADMIN_DASHBOARD_URL: ${ADMIN_DASHBOARD_URL}
       DASHBOARD_TUNNEL_URL: ${DASHBOARD_TUNNEL_URL}
-      DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localhost:3002}
+      DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localtest.me:3002}
     networks:
       - alsaada-enterprise-internal
       - alsaada-enterprise-public
@@ -131,7 +131,7 @@ services:
       DASHBOARD_URL: ${DASHBOARD_URL}
       ADMIN_DASHBOARD_URL: ${ADMIN_DASHBOARD_URL}
       DASHBOARD_TUNNEL_URL: ${DASHBOARD_TUNNEL_URL}
-      DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localhost:3002}
+      DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localtest.me:3002}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s

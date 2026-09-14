@@ -10,12 +10,13 @@ import {
   Shield,
   Briefcase,
 } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getSitesHub } from '@/lib/data-fetchers';
 import { ZeroStateCard } from '@/components/ui/zero-state-card';
 
 export default async function SitesHubPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
   const sites = await getSitesHub(user);
 
   return (

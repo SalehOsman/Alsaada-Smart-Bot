@@ -3,11 +3,14 @@ import ExcelJS from 'exceljs';
 import { prisma, decryptField } from '@alsaada/database';
 import { getCurrentUser } from '@/lib/auth';
 import { getNormalizedEncryptionKey } from '@/lib/data-fetchers';
-import { projectSafeWorkerFields } from '@alsaada/rbac';
 import { extractTraceId } from '@alsaada/telemetry';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'غير مصرح - يرجى تسجيل الدخول أولاً' }, { status: 401 });
+  }
+
   if (!['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role)) {
     return NextResponse.json({ error: 'غير مصرح بتصدير البيانات' }, { status: 403 });
   }
@@ -17,7 +20,8 @@ export async function GET(req: NextRequest) {
   const siteParam = searchParams.get('site');
   const statusParam = searchParams.get('status');
 
-  const whereClause: Record<string, any> = { isDeleted: false };
+  const whereClause: Record<string, unknown> = { isDeleted: false };
+
 
   // Strict Site Boundary: FIELD_ADMIN is strictly locked to their assigned site
   if (user.role === 'FIELD_ADMIN') {
@@ -123,7 +127,7 @@ export async function GET(req: NextRequest) {
     const totalMonthlySalary = basicSalary + fixedAllowances;
     const dailyWage = Number(w.dailyWage || 0);
 
-    const rowData: Record<string, any> = {
+    const rowData: Record<string, unknown> = {
       code: w.code,
       nickname: w.nickname || w.name.split(' ')[0],
       name: w.name,

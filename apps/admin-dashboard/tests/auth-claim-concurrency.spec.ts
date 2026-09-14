@@ -36,7 +36,7 @@ describe('Auth Claim Concurrency & Anti-Race Safety Gate', () => {
       data: {
         groupId,
         originKind: 'LOCAL',
-        targetOrigin: 'http://localhost:3002',
+        targetOrigin: 'http://localtest.me:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
         expiresAt: new Date(Date.now() + 300_000),
@@ -46,7 +46,7 @@ describe('Auth Claim Concurrency & Anti-Race Safety Gate', () => {
     // Launch 10 simultaneous claim requests with the identical token
     const concurrency = 10;
     const promises = Array.from({ length: concurrency }).map(() => {
-      const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+      const req = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawToken}`, {
         method: 'GET',
         headers: { accept: 'application/json' },
       });
@@ -58,8 +58,8 @@ describe('Auth Claim Concurrency & Anti-Race Safety Gate', () => {
 
     // Exactly 1 must be 200 OK
     const successCount = statuses.filter((s) => s === 200).length;
-    // Exactly (concurrency - 1) must fail with 409 Conflict or 401
-    const conflictCount = statuses.filter((s) => s === 409 || s === 401).length;
+    // Exactly (concurrency - 1) must fail with 401 (TOKEN_ALREADY_CLAIMED)
+    const conflictCount = statuses.filter((s) => s === 401).length;
 
     expect(successCount).toBe(1);
     expect(conflictCount).toBe(concurrency - 1);

@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 import { prisma } from '@alsaada/database';
 import { GET, POST } from '../src/app/api/auth/claim/route';
@@ -24,6 +24,11 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     testUserId = user.id;
   });
 
+  beforeEach(async () => {
+    await prisma.dashboardSession.deleteMany({ where: { actorTelegramId: testTelegramId } });
+    await prisma.dashboardAuthLink.deleteMany({ where: { actorTelegramId: testTelegramId } });
+  });
+
   afterAll(async () => {
     // Cleanup
     await prisma.dashboardSession.deleteMany({ where: { actorTelegramId: testTelegramId } });
@@ -40,26 +45,26 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
   });
 
   it('rejects claim request when token is missing', async () => {
-    const req = new NextRequest('http://localhost:3002/api/auth/claim', {
+    const req = new NextRequest('http://localtest.me:3002/api/auth/claim', {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const res = await GET(req);
     expect(res.status).toBe(400);
     const data = await res.json();
-    expect(data.error).toBe('TOKEN_REQUIRED');
+    expect(data.error).toBe('TOKEN_MISSING');
   });
 
   it('rejects claim request when token does not exist', async () => {
     const fakeToken = randomBytes(32).toString('hex');
-    const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${fakeToken}`, {
+    const req = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${fakeToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const res = await GET(req);
     expect(res.status).toBe(401);
     const data = await res.json();
-    expect(data.error).toBe('INVALID_OR_EXPIRED_TOKEN');
+    expect(data.error).toBe('TOKEN_NOT_FOUND');
   });
 
   it('successfully claims a valid token, creates 8-hour DB session, and sets 16h cookie', async () => {
@@ -71,14 +76,14 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       data: {
         groupId,
         originKind: 'LOCAL',
-        targetOrigin: 'http://localhost:3002',
+        targetOrigin: 'http://localtest.me:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
         expiresAt: new Date(Date.now() + 300_000), // 5 min
       },
     });
 
-    const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+    const req = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
@@ -152,7 +157,7 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       data: {
         groupId,
         originKind: 'LOCAL',
-        targetOrigin: 'http://localhost:3002',
+        targetOrigin: 'http://localtest.me:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
         expiresAt: new Date(Date.now() + 300_000),
@@ -160,20 +165,20 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     });
 
     // First claim: must succeed
-    const req1 = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+    const req1 = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const res1 = await GET(req1);
     expect(res1.status).toBe(200);
 
-    // Second claim: must fail with 409 Conflict
-    const req2 = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+    // Second claim: must fail with 401 Unauthorized (TOKEN_ALREADY_CLAIMED)
+    const req2 = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const res2 = await GET(req2);
-    expect(res2.status).toBe(409);
+    expect(res2.status).toBe(401);
     const data2 = await res2.json();
     expect(data2.error).toBe('TOKEN_ALREADY_CLAIMED');
   });
@@ -187,14 +192,14 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       data: {
         groupId,
         originKind: 'LOCAL',
-        targetOrigin: 'http://localhost:3002',
+        targetOrigin: 'http://localtest.me:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
         expiresAt: new Date(Date.now() - 10_000), // Expired 10s ago
       },
     });
 
-    const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+    const req = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
@@ -226,21 +231,21 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       data: {
         groupId,
         originKind: 'LOCAL',
-        targetOrigin: 'http://localhost:3002',
+        targetOrigin: 'http://localtest.me:3002',
         jtiHash,
         actorTelegramId: workerTelegramId,
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
 
-    const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+    const req = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const res = await GET(req);
     expect(res.status).toBe(403);
     const data = await res.json();
-    expect(data.error).toBe('FORBIDDEN_ROLE_OR_STATUS');
+    expect(data.error).toBe('ROLE_UNAUTHORIZED');
 
     // Cleanup worker
     await prisma.user.delete({ where: { id: workerUser.id } });
@@ -256,19 +261,19 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       data: {
         groupId,
         originKind: 'LOCAL',
-        targetOrigin: 'http://localhost:3002',
+        targetOrigin: 'http://localtest.me:3002',
         jtiHash,
         actorTelegramId: testTelegramId,
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
 
-    const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawToken}`, {
+    const req = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawToken}`, {
       method: 'GET',
     });
     const res = await GET(req);
     expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe('http://localhost:3002/admin');
+    expect(res.headers.get('location')).toBe('http://localtest.me:3002/admin');
     expect(res.cookies.get('alsaada_session')?.value).toBeDefined();
     expect(res.cookies.get('alsaada_session')?.maxAge).toBe(16 * 3600);
   });
@@ -290,7 +295,7 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
           jtiHash: localJtiHash,
           groupId,
           originKind: 'LOCAL',
-          targetOrigin: 'http://localhost:3002',
+          targetOrigin: 'http://localtest.me:3002',
           actorTelegramId: testTelegramId,
           expiresAt: new Date(Date.now() + 300_000),
         },
@@ -298,7 +303,7 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
           jtiHash: tunnelJtiHash,
           groupId,
           originKind: 'TUNNEL',
-          targetOrigin: 'http://localhost:3002',
+          targetOrigin: 'http://localtest.me:3002',
           actorTelegramId: testTelegramId,
           expiresAt: new Date(Date.now() + 300_000),
         },
@@ -306,20 +311,20 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
     });
 
     // Claim local link: must succeed
-    const localReq = new NextRequest(`http://localhost:3002/api/auth/claim?token=${localToken}`, {
+    const localReq = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${localToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const localRes = await GET(localReq);
     expect(localRes.status).toBe(200);
 
-    // Attempt to claim sibling tunnel link: must fail with 409 TOKEN_ALREADY_CLAIMED
-    const tunnelReq = new NextRequest(`http://localhost:3002/api/auth/claim?token=${tunnelToken}`, {
+    // Attempt to claim sibling tunnel link: must fail with 401 TOKEN_ALREADY_CLAIMED
+    const tunnelReq = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${tunnelToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const tunnelRes = await GET(tunnelReq);
-    expect(tunnelRes.status).toBe(409);
+    expect(tunnelRes.status).toBe(401);
     const tunnelData = await tunnelRes.json();
     expect(tunnelData.error).toBe('TOKEN_ALREADY_CLAIMED');
 
@@ -358,28 +363,28 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       data: {
         groupId,
         originKind: 'LOCAL',
-        targetOrigin: 'http://localhost:3002',
+        targetOrigin: 'http://localtest.me:3002',
         jtiHash: fourthJtiHash,
         actorTelegramId: testTelegramId,
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
 
-    const fourthReq = new NextRequest(`http://localhost:3002/api/auth/claim?token=${fourthToken}`, {
+    const fourthReq = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${fourthToken}`, {
       method: 'GET',
       headers: { accept: 'application/json' },
     });
     const fourthRes = await GET(fourthReq);
     expect(fourthRes.status).toBe(429);
     const fourthData = await fourthRes.json();
-    expect(fourthData.error).toBe('MAX_CONCURRENT_SESSIONS_REACHED');
+    expect(fourthData.error).toBe('MAX_SESSIONS_EXCEEDED');
   });
 
   describe('R1C-03: Reflected XSS Elimination, Security Headers & HTTP Status Matrix', () => {
     it('strictly prevents Reflected XSS and does not reflect <script>alert(1)</script> raw in HTML (400 on malformed token)', async () => {
       const maliciousPayload = '<script>alert(1)</script>';
       const req = new NextRequest(
-        `http://127.0.0.1.nip.io:3002/api/auth/claim?token=malformed-token&traceId=${encodeURIComponent(maliciousPayload)}`,
+        `http://localtest.me:3002/api/auth/claim?token=malformed-token&traceId=${encodeURIComponent(maliciousPayload)}`,
         { method: 'GET' }
       );
       const res = await GET(req);
@@ -402,7 +407,7 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       const imgPayload = '"><img src=x onerror=alert(1)>';
       const fakeValidToken = randomBytes(32).toString('hex');
       const req = new NextRequest(
-        `http://127.0.0.1.nip.io:3002/api/auth/claim?token=${fakeValidToken}&traceId=${encodeURIComponent(imgPayload)}`,
+        `http://localtest.me:3002/api/auth/claim?token=${fakeValidToken}&traceId=${encodeURIComponent(imgPayload)}`,
         { method: 'GET' }
       );
       const res = await GET(req);
@@ -431,7 +436,7 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       });
 
       const mismatchReq = new NextRequest(
-        `http://127.0.0.1.nip.io:3002/api/auth/claim?token=${rawToken}`,
+        `http://localtest.me:3002/api/auth/claim?token=${rawToken}`,
         { method: 'GET' }
       );
       const mismatchRes = await GET(mismatchReq);
@@ -439,17 +444,17 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       expect(mismatchRes.headers.get('content-security-policy')).toBeDefined();
     });
 
-    it('verifies standard nip.io local origin against localhost mismatch', async () => {
+    it('verifies standard localtest.me local origin against localhost mismatch', async () => {
       const rawToken = randomBytes(32).toString('hex');
       const jtiHash = createHash('sha256').update(rawToken).digest('hex');
       const groupId = randomUUID();
 
-      // Stored with standard local origin http://127.0.0.1.nip.io:3002
+      // Stored with standard local origin http://localtest.me:3002
       await prisma.dashboardAuthLink.create({
         data: {
           groupId,
           originKind: 'LOCAL',
-          targetOrigin: 'http://127.0.0.1.nip.io:3002',
+          targetOrigin: 'http://localtest.me:3002',
           jtiHash,
           actorTelegramId: testTelegramId,
           expiresAt: new Date(Date.now() + 300_000),
@@ -464,6 +469,127 @@ describe('Dashboard Auth Claim API Route (/api/auth/claim)', () => {
       const localhostRes = await GET(localhostReq);
       expect(localhostRes.status).toBe(403);
       const data = await localhostRes.json();
+      expect(data.error).toBe('ORIGIN_MISMATCH');
+    });
+
+    it('successfully claims tunnel token when forwarded reverse-proxy headers match DASHBOARD_TUNNEL_URL', async () => {
+      const { envConfig } = await import('../src/lib/env');
+      const tunnelTargetOrigin = envConfig.DASHBOARD_TUNNEL_URL;
+      const parsedTunnel = new URL(tunnelTargetOrigin);
+
+      const rawToken = randomBytes(32).toString('hex');
+      const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+      const groupId = randomUUID();
+
+      await prisma.dashboardAuthLink.create({
+        data: {
+          groupId,
+          originKind: 'TUNNEL',
+          targetOrigin: tunnelTargetOrigin,
+          jtiHash,
+          actorTelegramId: testTelegramId,
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      });
+
+      // Simulates Next.js Node server receiving request via ngrok / reverse proxy
+      // nextUrl.origin is internal localhost:3002, but forwarded headers match tunnelTargetOrigin
+      const req = new NextRequest(
+        `http://localhost:3002/api/auth/claim?token=${rawToken}`,
+        {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            'x-forwarded-proto': parsedTunnel.protocol.replace(':', ''),
+            'x-forwarded-host': parsedTunnel.host,
+            host: 'localhost:3002',
+          },
+        }
+      );
+
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.user.id).toBe(testUserId);
+    });
+
+    it('successfully claims local token when browser Host header matches DASHBOARD_LOCAL_URL', async () => {
+      const { envConfig } = await import('../src/lib/env');
+      const localTargetOrigin = envConfig.DASHBOARD_LOCAL_URL;
+      const parsedLocal = new URL(localTargetOrigin);
+
+      const rawToken = randomBytes(32).toString('hex');
+      const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+      const groupId = randomUUID();
+
+      await prisma.dashboardAuthLink.create({
+        data: {
+          groupId,
+          originKind: 'LOCAL',
+          targetOrigin: localTargetOrigin,
+          jtiHash,
+          actorTelegramId: testTelegramId,
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      });
+
+      // Simulates Next.js Node server receiving request where nextUrl.origin is localhost:3002
+      // but browser Host header is localtest.me:3002
+      const req = new NextRequest(
+        `http://localhost:3002/api/auth/claim?token=${rawToken}`,
+        {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            host: parsedLocal.host,
+          },
+        }
+      );
+
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.user.id).toBe(testUserId);
+    });
+
+    it('strictly rejects claim when forwarded reverse-proxy host is spoofed (evil.com)', async () => {
+      const { envConfig } = await import('../src/lib/env');
+      const tunnelTargetOrigin = envConfig.DASHBOARD_TUNNEL_URL;
+
+      const rawToken = randomBytes(32).toString('hex');
+      const jtiHash = createHash('sha256').update(rawToken).digest('hex');
+      const groupId = randomUUID();
+
+      await prisma.dashboardAuthLink.create({
+        data: {
+          groupId,
+          originKind: 'TUNNEL',
+          targetOrigin: tunnelTargetOrigin,
+          jtiHash,
+          actorTelegramId: testTelegramId,
+          expiresAt: new Date(Date.now() + 300_000),
+        },
+      });
+
+      // Attacker attempts Host header spoofing to bypass origin check
+      const req = new NextRequest(
+        `http://localhost:3002/api/auth/claim?token=${rawToken}`,
+        {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            'x-forwarded-proto': 'https',
+            'x-forwarded-host': 'evil.com',
+            host: 'evil.com',
+          },
+        }
+      );
+
+      const res = await GET(req);
+      expect(res.status).toBe(403);
+      const data = await res.json();
       expect(data.error).toBe('ORIGIN_MISMATCH');
     });
   });

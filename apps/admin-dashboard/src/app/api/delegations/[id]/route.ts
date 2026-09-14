@@ -8,7 +8,11 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'غير مصرح - يرجى تسجيل الدخول أولاً' }, { status: 401 });
+  }
   const { id } = await context.params;
+
   const traceId = extractTraceId(req);
 
   const delegation = await prisma.workerDelegation.findUnique({

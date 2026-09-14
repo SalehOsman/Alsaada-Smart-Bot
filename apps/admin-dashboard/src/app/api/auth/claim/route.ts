@@ -1,14 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
-import { prisma } from '@alsaada/database';
-import { canAccessDashboardRole, normalizeOrigin, isExactOriginMatch, isValidOpaqueTokenFormat } from '@alsaada/rbac';
-import { envConfig } from '../../../../lib/env';
+import { prisma, Prisma } from '@alsaada/database';
+import {
+  canAccessDashboardRole,
+  normalizeOrigin,
+  isExactOriginMatch,
+  isValidOpaqueTokenFormat,
+  resolveEffectiveRequestOrigin,
+  CLAIM_FAILURE_HTTP_STATUS_MAP,
+  type DashboardClaimFailureCode,
+  type DashboardAuthOrigins,
+  type CanonicalRole,
+} from '@alsaada/rbac';
+import { envConfig, validateDashboardAuthEnv } from '../../../../lib/env';
 import { extractTraceId, TelemetryLogger } from '@alsaada/telemetry';
 
 const logger = new TelemetryLogger({
   service: 'admin-dashboard',
   defaultComponent: 'auth-claim',
 });
+
+const PRISMA_CONNECTION_ERROR_CODES = new Set([
+  'P1000',
+  'P1001',
+  'P1002',
+  'P1003',
+  'P1008',
+  'P1017',
+]);
+
+type ClaimTransactionResult =
+  | {
+      ok: true;
+      sessionToken: string;
+      sessionId: string;
+      targetOrigin: string;
+      expiresAt: Date;
+      user: {
+        id: string;
+        telegramId: string;
+        name: string;
+        role: CanonicalRole;
+      };
+    }
+  | {
+      ok: false;
+      code: DashboardClaimFailureCode;
+    };
 
 function escapeHtml(text: string): string {
   return text
@@ -19,11 +57,11 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#x27;');
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   return handleClaim(request);
 }
 
-export async function POST() {
+export async function POST(): Promise<NextResponse> {
   return NextResponse.json(
     { success: false, error: 'METHOD_NOT_ALLOWED' },
     { status: 405, headers: { Allow: 'GET' } }
@@ -40,10 +78,12 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
   const isApiRequest = request.headers.get('accept')?.includes('application/json');
 
   if (!token || typeof token !== 'string' || token.trim().length === 0) {
+    const code: DashboardClaimFailureCode = 'TOKEN_MISSING';
+    const status = CLAIM_FAILURE_HTTP_STATUS_MAP[code];
     if (isApiRequest) {
       return NextResponse.json(
-        { success: false, error: 'TOKEN_REQUIRED', traceId },
-        { status: 400 }
+        { success: false, error: code, traceId },
+        { status }
       );
     }
     return NextResponse.redirect(botFallbackUrl, { status: 302 });
@@ -52,47 +92,70 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
   const rawToken = token.trim();
 
   if (!isValidOpaqueTokenFormat(rawToken)) {
+    const code: DashboardClaimFailureCode = 'TOKEN_MALFORMED';
+    const status = CLAIM_FAILURE_HTTP_STATUS_MAP[code];
     if (isApiRequest) {
       return NextResponse.json(
-        { success: false, error: 'INVALID_TOKEN_FORMAT', traceId },
-        { status: 400 }
+        { success: false, error: code, traceId },
+        { status }
       );
     }
-    return renderFailureHtml('INVALID_TOKEN_FORMAT', botFallbackUrl, traceId);
+    return renderFailureHtml(code, botFallbackUrl, traceId);
   }
 
   const jtiHash = crypto.createHash('sha256').update(rawToken).digest('hex');
 
   try {
-    // Single-use atomic consumption inside a single PostgreSQL transaction
-    const claimResult = await prisma.$transaction(async (tx) => {
+    const claimResult: ClaimTransactionResult = await prisma.$transaction(async (tx) => {
       const candidate = await tx.dashboardAuthLink.findUnique({
         where: { jtiHash },
       });
 
       if (!candidate) {
-        throw new Error('TOKEN_NOT_FOUND');
+        return { ok: false, code: 'TOKEN_NOT_FOUND' };
       }
 
       const now = new Date();
       if (candidate.expiresAt < now) {
-        throw new Error('TOKEN_EXPIRED');
+        return { ok: false, code: 'TOKEN_EXPIRED' };
       }
 
       if (candidate.claimedAt) {
-        throw new Error('TOKEN_ALREADY_CLAIMED');
+        return { ok: false, code: 'TOKEN_ALREADY_CLAIMED' };
       }
 
-      // Exact-origin allowlist verification against stored targetOrigin
-      const requestOrigin = normalizeOrigin(request.nextUrl.origin);
+      let trustedOrigins: DashboardAuthOrigins;
+      try {
+        trustedOrigins = validateDashboardAuthEnv();
+      } catch (configErr) {
+        logger.error('Invalid dashboard origins configuration during claim', {
+          traceId,
+          action: 'auth.claim.config-error',
+          error: configErr instanceof Error ? configErr.message : String(configErr),
+        });
+        return { ok: false, code: 'CONFIG_ERROR' };
+      }
+
+      const requestOrigin = resolveEffectiveRequestOrigin(
+        request.nextUrl.origin,
+        request.headers,
+        trustedOrigins
+      );
+
       if (!isExactOriginMatch(requestOrigin, candidate.targetOrigin)) {
-        throw new Error('ORIGIN_MISMATCH');
+        logger.warn('Dashboard claim origin mismatch detected', {
+          traceId,
+          action: 'auth.claim.origin-mismatch',
+          payload: {
+            requestOrigin,
+            candidateTargetOrigin: candidate.targetOrigin,
+          },
+        });
+        return { ok: false, code: 'ORIGIN_MISMATCH' };
       }
 
-      // Serialize concurrent claims for the same user via row-level lock
       await tx.$queryRaw`SELECT id FROM "users" WHERE "telegramId" = ${candidate.actorTelegramId} FOR UPDATE`;
 
-      // Fetch user and verify active status & RBAC role
       const user = await tx.user.findFirst({
         where: {
           telegramId: candidate.actorTelegramId,
@@ -123,10 +186,9 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
             },
           },
         });
-        throw new Error('FORBIDDEN_ROLE_OR_STATUS');
+        return { ok: false, code: 'ROLE_UNAUTHORIZED' };
       }
 
-      // Check active concurrent sessions limit (<= 3)
       const activeSessionsCount = await tx.dashboardSession.count({
         where: {
           actorTelegramId: candidate.actorTelegramId,
@@ -136,10 +198,9 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       });
 
       if (activeSessionsCount >= 3) {
-        throw new Error('MAX_CONCURRENT_SESSIONS_REACHED');
+        return { ok: false, code: 'MAX_SESSIONS_EXCEEDED' };
       }
 
-      // Atomic conditional update: strictly matching claimedAt: null to prevent race condition
       const updateResult = await tx.dashboardAuthLink.updateMany({
         where: {
           id: candidate.id,
@@ -153,10 +214,9 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       });
 
       if (updateResult.count === 0) {
-        throw new Error('TOKEN_ALREADY_CLAIMED');
+        return { ok: false, code: 'TOKEN_ALREADY_CLAIMED' };
       }
 
-      // Atomic sibling link invalidation: invalidate sibling link with the same groupId
       if (candidate.groupId) {
         await tx.dashboardAuthLink.updateMany({
           where: {
@@ -171,13 +231,12 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         });
       }
 
-      // Create durable 8-hour session in database with raw Opaque Token
       const sessionTtlHours = envConfig.DASHBOARD_SESSION_TTL_HOURS || 8;
       const expiresAt = new Date(Date.now() + sessionTtlHours * 3600 * 1000);
-      const maxExpiresAt = new Date(Date.now() + 16 * 3600 * 1000); // 16h total ceiling
+      const maxExpiresAt = new Date(Date.now() + 16 * 3600 * 1000);
 
-      const opaqueToken = crypto.randomBytes(32).toString('hex');
-      const sessionHash = crypto.createHash('sha256').update(opaqueToken).digest('hex');
+      const sessionToken = crypto.randomBytes(32).toString('hex');
+      const sessionHash = crypto.createHash('sha256').update(sessionToken).digest('hex');
       const userAgent = request.headers.get('user-agent') || 'Unknown';
       const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
 
@@ -195,7 +254,6 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         },
       });
 
-      // Forensic audit log on new session creation
       await tx.auditLog.create({
         data: {
           actorTelegramId: user.telegramId,
@@ -216,20 +274,32 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       });
 
       return {
-        opaqueToken,
+        ok: true,
+        sessionToken,
+        sessionId: createdSession.id,
         targetOrigin: candidate.targetOrigin,
         expiresAt,
         user: {
           id: user.id,
           telegramId: user.telegramId.toString(),
-          role: user.role,
+          role: user.role as CanonicalRole,
           name: user.fullName,
         },
       };
     });
 
-    const isHttps = claimResult.targetOrigin.startsWith('https:');
-    // Cookie maxAge is set to 16 hours so extending session in DB keeps cookie alive
+    if (!claimResult.ok) {
+      const status = CLAIM_FAILURE_HTTP_STATUS_MAP[claimResult.code];
+      if (isApiRequest) {
+        return NextResponse.json(
+          { success: false, error: claimResult.code, traceId },
+          { status }
+        );
+      }
+      return renderFailureHtml(claimResult.code, botFallbackUrl, traceId);
+    }
+
+    const isHttps = new URL(claimResult.targetOrigin).protocol === 'https:';
     const cookieMaxAge = 16 * 3600;
 
     if (isApiRequest) {
@@ -238,7 +308,7 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
         user: claimResult.user,
         expiresAt: claimResult.expiresAt.getTime(),
       });
-      res.cookies.set('alsaada_session', claimResult.opaqueToken, {
+      res.cookies.set('alsaada_session', claimResult.sessionToken, {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
@@ -248,10 +318,9 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
       return res;
     }
 
-    // Direct browser redirect derived purely from stored targetOrigin
     const redirectUrl = new URL('/admin', claimResult.targetOrigin);
     const redirectRes = NextResponse.redirect(redirectUrl, { status: 302 });
-    redirectRes.cookies.set('alsaada_session', claimResult.opaqueToken, {
+    redirectRes.cookies.set('alsaada_session', claimResult.sessionToken, {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',
@@ -261,158 +330,88 @@ async function handleClaim(request: NextRequest): Promise<NextResponse> {
 
     return redirectRes;
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'CLAIM_FAILED';
-    const isDbError =
-      errorMsg.includes('connect') ||
-      errorMsg.includes('database') ||
-      errorMsg.includes('Prisma') ||
-      (err as any)?.code === 'P1001' ||
-      (err as any)?.code === 'P1002';
+    let failureCode: DashboardClaimFailureCode = 'INTERNAL_ERROR';
 
-    if (isDbError) {
-      logger.error('Database connection error during dashboard auth claim (Fail-Closed)', {
-        traceId,
-        action: 'auth.claim.database-error',
-        error: err,
-      });
-
-      if (isApiRequest) {
-        return NextResponse.json(
-          { success: false, error: 'DATABASE_UNAVAILABLE', traceId },
-          { status: 503 }
-        );
+    if (
+      err instanceof Prisma.PrismaClientInitializationError ||
+      err instanceof Prisma.PrismaClientRustPanicError
+    ) {
+      failureCode = 'DATABASE_ERROR';
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (PRISMA_CONNECTION_ERROR_CODES.has(err.code)) {
+        failureCode = 'DATABASE_ERROR';
+      } else {
+        failureCode = 'INTERNAL_ERROR';
       }
-      return renderFailureHtml('DATABASE_UNAVAILABLE', botFallbackUrl, traceId);
     }
 
-    if (errorMsg === 'ORIGIN_MISMATCH') {
-      if (isApiRequest) {
-        return NextResponse.json(
-          { success: false, error: 'ORIGIN_MISMATCH', traceId },
-          { status: 403 }
-        );
-      }
-      return renderFailureHtml('ORIGIN_MISMATCH', botFallbackUrl, traceId);
-    }
-
-    if (errorMsg === 'TOKEN_ALREADY_CLAIMED') {
-      if (isApiRequest) {
-        return NextResponse.json(
-          { success: false, error: 'TOKEN_ALREADY_CLAIMED', traceId },
-          { status: 409 }
-        );
-      }
-      return renderFailureHtml('TOKEN_ALREADY_CLAIMED', botFallbackUrl, traceId);
-    }
-
-    if (errorMsg === 'TOKEN_EXPIRED') {
-      if (isApiRequest) {
-        return NextResponse.json(
-          { success: false, error: 'TOKEN_EXPIRED', traceId },
-          { status: 401 }
-        );
-      }
-      return renderFailureHtml('TOKEN_EXPIRED', botFallbackUrl, traceId);
-    }
-
-    if (errorMsg === 'MAX_CONCURRENT_SESSIONS_REACHED') {
-      if (isApiRequest) {
-        return NextResponse.json(
-          { success: false, error: 'MAX_CONCURRENT_SESSIONS_REACHED', traceId },
-          { status: 429 }
-        );
-      }
-      return renderFailureHtml('MAX_CONCURRENT_SESSIONS_REACHED', botFallbackUrl, traceId);
-    }
-
-    if (errorMsg === 'FORBIDDEN_ROLE_OR_STATUS') {
-      if (isApiRequest) {
-        return NextResponse.json(
-          { success: false, error: 'FORBIDDEN_ROLE_OR_STATUS', traceId },
-          { status: 403 }
-        );
-      }
-      return renderFailureHtml('FORBIDDEN_ROLE_OR_STATUS', botFallbackUrl, traceId);
-    }
-
-    // Uncaught or unexpected error
-    logger.error('Unexpected error during dashboard auth claim', {
+    const status = CLAIM_FAILURE_HTTP_STATUS_MAP[failureCode];
+    logger.error('Infrastructure or unexpected error during dashboard auth claim', {
       traceId,
-      action: 'auth.claim.unexpected',
-      error: err,
+      action: 'auth.claim.infrastructure-error',
+      payload: { failureCode },
+      error: err instanceof Error ? err.message : String(err),
     });
 
     if (isApiRequest) {
       return NextResponse.json(
-        { success: false, error: 'INVALID_OR_EXPIRED_TOKEN', traceId },
-        { status: 401 }
+        { success: false, error: failureCode, traceId },
+        { status }
       );
     }
-
-    return renderFailureHtml('INVALID_OR_EXPIRED_TOKEN', botFallbackUrl, traceId);
-  }
-}
-
-function getHttpStatusForReason(reason: string): number {
-  switch (reason) {
-    case 'TOKEN_REQUIRED':
-    case 'INVALID_TOKEN_FORMAT':
-      return 400;
-    case 'ORIGIN_MISMATCH':
-    case 'FORBIDDEN_ROLE_OR_STATUS':
-      return 403;
-    case 'TOKEN_ALREADY_CLAIMED':
-      return 401;
-    case 'MAX_CONCURRENT_SESSIONS_REACHED':
-      return 429;
-    case 'DATABASE_UNAVAILABLE':
-      return 503;
-    case 'INTERNAL_ERROR':
-      return 500;
-    case 'TOKEN_EXPIRED':
-    case 'INVALID_OR_EXPIRED_TOKEN':
-    default:
-      return 401;
+    return renderFailureHtml(failureCode, botFallbackUrl, traceId);
   }
 }
 
 function renderFailureHtml(
-  reason: string,
+  reason: DashboardClaimFailureCode,
   botFallbackUrl: string,
   traceId: string,
 ): NextResponse {
-  const titles: Record<string, { title: string; desc: string }> = {
-    ORIGIN_MISMATCH: {
-      title: 'رابط الدخول غير مخصص لهذا النطاق',
-      desc: 'تم استخدام رابط مخصص لنطاق وصول آخر (محلي أو عبر النفق). يرجى التأكد من الدخول عبر الرابط المطابق للعنوان المفتوح.',
+  const titles: Record<DashboardClaimFailureCode, { title: string; desc: string }> = {
+    TOKEN_MISSING: {
+      title: 'رابط الدخول غير مكتمل',
+      desc: 'لم يتم توفير رمز الدخول المطلوب. يرجى طلب رابط جديد من البوت.',
     },
-    MAX_CONCURRENT_SESSIONS_REACHED: {
-      title: 'تم الوصول إلى الحد الأقصى للجلسات النشطة',
-      desc: 'لديك 3 جلسات نشطة بالفعل. يرجى العودة إلى البوت لإدارة جلساتك النشطة أو إنهاء إحداها لإتاحة فتح جلسة جديدة.',
+    TOKEN_MALFORMED: {
+      title: 'رمز الدخول غير صالح',
+      desc: 'تنسيق رمز الدخول غير صحيح أو تالف. يرجى طلب رابط جديد من البوت.',
     },
-    TOKEN_ALREADY_CLAIMED: {
-      title: 'تم استخدام رابط الدخول مسبقاً',
-      desc: 'روابط الدخول المؤسسية صالحة للاستخدام لمرة واحدة فقط حفاظاً على أمان النظام. للحصول على رابط جديد، يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم».',
+    TOKEN_NOT_FOUND: {
+      title: 'رابط الدخول غير صالح',
+      desc: 'تعذر التحقق من رمز الدخول. يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم» لإصدار رابط جديد صالح.',
     },
     TOKEN_EXPIRED: {
       title: 'انتهت صلاحية رابط الدخول',
       desc: 'صلاحية روابط الدخول محددة بـ 5 دقائق فقط لضمان الحماية. يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم» لإصدار رابط جديد.',
     },
-    FORBIDDEN_ROLE_OR_STATUS: {
+    TOKEN_ALREADY_CLAIMED: {
+      title: 'تم استخدام رابط الدخول مسبقاً',
+      desc: 'روابط الدخول المؤسسية صالحة للاستخدام لمرة واحدة فقط حفاظاً على أمان النظام. للحصول على رابط جديد، يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم».',
+    },
+    ORIGIN_MISMATCH: {
+      title: 'رابط الدخول غير مخصص لهذا النطاق',
+      desc: 'تم استخدام رابط مخصص لنطاق وصول آخر (محلي أو عبر النفق). يرجى التأكد من الدخول عبر الرابط المطابق للعنوان المفتوح.',
+    },
+    ROLE_UNAUTHORIZED: {
       title: 'الوصول غير مصرح به',
       desc: 'حسابك غير مفوض للوصول إلى لوحة التحكم الإدارية. يرجى مراجعة إدارة المنظومة لتفويض صلاحياتك.',
     },
-    INVALID_OR_EXPIRED_TOKEN: {
-      title: 'رابط الدخول غير صالح',
-      desc: 'تعذر التحقق من رمز الدخول. يرجى العودة إلى البوت والضغط على «🖥️ فتح لوحة التحكم» لإصدار رابط جديد صالح.',
+    MAX_SESSIONS_EXCEEDED: {
+      title: 'تم الوصول إلى الحد الأقصى للجلسات النشطة',
+      desc: 'لديك 3 جلسات نشطة بالفعل. يرجى العودة إلى البوت لإدارة جلساتك النشطة أو إنهاء إحداها لإتاحة فتح جلسة جديدة.',
     },
-    INVALID_TOKEN_FORMAT: {
-      title: 'رمز الدخول غير صالح',
-      desc: 'تنسيق رمز الدخول غير صحيح أو تالف. يرجى طلب رابط جديد من البوت.',
+    CONFIG_ERROR: {
+      title: 'خطأ في إعدادات الاتصال',
+      desc: 'حدث خلل في إعدادات اتصال لوحة التحكم بالنظام. يرجى مراجعة المسؤول أو إعادة المحاولة لاحقاً.',
     },
-    DATABASE_UNAVAILABLE: {
+    DATABASE_ERROR: {
       title: 'الخدمة غير متاحة مؤقتاً',
       desc: 'تعذر الاتصال بقاعدة البيانات للتحقق من الجلسة. يرجى إعادة المحاولة لاحقاً أو مراجعة الدعم الفني.',
+    },
+    INTERNAL_ERROR: {
+      title: 'خطأ غير متوقع',
+      desc: 'حدث خطأ غير متوقع أثناء معالجة رابط الدخول. يرجى طلب رابط جديد من البوت.',
     },
   };
 
@@ -454,7 +453,7 @@ function renderFailureHtml(
 </body>
 </html>`;
 
-  const status = getHttpStatusForReason(reason);
+  const status = CLAIM_FAILURE_HTTP_STATUS_MAP[reason] || 500;
   const responseHeaders = new Headers();
   responseHeaders.set('Content-Type', 'text/html; charset=utf-8');
   responseHeaders.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';");

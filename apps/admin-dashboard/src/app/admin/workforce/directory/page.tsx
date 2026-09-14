@@ -1,10 +1,11 @@
 import React from 'react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getWorkforceDirectory, getSitesHub } from '@/lib/data-fetchers';
 import { WorkforceDirectoryClient } from './directory-client';
 
 export default async function WorkerDirectoryPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
   const [workers, sites] = await Promise.all([
     getWorkforceDirectory(user),
     getSitesHub(user),

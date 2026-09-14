@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Clock,
 } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { hasAccess } from '@/lib/rbac';
 import { prisma } from '@alsaada/database';
 import { ZeroStateCard } from '@/components/ui/zero-state-card';
@@ -21,7 +21,8 @@ import { ZeroStateCard } from '@/components/ui/zero-state-card';
 export const dynamic = 'force-dynamic';
 
 export default async function FinanceHubPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
 
   const canAccess = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
 

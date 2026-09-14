@@ -14,7 +14,7 @@ import {
   Coffee,
   Sparkles,
 } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { hasAccess } from '@/lib/rbac';
 import { prisma } from '@alsaada/database';
 import { ZeroStateCard } from '@/components/ui/zero-state-card';
@@ -26,7 +26,8 @@ export default async function CanteenOverviewPage({
 }: {
   searchParams?: Promise<{ category?: string; siteId?: string }>;
 }) {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
 
   const canAccess = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role);
 

@@ -91,13 +91,13 @@ describe('PLAN-22 Stop-The-Line R1 Remediation Verification Suite', () => {
     it('claim route strictly rejects non-hex and short magic tokens with 400 Bad Request', async () => {
       const badTokens = ['invalid-short', 'header.payload.sig', 'z'.repeat(64)];
       for (const token of badTokens) {
-        const req = new NextRequest(`http://localhost:3002/api/auth/claim?token=${token}`, {
+        const req = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${token}`, {
           headers: { accept: 'application/json' },
         });
         const res = await GET(req);
         expect(res.status).toBe(400);
         const body = await res.json();
-        expect(body.error).toBe('INVALID_TOKEN_FORMAT');
+        expect(body.error).toBe('TOKEN_MALFORMED');
       }
     });
   });
@@ -245,7 +245,7 @@ describe('PLAN-22 Stop-The-Line R1 Remediation Verification Suite', () => {
           {
             groupId: groupA,
             originKind: 'LOCAL',
-            targetOrigin: 'http://localhost:3002',
+            targetOrigin: 'http://localtest.me:3002',
             jtiHash: jtiHashA,
             actorTelegramId: testTelegramId,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),
@@ -253,7 +253,7 @@ describe('PLAN-22 Stop-The-Line R1 Remediation Verification Suite', () => {
           {
             groupId: groupB,
             originKind: 'LOCAL',
-            targetOrigin: 'http://localhost:3002',
+            targetOrigin: 'http://localtest.me:3002',
             jtiHash: jtiHashB,
             actorTelegramId: testTelegramId,
             expiresAt: new Date(Date.now() + 5 * 60 * 1000),
@@ -262,10 +262,10 @@ describe('PLAN-22 Stop-The-Line R1 Remediation Verification Suite', () => {
       });
 
       // Fire both claims concurrently with accept: application/json
-      const reqA = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawTokenA}`, {
+      const reqA = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawTokenA}`, {
         headers: { accept: 'application/json' },
       });
-      const reqB = new NextRequest(`http://localhost:3002/api/auth/claim?token=${rawTokenB}`, {
+      const reqB = new NextRequest(`http://localtest.me:3002/api/auth/claim?token=${rawTokenB}`, {
         headers: { accept: 'application/json' },
       });
 

@@ -60,8 +60,9 @@ export function DataTable<T extends Record<string, any>>({
       const valA = a[sortKey];
       const valB = b[sortKey];
       if (valA === valB) return 0;
-      if (valA == null) return 1;
-      if (valB == null) return -1;
+      if (valA === null || valA === undefined) return 1;
+      if (valB === null || valB === undefined) return -1;
+
       if (typeof valA === 'number' && typeof valB === 'number') {
         return sortAsc ? valA - valB : valB - valA;
       }

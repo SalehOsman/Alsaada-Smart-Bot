@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-13T19:09:46.349Z",
+  "generatedAt": "2026-09-14T11:36:23.171Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -26,7 +26,7 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "17892892a6232abcb36aa1c2943a1e1fc99fa68e53c66e5267f41afb39bf1200"
+      "sha256": "5e7c60571fccbbfe7d4109b37f13534b9b4fe7af0327e2cae14ea8932820f5eb"
     },
     {
       "path": "AGENTS.md",
@@ -54,7 +54,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "d50d8ddf3c66acbbfcd12d3a8929ad868a1b3976c42020427f68ffd4b2e17732"
+      "sha256": "a8c4dffc71bed10224610f2b928b3ef48e7c39ce67035e593107c402a3f0f8ec"
     },
     {
       "path": "pnpm-workspace.yaml",

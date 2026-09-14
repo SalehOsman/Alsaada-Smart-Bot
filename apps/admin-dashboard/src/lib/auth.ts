@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import crypto from 'node:crypto';
 import type { DashboardUser } from './rbac';
 import { canAccessDashboard, type CanonicalRole } from '@alsaada/rbac';
@@ -11,11 +12,24 @@ const logger = new TelemetryLogger({
   defaultComponent: 'auth-session',
 });
 
-export async function getCurrentUser(): Promise<DashboardUser>;
-export async function getCurrentUser(opts: { nullable: true }): Promise<DashboardUser | null>;
-export async function getCurrentUser(opts?: { nullable?: boolean }): Promise<DashboardUser | null> {
+/**
+ * Enforces authenticated session for Server Component Pages.
+ * Redirects to /session-expired if session is absent or expired, guaranteeing non-null DashboardUser.
+ */
+export async function requireDashboardUser(): Promise<DashboardUser> {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect('/session-expired');
+  }
+  return user;
+}
+
+export async function getCurrentUser(_opts?: { nullable?: boolean }): Promise<DashboardUser | null> {
   const cookieStore = await cookies();
+
+
   const sessionCookie = cookieStore.get('alsaada_session')?.value;
+
 
   if (!sessionCookie || !isValidOpaqueTokenFormat(sessionCookie)) {
     return null;

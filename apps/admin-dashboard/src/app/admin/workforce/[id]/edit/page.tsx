@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import { prisma, decryptField } from '@alsaada/database';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getNormalizedEncryptionKey } from '@/lib/data-fetchers';
 import { EditWorkerClient, type EditWorkerData } from './edit-worker-client';
 
@@ -10,7 +10,8 @@ interface PageProps {
 }
 
 export default async function EditWorkerPage({ params }: PageProps) {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
   const { id } = await params;
 
   if (!['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role)) {

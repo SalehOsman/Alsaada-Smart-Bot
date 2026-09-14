@@ -3,10 +3,49 @@ import path from 'path';
 import fs from 'fs';
 import { TelemetryLogger } from '@alsaada/telemetry';
 
+import {
+  validateDashboardAuthOrigins,
+  type DashboardAuthOrigins,
+} from '@alsaada/rbac';
+
 const logger = new TelemetryLogger({
   service: 'bot-server',
   defaultComponent: 'config',
 });
+
+/**
+ * Pure helper to resolve tunnel URL avoiding loopbacks and DRY code duplication
+ */
+export function resolveTunnelUrl(rawDashboardUrl: string, configuredTunnel?: string): string {
+  if (configuredTunnel && configuredTunnel.trim()) {
+    return configuredTunnel.trim().replace(/\/+$/, '');
+  }
+  const isLoopback =
+    rawDashboardUrl.includes('localhost') ||
+    rawDashboardUrl.includes('127.0.0.1') ||
+    rawDashboardUrl.includes('localtest.me');
+  if (rawDashboardUrl && !isLoopback) {
+    return rawDashboardUrl.trim().replace(/\/+$/, '');
+  }
+  return 'https://panel.alsaada.org';
+}
+
+function parseSafeBigInt(val: string | undefined, fallback = 0n): bigint {
+  if (!val || val === 'YOUR_TELEGRAM_ID_HERE') return fallback;
+  const sanitized = val.trim();
+  if (!/^\d+$/.test(sanitized)) return fallback;
+  try {
+    return BigInt(sanitized);
+  } catch (err) {
+    logger.warn('Failed to parse superAdminTelegramId to BigInt, using fallback', {
+      action: 'config.parse-bigint',
+      error: err,
+    });
+    return fallback;
+  }
+}
+
+
 
 // Locate root .env and load with override: true so root values always take precedence
 function findRootEnv(): string | null {
@@ -74,18 +113,11 @@ export function loadConfig(): AppConfig {
   const googleDriveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
   const googleServiceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
   const googlePrivateKey = (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
-  const dashboardLocalUrlRaw = (process.env.DASHBOARD_LOCAL_URL || 'http://127.0.0.1.nip.io:3002').replace(/\/+$/, '');
-  const dashboardLocalUrl = dashboardLocalUrlRaw.startsWith('http://localhost')
-    ? 'http://127.0.0.1.nip.io:3002'
-    : dashboardLocalUrlRaw;
-  const dashboardUrl = (process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || dashboardLocalUrl).replace(/\/+$/, '');
-  const rawTunnelUrl =
-    process.env.DASHBOARD_TUNNEL_URL ||
-    (process.env.DASHBOARD_URL && !process.env.DASHBOARD_URL.includes('localhost') && !process.env.DASHBOARD_URL.includes('127.0.0.1') ? process.env.DASHBOARD_URL : '') ||
-    (process.env.ADMIN_DASHBOARD_URL && !process.env.ADMIN_DASHBOARD_URL.includes('localhost') && !process.env.ADMIN_DASHBOARD_URL.includes('127.0.0.1') ? process.env.ADMIN_DASHBOARD_URL : '') ||
-    dashboardLocalUrl;
-  const dashboardTunnelUrl = rawTunnelUrl.replace(/\/+$/, '');
-  const dashboardAuthLinkSecret = process.env.DASHBOARD_AUTH_LINK_SECRET || process.env.DATABASE_ENCRYPTION_KEY || 'sovereign-dashboard-secret-32-chars';
+  const dashboardLocalUrl = (process.env.DASHBOARD_LOCAL_URL || 'http://localtest.me:3002').replace(/\/+$/, '');
+  const rawDashboardUrl = process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || '';
+  const dashboardTunnelUrl = resolveTunnelUrl(rawDashboardUrl, process.env.DASHBOARD_TUNNEL_URL);
+  const dashboardUrl = (process.env.DASHBOARD_URL || dashboardTunnelUrl || dashboardLocalUrl).replace(/\/+$/, '');
+  const dashboardAuthLinkSecret = process.env.DASHBOARD_AUTH_LINK_SECRET || '';
   const dashboardAuthLinkTtlMinutes = parseInt(process.env.DASHBOARD_AUTH_LINK_TTL_MINUTES || '5', 10);
   const dashboardSessionTtlHours = parseInt(process.env.DASHBOARD_SESSION_TTL_HOURS || '8', 10);
   const dashboardSessionNoticeMinutes = parseInt(process.env.DASHBOARD_SESSION_NOTICE_MINUTES || '60', 10);
@@ -103,7 +135,7 @@ export function loadConfig(): AppConfig {
     port,
     botToken,
     botUsername,
-    superAdminTelegramId: BigInt(superAdminTelegramIdRaw === 'YOUR_TELEGRAM_ID_HERE' ? '0' : superAdminTelegramIdRaw),
+    superAdminTelegramId: parseSafeBigInt(superAdminTelegramIdRaw),
     databaseUrl,
     redisUrl,
     databaseEncryptionKey,
@@ -129,6 +161,8 @@ export const config = loadConfig();
 const globalWithConfig = globalThis as typeof globalThis & { config?: AppConfig };
 globalWithConfig.config = config;
 
+
+
 export function validateStartupEnv(cfg: AppConfig = config): void {
   const errors: string[] = [];
 
@@ -141,6 +175,13 @@ export function validateStartupEnv(cfg: AppConfig = config): void {
   ) {
     errors.push('BOT_TOKEN is missing or set to placeholder in environment (.env).');
   }
+
+  // 2. Validate DATABASE_URL
+  const dbUrl = cfg.databaseUrl ? cfg.databaseUrl.trim() : '';
+  if (!dbUrl || dbUrl === 'YOUR_DATABASE_URL_HERE') {
+    errors.push('DATABASE_URL is missing or unconfigured in environment (.env).');
+  }
+
 
   // 2. Validate DATABASE_ENCRYPTION_KEY
   const encKey = cfg.databaseEncryptionKey ? cfg.databaseEncryptionKey.trim() : '';
@@ -157,11 +198,25 @@ export function validateStartupEnv(cfg: AppConfig = config): void {
     errors.push('DATABASE_ENCRYPTION_KEY is using insecure example key from .env.example in production.');
   }
 
-  // 3. Validate DASHBOARD_URL in production (must use HTTPS unless localhost)
+  // 3. Validate DASHBOARD_URL in production (must use HTTPS unless local origin)
   if (cfg.nodeEnv === 'production' && cfg.dashboardUrl) {
-    const isLocal = cfg.dashboardUrl.includes('localhost') || cfg.dashboardUrl.includes('127.0.0.1');
-    if (!isLocal && !cfg.dashboardUrl.startsWith('https://')) {
-      errors.push('DASHBOARD_URL must use HTTPS in production.');
+    const isLocalHost =
+      cfg.dashboardUrl.includes('localtest.me') ||
+      cfg.dashboardUrl.includes('localhost') ||
+      cfg.dashboardUrl.includes('127.0.0.1');
+    if (!isLocalHost) {
+      try {
+        const parsedDashboardUrl = new URL(cfg.dashboardUrl);
+        if (parsedDashboardUrl.protocol !== 'https:') {
+          errors.push('DASHBOARD_URL must use HTTPS in production.');
+        }
+      } catch (urlErr) {
+        logger.warn('Failed to parse DASHBOARD_URL during startup validation', {
+          action: 'config.validate.dashboard-url',
+          error: urlErr,
+        });
+        errors.push('DASHBOARD_URL must be a valid URL.');
+      }
     }
   }
 
@@ -175,3 +230,15 @@ export function validateStartupEnv(cfg: AppConfig = config): void {
     throw new Error(banner);
   }
 }
+
+/**
+ * Validates dashboard authentication environment variables against @alsaada/rbac SSOT contract.
+ * Uses validateDashboardAuthOrigins pure function.
+ */
+export function validateDashboardAuthEnv(): DashboardAuthOrigins {
+  const localUrl = process.env.DASHBOARD_LOCAL_URL || 'http://localtest.me:3002';
+  const rawDashboardUrl = process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || '';
+  const tunnelUrl = resolveTunnelUrl(rawDashboardUrl, process.env.DASHBOARD_TUNNEL_URL);
+  return validateDashboardAuthOrigins({ localUrl, tunnelUrl });
+}
+

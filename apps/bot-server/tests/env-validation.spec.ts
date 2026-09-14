@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { validateStartupEnv, AppConfig } from '../src/config/env.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { validateStartupEnv, validateDashboardAuthEnv, AppConfig } from '../src/config/env.js';
+import { DashboardAuthConfigError } from '@alsaada/rbac';
 
 describe('Startup Environment Fail-Fast Validation (validateStartupEnv)', () => {
   const baseValidConfig: AppConfig = {
@@ -129,5 +130,47 @@ describe('Startup Environment Fail-Fast Validation (validateStartupEnv)', () => 
         databaseEncryptionKey: '',
       })
     ).toThrow(/FATAL CONFIG ERROR[\s\S]*BOT_TOKEN[\s\S]*DATABASE_ENCRYPTION_KEY/i);
+  });
+});
+
+describe('Dashboard Auth Environment Validation (validateDashboardAuthEnv)', () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('validates default localtest.me and tunnel URLs correctly', () => {
+    delete process.env.DASHBOARD_LOCAL_URL;
+    delete process.env.DASHBOARD_TUNNEL_URL;
+    delete process.env.DASHBOARD_URL;
+    delete process.env.ADMIN_DASHBOARD_URL;
+
+    const origins = validateDashboardAuthEnv();
+    expect(origins.localOrigin).toBe('http://localtest.me:3002');
+    expect(origins.tunnelOrigin).toBe('https://panel.alsaada.org');
+  });
+
+  it('accepts custom valid localtest.me port and HTTPS tunnel URL', () => {
+    process.env.DASHBOARD_LOCAL_URL = 'http://localtest.me:4000';
+    process.env.DASHBOARD_TUNNEL_URL = 'https://custom-tunnel.ngrok-free.app';
+
+    const origins = validateDashboardAuthEnv();
+    expect(origins.localOrigin).toBe('http://localtest.me:4000');
+    expect(origins.tunnelOrigin).toBe('https://custom-tunnel.ngrok-free.app');
+  });
+
+  it('throws DashboardAuthConfigError when DASHBOARD_LOCAL_URL is invalid (e.g. nip.io or localhost)', () => {
+    process.env.DASHBOARD_LOCAL_URL = 'http://127.0.0.1.nip.io:3002';
+    expect(() => validateDashboardAuthEnv()).toThrow(DashboardAuthConfigError);
+
+    process.env.DASHBOARD_LOCAL_URL = 'http://localhost:3002';
+    expect(() => validateDashboardAuthEnv()).toThrow(DashboardAuthConfigError);
+  });
+
+  it('throws DashboardAuthConfigError when DASHBOARD_TUNNEL_URL is not HTTPS', () => {
+    process.env.DASHBOARD_LOCAL_URL = 'http://localtest.me:3002';
+    process.env.DASHBOARD_TUNNEL_URL = 'http://insecure-tunnel.example.com';
+    expect(() => validateDashboardAuthEnv()).toThrow(DashboardAuthConfigError);
   });
 });

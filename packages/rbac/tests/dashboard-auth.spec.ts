@@ -76,5 +76,221 @@ describe('Dashboard Auth Contract SSOT (@alsaada/rbac)', () => {
     expect(isValidOpaqueTokenFormat(null)).toBe(false);
     expect(isValidOpaqueTokenFormat(12345)).toBe(false);
   });
+
+  describe('validateDashboardAuthOrigins (@alsaada/rbac)', () => {
+    it('successfully validates standard local and tunnel origins', async () => {
+      const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
+      const result = validateDashboardAuthOrigins({
+        localUrl: 'http://localtest.me:3002',
+        tunnelUrl: 'https://panel.alsaada.org',
+      });
+      expect(result).toEqual({
+        localOrigin: 'http://localtest.me:3002',
+        tunnelOrigin: 'https://panel.alsaada.org',
+      });
+    });
+
+    it('successfully accepts trailing slashes and extracts pure canonical origin', async () => {
+      const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
+      const result = validateDashboardAuthOrigins({
+        localUrl: 'http://localtest.me:3002/',
+        tunnelUrl: 'https://tunnel.example.com/',
+      });
+      expect(result).toEqual({
+        localOrigin: 'http://localtest.me:3002',
+        tunnelOrigin: 'https://tunnel.example.com',
+      });
+    });
+
+    it('rejects localhost and 127.0.0.1.nip.io for local origin', async () => {
+      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://localhost:3002',
+          tunnelUrl: 'https://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://127.0.0.1.nip.io:3002',
+          tunnelUrl: 'https://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+    });
+
+    it('rejects missing or non-numeric port for local origin', async () => {
+      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://localtest.me',
+          tunnelUrl: 'https://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://localtest.me:99999',
+          tunnelUrl: 'https://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+    });
+
+    it('rejects local origin with subpath, query, hash or credentials', async () => {
+      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://localtest.me:3002/admin',
+          tunnelUrl: 'https://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://localtest.me:3002?foo=bar',
+          tunnelUrl: 'https://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://user:pass@localtest.me:3002',
+          tunnelUrl: 'https://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+    });
+
+    it('rejects unencrypted tunnel origin or invalid tunnel host', async () => {
+      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://localtest.me:3002',
+          tunnelUrl: 'http://tunnel.example.com',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+    });
+
+    it('rejects collision between local and tunnel origin', async () => {
+      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
+      expect(() =>
+        validateDashboardAuthOrigins({
+          localUrl: 'http://localtest.me:3002',
+          tunnelUrl: 'http://localtest.me:3002',
+        }),
+      ).toThrow(DashboardAuthConfigError);
+    });
+
+    it('rejects missing or empty inputs', async () => {
+      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
+      expect(() => validateDashboardAuthOrigins({} as any)).toThrow(DashboardAuthConfigError);
+      expect(() => validateDashboardAuthOrigins({ localUrl: '' } as any)).toThrow(DashboardAuthConfigError);
+    });
+  });
+
+  describe('CLAIM_FAILURE_HTTP_STATUS_MAP (@alsaada/rbac)', () => {
+    it('maps every DashboardClaimFailureCode to the exact HTTP status specified in PLAN-22', async () => {
+      const { CLAIM_FAILURE_HTTP_STATUS_MAP } = await import('../src/dashboard-auth.js');
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.TOKEN_MISSING).toBe(400);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.TOKEN_MALFORMED).toBe(400);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.TOKEN_NOT_FOUND).toBe(401);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.TOKEN_EXPIRED).toBe(401);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.TOKEN_ALREADY_CLAIMED).toBe(401);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.ORIGIN_MISMATCH).toBe(403);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.ROLE_UNAUTHORIZED).toBe(403);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.MAX_SESSIONS_EXCEEDED).toBe(429);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.CONFIG_ERROR).toBe(503);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.DATABASE_ERROR).toBe(503);
+      expect(CLAIM_FAILURE_HTTP_STATUS_MAP.INTERNAL_ERROR).toBe(500);
+    });
+  });
+
+  describe('resolveEffectiveRequestOrigin (@alsaada/rbac)', () => {
+    const trustedOrigins = {
+      localOrigin: 'http://localtest.me:3002',
+      tunnelOrigin: 'https://enquirer-hardening-penny.ngrok-free.dev',
+    };
+
+    it('returns nextUrlOrigin directly if it matches localOrigin', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const origin = resolveEffectiveRequestOrigin('http://localtest.me:3002', undefined, trustedOrigins);
+      expect(origin).toBe('http://localtest.me:3002');
+    });
+
+    it('returns nextUrlOrigin directly if it matches tunnelOrigin', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const origin = resolveEffectiveRequestOrigin('https://enquirer-hardening-penny.ngrok-free.dev', undefined, trustedOrigins);
+      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
+    });
+
+    it('resolves tunnelOrigin from reverse-proxy headers when nextUrlOrigin is internal localhost:3002', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const headers = new Map<string, string>([
+        ['x-forwarded-proto', 'https'],
+        ['x-forwarded-host', 'enquirer-hardening-penny.ngrok-free.dev'],
+        ['host', 'localhost:3002'],
+      ]);
+      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
+      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
+    });
+
+    it('resolves localOrigin from browser Host header when nextUrlOrigin is internal localhost:3002', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const headers = new Map<string, string>([
+        ['host', 'localtest.me:3002'],
+      ]);
+      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
+      expect(origin).toBe('http://localtest.me:3002');
+    });
+
+    it('strictly rejects adversarial host header spoofing (evil.com) and falls back to untrusted nextUrlOrigin', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const headers = new Map<string, string>([
+        ['x-forwarded-proto', 'https'],
+        ['x-forwarded-host', 'evil.com'],
+        ['host', 'evil.com'],
+      ]);
+      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
+      expect(origin).toBe('http://localhost:3002'); // NOT evil.com!
+    });
+
+    it('does NOT match localhost:3002 when developer accesses without localtest.me', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const headers = new Map<string, string>([
+        ['host', 'localhost:3002'],
+      ]);
+      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
+      expect(origin).toBe('http://localhost:3002'); // Remains localhost:3002 which will fail exact-match with localtest.me:3002
+    });
+
+    it('resolves tunnelOrigin when x-forwarded-host contains comma-separated proxy chain', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const headers = new Map<string, string>([
+        ['x-forwarded-proto', 'https'],
+        ['x-forwarded-host', 'enquirer-hardening-penny.ngrok-free.dev, 10.0.0.1'],
+      ]);
+      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
+      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
+    });
+
+    it('resolves tunnelOrigin when x-forwarded-host is uppercase (case-insensitive)', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const headers = new Map<string, string>([
+        ['x-forwarded-proto', 'HTTPS'],
+        ['x-forwarded-host', 'ENQUIRER-HARDENING-PENNY.NGROK-FREE.DEV'],
+      ]);
+      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
+      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
+    });
+
+    it('resolves trusted origin from Host header if x-forwarded-host is untrusted', async () => {
+      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
+      const headers = new Map<string, string>([
+        ['x-forwarded-host', 'untrusted-proxy.lan'],
+        ['host', 'localtest.me:3002'],
+      ]);
+      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
+      expect(origin).toBe('http://localtest.me:3002');
+    });
+  });
 });
 

@@ -1,10 +1,11 @@
 import React from 'react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getUsersManagementData, getDelegationsManagementData } from '@/lib/data-fetchers';
 import { UsersClient } from './users-client';
 
 export default async function UsersManagementPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
   const [users, delegations] = await Promise.all([
     getUsersManagementData(),
     getDelegationsManagementData(user),

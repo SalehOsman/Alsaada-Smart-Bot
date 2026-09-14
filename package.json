@@ -42,7 +42,10 @@
                     "ssot:query": "tsx tools/governance/rag-engine.ts query",
                     "ssot:sync": "tsx tools/governance/rag-engine.ts index",
                     "agent:check": "tsx tools/governance/agent-dispatcher.ts check",
-                    "agent:audit": "tsx tools/governance/agent-dispatcher.ts audit"
+                    "agent:audit": "tsx tools/governance/agent-dispatcher.ts audit",
+                    "ocr:review": "ocr review --concurrency 2",
+                    "ocr:preview": "ocr review --preview",
+                    "ocr:viewer": "ocr viewer"
                 },
     "devDependencies":  {
                             "@types/node":  "^22.13.9",

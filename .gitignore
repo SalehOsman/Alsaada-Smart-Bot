@@ -50,6 +50,9 @@ tmp/
 temp/
 .agents/*
 !.agents/skills/
+!.agents/rules/
+!.agents/subagents/
+
 
 # OS metadata
 .DS_Store

@@ -6,6 +6,10 @@ import { extractTraceId } from '@alsaada/telemetry';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'غير مصرح - يرجى تسجيل الدخول أولاً' }, { status: 401 });
+  }
+
   if (!['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role)) {
     return NextResponse.json({ error: 'غير مصرح بتصدير التقرير' }, { status: 403 });
   }
@@ -15,7 +19,8 @@ export async function GET(req: NextRequest) {
   const siteParam = searchParams.get('site');
   const statusParam = searchParams.get('status');
 
-  const whereClause: Record<string, any> = { isDeleted: false };
+  const whereClause: Record<string, unknown> = { isDeleted: false };
+
 
   if (user.role === 'FIELD_ADMIN') {
     if (user.assignedSiteId) {

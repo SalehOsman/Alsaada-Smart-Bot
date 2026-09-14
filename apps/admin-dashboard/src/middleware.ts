@@ -13,12 +13,22 @@ export async function middleware(request: NextRequest) {
   const botUsername = envConfig.TELEGRAM_BOT_USERNAME || 'Al_Saada_smart_bot';
   const botRedirectUrl = `https://t.me/${botUsername}?start=dashboard_access`;
 
-  // Protect /admin routes
-  if (pathname.startsWith('/admin')) {
+  const isApiRoute = pathname.startsWith('/api/') && !pathname.startsWith('/api/auth') && !pathname.startsWith('/api/health');
+  const isAdminPage = pathname.startsWith('/admin');
+
+  // Protect /admin routes and administrative API endpoints at the Edge boundary
+  if (isAdminPage || isApiRoute) {
     const sessionCookie = request.cookies.get('alsaada_session')?.value;
 
-    // Reject missing, non-opaque, or legacy HMAC tokens immediately at the Edge boundary
+    // Reject missing, non-opaque, or legacy tokens immediately at the Edge boundary
     if (!sessionCookie || !isValidOpaqueTokenFormat(sessionCookie)) {
+      if (isApiRoute) {
+        return NextResponse.json(
+          { error: 'UNAUTHORIZED', message: 'غير مصرح - جلسة غير صالحة' },
+          { status: 401, headers: traceHeaders }
+        );
+      }
+
       const redirectResponse = NextResponse.redirect(botRedirectUrl, { status: 302 });
       if (sessionCookie) {
         redirectResponse.cookies.set('alsaada_session', '', {
@@ -55,5 +65,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/api/export/:path*',
+    '/api/approvals/:path*',
+    '/api/delegations/:path*',
+    '/api/workers/:path*',
+  ],
 };
+

@@ -49,12 +49,16 @@ export class WorkerRegistrationService {
   constructor(
     private readonly repository: WorkerRegistrationRepository,
     private readonly stateStore: WorkerWizardStateStore = new InMemoryWorkerWizardStateStore(),
-    private readonly encryptionKey: string = 'alsaada-default-key-min-32-chars-long!',
-    private readonly blindIndexSalt: string = 'alsaada-blind-index-salt-secret',
-    private readonly botUsername: string = 'Al_Saada_smart_bot'
+    private readonly encryptionKey: string = process.env.DATABASE_ENCRYPTION_KEY || '',
+    private readonly blindIndexSalt: string = process.env.BLIND_INDEX_SALT || '',
+    private readonly botUsername: string = process.env.BOT_USERNAME || 'Al_Saada_smart_bot'
   ) {
-    this.normalizedKeyHex = normalizeKeyToHex(this.encryptionKey);
+    if (!this.encryptionKey && process.env.NODE_ENV === 'production') {
+      throw new Error('WorkerRegistrationService: DATABASE_ENCRYPTION_KEY is required in production.');
+    }
+    this.normalizedKeyHex = normalizeKeyToHex(this.encryptionKey || '0'.repeat(64));
   }
+
 
   validateId(
     idType: 'NATIONAL_ID' | 'PASSPORT',

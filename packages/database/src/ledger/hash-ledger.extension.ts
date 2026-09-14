@@ -32,7 +32,7 @@ export class LedgerHardDeleteForbiddenError extends Error {
   }
 }
 
-export interface LedgerRecordPayload extends Record<string, any> {
+export interface LedgerRecordPayload extends Record<string, unknown> {
   previousHash?: string;
   recordHash?: string;
   hashTimestamp?: Date | string;
@@ -64,15 +64,16 @@ function getMutex(model: string): AsyncMutex {
   return m;
 }
 
-export function extractAmount(data: Record<string, any>): number {
+export function extractAmount(data: Record<string, unknown>): number {
   if (data.amount !== undefined && data.amount !== null) return Number(data.amount);
   if (data.closingTotalInvoices !== undefined && data.closingTotalInvoices !== null) return Number(data.closingTotalInvoices);
   if (data.remainingCashReturned !== undefined && data.remainingCashReturned !== null) return Number(data.remainingCashReturned);
   return 0;
 }
 
-export function extractActorId(data: Record<string, any>): string {
+export function extractActorId(data: Record<string, unknown>): string {
   if (data.actorTelegramId !== undefined && data.actorTelegramId !== null) return String(data.actorTelegramId);
+
   if (data.actorId !== undefined && data.actorId !== null) return String(data.actorId);
   if (data.recordedByUserId !== undefined && data.recordedByUserId !== null) return String(data.recordedByUserId);
   if (data.auditedByUserId !== undefined && data.auditedByUserId !== null) return String(data.auditedByUserId);

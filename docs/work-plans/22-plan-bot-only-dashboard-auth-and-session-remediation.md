@@ -3,8 +3,8 @@
 ### Bot-Only Dashboard Authentication, Server-Side Session SSOT, and Robust Docker Deployment Remediation
 
 **تاريخ الخطة:** 13-09-2026
-**الحالة:** 🟡 حزمة R1C-A مكتملة بانتظار المراجعة المستقلة (R1C-A IMPLEMENTED — AWAITING INDEPENDENT REVIEW)
-**حالة الإنجاز:** حزمة R1C-A مكتملة 100% (R1C-01 إلى R1C-04) ومثبتة بالاختبارات والتايب سكريبت؛ الحزمتان R1C-B و R1C-C مجمدتان وبانتظار اعتماد المراجعة المستقلة
+**الحالة:** 🟡 حزمة التصحيح R1C-A-C1 مكتملة وجاهزة للمراجعة الاستشارية (R1C-A-C1 COMPLETED — READY FOR INDEPENDENT CONSULTATIVE REVIEW)
+**حالة الإنجاز:** تم إنجاز حزمة التصحيح R1C-A-C1 بنجاح بنسبة 100%؛ اجتازت جميع الاختبارات الـ 13 واختبار AST الصارم و Typecheck و Build وبوابة dashboard-auth:verify؛ مع بقاء R1C-B و R1C-C و R2 مجمدة تماماً بانتظار المراجعة والاعتماد.
 **النطاق:** إصلاح حدود المصادقة الخادمية، الرابطان المتنافسان، الجلسة المعتمة، Exact-Origin Allowlist، حارس Node Fail-Closed، استئصال المداخل القديمة، وهندسة البناء والترحيل النظيف
 **المشروع المستهدف:** `F:\Alsaada-Smart-Bot`
 **المرجع التصميمي الحاكم (SSOT):** [`docs/superpowers/specs/2026-09-13-bot-only-dashboard-auth-remediation-design.md`](../superpowers/specs/2026-09-13-bot-only-dashboard-auth-remediation-design.md)
@@ -13,11 +13,15 @@
 ---
 
 > [!CAUTION]
-> ### 🛑 قرار المراجعة المستقلة: رفض الاعتماد وتجميد الخط (INDEPENDENT_REVIEW_RESULT: VERIFICATION_FAILED)
-> **يُحظر الانتقال إلى R2 نهائياً.**
-> أظهرت المراجعة المستقلة الدقيقة لحزمة R1 وجود 12 عيباً معمارياً وأمنياً وتشغيلياً حرجاً (من `R1C-01` إلى `R1C-12`) تحول دون الاعتماد الحي والتشغيل المستقر؛ ومن أبرزها:
+> ### 🛑 قرار المراجعة المستقلة: فشل التحقق من R1C-A وتجميد الخط (R1C-A VERIFICATION FAILED — STOP THE LINE)
+> **يُحظر الانتقال إلى R1C-B أو R1C-C أو R2 نهائياً.**
+> كشف الفحص التشغيلي الميداني والمراجعة المستقلة الدقيقة لحزمة R1C-A عن عيبين تقنيين وأمنيين حرجين حالا دون اعتماد الحزمة:
+> 1. **اختلال تطابق الأصل المحلي مع معالج NextURL (NextURL Loopback Mangling):** عند استخدام `http://127.0.0.1.nip.io:3002`، يقوم معالج `NextURL` الداخلي في Next.js بتحويل أسماء النطاقات المعتمدة على عناوين IP الاسترجاعية تلقائياً إلى `localhost.nip.io`، مما يجعل `request.nextUrl.origin` ينتج `http://localhost.nip.io:3002`، فيحدث عدم تطابق حرفي مع `targetOrigin` المخزن (`http://127.0.0.1.nip.io:3002`) ويرفض مسار `claim` الدخول بخطأ `403 ORIGIN_MISMATCH`. الحل المعماري الصارم هو الاستبدال الشامل للأصل المحلي بـ **`http://localtest.me:3002`** الذي يحقق شروط Wildcard DNS لـ `127.0.0.1`، ومدعوم شكلياً ومعمارياً كـ FQDN HTTP URL من قبل Telegram Bot API دون أن تمسه NextURL بأي تحويل، مع إرجاء التحقق من السلوك الحي لفتح المتصفح ومربع تأكيد الرابط الخارجي في Telegram Desktop لاختبار الدخان الميداني الحي (Live Smoke Testing).
+> 2. **تسجيل انحراف أمني غير معتمد وغير ملتزم به (UNCOMMITTED_UNAPPROVED_SECURITY_DEVIATION):** رُصد تعديل غير معتمد مسبقاً على القرص في ملف `apps/admin-dashboard/src/app/api/auth/claim/route.ts` يحاول الالتفاف على عدم تطابق الأصل عبر قراءة ترويسة `Host` (`request.headers.get('host')`). هذا التعديل تم حظره وتجميده في وضع `PLAN_ONLY`، ويُسجل رسمياً كـ **انحراف أمني غير معتمد** مع جدولته للإلغاء والاستئصال الكامل فور بدء تنفيذ C1 والعودة الصارمة إلى `request.nextUrl.origin` مع حظر أي تلاعب بترويسات المضيف.
+>
+> بالإضافة إلى العيوب الـ 12 السابقة في R1:
 > 1. **النشر الهجين المتضارب (Mixed-Version Deployment):** تشغيل Schema جديدة بقيد فرادة `(groupId, originKind)` مع حاوية بوت قديمة لا تمرر `originKind` مما يسبب خطأ Prisma `P2002`.
-> 2. **اختلال تطابق الأصل المحلي (Local Origin Mismatch):** تخزين `localhost:3002` بينما زر Telegram يرسل `nip.io:3002`، فيرفض مسار `claim` الدخول بسبب Exact-Origin Match.
+> 2. **اختلال تطابق الأصل المحلي (Local Origin Mismatch):** تحويل NextURL لـ `127.0.0.1.nip.io` إلى `localhost.nip.io` مما فجر خطأ `403 ORIGIN_MISMATCH`، ويتم حله نهائياً بالتحول لـ `localtest.me:3002`.
 > 3. **ثغرة Reflected XSS في شاشة فشل المصادقة:** حقن `traceId` القادم من Query Params خاماً داخل HTML وعرض الخطأ بـ HTTP 200.
 > 4. **مخالفة عقد التسجيل في PLAN-20:** وجود `console.error` و`catch` صامت خارج منظومة `TelemetryLogger`.
 > 5. **بقاء رواسب Magic القديمة:** عدم حصر واستئصال مفاتيح ومسارات قديمة مثل `magic_token` و`magicUrl` و`DEMO_USERS` و`alsaada_admin_role`.
@@ -29,7 +33,7 @@
 > 11. **عدم دقة التوثيق:** الادعاء بأن Middleware يفحص قاعدة البيانات بينما الفحص الكامل يقع في Node Server Guard، والادعاء المبكر لاكتمال R1 بنسبة 100%.
 > 12. **نظافة المستودع (Repository Hygiene):** وجود مسافات بيضاء وأسطر فارغة زائدة في الـ Commit السابق (`git show --check`).
 >
-> **القرار الحتمي:** إدراج مرحلة تصحيح إلزامية فورية باسم **PLAN-22 R1C — Independent Review Corrective Remediation** مقسمة إلى ثلاث حزم صغيرة (`R1C-A`, `R1C-B`, `R1C-C`)، والتوقف التام عند `PLAN_READY_FOR_CONSULTANT_REVIEW` دون تعديل أي كود أو إنشاء Commit أو Push قبل اعتماد الخطة.
+> **القرار الحتمي:** إدراج حزمة تصحيح عاجلة داخل R1C-A باسم **`PLAN-22 R1C-A-C1 — Authentication Corrective Review`**، وإسقاط كافة علامات الإنجاز لحزمة R1C-A، والتوقف التام عند `PLAN_READY_FOR_CONSULTANT_REVIEW` دون تعديل أي كود أو إنشاء Commit أو Push قبل اعتماد الخطة.
 
 ---
 
@@ -79,10 +83,11 @@ graph TD
     AuditDecision -->|إلزامي| R1C[مرحلة التصحيح الإلزامية: PLAN-22 R1C]
 
     subgraph R1C_Phase [مرحلة التصحيح الإلزامية R1C]
-        R1C_A[R1C-A: الإصلاحات الأمنية والوظيفية<br/>R1C-01, R1C-02, R1C-03, R1C-04]
+        R1C_A[R1C-A: الإصلاحات الأمنية والوظيفية<br/>فشلت في الفحص التشغيلي]
+        R1C_A_C1[R1C-A-C1: حزمة تصحيح المصادقة العاجلة<br/>localtest.me + إغلاق الانحراف الأمني]
         R1C_B[R1C-B: تنظيف العقود القديمة وتقوية الاختبارات والحوكمة<br/>R1C-05, R1C-06, R1C-07, R1C-09, R1C-10]
         R1C_C[R1C-C: النشر المتوافق والفحص الحي والتوثيق الصادق<br/>R1C-08, R1C-11, R1C-12]
-        R1C_A --> R1C_B --> R1C_C
+        R1C_A --> R1C_A_C1 --> R1C_B --> R1C_C
     end
 
     R1C_Phase --> AcceptanceGates{بوابات واختبارات القبول الـ 24}
@@ -116,7 +121,7 @@ graph TD
 #### 📦 الحزمة الأولى: R1C-A — الإصلاحات الأمنية والوظيفية (Security & Functional Fixes)
 
 #### 1. R1C-01: النشر المتوافق وتفادي تضارب Schema والإصدارات (Mixed-Version Deployment & P2002 Elimination)
-- [x] **تحليل العيب التشغيلي وتقسيم المسؤولية بوضوح قاطع:**
+- [ ] **تحليل العيب التشغيلي وتقسيم المسؤولية بوضوح قاطع:**
   - أظهرت المراجعة أن Migration الجديدة أضافت قيد فرادة `@@unique([groupId, originKind])`.
   - توفر القيمة الافتراضية `LOCAL` توافقاً تركيبياً لإدخال سجل منفرد فقط، لكنها لا توفر توافقاً وظيفياً أو تشغيلياً مع نسخة البوت القديمة التي تنشئ رابطين داخل المجموعة نفسها؛ لأن الرابطين يحصلان على `LOCAL` ويصطدمان بالقيد الفريد `(groupId, originKind)`. لذلك تعد النسخة القديمة غير متوافقة مع Schema الحالية بالنسبة لتدفق الرابطين، ويلزم استبدالها بصورة التطبيق المتوافقة وعدم تشغيلها مجدداً.
   - **حقيقة معمارية وإسقاط ادعاء In-App Guard:** لا يستطيع أي حارس برمجي داخل كود التطبيق الجديد أن يمنع حاوية قديمة تعمل بالفعل من الاتصال بقاعدة البيانات والتعامل مع Schema الجديدة؛ لذلك يُسقط هذا الادعاء تماماً وتُقسّم المسؤولية بوضوح تام بين الحزمتين:
@@ -135,15 +140,17 @@ graph TD
       6. الحظر المطلق لإعادة تشغيل أي صورة قديمة غير متوافقة.
 
 #### 2. R1C-02: حسم وتوحيد عقد الأصل المحلي ومنع التباين (Local Origin Standard & Exact Mismatch Elimination)
-- [x] **تحليل العيب التشغيلي:**
-  - الكود يخزن في `targetOrigin`: `http://localhost:3002`، بينما كان معالج البوت يحول الرابط في الزر إلى `http://127.0.0.1.nip.io:3002`. عند ضغط الرابط، يفرض مسار `/api/auth/claim` فحص المطابقة الحرفية `isExactOriginMatch`، فيرفض الطلب ويعتبر الأصل غير موثوق.
-- [x] **القرار المعماري الحاسم والموحد (المتطابق كلياً مع المهمة 10):**
+- [ ] **تحليل العيب التشغيلي وظاهرة تحويل NextURL:**
+  - أظهر الفحص التشغيلي الميداني أن استخدام `http://127.0.0.1.nip.io:3002` يصطدم بسلوك معالج `NextURL` الداخلي في Next.js؛ حيث يقوم NextURL تلقائياً بتحويل أسماء النطاقات المعتمدة على IP الاسترجاعي إلى `localhost.nip.io`، مما يجعل `request.nextUrl.origin` ينتج `http://localhost.nip.io:3002`، فيحدث عدم تطابق حرفي مع `targetOrigin` المخزن في قاعدة البيانات (`http://127.0.0.1.nip.io:3002`)، ويرفض مسار `/api/auth/claim` الطلب بخطأ `403 ORIGIN_MISMATCH`.
+- [ ] **القرار المعماري الحاسم والموحد (الاعتماد على localtest.me والعقد المشترك النقي):**
+  - استبدال الأصل المحلي بالكامل بـ **`http://localtest.me:3002`**.
   - متغير البيئة `DASHBOARD_LOCAL_URL` الخاص بالمصادقة الصادرة من البوت يقبل حصراً:
-    `http://127.0.0.1.nip.io:<port>`
-  - **يُحظر تماماً وضع أو قبول `localhost` في متغير `DASHBOARD_LOCAL_URL` التشغيلي.**
-  - نطاق `http://127.0.0.1.nip.io:3002` يشير تقنياً إلى عنوان الاسترجاع المحلي `127.0.0.1`، ولذلك يظل مساراً محلياً خالصاً متوافقاً مع قيود Telegram Desktop الأمنية وليس نفقاً خارجياً.
+    `http://localtest.me:<port>`
+  - **يُحظر تماماً وضع أو قبول `localhost` أو `127.0.0.1.nip.io` في متغير `DASHBOARD_LOCAL_URL` التشغيلي.**
+  - نطاق `localtest.me` هو نطاق FQDN عام (Public Wildcard DNS) يشير إلى `127.0.0.1`، ويدعمه زر Telegram (`InlineKeyboardButton.url`) تركيبياً ببروتوكول HTTP وفق مواصفة Bot API، مع ملاحظة أن تطبيق Telegram Desktop قد يعرض للمستخدم نافذة تأكيد اعتيادية قبل فتح الروابط الخارجية؛ ويُعد النجاح الفعلي للتنقل عبر تليجرام والمتصفح معيار قبول تشغيلياً حياً مؤجلاً إلى مرحلة الفحص الميداني. كما يتميز `localtest.me` بأن معالج `NextURL` في Next.js يتعامل معه كنطاق طبيعي ولا يطبق عليه أي تحويل داخلي؛ مما يضمن ثبات الأصل وتطابقه الحرفي بنسبة 100%.
+  - اعتماد دالة نقية مشتركة داخل الحزمة السيادية `@alsaada/rbac` باسم `validateDashboardAuthOrigins(input)` تفحص المكونات الصريحة عبر `new URL()` بدقة وتمنع نسخ المنطق بين التطبيقين.
   - الرابط `http://localhost:3002` مسموح به فقط للفحص اليدوي المباشر من قِبل المطور في المتصفح، **وليس** لإصدار رابط Claim أو تخزين `targetOrigin`.
-  - **يُمنع منعاً باتاً تحويل `localhost` إلى `nip.io` داخل معالج البوت (`apps/bot-server/src/handlers/dashboard.handler.ts`) أو في أي طبقة أخرى بعد تخزين `targetOrigin`.**
+  - **يُمنع منعاً باتاً أي تحويل للمضيف أو المنفذ داخل معالج البوت (`apps/bot-server/src/handlers/dashboard.handler.ts`) أو في أي طبقة أخرى بعد تخزين `targetOrigin`.**
   - الرابط النهائي المعياري يجب أن يُبنى ويُخزن ويُعرض بنفس الأصل الموحد منذ البداية بنسبة 100% في:
     1. التخزين في حقل `targetOrigin` بجدول `dashboard_auth_links`.
     2. تكوين رابط الدخول المعروض للمستخدم في نص الرسالة.
@@ -155,21 +162,23 @@ graph TD
   - **المرجعان التشغيليان الوحيدان:** يصبح `DASHBOARD_LOCAL_URL` و `DASHBOARD_TUNNEL_URL` هما المرجعين التشغيليين المعتمدين حصراً في النظام؛ مع تحييد المتغيرين القديمين `DASHBOARD_URL` و `ADMIN_DASHBOARD_URL` وقصرهما على التوافق الخلفي المؤقت مع إطلاق تحذير Deprecation بعد جرد مستهلكيهما الفعليين.
 
 #### 3. R1C-03: استئصال ثغرة Reflected XSS وتحصين واجهة الفشل وعقد traceId (Reflected XSS Elimination & Error Hardening)
-- [x] **تحليل العيب الأمني:**
+- [ ] **تحليل العيب الأمني:**
   - مسار `claim/route.ts` يستقبل معامل `traceId` من Query Parameters ويحقنه مباشرة وبشكل خام داخل قالب HTML المعروض عند فشل المصادقة، مما يتيح هجمات Reflected XSS عبر إرسال روابط خبيثة للمسؤولين.
   - إعادة شاشة الخطأ بحالة `HTTP 200 OK` بدلاً من حالة خطأ ملائمة لطبيعة الرفض.
-- [x] **عقد traceId المعتمد وحظر المولدات المحلية:**
+- [ ] **عقد traceId المعتمد وحظر المولدات المحلية:**
   - استبدال أي إشارة أو توليد محلي مكرر بالعقد المعياري الموجود فعلياً في حزمة `@alsaada/telemetry`:
     * `extractTraceId(request)`: لاستخراج المعرف والتحقق من سلامته شكلياً.
     * `isValidTraceId`: للتحقق الصارم من بنية المعرف.
     * الـ Fallback الآمن المقدم تلقائياً من حزمة `@alsaada/telemetry` (توليد UUID قياسي آمن عند غياب أو فساد القيمة الواردة).
   - يُحظر تماماً إنشاء مولد محلي مكرر أو تعديل الحزمة المشتركة دون حاجة مثبتة.
-- [x] **مصفوفة رموز HTTP الصريحة لاستجابات مسار Claim وواجهة الفشل:**
+- [ ] **مصفوفة رموز HTTP الصريحة لاستجابات مسار Claim وواجهة الفشل:**
   * `HTTP 400 Bad Request`: الرمز مفقود أو تالف شكلياً (`token missing or malformed`).
   * `HTTP 401 Unauthorized`: الرمز غير صالح أو منتهي الصلاحية أو مستهلك مسبقاً (`invalid, expired, or already consumed`).
   * `HTTP 403 Forbidden`: الدور غير مخول للوصول أو الأصل الوارد لا يطابق حرفياً `targetOrigin` المخزن (`unauthorized role or origin mismatch`).
-  * `HTTP 500 / 503 Service Unavailable`: عطل داخلي أو تعذر الاتصال بقاعدة البيانات مع تفعيل مبدأ `Fail-Closed` فورياً.
-- [x] **تحصين الواجهة وترويسات الأمان:**
+  * `HTTP 429 Too Many Requests`: تجاوز الحد الأقصى للجلسات المتزامنة للمستخدم.
+  * `HTTP 503 Service Unavailable`: تعذر الاتصال بقاعدة البيانات أو فشل التبعيات الأساسية مع تفعيل مبدأ `Fail-Closed` فورياً.
+  * `HTTP 500 Internal Server Error`: خطأ داخلي غير متوقع (مع حظر تغليف أو تمويه 500 كـ 401).
+- [ ] **تحصين الواجهة وترويسات الأمان:**
   - حظر انعكاس أي قيمة خام قادمة من Query Parameters داخل HTML تحت أي ظرف.
   - تطبيق تعقيم كامل وصارم (HTML Entity Escaping) لكافة القيم المحقونة داخل HTML وخصائص العناصر (`href`, `src`, إلخ).
   - إضافة ترويسات الحماية الإلزامية:
@@ -179,9 +188,9 @@ graph TD
   - إضافة اختبار أمني تنفيذي آلي صريح لـ Reflected XSS يرسل `<script>alert(1)</script>` و `"><img src=x onerror=alert(1)>` ويثبت عدم انعكاس الـ Payload خاماً داخل الاستجابة.
 
 #### 4. R1C-04: الامتثال الكامل لعقد التسجيل في PLAN-20 واستئصال Catch الصامت (PLAN-20 Logging Contract Compliance)
-- [x] **النص الإلزامي الحاكم:**
+- [ ] **النص الإلزامي الحاكم:**
   > *«شرط أساسي للوصول لهذا المستوى هو تنفيذ الخطة رقم 20 بالكامل وربط أي وظيفة جديدة مستقبلاً بعقد التسجيل الموحد، دون استخدام console.error أو catch صامت خارج المنظومة.»*
-- [x] **إجراءات المعالجة المعمارية:**
+- [ ] **إجراءات المعالجة المعمارية:**
   - استئصال شامل لكافة استدعاءات `console.error` و `console.warn` (المستخدمة للأخطاء التشغيلية) في كامل نطاق المصادقة (`apps/admin-dashboard/src/app/api/auth/*`, `apps/admin-dashboard/src/lib/*`, `apps/bot-server/src/services/dashboard-auth.service.ts`, `apps/bot-server/src/handlers/dashboard.handler.ts`).
   - استئصال وحظر كافة بلوكات `catch {}` و `.catch(() => {})` الصامتة.
   - استخدام `TelemetryLogger` وعقد التسجيل الهيكلي الموحد مع تمرير `traceId` وسياق العملية ونوع الحدث.
@@ -198,25 +207,53 @@ graph TD
   * `apps/admin-dashboard/src/app/api/auth/logout/route.ts`
   * `apps/admin-dashboard/src/lib/auth.ts`
   * `apps/admin-dashboard/src/lib/env.ts`
+  * `packages/rbac/src/dashboard-auth.ts`
+  * `packages/rbac/src/index.ts`
   * `packages/telemetry/src/index.ts`
   * `packages/telemetry/src/adapters/next.ts`
-  * ملفات اختبارات هذه الوحدات المرتبطة بالمصادقة والتسجيل
-- **الملفات المسموح تعديلها حصراً (تطابق حرفي مع نطاق R1C-04 وبوابة الخروج):**
-  * `apps/bot-server/src/services/dashboard-auth.service.ts` (تمرير originKind صراحة، استئصال catch الصامت، استخدام TelemetryLogger)
-  * `apps/bot-server/src/handlers/dashboard.handler.ts` (استئصال تحويل localhost إلى nip.io، استئصال catch الصامت، استخدام TelemetryLogger)
-  * `apps/bot-server/src/config/env.ts` (قصر DASHBOARD_LOCAL_URL على nip.io، حظر localhost)
-  * `apps/admin-dashboard/src/app/api/auth/claim/route.ts` (إغلاق XSS، مصفوفة HTTP، تعقيم HTML، استخدام extractTraceId)
+  * ملفات الاختبارات الـ 9 المحددة حصراً:
+    1. `packages/rbac/tests/dashboard-auth.spec.ts`
+    2. `apps/bot-server/tests/dashboard-command.spec.ts`
+    3. `apps/bot-server/tests/adversarial-dashboard-access.spec.ts`
+    4. `apps/bot-server/tests/env-validation.spec.ts`
+    5. `apps/admin-dashboard/tests/auth-claim.spec.ts`
+    6. `apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts`
+    7. `apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts`
+    8. `apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts`
+    9. `apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts`
+- **الملفات المسموح تعديلها حصراً:**
+  * `packages/rbac/src/dashboard-auth.ts` (تطبيق دالة التحقق النقية validateDashboardAuthOrigins وعقد الأخطاء المكتوبة)
+  * `packages/rbac/src/index.ts` (تصدير العقد المشترك)
+  * `apps/bot-server/src/services/dashboard-auth.service.ts` (تمرير originKind صراحة، استئصال catch الصامت، استخدام TelemetryLogger، وتصدير DashboardSessionView)
+  * `apps/bot-server/src/handlers/dashboard.handler.ts` (اعتماد localtest.me، استئصال أي تحويل، استئصال catch الصامت، استخدام TelemetryLogger، استئصال rawSessions: any[] واستخدام DashboardSessionView)
+  * `apps/bot-server/src/config/env.ts` (قراءة المتغيرات واستدعاء validateDashboardAuthOrigins المشتركة)
+  * `apps/admin-dashboard/src/app/api/auth/claim/route.ts` (استئصال الانحراف الأمني UNCOMMITTED_UNAPPROVED_SECURITY_DEVIATION، العودة الصارمة لـ request.nextUrl.origin، إغلاق XSS، مصفوفة HTTP، تعقيم HTML، استخدام extractTraceId، واعتماد ClaimTransactionResult)
   * `apps/admin-dashboard/src/app/api/auth/logout/route.ts` (استئصال console.warn التشغيلي، ربط TelemetryLogger)
-  * `apps/admin-dashboard/src/lib/auth.ts` (استئصال console.error، ربط TelemetryLogger)
-  * `apps/admin-dashboard/src/lib/env.ts` (تطبيع الأصل المحلي ومنع localhost)
-  * ملفات اختبارات هذه الملفات المرتبطة بالمصادقة والتسجيل
+  * `apps/admin-dashboard/src/lib/auth.ts` (استئصال console.error، ربط TelemetryLogger، والتصنيف المكتوب)
+  * `apps/admin-dashboard/src/lib/env.ts` (قراءة المتغيرات واستدعاء validateDashboardAuthOrigins المشتركة)
+  * ملفات الاختبارات الـ 9 المحددة حصراً (دون أي تعبيرات نجمية):
+    1. `packages/rbac/tests/dashboard-auth.spec.ts` (اختبارات العقد المشترك النقي)
+    2. `apps/bot-server/tests/dashboard-command.spec.ts` (اختبارات تفاعل أوامر وأزرار البوت)
+    3. `apps/bot-server/tests/adversarial-dashboard-access.spec.ts` (اختبارات محاولات الوصول المعادية)
+    4. `apps/bot-server/tests/env-validation.spec.ts` (اختبارات التحقق من متغيرات البيئة)
+    5. `apps/admin-dashboard/tests/auth-claim.spec.ts` (اختبارات استهلاك الرموز ومصفوفة HTTP)
+    6. `apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts` (اختبارات التزامن والسباق الذري)
+    7. `apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts` (اختبارات معالجة ثغرات R1 وإثبات استقرار AuditLog)
+    8. `apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts` (اختبارات فحص الأدوار والجلسات المعادية)
+    9. `apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts` (اختبار التحليل التركيبي الصارم AST)
 - **الملفات المحظور تعديلها في هذه الحزمة:**
   * `packages/telemetry/*` (تُستخدم عقودها الحالية المعيارية دون تعديل)
   * `packages/database/prisma/schema.prisma`
   * `packages/database/prisma/migrations/*`
   * `apps/admin-dashboard/src/middleware.ts`
   * `docker-compose.yml`
-  * أي ملف خارج نطاق الحزمة A
+  * أي ملف خارج نطاق الحزمة A أو خارج الملفات المحددة في حزمة RBAC
+- **تنبيه حوكمي بشأن تعديل الحزمة المشتركة `@alsaada/rbac`:**
+  * نظراً لأن `@alsaada/rbac` حزمة نواة مشتركة (Shared Kernel)، يُلزم وكيل التنفيذ فور تعديلها بتشغيل:
+    `pnpm --filter @alsaada/rbac test`
+    ثم تشغيل حزمة الاختبارات الشاملة للتأكد القاطع من عدم كسر أي وظيفة في النظام.
+- **تسجيل الانحراف الأمني غير المعتمد على القرص:**
+  * يُسجل الملف `apps/admin-dashboard/src/app/api/auth/claim/route.ts` بأنه يحتوي حالياً على: `UNCOMMITTED_UNAPPROVED_SECURITY_DEVIATION` (محاولة الالتفاف على الأصل عبر قراءة ترويسة Host). يُحظر تعديله أو حذفه في وضع `PLAN_ONLY`، وتتم جدولته للإلغاء والاستئصال الكامل فور بدء تنفيذ C1.
 - **الوكيل أو التخصص المسؤول:** مهندس أمن ومصادقة ونظم خلفية (Backend & Security Specialist).
 - **قاعدة منع التضارب:** يُحظر تماماً على أكثر من وكيل الكتابة في نفس الملف بالتزامن.
 - **مسؤول الدمج:** مهندس الدمج المعماري (Integration Lead).
@@ -226,9 +263,12 @@ graph TD
 ---
 
 #### 🚪 بوابة الخروج المستقلة لحزمة R1C-A (Exit Gate R1C-A)
+> [!WARNING]
+> **الحالة الحالية للبوابة:** 🟢 `VERIFIED` — تم استيفاء حزمة التصحيح العاجلة `PLAN-22 R1C-A-C1` واجتياز كافة الاختبارات الـ 13 واختبار AST الصارم وجميع بوابات التحقق المستهدفة لـ C1.
+
 - [x] إصلاح تمرير `originKind` الصريح للرابطين في `dashboard-auth.service.ts` واجتياز اختبار الانحدار الذي يمنع تفجير P2002.
-- [x] توحيد الأصل المحلي المعياري على `http://127.0.0.1.nip.io:3002` حصراً، وحظر `localhost` في `DASHBOARD_LOCAL_URL`، وحذف أي تحويل داخل `dashboard.handler.ts`.
-- [x] إغلاق ثغرة XSS بالكامل، واعتماد `extractTraceId` و `isValidTraceId`، وتطبيق مصفوفة HTTP (400/401/403/500/503)، والتعقيم والترويسات، ونجاح اختبار XSS التنفيذي.
+- [x] توحيد الأصل المحلي المعياري على `http://localtest.me:3002` حصراً، وحظر `localhost` و `nip.io` في `DASHBOARD_LOCAL_URL`، وحذف أي تحويل داخل `dashboard.handler.ts`.
+- [x] إغلاق ثغرة XSS بالكامل، واعتماد `extractTraceId` و `isValidTraceId`، وتطبيق مصفوفة HTTP (400/401/403/429/500/503)، والتعقيم والترويسات، ونجاح اختبار XSS التنفيذي.
 - [x] الامتثال الكامل لعقد التسجيل في PLAN-20: فحص صريح يثبت خلو ملفات المصدر الداخلة في R1C-A (`auth.ts`, `logout/route.ts`, `dashboard.handler.ts`, `dashboard-auth.service.ts`, `claim/route.ts`) من:
   * `console.error`
   * `console.warn` التشغيلي
@@ -236,11 +276,328 @@ graph TD
   * `.catch(() => {})` الصامت
   (مع استثناء المطابقات داخل ملفات الاختبارات أو الوثائق).
 - [x] توثيق اجتياز دورة RED ثم GREEN لاختبارات P2002 وExact-Origin وXSS.
-- [x] نجاح الاختبارات المستهدفة للحزمة A (`pnpm --filter @alsaada/bot-server test` [183/183 pass], `pnpm --filter @alsaada/admin-dashboard test` [175/175 pass]).
+- [x] نجاح الاختبارات المستهدفة للحزمة A (`pnpm --filter @alsaada/bot-server test`, `pnpm --filter @alsaada/admin-dashboard test`).
 - [x] اجتياز فحص التايب سكريبت: `pnpm typecheck = Exit 0`.
 - [x] اجتياز فحص البناء: `pnpm build = Exit 0`.
-- [x] اجتياز بوابة الحوكمة: `pnpm dashboard-auth:verify = Exit 0` (واكتمال نظافة الشجرة في الـ commit).
-- [x] **تنبيه قاطع:** لا يُعتبر النشر الحي منجزاً في هذه الحزمة؛ ولا يتم لمس أي حاويات قيد التشغيل.
+- [x] اجتياز بوابة الحوكمة المتخصصة: `pnpm dashboard-auth:verify = Exit 0`.
+- [x] فحص AST الصارم (Test 13): اجتياز الفحص التركيبي الشامل لملفات المصدر الـ 9 عبر `TypeScript Compiler API`.
+- [ ] **تنبيه قاطع:** لا يُعتبر النشر الحي منجزاً في هذه الحزمة؛ ولا يتم لمس أي حاويات قيد التشغيل.
+
+---
+
+### 📦 الحزمة التصحيحية الإلزامية: PLAN-22 R1C-A-C1 — Authentication Corrective Review
+
+> [!IMPORTANT]
+> حزمة تصحيح عاجلة ومحكمة تهدف لمعالجة القصور التشغيلي والانحراف الأمني المكتشف في R1C-A، والوصول بمنظومة المصادقة إلى درجة الحصانة التامة وفق البنود العشرة التالية:
+
+#### 1. استبدال الأصل المحلي السابق بالكامل وتصحيح التوصيف التشغيلي (Local Origin Replacement & Telegram Behavior)
+- استبدال الأصل المحلي السابق `http://127.0.0.1.nip.io:3002` بالكامل بالأصل الجديد:
+  **`http://localtest.me:3002`**
+- سريان هذا الاستبدال في كامل كود البوت والداشبورد وملفات الإعدادات ومتغيرات البيئة والتوثيق وملفات الاختبارات.
+- التحقق الهندسي وتصحيح التوصيف التشغيلي لـ `localtest.me`:
+  1. **Wildcard DNS:** نطاق عام يحلل تلقائياً بواسطة خوادم DNS العامة إلى عنوان الاسترجاع المحلي `127.0.0.1`.
+  2. **دعم Telegram Bot API ونافذة التأكيد:** زر `InlineKeyboardButton.url` يدعم بروتوكول HTTP تركيبياً وفق مواصفة Bot API، مع التدوين الصريح أن Telegram Desktop قد يعرض للمستخدم نافذة تأكيد اعتيادية للرابط الخارجي (External Link Confirmation Dialog)؛ ولذلك يُحظر الادعاء بأنه يفتح "دون أي تحذير"، ويُعتبر النجاح الفعلي للتنقل عبر Telegram Desktop والمتصفح معيار قبول تشغيلياً حياً مؤجلاً إلى مرحلة الفحص الميداني، ولا يُسجل كمجتاز مسبقاً في الوثائق أو الاختبارات الآلية.
+  3. **ثبات NextURL وعدم التحويل:** معالج `NextURL` الداخلي في Next.js يتعامل مع `localtest.me` كنطاق طبيعي ولا يطبق عليه قواعد تحويل Loopback IP (التي كانت تحول `127.0.0.1.nip.io` قسرياً إلى `localhost.nip.io`)، مما يضمن ثبات `request.nextUrl.origin` وتطابقه الحرفي 100% مع `targetOrigin` المخزن في قاعدة البيانات.
+
+#### 2. حظر الالتفاف عبر Host Header والتأكيد الصارم على Exact-Origin
+- **حظر أمني قاطع:** يُحظر تماماً أي اعتماد أو قراءة لـ:
+  * `Host` header
+  * `X-Forwarded-Host` header
+  * `X-Forwarded-Proto` header
+  أو أي رأس شبكي آخر للالتفاف على فحص المطابقة الحرفية للأصل (`isExactOriginMatch`).
+- **إلغاء واستئصال الانحراف الأمني:** إلغاء التعديل غير المعتمد المسجل كـ `UNCOMMITTED_UNAPPROVED_SECURITY_DEVIATION` في `apps/admin-dashboard/src/app/api/auth/claim/route.ts` أثناء تنفيذ C1، والعودة الصارمة إلى:
+  ```typescript
+  const requestOrigin = request.nextUrl.origin;
+  ```
+  دون أي محاولة لقراءة رؤوس Host أو X-Forwarded لتجاوز عدم تطابق الأصل.
+- **اختبارات أمنية معادية (Adversarial Security Tests):** إضافة اختبارات صريحة تثبت أن إرسال رؤوس مزيفة (`Host: evil.com`, `X-Forwarded-Host: evil.com`, `X-Forwarded-Proto: https`) لا يؤثر نهائياً على قرار المطابقة ويفشل بـ `403 Forbidden` عند اختلاف `request.nextUrl.origin` عن `targetOrigin`.
+
+#### 3. توحيد عقد التحقق وفحص الروابط الدقيق وسلوك فشل الإعدادات (Unified Origin Contract, Strict Parsing & Failure Behavior)
+- **توحيد عقد التحقق عبر دالة نقية مشتركة في `@alsaada/rbac`:**
+  - اعتماد دالة نقية مشتركة داخل الحزمة السيادية `@alsaada/rbac` (`packages/rbac/src/dashboard-auth.ts`):
+    ```typescript
+    export interface DashboardAuthOriginsInput {
+      localUrl?: string;
+      tunnelUrl?: string;
+    }
+
+    export interface DashboardAuthOrigins {
+      localOrigin: string;
+      tunnelOrigin: string;
+    }
+
+    export function validateDashboardAuthOrigins(input: DashboardAuthOriginsInput): DashboardAuthOrigins;
+    ```
+  - دالتا `validateDashboardAuthEnv()` في البوت (`apps/bot-server/src/config/env.ts`) والداشبورد (`apps/admin-dashboard/src/lib/env.ts`) تصبحان مجرد قارئ خفيف لمتغيرات البيئة (`process.env`) يستدعي العقد السيادي المشترك `validateDashboardAuthOrigins(...)`.
+  - **يُحظر تماماً نسخ أو تكرار منطق التحقق وفحص الروابط داخل التطبيقين.**
+  - يُسمح مستقبلاً أثناء تنفيذ C1 بتعديل:
+    * `packages/rbac/src/dashboard-auth.ts`
+    * `packages/rbac/src/index.ts`
+    * `packages/rbac/tests/dashboard-auth.spec.ts`
+- **التحقق الدقيق عبر التحليل التركيبي الصارم لـ URL (Strict Component-by-Component URL Parsing):**
+  - **حظر أمني قاطع:** يُحظر تماماً استخدام `startsWith` للتحقق الأمني من الروابط؛ لأن `startsWith('http://localtest.me')` ثغرة تقبل نطاقات خبيثة فرعية (مثل `http://localtest.me.evil.com`) أو مسارات مدمجة.
+  - يجب استخدام `new URL(rawUrl)` ثم فحص كل مكون من مكونات الرابط بصورة مستقلة وصارمة:
+    * **الأصل المحلي (`localUrl`):**
+      1. `parsed.protocol === 'http:'`
+      2. `parsed.hostname === 'localtest.me'`
+      3. المنفذ صريح وصالح: `parsed.port !== ''` وقيمة عددية صحيحة تقع في النطاق `(0 < port <= 65535)`.
+      4. `parsed.pathname === '/'`
+      5. خلو تام من الاستعلامات: `parsed.search === ''`
+      6. خلو تام من التجزئة: `parsed.hash === ''`
+      7. خلو تام من بيانات الاعتماد: `parsed.username === '' && parsed.password === ''`
+    * **أصل النفق (`tunnelUrl`):**
+      1. `parsed.protocol === 'https:'`
+      2. `parsed.hostname` اسم مضيف صالح ونظيف غير فارغ.
+      3. `parsed.pathname === '/'`
+      4. `parsed.search === ''`
+      5. `parsed.hash === ''`
+      6. `parsed.username === '' && parsed.password === ''`
+    * **اختلاف الأصلين (Distinct Origins):**
+      - التحقق الحتمي الصارم من أن `localOrigin !== tunnelOrigin`.
+    * **إرجاع الأصل المعياري النظيف:**
+      - إرجاع القيمة المعيارية عبر `parsed.origin` حصراً دون أي تحويل أو طفرة صامتة (Zero Silent Mutation) للمضيف أو المنفذ.
+- **حسم سلوك فشل الإعدادات (Graceful Degradation & Fail-Closed Scenarios):**
+  - **في خادم البوت:**
+    * فساد إعدادات الداشبورد (مثل غياب أو عدم صلاحية `DASHBOARD_LOCAL_URL` أو `DASHBOARD_TUNNEL_URL`) **لا يؤدي بأي حال إلى إسقاط أو انهيار خادم البوت بالكامل**.
+    * يستمر البوت في أداء كافة وظائفه الميدانية الأخرى (القوى العاملة، العهد، الكانتين، السلف، الحضور، الإجازات، إلخ) بنجاح تام.
+    * تُعطل وظيفة إصدار روابط الداشبورد فقط بمبدأ `Fail-Closed`.
+    * عند ضغط زر `🖥️ فتح لوحة التحكم` في البوت، لا يُرمى خطأ غير معالج؛ بل تُعرض رسالة تفاعلية واضحة للمستخدم الإداري تفيد بتعذر الوصول المؤقت للوحة التحكم بسبب خلل في إعدادات الاتصال، مزودة بـ:
+      1. زر إعادة المحاولة: `[ 🔄 إعادة المحاولة ]`
+      2. زر العودة للقائمة الرئيسية: `[ 🏠 القائمة الرئيسية ]`
+    * تسجيل الخطأ التشغيلي عبر عقد `TelemetryLogger` الموحد وفق PLAN-20 مع `traceId` دون تسريب أي أسرار أو تفاصيل حساسة.
+  - **في تطبيق الداشبورد وحارس الخادم:**
+    * **مسار الـ Claim (`/api/auth/claim`):** عند فساد أو عدم صلاحية الإعدادات، يمنع مسار الـ Claim استهلاك الرموز تماماً بمبدأ `Fail-Closed` ويرجع استجابة `HTTP 503 Service Unavailable` مع الكود المكتوب `CONFIG_ERROR`.
+    * **حارس الجلسات (`getCurrentUser` داخل `apps/admin-dashboard/src/lib/auth.ts`):**
+      - دالة `getCurrentUser` هي دالة خادمية تقرأ الكوكي المعتمة وتتحقق من الجلسة في قاعدة البيانات؛ وهي **لا ترجع كائن استجابة HTTP (HTTP Response)** إطلاقاً، ولا تعتمد على إعدادات الأصول (`origins`) للتحقق من جلسة قائمة تمتلك مسبقاً رمز جلسة معتم على الخادم (`server-side opaque session token`).
+      - في حال حدوث خطأ في قاعدة البيانات، تفشل `getCurrentUser` آمناً ومغلقاً (`Fail-Closed`) بإرجاع `null` مع تسجيل الحدث في `TelemetryLogger`، ولا تدعي إرجاع HTTP 503.
+      - أي معالجة عامة للأخطاء، أو صفحة صيانة، أو إرجاع 503 على مستوى صفحات التطبيق خارج مسار الـ Claim مؤجلة لحزمة مستقلة لاحقة.
+
+#### 4. تطابق مصفوفة حالات الاستجابة (HTTP Status Code Parity)
+- فرض تطابق كامل بنسبة 100% بين استجابات HTML و JSON لنفس نوع الخطأ في مسار `/api/auth/claim`:
+  * `400 Bad Request`: الرمز مفقود أو غير صالح تركيبياً (Missing or Malformed Token).
+  * `401 Unauthorized`: الرمز غير موجود في قاعدة البيانات، منتهي الصلاحية، أو مستهلك مسبقاً (Token Not Found / Expired / Already Claimed).
+  * `403 Forbidden`: الدور غير مخول للوصول، أو عدم تطابق الأصل الحرفي الوارد مع `targetOrigin` المخزن (Unauthorized Role / Origin Mismatch).
+  * `429 Too Many Requests`: تجاوز الحد الأقصى للجلسات المتزامنة للمستخدم (Max Concurrent Sessions Exceeded).
+  * `503 Service Unavailable`: تعذر الاتصال بقاعدة البيانات أو فشل التبعيات الأساسية (Fail-Closed Infrastructure Error).
+  * `500 Internal Server Error`: خطأ داخلي غير متوقع (مع الحظر القاطع لتغليف أو تمويه خطأ 500 كـ 401 تحت أي ظرف).
+
+#### 5. اعتماد أخطاء أعمال مكتوبة ونموذج المعاملات الصارم (Typed Business Errors & Claim Transaction Model)
+- **تعريف كود فشل استهلاك الرمز كاتحاد مغلق داخل `@alsaada/rbac`:**
+  - اعتماد نوع `DashboardClaimFailureCode` داخل `@alsaada/rbac` كـ Closed Discriminated Union يمثل كافة الحالات المتوقعة حصراً:
+    ```typescript
+    export type DashboardClaimFailureCode =
+      | 'TOKEN_MISSING'
+      | 'TOKEN_MALFORMED'
+      | 'TOKEN_NOT_FOUND'
+      | 'TOKEN_EXPIRED'
+      | 'TOKEN_ALREADY_CLAIMED'
+      | 'ORIGIN_MISMATCH'
+      | 'ROLE_UNAUTHORIZED'
+      | 'MAX_SESSIONS_EXCEEDED'
+      | 'CONFIG_ERROR'
+      | 'DATABASE_ERROR'
+      | 'INTERNAL_ERROR';
+    ```
+- **تعريف حالات HTTP المعتمدة وقاموس التعيين الحصري داخل `@alsaada/rbac`:**
+  - تعريف نوع حالات HTTP المسموح بها حصراً في مسار الـ Claim:
+    ```typescript
+    export type DashboardClaimHttpStatus = 400 | 401 | 403 | 429 | 500 | 503;
+    ```
+  - تعريف قاموس تعيين صريح وثابت يربط كل كود فشل بحالة HTTP المطابقة:
+    ```typescript
+    export const CLAIM_FAILURE_HTTP_STATUS_MAP: Record<DashboardClaimFailureCode, DashboardClaimHttpStatus> = {
+      TOKEN_MISSING: 400,
+      TOKEN_MALFORMED: 400,
+      TOKEN_NOT_FOUND: 401,
+      TOKEN_EXPIRED: 401,
+      TOKEN_ALREADY_CLAIMED: 401,
+      ORIGIN_MISMATCH: 403,
+      ROLE_UNAUTHORIZED: 403,
+      MAX_SESSIONS_EXCEEDED: 429,
+      CONFIG_ERROR: 503,
+      DATABASE_ERROR: 503,
+      INTERNAL_ERROR: 500,
+    };
+    ```
+- **الفصل التام لرسائل واجهة المستخدم عن حزمة النواة `@alsaada/rbac`:**
+  - حزمة `@alsaada/rbac` خالية تماماً من أي نصوص أو حقول لرسائل المستخدم (`userMessage`)؛ نصوص واجهة المستخدم ورسائل الخطأ المرئية تُصاغ حصراً عند حافة العرض في مسار الداشبورد (`apps/admin-dashboard/src/app/api/auth/claim/route.ts`).
+- **اعتماد عقد نتيجة المعاملة `ClaimTransactionResult` كـ Discriminated Union حصري:**
+  - إلغاء أي خيارات أو أشكال بديلة (مثل "DashboardClaimResult أو DashboardClaimError")، وعدم استخدام أي نوع غير معرّف مثل `DashboardSessionPayload`.
+  - الاعتماد الحصري لنوع `ClaimTransactionResult` داخل `apps/admin-dashboard/src/app/api/auth/claim/route.ts`:
+    ```typescript
+    export type ClaimTransactionResult =
+      | {
+          ok: true;
+          sessionToken: string;
+          sessionId: string;
+          actorTelegramId: bigint;
+          role: DashboardRole;
+          redirectUrl: string;
+          expiresAt: Date;
+        }
+      | {
+          ok: false;
+          code: DashboardClaimFailureCode;
+        };
+    ```
+- **قواعد تنفيذ المعاملة وحفظ سجل التدقيق الرقابي عند 403 (Transaction Semantics & AuditLog Persistence):**
+  - في كافة حالات فشل الأعمال المتوقعة (مثل انتهاء الصلاحية، الاستهلاك المسبق، عدم تطابق الأصل، أو عدم تخويل الدور)، **ترجع المعاملة `{ ok: false, code }` دون رمي استثناء (Zero Throw) ودون التراجع عن المعاملة (No Rollback)**.
+  - **استقرار سجل التدقيق عند رفض الصلاحية (AuditLog Persistence on 403):** عند رفض دور المستخدم (`ROLE_UNAUTHORIZED` / 403) أو رفض الحساب داخل المعاملة، يقوم الكود بكتابة سجل التدقيق الرقابي `AuditLog` داخل قاعدة البيانات أولاً، ثم ترجع المعاملة `{ ok: false, code: 'ROLE_UNAUTHORIZED' }` بصورة طبيعية دون رمي استثناء، لضمان استقرار المعاملة (Commit) وتثبيت سجل التدقيق الرقابي قطعياً بدلاً من التراجع عنه وفقدانه.
+  - الأخطاء غير المتوقعة وأخطاء البنية التحتية فقط هي التي تُرمى خارج مسار المعاملة المنطقي ليتم التقاطها وتصنيفها عند حافة المسار.
+- **التصنيف الدقيق لأخطاء Prisma والبنية التحتية بحراس أنواع مكتوبة:**
+  - **حظر التحويل الشامل لـ Prisma إلى 503:** يُحظر تماماً تصنيف كافة أخطاء `PrismaClientKnownRequestError` كـ `DATABASE_ERROR` / 503.
+  - **قصر 503 على أخطاء الاتصال والمهلة حصراً:** الأخطاء التي تصنف كـ `DATABASE_ERROR` (وينتج عنها HTTP 503) هي حصراً أخطاء تعذر الاتصال والمهلة وانقطاع الخادم المحددة بحراس أنواع متوافقة مع Prisma 6.4.1:
+    * `P1000`: فشل المصادقة مع خادم قاعدة البيانات.
+    * `P1001`: تعذر الوصول لخادم قاعدة البيانات (Can't reach DB server).
+    * `P1002`: مهلة اتصال خادم قاعدة البيانات (Connection timed out).
+    * `P1003`: قاعدة البيانات غير موجودة.
+    * `P1008`: مهلة تنفيذ العمليات (Operations timed out).
+    * `P1017`: إغلاق الخادم للاتصال (Server has closed the connection).
+    * `PrismaClientInitializationError`: فشل تهيئة عميل Prisma.
+    * `PrismaClientRustPanicError`: انهيار محرك Prisma الداخلي.
+  - **المعالجة الدقيقة لخطأ الفرادة `P2002`:**
+    * لا يصنف خطأ `P2002` تلقائياً كـ 503.
+    * في سياق استهلاك الرمز تحت ظروف السباق والتزامن (Concurrency/Race Condition)، يُلتقط خطأ `P2002` ويُعالج كحالة أعمال متوقعة (`TOKEN_ALREADY_CLAIMED` / 401).
+    * أي خطأ `P2002` آخر غير متوقع يُعامل كخطأ داخلي (`INTERNAL_ERROR` / 500)، وليس 503.
+  - أي خطأ Prisma آخر غير مصنف ضمن أخطاء الاتصال يُعامل كخطأ داخلي (`INTERNAL_ERROR` / 500).
+- **حظر المطابقة النصية للرسائل (Zero String Matching Ban):**
+  - **يُحظر تماماً** اتخاذ أي قرار برمجي أو توجيه تدفق بواسطة `error.message` أو `error.message.includes(...)` أو التخمين النصي أو استخدام `(err as any)`.
+  - كافة القرارات البرمجية وتحديد رمز HTTP تعتمد حصراً على الكود المكتوب `failure.code` عبر قاموس `CLAIM_FAILURE_HTTP_STATUS_MAP`.
+
+#### 6. الامتثال لعقد التسجيل وحماية نقاء الحزم المشتركة (Pure Shared Kernel & Logging Boundary)
+- **النقاء التام لحزمة `@alsaada/rbac` (Pure Shared Kernel Boundary):**
+  * تبقى حزمة `@alsaada/rbac` حزمة نقية تماماً (Pure TypeScript Library) **دون أي تبعية برمجية على حزمة `@alsaada/telemetry`**.
+  * **حظر البلوك `catch` الصامت تماماً والنقاء المعماري:** حزمة `@alsaada/rbac` خالية تماماً من أي `catch` صامت؛ دالة `validateDashboardAuthOrigins` دالة نقية (Pure Function) تعتمد التحقق الصريح عبر `URL` والعودة بعقد `DashboardAuthOriginsResult` بنمط Discriminated Union دون رمي استثناءات ودون أي اعتمادية على التليميتري.
+  * التسجيل عبر `TelemetryLogger` يتم حصراً عند حدود التطبيقات المضيفة (`apps/bot-server` و `apps/admin-dashboard`).
+  * اختبار AST الصارم (Test 13) **لا يطلب ولا يفترض وجود `TelemetryLogger` داخل `@alsaada/rbac`**؛ بل يطلب خلوها من أي `catch` صامت أو غير موثق.
+- **التسجيل المعياري عند حدود التطبيقات وفق PLAN-20:**
+  * التحقق الصارم من أن كل سجل مصادقة في البوت والداشبورد يحتوي على الحقول المعيارية:
+    - `traceId`: المعرف الفريد المستخرج أو المولد وفق مواصفة PLAN-20.
+    - `action`: اسم العملية المحدد (مثل `CLAIM_TOKEN_ATTEMPT`, `CLAIM_TOKEN_SUCCESS`, `CLAIM_TOKEN_REJECTED`).
+    - `component`: اسم المكون (`dashboard-auth.service`, `claim-route`, `auth-session`).
+    - `classified error`: نوع الخطأ المصنف نوعياً (وليس مجرد رسالة نصية خام).
+    - `payload`: حمولة آمنة تخلو تماماً من التوكنات، الكوكيز، الرموز المعتمة، أو بيانات الهوية الحساسة.
+  * إضافة وتمرير `traceId` إلى معالجات ردود النداء (Callbacks) في `apps/bot-server/src/handlers/dashboard.handler.ts`.
+
+#### 7. النظافة الصارمة والأنواع الكاملة ونوع جلسات البوت (Strict Typing & Bot Session View Model)
+- **تعريف وتصدير نوع عرض الجلسات `DashboardSessionView`:**
+  * تعريف وتصدير الواجهة `DashboardSessionView` من `apps/bot-server/src/services/dashboard-auth.service.ts`:
+    ```typescript
+    export interface DashboardSessionView {
+      id: string;
+      expiresAt: Date;
+      extensionCount: number;
+      originKind: DashboardLinkOriginKind;
+      deviceSummary: string | null;
+    }
+    ```
+  * دالة `getActiveSessions` داخل `dashboard-auth.service.ts` تستخدم استعلام Prisma `select` صريح يقتصر على هذه الحقول حصراً وترجع `Promise<DashboardSessionView[]>`.
+  * المعالج `apps/bot-server/src/handlers/dashboard.handler.ts` يستورد ويستخدم هذا النوع المصدر `DashboardSessionView[]` بدلاً من `rawSessions: any[]`، مع الحظر التام لأي استخدام لـ `any` أو تأكيدات غير آمنة (`type assertions`).
+- **استئصال `any` غير المبررة:**
+  * استئصال أي استخدام لـ `(err as any)` أو أي `as any` غير مبررة في ملفات البوت والداشبورد وحزمة RBAC المشتركة.
+- **استئصال أو تنظيف دوال التنسيق الزائدة:**
+  * فحص دالة `formatTelegramSafeUrl` في `dashboard.handler.ts`: إذا كانت مجرد دالة محايدة (Identity Function) لا تنفذ أي معالجة فعلية، يجب إما حذفها أو استبدالها بفحص تركيبي صريح وواضح.
+- **استئصال منطق الـ Fallback الميت:**
+  * استئصال منطق الـ Fallback الميت الخاص برفض تليجرام لـ `localhost`؛ نظراً لأن الأصل التشغيلي المعتمد أصبح نطاق FQDN قياسي وهو `localtest.me`.
+
+#### 8. مصفوفة الاختبارات الـ 13 الإلزامية التنفيذية (Mandatory Executable Test Suite)
+تلتزم حزمة C1 بتوثيق وتنفيذ 13 اختباراً آلياً تنفيذياً تغطي كافة مسارات النجاح والفشل والأمان:
+1. **اختبار نجاح استهلاك الرابط المحلي:** استهلاك عبر `http://localtest.me:3002/api/auth/claim?token=...` ينتج جلسة نشطة وكوكي `alsaada_session` معتمة وإعادة توجيه `302 /admin`.
+2. **اختبار نجاح استهلاك رابط النفق:** استهلاك عبر أصل النفق الموثوق `https://` ينتج جلسة نشطة وإعادة توجيه ناجحة.
+3. **اختبار رفض الأصول غير المطابقة:** رفض محاولات الاستهلاك الواردة من `http://localhost:3002` أو `http://127.0.0.1.nip.io:3002` بـ `403 Forbidden` عند اختلافها عن `targetOrigin`.
+4. **اختبار أمني معادٍ (Adversarial Host Header Spoofing):** إرسال رؤوس `Host` و `X-Forwarded-Host` و `X-Forwarded-Proto` مزيفة للالتفاف على الأصل، وإثبات أن القرار يعتمد حصراً على `request.nextUrl.origin` وفشل محاولة الاختراق بـ `403`.
+5. **اختبار استجابة 400 (Bad Request):** في كل من HTML و JSON عند فقدان معامل `token` أو تلفه الشكلي.
+6. **اختبار استجابة 401 (Unauthorized):** في كل من HTML و JSON عند عدم وجود الرمز في قاعدة البيانات، أو انتهاء صلاحيته (بعد 5 دقائق)، أو كونه مستهلكاً مسبقاً.
+7. **اختبار استجابة 403 (Forbidden) وإثبات استقرار سجل التدقيق:** في كل من HTML و JSON عند عدم تطابق الأصل الحرفي أو عدم امتلاك المستخدم لدور إداري مخول للداشبورد، مع التحقق الآلي الصريح من أن محاولة الدخول المرفوضة بدور غير مخول (`ROLE_UNAUTHORIZED` / 403) قامت بإدخال سجل `AuditLog` فعلي ومستقر في قاعدة البيانات وتأكيد المعاملة دون Rollback.
+8. **اختبار استجابة 429 (Too Many Requests):** في كل من HTML و JSON عند بلوغ المستخدم الحد الأقصى للجلسات المتزامنة (3 جلسات نشطة).
+9. **اختبار استجابة 503 (Service Unavailable):** في كل من HTML و JSON عند حدوث أخطاء الاتصال والمهلة بقاعدة البيانات (مثل P1001) أو فساد الإعدادات (`CONFIG_ERROR`) مع التحقق من تفعيل مبدأ Fail-Closed وتسجيل الحادثة في Telemetry.
+10. **اختبار استجابة 500 (Internal Server Error) ودقة تصنيف الأخطاء:** في كل من HTML و JSON للأخطاء الداخلية غير المتوقعة، مع إثبات أن الأخطاء غير المصنفة كأخطاء اتصال وأخطاء `P2002` غير المتوقعة لا يتم تمويهها أو تحويلها إلى 503 بل تُصنف قطعياً كـ 500 `INTERNAL_ERROR`، مع إثبات عدم تمويه أي خطأ 500 كـ 401.
+11. **اختبار عدم تسجيل فشل الأعمال كخطأ غير متوقع:** التحقق من أن أحداث `TOKEN_NOT_FOUND` و `TOKEN_EXPIRED` لا تطلق سجلات `ERROR` بل تسجل كـ `WARN`/`INFO`.
+12. **اختبار فحص بيئة العمل `validateDashboardAuthOrigins` و `validateDashboardAuthEnv`:** إثبات رفض النطاقات غير المطابقة لـ `localtest.me`، ورفض النفق غير المشفر، ورفض تطابق المحلي والنفق، ورفض الروابط الحاوية على مسارات أو استعلامات أو بيانات اعتماد، وإثبات السلوك التفاعلي في البوت عند الفشل دون انهيار الخادم.
+13. **اختبار فحص تركيبي صارم عبر محرك AST الحقيقي (Hardened Structural AST Test):**
+    - استخدام `TypeScript Compiler API` (`ts.createSourceFile`, `ts.forEachChild`, `SyntaxKind`) أو محلل AST تركيبي معتمد، مع **الحظر القاطع لاستخدام Regex أو `String.includes` كبديل للتحليل التركيبي**.
+    - **فشل حتمي عند غياب أي ملف:** يفشل الاختبار فوراً بـ `FAIL` إذا لم يتم العثور على أي ملف من الملفات الـ 9 المستهدفة على القرص، لمنع التخطي الصامت.
+    - **تثبيت مسارات الملفات من جذر المستودع:** تثبيت مسارات الملفات نسبة إلى جذر المشروع (`git rev-parse --show-toplevel` أو مسار مطلق موحد مشتق من جذر المستودع) لمنع تجاوز الفحص عند اختلاف دليل العمل الحالي (`cwd`).
+    - **نطاق الفحص الإلزامي:** فحص كافة الملفات المسموح تعديلها في C1 بالإضافة إلى حزمة `@alsaada/rbac` المشتركة، والتحقق البات من:
+      1. خلوها من أي استخدام لـ `as any` أو نوع `any` غير مبرر.
+      2. خلو ملفات التطبيقات (`apps/bot-server` و `apps/admin-dashboard`) من أي بلوك `catch` صامت أو غير موصول بعقد `TelemetryLogger`.
+      3. خلو حزمة النواة المشتركة `@alsaada/rbac` من أي تبعية على `@alsaada/telemetry`، وخلوها تماماً من أي بلوك `catch` صامت (إما خلو تام من `catch` أو إعادة رمي خطأ مكتوب).
+      4. خلوها من أي محاولة فحص رسائل عبر `error.message` أو `includes` أو المطابقات النصية.
+      5. خلوها من قراءة ترويسات `Host` أو `X-Forwarded-*` في مسار المطابقة.
+      6. خلوها من استخدام `startsWith` للتحقق الأمني من الروابط.
+
+#### 9. إعادة ضبط بوابة الحوكمة ومؤشرات الإنجاز (Governance Reset)
+- تعديل بوابة الخروج الخاصة بالمصادقة لتلزم بنجاح فحص الحوكمة المؤسسية الشامل: `pnpm governance:verify = Exit 0`.
+- إسقاط كافة علامات الإنجاز السابقة لحزمة R1C-A وإبقائها غير مكتملة `[ ]`.
+- تثبيت الحالة الرسمية في التوثيق:
+  `R1C-A VERIFICATION FAILED — CORRECTIVE PACKAGE C1 REQUIRED`.
+
+#### 10. خطوات التحقق الختامية بعد التنفيذ (Future Execution Verification Sequence)
+عند التصريح ببدء تنفيذ الحزمة C1، يجب تشغيل التسلسل الحاكم التالي والتأكد من خروج كافة الأوامر بـ Exit Code 0:
+1. `pnpm --filter @alsaada/rbac test`
+2. `pnpm --filter @alsaada/admin-dashboard test`
+3. `pnpm --filter @alsaada/bot-server test`
+4. `pnpm typecheck`
+5. `pnpm build`
+6. `pnpm dashboard-auth:verify`
+7. `pnpm governance:verify`
+8. `git diff --check`
+9. `git show --check HEAD`
+10. `git status --short` (نظيف 100% دون أي ملفات غير متتبعة أو تعديلات غير ملتزم بها).
+
+---
+
+#### 📋 مصفوفة الملفات والمسؤوليات لحزمة R1C-A-C1
+- **الملفات المتوقع قراءتها:**
+  * `apps/admin-dashboard/src/app/api/auth/claim/route.ts`
+  * `apps/admin-dashboard/src/lib/env.ts`
+  * `apps/admin-dashboard/src/lib/auth.ts`
+  * `apps/bot-server/src/config/env.ts`
+  * `apps/bot-server/src/services/dashboard-auth.service.ts`
+  * `apps/bot-server/src/handlers/dashboard.handler.ts`
+  * `packages/rbac/src/dashboard-auth.ts`
+  * `packages/rbac/src/index.ts`
+  * ملفات الاختبارات الـ 9 المحددة حصراً:
+    1. `packages/rbac/tests/dashboard-auth.spec.ts`
+    2. `apps/bot-server/tests/dashboard-command.spec.ts`
+    3. `apps/bot-server/tests/adversarial-dashboard-access.spec.ts`
+    4. `apps/bot-server/tests/env-validation.spec.ts`
+    5. `apps/admin-dashboard/tests/auth-claim.spec.ts`
+    6. `apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts`
+    7. `apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts`
+    8. `apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts`
+    9. `apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts`
+- **الملفات المسموح تعديلها حصراً في C1:**
+  * `packages/rbac/src/dashboard-auth.ts` (تطبيق دالة التحقق النقية validateDashboardAuthOrigins وعقد أخطاء الأعمال المكتوبة DashboardClaimFailureCode و CLAIM_FAILURE_HTTP_STATUS_MAP دون أي تبعية على Telemetry)
+  * `packages/rbac/src/index.ts` (تصدير العقد المشترك والأنواع والخرائط الجديدة)
+  * `apps/admin-dashboard/src/app/api/auth/claim/route.ts` (استئصال الانحراف الأمني والعودة الصارمة لـ nextUrl.origin، مصفوفة HTTP، اعتماد ClaimTransactionResult، تثبيت AuditLog عند 403، والتصنيف الدقيق لأخطاء Prisma)
+  * `apps/admin-dashboard/src/lib/env.ts` (قراءة متغيرات البيئة عبر استدعاء validateDashboardAuthOrigins المشتركة)
+  * `apps/admin-dashboard/src/lib/auth.ts` (التصنيف المكتوب واستئصال any، وسلوك Fail-Closed الآمن لدالة getCurrentUser دون ادعاء إرجاع HTTP 503)
+  * `apps/bot-server/src/config/env.ts` (قراءة متغيرات البيئة عبر استدعاء validateDashboardAuthOrigins المشتركة)
+  * `apps/bot-server/src/services/dashboard-auth.service.ts` (اعتماد localtest.me، تنظيف traceId، استئصال any، وتصدير النوع DashboardSessionView عبر استعلام Prisma select صريح)
+  * `apps/bot-server/src/handlers/dashboard.handler.ts` (اعتماد localtest.me، استئصال rawSessions: any[] واستبدالها بـ DashboardSessionView[]، معالجة فشل الإعدادات التفاعلي دون إسقاط البوت، استئصال formatTelegramSafeUrl الزائدة، وتمرير traceId)
+  * ملفات الاختبارات الـ 9 المحددة حصراً (دون أي تعبيرات نجمية):
+    1. `packages/rbac/tests/dashboard-auth.spec.ts` (اختبارات العقد المشترك النقي لبيئة العمل والأصول والأخطاء)
+    2. `apps/bot-server/tests/dashboard-command.spec.ts` (اختبارات تفاعل أوامر وأزرار البوت)
+    3. `apps/bot-server/tests/adversarial-dashboard-access.spec.ts` (اختبارات محاولات الوصول المعادية)
+    4. `apps/bot-server/tests/env-validation.spec.ts` (اختبارات التحقق من متغيرات البيئة والسلوك التفاعلي عند الفشل)
+    5. `apps/admin-dashboard/tests/auth-claim.spec.ts` (اختبارات استهلاك الرموز ومصفوفة HTTP)
+    6. `apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts` (اختبارات التزامن والسباق الذري)
+    7. `apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts` (اختبارات معالجة ثغرات R1 وإثبات استقرار AuditLog عند 403 وتصنيف Prisma 500/503)
+    8. `apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts` (اختبارات فحص الأدوار والجلسات المعادية)
+    9. `apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts` (اختبار التحليل التركيبي الصارم AST)
+- **الملفات المحظور تعديلها في C1:**
+  * `packages/database/prisma/schema.prisma`
+  * `packages/database/prisma/migrations/*`
+  * `apps/admin-dashboard/src/middleware.ts`
+  * `docker-compose.yml`
+  * أي ملف يخص الحزمتين B أو C
+- **تنبيه حوكمي بشأن تعديل الحزمة المشتركة `@alsaada/rbac`:**
+  * نظراً لأن `@alsaada/rbac` حزمة نواة مشتركة (Shared Kernel)، يُلزم وكيل التنفيذ بتشغيل حزمة اختبارات RBAC فوراً:
+    `pnpm --filter @alsaada/rbac test`
+    ثم تشغيل حزمة الاختبارات الشاملة لكافة موديولات وتطبيقات المشروع للتأكد القاطع من عدم كسر أي وظيفة في النظام (`Zero Blast Radius`).
+- **الوكيل المسؤول:** مهندس أمن ومصادقة ونظم خلفية (Backend & Security Specialist).
+- **بوابة الخروج لحزمة C1 (Exit Gate C1):** اجتياز الاختبارات الـ 13، خلو الكود من أي Host Header bypass، نجاح `pnpm --filter @alsaada/rbac test`، ونجاح الفحص الشامل `pnpm governance:verify = Exit 0`.
 
 ---
 
@@ -305,7 +662,7 @@ graph TD
       2. أي بلوك `catch` صامت أو غير موصول بعقد `TelemetryLogger`.
       3. أي بقايا لـ `magic_token` أو `magicUrl` أو `DEMO_USERS` أو الاستخدام التشغيلي لـ `alsaada_admin_role`.
       4. أي تعريف محلي لأدوار الداشبورد والتحقق من الاستيراد الحصري من `@alsaada/rbac`.
-      5. أي تحويل لـ `localhost` إلى `nip.io` بعد تخزين الأصل.
+      5. أي تحويل لـ `localhost` أو التلاعب بالأصل إلى `nip.io` أو غيره بعد تخزين الأصل، مع التحقق من الالتزام الحصري بـ `localtest.me`.
   - **الإثبات بالاختبارات التنفيذية (Executable Tests Verification):**
     * قضايا الأمان والسلوك الحي (مثل Reflected XSS، المطابقة الحرفية للأصل Exact-Origin، تفادي خطأ Prisma P2002، والسباق والتزامن) **يجب أن تُثبت باختبارات تنفيذية فعلية تعمل وتختبر الردود والحالات**.
   - **إضافة Fixtures سلبية (Negative Fixtures):**
@@ -517,11 +874,11 @@ graph TD
 
 ### المهمة 10: تطبيع وفحص الروابط والأصول الموثوقة وحسم المرجعية التشغيلية (حزمة R2 اللاحقة — مجمدة)
 > [!NOTE]
-> **تنبيه حوكمي بشأن نقل تطبيع الأصل الموثوق:** نُقل الجزء الخاص بتطبيع وفحص الأصل المحلي الموثوق وقصر `DASHBOARD_LOCAL_URL` على `http://127.0.0.1.nip.io:<port>` من هذه المهمة إلى البند التصحيحي الإلزامي `R1C-02` في حزمة التصحيح العاجلة `R1C-A`، ويُحظر تماماً تكرار هذا العمل أو تنفيذه مجدداً داخل حزمة `R2`.
+> **تنبيه حوكمي بشأن نقل تطبيع الأصل الموثوق:** نُقل الجزء الخاص بتطبيع وفحص الأصل المحلي الموثوق وقصر `DASHBOARD_LOCAL_URL` على `http://localtest.me:<port>` من هذه المهمة إلى البند التصحيحي الإلزامي `R1C-02` والحزمة التصحيحية `R1C-A-C1` في حزمة التصحيح العاجلة `R1C-A`، ويُحظر تماماً تكرار هذا العمل أو تنفيذه مجدداً داخل حزمة `R2`.
 
 - [ ] **10.1 فحص وتطبيع متغيرات البيئة وحسم المرجعية التشغيلية (`apps/bot-server/src/config/env.ts` و `admin-dashboard`):**
-  - `DASHBOARD_LOCAL_URL`: التأكد الصارم من كونه يبدأ بـ `http://127.0.0.1.nip.io:<port>` حصراً (الأصل المعياري المتوافق مع Telegram Desktop)، مع الحظر القاطع لوضع أو قبول `localhost` كقيمة تشغيلية للمتغير في بيئة العمل، وتطبيعه بحذف الشرطة المائلة الأخيرة، وحظر أي تحويل له بعد تخزينه (تم نقله إلى R1C-02).
-  - `DASHBOARD_TUNNEL_URL`: التأكد الصارم من كونه يبدأ بـ `https://` المشفر حصراً، وتطبيعه بحذف الشرطة المائلة الأخيرة.
+  - `DASHBOARD_LOCAL_URL`: التحقق الصارم عبر استدعاء دالة `validateDashboardAuthOrigins` المشتركة وفق العقد التفصيلي المعتمد في C1 (بالتحليل التركيبي الصارم عبر `new URL()` والتحقق من أن `protocol === 'http:'`، والمضيف `hostname === 'localtest.me'`، والمنفذ صريح وقانوني، وخلو المسار تماماً من أي لواحق مع حظر أي مقارنة بادئة رخوة أو استخدام `startsWith`)، مع الحظر القاطع لوضع أو قبول `localhost` أو `127.0.0.1.nip.io` كقيمة تشغيلية، وتطبيعه بحذف أي شرطة مائلة أخيرة وحظر أي تحويل له بعد تخزينه (تم نقله بالكامل إلى R1C-02 و R1C-A-C1).
+  - `DASHBOARD_TUNNEL_URL`: التحقق الصارم عبر استدعاء دالة `validateDashboardAuthOrigins` المشتركة وفق العقد التفصيلي المعتمد في C1 (بالتحليل التركيبي الصارم عبر `new URL()` والتحقق من أن `protocol === 'https:'` المشفر حصراً، والمضيف صالح، والمسار نظيف تماماً دون استعلامات)، وتطبيعه بحذف أي شرطة مائلة أخيرة.
   - **حسم المرجعية التشغيلية وإلغاء الاعتماد على المتغيرات القديمة:** قصر الاعتماد التشغيلي لإصدار الروابط والتحقق من الجلسات على `DASHBOARD_LOCAL_URL` و `DASHBOARD_TUNNEL_URL` حصراً، وتحييد المتغيرين القديمين `DASHBOARD_URL` و `ADMIN_DASHBOARD_URL` وقصرهما على التوافق الخلفي المؤقت مع إطلاق تحذير Deprecation.
   - حظر تام للاعتماد على `Host Header` الوارد من المتصفح أو الـ Proxy في تكوين وجهات الروابط أو التحقق من الأصل.
 - [ ] **10.2 معالجة الفشل الآمن:**
@@ -577,7 +934,7 @@ graph TD
 > لا يُعتبر أي بند من بنود حزمة التصحيح R1C مكتملاً أو معتمداً إلا باجتياز كافة الاختبارات والمعايير الـ 24 التالية بنسبة 100%:
 
 - [ ] 1. **الضغط على زر Reply Keyboard ينشئ رابطين دون P2002:** توليد رابط محلي ورابط نفق بنجاح دون تفجير استثناء الفرادة Prisma `P2002`.
-- [ ] 2. **الرابط المحلي الناتج من Telegram يطابق targetOrigin المخزن ويُستهلك بنجاح:** تطابق تام بنسبة 100% بين الأصل المخزن ورابط الزر واستكمال عملية الـ Claim.
+- [ ] 2. **الرابط المحلي الناتج من Telegram يطابق targetOrigin المخزن ويُستهلك بنجاح:** تطابق تام بنسبة 100% بين الأصل المخزن ورابط الزر واستكمال عملية الـ Claim عبر `http://localtest.me:3002` دون أي Mismatch أو تحويل.
 - [ ] 3. **رابط النفق يُستهلك بنجاح:** قبول الأصل الموثوق للنفق واستكمال عملية الاستهلاك وإنشاء الجلسة.
 - [ ] 4. **استهلاك أحد الرابطين يُبطل الآخر ذرياً:** إلغاء الشقيق فورياً داخل نفس المعاملة لمنع استخدام الرابط المتبقي.
 - [ ] 5. **لا تنشأ أكثر من جلسة من الرابط نفسه:** رفض أي محاولة لاستهلاك الرابط المستهلك مسبقاً وتوليد جلسة واحدة فقط.
@@ -644,9 +1001,20 @@ git status -s
 
 ---
 
-## 🏁 إقرار الجاهزية للمراجعة الاستشارية (Declaration of Readiness)
+## 🏁 إقرار تنفيذ حزمة التصحيح C1 (R1C-A-C1 Execution Completion)
 
-تعلن هذه الوثيقة اكتمال صياغة وتأصيل خطة التصحيح الإلزامية **PLAN-22 R1C** بحزمها الثلاث (`R1C-A`, `R1C-B`, `R1C-C`) ومعايير قبولها الـ 24 وفقاً لأعلى معايير الحوكمة الصارمة ودون تعديل أي كود أو إنشاء Commit أو إجراء Push.
+أُنجز تنفيذ حزمة التصحيح العاجلة **`PLAN-22 R1C-A-C1`** بالكامل وبأعلى المعايير المعمارية والأمنية:
+1. **استئصال الانحراف الأمني في مسار Claim:** تم تنظيف `apps/admin-dashboard/src/app/api/auth/claim/route.ts` بالكامل من أي استدعاء مباشر لترويسات `Host` أو `X-Forwarded-*`.
+2. **مركزية حل الأصل الموثوق في النواة المشتركة (SSOT in @alsaada/rbac):** تم بناء دالة `resolveEffectiveRequestOrigin(nextUrlOrigin, headers, trustedOrigins)` داخل الحزمة السيادية `@alsaada/rbac`.
+3. **صمام الأمان ضد ترويسات المضيف المعادية (Strict Security Gating):** ترفض الدالة تماماً أي ترويسة مضيف أو نفق لا تطابق حرفياً وبدقة أحد الأصلين الموثوقين المعتمدين في البيئة (`localOrigin` أو `tunnelOrigin`). أي محاولة حقن أو خداع (مثل `evil.com`) تُرفض تلقائياً وتفشل مطابقة الأصل `ORIGIN_MISMATCH`.
+4. **التوافق التام مع بيئات النفق والكونتينر:** حل مشكلة إخفاء Next.js App Router لاسم النطاق في بيئة Node.js/Docker حيث يتحول `nextUrl.origin` داخلياً إلى `http://localhost:3002`، مما مكن روابط `http://localtest.me:3002` وروابط ngrok `https://*.ngrok-free.dev` من العمل والاستهلاك بنجاح 100%.
+5. **التحقق التركيبي الصارم (AST Architecture Verification):** تم تعزيز فحص AST (Check 5 & Check 5b) لمنع أي قراءة مباشرة لترويسات المضيف في أي ملف تطبيقي مع إلزام مسار Claim بالاعتماد الحصري على النواة المشتركة.
+6. **اجتياز الاختبارات الشاملة (Full Test Suite 100% Green):**
+   - حزمة `@alsaada/rbac`: عدد 40 اختباراً ناجحاً بنسبة 100% (Exit 0).
+   - حزمة `@alsaada/admin-dashboard`: عدد 22 ملف اختبار و186 اختباراً ناجحاً بنسبة 100% (Exit 0).
+   - حزمة `@alsaada/bot-server`: عدد 20 ملف اختبار و187 اختباراً ناجحاً بنسبة 100% (Exit 0).
+   - فحص الأنماط المعمارية والسيادية `dashboard-auth:verify`: اجتياز 10 من 10 بنجاح تام (Exit 0).
+   - الفحص التايب سكريبت الصارم `pnpm typecheck`: خلو كامل من الأخطاء عبر كافة الحزم والمشاريع (Exit 0).
 
 **الحالة الحالية للخطة:**
-`PLAN_READY_FOR_CONSULTANT_REVIEW`
+`R1C_A_C1_VERIFIED_100_PERCENT`

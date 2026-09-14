@@ -6,11 +6,15 @@ import { extractTraceId } from '@alsaada/telemetry';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'غير مصرح - يرجى تسجيل الدخول أولاً' }, { status: 401 });
+  }
+
   if (!['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role)) {
     return NextResponse.json({ error: 'غير مصرح' }, { status: 403 });
   }
 
-  const whereClause: Record<string, any> = {};
+  const whereClause: Record<string, unknown> = {};
   if (user.role === 'FIELD_ADMIN' && user.assignedSiteId) {
     whereClause.siteId = user.assignedSiteId;
   }
@@ -40,9 +44,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'غير مصرح - يرجى تسجيل الدخول أولاً' }, { status: 401 });
+  }
+
   if (!['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role)) {
     return NextResponse.json({ error: 'غير مصرح بإنشاء تفويضات' }, { status: 403 });
   }
+
 
   const traceId = extractTraceId(req);
   const body = await req.json();

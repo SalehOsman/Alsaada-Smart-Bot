@@ -7,6 +7,7 @@ import {
   canAccessDashboard,
   DASHBOARD_AUTHORIZED_ROLES,
   normalizeOrigin,
+  validateDashboardAuthOrigins,
   type CanonicalRole,
 } from '@alsaada/rbac';
 
@@ -18,13 +19,21 @@ const logger = new TelemetryLogger({
 export const AUTHORIZED_DASHBOARD_ROLES = DASHBOARD_AUTHORIZED_ROLES;
 export type AuthorizedDashboardRole = (typeof DASHBOARD_AUTHORIZED_ROLES)[number];
 
+export interface DashboardSessionView {
+  id: string;
+  expiresAt: Date;
+  extensionCount: number;
+  originKind: 'LOCAL' | 'TUNNEL';
+  deviceSummary: string | null;
+}
 
 export type DashboardAccessRejectionReason =
   | 'USER_NOT_FOUND'
   | 'ACCOUNT_INACTIVE'
   | 'ACCOUNT_BANNED'
   | 'UNAUTHORIZED_ROLE'
-  | 'MAX_CONCURRENT_SESSIONS_REACHED';
+  | 'MAX_CONCURRENT_SESSIONS_REACHED'
+  | 'CONFIG_ERROR';
 
 export interface IssueDashboardAccessInput {
   telegramId: bigint;
@@ -243,8 +252,28 @@ export class DashboardAuthService {
     const ttlMinutes = config.dashboardAuthLinkTtlMinutes || 5;
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-    const localBase = normalizeOrigin(config.dashboardLocalUrl || 'http://localhost:3002');
-    const tunnelBase = normalizeOrigin(config.dashboardTunnelUrl || localBase);
+    let localBase: string;
+    let tunnelBase: string;
+    try {
+      const origins = validateDashboardAuthOrigins({
+        localUrl: config.dashboardLocalUrl,
+        tunnelUrl: config.dashboardTunnelUrl,
+      });
+      localBase = origins.localOrigin;
+      tunnelBase = origins.tunnelOrigin;
+    } catch (configErr: unknown) {
+      logger.error('Failed to validate dashboard origins configuration during token issuance', {
+        traceId,
+        action: 'dashboard.origins.validate',
+        error: configErr instanceof Error ? configErr.message : String(configErr),
+      });
+      return {
+        success: false,
+        reason: 'CONFIG_ERROR',
+        user: null,
+        telegramId,
+      };
+    }
 
     // 4. Save both auth links into dashboard_auth_links table with shared groupId
     await prisma.$transaction([
@@ -475,15 +504,30 @@ export class DashboardAuthService {
   /**
    * Get all currently active sessions for a user
    */
-  async getActiveSessions(telegramId: bigint) {
-    return prisma.dashboardSession.findMany({
+  async getActiveSessions(telegramId: bigint): Promise<DashboardSessionView[]> {
+    const rawSessions = await prisma.dashboardSession.findMany({
       where: {
         actorTelegramId: telegramId,
         revokedAt: null,
         expiresAt: { gt: new Date() },
       },
+      select: {
+        id: true,
+        expiresAt: true,
+        extensionCount: true,
+        originKind: true,
+        deviceSummary: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
+
+    return rawSessions.map((s) => ({
+      id: s.id,
+      expiresAt: s.expiresAt,
+      extensionCount: s.extensionCount,
+      originKind: s.originKind === 'TUNNEL' ? 'TUNNEL' : 'LOCAL',
+      deviceSummary: s.deviceSummary,
+    }));
   }
 
   /**

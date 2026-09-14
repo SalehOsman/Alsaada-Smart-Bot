@@ -1,6 +1,6 @@
 export type OutboxEventStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
-export interface OutboxEvent<T = any> {
+export interface OutboxEvent<T = Record<string, unknown>> {
   id: string;
   eventType: string; // e.g. 'SHEETS_APPEND_ROW', 'SHEETS_UPDATE_ROW'
   targetSheet: string;
@@ -13,12 +13,13 @@ export interface OutboxEvent<T = any> {
   errorMessage?: string | undefined;
 }
 
-export interface OutboxEnqueueInput<T = any> {
+export interface OutboxEnqueueInput<T = Record<string, unknown>> {
   eventType: string;
   targetSheet: string;
   payload: T;
   maxRetries?: number | undefined;
 }
+
 
 export interface OutboxProcessResult {
   processedCount: number;

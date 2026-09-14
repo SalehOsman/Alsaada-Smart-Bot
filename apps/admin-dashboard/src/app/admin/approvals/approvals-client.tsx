@@ -62,13 +62,14 @@ export function ApprovalsClient({ initialData, userRole }: ApprovalsClientProps)
     let notes: string | undefined = undefined;
 
     if (decision === 'REJECTED') {
-      const promptNotes = window.prompt(`يرجى كتابة سبب رفض الطلب (${item.ticketNumber}):`, '');
+      const promptNotes = typeof window !== 'undefined' ? window.prompt(`يرجى كتابة سبب رفض الطلب (${item.ticketNumber}):`, '') : null;
       if (promptNotes === null) return; // User cancelled
       notes = promptNotes.trim();
     } else {
-      const confirmAction = window.confirm(`هل أنت متأكد من ${actionText} الطلب (${item.ticketNumber})؟`);
+      const confirmAction = typeof window !== 'undefined' ? window.confirm(`هل أنت متأكد من ${actionText} الطلب (${item.ticketNumber})؟`) : true;
       if (!confirmAction) return;
     }
+
 
     setProcessingId(item.id);
     setFeedback(null);

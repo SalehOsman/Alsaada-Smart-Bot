@@ -14,7 +14,7 @@ import {
   Pickaxe,
   Wrench,
 } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { hasAccess } from '@/lib/rbac';
 import { prisma } from '@alsaada/database';
 import { ZeroStateCard } from '@/components/ui/zero-state-card';
@@ -22,7 +22,8 @@ import { ZeroStateCard } from '@/components/ui/zero-state-card';
 export const dynamic = 'force-dynamic';
 
 export default async function OperationsHubPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
 
   const canAccess = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role);
 

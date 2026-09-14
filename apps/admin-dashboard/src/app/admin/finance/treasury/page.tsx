@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getTreasuryData } from '@/lib/data-fetchers';
 import { hasAccess } from '@/lib/rbac';
 import { TreasuryClient } from './treasury-client';
@@ -9,7 +9,8 @@ import { ShieldAlert } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function TreasuryPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
 
   // Sovereign financial access for SUPER_ADMIN, GENERAL_ADMIN (canonical roles replacing legacy ACCOUNTANT)
   const canAccess = hasAccess(user.role, ['SUPER_ADMIN', 'GENERAL_ADMIN']);

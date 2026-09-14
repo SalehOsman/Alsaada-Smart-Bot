@@ -6,6 +6,12 @@ import { hasAccess } from '@/lib/rbac';
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: 'غير مصرح - يرجى تسجيل الدخول أولاً' },
+        { status: 401 }
+      );
+    }
 
     // Check RBAC: Strictly restricted to SUPER_ADMIN and GENERAL_ADMIN
     const canApprove = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
@@ -32,7 +38,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const reviewerId = user.id;
 
     if (type === 'CLEARANCE') {
       await prisma.workerClearance.update({
@@ -96,11 +101,13 @@ export async function POST(request: Request) {
       success: true,
       message: decision === 'APPROVED' ? 'تم الاعتماد بنجاح' : 'تم تسجيل الرفض بنجاح',
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Approvals API error:', err);
+    const message = err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل القرار';
     return NextResponse.json(
-      { error: err.message || 'حدث خطأ أثناء تسجيل القرار' },
+      { error: message },
       { status: 500 }
     );
   }
 }
+

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getApprovalsData } from '@/lib/data-fetchers';
 import { hasAccess } from '@/lib/rbac';
 import { ApprovalsClient } from './approvals-client';
@@ -9,7 +9,8 @@ import { ShieldAlert } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function ApprovalsPage() {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
 
   const canAccess = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role);
 

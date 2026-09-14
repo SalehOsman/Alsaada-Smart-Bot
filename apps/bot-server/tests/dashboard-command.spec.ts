@@ -68,6 +68,8 @@ vi.mock('../src/redis.js', () => ({
 describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token Engine', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    config.dashboardLocalUrl = 'http://localtest.me:3002';
+    config.dashboardTunnelUrl = 'https://panel.alsaada.org';
   });
 
   describe('1. Cryptographic Opaque Token & SSOT Security Standards', () => {
@@ -291,7 +293,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
   describe('4. Telegram Bot Handler (handleDashboardCommand)', () => {
     it('renders dashboard access card with localized role, site info, and dual links', async () => {
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
-      config.dashboardLocalUrl = 'http://127.0.0.1.nip.io:3002';
+      config.dashboardLocalUrl = 'http://localtest.me:3002';
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-fa-01',
         telegramId: 12345678n,
@@ -335,10 +337,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       const tunnelBtn = flatButtons.find((btn: any) => btn.text === '🌐 فتح عبر النفق (Tunnel)');
       expect(tunnelBtn).toBeDefined();
       expect(tunnelBtn.url).toContain('/api/auth/claim?token=');
-      const localBtn = flatButtons.find((btn: any) => btn.text === '💻 فتح محلياً (Localhost)');
+      const localBtn = flatButtons.find((btn: any) => btn.text === '💻 فتح محلياً (localtest.me)');
       expect(localBtn).toBeDefined();
       expect(localBtn.url).toContain('/api/auth/claim?token=');
-      expect(localBtn.url).toContain('127.0.0.1.nip.io');
+      expect(localBtn.url).toContain('localtest.me');
 
       // 3. Regeneration and main-menu callbacks remain available.
       const sessListBtn = flatButtons.find((btn: any) => btn.callback_data === 'sess_list');
@@ -348,7 +350,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
     });
 
     it('returns an interactive safe fallback when Telegram rejects the rich dashboard card', async () => {
-      config.dashboardUrl = 'https://dashboard.alsaada.com';
+      config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
+      config.dashboardLocalUrl = 'http://localtest.me:3002';
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-dashboard-fallback',
         telegramId: 12344321n,
@@ -382,9 +385,9 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       );
     });
 
-    it('gracefully recovers when Telegram Bot API rejects localhost button with Wrong HTTP URL', async () => {
+    it('gracefully recovers with interactive error card when dashboard origins configuration fails', async () => {
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
-      config.dashboardLocalUrl = 'http://localhost:3002';
+      config.dashboardLocalUrl = 'http://invalid-hostname:3002';
 
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-fa-recovery',
@@ -395,14 +398,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         isBanned: false,
       } as any);
 
-      // First attempt throws Wrong HTTP URL (Telegram API real behavior on localhost), second attempt succeeds
-      const reply = vi
-        .fn()
-        .mockRejectedValueOnce(
-          new Error("Bad Request: inline keyboard button URL 'http://localhost:3002/api/auth/claim?token=xyz' is invalid: Wrong HTTP URL"),
-        )
-        .mockResolvedValueOnce({});
-
+      const reply = vi.fn().mockResolvedValueOnce({});
       const mockCtx = {
         from: { id: 55667788, first_name: 'أحمد' },
         chat: { type: 'private' },
@@ -411,17 +407,17 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
 
       await handleDashboardCommand(mockCtx);
 
-      expect(reply).toHaveBeenCalledTimes(2);
-      const [retryText, retryOptions] = reply.mock.calls[1] as [string, any];
-      expect(retryText).toContain('لوحة التحكم المؤسسية — رابط الدخول المباشر');
-      const retryButtons = retryOptions.reply_markup.inline_keyboard.flat();
-      expect(retryButtons.find((btn: any) => btn.text === '🌐 فتح عبر النفق (Tunnel)')).toBeDefined();
-      expect(retryButtons.find((btn: any) => btn.text === '💻 فتح محلياً (Localhost)')).toBeUndefined();
+      expect(reply).toHaveBeenCalledTimes(1);
+      const [replyText, replyOptions] = reply.mock.calls[0] as [string, any];
+      expect(replyText).toContain('تعذر الوصول المؤقت إلى لوحة التحكم');
+      const buttons = replyOptions.reply_markup.inline_keyboard.flat();
+      expect(buttons.find((btn: any) => btn.text === '🔄 إعادة المحاولة')).toBeDefined();
+      expect(buttons.find((btn: any) => btn.text === '🏠 القائمة الرئيسية')).toBeDefined();
     });
 
-    it('should include dual link buttons (Tunnel and Localhost) and session management in keyboard', async () => {
+    it('should include dual link buttons (Tunnel and Local) and session management in keyboard', async () => {
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
-      config.dashboardLocalUrl = 'http://127.0.0.1.nip.io:3002';
+      config.dashboardLocalUrl = 'http://localtest.me:3002';
 
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-fa-02',
@@ -462,10 +458,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(tunnelBtn).toBeDefined();
       expect(tunnelBtn.url).toContain('/api/auth/claim?token=');
 
-      const localBtn = flatButtons.find((btn: any) => btn.text === '💻 فتح محلياً (Localhost)');
+      const localBtn = flatButtons.find((btn: any) => btn.text === '💻 فتح محلياً (localtest.me)');
       expect(localBtn).toBeDefined();
       expect(localBtn.url).toContain('/api/auth/claim?token=');
-      expect(localBtn.url).toContain('127.0.0.1.nip.io');
+      expect(localBtn.url).toContain('localtest.me');
 
       const sessListBtn = flatButtons.find((btn: any) => btn.text === '📋 جلساتي النشطة');
       expect(sessListBtn).toBeDefined();

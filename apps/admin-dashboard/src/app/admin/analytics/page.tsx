@@ -11,7 +11,7 @@ import {
   Sparkles,
   Layers,
 } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { requireDashboardUser } from '@/lib/auth';
 import { getOverviewKpis, getSitesHub } from '@/lib/data-fetchers';
 import { getAnalyticsModulesForRole } from '@/lib/analytics-registry';
 import type { CanonicalRole } from '@alsaada/rbac';
@@ -26,7 +26,8 @@ interface AnalyticsPageProps {
 }
 
 export default async function AnalyticsCenterPage({ searchParams }: AnalyticsPageProps) {
-  const user = await getCurrentUser();
+  const user = await requireDashboardUser();
+
   const params = await searchParams;
 
   const [kpis, sites] = await Promise.all([

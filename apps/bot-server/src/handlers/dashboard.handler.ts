@@ -4,17 +4,9 @@ import { TelemetryLogger } from '@alsaada/telemetry';
 import { formatClickToCopy, DISABLED_LINK_PREVIEWS } from '@alsaada/core-components';
 import { formatDateTime } from '@alsaada/regional-engine';
 import type { MyContext } from '../types/context.js';
-import { dashboardAuthService } from '../services/dashboard-auth.service.js';
+import { dashboardAuthService, type DashboardSessionView } from '../services/dashboard-auth.service.js';
 import { screenFlowService } from '../services/screen-flow.service.js';
 import { config } from '../config/env.js';
-
-/**
- * Formats a Telegram-safe URL. The canonical local URL (127.0.0.1.nip.io) is configured
- * at the environment level (DASHBOARD_LOCAL_URL) so no runtime mutation is performed.
- */
-export function formatTelegramSafeUrl(rawUrl: string): string {
-  return rawUrl;
-}
 
 const logger = new TelemetryLogger({
   service: 'bot-server',
@@ -176,6 +168,20 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
     });
 
     if (!result.success) {
+      if (result.reason === 'CONFIG_ERROR') {
+        const configKb = new InlineKeyboard()
+          .text('🔄 إعادة المحاولة', 'action:open_dashboard')
+          .row()
+          .text('🏠 القائمة الرئيسية', 'action:main_menu');
+
+        await ctx.reply(
+          '⚠️ <b>تعذر الوصول المؤقت إلى لوحة التحكم</b>\n\n' +
+          'حدث خلل في إعدادات اتصال لوحة التحكم بالنظام. يرجى مراجعة المسؤول أو إعادة المحاولة لاحقاً.',
+          { parse_mode: 'HTML', reply_markup: configKb },
+        );
+        return;
+      }
+
       if (result.reason === 'MAX_CONCURRENT_SESSIONS_REACHED') {
         const activeSessions = result.activeSessions || [];
         let maxText =
@@ -241,29 +247,26 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
       `🛡️ <b>الأمان:</b> استخدام لمرة واحدة ذرياً (استخدام أي من الرابطين يلغي الرابط الشقيق فوراً).\n\n` +
       `👇 <b>اختر طريقة فتح لوحة التحكم عبر الأزرار أدناه:</b>`;
 
-    const safeTunnelUrl = formatTelegramSafeUrl(tunnelUrl);
-    const safeLocalUrl = formatTelegramSafeUrl(localUrl);
-
     const buildFullKeyboard = () =>
       new InlineKeyboard()
-        .url('🌐 فتح عبر النفق (Tunnel)', safeTunnelUrl)
+        .url('🌐 فتح عبر النفق (Tunnel)', tunnelUrl)
         .row()
-        .url('💻 فتح محلياً (Localhost)', safeLocalUrl)
+        .url('💻 فتح محلياً (localtest.me)', localUrl)
         .row()
         .text('📋 جلساتي النشطة', 'sess_list')
         .row()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
-    const buildSafeKeyboard = () =>
+    const buildFallbackKeyboard = () =>
       new InlineKeyboard()
-        .url('🌐 فتح عبر النفق (Tunnel)', safeTunnelUrl)
+        .url('🌐 فتح عبر النفق (Tunnel)', tunnelUrl)
         .row()
         .text('📋 جلساتي النشطة', 'sess_list')
         .row()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
     async function sendDashboardCard(
-      sendFn: (text: string, options: any) => Promise<any>,
+      sendFn: (text: string, options: { parse_mode: 'HTML'; reply_markup: InlineKeyboard; link_preview_options: typeof DISABLED_LINK_PREVIEWS }) => Promise<unknown>,
     ): Promise<void> {
       try {
         await sendFn(card, {
@@ -271,29 +274,22 @@ export async function handleDashboardCommand(ctx: MyContext): Promise<void> {
           reply_markup: buildFullKeyboard(),
           link_preview_options: DISABLED_LINK_PREVIEWS,
         });
-      } catch (sendError: unknown) {
-        const errMsg = sendError instanceof Error ? sendError.message : String(sendError);
-        // Telegram Bot API rejects inline buttons containing non-FQDN hostnames with "Wrong HTTP URL"
-        if (
-          errMsg.includes('Wrong HTTP URL') ||
-          errMsg.includes('inline keyboard button URL')
-        ) {
-          logger.warn(
-            'Telegram rejected localhost inline keyboard URL button. Gracefully delivering card without localhost button',
-            {
-              traceId,
-              action: 'dashboard.send-fallback-no-localhost-btn',
-              error: errMsg,
-            },
-          );
-          await sendFn(card, {
+      } catch (err: unknown) {
+        const errStr = String(err);
+        if (errStr.includes('BUTTON_URL_INVALID')) {
+          logger.warn('Telegram client rejected local URL in inline keyboard; falling back to tunnel-only keyboard', {
+            traceId,
+            error: errStr,
+          });
+          const fallbackCard = `${card}\n\n⚠️ <i>ملاحظة: تعذر فتح الرابط المحلي كزر تفاعلي في تطبيقك. يمكنك نسخه يدوياً:\n<code>${escapeHtml(localUrl)}</code></i>`;
+          await sendFn(fallbackCard, {
             parse_mode: 'HTML',
-            reply_markup: buildSafeKeyboard(),
+            reply_markup: buildFallbackKeyboard(),
             link_preview_options: DISABLED_LINK_PREVIEWS,
           });
           return;
         }
-        throw sendError;
+        throw err;
       }
     }
 
@@ -362,6 +358,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
   if (!data) return false;
   if (!data.startsWith('sess_')) return false;
 
+  const traceId = resolveTraceId(ctx);
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
   if (telegramId === 0n) return false;
 
@@ -383,6 +380,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
             false,
           ).catch((trackErr) => {
             logger.debug('Failed to track active screen in session renderScreen edit', {
+              traceId,
               error: trackErr,
             });
           });
@@ -390,6 +388,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
         return;
       } catch (editErr) {
         logger.debug('In-place editMessageText failed in session renderScreen, falling back to reply', {
+          traceId,
           error: editErr,
         });
       }
@@ -408,6 +407,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
         false,
       ).catch((trackErr) => {
         logger.debug('Failed to track active screen in session renderScreen reply', {
+          traceId,
           error: trackErr,
         });
       });
@@ -424,7 +424,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
       try {
         await ctx.answerCallbackQuery({ text: '⏳ تم تمديد الجلسة بنجاح لمدة 8 ساعات إضافية', show_alert: false });
       } catch (cbErr) {
-        logger.debug('Failed to answerCallbackQuery for sess_ext success', { error: cbErr });
+        logger.debug('Failed to answerCallbackQuery for sess_ext success', { traceId, error: cbErr });
       }
       const text =
         `✅ <b>تم تمديد الجلسة بنجاح</b>\n\n` +
@@ -444,32 +444,27 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
       try {
         await ctx.answerCallbackQuery({ text: alertMsg, show_alert: true });
       } catch (cbErr) {
-        logger.debug('Failed to answerCallbackQuery for sess_ext error', { error: cbErr });
+        logger.debug('Failed to answerCallbackQuery for sess_ext error', { traceId, error: cbErr });
       }
     }
     return true;
   }
 
-  // 2. Revoke session: sess_rev:<uuid>
+  // 2. Revoke single session: sess_rev:<uuid>
   if (data.startsWith('sess_rev:')) {
     const sessionId = data.slice('sess_rev:'.length).trim();
-    const result = await dashboardAuthService.revokeSession(
-      sessionId,
-      'USER_TELEGRAM_REVOCATION',
-      telegramId
-    );
-
+    const result = await dashboardAuthService.revokeSession(sessionId, 'USER_TELEGRAM_REVOCATION', telegramId);
     if (result.success) {
       try {
         await ctx.answerCallbackQuery({ text: '🛑 تم إنهاء الجلسة فورياً بنجاح', show_alert: false });
       } catch (cbErr) {
-        logger.debug('Failed to answerCallbackQuery for sess_rev success', { error: cbErr });
+        logger.debug('Failed to answerCallbackQuery for sess_rev success', { traceId, error: cbErr });
       }
     } else {
       try {
         await ctx.answerCallbackQuery({ text: '⚠️ تعذر إنهاء الجلسة: غير موجودة', show_alert: true });
       } catch (cbErr) {
-        logger.debug('Failed to answerCallbackQuery for sess_rev error', { error: cbErr });
+        logger.debug('Failed to answerCallbackQuery for sess_rev error', { traceId, error: cbErr });
       }
     }
 
@@ -477,14 +472,14 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
       ? `🛑 <b>تم إنهاء الجلسة فورياً بنجاح.</b>\n\n`
       : `⚠️ تعذر إنهاء الجلسة: غير موجودة أو منتهية بالفعل.\n\n`;
 
-    let rawSessions: any[] = [];
+    let sessions: DashboardSessionView[] = [];
     try {
-      rawSessions = await dashboardAuthService.getActiveSessions(telegramId);
+      const fetched = await dashboardAuthService.getActiveSessions(telegramId);
+      sessions = Array.isArray(fetched) ? fetched : [];
     } catch (fetchErr) {
-      logger.warn('Failed to fetch active sessions in sess_rev', { error: fetchErr });
-      rawSessions = [];
+      logger.warn('Failed to fetch active sessions in sess_rev', { traceId, error: fetchErr });
+      sessions = [];
     }
-    const sessions = Array.isArray(rawSessions) ? rawSessions : [];
     if (sessions.length === 0) {
       const emptyKeyboard = new InlineKeyboard()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -527,10 +522,11 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     try {
       await ctx.answerCallbackQuery();
     } catch (cbErr) {
-      logger.debug('Failed to answerCallbackQuery for sess_list', { error: cbErr });
+      logger.debug('Failed to answerCallbackQuery for sess_list', { traceId, error: cbErr });
     }
 
-    const sessions = await dashboardAuthService.getActiveSessions(telegramId);
+    const fetched = await dashboardAuthService.getActiveSessions(telegramId);
+    const sessions = fetched;
     if (sessions.length === 0) {
       const emptyKeyboard = new InlineKeyboard()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
@@ -574,7 +570,7 @@ export async function handleSessionCallbacks(ctx: MyContext): Promise<boolean> {
     try {
       await ctx.answerCallbackQuery({ text: '🛑 تم إنهاء كافة جلساتك النشطة بنجاح', show_alert: true });
     } catch (cbErr) {
-      logger.debug('Failed to answerCallbackQuery for sess_rev_all', { error: cbErr });
+      logger.debug('Failed to answerCallbackQuery for sess_rev_all', { traceId, error: cbErr });
     }
 
     const emptyKeyboard = new InlineKeyboard()
