@@ -6,6 +6,7 @@ import {
   FileCheck2,
   UserPlus,
   ArrowUpRight,
+  ArrowUpLeft,
   Sparkles,
   PackageCheck,
   Tractor,
@@ -54,137 +55,158 @@ export function FieldAdminOverview({ user, kpis, sites, workers }: FieldAdminOve
 
       {/* Field KPIs (STRICTLY NON-FINANCIAL: Zero Contractual Salaries/Wages) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-        <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200 shadow-xs hover:border-emerald-400 transition-colors">
+        <Link
+          href="/admin/workforce/directory"
+          aria-label="الانتقال إلى كشف عمالة الموقع الميداني"
+          className="group cursor-pointer bg-white dark:bg-slate-900 rounded-xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-orange-500/60 dark:hover:border-orange-500/60 hover:shadow-lg hover:scale-[1.01] transition-all relative block"
+        >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500">العمالة الحاضرة بالموقع</span>
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Users className="w-5 h-5" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">العمالة الحاضرة بالموقع</span>
+            <div className="flex items-center gap-1.5">
+              <ArrowUpLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 opacity-0 group-hover:opacity-100 group-hover:text-orange-500 transition-all -translate-x-1 group-hover:translate-x-0" />
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center">
+                <Users className="w-5 h-5" />
+              </div>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold text-slate-900">{siteWorkers.length}</span>
-            <span className="text-xs text-emerald-600 font-semibold">عامل بموقعك</span>
+            <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">{siteWorkers.length}</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">عامل بموقعك</span>
           </div>
-          <p className="text-xs text-slate-400 mt-2">مقيدون في كشف عمالة الموقع</p>
-        </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">مقيدون في كشف عمالة الموقع</p>
+        </Link>
 
-        <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200 shadow-xs hover:border-emerald-400 transition-colors">
+        <Link
+          href="/admin/settings/sites"
+          aria-label="الانتقال إلى بيانات الموقع الميداني المعتمد"
+          className="group cursor-pointer bg-white dark:bg-slate-900 rounded-xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-orange-500/60 dark:hover:border-orange-500/60 hover:shadow-lg hover:scale-[1.01] transition-all relative block"
+        >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500">الموقع الميداني المعتمد</span>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Building2 className="w-5 h-5" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">الموقع الميداني المعتمد</span>
+            <div className="flex items-center gap-1.5">
+              <ArrowUpLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 opacity-0 group-hover:opacity-100 group-hover:text-orange-500 transition-all -translate-x-1 group-hover:translate-x-0" />
+              <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center">
+                <Building2 className="w-5 h-5" />
+              </div>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-lg sm:text-xl font-bold text-slate-900">{siteName}</span>
+            <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">{siteName}</span>
           </div>
-          <p className="text-xs text-slate-400 mt-2">نطاق الإشراف الميداني المخصص لك</p>
-        </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">نطاق الإشراف الميداني المخصص لك</p>
+        </Link>
 
-        <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200 shadow-xs hover:border-emerald-400 transition-colors">
+        <Link
+          href="/admin/settings/telemetry"
+          aria-label="الانتقال إلى مرصد الاتصال وحالة النظام"
+          className="group cursor-pointer bg-white dark:bg-slate-900 rounded-xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-orange-500/60 dark:hover:border-orange-500/60 hover:shadow-lg hover:scale-[1.01] transition-all relative block"
+        >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500">حالة الربط مع تيليجرام</span>
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">حالة الربط مع تيليجرام</span>
+            <div className="flex items-center gap-1.5">
+              <ArrowUpLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 opacity-0 group-hover:opacity-100 group-hover:text-orange-500 transition-all -translate-x-1 group-hover:translate-x-0" />
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center">
+                <Sparkles className="w-5 h-5" />
+              </div>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-indigo-700">متصل بالبوت 🟢</span>
+            <span className="text-xl font-bold text-indigo-700 dark:text-indigo-400">متصل بالبوت 🟢</span>
           </div>
-          <p className="text-xs text-slate-400 mt-2">جلسة مؤمنة بالرقم التعريفي {user.telegramId || 'معتمد'}</p>
-        </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">جلسة مؤمنة بالرقم التعريفي {user.telegramId || 'معتمد'}</p>
+        </Link>
       </div>
 
       {/* Field Shortcuts */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-xs">
-        <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-emerald-600" />
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
+        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />
           <span>الإجراءات الميدانية السريعة</span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/admin/workforce/new"
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 transition-colors group"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center">
                 <UserPlus className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-700">تعيين عامل جديد</p>
-                <p className="text-xs text-slate-500">تسجيل وتسكين بالموقع</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400">تعيين عامل جديد</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">تسجيل وتسكين بالموقع</p>
               </div>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600" />
+            <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400" />
           </Link>
 
           <Link
             href="/admin/workforce/directory"
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 transition-colors group"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 flex items-center justify-center">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 group-hover:text-blue-700">كشف عمالة الموقع</p>
-                <p className="text-xs text-slate-500">{siteWorkers.length} عامل مسجل</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-700 dark:group-hover:text-blue-400">كشف عمالة الموقع</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{siteWorkers.length} عامل مسجل</p>
               </div>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600" />
+            <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
           </Link>
 
           <Link
             href="/admin/workforce/clearances"
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-amber-500 hover:bg-amber-50/30 transition-colors group"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 hover:bg-amber-50/30 dark:hover:bg-amber-950/20 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 flex items-center justify-center">
                 <FileCheck2 className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 group-hover:text-amber-700">مخالصات الموقع</p>
-                <p className="text-xs text-slate-500">تسليم العهد وإنهاء الخدمة</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-700 dark:group-hover:text-amber-400">مخالصات الموقع</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">تسليم العهد وإنهاء الخدمة</p>
               </div>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600" />
+            <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-amber-600 dark:group-hover:text-amber-400" />
           </Link>
 
           <Link
             href="/admin/logistics/canteen"
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-purple-500 hover:bg-purple-50/30 transition-colors group"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 flex items-center justify-center">
                 <PackageCheck className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 group-hover:text-purple-700">الكانتين والمهمات</p>
-                <p className="text-xs text-slate-500">صرف الوقاية والمسحوبات</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-700 dark:group-hover:text-purple-400">الكانتين والمهمات</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">صرف الوقاية والمسحوبات</p>
               </div>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600" />
+            <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-purple-600 dark:group-hover:text-purple-400" />
           </Link>
         </div>
       </div>
 
       {/* Site Workers Table (Zero Salaries displayed) */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-slate-700" />
-            <h2 className="text-sm font-bold text-slate-900">سجل عمالة {siteName}</h2>
+            <Users className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">سجل عمالة {siteName}</h2>
           </div>
           <Link
             href="/admin/workforce/directory"
-            className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+            className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
           >
             عرض الكل والبحث ←
           </Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-right text-xs">
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 font-semibold">
+            <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 font-semibold">
               <tr>
                 <th className="py-3 px-4">اسم الشهرة / العامل</th>
                 <th className="py-3 px-4">كود العامل</th>
@@ -194,19 +216,19 @@ export function FieldAdminOverview({ user, kpis, sites, workers }: FieldAdminOve
                 <th className="py-3 px-4">الحالة</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
               {siteWorkers.slice(0, 10).map((w) => (
-                <tr key={w.id} className="hover:bg-slate-50/50">
+                <tr key={w.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4">
-                    <div className="font-bold text-slate-900">{w.nickname}</div>
-                    <div className="text-[11px] text-slate-500">{w.fullName}</div>
+                    <div className="font-bold text-slate-900 dark:text-slate-100">{w.nickname}</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">{w.fullName}</div>
                   </td>
-                  <td className="py-3 px-4 font-mono text-slate-500">{w.code}</td>
-                  <td className="py-3 px-4 text-slate-700">{w.jobTitle}</td>
-                  <td className="py-3 px-4 font-mono text-slate-600 dir-ltr text-right">{w.phone}</td>
-                  <td className="py-3 px-4 font-mono text-slate-400">{w.nationalIdMasked}</td>
+                  <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400">{w.code}</td>
+                  <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{w.jobTitle}</td>
+                  <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400 dir-ltr text-right">{w.phone}</td>
+                  <td className="py-3 px-4 font-mono text-slate-400 dark:text-slate-500">{w.nationalIdMasked}</td>
                   <td className="py-3 px-4">
-                    <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                       نشط
                     </span>
                   </td>
@@ -214,7 +236,7 @@ export function FieldAdminOverview({ user, kpis, sites, workers }: FieldAdminOve
               ))}
               {siteWorkers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
+                  <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500">
                     لا توجد عمالة مسجلة بهذا الموقع حتى الآن.
                   </td>
                 </tr>

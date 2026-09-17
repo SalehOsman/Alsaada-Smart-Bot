@@ -30,7 +30,13 @@ describe('Flow 00.2 RBAC Tests — مصفوفة المشاريع والمواق�
     } as unknown as SettingsModuleContext;
 
     await handler.renderSitesHub(ctxWorker);
-    expect(answerCallbackMock.mock.calls.length + replyMock.mock.calls.length).toBeGreaterThanOrEqual(0);
+    expect(answerCallbackMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining('مخصص حصرياً للمدير العام'),
+        show_alert: true,
+      })
+    );
+    expect(replyMock).not.toHaveBeenCalled();
   });
 
   it('should allow access for verified Super Admin', async () => {

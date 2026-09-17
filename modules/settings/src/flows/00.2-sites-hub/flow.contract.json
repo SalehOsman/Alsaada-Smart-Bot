@@ -28,7 +28,15 @@
     "action:settings:sites_hub",
     "action:site:add_new",
     "action:site:view",
-    "action:site:toggle"
+    "action:site:toggle",
+    "action:site:add_gov_page",
+    "action:site:edit_gov_page",
+    "action:site:add:back_to_name",
+    "action:site:add:back_to_code",
+    "action:site:add:back_to_gov",
+    "action:site:add:skip_location",
+    "action:site:add:back_to_location",
+    "action:site:gov:noop"
   ],
   "inputs": [
     "text:site_name",
@@ -69,5 +77,7 @@
     "data"
   ],
   "manualUatRequired": false,
-  "allowAny": false
+  "allowAny": false,
+  "classification": "EVOLVED",
+  "workPlan": "PLAN-09"
 }

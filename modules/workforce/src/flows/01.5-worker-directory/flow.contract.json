@@ -20,7 +20,12 @@
     "action:worker:dir:page:*",
     "action:worker:view:*",
     "action:worker:dir:search_prompt",
-    "action:worker:dir:clear_search"
+    "action:worker:dir:clear_search",
+    "action:worker:docs:*",
+    "action:worker:doc_view:*",
+    "action:worker:doc_del:*",
+    "action:worker:doc_add:*",
+    "act:wdoc:cat:*"
   ],
   "navigationPath": [
     "القائمة الرئيسية",
@@ -33,7 +38,12 @@
     "action:worker:dir:page",
     "action:worker:view",
     "action:worker:dir:search_prompt",
-    "action:worker:dir:clear_search"
+    "action:worker:dir:clear_search",
+    "action:worker:docs",
+    "action:worker:doc_view",
+    "action:worker:doc_del",
+    "action:worker:doc_add",
+    "act:wdoc:cat"
   ],
   "inputs": [
     "text:search_query",
@@ -46,7 +56,8 @@
   ],
   "dataImpact": {
     "database": [
-      "Worker"
+      "Worker",
+      "WorkerDocument"
     ],
     "googleSheets": [],
     "exports": [],
@@ -70,5 +81,7 @@
     "data"
   ],
   "manualUatRequired": true,
-  "allowAny": false
+  "allowAny": false,
+  "classification": "LEGACY_PARITY",
+  "legacyFeatureCode": "05"
 }

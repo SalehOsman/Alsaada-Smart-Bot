@@ -89,9 +89,11 @@ export * from './flows/01.8-worker-offboarding/flow.validators.js';
 export * from './flows/01.8-worker-offboarding/flow.messages.js';
 export * from './flows/01.8-worker-offboarding/flow.telemetry.js';
 
+// Export flow 01.9 worker commitment index components (NEW-80)
+export * from './flows/01.9-worker-commitment-index/index.js';
+
 // Export workforce domain services & hub
 export * from './services/worker-facade.service.js';
-export * from './services/ai-vision-id.service.js';
 export * from './services/worker-storage.service.js';
 export * from './services/worker-expiry-alert.service.js';
 export * from './hub/hr-hub.handler.js';

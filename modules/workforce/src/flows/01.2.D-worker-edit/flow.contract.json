@@ -79,5 +79,7 @@
     "data"
   ],
   "manualUatRequired": true,
-  "allowAny": false
+  "allowAny": false,
+  "classification": "EVOLVED",
+  "workPlan": "PLAN-12"
 }

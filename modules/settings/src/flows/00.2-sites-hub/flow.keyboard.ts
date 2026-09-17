@@ -1,4 +1,10 @@
 import { InlineKeyboard } from 'grammy';
+import {
+  buildGovernoratePickerKeyboard,
+  getGovernoratesList,
+  buildLocationPromptKeyboard,
+  DEFAULT_GOV_PAGE_SIZE,
+} from '@alsaada/core-components';
 import type { SiteDto } from './flow.types.js';
 
 export function buildSitesListKeyboard(sites: SiteDto[], isImpersonating?: boolean): InlineKeyboard {
@@ -55,31 +61,60 @@ export function buildSiteEditMenuKeyboard(siteCode: string): InlineKeyboard {
     .text('🔙 العودة لبطاقة الموقع', `action:site:view:${siteCode}`);
 }
 
+/**
+ * 27 Official Egyptian Governorates from Core Components SSOT.
+ */
+export const EGYPTIAN_GOVERNORATES = getGovernoratesList().map((g) => g.nameAr) as readonly string[];
+export const GOV_PAGE_SIZE = DEFAULT_GOV_PAGE_SIZE;
+
+export function buildGovPickerKeyboard(siteCode?: string, page = 1): InlineKeyboard {
+  return buildGovernoratePickerKeyboard({
+    page,
+    actionPrefix: siteCode ? `action:site:set_gov:${siteCode}` : 'action:site:add:gov',
+    pagePrefix: siteCode ? `action:site:edit_gov_page:${siteCode}` : 'action:site:add_gov_page',
+    backCallbackData: siteCode ? undefined : 'action:site:add:back_to_code',
+    cancelCallbackData: siteCode ? `action:site:view:${siteCode}` : 'action:settings:sites_hub',
+    cancelText: siteCode ? '❌ إلغاء والعودة' : '❌ إلغاء',
+    noopCallbackData: 'action:site:gov:noop',
+  });
+}
+
+export function buildSiteLocationPromptKeyboard(siteCode?: string): InlineKeyboard {
+  return buildLocationPromptKeyboard({
+    skipCallbackData: siteCode ? undefined : 'action:site:add:skip_location',
+    backCallbackData: siteCode ? undefined : 'action:site:add:back_to_gov',
+    cancelCallbackData: siteCode ? `action:site:view:${siteCode}` : 'action:settings:sites_hub',
+    cancelText: siteCode ? '❌ إلغاء والعودة' : '❌ إلغاء',
+  });
+}
+
 export function buildGeofencePickerKeyboard(siteCode?: string): InlineKeyboard {
   const prefix = siteCode ? `action:site:set_geofence:${siteCode}` : 'action:site:add:geofence';
-  return new InlineKeyboard()
+  const keyboard = new InlineKeyboard()
     .text('100 متر (دقيق جداً)', `${prefix}:100`)
     .text('250 متر (موقع متوسط)', `${prefix}:250`)
     .row()
     .text('500 متر (مشروع متسع)', `${prefix}:500`)
     .text('1000 متر (محجر / طريق)', `${prefix}:1000`)
-    .row()
-    .text('❌ إلغاء والعودة', siteCode ? `action:site:view:${siteCode}` : 'action:settings:sites_hub');
-}
+    .row();
 
-export function buildGovPickerKeyboard(siteCode?: string): InlineKeyboard {
-  const govs = ['القاهرة', 'الجيزة', 'الإسكندرية', 'السويس', 'البحر الأحمر', 'مطروح', 'الشرقية', 'الدقهلية', 'أسوان'];
-  const prefix = siteCode ? `action:site:set_gov:${siteCode}` : 'action:site:add:gov';
-  const keyboard = new InlineKeyboard();
-
-  for (let i = 0; i < govs.length; i += 3) {
-    const chunk = govs.slice(i, i + 3);
-    chunk.forEach((g) => keyboard.text(g, `${prefix}:${g}`));
-    keyboard.row();
+  if (siteCode) {
+    keyboard.text('❌ إلغاء والعودة', `action:site:view:${siteCode}`);
+  } else {
+    keyboard
+      .text('◀️ السابق', 'action:site:add:back_to_location')
+      .text('❌ إلغاء', 'action:settings:sites_hub');
   }
 
-  keyboard.text('❌ إلغاء والعودة', siteCode ? `action:site:view:${siteCode}` : 'action:settings:sites_hub');
   return keyboard;
+}
+
+export function buildConfirmCodeKeyboard(code: string): InlineKeyboard {
+  return new InlineKeyboard()
+    .text(`✅ اعتماد الكود المقترح (${code})`, `action:site:confirm_code:${code}`)
+    .row()
+    .text('◀️ السابق', 'action:site:add:back_to_name')
+    .text('❌ إلغاء', 'action:settings:sites_hub');
 }
 
 export function buildProjectsPickerKeyboard(projects: Array<{ id: string; name: string }>, siteCode?: string): InlineKeyboard {

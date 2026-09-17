@@ -1,6 +1,6 @@
 {
   "name": "@alsaada/workforce",
-  "version": "1.0.0",
+  "version": "2.0.0-alpha.1",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@alsaada/ai-vision-engine": "workspace:*",
     "@alsaada/core-components": "workspace:*",
     "@alsaada/database": "workspace:*",
     "@alsaada/national-id-engine": "workspace:*",

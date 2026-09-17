@@ -1,0 +1,21 @@
+{
+  "name": "@alsaada/ai-vision-engine",
+  "version": "2.0.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alsaada/national-id-engine": "workspace:*",
+    "@alsaada/regional-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.9.3",
+    "vitest": "^3.0.8"
+  }
+}

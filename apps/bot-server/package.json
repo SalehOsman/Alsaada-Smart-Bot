@@ -12,6 +12,7 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@alsaada/ai-vision-engine": "workspace:*",
     "@alsaada/core-components": "workspace:*",
     "@alsaada/database": "workspace:*",
     "@alsaada/national-id-engine": "workspace:*",

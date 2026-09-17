@@ -1,10 +1,11 @@
-﻿import { join } from 'node:path';
+import { join } from 'node:path';
 import { createResult, fail, isCliEntrypoint, listFlowDirs, printAndExit, readUtf8, toRepoPath, type VerificationResult } from './common.js';
 
 const REQUIRED_TOP_LEVEL = [
   'flowCode',
   'flowName',
   'module',
+  'classification',
   'status',
   'allowedRoles',
   'blockedRoles',
@@ -24,6 +25,7 @@ const REQUIRED_DATA_IMPACT = ['database', 'googleSheets', 'exports', 'notificati
 const REQUIRED_SLA = ['buttonP95', 'stepP95', 'commitP95'] as const;
 const REQUIRED_TESTS = ['unit', 'integration', 'ux', 'rbac', 'data'] as const;
 const ALLOWED_STATUSES = new Set(['Pending', 'InProgress', 'Implemented', 'UAT_PASS', 'Archived']);
+const ALLOWED_CLASSIFICATIONS = new Set(['LEGACY_PARITY', 'EVOLVED', 'NOVEL', 'DEPRECATED']);
 
 function isEmpty(value: unknown): boolean {
   if (value === undefined || value === null) return true;
@@ -62,6 +64,10 @@ export function verifyFlowContracts(root = process.cwd()): VerificationResult {
 
     if (typeof contract.status === 'string' && !ALLOWED_STATUSES.has(contract.status)) {
       fail(result, `${repoPath} has invalid status: ${contract.status}`);
+    }
+
+    if (typeof contract.classification === 'string' && !ALLOWED_CLASSIFICATIONS.has(contract.classification)) {
+      fail(result, `${repoPath} has invalid classification: ${contract.classification}. Must be one of: ${Array.from(ALLOWED_CLASSIFICATIONS).join(', ')}`);
     }
 
     const dataImpact = contract.dataImpact as Record<string, unknown> | undefined;

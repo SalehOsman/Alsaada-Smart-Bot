@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma } from '@alsaada/database';
-import type { WorkerDirectoryQuery, WorkerDirectoryResult, WorkerDirectoryItem } from './flow.types.js';
+import type { WorkerDirectoryQuery, WorkerDirectoryResult, WorkerDirectoryItem, WorkerDocumentItem } from './flow.types.js';
 
 export class WorkerDirectoryRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -69,6 +69,10 @@ export class WorkerDirectoryRepository {
         site: true,
         department: true,
         jobRef: true,
+        commitmentScores: {
+          orderBy: { evaluationDate: 'desc' },
+          take: 1,
+        },
       },
     });
   }
@@ -81,5 +85,101 @@ export class WorkerDirectoryRepository {
     ]);
     return { totalActive, egyptianCount, foreignCount };
   }
+
+  private cachedTradeName: { name: string; expiresAt: number } | null = null;
+
+  async getCompanyTradeName(): Promise<string> {
+    const now = Date.now();
+    if (this.cachedTradeName && this.cachedTradeName.expiresAt > now) {
+      return this.cachedTradeName.name;
+    }
+    try {
+      const profile = await this.prisma.companyProfile.findFirst({
+        include: { tenant: true },
+      });
+      let name = 'المنظومة المؤسسية';
+      if (profile?.tradeName && profile.tradeName.trim().length > 0) {
+        name = profile.tradeName.trim();
+      } else if (profile?.legalName && profile.legalName.trim().length > 0) {
+        name = profile.legalName.trim();
+      } else if (profile?.tenant?.name && profile.tenant.name.trim().length > 0) {
+        name = profile.tenant.name.trim();
+      } else {
+        const tenant = await this.prisma.tenant.findFirst({
+          where: { isActive: true },
+          select: { name: true },
+          orderBy: { createdAt: 'asc' },
+        });
+        if (tenant?.name && tenant.name.trim().length > 0) {
+          name = tenant.name.trim();
+        }
+      }
+      this.cachedTradeName = { name, expiresAt: now + 300000 };
+      return name;
+    } catch {
+      return 'المنظومة المؤسسية';
+    }
+  }
+
+  async countWorkerDocuments(workerId: string): Promise<number> {
+    if (!this.prisma.workerDocument) return 0;
+    return this.prisma.workerDocument.count({
+      where: { workerId },
+    });
+  }
+
+  async findWorkerDocuments(workerId: string): Promise<WorkerDocumentItem[]> {
+    if (!this.prisma.workerDocument) return [];
+    const docs = await this.prisma.workerDocument.findMany({
+      where: { workerId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return docs.map((d) => ({
+      id: d.id,
+      workerId: d.workerId,
+      title: d.title,
+      category: d.category,
+      fileName: d.fileName,
+      fileType: d.fileType,
+      fileUri: d.fileUri,
+      driveFileId: d.driveFileId,
+      fileSizeBytes: d.fileSizeBytes,
+      uploadedBy: d.uploadedBy,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
+    }));
+  }
+
+  async findDocumentById(docId: string) {
+    if (!this.prisma.workerDocument) return null;
+    return this.prisma.workerDocument.findUnique({
+      where: { id: docId },
+      include: { worker: true },
+    });
+  }
+
+  async createDocument(data: {
+    workerId: string;
+    title: string;
+    category: string;
+    fileName: string;
+    fileType: string;
+    fileUri: string;
+    driveFileId?: string | null;
+    fileSizeBytes?: bigint | null;
+    uploadedBy?: bigint | null;
+  }) {
+    return this.prisma.workerDocument.create({
+      data,
+      include: { worker: true },
+    });
+  }
+
+  async deleteDocument(docId: string) {
+    return this.prisma.workerDocument.delete({
+      where: { id: docId },
+    });
+  }
 }
+
 

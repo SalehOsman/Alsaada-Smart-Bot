@@ -26,6 +26,10 @@ export class GuestJoinService {
     }
   }
 
+  async getCompanyTradeName(): Promise<string> {
+    return this.repository.getCompanyTradeName();
+  }
+
   async searchWorkerForGuest(query: string) {
     return this.repository.findWorkerByCodeOrSearch(query);
   }
@@ -138,5 +142,9 @@ export class GuestJoinService {
       applicantUsername,
       signature
     );
+  }
+
+  async unlinkWorkerAccount(workerId: string, actorTelegramId?: bigint) {
+    return this.repository.unlinkWorkerAccount(workerId, actorTelegramId);
   }
 }

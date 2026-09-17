@@ -67,7 +67,8 @@ export class GuestJoinHandler {
     };
     this.activeStates.set(telegramId.toString(), state);
 
-    const text = formatSearchPrompt();
+    const companyName = await this.service.getCompanyTradeName();
+    const text = formatSearchPrompt(companyName);
     const keyboard = buildGuestSearchCancelKeyboard();
 
     if (ctx.callbackQuery) {

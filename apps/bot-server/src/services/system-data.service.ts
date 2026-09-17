@@ -286,6 +286,13 @@ export class SystemDataService {
   async cached<T>(key: string, ttlSeconds: number, fetcher: () => Promise<T>): Promise<T> {
     return fastCache.rememberSWR(key, ttlSeconds, fetcher);
   }
+
+  /**
+   * فحص الاتصال بقاعدة البيانات وقياس زمن الاستجابة (Database Ping)
+   */
+  async pingDatabase(): Promise<void> {
+    await prisma.$queryRawUnsafe('SELECT 1');
+  }
 }
 
 export const systemDataService = new SystemDataService();

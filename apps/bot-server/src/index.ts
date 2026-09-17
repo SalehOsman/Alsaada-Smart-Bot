@@ -43,6 +43,7 @@ async function bootstrap() {
     bot.api
       .setMyCommands([
         { command: 'start', description: '🏠 القائمة الرئيسية واللوحة التشغيلية' },
+        { command: 'boost', description: '⚡ فحص وتسريع سرعة استجابة البوت' },
         { command: 'cancel', description: '❌ إلغاء المعاملة الحالية والتراجع' },
       ])
       .then(() => {

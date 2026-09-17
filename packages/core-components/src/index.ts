@@ -36,3 +36,17 @@ export * from './shift-accrual/types.js';
 export * from './shift-accrual/engine.js';
 export * from './outbox-queue/types.js';
 export * from './outbox-queue/worker.js';
+export * from './in-place-flow/index.js';
+export * from './governorate-picker/index.js';
+export * from './location-picker/index.js';
+
+// Sovereign Architecture Contracts
+export * from './contracts/flow.contract.js';
+export * from './contracts/dashboard.contract.js';
+export * from './contracts/module.contract.js';
+
+// Universal Wizard Session Engine
+export * from './wizard-session/wizard-session.engine.js';
+
+// Worker Commitment & Evaluation Engine (NEW-80)
+export * from './worker-commitment/index.js';

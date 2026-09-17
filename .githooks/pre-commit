@@ -7,11 +7,6 @@ pnpm typecheck || {
   exit 1
 }
 
-pnpm telegram-contracts:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Telegram contracts violated. Check URL/Callback byte limits."
-  exit 1
-}
-
 pnpm arch:verify || {
   echo "❌ [PRE-COMMIT ERROR] Architecture verification failed. Check handler line counts and required files."
   exit 1
@@ -27,5 +22,55 @@ pnpm flow-contracts:verify || {
   exit 1
 }
 
-echo "✅ [PRE-COMMIT] All pre-commit checks passed successfully."
+pnpm telegram-contracts:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Telegram contracts violated. Check URL/Callback byte limits."
+  exit 1
+}
+
+pnpm latency:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Latency anti-patterns detected. Blocking deleteMessage or awaited setMyCommands found."
+  exit 1
+}
+
+pnpm rbac-matrix:verify || {
+  echo "❌ [PRE-COMMIT ERROR] RBAC matrix verification failed. Deprecated roles or illegal permissions found."
+  exit 1
+}
+
+pnpm field-masking:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Field masking verification failed. Unmasked salary/compensation fields detected."
+  exit 1
+}
+
+pnpm observability:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Observability verification failed. console.error or empty catch blocks found."
+  exit 1
+}
+
+pnpm test-authenticity:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Test authenticity check failed. Sham assertions found."
+  exit 1
+}
+
+pnpm legacy-parity:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Legacy parity verification failed. Accounting invariants violated."
+  exit 1
+}
+
+pnpm financial:verify || {
+  echo "❌ [PRE-COMMIT ERROR] Financial integrity verification failed."
+  exit 1
+}
+
+pnpm governance:tamper-check || {
+  echo "❌ [PRE-COMMIT ERROR] Governance tamper check failed. Locked flow or dashboard feature modified without explicit unlock."
+  exit 1
+}
+
+pnpm test:pre-commit || {
+  echo "❌ [PRE-COMMIT ERROR] Smart test guard failed. Related tests failed on modified code."
+  exit 1
+}
+
+echo "✅ [PRE-COMMIT] All 11 verifiers and smart test guard passed successfully."
 exit 0

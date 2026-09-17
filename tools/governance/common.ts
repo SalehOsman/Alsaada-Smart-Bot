@@ -1,4 +1,4 @@
-﻿import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -101,7 +101,11 @@ export function printAndExit(name: string, result: VerificationResult): void {
 
 export function gitStatusShort(root: string): string {
   try {
-    return execFileSync('git', ['status', '--short'], { cwd: root, encoding: 'utf8' }).trim();
+    return execFileSync('git', ['status', '--short'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
   } catch (error) {
     return `git status failed: ${String(error)}`;
   }

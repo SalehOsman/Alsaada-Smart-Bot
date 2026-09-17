@@ -27,7 +27,11 @@ function resolveTunnelUrl(): string {
 export function validateDashboardAuthEnv(): DashboardAuthOrigins {
   const localUrl = process.env.DASHBOARD_LOCAL_URL || 'http://localtest.me:3002';
   const tunnelUrl = resolveTunnelUrl();
-  return validateDashboardAuthOrigins({ localUrl, tunnelUrl });
+  const res = validateDashboardAuthOrigins({ localUrl, tunnelUrl });
+  if (!res.ok) {
+    throw new Error(`DASHBOARD_AUTH_CONFIG_ERROR: ${res.code}`);
+  }
+  return res.origins;
 }
 
 export const envConfig = {

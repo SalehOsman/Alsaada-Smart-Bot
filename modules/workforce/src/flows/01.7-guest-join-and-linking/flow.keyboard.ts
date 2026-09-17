@@ -21,7 +21,13 @@ export function buildAfterSubmitKeyboard(): InlineKeyboard {
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 }
 
-export function buildLinkingSuccessKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text('🚀 فتح البوابة الذاتية للعامل', 'action:main_menu');
+export function buildLinkingSuccessKeyboard(workerId?: string): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  if (workerId) {
+    kb.text('⭐ مؤشر التزامي وتقييمي', `action:wcs:card:${workerId}`).row();
+  } else {
+    kb.text('⭐ مؤشر التزامي وتقييمي', 'action:wcs:card:my').row();
+  }
+  kb.text('🚀 فتح البوابة الذاتية للعامل', 'action:main_menu');
+  return kb;
 }

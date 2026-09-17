@@ -2,7 +2,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isCliEntrypoint, readUtf8, toRepoPath } from '../governance/common.js';
 import { resolveTargetFlowDir, verifyFlowFast } from '../governance/verify-flow-fast.js';
-import { APPROVAL_PHRASE, writeGovernanceLock } from '../governance/verify-governance-lock.js';
+import { APPROVAL_PHRASE, lockFlowEntry, writeGovernanceLock } from '../governance/verify-governance-lock.js';
 
 export interface FinishFlowOptions {
   commitRef?: string | undefined;
@@ -157,8 +157,8 @@ export function finishFlow(
 
   writeFileSync(evidenceFilePath, evidenceContent, 'utf8');
 
-  // 5. Update governance.lock.json
-  writeGovernanceLock(root);
+  // 5. Update governance.lock.json and seal flow cryptographically
+  lockFlowEntry(root, flowKey, targetDir, { titleArabic, flowSlug });
 
   return {
     ok: true,

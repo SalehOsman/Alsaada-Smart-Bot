@@ -62,5 +62,6 @@
     "data"
   ],
   "manualUatRequired": false,
-  "allowAny": false
+  "allowAny": false,
+  "classification": "NOVEL"
 }

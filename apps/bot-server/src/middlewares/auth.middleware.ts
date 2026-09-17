@@ -9,6 +9,7 @@ export const USER_CACHE_PREFIX = 'cache:user:';
 
 export async function invalidateUserCache(telegramId: bigint): Promise<void> {
   try {
+    await fastCache.invalidateUserContext(telegramId);
     await fastCache.invalidate(`auth:user:${telegramId}`);
     await fastCache.invalidate(`auth:imp:${telegramId}`);
     await fastCache.invalidate(`auth:ent:${telegramId}`);
@@ -19,6 +20,22 @@ export async function invalidateUserCache(telegramId: bigint): Promise<void> {
   } catch {}
 }
 
+
+async function resolveDefaultFieldAdminSiteId(): Promise<string | null> {
+  return fastCache.rememberSWR('system:default_field_admin_site', 300, async () => {
+    let activeSite = await prisma.site.findFirst({
+      where: { status: 'ACTIVE', workers: { some: { isDeleted: false } } },
+      select: { id: true },
+    });
+    if (!activeSite) {
+      activeSite = await prisma.site.findFirst({
+        where: { status: 'ACTIVE' },
+        select: { id: true },
+      });
+    }
+    return activeSite?.id ?? null;
+  });
+}
 
 export async function authMiddleware(ctx: MyContext, next: NextFunction): Promise<void> {
   const from = ctx.from;
@@ -31,8 +48,8 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
   ctx.isRealSuperAdmin = isSuperAdminEnv;
 
   try {
-    // ⚡ L1 IN-MEMORY RAM AUTH LOOKUP (< 0.1ms) with SWR background revalidation
-    const user = await fastCache.rememberSWR(`auth:user:${telegramId}`, 180, async () => {
+    // ⚡ L1 IN-MEMORY RAM AUTH LOOKUP (< 0.01ms) with SWR background revalidation (TTL: 60s)
+    const user = await fastCache.rememberUserContext(telegramId, async () => {
       let dbUser = await prisma.user.findUnique({
         where: { telegramId },
       });
@@ -84,17 +101,8 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
           }
         }
         if (ctx.effectiveRole === 'FIELD_ADMIN' && !ctx.assignedSiteId) {
-          let activeSite = await prisma.site.findFirst({
-            where: { status: 'ACTIVE', workers: { some: { isDeleted: false } } },
-            select: { id: true },
-          });
-          if (!activeSite) {
-            activeSite = await prisma.site.findFirst({
-              where: { status: 'ACTIVE' },
-              select: { id: true },
-            });
-          }
-          if (activeSite) ctx.assignedSiteId = activeSite.id;
+          const defaultSiteId = await resolveDefaultFieldAdminSiteId();
+          if (defaultSiteId) ctx.assignedSiteId = defaultSiteId;
         }
       } else {
         ctx.effectiveRole = 'SUPER_ADMIN';
@@ -112,17 +120,8 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
           ctx.workerId = user.workerId;
         }
         if (ctx.effectiveRole === 'FIELD_ADMIN' && !ctx.assignedSiteId) {
-          let activeSite = await prisma.site.findFirst({
-            where: { status: 'ACTIVE', workers: { some: { isDeleted: false } } },
-            select: { id: true },
-          });
-          if (!activeSite) {
-            activeSite = await prisma.site.findFirst({
-              where: { status: 'ACTIVE' },
-              select: { id: true },
-            });
-          }
-          if (activeSite) ctx.assignedSiteId = activeSite.id;
+          const defaultSiteId = await resolveDefaultFieldAdminSiteId();
+          if (defaultSiteId) ctx.assignedSiteId = defaultSiteId;
         }
       }
       ctx.isImpersonating = false;

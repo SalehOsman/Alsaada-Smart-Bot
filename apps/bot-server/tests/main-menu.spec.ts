@@ -120,7 +120,7 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
     expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
 
-  it('should append sovereign escape button when Super Admin is impersonating another role', () => {
+  it('should maintain pure role buttons and NOT append inline escape button when Super Admin is impersonating another role', () => {
     const mockCtx = {
       effectiveRole: 'WORKER',
       isRealSuperAdmin: true,
@@ -132,10 +132,8 @@ describe('Role-Based Main Menu & Ghost Mode Keyboards', () => {
 
     // Worker buttons should be present
     expect(buttons.some(b => b.callback_data === 'menu:worker:statement')).toBe(true);
-    // Escape hatch must be present!
-    const escapeBtn = buttons.find(b => b.callback_data === 'action:exit_impersonate');
-    expect(escapeBtn).toBeDefined();
-    expect(escapeBtn?.text).toContain('إنهاء وضع المحاكاة');
+    // Inline escape hatch is removed in favor of the persistent bottom reply bar (100% visual parity)
+    expect(buttons.some(b => b.callback_data === 'action:exit_impersonate')).toBe(false);
   });
 
   it('should NOT append escape button if regular worker tries to impersonate', () => {
@@ -176,6 +174,26 @@ describe('Start Handler & Welcome Messages', () => {
     expect(msg).toContain('عامل مسجل');
   });
 
+  it('should greet simulated entity by their actual name and code when impersonating', () => {
+    const mockCtx = {
+      from: { id: 123456, first_name: 'صالح' },
+      effectiveRole: 'WORKER',
+      isRealSuperAdmin: true,
+      isImpersonating: true,
+      impersonatedEntity: {
+        type: 'WORKER',
+        id: 'w-101',
+        name: 'محمود إبراهيم',
+        code: 'W-101',
+      },
+    } as unknown as MyContext;
+
+    const msg = buildWelcomeMessage(mockCtx);
+    expect(msg).toContain('وضع المحاكاة النشط — GHOST MODE');
+    expect(msg).toContain('محمود إبراهيم (W-101)');
+    expect(msg).not.toContain('مرحباً بك يا *صالح*');
+  });
+
   it('should NOT prepend ghost mode banner when in normal mode', () => {
     const mockCtx = {
       from: { id: 123456, first_name: 'أحمد' },
@@ -211,6 +229,15 @@ describe('Persistent Bottom Reply Keyboard', () => {
     expect(buttons.some(b => b.text === '👤 ملفي الشخصي')).toBe(true);
   });
 
+  it('should build persistent reply keyboard for WORKER_SUPERVISOR with fuel level button', () => {
+    const mockCtx = { effectiveRole: 'WORKER_SUPERVISOR' } as MyContext;
+    const kb = buildPersistentReplyKeyboard(mockCtx);
+    const buttons = kb.keyboard.flat() as Array<{ text: string }>;
+    expect(buttons.some(b => b.text === '🏠 القائمة الرئيسية')).toBe(true);
+    expect(buttons.some(b => b.text === '🚜 تسجيل منسوب')).toBe(true);
+    expect(buttons.some(b => b.text === '👤 ملفي الشخصي')).toBe(true);
+  });
+
   it('should build persistent reply keyboard for WORKER in dual mode with supervisor return button', () => {
     const mockCtx = { effectiveRole: 'WORKER', isDualWorkerMode: true } as MyContext;
     const kb = buildPersistentReplyKeyboard(mockCtx);
@@ -233,6 +260,12 @@ describe('Persistent Bottom Reply Keyboard', () => {
     const kb = buildPersistentReplyKeyboard(mockCtx);
     const buttons = kb.keyboard.flat() as Array<{ text: string }>;
     expect(buttons.some(b => b.text.includes('إلغاء') || b.text.includes('cancel'))).toBe(false);
+  });
+
+  it('should have custom placeholder configured on persistent reply keyboard for Web & Desktop', () => {
+    const mockCtx = { effectiveRole: 'SUPER_ADMIN' } as MyContext;
+    const kb = buildPersistentReplyKeyboard(mockCtx);
+    expect((kb as any).input_field_placeholder).toBe('اختر إجراءً من القائمة بالأسفل...');
   });
 });
 

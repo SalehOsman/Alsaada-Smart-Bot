@@ -47,7 +47,7 @@
 
 ```
 F:\Alsaada-Smart-Bot/
-├── docs/                        # 📚 التوثيق المعماري الشامل والمواصفات القياسية (00 إلى 21)
+├── docs/                        # 📚 التوثيق المعماري الشامل والمواصفات القياسية (00 إلى 26)
 ├── packages/                    # 🧱 الحزم التقنية المشتركة والنواة المستقلة (Core Shared Kernel)
 │   ├── core-components/         # مكونات الواجهة والمحركات (Pickers, Clearing, CustodyGate, Installments, Outbox, etc.)
 │   ├── database/                # قاعدة البيانات (Prisma 6.4+ + PostgreSQL + التشفير والهاش التراكمي ونظام التدقيق الجنائي)
@@ -117,6 +117,10 @@ F:\Alsaada-Smart-Bot/
 * [21. معيار الموديولات الإلزامي وبوابات الاعتماد الصارمة](./docs/21-mandatory-module-architecture-and-gates.md)
 * [22. معايير تصميم تجربة وواجهة المستخدم على تليجرام](./docs/22-telegram-ux-ui-design-system-and-ergonomics.md)
 * [23. ميثاق تشكيل الفرق الهندسية المستقلة ومحرك المعرفة المرجعية المحلي](./docs/23-autonomous-agent-roster-and-rag.md)
+* [24. دستور ومعايير هندسة وظائف وتدفقات المنظومة (المواصفات الشاملة الموحدة)](./docs/24-enterprise-feature-and-flow-master-specification.md)
+* [25. المخطط المعماري المؤسسي للسرعة القصوى والأداء الفائق للبوت (< 100ms)](./docs/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md)
+* [26. السجل المرجعي الشامل للوظائف المقفلة والحصانة التشفيرية](./docs/26-locked-flows-and-features-registry.md)
+* [27. دستور حوكمة الذكاء الاصطناعي وبوابات الجودة المؤسسية الموحدة](./docs/27-enterprise-ai-governance-and-quality-gates-constitution.md)
 
 ---
 

@@ -1,6 +1,7 @@
 import type { Bot } from 'grammy';
 import type { PrismaClient } from '@alsaada/database';
 import type { WorkforceModuleContext } from '../shared/module.types.js';
+import { shouldRenderInPlace } from '@alsaada/core-components';
 import { HrHubHandler } from './hr-hub.handler.js';
 import {
   handleSwitchToWorker,
@@ -16,12 +17,14 @@ export function registerWorkforceHubRoutes(
 
   // HR Hub Domain Navigation
   bot.callbackQuery('menu:domain:hr', async (ctx) => {
-    await hrHubHandler.renderHrHub(ctx, true);
+    const inPlace = await shouldRenderInPlace(ctx, true);
+    await hrHubHandler.renderHrHub(ctx, inPlace);
   });
 
   bot.callbackQuery(/^menu:hr_sub:(.+)$/, async (ctx) => {
     const subKey = ctx.match[1]!;
-    await hrHubHandler.renderHrSubHub(ctx, subKey, true);
+    const inPlace = await shouldRenderInPlace(ctx, true);
+    await hrHubHandler.renderHrSubHub(ctx, subKey, inPlace);
   });
 
   bot.callbackQuery(

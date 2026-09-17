@@ -18,22 +18,33 @@ describe('Flow 00.4 RBAC Tests — الملف الشخصي للمدير العا
 
   const handler = new AdminProfileHandler(mockService);
 
-  it('should deny or alert non-super admin users', async () => {
+  it('should deny or alert unrecorded users', async () => {
     const replyMock = vi.fn().mockResolvedValue({});
     const answerCallbackMock = vi.fn().mockResolvedValue(true);
     const ctxWorker = {
       isRealSuperAdmin: false,
       effectiveRole: 'WORKER',
+      from: { id: 123456 },
       reply: replyMock,
       callbackQuery: { data: 'test' },
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
     await handler.renderAdminProfile(ctxWorker);
-    expect(answerCallbackMock.mock.calls.length + replyMock.mock.calls.length).toBeGreaterThanOrEqual(0);
+    expect(answerCallbackMock).toHaveBeenCalled();
+    expect(replyMock).toHaveBeenCalledWith('⚠️ لم يتم العثور على سجل حسابك في قاعدة البيانات.');
   });
+  it('should allow access for verified Super Admin with valid profile', async () => {
+    vi.mocked(mockService.getProfile).mockResolvedValueOnce({
+      id: 'admin-1',
+      telegramId: 7594239391n,
+      role: 'SUPER_ADMIN',
+      fullName: 'Super Admin User',
+      phone: '01012345678',
+      assignedSiteName: null,
+      isActive: true,
+    });
 
-  it('should allow access for verified Super Admin', async () => {
     const replyMock = vi.fn().mockResolvedValue({});
     const ctxSuper = {
       isRealSuperAdmin: true,
@@ -43,6 +54,9 @@ describe('Flow 00.4 RBAC Tests — الملف الشخصي للمدير العا
     } as unknown as SettingsModuleContext;
 
     await handler.renderAdminProfile(ctxSuper);
-    expect(replyMock).toHaveBeenCalled();
+    expect(replyMock).toHaveBeenCalledWith(
+      expect.stringContaining('الملف الشخصي'),
+      expect.objectContaining({})
+    );
   });
 });

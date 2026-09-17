@@ -62,7 +62,6 @@ export class WorkerStorageService {
         const frontFullPath = path.join(workerDir, frontFilename);
         fs.writeFileSync(frontFullPath, frontBuffer);
         result.localFrontPath = `attachments/workers/${sanitizedCode}/${frontFilename}`;
-        console.log(`✅ [STORAGE] Saved front ID locally in worker folder: ${result.localFrontPath}`);
       }
 
       if (backBuffer && backBuffer.length > 0) {
@@ -70,7 +69,6 @@ export class WorkerStorageService {
         const backFullPath = path.join(workerDir, backFilename);
         fs.writeFileSync(backFullPath, backBuffer);
         result.localBackPath = `attachments/workers/${sanitizedCode}/${backFilename}`;
-        console.log(`✅ [STORAGE] Saved back ID locally in worker folder: ${result.localBackPath}`);
       }
     } catch (err) {
       console.error('❌ [STORAGE] Error saving worker ID photos locally:', err);
@@ -97,9 +95,27 @@ export class WorkerStorageService {
 
     fs.writeFileSync(fullPath, fileBuffer);
     const localPath = `attachments/workers/${sanitizedCode}/${safeFileName}`;
-    console.log(`✅ [STORAGE] Saved worker attachment: ${localPath}`);
 
     return { localPath, fileName: safeFileName };
+  }
+
+  /**
+   * 🗑️ حذف مستند أو مرفق من مجلد العامل محلياً
+   */
+  deleteWorkerAttachmentLocally(localPath: string): boolean {
+    try {
+      const fullPath = path.resolve(process.cwd(), localPath);
+      if (!fullPath.startsWith(this.baseDir)) {
+        return false;
+      }
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+        return true;
+      }
+    } catch (err) {
+      console.error('❌ [STORAGE] Error deleting worker attachment locally:', err);
+    }
+    return false;
   }
 
   /**
@@ -145,15 +161,12 @@ export class WorkerStorageService {
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        console.warn(`⚠️ [GOOGLE-DRIVE] OAuth token request failed (${res.status}): ${errText}`);
         return null;
       }
 
       const data = (await res.json()) as any;
       return data.access_token || null;
-    } catch (error) {
-      console.warn('⚠️ [GOOGLE-DRIVE] Could not sign or fetch Google token:', error);
+    } catch {
       return null;
     }
   }
@@ -212,16 +225,12 @@ export class WorkerStorageService {
       );
 
       if (!res.ok) {
-        const err = await res.text();
-        console.warn(`⚠️ [GOOGLE-DRIVE] File upload failed (${res.status}): ${err}`);
         return null;
       }
 
       const fileData = (await res.json()) as any;
-      console.log(`✅ [GOOGLE-DRIVE] Uploaded ${fileName} to Drive (File ID: ${fileData.id})`);
       return fileData.id || null;
-    } catch (err) {
-      console.error('❌ [GOOGLE-DRIVE] Error during Drive upload:', err);
+    } catch {
       return null;
     }
   }

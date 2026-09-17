@@ -5,9 +5,19 @@ import { WorkerDirectoryMessages } from './flow.messages.js';
 import { WorkerDirectoryKeyboards } from './flow.keyboard.js';
 import { normalizeDigits } from '@alsaada/regional-engine';
 import { validateDirectorySearchQuery, validateDirectoryPage, validateWorkerIdParam } from './flow.validators.js';
+import { WorkerDocumentsHandler } from './flow.documents-handler.js';
+import type { WorkerDirectoryRepository } from './flow.repository.js';
 
 export class WorkerDirectoryHandler {
-  constructor(private readonly service: WorkerDirectoryService) {}
+  public readonly docsHandler?: WorkerDocumentsHandler | undefined;
+
+  constructor(
+    private readonly service: WorkerDirectoryService,
+    private readonly repository?: WorkerDirectoryRepository,
+    docsHandler?: WorkerDocumentsHandler | undefined
+  ) {
+    this.docsHandler = docsHandler || (repository ? new WorkerDocumentsHandler(service, repository) : undefined);
+  }
 
   private checkRbac(ctx: WorkforceModuleContext): boolean {
     const role = ctx.effectiveRole || 'GUEST';
@@ -124,6 +134,8 @@ export class WorkerDirectoryHandler {
       isIdRevealed,
       idNumber: profile.idNumberFull || profile.idNumberMasked,
       phone: profile.phone || undefined,
+      hasTelegram: Boolean(profile.telegramId),
+      documentsCount: profile.documentsCount,
     });
 
     await this.replyOrEdit(ctx, text, keyboard);

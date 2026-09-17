@@ -73,5 +73,6 @@
     "rbac",
     "data"
   ],
-  "manualUatRequired": false
+  "manualUatRequired": false,
+  "classification": "NOVEL"
 }

@@ -6,9 +6,10 @@ const globalForPrisma = globalThis as unknown as {
   prismaInstance?: ReturnType<typeof createExtendedPrismaClient> | undefined;
 };
 
-export function createExtendedPrismaClient(): PrismaClient {
+export function createExtendedPrismaClient(options?: any): PrismaClient {
   const baseClient = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    ...(options ?? {}),
   });
 
   return baseClient

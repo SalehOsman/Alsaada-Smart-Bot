@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { aiVisionIdService } from '@alsaada/workforce';
+import { aiVisionEngine } from '@alsaada/ai-vision-engine';
 import { extractFirstTwoNames } from '@alsaada/regional-engine';
 
 describe('AI Vision ID Service & Document Verification Engine', () => {
@@ -39,10 +39,10 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       } as any);
 
       // Temporary set API key for test
-      vi.spyOn(aiVisionIdService as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
+      vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
 
       const dummyBuffer = Buffer.from('fake-image-bytes');
-      const result = await aiVisionIdService.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
+      const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
 
       expect(result.isValid).toBe(false);
       expect(result.detectedDocType).toBe('OTHER');
@@ -80,10 +80,10 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
         json: async () => mockGeminiResponse,
       } as any);
 
-      vi.spyOn(aiVisionIdService as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
+      vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
 
       const dummyBuffer = Buffer.from('fake-image-bytes');
-      const result = await aiVisionIdService.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
+      const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
 
       expect(result.isValid).toBe(false);
       expect(result.isQualityAcceptable).toBe(false);
@@ -122,10 +122,10 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
         json: async () => mockGeminiResponse,
       } as any);
 
-      vi.spyOn(aiVisionIdService as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
+      vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
 
       const dummyBuffer = Buffer.from('fake-image-bytes');
-      const result = await aiVisionIdService.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
+      const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
 
       expect(result.isValid).toBe(true);
       expect(result.nationalIdNumber).toBe('29504200101234');
@@ -164,10 +164,10 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
         json: async () => mockGeminiResponse,
       } as any);
 
-      vi.spyOn(aiVisionIdService as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
+      vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
 
       const dummyBuffer = Buffer.from('fake-image-bytes');
-      const result = await aiVisionIdService.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_BACK');
+      const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_BACK');
 
       expect(result.isValid).toBe(true);
       expect(result.expiryDateStr).toBe('15-08-2029');
@@ -202,10 +202,10 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
         json: async () => mockGeminiResponse,
       } as any);
 
-      vi.spyOn(aiVisionIdService as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
+      vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
 
       const dummyBuffer = Buffer.from('fake-image-bytes');
-      const result = await aiVisionIdService.scanDocument(dummyBuffer, 'image/jpeg', 'PASSPORT');
+      const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'PASSPORT');
 
       expect(result.isValid).toBe(true);
       expect(result.passportNumber).toBe('A12345678');

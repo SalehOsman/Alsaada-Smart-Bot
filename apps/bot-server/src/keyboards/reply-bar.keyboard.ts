@@ -13,14 +13,13 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
   const keyboard = new Keyboard();
   const role = ctx.effectiveRole || 'GUEST';
 
-  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
-    keyboard.text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)').row();
-  }
-
-  if (role === 'SUPER_ADMIN' || role === 'GENERAL_ADMIN') {
-    keyboard
-      .text('🏠 القائمة الرئيسية')
-      .text('⚙️ إعدادات النظام');
+  if (role === 'SUPER_ADMIN') {
+    keyboard.text('🏠 القائمة الرئيسية');
+    if (!ctx.isImpersonating) {
+      keyboard.text('⚙️ إعدادات النظام');
+    }
+  } else if (role === 'GENERAL_ADMIN') {
+    keyboard.text('🏠 القائمة الرئيسية');
   } else if (role === 'FIELD_ADMIN') {
     keyboard
       .text('🏠 القائمة الرئيسية')
@@ -78,5 +77,10 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
     keyboard.row().text(DASHBOARD_KEYBOARD_BUTTON_TEXT);
   }
 
-  return keyboard.resized().persistent();
+  // Ghost Mode Sovereign Escape Hatch: placed in the LAST row below all simulated role buttons
+  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    keyboard.row().text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)');
+  }
+
+  return keyboard.resized().persistent().placeholder('اختر إجراءً من القائمة بالأسفل...');
 }

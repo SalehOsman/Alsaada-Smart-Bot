@@ -2,6 +2,7 @@ import { InlineKeyboard } from 'grammy';
 import { prisma as defaultPrisma, type PrismaClient } from '@alsaada/database';
 import type { WorkforceModuleContext } from '../shared/module.types.js';
 import { WorkerDirectoryRepository } from '../flows/01.5-worker-directory/flow.repository.js';
+import { buildHrSubHubKeyboard } from './hub.keyboards.js';
 
 /**
  * 👥 تصيير بوابة قطاع الموارد البشرية والعمالة (HR Domain Hub)
@@ -98,7 +99,7 @@ export async function renderHrSubHub(
 
   const activePrisma = prisma || (ctx as any).prisma || (defaultPrisma as unknown as PrismaClient);
   let text = '';
-  const keyboard = new InlineKeyboard();
+  let keyboard = new InlineKeyboard();
 
   switch (subKey) {
     case 'advances': {
@@ -146,32 +147,19 @@ export async function renderHrSubHub(
         `تسجيل وتوثيق ملفات العمال الجدد، دليل السجل الشامل، وتعديل البيانات.\n\n` +
         `اختر الإجراء المطلوب:`;
 
-      keyboard
-        .text('➕ تسجيل وتعيين عامل جديد', 'action:worker:add_single')
-        .row()
-        .text('📋 دليل وسجل العاملين (360°)', 'action:worker:directory')
-        .row();
-
-      keyboard.text('✏️ تعديل بيانات عامل', 'action:worker_edit:pick').row();
-      keyboard.text('🚪 إنهاء خدمة عامل', 'wizard:worker_offboard:start').row();
-
+      let pendingCount = 0;
+      let pendingDecisionsCount = 0;
       if (isSuperAdmin) {
-        const [pendingCount, pendingDecisionsCount] = await Promise.all([
+        [pendingCount, pendingDecisionsCount] = await Promise.all([
           activePrisma.workerEditRequest.count({ where: { status: 'PENDING' } }).catch(() => 0),
           activePrisma.disciplinaryAndBonus.count({ where: { approvedByUserId: null } }).catch(() => 0),
         ]);
-        if (pendingCount > 0) {
-          keyboard.text(`📨 مراجعة طلبات التعديل المعلقة (${pendingCount})`, 'action:worker_edit:pending_list').row();
-        }
-        if (pendingDecisionsCount > 0) {
-          keyboard.text(`⚖️ صندوق القرارات المعلقة (${pendingDecisionsCount})`, 'action:wob:hub:pending_decisions').row();
-        }
       }
 
-
-      keyboard
-        .text('📥📤 استيراد وتصدير كشف العمال', 'menu:hr_sub:worker_excel')
-        .row();
+      keyboard = buildHrSubHubKeyboard('onboarding', role, isSuperAdmin, {
+        pendingEditCount: pendingCount,
+        pendingDecisionsCount,
+      });
       break;
     }
 

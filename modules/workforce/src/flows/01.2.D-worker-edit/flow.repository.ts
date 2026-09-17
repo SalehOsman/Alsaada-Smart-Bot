@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { PrismaClient, Prisma } from '@alsaada/database';
 import type {
   PendingEditTicket,
@@ -88,7 +89,7 @@ export class WorkerEditRepository {
       });
 
       if (audit && 'workerChangeLog' in tx && typeof tx.workerChangeLog?.create === 'function') {
-        const changeId = `CHG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const changeId = `CHG-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
         await tx.workerChangeLog.create({
           data: {
             changeId,
@@ -164,7 +165,7 @@ export class WorkerEditRepository {
         where: { id: adj.workerId },
         data: {
           basicSalary: new Prisma.Decimal(adj.newBasicSalary),
-          fixedAllowances: new Prisma.Decimal(adj.newAdditionalSalary),
+          additionalSalary: new Prisma.Decimal(adj.newAdditionalSalary),
           dailyWage: new Prisma.Decimal((adj.newGrossSalary / 30).toFixed(2)),
         },
       });

@@ -1,13 +1,19 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
+import { fastCache } from '../services/fast-cache.service.js';
 
 /**
  * Builds the enterprise main menu keyboard dynamically based on the effective user role.
- * Includes the Sovereign Escape Hatch for the Super Admin if Ghost Mode is active.
+ * 100% pure inline menu matching the simulated role; escape hatch is strictly delegated to the persistent reply keyboard.
+ * Memoized via FastCache to eliminate GC churn.
  */
 export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
-  const keyboard = new InlineKeyboard();
   const role = ctx.effectiveRole || 'GUEST';
+  const isDual = !!ctx.isDualWorkerMode;
+  const cacheKey = `kb:main_menu:${role}:${isDual}`;
+
+  return fastCache.memoizeKeyboard(cacheKey, () => {
+    const keyboard = new InlineKeyboard();
 
   switch (role) {
     case 'SUPER_ADMIN':
@@ -96,12 +102,6 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
       break;
   }
 
-  // Sovereign Escape Hatch: If Super Admin is simulating another role, ALWAYS provide an escape button
-  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
-    keyboard
-      .row()
-      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
-  }
-
-  return keyboard;
+    return keyboard;
+  });
 }

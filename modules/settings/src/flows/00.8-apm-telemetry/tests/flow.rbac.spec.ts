@@ -30,7 +30,8 @@ describe('Flow 00.8 RBAC Tests — رادار الأداء ومراقبة الخ
     } as unknown as SettingsModuleContext;
 
     await handler.renderApmDashboard(ctxWorker);
-    expect(answerCallbackMock.mock.calls.length + replyMock.mock.calls.length).toBeGreaterThanOrEqual(0);
+    expect(replyMock).not.toHaveBeenCalled();
+    expect(answerCallbackMock).not.toHaveBeenCalled();
   });
 
   it('should allow access for verified Super Admin', async () => {
@@ -43,6 +44,9 @@ describe('Flow 00.8 RBAC Tests — رادار الأداء ومراقبة الخ
     } as unknown as SettingsModuleContext;
 
     await handler.renderApmDashboard(ctxSuper);
-    expect(replyMock).toHaveBeenCalled();
+    expect(replyMock).toHaveBeenCalledWith(
+      expect.stringContaining('رادار قياس الأداء والسرعة الفائقة'),
+      expect.objectContaining({})
+    );
   });
 });

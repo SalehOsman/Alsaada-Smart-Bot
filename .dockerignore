@@ -1,12 +1,43 @@
-node_modules
+# Git & CI
 .git
-.env
-dist
-.system_generated
-**/.next
-**/.next-dev
-**/tsconfig.tsbuildinfo
-**/*.tsbuildinfo
-**/coverage
-.scratch
+.github
+.githooks
 
+# Dependencies & package managers
+node_modules
+.pnpm-store
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Build outputs
+dist
+.next
+build
+out
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentation & AI Evidence
+docs/ai-execution-evidence/
+
+# Tests & coverage
+tests/
+**/*.spec.ts
+**/*.test.ts
+.vitest
+coverage
+
+# Temporary files & OS files
+.DS_Store
+Thumbs.db
+*.tmp

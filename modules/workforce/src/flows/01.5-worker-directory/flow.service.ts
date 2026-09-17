@@ -1,13 +1,14 @@
 import { decryptField, normalizeKeyToHex } from '@alsaada/database';
 import { normalizeDigits, formatCurrency } from '@alsaada/regional-engine';
-import { normalizeEgyptianPhone } from '@alsaada/core-components';
 import { EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
 import { WorkerDirectoryRepository } from './flow.repository.js';
 import { WorkerDirectoryMessages } from './flow.messages.js';
+import { workerStorageService } from '../../services/worker-storage.service.js';
 import type {
   WorkerDirectoryQuery,
   WorkerDirectoryResult,
   WorkerProfile360,
+  WorkerDocumentItem,
 } from './flow.types.js';
 
 export class WorkerDirectoryService {
@@ -94,7 +95,8 @@ export class WorkerDirectoryService {
     const basicSal = Number(worker.basicSalary || 0);
     const addSal = Number(worker.fixedAllowances || 0);
     const totalSal = basicSal + addSal > 0 ? basicSal + addSal : Number(worker.dailyWage || 0) * 30;
-    const dailyWageVal = Number(worker.dailyWage || 0) > 0 ? Number(worker.dailyWage) : (totalSal > 0 ? totalSal / 30 : 0);
+    const rawDailyWage = Number(worker.dailyWage || 0);
+    const dailyWageVal = rawDailyWage > 0 ? rawDailyWage : (totalSal > 0 ? totalSal / 30 : 0);
     const basicSalaryMasked = canViewFinances && basicSal > 0 ? formatCurrency(basicSal) : undefined;
     const additionalSalaryMasked = canViewFinances && addSal > 0 ? formatCurrency(addSal) : undefined;
     const totalSalaryMasked = canViewFinances && totalSal > 0 ? formatCurrency(totalSal) : undefined;
@@ -223,12 +225,24 @@ export class WorkerDirectoryService {
 
     let missingDataWhatsAppUrl: string | undefined;
     if (!isProfileComplete && missingItems.length > 0) {
+      const companyName = await this.repository.getCompanyTradeName();
       const waText = WorkerDirectoryMessages.formatMissingDataWhatsAppMessage({
         name: worker.name,
         nickname: worker.nickname,
         missingItems,
+        companyName,
       });
       missingDataWhatsAppUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+    }
+
+    const latestScore = (worker as { commitmentScores?: Array<{ tier: string; totalScore: number }> }).commitmentScores?.[0];
+    let commitmentBadge: string | undefined;
+    if (latestScore) {
+      const tierBadge = latestScore.tier === 'COMMITTED' ? '🟢' : latestScore.tier === 'MODERATE' ? '🟡' : latestScore.tier === 'PROBATION' ? '⚪' : '🔴';
+      const tierArabic = latestScore.tier === 'COMMITTED' ? 'ملتزم' : latestScore.tier === 'MODERATE' ? 'متوسط الالتزام' : latestScore.tier === 'PROBATION' ? 'حديث تعيين' : 'قيد المتابعة';
+      commitmentBadge = `${tierBadge} ${tierArabic} (${latestScore.totalScore}/100)`;
+    } else {
+      commitmentBadge = '🟢 ملتزم (100/100)';
     }
 
     return {
@@ -267,6 +281,64 @@ export class WorkerDirectoryService {
       completionPercentage,
       missingItems,
       missingDataWhatsAppUrl,
+      telegramId: worker.telegramId || undefined,
+      documentsCount: await this.repository.countWorkerDocuments(worker.id),
+      commitmentBadge,
     };
+  }
+
+  async getWorkerDocuments(workerId: string): Promise<WorkerDocumentItem[]> {
+    return this.repository.findWorkerDocuments(workerId);
+  }
+
+  async getDocumentById(docId: string) {
+    return this.repository.findDocumentById(docId);
+  }
+
+  async addWorkerDocument(params: {
+    workerId: string;
+    workerCode: string;
+    originalFileName: string;
+    fileBuffer: Buffer;
+    title: string;
+    category: string;
+    mimeType?: string | undefined;
+    uploadedBy?: bigint | null | undefined;
+  }) {
+    const saved = workerStorageService.saveWorkerAttachmentLocally(
+      params.workerCode,
+      params.originalFileName,
+      params.fileBuffer
+    );
+
+    return this.repository.createDocument({
+      workerId: params.workerId,
+      title: params.title,
+      category: params.category,
+      fileName: saved.fileName,
+      fileType: params.mimeType || 'application/octet-stream',
+      fileUri: saved.localPath,
+      fileSizeBytes: BigInt(params.fileBuffer.length),
+      uploadedBy: params.uploadedBy ?? null,
+    });
+  }
+
+  async deleteWorkerDocument(
+    docId: string,
+    actorRole: string
+  ): Promise<{ success: boolean; error?: string; workerId?: string }> {
+    if (actorRole !== 'SUPER_ADMIN') {
+      return { success: false, error: 'غير مصرح: حذف المستندات محصور حصراً بالسوبر أدمن.' };
+    }
+
+    const doc = await this.repository.findDocumentById(docId);
+    if (!doc) {
+      return { success: false, error: 'المستند غير موجود أو تم حذفه مسبقاً.' };
+    }
+
+    workerStorageService.deleteWorkerAttachmentLocally(doc.fileUri);
+    await this.repository.deleteDocument(docId);
+
+    return { success: true, workerId: doc.workerId };
   }
 }

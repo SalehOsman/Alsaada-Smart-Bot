@@ -12,12 +12,24 @@ export type UserRole =
   | 'SUPPLIER'
   | 'GUEST';
 
+export interface ImpersonatedEntityInfo {
+  type: 'WORKER' | 'SUPPLIER' | 'SITE';
+  id: string;
+  name: string;
+  code?: string | undefined;
+  siteId?: string | undefined;
+  siteName?: string | undefined;
+}
+
 export interface SettingsModuleContext extends Context {
   effectiveRole?: UserRole;
   isRealSuperAdmin?: boolean;
   isImpersonating?: boolean;
   assignedSiteId?: string | null;
   adminSites?: string[];
+  workerId?: string | undefined;
+  workerCode?: string | undefined;
+  impersonatedEntity?: ImpersonatedEntityInfo | undefined;
   dbUser?: {
     id: string;
     telegramId: bigint;
@@ -29,8 +41,11 @@ export interface SettingsModuleContext extends Context {
 
 export interface SettingsModuleOptions {
   prisma: PrismaClient;
-  redis?: Redis | null;
-  encryptionKey?: string;
-  onImpersonationChange?: (telegramId: bigint) => Promise<void>;
+  redis?: Redis | null | undefined;
+  encryptionKey?: string | undefined;
+  onImpersonationChange?: ((telegramId: bigint, targetRole?: string) => Promise<void>) | undefined;
+  screenFlow?: {
+    ensurePersistentKeyboard: (ctx: SettingsModuleContext, customText?: string, forceRefresh?: boolean) => Promise<void>;
+  } | undefined;
 }
 

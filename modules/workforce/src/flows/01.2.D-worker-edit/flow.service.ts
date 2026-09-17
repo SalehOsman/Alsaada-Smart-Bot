@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { encryptField, decryptField, createBlindIndex, normalizeKeyToHex, Prisma } from '@alsaada/database';
 import { normalizeDigits, parseFlexibleDate } from '@alsaada/regional-engine';
 import { detectGovernorateFromAddress, getGovernorateCodeByName, EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
@@ -253,7 +254,7 @@ export class WorkerEditService {
     const prevAdd = Number(worker.fixedAllowances || 0);
     const prevGross = prevBase + prevAdd;
     const newGross = params.newBase + params.newAdd;
-    const changeId = `SAL-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const changeId = `SAL-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
 
     await this.repository.createSalaryAdjustment({
       changeId,

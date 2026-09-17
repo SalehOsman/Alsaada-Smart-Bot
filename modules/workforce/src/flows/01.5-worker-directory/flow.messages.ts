@@ -1,5 +1,5 @@
 import { formatDateDMY } from '@alsaada/regional-engine';
-import type { WorkerProfile360 } from './flow.types.js';
+import type { WorkerProfile360, WorkerDocumentItem } from './flow.types.js';
 
 import { formatShiftSystem, cleanMd } from '../../shared/module.messages.js';
 
@@ -60,6 +60,7 @@ export const WorkerDirectoryMessages = {
       `━━━━━━━━━━━━━━━━━━━━━`,
       `🛡️ *الحالة التشغيلية والسلامة:*`,
       `• *الحالة بالمنظومة:* ${p.status === 'ACTIVE' ? '🟢 نشط وعلى رأس العمل' : '⚪ منتهي الخدمة / مؤرشف'}`,
+      p.commitmentBadge ? `• *⭐ مؤشر الالتزام:* ${p.commitmentBadge}` : '',
       p.drivingLicense ? `• *رخصة القيادة:* ${cleanMd(p.drivingLicense)}` : '',
       p.militaryStatus ? `• *الخدمة العسكرية:* ${cleanMd(p.militaryStatus)}` : '',
       p.maritalStatus ? `• *الحالة الاجتماعية:* ${cleanMd(p.maritalStatus)}` : '',
@@ -74,12 +75,13 @@ export const WorkerDirectoryMessages = {
     return lines.join('\n');
   },
 
-  formatMissingDataWhatsAppMessage(p: { name: string; nickname?: string | null | undefined; missingItems: string[] }): string {
+  formatMissingDataWhatsAppMessage(p: { name: string; nickname?: string | null | undefined; missingItems: string[]; companyName?: string | undefined }): string {
     const displayName = p.nickname || p.name;
+    const company = p.companyName?.trim() || 'المنظومة';
     const itemsList = p.missingItems.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
     return (
       `السلام عليكم زميلنا العزيز / ${displayName}،\n` +
-      `تحية طيبة من إدارة الموارد البشرية بشركة السعادة.\n\n` +
+      `تحية طيبة من إدارة الموارد البشرية بـ ${company}.\n\n` +
       `نرجو من سيادتكم التكرم بموافاتنا بالبيانات والمستندات التالية لاستكمال ملفكم الوظيفي بالمنظومة:\n` +
       `${itemsList}\n\n` +
       `شاكرين ومقدرين حسن تعاونكم معنا.`
@@ -104,5 +106,71 @@ export const WorkerDirectoryMessages = {
 
   notFound(): string {
     return `⚠️ لم يتم العثور على سجل العامل المطلوب. قد يكون قد تم حذفه أو نقله.`;
+  },
+
+  documentsListHeader(workerName: string, workerCode: string, docs: WorkerDocumentItem[]): string {
+    const header = [
+      `📁 *أرشيف مستندات ومرفقات العامل*`,
+      `━━━━━━━━━━━━━━━━━━━━━`,
+      `• *العامل:* ${cleanMd(workerName)} (\`#${workerCode}\`)`,
+      `• *إجمالي المستندات المرفقة:* *${docs.length} مستند*`,
+      `━━━━━━━━━━━━━━━━━━━━━`,
+    ];
+
+    if (docs.length === 0) {
+      header.push(`_لا توجد مستندات أو مرفقات مسجلة لهذا العامل حتى الآن._\n_يمكنك رفع مستند جديد بالضغط على الزر أدناه._`);
+    } else {
+      header.push(`اضغط على أي مستند أدناه لمعاينته وتنزيله مباشرة:`);
+    }
+
+    return header.join('\n');
+  },
+
+  documentCategoryPrompt(workerName: string, workerCode: string): string {
+    return (
+      `➕ *إضافة / رفع مستند جديد*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `• *العامل:* ${cleanMd(workerName)} (\`#${workerCode}\`)\n\n` +
+      `يرجى اختيار تصنيف المستند من القائمة أدناه، أو اختيار مستند مخصص لكتابة عنوان يدوي:`
+    );
+  },
+
+  customTitlePrompt(): string {
+    return (
+      `✏️ *كتابة عنوان المستند المخصص*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `يرجى كتابة عنوان أو مسمى المستند (مثال: إقرار استلام عهدة، بطاقة ضريبية، شهادة خبرة...):`
+    );
+  },
+
+  awaitFilePrompt(title: string): string {
+    return (
+      `📎 *إرسال ملف المستند*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `• *عنوان المستند:* ${cleanMd(title)}\n\n` +
+      `يرجى إرسال الملف الآن (صورة بصيغة JPG/PNG أو ملف مستند PDF):`
+    );
+  },
+
+  documentUploadSuccess(title: string): string {
+    return `✅ تم رفع وأرشفة المستند *${cleanMd(title)}* بنجاح في مجلد العامل!`;
+  },
+
+  documentDeleteSuccess(title: string): string {
+    return `🗑️ تم حذف المستند *${cleanMd(title)}* نهائياً من المنظومة وقرص التخزين.`;
+  },
+
+  documentCaption(title: string, workerName: string, workerCode: string, category: string, date: Date): string {
+    return (
+      `📄 *${cleanMd(title)}*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `• *العامل:* ${cleanMd(workerName)} (\`#${workerCode}\`)\n` +
+      `• *التصنيف:* ${cleanMd(category)}\n` +
+      `• *تاريخ الرفع:* ${formatDateDMY(date)}`
+    );
+  },
+
+  documentFileNotFound(): string {
+    return `⚠️ تعذر العثور على الملف على الخادم، قد يكون قد تم نقله أو حذفه.`;
   },
 };

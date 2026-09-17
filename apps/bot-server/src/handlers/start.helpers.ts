@@ -22,16 +22,24 @@ export function getRoleTitle(role: string): string {
 }
 
 export function buildWelcomeMessage(ctx: MyContext, companyName?: string): string {
-  const name = ctx.from?.first_name || 'أهلاً بك';
+  const isSimulatedEntity = Boolean(ctx.isImpersonating && ctx.impersonatedEntity?.name);
+  const name = isSimulatedEntity
+    ? (ctx.impersonatedEntity!.code
+        ? `${ctx.impersonatedEntity!.name} (${ctx.impersonatedEntity!.code})`
+        : ctx.impersonatedEntity!.name)
+    : (ctx.from?.first_name || 'أهلاً بك');
   const role = ctx.effectiveRole || 'GUEST';
   const roleTitle = getRoleTitle(role);
   const company = companyName || 'المنظومة المؤسسية';
 
   let simulationBanner = '';
   if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
+    const identitySubtitle = ctx.impersonatedEntity?.name
+      ? `\n🔹 *المستخدم المحاكى:* ${ctx.impersonatedEntity.name}${ctx.impersonatedEntity.code ? ` (\`${ctx.impersonatedEntity.code}\`)` : ''}`
+      : '';
     simulationBanner =
       `🎭 *[ وضع المحاكاة النشط — GHOST MODE ]*\n` +
-      `أنت تستعرض وتختبر النظام الآن بهوية: *${roleTitle}*\n` +
+      `أنت تستعرض وتختبر النظام الآن بهوية: *${roleTitle}*${identitySubtitle}\n` +
       `لإنهاء المحاكاة والعودة لصلاحيات المدير العام، اضغط زر الإنهاء بالأسفل.\n` +
       `────────────────────────\n\n`;
   }

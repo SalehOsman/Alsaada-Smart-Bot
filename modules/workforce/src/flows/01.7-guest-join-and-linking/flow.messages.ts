@@ -1,9 +1,10 @@
-export function formatSearchPrompt(): string {
+export function formatSearchPrompt(companyName?: string): string {
+  const company = companyName?.trim() || 'المنظومة';
   return (
     `📝 *تقديم طلب انضمام وربط حساب بالبوابة الرقمية*\n` +
     `────────────────────────────\n` +
     `أهلاً بك زميلنا العزيز 👋\n\n` +
-    `لربط حسابك بسجلك الوظيفي المعتمد في شركة السعادة، يرجى إرسال:\n` +
+    `لربط حسابك بسجلك الوظيفي المعتمد في ${company}، يرجى إرسال:\n` +
     `• *كودك الوظيفي* (مثال: \`OP-DRV-0015\` أو الكود القديم \`106\`)\n` +
     `• أو *الرقم القومي* المسجل في عقد العمل.\n\n` +
     `أرسل الكود أو الرقم القومي الآن:`
@@ -46,23 +47,32 @@ export function formatAdminApprovalCard(
   );
 }
 
-export function formatWhatsAppMessageText(workerName: string, deepLink: string): string {
+export function formatWhatsAppMessageText(workerName: string, deepLink: string, companyName?: string): string {
+  const company = companyName?.trim() || 'المنظومة';
   return (
     `مرحباً زميلنا العزيز/ ${workerName}،\n` +
-    `بناءً على طلب ربط حسابك ببوابة شركة السعادة الرقمية، نرسل إليك رابط التفعيل المشفر:\n` +
+    `بناءً على طلب ربط حسابك ببوابة ${company} الرقمية، نرسل إليك رابط التفعيل المشفر:\n` +
     `${deepLink}\n\n` +
     `⚠️ تنبيه أمني: هذا الرابط صالح لمدة 24 ساعة ومخصص حصرياً لهاتفك وحسابك، لا تشاركه مع أي شخص آخر.`
   );
 }
 
-export function formatLinkingSuccess(workerName: string, workerCode: string, jobTitle: string, siteName?: string): string {
+export function formatLinkingSuccess(
+  workerName: string,
+  workerCode: string,
+  jobTitle: string,
+  siteName?: string,
+  commitmentBadge?: string
+): string {
   const siteLine = siteName ? `📍 *الموقع:* ${siteName}\n` : '';
+  const scoreLine = commitmentBadge ? `⭐ *مؤشر الالتزام:* ${commitmentBadge}\n` : `⭐ *مؤشر الالتزام:* 🟢 *ملتزم* (100/100)\n`;
   return (
     `🎉 *تهانينا يا ${workerName}! تم تفعيل وربط حسابك بنجاح!*\n` +
     `────────────────────────────\n` +
     `🆔 *كودك الوظيفي:* \`#${workerCode}\`\n` +
     `💼 *الوظيفة:* ${jobTitle}\n` +
     siteLine +
+    scoreLine +
     `────────────────────────────\n` +
     `أصبحت الآن متصلاً رسمياً بالبوابة الذاتية للعاملين. يمكنك استعراض كشف حسابك وتقديم طلباتك مباشرة.`
   );

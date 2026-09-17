@@ -1,0 +1,92 @@
+{
+  "flowCode": "01.9",
+  "flowName": "مؤشر التزام وموثوقية العمال الشامل (NEW-80)",
+  "module": "workforce",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "GENERAL_ADMIN",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE",
+    "WORKER"
+  ],
+  "blockedRoles": [
+    "SUPPLIER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "menu:wcs:main",
+    "action:wcs:query",
+    "action:wcs:view:*",
+    "action:wcs:card:*",
+    "action:wcs:under_review",
+    "action:wcs:under_review:page:*",
+    "action:wcs:honor_roll",
+    "action:wcs:honor_roll:page:*",
+    "action:wcs:export_excel"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "الموارد البشرية",
+    "شؤون العاملين والتعيينات",
+    "مؤشر التزام وموثوقية العمال"
+  ],
+  "buttons": [
+    "menu:wcs:main",
+    "action:wcs:query",
+    "action:wcs:view",
+    "action:wcs:card",
+    "action:wcs:under_review",
+    "action:wcs:under_review:page",
+    "action:wcs:honor_roll",
+    "action:wcs:honor_roll:page",
+    "action:wcs:export_excel"
+  ],
+  "inputs": [
+    "select:worker_id",
+    "pagination:page_number",
+    "filter:site_id"
+  ],
+  "outputs": [
+    "menu:wcs_dashboard",
+    "card:worker_commitment_card",
+    "list:workers_under_review",
+    "list:workers_honor_roll",
+    "document:xlsx_commitment_report"
+  ],
+  "dataImpact": {
+    "database": [
+      "WorkerCommitmentScore",
+      "Worker",
+      "Leave",
+      "DisciplinaryAndBonus",
+      "PPEAsset",
+      "AdvanceRequest"
+    ],
+    "googleSheets": [],
+    "exports": [
+      "document:xlsx_commitment_report"
+    ],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "01.5",
+    "01.7"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 700,
+    "stepP95": 1200,
+    "commitP95": 2000
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false,
+  "classification": "NOVEL"
+}

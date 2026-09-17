@@ -1,6 +1,6 @@
 {
   "name": "@alsaada/database",
-  "version": "1.0.0",
+  "version": "2.0.0-alpha.1",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -8,13 +8,15 @@
   "scripts": {
     "build": "tsc && node -e \"const fs = require('fs'); fs.cpSync('src/generated', 'dist/generated', {recursive: true});\"",
     "test": "vitest run",
+    "db:format": "prisma format",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:studio": "prisma studio --port 5555 --browser none --hostname 0.0.0.0",
     "db:purge:test": "tsx src/scripts/purge-test-data.ts --confirm",
-    "db:seed:company": "tsx src/scripts/seed-company-profile.ts"
+    "db:seed:company": "tsx src/scripts/seed-company-profile.ts",
+    "db:remediate": "tsx src/scripts/remediate-job-matrix-and-cycles.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1"

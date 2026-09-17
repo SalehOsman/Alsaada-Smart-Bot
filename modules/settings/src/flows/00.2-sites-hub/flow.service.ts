@@ -46,11 +46,11 @@ export class SitesHubService {
   async createSite(data: {
     name: string;
     code: string;
-    governorate?: string;
+    governorate?: string | undefined;
     geofenceRadiusMeters: number;
-    projectId?: string;
-    latitude?: number;
-    longitude?: number;
+    projectId?: string | undefined;
+    latitude?: number | undefined;
+    longitude?: number | undefined;
   }): Promise<{ success: boolean; site?: SiteDto; error?: string }> {
     const nameVal = validateSiteName(data.name);
     if (!nameVal.isValid) return { success: false, error: nameVal.error ?? 'اسم الموقع غير صالح' };
@@ -85,6 +85,10 @@ export class SitesHubService {
       data.projectId = String(value);
     } else if (fieldKey === 'geofence') {
       data.geofenceRadiusMeters = Number(value);
+    } else if (fieldKey === 'location') {
+      const [latStr, lngStr] = String(value).split(',');
+      data.latitude = parseFloat(latStr || '0');
+      data.longitude = parseFloat(lngStr || '0');
     }
 
     const updated = await this.repository.updateSiteField(code, data);

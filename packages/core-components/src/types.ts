@@ -1,14 +1,14 @@
 export interface WorkerItem {
   id: string;
   code: string; // Current active structured code (e.g. OP-DRV-0042)
-  legacyCode?: string | null; // Historical & legacy code (e.g. "106")
-  aliases?: string[]; // Historical & legacy codes (e.g. ["101", "OP-HLP-0015"])
+  legacyCode?: string | null | undefined; // Historical & legacy code (e.g. "106")
+  aliases?: string[] | undefined; // Historical & legacy codes (e.g. ["101", "OP-HLP-0015"])
   name: string;
-  nickname?: string | null;
-  jobTitle?: string;
-  siteLocation?: string;
-  phone?: string;
-  dailyWage?: number;
+  nickname?: string | null | undefined;
+  jobTitle?: string | null | undefined;
+  siteLocation?: string | null | undefined;
+  phone?: string | null | undefined;
+  dailyWage?: number | null | undefined;
 }
 
 export interface PaginationState {

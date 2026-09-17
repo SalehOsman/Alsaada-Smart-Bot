@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, expect, test } from 'vitest';
@@ -8,12 +8,26 @@ import { verifyArchitecture } from '../verify-architecture.js';
 import { verifyDocsAudit } from '../verify-docs-audit.js';
 import { verifyDocsParity } from '../verify-docs-parity.js';
 import { verifyFlowContracts } from '../verify-flow-contracts.js';
-import { buildGovernanceLock, APPROVAL_PHRASE } from '../verify-governance-lock.js';
-import { verifyGovernanceTamper } from '../verify-governance-tamper.js';
+import { buildGovernanceLock, verifyGovernanceLock, APPROVAL_PHRASE, lockFlowEntry, type GovernanceLock } from '../verify-governance-lock.js';
+import {
+  cleanTargetPath,
+  extractTargetPathsFromEvidence,
+  hasExactApprovalEvidence,
+  isScaffoldAutoEvidence,
+  normalizePath,
+  pathMatchesTarget,
+  verifyGovernanceTamper,
+} from '../verify-governance-tamper.js';
 import { verifyMigrationRegistry } from '../verify-migration-registry.js';
+import { verifyTelegramContracts } from '../verify-telegram-contracts.js';
 import { verifyFlowFast } from '../verify-flow-fast.js';
 import { scaffoldFlow } from '../../scaffold/scaffold-flow.js';
 import { finishFlow } from '../../scaffold/finish-flow.js';
+import { unlockFeature } from '../../scaffold/unlock-feature.js';
+import { finishDashboard } from '../../scaffold/finish-dashboard.js';
+import { scaffoldDashboard } from '../../scaffold/scaffold-dashboard.js';
+import { scaffoldModule } from '../../scaffold/scaffold-module.js';
+import { finishModule } from '../../scaffold/finish-module.js';
 
 function fixtureRoot(name: string): string {
   const root = join(tmpdir(), `alsaada-governance-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -233,7 +247,7 @@ describe('governance verifiers', () => {
     expect(lock.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256))).toBe(true);
   });
 
-  test('governance tamper verifier rejects protected file changes without the exact approval phrase', () => {
+  test('governance tamper verifier rejects protected file changes when hash mismatches lock', () => {
     const root = fixtureRoot('tamper-fail');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -243,21 +257,245 @@ describe('governance verifiers', () => {
     const result = verifyGovernanceTamper(root);
 
     expect(result.ok).toBe(false);
-    expect(result.failures.some((failure) => failure.includes(APPROVAL_PHRASE))).toBe(true);
+    expect(result.failures.some((failure) => failure.includes('AGENTS.md'))).toBe(true);
   });
 
-  test('governance tamper verifier allows protected file changes only with the exact approval phrase', () => {
+  test('governance tamper verifier strictly rejects protected file changes even with approval evidence (evidence bypass permanently excised)', () => {
     const root = fixtureRoot('tamper-approval');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
     writeJson(join(root, 'governance.lock.json'), lock);
-    writeFileSync(join(root, 'AGENTS.md'), 'changed with approval\n', 'utf8');
+    writeFileSync(join(root, 'AGENTS.md'), 'changed with approval draft\n', 'utf8');
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `Target-Paths: AGENTS.md\n${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+
+    // Master Work Plan 63: Evidence bypass is permanently excised. governance.lock.json is exclusive SSOT.
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('governance tamper verifier rejects evidence without Target-Paths and rejects file changes', () => {
+    const root = fixtureRoot('tamper-no-target');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed without target paths\n', 'utf8');
     writeFileSync(join(root, 'docs', 'ai-execution-evidence', 'approval.md'), `${APPROVAL_PHRASE}\n`, 'utf8');
 
     const result = verifyGovernanceTamper(root);
 
-    expect(result.ok).toBe(true);
-    expect(result.warnings.some((warning) => warning.includes('explicit approval'))).toBe(true);
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('governance tamper verifier rejects wildcard Target-Paths: *', () => {
+    const root = fixtureRoot('tamper-wildcard-star');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed with wildcard\n', 'utf8');
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `Target-Paths: *\n${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+
+    expect(result.ok).toBe(false);
+  });
+
+  test('governance tamper verifier rejects auto-generated scaffold closure evidence for governance file changes', () => {
+    const root = fixtureRoot('tamper-scaffold-bypass');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed under cover of closure doc\n', 'utf8');
+    // Simulates an auto-generated flow closure doc that contains the phrase
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', '2026-09-16-flow-01.1-closure.md'),
+      `# توثيق الحوكمة: اكتمال واعتماد تدفق 01.1\n- عبارة الاعتماد الإلزامية: ${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('governance tamper verifier rejects evidence that targets a different file', () => {
+    const root = fixtureRoot('tamper-mismatched-target');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed\n', 'utf8');
+    // Targets GEMINI.md, but AGENTS.md was changed
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `Target-Paths: GEMINI.md\n${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('governance tamper verifier strictly rejects evidence bypass with markdown bold formatting (- **Target-Paths:** ...)', () => {
+    const root = fixtureRoot('tamper-bold-target');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed with bold target\n', 'utf8');
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `- **Target-Paths:** AGENTS.md\n${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('governance tamper verifier strictly rejects evidence bypass with markdown links in Target-Paths', () => {
+    const root = fixtureRoot('tamper-link-target');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed with link target\n', 'utf8');
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `- **Target-Paths:** [AGENTS.md](file:///path/to/AGENTS.md)\n${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('governance tamper verifier strictly rejects evidence bypass with Arabic labels', () => {
+    const root = fixtureRoot('tamper-arabic-label');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed with arabic label\n', 'utf8');
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `- **المسارات المرخصة:** AGENTS.md\n${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('governance tamper verifier strictly rejects evidence bypass with YAML frontmatter Target-Paths', () => {
+    const root = fixtureRoot('tamper-yaml-frontmatter');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+    writeFileSync(join(root, 'AGENTS.md'), 'changed with yaml frontmatter\n', 'utf8');
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `---
+target-paths:
+  - AGENTS.md
+---
+# Evidence
+${APPROVAL_PHRASE}
+`,
+      'utf8'
+    );
+
+    const result = verifyGovernanceTamper(root);
+    expect(result.ok).toBe(false);
+    expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
+  });
+
+  test('extractTargetPathsFromEvidence correctly parses and normalizes diverse target path formats', () => {
+    const content = `---
+target-paths:
+  - "AGENTS.md"
+  - \`GEMINI.md\`
+  - [package.json](package.json)
+---
+# Title
+- **Target-Paths:** [tools/governance/](file:///tools/governance), \`tools/scaffold/\`
+- **المسارات المرخصة:** .githooks/
+`;
+    const targets = extractTargetPathsFromEvidence(content);
+    expect(targets).toContain('AGENTS.md');
+    expect(targets).toContain('GEMINI.md');
+    expect(targets).toContain('package.json');
+    expect(targets).toContain('tools/governance');
+    expect(targets).toContain('tools/scaffold');
+    expect(targets).toContain('.githooks');
+  });
+
+  test('pathMatchesTarget properly matches paths and rejects wildcards and empty targets', () => {
+    expect(pathMatchesTarget('tools/governance/verify-governance-tamper.ts', 'tools/governance')).toBe(true);
+    expect(pathMatchesTarget('tools/governance/verify-governance-tamper.ts', 'tools/governance/')).toBe(true);
+    expect(pathMatchesTarget('tools/governance/verify-governance-tamper.ts', 'tools/governance/*')).toBe(true);
+    expect(pathMatchesTarget('tools/governance/verify-governance-tamper.ts', './tools/governance')).toBe(true);
+    expect(pathMatchesTarget('package.json', 'package.json')).toBe(true);
+    expect(pathMatchesTarget('package.json', './package.json')).toBe(true);
+
+    // Rejections
+    expect(pathMatchesTarget('package.json', '*')).toBe(false);
+    expect(pathMatchesTarget('package.json', '/*')).toBe(false);
+    expect(pathMatchesTarget('package.json', 'all')).toBe(false);
+    expect(pathMatchesTarget('package.json', '.')).toBe(false);
+    expect(pathMatchesTarget('package.json', '')).toBe(false);
+    expect(pathMatchesTarget('AGENTS.md', 'GEMINI.md')).toBe(false);
+  });
+
+  test('isScaffoldAutoEvidence accurately detects auto-generated evidence from all scaffold tools', () => {
+    expect(isScaffoldAutoEvidence('2026-09-16-flow-01.1-closure.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('2026-09-16-dashboard-workforce-closure.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('2026-09-16-module-advances-closure.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('2026-09-16-unlock-flow-01.1.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('2026-09-16-unlock-speed-engine.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('2026-09-16-unlock-docker.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('2026-09-16-docker-infrastructure-lock.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('2026-09-16-plan-42-speed-engine-lock.md', '# Header')).toBe(true);
+    expect(isScaffoldAutoEvidence('plan.md', 'ترخيص فك قفل الحوكمة: تدفق البوت')).toBe(true);
+    expect(isScaffoldAutoEvidence('plan.md', 'توثيق القفل التشفيري للبنية التحتية والدوكر')).toBe(true);
+
+    // Real plan evidence should NOT be treated as auto-evidence
+    expect(isScaffoldAutoEvidence('2026-09-16-plan-45-governance-anti-tamper-wildcard-remediation-and-docker-lock.md', '# Plan 45')).toBe(false);
+  });
+
+  test('hasExactApprovalEvidence returns false because evidence bypass is permanently excised', () => {
+    const root = fixtureRoot('tamper-has-exact-helper');
+    writeMandatoryDocs(root);
+    const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
+    writeJson(join(root, 'governance.lock.json'), lock);
+
+    // Markdown approval bypass is permanently excised per Master Work Plan 63
+    expect(hasExactApprovalEvidence(root)).toBe(false);
+    expect(hasExactApprovalEvidence(root, [])).toBe(false);
+
+    writeFileSync(join(root, 'AGENTS.md'), 'tampered agents\n', 'utf8');
+    expect(hasExactApprovalEvidence(root)).toBe(false);
+    expect(hasExactApprovalEvidence(root, ['AGENTS.md'])).toBe(false);
+
+    writeFileSync(
+      join(root, 'docs', 'ai-execution-evidence', 'approval.md'),
+      `- **Target-Paths:** AGENTS.md\n${APPROVAL_PHRASE}\n`,
+      'utf8'
+    );
+    expect(hasExactApprovalEvidence(root)).toBe(false);
+    expect(hasExactApprovalEvidence(root, ['AGENTS.md'])).toBe(false);
   });
 
   test('flow scaffolder creates a 100% compliant flow passing verifyArchitecture', () => {
@@ -284,6 +522,37 @@ describe('governance verifiers', () => {
     expect(fastResult.ok).toBe(true);
   });
 
+  test('flow scaffolder automatically registers in flows.manifest.ts when present', () => {
+    const root = fixtureRoot('scaffold-manifest-test');
+    writeMandatoryDocs(root);
+    const manifestDir = join(root, 'modules', 'advances', 'src');
+    mkdirSync(manifestDir, { recursive: true });
+    const mockManifestPath = join(manifestDir, 'flows.manifest.ts');
+    writeFileSync(
+      mockManifestPath,
+      `import type { FlowContractMetadata } from './flows.manifest.js';
+
+export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
+  {
+    flowCode: '02.0',
+    flowName: 'سلف سابقة',
+    module: 'advances',
+    status: 'Implemented',
+    allowedRoles: ['SUPER_ADMIN'],
+  },
+];\n`,
+      'utf8'
+    );
+
+    const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
+    expect(existsSync(flowPath)).toBe(true);
+
+    const updatedManifest = readFileSync(mockManifestPath, 'utf8');
+    expect(updatedManifest).toContain("import { createCashAdvancePlugin } from './flows/02.1-cash-advance/flow.plugin.js';");
+    expect(updatedManifest).toContain("flowCode: '02.1'");
+    expect(updatedManifest).toContain("flowName: 'تسجيل وصرف سلفة نقدية'");
+  });
+
   test('finishFlow updates migration registry and generates evidence file', () => {
     const root = fixtureRoot('finish-flow-test');
     writeMandatoryDocs(root);
@@ -305,8 +574,530 @@ describe('governance verifiers', () => {
     const regText = readFileSync(join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'), 'utf8');
     expect(regText).toContain('🟢 **مكتمل وموثق 100%**');
     expect(regText).toContain('modules/canteen/src/flows/04.1-worker-canteen');
+
+    // Check governance.lock.json contains locked flow
+    const lockRaw = readFileSync(join(root, 'governance.lock.json'), 'utf8');
+    const lock = JSON.parse(lockRaw) as GovernanceLock;
+    expect(lock.lockedFlows).toBeDefined();
+    expect(lock.lockedFlows!['04.1']).toBeDefined();
+    expect(lock.lockedFlows!['04.1']!.files.length).toBeGreaterThan(0);
+    expect(lock.lockedFlows!['04.1']!.files.every((f) => /^[a-f0-9]{64}$/.test(f.sha256))).toBe(true);
+
+    // Verify lock passes
+    const lockVerify = verifyGovernanceLock(root);
+    expect(lockVerify.ok).toBe(true);
+
+    // Modify a file in locked flow -> cryptographic verification MUST fail
+    const flowHandlerPath = join(root, 'modules', 'canteen', 'src', 'flows', '04.1-worker-canteen', 'flow.handler.ts');
+    writeFileSync(flowHandlerPath, '// TAMPERED\n', 'utf8');
+    const tamperedVerify = verifyGovernanceLock(root);
+    expect(tamperedVerify.ok).toBe(false);
+    expect(tamperedVerify.failures.some((f) => f.includes('04.1') && f.includes('Modified'))).toBe(true);
+
+    // verifyGovernanceTamper MUST also fail and CANNOT be bypassed by an evidence file
+    const tamperedTamperVerify = verifyGovernanceTamper(root);
+    expect(tamperedTamperVerify.ok).toBe(false);
+    expect(tamperedTamperVerify.failures.some((f) => f.includes('04.1'))).toBe(true);
+
+    // Revert modified file
+    writeFileSync(flowHandlerPath, 'export {};\n', 'utf8');
+
+    // Inject an unrecorded file into locked flow -> MUST fail detection
+    const evilFile = join(root, 'modules', 'canteen', 'src', 'flows', '04.1-worker-canteen', 'backdoor.ts');
+    writeFileSync(evilFile, 'export const evil = true;\n', 'utf8');
+    const injectionLockVerify = verifyGovernanceLock(root);
+    expect(injectionLockVerify.ok).toBe(false);
+    expect(injectionLockVerify.failures.some((f) => f.includes('unrecorded file'))).toBe(true);
+
+    const injectionTamperVerify = verifyGovernanceTamper(root);
+    expect(injectionTamperVerify.ok).toBe(false);
+    expect(injectionTamperVerify.failures.some((f) => f.includes('unrecorded file'))).toBe(true);
+
+    // Remove injected file
+    unlinkSync(evilFile);
+
+    // Unlock flow with verbatim approval phrase
+    const unlockRes = unlockFeature({
+      type: 'flow',
+      targetKey: '04.1',
+      phrase: 'نعم موافق على التعديل',
+      reason: 'Updating flow handler for architectural remediation',
+      root,
+    });
+    expect(unlockRes.ok).toBe(true);
+    expect(unlockRes.evidenceFile).toBeDefined();
+
+    // Verify lock passes again after unlock
+    const postUnlockVerify = verifyGovernanceLock(root);
+    expect(postUnlockVerify.ok).toBe(true);
+  });
+
+  test('dashboard feature scaffolding and finishDashboard cryptographic sealing', () => {
+    const root = fixtureRoot('dashboard-lock-test');
+    writeMandatoryDocs(root);
+    mkdirSync(join(root, 'apps', 'admin-dashboard', 'src', 'app', 'admin'), { recursive: true });
+
+    // Seed mock dashboard.manifest.ts
+    const mockManifestPath = join(root, 'apps', 'admin-dashboard', 'src', 'dashboard.manifest.ts');
+    writeFileSync(
+      mockManifestPath,
+      `export const DASHBOARD_SECTIONS_MANIFEST = [
+  {
+    title: '👥 الموارد البشرية والعمالة',
+    href: '/admin/workforce',
+    iconName: 'Users',
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
+    features: [
+      {
+        id: 'workforce/new',
+        module: 'workforce',
+        title: 'تعيين عامل جديد',
+        href: '/admin/workforce/new',
+        allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
+        status: 'Implemented',
+      },
+    ],
+  },
+];\n`,
+      'utf8'
+    );
+
+    // 1. Scaffold dashboard feature
+    const createdDir = scaffoldDashboard({
+      moduleName: 'workforce',
+      featureSlug: 'worker-history',
+      titleArabic: 'سجل حركات العامل',
+      root,
+    });
+    expect(existsSync(createdDir)).toBe(true);
+
+    // Verify dashboard.manifest.ts was updated cleanly inside the workforce section's features array
+    const updatedManifest = readFileSync(mockManifestPath, 'utf8');
+    expect(updatedManifest).toContain("id: 'workforce/worker-history'");
+    expect(updatedManifest).toContain("module: 'workforce'");
+
+    // 2. Finish dashboard feature
+    const finishRes = finishDashboard('workforce/worker-history', { commitRef: 'P38-Dash-Test', root });
+    expect(finishRes.ok).toBe(true);
+    expect(finishRes.evidenceFile).toBeDefined();
+    expect(existsSync(join(root, finishRes.evidenceFile!))).toBe(true);
+
+    // 3. Verify sealed in governance.lock.json
+    const lockRaw = readFileSync(join(root, 'governance.lock.json'), 'utf8');
+    const lock = JSON.parse(lockRaw) as GovernanceLock;
+    expect(lock.lockedDashboardFeatures).toBeDefined();
+    expect(lock.lockedDashboardFeatures!['workforce/worker-history']).toBeDefined();
+
+    // 4. Verify tampering detection on dashboard feature (both lock and tamper verifier)
+    const pagePath = join(createdDir, 'page.tsx');
+    writeFileSync(pagePath, '// UNAUTHORIZED DASHBOARD EDIT\n', 'utf8');
+    const lockCheck = verifyGovernanceLock(root);
+    expect(lockCheck.ok).toBe(false);
+    expect(lockCheck.failures.some((f) => f.includes('workforce/worker-history'))).toBe(true);
+
+    const tamperCheck = verifyGovernanceTamper(root);
+    expect(tamperCheck.ok).toBe(false);
+    expect(tamperCheck.failures.some((f) => f.includes('workforce/worker-history'))).toBe(true);
+
+    // 5. Unlock dashboard feature with approval phrase
+    const unlockRes = unlockFeature({
+      type: 'dashboard',
+      targetKey: 'workforce/worker-history',
+      phrase: 'موافق على الفتح',
+      reason: 'Updating dashboard chart metrics layout',
+      root,
+    });
+    expect(unlockRes.ok).toBe(true);
+    const postUnlock = verifyGovernanceLock(root);
+    expect(postUnlock.ok).toBe(true);
+  });
+
+  test('seals flow 01.1 cryptographic hash accurately in repo governance.lock.json', () => {
+    const root = process.cwd();
+    const flowDir = join(root, 'modules', 'workforce', 'src', 'flows', '01.1-worker-registration');
+    const lockPath = join(root, 'governance.lock.json');
+    if (existsSync(flowDir) && existsSync(lockPath)) {
+      const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+      if (lock.lockedFlows?.['01.1']) {
+        const updated = lockFlowEntry(root, '01.1', flowDir);
+        expect(updated.lockedFlows?.['01.1']?.files.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test('architecture verifier rejects local shadow FlowPlugin interface in flows.manifest.ts', () => {
+    const root = fixtureRoot('shadow-flow-plugin');
+    writeMandatoryDocs(root);
+    const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
+    expect(existsSync(flowPath)).toBe(true);
+
+    const manifestPath = join(root, 'modules', 'advances', 'src', 'flows.manifest.ts');
+    writeFileSync(
+      manifestPath,
+      `export interface FlowPlugin { flowKey: string; }\nexport const ADVANCES_FLOW_METADATA = [{ flowCode: '02.1' }];\n`,
+      'utf8'
+    );
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(false);
+    expect(archResult.failures.some((f) => f.includes('local shadow FlowPlugin interface'))).toBe(true);
+  });
+
+  test('architecture verifier rejects local shadow DashboardFeature interface in dashboard.manifest.ts', () => {
+    const root = fixtureRoot('shadow-dash-feature');
+    writeMandatoryDocs(root);
+    const dashManifestPath = join(root, 'apps', 'admin-dashboard', 'src', 'dashboard.manifest.ts');
+    mkdirSync(join(root, 'apps', 'admin-dashboard', 'src'), { recursive: true });
+    writeFileSync(
+      dashManifestPath,
+      `export interface DashboardFeature { id: string; }\nexport const DASHBOARD_SECTIONS_MANIFEST = [];\n`,
+      'utf8'
+    );
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(false);
+    expect(archResult.failures.some((f) => f.includes('local shadow DashboardFeature interface'))).toBe(true);
+  });
+
+  test('architecture verifier rejects local shadow contracts in flow.plugin.ts', () => {
+    const root = fixtureRoot('shadow-flow-plugin-file');
+    writeMandatoryDocs(root);
+    const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
+    const pluginPath = join(flowPath, 'flow.plugin.ts');
+    writeFileSync(
+      pluginPath,
+      `export interface FlowContractMetadata { code: string; }\nexport const dummy = true;\n`,
+      'utf8'
+    );
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(false);
+    expect(archResult.failures.some((f) => f.includes('local shadow flow contract interface'))).toBe(true);
+  });
+
+  test('architecture verifier rejects local shadow DashboardSubSection in dashboard.manifest.ts', () => {
+    const root = fixtureRoot('shadow-dash-subsection');
+    writeMandatoryDocs(root);
+    const dashManifestPath = join(root, 'apps', 'admin-dashboard', 'src', 'dashboard.manifest.ts');
+    mkdirSync(join(root, 'apps', 'admin-dashboard', 'src'), { recursive: true });
+    writeFileSync(
+      dashManifestPath,
+      `import { DashboardFeature } from '@alsaada/core-components';\nexport interface DashboardSubSection { title: string; }\nexport const DASHBOARD_SECTIONS_MANIFEST = [];\n`,
+      'utf8'
+    );
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(false);
+    expect(archResult.failures.some((f) => f.includes('local shadow DashboardSubSection interface'))).toBe(true);
+  });
+
+  test('architecture verifier rejects direct prisma calls in bot-server handlers', () => {
+    const root = fixtureRoot('direct-prisma-handler');
+    writeMandatoryDocs(root);
+    const handlersDir = join(root, 'apps', 'bot-server', 'src', 'handlers');
+    mkdirSync(handlersDir, { recursive: true });
+    writeFileSync(
+      join(handlersDir, 'bad.handler.ts'),
+      `import { prisma } from '../db.js';\nexport async function handle() { await prisma.worker.findMany(); }\n`,
+      'utf8'
+    );
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(false);
+    expect(archResult.failures.some((f) => f.includes('direct database calls via prisma.*'))).toBe(true);
+  });
+
+  test('governance lock builder protects tools/scaffold and .githooks directories', () => {
+    const root = fixtureRoot('meta-tooling-lock');
+    writeMandatoryDocs(root);
+    mkdirSync(join(root, 'tools', 'scaffold'), { recursive: true });
+    mkdirSync(join(root, '.githooks'), { recursive: true });
+    writeFileSync(join(root, 'tools', 'scaffold', 'scaffold-flow.ts'), 'export const scaffold = true;\n', 'utf8');
+    writeFileSync(join(root, '.githooks', 'pre-commit'), '#!/bin/sh\nexit 0\n', 'utf8');
+
+    const lock = buildGovernanceLock(root, '2026-09-16T00:00:00.000Z');
+    expect(lock.protectedPaths.directories).toContain('tools/scaffold');
+    expect(lock.protectedPaths.directories).toContain('.githooks');
+    expect(lock.files.some((f) => f.path === 'tools/scaffold/scaffold-flow.ts')).toBe(true);
+    expect(lock.files.some((f) => f.path === '.githooks/pre-commit')).toBe(true);
+  });
+
+  test('architecture verifier rejects local shadow AppModuleDefinition in module.register.ts', () => {
+    const root = fixtureRoot('shadow-app-module-def');
+    writeMandatoryDocs(root);
+    const modDir = join(root, 'modules', 'canteen');
+    mkdirSync(join(modDir, 'src'), { recursive: true });
+    writeFileSync(join(modDir, 'package.json'), JSON.stringify({ name: '@alsaada/canteen' }), 'utf8');
+    writeFileSync(
+      join(modDir, 'src', 'module.register.ts'),
+      `export interface AppModuleDefinition { name: string; }\nexport const canteen = true;\n`,
+      'utf8'
+    );
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(false);
+    expect(archResult.failures.some((f) => f.includes('local shadow AppModuleDefinition interface'))).toBe(true);
+  });
+
+  test('architecture verifier rejects module missing AppModuleDefinition import from @alsaada/core-components', () => {
+    const root = fixtureRoot('missing-app-module-import');
+    writeMandatoryDocs(root);
+    const modDir = join(root, 'modules', 'canteen');
+    mkdirSync(join(modDir, 'src'), { recursive: true });
+    writeFileSync(join(modDir, 'package.json'), JSON.stringify({ name: '@alsaada/canteen' }), 'utf8');
+    writeFileSync(
+      join(modDir, 'src', 'module.register.ts'),
+      `export const canteenModule = { name: 'canteen' };\n`,
+      'utf8'
+    );
+
+    const archResult = verifyArchitecture(root);
+    expect(archResult.ok).toBe(false);
+    expect(archResult.failures.some((f) => f.includes('must import and implement AppModuleDefinition'))).toBe(true);
+  });
+
+  test('scaffoldModule, finishModule, and unlockFeature full module lifecycle suite', () => {
+    const root = fixtureRoot('module-lifecycle');
+    writeMandatoryDocs(root);
+
+    // Mock apps/bot-server structure for auto-wiring
+    const botServerDir = join(root, 'apps', 'bot-server', 'src');
+    mkdirSync(botServerDir, { recursive: true });
+    writeFileSync(
+      join(root, 'apps', 'bot-server', 'package.json'),
+      JSON.stringify({ dependencies: {} }, null, 2),
+      'utf8'
+    );
+    writeFileSync(
+      join(botServerDir, 'modules.registry.ts'),
+      `import type { AppModuleDefinition } from '@alsaada/core-components';\n\nexport function buildRegisteredModules(runtime: any) {\n  const modules: AppModuleDefinition<any>[] = [\n  ];\n  return { modules };\n}\n`,
+      'utf8'
+    );
+
+    // 1. Scaffold module
+    const scaffoldRes = scaffoldModule({
+      name: 'canteen',
+      titleArabic: 'إدارة الكانتين',
+      root,
+    });
+    expect(scaffoldRes.ok).toBe(true);
+    expect(existsSync(scaffoldRes.moduleDir)).toBe(true);
+
+    // Verify all 10 files exist
+    expect(existsSync(join(scaffoldRes.moduleDir, 'package.json'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'tsconfig.json'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'src', 'shared', 'module.types.ts'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'src', 'shared', 'module.constants.ts'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'src', 'module.permissions.ts'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'src', 'flows.manifest.ts'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'src', 'module.routes.ts'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'src', 'module.register.ts'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'src', 'index.ts'))).toBe(true);
+    expect(existsSync(join(scaffoldRes.moduleDir, 'tests', 'canteen-module.spec.ts'))).toBe(true);
+
+    // Verify auto-wiring in bot-server
+    const botPkg = JSON.parse(readFileSync(join(root, 'apps', 'bot-server', 'package.json'), 'utf8'));
+    expect(botPkg.dependencies['@alsaada/canteen']).toBe('workspace:*');
+
+    const regContent = readFileSync(join(botServerDir, 'modules.registry.ts'), 'utf8');
+    expect(regContent).toContain("import { createCanteenAppModule } from '@alsaada/canteen';");
+    expect(regContent).toContain('createCanteenAppModule');
+
+    // 2. Finish module with cryptographic lock
+    const finishRes = finishModule('canteen', {
+      commitRef: 'P43-Test',
+      root,
+      skipTests: true,
+      lock: true,
+    });
+    expect(finishRes.ok).toBe(true);
+    expect(finishRes.isLocked).toBe(true);
+    expect(existsSync(join(root, finishRes.evidenceFile!))).toBe(true);
+
+    // Verify status updated from draft to active
+    const regFile = readFileSync(join(scaffoldRes.moduleDir, 'src', 'module.register.ts'), 'utf8');
+    expect(regFile).toContain("status: 'active'");
+
+    // Verify recorded in docs/19
+    const doc19 = readFileSync(join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'), 'utf8');
+    expect(doc19).toContain('mod:canteen');
+    expect(doc19).toContain('مكتمل وموثق 100%');
+
+    // Verify locked in governance.lock.json
+    const lockRaw = readFileSync(join(root, 'governance.lock.json'), 'utf8');
+    const lock = JSON.parse(lockRaw) as GovernanceLock;
+    expect(lock.lockedModules).toBeDefined();
+    expect(lock.lockedModules!['canteen']).toBeDefined();
+
+    // 3. Tampering check on module
+    writeFileSync(join(scaffoldRes.moduleDir, 'src', 'index.ts'), '// TAMPERED CONTENT\n', 'utf8');
+    const lockCheck = verifyGovernanceLock(root);
+    expect(lockCheck.ok).toBe(false);
+    expect(lockCheck.failures.some((f) => f.includes('canteen'))).toBe(true);
+
+    const tamperCheck = verifyGovernanceTamper(root);
+    expect(tamperCheck.ok).toBe(false);
+    expect(tamperCheck.failures.some((f) => f.includes('canteen'))).toBe(true);
+
+    // 4. Unlock module with approval phrase
+    const unlockRes = unlockFeature({
+      type: 'module',
+      targetKey: 'canteen',
+      phrase: 'موافق على الفتح',
+      reason: 'Adding cigarette pricing configuration matrix',
+      root,
+    });
+    expect(unlockRes.ok).toBe(true);
+    const postUnlock = verifyGovernanceLock(root);
+    expect(postUnlock.ok).toBe(true);
+  });
+
+  describe('verifyTelegramContracts AST Guard', () => {
+    test('passes on valid single and multi-line telegram buttons', () => {
+      const root = fixtureRoot('tg-valid');
+      const moduleDir = join(root, 'modules', 'sample', 'src');
+      mkdirSync(moduleDir, { recursive: true });
+      writeFileSync(
+        join(moduleDir, 'sample.keyboard.ts'),
+        `
+        import { InlineKeyboard } from 'grammy';
+        export function sampleKeyboard() {
+          const kb = new InlineKeyboard();
+          kb.text('حفظ البيانات', 'action:save_record');
+          kb.text(
+            'زر ممتد على عدة أسطر',
+            'action:multiline_ok'
+          );
+          kb.url('الموقع الرسمي', 'https://alsaada.com/dashboard');
+          return kb;
+        }
+        `,
+        'utf8'
+      );
+
+      const res = verifyTelegramContracts(root);
+      expect(res.ok).toBe(true);
+      expect(res.checked).toBeGreaterThanOrEqual(3);
+    });
+
+    test('catches multi-line callback data exceeding 64 bytes', () => {
+      const root = fixtureRoot('tg-multiline-overflow');
+      const moduleDir = join(root, 'modules', 'sample', 'src');
+      mkdirSync(moduleDir, { recursive: true });
+      const longCallback = 'action:site:very_long_nested_path_that_certainly_exceeds_the_sixty_four_byte_limit_established_by_telegram';
+      writeFileSync(
+        join(moduleDir, 'sample.keyboard.ts'),
+        `
+        import { InlineKeyboard } from 'grammy';
+        export function sampleKeyboard() {
+          const kb = new InlineKeyboard();
+          kb.text(
+            'زر متعدد الأسطر متجاوز',
+            '${longCallback}'
+          );
+          return kb;
+        }
+        `,
+        'utf8'
+      );
+
+      const res = verifyTelegramContracts(root);
+      expect(res.ok).toBe(false);
+      expect(res.failures.some((f) => f.includes('CALLBACK_OVERFLOW'))).toBe(true);
+    });
+
+    test('strictly prohibits free-form name or text injection in callback_data', () => {
+      const root = fixtureRoot('tg-name-injection');
+      const moduleDir = join(root, 'modules', 'sample', 'src');
+      mkdirSync(moduleDir, { recursive: true });
+      writeFileSync(
+        join(moduleDir, 'sample.keyboard.ts'),
+        `
+        import { InlineKeyboard } from 'grammy';
+        export function sampleKeyboard(worker: { id: string; fullName: string }) {
+          const kb = new InlineKeyboard();
+          // Prohibited: injecting worker.fullName in callback_data
+          kb.text('اختيار العامل', \`action:worker:\${worker.fullName}\`);
+          return kb;
+        }
+        `,
+        'utf8'
+      );
+
+      const res = verifyTelegramContracts(root);
+      expect(res.ok).toBe(false);
+      expect(res.failures.some((f) => f.includes('DYNAMIC_STRING_INJECTION'))).toBe(true);
+    });
+
+    test('rejects tel: protocol in InlineKeyboardButton.url', () => {
+      const root = fixtureRoot('tg-tel-url');
+      const moduleDir = join(root, 'modules', 'sample', 'src');
+      mkdirSync(moduleDir, { recursive: true });
+      writeFileSync(
+        join(moduleDir, 'sample.keyboard.ts'),
+        `
+        import { InlineKeyboard } from 'grammy';
+        export function sampleKeyboard() {
+          const kb = new InlineKeyboard();
+          kb.url('اتصال هاتفي', 'tel:+201012345678');
+          return kb;
+        }
+        `,
+        'utf8'
+      );
+
+      const res = verifyTelegramContracts(root);
+      expect(res.ok).toBe(false);
+      expect(res.failures.some((f) => f.includes('INVALID_URL_PROTOCOL'))).toBe(true);
+    });
+
+    test('strictly prohibits free-form name or text injection via string concatenation (+)', () => {
+      const root = fixtureRoot('tg-name-concat');
+      const moduleDir = join(root, 'modules', 'sample', 'src');
+      mkdirSync(moduleDir, { recursive: true });
+      writeFileSync(
+        join(moduleDir, 'sample.keyboard.ts'),
+        `
+        import { InlineKeyboard } from 'grammy';
+        export function sampleKeyboard(worker: { id: string; fullName: string }) {
+          const kb = new InlineKeyboard();
+          // Prohibited: concatenating worker.fullName in callback_data
+          kb.text('اختيار العامل', 'action:worker:' + worker.fullName);
+          return kb;
+        }
+        `,
+        'utf8'
+      );
+
+      const res = verifyTelegramContracts(root);
+      expect(res.ok).toBe(false);
+      expect(res.failures.some((f) => f.includes('DYNAMIC_STRING_INJECTION'))).toBe(true);
+    });
+
+    test('strictly prohibits multi-line button text labels', () => {
+      const root = fixtureRoot('tg-multiline-text');
+      const moduleDir = join(root, 'modules', 'sample', 'src');
+      mkdirSync(moduleDir, { recursive: true });
+      writeFileSync(
+        join(moduleDir, 'sample.keyboard.ts'),
+        `
+        import { InlineKeyboard } from 'grammy';
+        export function sampleKeyboard() {
+          const kb = new InlineKeyboard();
+          kb.text('سطر أول\\nسطر ثاني', 'action:test');
+          return kb;
+        }
+        `,
+        'utf8'
+      );
+
+      const res = verifyTelegramContracts(root);
+      expect(res.ok).toBe(false);
+      expect(res.failures.some((f) => f.includes('MULTILINE_BUTTON_TEXT'))).toBe(true);
+    });
   });
 });
+
 
 
 

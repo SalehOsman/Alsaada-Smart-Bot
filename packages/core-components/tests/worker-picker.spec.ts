@@ -179,6 +179,33 @@ describe('UniversalWorkerPicker', () => {
       expect(hasBack).toBe(true);
       expect(hasHome).toBe(true);
     });
+
+    it('supports custom formatLabel option for domain-specific badge and score decoration', () => {
+      interface CustomWorker extends WorkerItem {
+        badge: string;
+        score: number;
+      }
+
+      const worker: CustomWorker = {
+        id: 'cw-1',
+        code: 'DRV-10',
+        name: 'صالح رجب',
+        nickname: 'صالح رجب',
+        jobTitle: 'سائق لودر',
+        badge: '🟢',
+        score: 95,
+      };
+
+      const { items, pagination } = paginateItems([worker], 1, 1);
+      const kb = buildWorkerPickerKeyboard<CustomWorker>({
+        workers: items,
+        pagination,
+        formatLabel: (w) => `${w.badge} 🚜 ${w.nickname} - ${w.score} نقطة`,
+      });
+
+      expect(kb.inline_keyboard[0]![0]!.text).toBe('🟢 🚜 صالح رجب - 95 نقطة');
+    });
   });
 });
+
 

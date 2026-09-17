@@ -30,7 +30,8 @@ describe('Flow 00.9 RBAC Tests — صمامات الطوارئ والذاكرة 
     } as unknown as SettingsModuleContext;
 
     await handler.renderEmergencyCacheHub(ctxWorker);
-    expect(answerCallbackMock.mock.calls.length + replyMock.mock.calls.length).toBeGreaterThanOrEqual(0);
+    expect(replyMock).not.toHaveBeenCalled();
+    expect(answerCallbackMock).not.toHaveBeenCalled();
   });
 
   it('should allow access for verified Super Admin', async () => {
@@ -43,6 +44,9 @@ describe('Flow 00.9 RBAC Tests — صمامات الطوارئ والذاكرة 
     } as unknown as SettingsModuleContext;
 
     await handler.renderEmergencyCacheHub(ctxSuper);
-    expect(replyMock).toHaveBeenCalled();
+    expect(replyMock).toHaveBeenCalledWith(
+      expect.stringContaining('صمامات التحكم الإداري وحالات الطوارئ'),
+      expect.objectContaining({})
+    );
   });
 });

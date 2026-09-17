@@ -78,112 +78,94 @@ describe('Dashboard Auth Contract SSOT (@alsaada/rbac)', () => {
   });
 
   describe('validateDashboardAuthOrigins (@alsaada/rbac)', () => {
-    it('successfully validates standard local and tunnel origins', async () => {
+    it('returns a typed success result for valid explicit origins', async () => {
       const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
       const result = validateDashboardAuthOrigins({
         localUrl: 'http://localtest.me:3002',
         tunnelUrl: 'https://panel.alsaada.org',
       });
       expect(result).toEqual({
-        localOrigin: 'http://localtest.me:3002',
-        tunnelOrigin: 'https://panel.alsaada.org',
+        ok: true,
+        origins: {
+          localOrigin: 'http://localtest.me:3002',
+          tunnelOrigin: 'https://panel.alsaada.org',
+        },
       });
     });
 
-    it('successfully accepts trailing slashes and extracts pure canonical origin', async () => {
+    it('returns canonical origins without throwing or exposing raw input', async () => {
       const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
       const result = validateDashboardAuthOrigins({
         localUrl: 'http://localtest.me:3002/',
         tunnelUrl: 'https://tunnel.example.com/',
       });
       expect(result).toEqual({
-        localOrigin: 'http://localtest.me:3002',
-        tunnelOrigin: 'https://tunnel.example.com',
+        ok: true,
+        origins: {
+          localOrigin: 'http://localtest.me:3002',
+          tunnelOrigin: 'https://tunnel.example.com',
+        },
       });
     });
 
-    it('rejects localhost and 127.0.0.1.nip.io for local origin', async () => {
-      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://localhost:3002',
-          tunnelUrl: 'https://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
-
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://127.0.0.1.nip.io:3002',
-          tunnelUrl: 'https://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
+    it('returns LOCAL_URL_INVALID without throwing for forbidden local origins', async () => {
+      const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
+      expect(validateDashboardAuthOrigins({
+        localUrl: 'http://localhost:3002',
+        tunnelUrl: 'https://tunnel.example.com',
+      })).toEqual({ ok: false, code: 'LOCAL_URL_INVALID' });
+      expect(validateDashboardAuthOrigins({
+        localUrl: 'http://127.0.0.1.nip.io:3002',
+        tunnelUrl: 'https://tunnel.example.com',
+      })).toEqual({ ok: false, code: 'LOCAL_URL_INVALID' });
     });
 
-    it('rejects missing or non-numeric port for local origin', async () => {
-      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://localtest.me',
-          tunnelUrl: 'https://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
-
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://localtest.me:99999',
-          tunnelUrl: 'https://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
+    it('returns typed missing codes with zero any casts', async () => {
+      const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
+      expect(validateDashboardAuthOrigins({})).toEqual({ ok: false, code: 'LOCAL_URL_MISSING' });
+      expect(validateDashboardAuthOrigins({ localUrl: 'http://localtest.me:3002' })).toEqual({
+        ok: false,
+        code: 'TUNNEL_URL_MISSING',
+      });
     });
 
-    it('rejects local origin with subpath, query, hash or credentials', async () => {
-      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://localtest.me:3002/admin',
+    it('returns LOCAL_URL_INVALID for invalid port, path, query or credentials', async () => {
+      const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
+      for (const localUrl of [
+        'http://localtest.me',
+        'http://localtest.me:99999',
+        'http://localtest.me:3002/admin',
+        'http://localtest.me:3002?foo=bar',
+        'http://user:pass@localtest.me:3002',
+      ]) {
+        expect(validateDashboardAuthOrigins({
+          localUrl,
           tunnelUrl: 'https://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
-
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://localtest.me:3002?foo=bar',
-          tunnelUrl: 'https://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
-
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://user:pass@localtest.me:3002',
-          tunnelUrl: 'https://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
+        })).toEqual({ ok: false, code: 'LOCAL_URL_INVALID' });
+      }
     });
 
-    it('rejects unencrypted tunnel origin or invalid tunnel host', async () => {
-      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
-      expect(() =>
-        validateDashboardAuthOrigins({
+    it('returns TUNNEL_URL_INVALID for insecure or malformed tunnel origins', async () => {
+      const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
+      for (const tunnelUrl of [
+        'http://tunnel.example.com',
+        'not-a-url',
+        'https://user:pass@tunnel.example.com',
+        'https://tunnel.example.com/admin',
+      ]) {
+        expect(validateDashboardAuthOrigins({
           localUrl: 'http://localtest.me:3002',
-          tunnelUrl: 'http://tunnel.example.com',
-        }),
-      ).toThrow(DashboardAuthConfigError);
+          tunnelUrl,
+        })).toEqual({ ok: false, code: 'TUNNEL_URL_INVALID' });
+      }
     });
 
-    it('rejects collision between local and tunnel origin', async () => {
-      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
-      expect(() =>
-        validateDashboardAuthOrigins({
-          localUrl: 'http://localtest.me:3002',
-          tunnelUrl: 'http://localtest.me:3002',
-        }),
-      ).toThrow(DashboardAuthConfigError);
-    });
-
-    it('rejects missing or empty inputs', async () => {
-      const { validateDashboardAuthOrigins, DashboardAuthConfigError } = await import('../src/dashboard-auth.js');
-      expect(() => validateDashboardAuthOrigins({} as any)).toThrow(DashboardAuthConfigError);
-      expect(() => validateDashboardAuthOrigins({ localUrl: '' } as any)).toThrow(DashboardAuthConfigError);
+    it('returns ORIGINS_NOT_DISTINCT when both canonical origins are identical', async () => {
+      const { validateDashboardAuthOrigins } = await import('../src/dashboard-auth.js');
+      expect(validateDashboardAuthOrigins({
+        localUrl: 'http://localtest.me:3002',
+        tunnelUrl: 'http://localtest.me:3002',
+      })).toEqual({ ok: false, code: 'ORIGINS_NOT_DISTINCT' });
     });
   });
 
@@ -204,93 +186,8 @@ describe('Dashboard Auth Contract SSOT (@alsaada/rbac)', () => {
     });
   });
 
-  describe('resolveEffectiveRequestOrigin (@alsaada/rbac)', () => {
-    const trustedOrigins = {
-      localOrigin: 'http://localtest.me:3002',
-      tunnelOrigin: 'https://enquirer-hardening-penny.ngrok-free.dev',
-    };
-
-    it('returns nextUrlOrigin directly if it matches localOrigin', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const origin = resolveEffectiveRequestOrigin('http://localtest.me:3002', undefined, trustedOrigins);
-      expect(origin).toBe('http://localtest.me:3002');
-    });
-
-    it('returns nextUrlOrigin directly if it matches tunnelOrigin', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const origin = resolveEffectiveRequestOrigin('https://enquirer-hardening-penny.ngrok-free.dev', undefined, trustedOrigins);
-      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
-    });
-
-    it('resolves tunnelOrigin from reverse-proxy headers when nextUrlOrigin is internal localhost:3002', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const headers = new Map<string, string>([
-        ['x-forwarded-proto', 'https'],
-        ['x-forwarded-host', 'enquirer-hardening-penny.ngrok-free.dev'],
-        ['host', 'localhost:3002'],
-      ]);
-      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
-      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
-    });
-
-    it('resolves localOrigin from browser Host header when nextUrlOrigin is internal localhost:3002', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const headers = new Map<string, string>([
-        ['host', 'localtest.me:3002'],
-      ]);
-      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
-      expect(origin).toBe('http://localtest.me:3002');
-    });
-
-    it('strictly rejects adversarial host header spoofing (evil.com) and falls back to untrusted nextUrlOrigin', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const headers = new Map<string, string>([
-        ['x-forwarded-proto', 'https'],
-        ['x-forwarded-host', 'evil.com'],
-        ['host', 'evil.com'],
-      ]);
-      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
-      expect(origin).toBe('http://localhost:3002'); // NOT evil.com!
-    });
-
-    it('does NOT match localhost:3002 when developer accesses without localtest.me', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const headers = new Map<string, string>([
-        ['host', 'localhost:3002'],
-      ]);
-      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
-      expect(origin).toBe('http://localhost:3002'); // Remains localhost:3002 which will fail exact-match with localtest.me:3002
-    });
-
-    it('resolves tunnelOrigin when x-forwarded-host contains comma-separated proxy chain', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const headers = new Map<string, string>([
-        ['x-forwarded-proto', 'https'],
-        ['x-forwarded-host', 'enquirer-hardening-penny.ngrok-free.dev, 10.0.0.1'],
-      ]);
-      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
-      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
-    });
-
-    it('resolves tunnelOrigin when x-forwarded-host is uppercase (case-insensitive)', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const headers = new Map<string, string>([
-        ['x-forwarded-proto', 'HTTPS'],
-        ['x-forwarded-host', 'ENQUIRER-HARDENING-PENNY.NGROK-FREE.DEV'],
-      ]);
-      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
-      expect(origin).toBe('https://enquirer-hardening-penny.ngrok-free.dev');
-    });
-
-    it('resolves trusted origin from Host header if x-forwarded-host is untrusted', async () => {
-      const { resolveEffectiveRequestOrigin } = await import('../src/dashboard-auth.js');
-      const headers = new Map<string, string>([
-        ['x-forwarded-host', 'untrusted-proxy.lan'],
-        ['host', 'localtest.me:3002'],
-      ]);
-      const origin = resolveEffectiveRequestOrigin('http://localhost:3002', headers, trustedOrigins);
-      expect(origin).toBe('http://localtest.me:3002');
-    });
+  it('does not export a request-origin resolver that reads Host headers', async () => {
+    const dashboardAuthApi = await import('../src/dashboard-auth.js');
+    expect('resolveEffectiveRequestOrigin' in dashboardAuthApi).toBe(false);
   });
 });
-

@@ -134,33 +134,33 @@ export default async function CanteenOverviewPage({
     <div className="space-y-6">
       {/* Breadcrumb & Header */}
       <div className="space-y-2">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500">
-          <Link href="/admin" className="hover:text-orange-600 transition-colors">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <Link href="/admin" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
             الرئيسية
           </Link>
           <span>/</span>
-          <Link href="/admin/logistics" className="hover:text-orange-600 transition-colors">
+          <Link href="/admin/logistics" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
             ⛽ التعيينات والمخازن والكانتين
           </Link>
           <span>/</span>
-          <span className="text-slate-800 font-semibold">مبيعات ومسحوبات الكانتين ومهمات الوقاية</span>
+          <span className="text-slate-800 dark:text-slate-200 font-semibold">مبيعات ومسحوبات الكانتين ومهمات الوقاية</span>
         </nav>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center gap-3">
             <Link
               href="/admin/logistics"
-              className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-900 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center shrink-0"
+              className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center shrink-0"
               aria-label="الرجوع لقسم التعيينات والمخازن"
             >
               <ArrowRight className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-                <ShoppingBag className="w-6 h-6 text-orange-600" />
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <ShoppingBag className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                 <span>مخزون الكانتين ومسحوبات العمال العينية (Canteen Inventory)</span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 متابعة أرصدة السلع الاستهلاكية، مسحوبات السجائر، ومقاصة تخفيض التكاليف الميدانية
               </p>
             </div>
@@ -170,13 +170,13 @@ export default async function CanteenOverviewPage({
 
       {/* Low Stock Warning */}
       {counts.lowStock > 0 && (
-        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-3 text-amber-900">
-          <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0 animate-pulse" />
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-4 rounded-xl flex items-center gap-3 text-amber-900 dark:text-amber-200">
+          <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
           <div>
             <h4 className="font-bold text-sm">
               تنبيه حرج في المخزون: توجد ({counts.lowStock}) أصناف أوشكت على النفاد في الكانتين!
             </h4>
-            <p className="text-xs text-amber-700 mt-0.5">
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
               يرجى تحرير أمر شراء وتوريد عبر العهدة الميدانية لإعادة ملء المخزون قبل نفاذ السلع الأساسية.
             </p>
           </div>
@@ -185,50 +185,52 @@ export default async function CanteenOverviewPage({
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>إجمالي السلع المسجلة</span>
-            <Boxes className="w-4 h-4 text-orange-600" />
+            <Boxes className="w-4 h-4 text-orange-600 dark:text-orange-400" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.total}</div>
-          <p className="text-[11px] text-slate-400 mt-1">صنف بمخازن الكانتين</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.total}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">صنف بمخازن الكانتين</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>أصناف السجائر والتبغ</span>
-            <Cigarette className="w-4 h-4 text-slate-600" />
+            <Cigarette className="w-4 h-4 text-slate-600 dark:text-slate-400" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.cigarettes}</div>
-          <p className="text-[11px] text-slate-400 mt-1">مقاصة عينية مباشرة</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.cigarettes}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">مقاصة عينية مباشرة</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>الأغذية والمشروبات</span>
-            <Coffee className="w-4 h-4 text-slate-600" />
+            <Coffee className="w-4 h-4 text-slate-600 dark:text-slate-400" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.foodAndSnacks}</div>
-          <p className="text-[11px] text-slate-400 mt-1">وجبات خفيفة ومستلزمات</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.foodAndSnacks}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">وجبات خفيفة ومستلزمات</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>أصناف أوشكت على النفاد</span>
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.lowStock}</div>
-          <p className="text-[11px] text-slate-400 mt-1">تتطلب إعادة طلب فورية</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.lowStock}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">تتطلب إعادة طلب فورية</p>
         </div>
       </div>
 
       {/* Category Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-        <span className="text-xs font-bold text-slate-700 ml-2">التصنيف:</span>
+      <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-2">التصنيف:</span>
         <Link
           href={`/admin/logistics/canteen${siteFilter ? `?siteId=${siteFilter}` : ''}`}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center ${
-            !resolvedParams.category ? 'bg-orange-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            !resolvedParams.category
+              ? 'bg-orange-600 text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
           الكل ({items.length})
@@ -236,7 +238,9 @@ export default async function CanteenOverviewPage({
         <Link
           href={`/admin/logistics/canteen?category=CIGARETTES${siteFilter ? `&siteId=${siteFilter}` : ''}`}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center ${
-            resolvedParams.category === 'CIGARETTES' ? 'bg-orange-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            resolvedParams.category === 'CIGARETTES'
+              ? 'bg-orange-600 text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
           سجائر وتبغ
@@ -244,7 +248,9 @@ export default async function CanteenOverviewPage({
         <Link
           href={`/admin/logistics/canteen?category=SNACKS_AND_FOOD${siteFilter ? `&siteId=${siteFilter}` : ''}`}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center ${
-            resolvedParams.category === 'SNACKS_AND_FOOD' ? 'bg-orange-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            resolvedParams.category === 'SNACKS_AND_FOOD'
+              ? 'bg-orange-600 text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
           أغذية وسناكس
@@ -252,7 +258,9 @@ export default async function CanteenOverviewPage({
         <Link
           href={`/admin/logistics/canteen?category=BEVERAGES${siteFilter ? `&siteId=${siteFilter}` : ''}`}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center ${
-            resolvedParams.category === 'BEVERAGES' ? 'bg-orange-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            resolvedParams.category === 'BEVERAGES'
+              ? 'bg-orange-600 text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
           مشروبات
@@ -271,10 +279,10 @@ export default async function CanteenOverviewPage({
       ) : (
         <div className="space-y-4">
           {/* Desktop Table View */}
-          <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+          <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-right text-xs min-w-[800px]">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-semibold">
                   <tr>
                     <th className="px-4 py-3">كود الصنف</th>
                     <th className="px-4 py-3">اسم السلعة</th>
@@ -286,42 +294,42 @@ export default async function CanteenOverviewPage({
                     <th className="px-4 py-3">حالة المخزون</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {items.map((it) => (
-                    <tr key={it.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-4 py-3 font-mono font-bold text-orange-600">
+                    <tr key={it.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-4 py-3 font-mono font-bold text-orange-600 dark:text-orange-400">
                         {it.code}
                       </td>
-                      <td className="px-4 py-3 font-bold text-slate-900">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">
                         {it.name}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {getCategoryLabel(it.category)}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         <span className="inline-flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                          <Building2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>{it.siteName}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-700">
+                      <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
                         {it.costPrice.toLocaleString('ar-EG')} ج.م
                       </td>
-                      <td className="px-4 py-3 font-bold text-slate-900">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">
                         {it.sellingPrice.toLocaleString('ar-EG')} ج.م
                       </td>
-                      <td className="px-4 py-3 font-mono font-bold text-slate-900">
+                      <td className="px-4 py-3 font-mono font-bold text-slate-900 dark:text-slate-100">
                         {it.currentStock.toLocaleString('ar-EG')}
                       </td>
                       <td className="px-4 py-3">
                         {it.isLowStock ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                            <AlertTriangle className="w-3 h-3 text-amber-600" />
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 dark:text-amber-400 dark:bg-amber-950/40 dark:border-amber-800">
+                            <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                             <span>مخزون حرج (&le; {it.reorderThreshold})</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/40 dark:border-emerald-800">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                             <span>كافٍ</span>
                           </span>
                         )}
@@ -338,45 +346,45 @@ export default async function CanteenOverviewPage({
             {items.map((it) => (
               <div
                 key={it.id}
-                className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-3"
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-2xs space-y-3"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="font-mono text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200/50">
+                    <span className="font-mono text-xs font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded border border-orange-200/50 dark:border-orange-800/50">
                       {it.code}
                     </span>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1">{it.name}</h3>
-                    <p className="text-xs text-slate-500">{getCategoryLabel(it.category)}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-1">{it.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{getCategoryLabel(it.category)}</p>
                   </div>
                   {it.isLowStock ? (
-                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 dark:text-amber-400 dark:bg-amber-950/40 dark:border-amber-800">
                       حرج
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/40 dark:border-emerald-800">
                       كافٍ
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg">
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">الموقع:</span>
-                    <span className="font-medium text-slate-800">{it.siteName}</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px]">الموقع:</span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">{it.siteName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">الرصيد المتاح:</span>
-                    <span className="font-mono font-bold text-slate-900">
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px]">الرصيد المتاح:</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                       {it.currentStock.toLocaleString('ar-EG')}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">سعر التكلفة:</span>
-                    <span className="font-medium text-slate-800">{it.costPrice} ج.م</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px]">سعر التكلفة:</span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">{it.costPrice} ج.م</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">سعر الصرف:</span>
-                    <span className="font-bold text-orange-600">{it.sellingPrice} ج.م</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px]">سعر الصرف:</span>
+                    <span className="font-bold text-orange-600 dark:text-orange-400">{it.sellingPrice} ج.م</span>
                   </div>
                 </div>
               </div>

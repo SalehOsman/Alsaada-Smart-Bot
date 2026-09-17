@@ -118,7 +118,11 @@ export function registerSettingsRoutes(
   // 00.6 Ghost Mode
   const ghostRepo = new GhostModeRepository(redis, prisma);
   const ghostService = new GhostModeService(ghostRepo);
-  const ghostModeHandler = new GhostModeHandler(ghostService, options.onImpersonationChange);
+  const ghostModeHandler = new GhostModeHandler(
+    ghostService,
+    options.onImpersonationChange,
+    options.screenFlow
+  );
 
   // 00.7 Audit Incident Vault
   const auditRepo = new AuditIncidentVaultRepository(prisma);
@@ -206,6 +210,22 @@ export function registerSettingsRoutes(
   bot.callbackQuery(/^action:site:sp:(.+):(.+)$/, async (ctx) => {
     if (ctx.match?.[1] && ctx.match?.[2]) await sitesHandler.handleSelectProject(ctx, ctx.match[2], ctx.match[1]);
   });
+  bot.callbackQuery('action:site:add:back_to_name', (ctx) => sitesHandler.handleBackToName(ctx));
+  bot.callbackQuery('action:site:add:back_to_code', (ctx) => sitesHandler.handleBackToCode(ctx));
+  bot.callbackQuery('action:site:add:back_to_gov', (ctx) => sitesHandler.handleBackToGov(ctx));
+  bot.callbackQuery('action:site:add:skip_location', (ctx) => sitesHandler.handleSkipLocation(ctx));
+  bot.callbackQuery('action:site:add:back_to_location', (ctx) => sitesHandler.handleBackToLocation(ctx));
+  bot.callbackQuery(/^action:site:add_gov_page:(\d+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await sitesHandler.handleGovPageChange(ctx, parseInt(ctx.match[1], 10));
+  });
+  bot.callbackQuery(/^action:site:edit_gov_page:(.+):(\d+)$/, async (ctx) => {
+    if (ctx.match?.[1] && ctx.match?.[2]) {
+      await sitesHandler.handleGovPageChange(ctx, parseInt(ctx.match[2], 10), ctx.match[1]);
+    }
+  });
+  bot.callbackQuery('action:site:gov:noop', async (ctx) => {
+    await ctx.answerCallbackQuery().catch(() => {});
+  });
 
 
   // --- Flow 00.3 Job Matrix ---
@@ -218,6 +238,8 @@ export function registerSettingsRoutes(
     if (ctx.match?.[1]) await jobMatrixHandler.handleToggleDept(ctx, ctx.match[1]);
   });
   bot.callbackQuery('action:dept:download_excel', (ctx) => jobMatrixHandler.handleDownloadExcel(ctx));
+  bot.callbackQuery('action:dept:upload_excel', (ctx) => jobMatrixHandler.handleStartUpload(ctx));
+  bot.callbackQuery('action:dept:cancel_upload', (ctx) => jobMatrixHandler.handleCancelUpload(ctx));
   bot.callbackQuery(/^action:job:view:(.+):(.+)$/, async (ctx) => {
     if (ctx.match?.[1] && ctx.match?.[2]) {
       await jobMatrixHandler.renderJobDetail(ctx, ctx.match[1], ctx.match[2], true);
@@ -238,6 +260,34 @@ export function registerSettingsRoutes(
       await jobMatrixHandler.handlePromptEditCycle(ctx, ctx.match[1], ctx.match[2]);
     }
   });
+  bot.callbackQuery(/^action:job:cycle_choice:(.+):(.+):(\d+):(\d+)$/, async (ctx) => {
+    if (ctx.match?.[1] && ctx.match?.[2] && ctx.match?.[3] && ctx.match?.[4]) {
+      await jobMatrixHandler.handleCycleChoice(
+        ctx,
+        ctx.match[1],
+        ctx.match[2],
+        parseInt(ctx.match[3], 10),
+        parseInt(ctx.match[4], 10)
+      );
+    }
+  });
+  bot.callbackQuery(/^action:job:cycle_custom:(.+):(.+)$/, async (ctx) => {
+    if (ctx.match?.[1] && ctx.match?.[2]) {
+      await jobMatrixHandler.handlePromptCustomCycle(ctx, ctx.match[1], ctx.match[2]);
+    }
+  });
+  bot.callbackQuery(/^action:job:cpol:(.+):(.+):(\d+):(\d+):(NEW_HIRES_ONLY|NEXT_CYCLE)$/, async (ctx) => {
+    if (ctx.match?.[1] && ctx.match?.[2] && ctx.match?.[3] && ctx.match?.[4] && ctx.match?.[5]) {
+      await jobMatrixHandler.handleCyclePolicy(
+        ctx,
+        ctx.match[1],
+        ctx.match[2],
+        parseInt(ctx.match[3], 10),
+        parseInt(ctx.match[4], 10),
+        ctx.match[5] as 'NEW_HIRES_ONLY' | 'NEXT_CYCLE'
+      );
+    }
+  });
   bot.callbackQuery(/^action:job:quick_preset:(.+):(.+):(\d+):(\d+)$/, async (ctx) => {
     if (ctx.match?.[1] && ctx.match?.[2] && ctx.match?.[3] && ctx.match?.[4]) {
       await jobMatrixHandler.handleQuickPreset(
@@ -246,6 +296,28 @@ export function registerSettingsRoutes(
         ctx.match[2],
         parseInt(ctx.match[3], 10),
         parseInt(ctx.match[4], 10)
+      );
+    }
+  });
+  bot.callbackQuery(/^action:job:edit_salary:(.+):(.+)$/, async (ctx) => {
+    if (ctx.match?.[1] && ctx.match?.[2]) {
+      await jobMatrixHandler.handlePromptEditSalary(ctx, ctx.match[1], ctx.match[2], 'base');
+    }
+  });
+  bot.callbackQuery(/^action:job:edit_add_salary:(.+):(.+)$/, async (ctx) => {
+    if (ctx.match?.[1] && ctx.match?.[2]) {
+      await jobMatrixHandler.handlePromptEditSalary(ctx, ctx.match[1], ctx.match[2], 'add');
+    }
+  });
+  bot.callbackQuery(/^action:job:spol:(.+):(.+):(base|add):([0-9.]+):(NEW_HIRES_ONLY|ALL_ACTIVE_WORKERS)$/, async (ctx) => {
+    if (ctx.match?.[1] && ctx.match?.[2] && ctx.match?.[3] && ctx.match?.[4] && ctx.match?.[5]) {
+      await jobMatrixHandler.handleSalaryPolicy(
+        ctx,
+        ctx.match[1],
+        ctx.match[2],
+        ctx.match[3] as 'base' | 'add',
+        parseFloat(ctx.match[4]),
+        ctx.match[5] as 'NEW_HIRES_ONLY' | 'ALL_ACTIVE_WORKERS'
       );
     }
   });
@@ -365,6 +437,7 @@ export function registerSettingsRoutes(
   const handleTextInput = async (ctx: SettingsModuleContext): Promise<boolean> => {
     if (ctx.message?.text && (await userRbacHandler.handleTextInput(ctx, ctx.message.text))) return true;
     if (await corporateHandler.handleTextInput(ctx)) return true;
+    if (await jobMatrixHandler.handleTextInput(ctx)) return true;
     if (await sitesHandler.handleTextInput(ctx)) return true;
     if (await adminProfileHandler.handleTextInput(ctx)) return true;
     if (await auditVaultHandler.handleJourneyInput(ctx)) return true;
@@ -376,6 +449,32 @@ export function registerSettingsRoutes(
     if (await sitesHandler.handleLocationInput(ctx)) return true;
     return false;
   };
+
+  // Document input routing for Job Matrix Excel import
+  bot.on('message:document', async (ctx, next) => {
+    if (ctx.from && jobMatrixHandler.isWaitingForUpload(String(ctx.from.id))) {
+      const doc = ctx.message?.document;
+      if (doc && (doc.file_name?.endsWith('.xlsx') || doc.file_name?.endsWith('.xls'))) {
+        try {
+          const file = await ctx.api.getFile(doc.file_id);
+          if (file.file_path) {
+            const token = ctx.api.token;
+            const downloadUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
+            const response = await fetch(downloadUrl);
+            if (response.ok) {
+              const arrayBuffer = await response.arrayBuffer();
+              const buffer = Buffer.from(arrayBuffer);
+              await jobMatrixHandler.handleDocumentUpload(ctx, buffer);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('Failed to download Excel file for Job Matrix import:', err);
+        }
+      }
+    }
+    return next();
+  });
 
   return {
     corporateHandler,

@@ -89,11 +89,11 @@ export class SitesHubRepository {
   async createSite(data: {
     name: string;
     code: string;
-    governorate?: string;
+    governorate?: string | undefined;
     geofenceRadiusMeters: number;
-    projectId?: string;
-    latitude?: number;
-    longitude?: number;
+    projectId?: string | undefined;
+    latitude?: number | undefined;
+    longitude?: number | undefined;
   }): Promise<SiteDto> {
     let projectId = data.projectId;
     if (!projectId) {

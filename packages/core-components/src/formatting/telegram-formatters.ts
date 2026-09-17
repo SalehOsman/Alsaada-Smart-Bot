@@ -178,3 +178,22 @@ export async function withChatAction<T>(
     }
   }
 }
+
+/**
+ * ⚡ الحذف الخلفي الآمن وغير الحاجب لرسائل تليجرام (Safe Background Non-Blocking Deletion)
+ * يُطلق استدعاء deleteMessage في الخلفية بصمت تام ودون انتظار لمنع أي تأخير في الاستجابة
+ */
+export function safeDeleteBackground(
+  ctx: {
+    chat?: { id: number | string | bigint };
+    message?: { id?: number; message_id?: number; chat?: { id: number | string | bigint } };
+    callbackQuery?: { message?: { id?: number; message_id?: number; chat?: { id: number | string | bigint } } };
+    api?: { deleteMessage: (chatId: number | string | bigint, messageId: number) => Promise<unknown> };
+  },
+  messageId?: number
+): void {
+  const chatId = ctx?.chat?.id || ctx?.message?.chat?.id || ctx?.callbackQuery?.message?.chat?.id;
+  const id = messageId ?? ctx?.message?.message_id;
+  if (!chatId || !id || !ctx?.api || typeof ctx.api.deleteMessage !== 'function') return;
+  void ctx.api.deleteMessage(chatId, id).catch(() => {});
+}

@@ -16,12 +16,6 @@ export async function handleMenuPlaceholder(ctx: MyContext): Promise<void> {
   const keyboard = new InlineKeyboard()
     .text('🏠 العودة للقائمة الرئيسية', 'action:main_menu');
 
-  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
-    keyboard
-      .row()
-      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
-  }
-
   const text =
     `🏗️ *هذا القسم قيد البناء البرمجي والربط الميداني*\n\n` +
     `🔹 *المعرف الإجرائي:* \`${callbackData}\`\n` +

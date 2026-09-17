@@ -19,6 +19,12 @@
     "action:worker:add_single",
     "wizard:worker:doc_type:nat_id",
     "wizard:worker:doc_type:passport",
+    "wizard:worker:ai_skip",
+    "wizard:worker:ai_approve",
+    "wizard:worker:ai_edit:name",
+    "wizard:worker:ai_edit:id",
+    "wizard:worker:ai_edit:address",
+    "wizard:worker:ai_edit:expiry",
     "wizard:worker:confirm",
     "wizard:worker:cancel",
     "wizard:worker:back"
@@ -34,6 +40,11 @@
     "wizard:worker:doc_type:nat_id",
     "wizard:worker:doc_type:passport",
     "wizard:worker:ai_skip",
+    "wizard:worker:ai_approve",
+    "wizard:worker:ai_edit:name",
+    "wizard:worker:ai_edit:id",
+    "wizard:worker:ai_edit:address",
+    "wizard:worker:ai_edit:expiry",
     "wizard:worker:confirm",
     "wizard:worker:cancel",
     "wizard:worker:back"
@@ -56,6 +67,7 @@
   "dataImpact": {
     "database": [
       "Worker",
+      "WorkerDocument",
       "AuditLog",
       "OutboxEvent"
     ],
@@ -85,5 +97,7 @@
     "data"
   ],
   "manualUatRequired": true,
-  "allowAny": false
+  "allowAny": false,
+  "classification": "LEGACY_PARITY",
+  "legacyFeatureCode": "01"
 }

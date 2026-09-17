@@ -1,16 +1,15 @@
+import crypto from 'node:crypto';
 import { redis } from '../redis.js';
 
-interface MemoryCacheEntry<T> {
+export interface MemoryCacheEntry<T> {
   value: T;
   expiresAt: number;
   staleAt: number;
 }
 
-export interface FastCacheOptions {
-  /** مدة الصلاحية الكاملة بالثواني (افتراضي: 300 ثانية / 5 دقائق) */
-  ttlSeconds?: number;
-  /** مدة اعتبار البيانات حديثة قبل بدء التحديث الخلفي (لنمط SWR) */
-  staleTtlSeconds?: number;
+export interface SpeedAuditResult<T> {
+  result: T;
+  durationMs: number;
 }
 
 /**
@@ -22,6 +21,8 @@ export interface FastCacheOptions {
 export class FastCacheService {
   private l1Store = new Map<string, MemoryCacheEntry<any>>();
   private backgroundRefreshPromises = new Map<string, Promise<any>>();
+  private inflightRequests = new Map<string, Promise<any>>();
+  private memoizedKeyboards = new Map<string, any>();
   private readonly DEFAULT_TTL = 300; // 5 minutes
 
   private serialize(value: any): string {
@@ -37,6 +38,7 @@ export class FastCacheService {
   /**
    * 💡 استرجاع القيمة من الكاش المتعدد أو جلبها وتخزينها تلقائياً
    * L1 RAM -> L2 Redis -> L3 Fetcher
+   * مزود بحماية كاملة من التدافع المتزامن (Dogpile / Cache Stampede Coalescing)
    */
   public async remember<T>(
     key: string,
@@ -52,29 +54,43 @@ export class FastCacheService {
       return l1Entry.value as T;
     }
 
-    // 2. فحص المستوى الثاني: L2 Redis 7 Cache (< 1.5ms)
-    if (this.isRedisReady()) {
-      try {
-        const cachedJson = await redis.get(fullKey);
-        if (cachedJson) {
-          const parsed = JSON.parse(cachedJson) as T;
-          // حفظ في L1 للطلبات القادمة
-          this.l1Store.set(fullKey, {
-            value: parsed,
-            expiresAt: now + ttlSeconds * 1000,
-            staleAt: now + (ttlSeconds * 1000) / 2,
-          });
-          return parsed;
-        }
-      } catch (err) {
-        console.warn(`⚠️ [FastCache] Redis read error for ${fullKey}:`, err);
-      }
+    // Coalesce concurrent requests (Dogpile / Cache Stampede Protection)
+    if (this.inflightRequests.has(fullKey)) {
+      return this.inflightRequests.get(fullKey) as Promise<T>;
     }
 
-    // 3. المستوى الثالث: L3 Fetcher (Database Query)
-    const freshValue = await fetcher();
-    await this.set(key, freshValue, ttlSeconds);
-    return freshValue;
+    const inflight = (async () => {
+      try {
+        // 2. فحص المستوى الثاني: L2 Redis 7 Cache (< 1.5ms)
+        if (this.isRedisReady()) {
+          try {
+            const cachedJson = await redis.get(fullKey);
+            if (cachedJson) {
+              const parsed = JSON.parse(cachedJson) as T;
+              // حفظ في L1 للطلبات القادمة
+              this.l1Store.set(fullKey, {
+                value: parsed,
+                expiresAt: now + ttlSeconds * 2 * 1000,
+                staleAt: now + ttlSeconds * 1000,
+              });
+              return parsed;
+            }
+          } catch (err) {
+            console.warn(`⚠️ [FastCache] Redis read error for ${fullKey}:`, err);
+          }
+        }
+
+        // 3. المستوى الثالث: L3 Fetcher (Database Query)
+        const freshValue = await fetcher();
+        await this.set(key, freshValue, ttlSeconds);
+        return freshValue;
+      } finally {
+        this.inflightRequests.delete(fullKey);
+      }
+    })();
+
+    this.inflightRequests.set(fullKey, inflight);
+    return inflight;
   }
 
   /**
@@ -125,8 +141,8 @@ export class FastCacheService {
   public async set<T>(key: string, value: T, ttlSeconds: number = this.DEFAULT_TTL): Promise<void> {
     const fullKey = `fastcache:${key}`;
     const now = Date.now();
-    const expiresAt = now + ttlSeconds * 1000;
-    const staleAt = now + (ttlSeconds * 1000) / 2;
+    const staleAt = now + ttlSeconds * 1000;
+    const expiresAt = now + ttlSeconds * 2 * 1000;
 
     // 1. حفظ في L1 (كائن حقيقي بالذاكرة بدون overhead التسلسل)
     this.l1Store.set(fullKey, { value, expiresAt, staleAt });
@@ -134,7 +150,7 @@ export class FastCacheService {
     // 2. حفظ في L2 Redis الموزع
     if (this.isRedisReady()) {
       try {
-        await redis.set(fullKey, this.serialize(value), 'EX', ttlSeconds);
+        await redis.set(fullKey, this.serialize(value), 'EX', ttlSeconds * 2);
       } catch (err) {
         console.warn(`⚠️ [FastCache] Redis set error for ${fullKey}:`, err);
       }
@@ -158,12 +174,14 @@ export class FastCacheService {
           const parsed = JSON.parse(raw) as T;
           this.l1Store.set(fullKey, {
             value: parsed,
-            expiresAt: now + this.DEFAULT_TTL * 1000,
-            staleAt: now + (this.DEFAULT_TTL * 1000) / 2,
+            expiresAt: now + this.DEFAULT_TTL * 2 * 1000,
+            staleAt: now + this.DEFAULT_TTL * 1000,
           });
           return parsed;
         }
-      } catch {}
+      } catch (err) {
+        console.warn(`⚠️ [FastCache] Redis get error for ${fullKey}:`, err);
+      }
     }
 
     return null;
@@ -194,7 +212,7 @@ export class FastCacheService {
       `^fastcache:${cleanPattern.replace(/\*/g, '.*')}$`
     );
 
-    // تطهير L1 RAM
+    // تطهير L1
     for (const k of this.l1Store.keys()) {
       if (regexPattern.test(k)) {
         this.l1Store.delete(k);
@@ -222,15 +240,19 @@ export class FastCacheService {
     action: () => Promise<T>
   ): Promise<{ success: boolean; result?: T; error?: string }> {
     const fullLockKey = `lock:${lockKey}`;
-    const token = `${Date.now()}-${Math.random()}`;
+    const token = `${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
 
     let acquired = false;
 
-    try {
-      const res = await redis.set(fullLockKey, token, 'EX', ttlSeconds, 'NX');
-      acquired = res === 'OK';
-    } catch {
-      acquired = true; // Fallback to memory execution if redis fails
+    if (!this.isRedisReady()) {
+      acquired = true; // Fallback to memory execution if redis is unavailable
+    } else {
+      try {
+        const res = await redis.set(fullLockKey, token, 'EX', ttlSeconds, 'NX');
+        acquired = res === 'OK';
+      } catch {
+        acquired = true; // Fallback to memory execution if redis fails
+      }
     }
 
     if (!acquired) {
@@ -244,13 +266,15 @@ export class FastCacheService {
       const result = await action();
       return { success: true, result };
     } finally {
-      try {
-        const currentVal = await redis.get(fullLockKey);
-        if (currentVal === token) {
-          await redis.del(fullLockKey);
+      if (this.isRedisReady()) {
+        try {
+          const currentVal = await redis.get(fullLockKey);
+          if (currentVal === token) {
+            await redis.del(fullLockKey);
+          }
+        } catch {
+          // Ignore unlock error
         }
-      } catch {
-        // Ignore unlock error
       }
     }
   }
@@ -258,13 +282,10 @@ export class FastCacheService {
   /**
    * ⏱️ دالة مساعدة لحساب وتوثيق زمن تنفيذ أي عملية بدقة الملي ثانية
    */
-  public async measureSpeed<T>(
-    actionName: string,
-    action: () => Promise<T>
-  ): Promise<{ result: T; durationMs: number }> {
+  public async measureSpeed<T>(actionName: string, fn: () => Promise<T>): Promise<SpeedAuditResult<T>> {
     const start = performance.now();
     try {
-      const result = await action();
+      const result = await fn();
       const durationMs = Math.round((performance.now() - start) * 100) / 100;
       return { result, durationMs };
     } catch (error) {
@@ -272,6 +293,60 @@ export class FastCacheService {
       console.error(`❌ [SpeedAudit] ${actionName} failed after ${durationMs}ms:`, error);
       throw error;
     }
+  }
+
+  /**
+   * ⚡ L1 RAM Micro-Cache لجلسات المستخدم وصلاحياته (< 0.01ms) بنمط SWR
+   * يخزن بيانات وسياق المستخدم في الذاكرة المباشرة بعمر زمني افتراضي 60 ثانية
+   */
+  public async rememberUserContext<T>(
+    userId: bigint | string,
+    fetcher: () => Promise<T>,
+    ttlSeconds: number = 60
+  ): Promise<T> {
+    const key = `user_context:${userId.toString()}`;
+    return this.rememberSWR<T>(key, ttlSeconds, fetcher);
+  }
+
+  /**
+   * 🎯 تطهير فوري لكاش سياق المستخدم في L1 و L2
+   */
+  public async invalidateUserContext(userId: bigint | string): Promise<void> {
+    const key = `user_context:${userId.toString()}`;
+    await this.invalidate(key);
+  }
+
+  /**
+   * ⚡ L1 RAM Micro-Cache لجلسات التشغيل بنمط SWR
+   */
+  public async rememberSession<T>(
+    sessionKey: string,
+    fetcher: () => Promise<T>,
+    ttlSeconds: number = 60
+  ): Promise<T> {
+    const key = `session:${sessionKey}`;
+    return this.rememberSWR<T>(key, ttlSeconds, fetcher);
+  }
+
+  /**
+   * 🎛️ تجميد وتخزين لوحات المفاتيح الساكنة (Memoized Keyboards Singleton)
+   * يمنع إعادة البناء المتكرر للوحات الأزرار المتكررة ويخفض استهلاك الـ Garbage Collector للصفر
+   */
+  public memoizeKeyboard<T>(keyboardKey: string, builder: () => T): T {
+    const existing = this.memoizedKeyboards.get(keyboardKey);
+    if (existing !== undefined) {
+      return existing as T;
+    }
+    const keyboard = builder();
+    this.memoizedKeyboards.set(keyboardKey, keyboard);
+    return keyboard;
+  }
+
+  /**
+   * تطهير لوحات المفاتيح المخزنة مؤقتاً
+   */
+  public clearMemoizedKeyboards(): void {
+    this.memoizedKeyboards.clear();
   }
 
   /**
@@ -287,6 +362,8 @@ export class FastCacheService {
   public clearL1(): void {
     this.l1Store.clear();
     this.backgroundRefreshPromises.clear();
+    this.inflightRequests.clear();
+    this.memoizedKeyboards.clear();
   }
 }
 

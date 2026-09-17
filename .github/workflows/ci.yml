@@ -39,6 +39,9 @@ jobs:
       - name: Run Automated Test Suites
         run: pnpm test
 
+      - name: Verify Git Hygiene & Version Parity
+        run: pnpm git-hygiene:verify
+
       - name: Run Full Enterprise Governance Gate
         run: pnpm governance:verify
 

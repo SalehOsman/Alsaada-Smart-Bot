@@ -1,4 +1,4 @@
-﻿import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createResult, fail, gitStatusShort, isCliEntrypoint, printAndExit, readUtf8, type VerificationResult } from './common.js';
 
@@ -67,5 +67,6 @@ export function verifyAiCompliance(root = process.cwd(), options: AiComplianceOp
 }
 
 if (isCliEntrypoint(import.meta.url)) {
-  printAndExit('ai-compliance:verify', verifyAiCompliance(process.cwd(), { requireEvidence: true, requireCleanGit: true }));
+  const requireCleanGit = process.argv.includes('--clean-git');
+  printAndExit('ai-compliance:verify', verifyAiCompliance(process.cwd(), { requireEvidence: true, requireCleanGit }));
 }

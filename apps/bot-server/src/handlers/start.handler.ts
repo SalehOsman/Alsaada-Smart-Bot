@@ -65,9 +65,8 @@ export async function renderRoleHome(ctx: MyContext, inPlace = false): Promise<v
 }
 
 export async function handleStart(ctx: MyContext): Promise<void> {
-  // الحذف الصامت لأمر /start وتنظيف أي تدفق سابق
+  // الحذف الصامت لأمر /start في الخلفية دون تكرار الحذف المزدوج
   await screenFlowService.cleanupIncomingUserMessage(ctx);
-  await screenFlowService.cleanupUnfinishedFlow(ctx, 'start');
 
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
 
@@ -131,7 +130,7 @@ export async function handleStart(ctx: MyContext): Promise<void> {
         `━━━━━━━━━━━━━━━━━━━━━\n` +
         `أصبحت الآن متصلاً رسمياً بالبوابة الذاتية للعاملين.`;
 
-      await screenFlowService.ensurePersistentKeyboard(ctx);
+      await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
 
       await ctx.reply(successCard, {
         parse_mode: 'Markdown',
@@ -202,11 +201,64 @@ export async function handleStart(ctx: MyContext): Promise<void> {
         if (telegramId > 0n) {
           await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
         }
+        await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
         await renderRoleHome(ctx, false);
         return;
       }
 
-      // إذا كان العامل غير مرتبط أو قيد التفعيل
+      // إذا كان العامل مرتبطاً بحساب تليجرام آخر
+      if (worker.telegramId && worker.telegramId !== telegramId) {
+        await ctx.reply(
+          `⚠️ *تنبيه أمني:* هذا السجل الوظيفي (\`#${worker.code}\`) مرتبط بالفعل بحساب تليجرام آخر معتمد بالمنظومة.\n` +
+          `إذا كنت قد غيرت حسابك، يرجى مراجعة إدارة الموارد البشرية لإعادة ضبط الحساب.`,
+          {
+            parse_mode: 'Markdown',
+            reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+          }
+        );
+        return;
+      }
+
+      // 🛡️ Admin Shield: فحص إذا كان المستخدم يملك صلاحية إدارية
+      const adminRoles = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'];
+      const userRole = ctx.effectiveRole || ctx.dbUser?.role || 'GUEST';
+      const isAdmin = adminRoles.includes(userRole) || ctx.isRealSuperAdmin;
+
+      if (isAdmin) {
+        const adminPreviewCard =
+          `🛡️ *[وضع معاينة الإدارة]*\n` +
+          `━━━━━━━━━━━━━━━━━━━━━\n` +
+          `هذا رابط دعوة خاص بالعامل: *${worker.name}* (\`#${worker.code}\`).\n` +
+          `💼 *المسمى الوظيفي:* ${worker.jobTitle} | 📍 *الموقع:* ${worker.site?.name || 'الموقع العام'}\n` +
+          `━━━━━━━━━━━━━━━━━━━━━\n` +
+          `⚠️ أنت مسجل حالياً بصلاحية إدارية (*${getRoleTitle(userRole)}*).\n` +
+          `لا يمكن ربط هذا العامل بحسابك الإداري منعاً لاختلاط الصلاحيات أو خفض الرتبة.`;
+
+        await ctx.reply(adminPreviewCard, {
+          parse_mode: 'Markdown',
+          reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+        });
+        return;
+      }
+
+      // فحص ما إذا كان هناك طلب معلق بالفعل لنفس المستخدم
+      const pendingTicket = await guestJoinRepo.findPendingApplication(telegramId);
+
+      if (pendingTicket) {
+        await ctx.reply(
+          `⏳ *طلبك قيد المراجعة الإدارية*\n` +
+          `━━━━━━━━━━━━━━━━━━━━━\n` +
+          `يوجد لديك بالفعل طلب معلق لربط وتفعيل حسابك برقم التذكرة: \`${pendingTicket.ticketNumber}\`.\n` +
+          `يرجى انتظار موافقة واعتماد إدارة المنظومة وسيصلك إشعار لحظي فور التفعيل.`,
+          {
+            parse_mode: 'Markdown',
+            reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
+          }
+        );
+        return;
+      }
+
+      // Pre-filled Join Application for Guests/Workers
       const siteLine = worker.site?.name ? `📍 *الموقع الميداني المخصص:* ${worker.site.name}\n` : '';
       const hireDateLine = `📅 *تاريخ مباشرة العمل:* *${formatDate(worker.hireDate)}*\n`;
       const shiftLine = worker.shiftSystem ? `🔄 *نظام الدوام:* ${worker.shiftSystem.replace(/_/g, ' ')}\n` : '';
@@ -228,10 +280,10 @@ export async function handleStart(ctx: MyContext): Promise<void> {
         `• 🌴 تقديم طلبات الإجازات ومتابعة رصيدك وأيام عملك.\n` +
         `• 📝 تقديم طلبات السلف وتحديث بيانات المحفظة الإلكترونية.\n` +
         `• 🛡️ متابعة مهمات الوقاية (PPE) والتظلمات الميدانية.\n\n` +
-        `اضغط على الزر أدناه لتأكيد هويتك وتفعيل خدماتك الذاتية فوراً:`;
+        `اضغط على الزر أدناه لإرسال طلب تفعيل وربط حسابك للإدارة للمراجعة والاعتماد:`;
 
       const kb = new InlineKeyboard()
-        .text('⚡ تأكيد وربط حسابي فوراً', `action:claim_worker:${worker.code}:${inviteToken}`)
+        .text('📝 إرسال طلب ربط وتفعيل حسابي', `act:sub_join:${worker.code}:${inviteToken}`)
         .row()
         .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
@@ -240,85 +292,28 @@ export async function handleStart(ctx: MyContext): Promise<void> {
     }
   }
 
-  // التدفق الاعتيادي لبدء البوت
+  // التدفق الاعتيادي لبدء البوت — مزامنة الأوامر في الخلفية دون حظر استجابة المستخدم
   if (ctx.from) {
-    await syncUserCommandsScope(
+    void syncUserCommandsScope(
       ctx.api,
       telegramId,
       ctx.effectiveRole || 'GUEST',
       !!ctx.isDualWorkerMode
-    );
+    ).catch(() => {});
   }
 
-  // 4. ضمان فرض تثبيت كيبورد الرد السريع الدائم في أسفل الشات وإظهاره فوراً
+  // 4. ضمان تثبيت كيبورد الرد السريع الدائم وفرض التحديث الفوري عند /start
   await screenFlowService.ensurePersistentKeyboard(ctx, undefined, true);
 
   await renderRoleHome(ctx, false);
 }
 
-/**
- * ⚡ معالجة زر ربط وتفعيل حساب العامل المباشر من رابط الدعوة
- */
-export async function handleClaimWorker(ctx: MyContext): Promise<void> {
-  if (!ctx.callbackQuery || !ctx.from) return;
-  await ctx.answerCallbackQuery().catch(() => {});
-
-  const data = ctx.callbackQuery.data || '';
-  const rawData = data.replace('action:claim_worker:', '').trim();
-  const [workerCode, token] = rawData.split(':');
-  const telegramId = BigInt(ctx.from.id);
-
-  if (!workerCode || !token) {
-    await ctx.reply('⚠️ *تنبيه أمني:* رمز توثيق الدعوة مفقود أو غير صالح.', {
-      reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
-    });
-    return;
-  }
-
-  const secretKey = config.databaseEncryptionKey;
-  if (!secretKey) {
-    throw new Error('DATABASE_ENCRYPTION_KEY is required in configuration.');
-  }
-  if (!verifyWorkerInviteToken(workerCode, token, secretKey)) {
-    await ctx.reply('⚠️ *تنبيه أمني:* رمز توثيق الدعوة غير مطابق أو تم التلاعب به.', {
-      reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
-    });
-    return;
-  }
-
-  try {
-    const guestJoinRepo = new GuestJoinRepository(prisma);
-    const linkResult = await guestJoinRepo.linkWorkerAccount(
-      workerCode,
-      telegramId,
-      ctx.from.username || undefined,
-      token
-    );
-
-    await invalidateUserCache(telegramId);
-    await syncUserCommandsScope(ctx.api, telegramId, 'WORKER', false);
-
-    const companyName = await systemDataService.getCompanyTradeName();
-    const successText =
-      `🎉 *تهانينا يا ${linkResult.workerName}! تم تفعيل وربط حسابك بنجاح 100%!*\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `أصبحت الآن متصلاً رسمياً ببوابة الخدمة الذاتية للعاملين بـ ${companyName}.\n\n` +
-      `🆔 *كودك الوظيفي:* \`#${linkResult.workerCode}\`\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `يمكنك الآن متابعة كافة مستحقاتك، طلبات الإجازات، والسلف المالية مباشرة.`;
-
-    ctx.effectiveRole = 'WORKER';
-    await ctx.reply(successText, {
-      parse_mode: 'Markdown',
-      reply_markup: buildMainMenuKeyboard(ctx),
-    });
-    return;
-  } catch (err: any) {
-    await ctx.reply(`⚠️ *تنبيه أمني:* ${err.message || 'تعذر إتمام عملية ربط وتفعيل الحساب.'}`, {
-      parse_mode: 'Markdown',
-      reply_markup: new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu'),
-    });
-    return;
-  }
-}
+// تصدير معالجات ربط العمال والاعتماد وإلغاء الربط
+export {
+  handleSubmitJoinRequest,
+  handleApproveWorkerLink,
+  handleRejectWorkerLink,
+  handleAdminUnlinkWorker,
+  handleSubmitJoinRequest as handleClaimWorker,
+} from './worker-linking.handler.js';
 

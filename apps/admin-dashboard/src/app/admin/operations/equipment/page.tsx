@@ -122,33 +122,33 @@ export default async function EquipmentRegisterPage({
     <div className="space-y-6">
       {/* Breadcrumb & Header */}
       <div className="space-y-2">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500">
-          <Link href="/admin" className="hover:text-orange-600 transition-colors">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <Link href="/admin" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
             الرئيسية
           </Link>
           <span>/</span>
-          <Link href="/admin/operations" className="hover:text-orange-600 transition-colors">
+          <Link href="/admin/operations" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
             🚜 تشغيل المواقع والإنتاج
           </Link>
           <span>/</span>
-          <span className="text-slate-800 font-semibold">المعدات والمحروقات الميدانية</span>
+          <span className="text-slate-800 dark:text-slate-200 font-semibold">المعدات والمحروقات الميدانية</span>
         </nav>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
           <div className="flex items-center gap-3">
             <Link
               href="/admin/operations"
-              className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-900 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center shrink-0"
+              className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center shrink-0 cursor-pointer"
               aria-label="الرجوع لقسم التشغيل"
             >
               <ArrowRight className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-                <Tractor className="w-6 h-6 text-orange-600" />
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Tractor className="w-6 h-6 text-orange-600 dark:text-orange-500" />
                 <span>سجل المعدات والآليات الثقيلة (Heavy Equipment Register)</span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 متابعة الحفارات، اللوادر، صهاريج الوقود، قراءات العدادات وحالات الجاهزية الميدانية
               </p>
             </div>
@@ -158,50 +158,50 @@ export default async function EquipmentRegisterPage({
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>إجمالي الأسطول</span>
-            <Tractor className="w-4 h-4 text-orange-600" />
+            <Tractor className="w-4 h-4 text-orange-600 dark:text-orange-500" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.total}</div>
-          <p className="text-[11px] text-slate-400 mt-1">آلية مسجلة بالنظام</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.total}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">آلية مسجلة بالنظام</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>جاهزة للعمل</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.operational}</div>
-          <p className="text-[11px] text-slate-400 mt-1">حالة تشغيلية ممتازة</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.operational}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">حالة تشغيلية ممتازة</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>تحتاج صيانة</span>
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.maintenance}</div>
-          <p className="text-[11px] text-slate-400 mt-1">تغيير زيوت / فلاتر</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.maintenance}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">تغيير زيوت / فلاتر</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
             <span>معطلة عن العمل</span>
-            <XCircle className="w-4 h-4 text-rose-600" />
+            <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           </div>
-          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900">{counts.broken}</div>
-          <p className="text-[11px] text-slate-400 mt-1">تتطلب تدخل ورشة فورية</p>
+          <div className="mt-2 text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">{counts.broken}</div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">تتطلب تدخل ورشة فورية</p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-        <span className="text-xs font-bold text-slate-700">تصفية حسب الموقع:</span>
+      <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">تصفية حسب الموقع:</span>
         <Link
           href="/admin/operations/equipment"
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center ${
-            !siteFilter ? 'bg-orange-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center cursor-pointer ${
+            !siteFilter ? 'bg-orange-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
           كافة المواقع
@@ -210,10 +210,10 @@ export default async function EquipmentRegisterPage({
           <Link
             key={site.id}
             href={`/admin/operations/equipment?siteId=${site.id}`}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center justify-center cursor-pointer ${
               siteFilter === site.id
                 ? 'bg-orange-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
             {site.name}
@@ -233,10 +233,10 @@ export default async function EquipmentRegisterPage({
       ) : (
         <div className="space-y-4">
           {/* Desktop Table View */}
-          <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+          <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-right text-xs min-w-[800px]">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-semibold">
                   <tr>
                     <th className="px-4 py-3">كود الآلية</th>
                     <th className="px-4 py-3">اسم الآلية والنوع</th>
@@ -247,56 +247,56 @@ export default async function EquipmentRegisterPage({
                     <th className="px-4 py-3">الحالة الفنية</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {equipments.map((eq) => (
-                    <tr key={eq.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-4 py-3 font-mono font-bold text-orange-600">
+                    <tr key={eq.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-4 py-3 font-mono font-bold text-orange-600 dark:text-orange-400">
                         {eq.code}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-bold text-slate-900">{eq.name}</div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{eq.name}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
                           {eq.type} {eq.brand ? `• ${eq.brand}` : ''} {eq.plateNumber ? `• (${eq.plateNumber})` : ''}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                         <span className="inline-flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                          <Building2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>{eq.siteName}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        <span className="inline-flex items-center gap-1 font-semibold text-slate-800">
-                          <User className="w-3.5 h-3.5 text-slate-400" />
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1 font-semibold text-slate-800 dark:text-slate-200">
+                          <User className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>{eq.operatorName}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono font-bold text-slate-900">
+                      <td className="px-4 py-3 font-mono font-bold text-slate-900 dark:text-slate-100">
                         {eq.meterReading.toLocaleString('ar-EG')} {eq.meterType}
                       </td>
                       <td className="px-4 py-3">
                         {eq.fuelLevel !== null ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700">
-                            <Fuel className="w-3 h-3 text-orange-600" />
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            <Fuel className="w-3 h-3 text-orange-600 dark:text-orange-400" />
                             <span>{eq.fuelLevel}%</span>
                           </span>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400 dark:text-slate-500">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         {eq.status === 'OPERATIONAL' ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/40 dark:border-emerald-800">
                             <CheckCircle2 className="w-3 h-3" />
                             <span>جاهزة للعمل</span>
                           </span>
                         ) : eq.status === 'NEEDS_MAINTENANCE' ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 dark:text-amber-400 dark:bg-amber-950/40 dark:border-amber-800">
                             <AlertTriangle className="w-3 h-3" />
                             <span>تحتاج صيانة</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 dark:text-rose-400 dark:bg-rose-950/40 dark:border-rose-800">
                             <XCircle className="w-3 h-3" />
                             <span>معطلة</span>
                           </span>
@@ -314,49 +314,49 @@ export default async function EquipmentRegisterPage({
             {equipments.map((eq) => (
               <div
                 key={eq.id}
-                className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-3"
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-2xs space-y-3"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="font-mono text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200/50">
+                    <span className="font-mono text-xs font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded border border-orange-200/50 dark:border-orange-800/50">
                       {eq.code}
                     </span>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1">{eq.name}</h3>
-                    <p className="text-xs text-slate-500">{eq.type} {eq.brand ? `• ${eq.brand}` : ''}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-1">{eq.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{eq.type} {eq.brand ? `• ${eq.brand}` : ''}</p>
                   </div>
                   {eq.status === 'OPERATIONAL' ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/40 dark:border-emerald-800">
                       جاهزة
                     </span>
                   ) : eq.status === 'NEEDS_MAINTENANCE' ? (
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 dark:text-amber-400 dark:bg-amber-950/40 dark:border-amber-800">
                       صيانة
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                    <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 dark:text-rose-400 dark:bg-rose-950/40 dark:border-rose-800">
                       معطلة
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg">
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg">
                   <div>
                     <span className="text-slate-400 block text-[10px]">الموقع:</span>
-                    <span className="font-medium text-slate-800">{eq.siteName}</span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">{eq.siteName}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">المشغل:</span>
-                    <span className="font-medium text-slate-800">{eq.operatorName}</span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">{eq.operatorName}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">قراءة العداد:</span>
-                    <span className="font-mono font-bold text-slate-900">
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                       {eq.meterReading.toLocaleString('ar-EG')} {eq.meterType}
                     </span>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">مستوى الوقود:</span>
-                    <span className="font-bold text-orange-600">
+                    <span className="font-bold text-orange-600 dark:text-orange-400">
                       {eq.fuelLevel !== null ? `${eq.fuelLevel}%` : '—'}
                     </span>
                   </div>

@@ -28,12 +28,6 @@ export async function handlePing(ctx: MyContext): Promise<void> {
     .row()
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 
-  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
-    keyboard
-      .row()
-      .text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
-  }
-
   const responseText = 
     `⚡ *تقرير فحص أداء وسرعة النظام (System Telemetry & Health)*\n\n` +
     `🏢 *المشروع:* Al-Saada Enterprise System \`v${config.appVersion}\`\n` +

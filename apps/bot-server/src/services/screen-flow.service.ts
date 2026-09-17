@@ -7,10 +7,46 @@ import {
   getPendingWorkerWizard,
   getPersistentKeyboardMsg,
   setPersistentKeyboardMsg,
+  clearPersistentKeyboardMsg,
   UserActiveScreenState,
 } from '../redis.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 import { systemDataService } from './system-data.service.js';
+
+export const NAVIGATION_IMMUNITY_PATTERNS: readonly RegExp[] = Object.freeze([
+  /^action:main_menu$/,
+  /^action:exit_impersonate$/,
+  /^(noop|action:.*:noop|wizard:.*:noop)$/,
+  /^(back|action:.*:back.*|action:.*:prev.*)$/,
+  /^(cancel|action:.*:cancel.*)$/,
+  /^wizard:.*:(back|cancel)$/,
+  /^wizard:.*:retry:.*$/,
+  /^(action|menu):(settings|settings_sub|workforce|hr|hr_sub):.*$/,
+  /^action:worker:.*$/,
+  /^wizard:worker:.*$/,
+  /^action:.*:hub.*$/,
+  /^action:.*:menu.*$/,
+  /^action:.*:view:.*$/,
+  /^action:.*:page:.*$/,
+  /^wizard:.*(_page|:page):.*$/,
+  /^action:site:(add|edit)_gov_page:.*$/,
+]);
+
+export function isNavigationImmune(data: string): boolean {
+  if (!data) return false;
+  return NAVIGATION_IMMUNITY_PATTERNS.some((pattern) => pattern.test(data));
+}
+
+/**
+ * ⚡ الحذف الخلفي الآمن وغير الحاجب لرسائل تليجرام (Safe Background Non-Blocking Deletion)
+ * يُطلق استدعاء deleteMessage في الخلفية بصمت تام ودون انتظار (< 0.01ms) لمنع أي تأخير في الاستجابة
+ */
+export function safeDeleteBackground(ctx: MyContext, messageId?: number): void {
+  const chatId = ctx.chat?.id || ctx.message?.chat?.id || ctx.callbackQuery?.message?.chat?.id;
+  const id = messageId ?? ctx.message?.message_id;
+  if (!chatId || !id || !ctx.api) return;
+  void ctx.api.deleteMessage(chatId, id).catch(() => {});
+}
 
 export class ScreenFlowService {
   /**
@@ -18,6 +54,7 @@ export class ScreenFlowService {
    */
   async ensurePersistentKeyboard(ctx: MyContext, customText?: string, forceRefresh = false): Promise<void> {
     if (!ctx.from || !ctx.chat) return;
+    if (ctx.chat.type && ctx.chat.type !== 'private') return;
     const telegramId = BigInt(ctx.from.id);
     const existing = await getPersistentKeyboardMsg(telegramId);
 
@@ -26,9 +63,13 @@ export class ScreenFlowService {
       return;
     }
 
-    // إذا طُلب التحديث الصريح، نقوم بتنظيف الرسالة القديمة برفق
+    // إذا طُلب التحديث الصريح، نقوم بتنظيف الرسالة القديمة برفق دون حجب
     if (existing && ctx.api) {
-      await ctx.api.deleteMessage(existing.chatId, existing.messageId).catch(() => {});
+      try {
+        void ctx.api.deleteMessage(existing.chatId, existing.messageId).catch(() => {});
+      } catch {
+        // تجاهل أي خطأ تزامني عند استدعاء الحذف
+      }
     }
 
     const replyKeyboard = buildPersistentReplyKeyboard(ctx);
@@ -39,13 +80,17 @@ export class ScreenFlowService {
       `لوحة أزرار التنقل والتحكم الميداني مفعلة ومتاحة بالأسفل دائماً ⬇️`;
 
     try {
-      const sent = await ctx.api.sendMessage(ctx.chat.id, text, {
-        parse_mode: 'Markdown',
-        reply_markup: replyKeyboard,
-      });
-      await setPersistentKeyboardMsg(telegramId, ctx.chat.id, sent.message_id);
+      if (ctx.api) {
+        const sent = await ctx.api.sendMessage(ctx.chat.id, text, {
+          parse_mode: 'Markdown',
+          reply_markup: replyKeyboard,
+        });
+        if (sent?.message_id) {
+          await setPersistentKeyboardMsg(telegramId, ctx.chat.id, sent.message_id);
+        }
+      }
     } catch {
-      // Fallback
+      // Fallback: منع أي استثناء في حال حظر البوت أو مشاكل شبكة تليجرام
     }
   }
 
@@ -54,18 +99,24 @@ export class ScreenFlowService {
    */
   async removePersistentKeyboard(ctx: MyContext, customText?: string): Promise<void> {
     if (!ctx.from || !ctx.chat || !ctx.api) return;
+    if (ctx.chat.type && ctx.chat.type !== 'private') return;
     const telegramId = BigInt(ctx.from.id);
     const existing = await getPersistentKeyboardMsg(telegramId);
     if (existing) {
-      await ctx.api.deleteMessage(existing.chatId, existing.messageId).catch(() => {});
-      await clearUserActiveScreen(telegramId).catch(() => {});
+      void ctx.api.deleteMessage(existing.chatId, existing.messageId).catch(() => {});
     }
+    try {
+      await clearPersistentKeyboardMsg(telegramId);
+    } catch {}
+    try {
+      await clearUserActiveScreen(telegramId);
+    } catch {}
     const text = customText || '🔄 تم تحديث واجهة التنقل وتطهير الصلاحيات السابقة.';
     try {
       const msg = await ctx.api.sendMessage(ctx.chat.id, text, {
         reply_markup: { remove_keyboard: true },
       });
-      await ctx.api.deleteMessage(ctx.chat.id, msg.message_id).catch(() => {});
+      void ctx.api.deleteMessage(ctx.chat.id, msg.message_id).catch(() => {});
     } catch {
       // Fallback
     }
@@ -82,9 +133,9 @@ export class ScreenFlowService {
       const clickedMsgId = ctx.callbackQuery?.message?.message_id;
       if (!clickedMsgId || clickedMsgId === active.messageId) {
         if (ctx.api) {
-          await ctx.api.deleteMessage(active.chatId, active.messageId).catch(() => {});
+          void ctx.api.deleteMessage(active.chatId, active.messageId).catch(() => {});
         } else if (ctx.callbackQuery?.message?.chat) {
-          await ctx.deleteMessage().catch(() => {});
+          void ctx.deleteMessage().catch(() => {});
         }
         await clearUserActiveScreen(telegramId);
         (ctx as any).fromMainMenu = true;
@@ -104,11 +155,27 @@ export class ScreenFlowService {
     flowType: string,
     isCompleted = false
   ): Promise<void> {
+    let finalCompleted = isCompleted;
+    let finalFlowType = flowType;
+    const existing = await getUserActiveScreen(telegramId).catch(() => null);
+    if (existing && existing.messageId === messageId) {
+      if (existing.isCompleted) {
+        finalCompleted = true;
+      }
+      if (
+        (flowType === 'edited_screen' || flowType === 'screen') &&
+        existing.flowType &&
+        existing.flowType !== 'edited_screen' &&
+        existing.flowType !== 'screen'
+      ) {
+        finalFlowType = existing.flowType;
+      }
+    }
     await setUserActiveScreen(telegramId, {
       chatId,
       messageId,
-      flowType,
-      isCompleted,
+      flowType: finalFlowType,
+      isCompleted: finalCompleted,
       updatedAt: Date.now(),
     });
   }
@@ -165,9 +232,9 @@ export class ScreenFlowService {
     if (!active.isCompleted) {
       // تدفق غير مكتمل -> حذف الرسالة تماماً من الشات دون أي أثر
       if (ctx.api) {
-        await ctx.api.deleteMessage(active.chatId, active.messageId).catch(async () => {
+        void ctx.api.deleteMessage(active.chatId, active.messageId).catch(() => {
           // في حال تعذر الحذف (مثلاً مر عليها أكثر من 48 ساعة)، يتم تجريد الأزرار فوراً
-          await ctx.api
+          void ctx.api
             .editMessageReplyMarkup(active.chatId, active.messageId, { reply_markup: { inline_keyboard: [] } })
             .catch(() => {});
         });
@@ -178,7 +245,7 @@ export class ScreenFlowService {
       // تظل في الشات دائماً وأبداً بدون حذف وبدون أي تعديل على نصها!
       // تجرد فقط من لوحة الأزرار لمنع إعادة الضغط المكرر
       if (ctx.api) {
-        await ctx.api
+        void ctx.api
           .editMessageReplyMarkup(active.chatId, active.messageId, { reply_markup: { inline_keyboard: [] } })
           .catch(() => {});
       }
@@ -190,27 +257,55 @@ export class ScreenFlowService {
    * 🗑️ الحذف الصامت الفوري لرسائل المستخدم النصية والمدخلات (Silent Input Deletion)
    */
   async cleanupIncomingUserMessage(ctx: MyContext): Promise<void> {
-    if (ctx.chat && ctx.message?.message_id) {
-      await ctx.api.deleteMessage(ctx.chat.id, ctx.message.message_id).catch(() => {});
-    }
+    safeDeleteBackground(ctx);
   }
 
   /**
-   * 🛡️ التحقق الصارم من حداثة وصلاحية الـ Callback Query
+   * 🛡️ التحقق الصارم من حداثة وصلاحية الـ Callback Query ومصفوفة حصانة التنقل
    */
   async isStaleCallback(ctx: MyContext): Promise<{ isStale: boolean; reason?: string }> {
     if (!ctx.callbackQuery || !ctx.from) return { isStale: false };
 
     const data = ctx.callbackQuery.data || '';
-    // Sovereign navigation immunity: Impersonation escape hatch is never stale
-    if (data === 'action:exit_impersonate') {
+    const telegramId = BigInt(ctx.from.id);
+    const clickedMsgId = ctx.callbackQuery.message?.message_id;
+
+    // 1. Navigation Immunity Matrix: Safe navigation, read, back, cancel, and hub callbacks are NEVER blocked
+    if (isNavigationImmune(data)) {
+      if (clickedMsgId) {
+        const active = await getUserActiveScreen(telegramId).catch(() => null);
+        const chatId = ctx.chat?.id || ctx.callbackQuery.message?.chat?.id || active?.chatId;
+
+        // Auto-cleanup: If navigating on a different message while an incomplete flow was active, delete abandoned message
+        if (active && active.messageId !== clickedMsgId && !active.isCompleted && ctx.api) {
+          const activeChat = active.chatId || chatId;
+          if (activeChat) {
+            void ctx.api.deleteMessage(activeChat, active.messageId).catch(() => {
+              void ctx.api
+                .editMessageReplyMarkup(activeChat, active.messageId, { reply_markup: { inline_keyboard: [] } })
+                .catch(() => {});
+            });
+          }
+        }
+
+        // Auto-Healing: Seamlessly update user_active_screen in Redis to the current message ID
+        if (chatId) {
+          try {
+            await setUserActiveScreen(telegramId, {
+              chatId,
+              messageId: clickedMsgId,
+              flowType: active?.flowType || 'screen',
+              isCompleted: false,
+              updatedAt: Date.now(),
+            });
+          } catch {}
+        }
+      }
       return { isStale: false };
     }
 
-    const clickedMsgId = ctx.callbackQuery.message?.message_id;
     if (!clickedMsgId) return { isStale: false };
 
-    const telegramId = BigInt(ctx.from.id);
     const active = await getUserActiveScreen(telegramId);
 
     if (active) {

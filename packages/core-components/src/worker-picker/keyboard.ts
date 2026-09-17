@@ -1,8 +1,8 @@
 import { InlineKeyboard } from 'grammy';
 import type { WorkerItem, PaginationState, CustomActionButton } from '../types.js';
 
-export interface WorkerKeyboardOptions {
-  workers: WorkerItem[];
+export interface WorkerKeyboardOptions<T extends WorkerItem = WorkerItem> {
+  workers: T[];
   pagination: PaginationState;
   selectedWorkerIds?: string[];
   customActionButtons?: CustomActionButton[];
@@ -13,13 +13,14 @@ export interface WorkerKeyboardOptions {
   workerCallbackPrefix?: string;
   pageCallbackPrefix?: string;
   includeLegacyCode?: boolean;
+  formatLabel?: (worker: T, isSelected: boolean) => string;
 }
 
 /**
  * Resolves the primary display name for a worker, strictly prioritizing nickname (اسم الشهرة).
  * Returns the worker's nickname if present and non-empty, otherwise falls back to full name.
  */
-export function getWorkerDisplayName(worker: { name: string; nickname?: string | null }): string {
+export function getWorkerDisplayName(worker: { name: string; nickname?: string | null | undefined }): string {
   if (worker.nickname && worker.nickname.trim().length > 0) {
     return worker.nickname.trim();
   }
@@ -29,7 +30,7 @@ export function getWorkerDisplayName(worker: { name: string; nickname?: string |
 /**
  * Resolves an appropriate descriptive emoji icon based on the worker's job title / profession.
  */
-export function getJobTitleIcon(jobTitle?: string | null): string {
+export function getJobTitleIcon(jobTitle?: string | null | undefined): string {
   if (!jobTitle) return '👷';
   const t = jobTitle.trim().toLowerCase();
 
@@ -83,7 +84,7 @@ export function getJobTitleIcon(jobTitle?: string | null): string {
  * Falls back to code if jobTitle is not available.
  */
 export function formatWorkerPickerLabel(
-  worker: WorkerItem | { name: string; nickname?: string | null; code: string; legacyCode?: string | null; jobTitle?: string | null },
+  worker: WorkerItem | { name: string; nickname?: string | null | undefined; code: string; legacyCode?: string | null | undefined; jobTitle?: string | null | undefined },
   isSelected = false,
   includeLegacyCode = false
 ): string {
@@ -97,16 +98,18 @@ export function formatWorkerPickerLabel(
 /**
  * Builds the inline keyboard for worker selection with in-place pagination and controls.
  */
-export function buildWorkerPickerKeyboard(options: WorkerKeyboardOptions): InlineKeyboard {
+export function buildWorkerPickerKeyboard<T extends WorkerItem = WorkerItem>(options: WorkerKeyboardOptions<T>): InlineKeyboard {
   const keyboard = new InlineKeyboard();
   const workerPrefix = options.workerCallbackPrefix ?? 'worker_sel:';
   const pagePrefix = options.pageCallbackPrefix ?? 'worker_page:';
   const selectedSet = new Set(options.selectedWorkerIds ?? []);
 
-  // 1. Worker Buttons (prioritizing nickname via formatWorkerPickerLabel)
+  // 1. Worker Buttons (prioritizing nickname via formatWorkerPickerLabel or custom formatLabel)
   for (const worker of options.workers) {
     const isSelected = selectedSet.has(worker.id);
-    const label = formatWorkerPickerLabel(worker, isSelected, options.includeLegacyCode ?? false);
+    const label = options.formatLabel
+      ? options.formatLabel(worker, isSelected)
+      : formatWorkerPickerLabel(worker, isSelected, options.includeLegacyCode ?? false);
     keyboard.text(label, `${workerPrefix}${worker.id}`).row();
   }
 

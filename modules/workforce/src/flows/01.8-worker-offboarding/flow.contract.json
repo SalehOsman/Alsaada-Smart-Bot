@@ -101,5 +101,7 @@
     "rbac",
     "data"
   ],
-  "manualUatRequired": false
+  "manualUatRequired": false,
+  "classification": "EVOLVED",
+  "workPlan": "PLAN-16"
 }

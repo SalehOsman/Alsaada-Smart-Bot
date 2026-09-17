@@ -238,6 +238,7 @@ export class WorkerService {
     walletType?: string | undefined;
     accountNumber?: string | undefined;
     phone: string;
+    companyName?: string | undefined;
     botUsername?: string | undefined;
   }): string {
     return this.registrationService.buildWelcomeWhatsAppUrl(data);

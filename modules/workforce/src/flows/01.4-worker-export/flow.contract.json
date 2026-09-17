@@ -84,5 +84,7 @@
     "data"
   ],
   "manualUatRequired": true,
-  "allowAny": false
+  "allowAny": false,
+  "classification": "LEGACY_PARITY",
+  "legacyFeatureCode": "04"
 }

@@ -56,5 +56,142 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
   }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.25);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(249, 115, 22, 0.5);
+  }
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .dark select,
+  .dark textarea {
+    background-color: rgb(2 6 23 / 0.7);
+    border-color: rgb(51 65 85 / 0.8);
+    color: rgb(241 245 249);
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: rgb(100 116 139);
+  }
+  .dark table {
+    border-color: rgb(30 41 59);
+  }
+  .dark th {
+    border-color: rgb(30 41 59);
+  }
+  .dark td {
+    border-color: rgb(30 41 59);
+  }
+}
+
+/* Multi-Tier Elevation Classes */
+.elevation-tier-0 {
+  @apply bg-slate-950;
+}
+.elevation-tier-1 {
+  @apply bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 backdrop-blur-md dark:border-t-slate-700/40;
+}
+.elevation-tier-2 {
+  @apply bg-slate-50 dark:bg-slate-950/70 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:border-orange-500;
+}
+.elevation-tier-3 {
+  @apply bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-2xl;
+}
+
+/* Clean Paper & PDF Print Stylesheet */
+@media print {
+  aside,
+  header,
+  nav,
+  .no-print,
+  [data-no-print="true"],
+  button:not(.print-include) {
+    display: none !important;
+  }
+
+  body,
+  main,
+  #root,
+  .dashboard-content {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    background: transparent !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+}
+
+/* Custom Sleek Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.5);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+}
+
+.dark body,
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+.dark ::-webkit-scrollbar-thumb,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+}
+.dark ::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.6);
+}
+
+/* Hide Scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

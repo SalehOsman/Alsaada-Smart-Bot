@@ -50,8 +50,10 @@ export interface CreateWorkerInput {
   siteName?: string | undefined;
   hireDate?: Date | undefined;
   shiftSystem?: string | undefined;
+  contractType?: string | undefined;
   dailyWage?: number | undefined;
   basicSalary?: number | undefined;
+  additionalSalary?: number | undefined;
   fixedAllowances?: number | undefined;
   paymentMethod?: string | undefined;
   accountNumber?: string | undefined;
@@ -65,6 +67,8 @@ export interface CreateWorkerInput {
   previousInsuranceStatus?: string | undefined;
   idCardFrontPath?: string | undefined;
   idCardBackPath?: string | undefined;
+  frontPhotoBuffer?: Buffer | undefined;
+  backPhotoBuffer?: Buffer | undefined;
   idCardExpiryDate?: Date | undefined;
   address?: string | undefined;
   notes?: string | undefined;
@@ -88,11 +92,14 @@ export interface PendingWorkerWizardState {
   backPhotoFileId?: string | undefined;
   frontPhotoPath?: string | undefined;
   backPhotoPath?: string | undefined;
+  frontPhotoBase64?: string | undefined;
+  backPhotoBase64?: string | undefined;
   aiDetectedData?: {
     nationalId?: string | undefined;
     passportNumber?: string | undefined;
     name?: string | undefined;
     birthDate?: string | undefined;
+    age?: number | undefined;
     gender?: 'MALE' | 'FEMALE' | undefined;
     governorateName?: string | undefined;
     governorateCode?: string | undefined;
@@ -113,13 +120,18 @@ export interface PendingWorkerWizardState {
   paymentMethod?: string | undefined;
   accountNumber?: string | undefined;
   walletType?: string | undefined;
+  walletNumber?: string | undefined;
+  walletWarning?: string | undefined;
   jobTitleId?: string | undefined;
   jobTitleName?: string | undefined;
   siteId?: string | undefined;
   siteName?: string | undefined;
   hireDate?: string | undefined;
   shiftSystem?: string | undefined;
+  contractType?: string | undefined;
   dailyWage?: number | undefined;
+  basicSalary?: number | undefined;
+  additionalSalary?: number | undefined;
   drivingLicense?: string | undefined;
   militaryStatus?: string | undefined;
   emergencyPhone?: string | undefined;
@@ -140,6 +152,7 @@ export interface RegisteredWorkerResult {
   hireDate: Date;
   shiftSystem?: string | undefined;
   welcomeWhatsAppUrl: string;
+  companyName?: string | undefined;
 }
 
 export interface WorkerDuplicateCheckResult {
@@ -160,6 +173,11 @@ export interface WorkerLookupOption {
 
 export interface JobTitleLookupOption extends WorkerLookupOption {
   departmentCode: string;
+  baseSalary?: number | undefined;
+  additionalSalary?: number | undefined;
+  workDays?: number | undefined;
+  restDays?: number | undefined;
+  shiftNature?: string | undefined;
 }
 
 export interface WorkerWizardStateStore {
@@ -168,26 +186,56 @@ export interface WorkerWizardStateStore {
   delete(telegramId: bigint): Promise<void>;
 }
 
-export interface AiVisionScanResult {
-  isValid: boolean;
-  detectedDocType: 'EGYPTIAN_NATIONAL_ID_FRONT' | 'EGYPTIAN_NATIONAL_ID_BACK' | 'PASSPORT' | 'OTHER';
-  isQualityAcceptable: boolean;
-  nationalIdNumber?: string | undefined;
-  passportNumber?: string | undefined;
-  expiryDateStr?: string | undefined;
-  fullName?: string | undefined;
-  address?: string | undefined;
-  birthDate?: Date | undefined;
-  gender?: 'MALE' | 'FEMALE' | undefined;
-  governorateNameAr?: string | undefined;
-  userErrorMessage?: string | undefined;
-  rawJson?: Record<string, unknown> | undefined;
-}
+export type { AiVisionScanResult } from '@alsaada/ai-vision-engine';
 
 export interface AiVisionScanner {
   scanDocument(
     imageBuffer: Buffer,
     mimeType: string,
     expectedType: 'NATIONAL_ID_FRONT' | 'NATIONAL_ID_BACK' | 'PASSPORT'
-  ): Promise<AiVisionScanResult>;
+  ): Promise<import('@alsaada/ai-vision-engine').AiVisionScanResult>;
 }
+
+export const DRIVING_LICENSE_MAP: Record<string, string> = {
+  none: 'لا توجد رخصة قيادة',
+  pvt: 'رخصة خاصة',
+  '1st': 'مهنية درجة أولى',
+  '2nd': 'مهنية درجة ثانية',
+  '3rd': 'مهنية درجة ثالثة',
+  heavy: 'رخصة تشغيل معدات ثقيلة',
+  skip: 'لا توجد رخصة قيادة',
+};
+
+export const MILITARY_STATUS_MAP: Record<string, string> = {
+  served: 'أدى الخدمة العسكرية (قدوة حسنة)',
+  final_exempt: 'إعفاء نهائي',
+  temp_exempt: 'إعفاء مؤقت',
+  postponed: 'تأجيل دراسي',
+  not_req: 'غير مطلوب / معافى طبياً',
+  not_applied: 'لم يتم التقدم للخدمة العسكرية',
+  skip: 'غير محدد / معافى',
+};
+
+export const INSURANCE_STATUS_MAP: Record<string, string> = {
+  uninsured: 'غير مؤمن عليه بجهة أخرى',
+  previously_insured: 'مؤمن عليه بجهة سابقة',
+  fulltime_no_insurance: 'متفرغ تماماً وبدون تأمين',
+  skip: 'غير مؤمن عليه بجهة أخرى',
+};
+
+export const MARITAL_STATUS_MAP: Record<string, string> = {
+  single: 'أعزب',
+  married: 'متزوج',
+  married_children: 'متزوج ويعول',
+  divorced: 'مطلق',
+  widowed: 'أرمل',
+  skip: 'أعزب',
+};
+
+export const PAYOUT_METHOD_MAP: Record<string, { type: string; label: string; method: string }> = {
+  CASH_SITE: { type: 'نقدي / كاش', label: 'استلام نقدي بالخزينة / الموقع', method: 'CASH_SITE' },
+  VODAFONE_CASH: { type: 'محفظة إلكترونية', label: 'محفظة فودافون كاش', method: 'VODAFONE_CASH' },
+  INSTAPAY: { type: 'تحويل بنكي / إنستاباي', label: 'إنستاباي (InstaPay)', method: 'INSTAPAY' },
+  BANK_TRANSFER: { type: 'تحويل بنكي رسمي', label: 'تحويل بنكي رسمي', method: 'BANK_TRANSFER' },
+};
+

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export type FlowTemplate = 'default' | 'cash-outflow' | 'in-kind-clearing' | 'approval-request' | 'excel-export';
@@ -51,11 +51,13 @@ export function scaffoldFlow(
     titleArabic: flowTitleArabic,
     module: moduleName,
     template,
+    classification: 'LEGACY_PARITY',
+    legacyFeatureCode: flowKey,
     status: 'Draft',
     allowAny: false,
     version: '1.0.0',
     createdAt: new Date().toISOString(),
-    allowedRoles: ['SUPER_ADMIN', 'PROJECT_MANAGER', 'SITE_SUPERVISOR'],
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
     screens: [
       { step: 1, key: 'INIT', title: flowTitleArabic, mode: 'InPlace' },
       { step: 2, key: 'INPUT', title: 'إدخال البيانات', mode: 'InPlace' },
@@ -184,17 +186,21 @@ export class ${pascalName}Service {
 
   // 5. flow.keyboard.ts
   const kbContent = `import { InlineKeyboard } from 'grammy';
-import { buildConfirmationKeyboard, buildCompletionKeyboard } from '@alsaada/core-components';
+import { buildConfirmationKeyboard, buildCompletionKeyboard, buildWhatsAppLink } from '@alsaada/core-components';
 
 export class ${pascalName}Keyboards {
   static confirmationKeyboard(flowKey: string): InlineKeyboard {
     return buildConfirmationKeyboard(\`action:\${flowKey}:confirm\`, \`action:\${flowKey}:cancel\`);
   }
 
-  static completionKeyboard(receiptId: string): InlineKeyboard {
+  static completionKeyboard(receiptId: string, summaryText?: string): InlineKeyboard {
+    const whatsAppLink = summaryText
+      ? buildWhatsAppLink({ phone: '', message: summaryText })
+      : undefined;
     return buildCompletionKeyboard({
       actionDomain: '${flowSlug}',
       receiptNumber: receiptId,
+      whatsAppLink,
     });
   }
 }
@@ -202,23 +208,28 @@ export class ${pascalName}Keyboards {
   writeFileSync(join(targetDir, 'flow.keyboard.ts'), kbContent, 'utf8');
 
   // 6. flow.messages.ts
-  const messagesContent = `export class ${pascalName}Messages {
+  const messagesContent = `import { formatBreadcrumbs, formatConfirmationCard } from '@alsaada/core-components';
+
+export class ${pascalName}Messages {
   static initPrompt(title: string): string {
-    return \`📋 *\${title}*\\n────────────────────────────\\nيرجى تحديد البيانات المطلوبة:\`;
+    const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'البداية']);
+    return \`\${breadcrumb}📋 *\${title}*\\n────────────────────────────\\nيرجى تحديد البيانات المطلوبة:\`;
   }
 
-  static confirmationCard(workerName: string, amount: number): string {
-    return (
-      \`📋 *مراجعة وتأكيد العملية*\\n\` +
-      \`────────────────────────────\\n\` +
-      \`👤 العامل: *\${workerName}*\\n\` +
-      \`💰 المبلغ: *\${amount} ج.م*\\n\\n\` +
-      \`هل تؤكد حفظ واعتماد المعاملة؟\`
-    );
+  static confirmationCard(workerName: string, amount: number, recordedBy = 'المشرف'): string {
+    const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'مراجعة وتأكيد']);
+    const card = formatConfirmationCard({
+      operationTitle: '${flowTitleArabic}',
+      workerName,
+      amount,
+      recordedBy,
+    });
+    return \`\${breadcrumb}\${card}\\nهل تؤكد حفظ واعتماد المعاملة؟\`;
   }
 
   static successReceipt(refId: string): string {
-    return \`✅ *تم اعتماد العملية بنجاح*\\n────────────────────────────\\nرقم السند: \`\`\${refId}\`\`;
+    const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'إتمام العملية']);
+    return \`\${breadcrumb}✅ *تم اعتماد العملية بنجاح*\\n────────────────────────────\\nرقم السند: \`\`\${refId}\`\`;
   }
 }
 `;
@@ -265,6 +276,11 @@ export class ${pascalName}Keyboards {
 
   // 10. flow.handler.ts (Strictly < 350 lines)
   const handlerContent = `import type { Context, InlineKeyboard } from 'grammy';
+import {
+  UniversalWizardSessionEngine,
+  formatBreadcrumbs,
+  safeDeleteBackground,
+} from '@alsaada/core-components';
 import type { ${pascalName}Service } from './flow.service.js';
 import type { ${pascalName}Repository } from './flow.repository.js';
 import { ${pascalName}Keyboards } from './flow.keyboard.js';
@@ -273,31 +289,60 @@ import { ${pascalName}Telemetry } from './flow.telemetry.js';
 import type { ${pascalName}State } from './flow.types.js';
 
 export class ${pascalName}Handler {
-  private readonly userStates = new Map<string, ${pascalName}State>();
-
   constructor(
     private readonly service: ${pascalName}Service,
-    private readonly repository: ${pascalName}Repository
+    private readonly repository: ${pascalName}Repository,
+    private readonly sessionEngine: UniversalWizardSessionEngine<${pascalName}State> = new UniversalWizardSessionEngine<${pascalName}State>({
+      moduleKey: '${moduleName}',
+      flowKey: '${flowKey}',
+      maxHistoryDepth: 10,
+    })
   ) {}
 
   async handleStart(ctx: Context): Promise<void> {
-    const userId = ctx.from ? String(ctx.from.id) : 'unknown';
-    ${pascalName}Telemetry.logStart(userId, '${flowKey}');
+    const userId = ctx.from?.id ? BigInt(ctx.from.id) : 0n;
+    if (userId === 0n) {
+      await ctx.reply('⚠️ غير مصرح لك بتنفيذ هذا التدفق.');
+      return;
+    }
+
+    safeDeleteBackground(ctx);
+    ${pascalName}Telemetry.logStart(String(userId), '${flowKey}');
+
+    await this.sessionEngine.startSession(userId, {
+      step: 'INIT',
+      createdAt: Date.now(),
+    });
+
     const text = ${pascalName}Messages.initPrompt('${flowTitleArabic}');
     const kb = ${pascalName}Keyboards.confirmationKeyboard('${flowKey}');
     await this.replyOrEdit(ctx, text, kb);
   }
 
   async handleConfirm(ctx: Context): Promise<void> {
-    const userId = ctx.from ? String(ctx.from.id) : 'unknown';
+    const userId = ctx.from?.id ? BigInt(ctx.from.id) : 0n;
+    if (userId === 0n) {
+      await ctx.reply('⚠️ غير مصرح لك بتنفيذ هذا التدفق.');
+      return;
+    }
+
+    safeDeleteBackground(ctx);
+
+    const session = await this.sessionEngine.getSession(userId);
+    const workerId = session?.data?.workerId ?? 'sample-worker-id';
+    const amount = session?.data?.amount ?? 100;
+
     const result = await this.service.execute({
-      workerId: 'sample-worker-id',
+      workerId,
       workerCode: 'OP-LAB-001',
       workerName: 'عامل تجريبي',
-      amount: 100,
-      actorTelegramId: ctx.from ? BigInt(ctx.from.id) : undefined,
+      amount,
+      actorTelegramId: userId,
     });
-    ${pascalName}Telemetry.logCompletion(userId, result.referenceId);
+
+    await this.sessionEngine.clearSession(userId);
+    ${pascalName}Telemetry.logCompletion(String(userId), result.referenceId);
+
     const text = ${pascalName}Messages.successReceipt(result.referenceId);
     const kb = ${pascalName}Keyboards.completionKeyboard(result.referenceId);
     await this.replyOrEdit(ctx, text, kb);
@@ -385,9 +430,11 @@ describe('Flow ${flowKey} UX Tests — ${pascalName}', () => {
   const rbacSpec = `import { describe, it, expect } from 'vitest';
 
 describe('Flow ${flowKey} RBAC Tests — ${pascalName}', () => {
-  it('should restrict unauthenticated roles', () => {
-    const allowed = ['SUPER_ADMIN', 'PROJECT_MANAGER', 'SITE_SUPERVISOR'];
+  it('should restrict unauthenticated roles and permit canonical admin roles', () => {
+    const allowed = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'];
     expect(allowed.includes('SUPER_ADMIN')).toBe(true);
+    expect(allowed.includes('GENERAL_ADMIN')).toBe(true);
+    expect(allowed.includes('FIELD_ADMIN')).toBe(true);
     expect(allowed.includes('GUEST')).toBe(false);
   });
 });
@@ -396,15 +443,122 @@ describe('Flow ${flowKey} RBAC Tests — ${pascalName}', () => {
 
   // 15. tests/flow.data.spec.ts
   const dataSpec = `import { describe, it, expect } from 'vitest';
+import { validate${pascalName}Input } from '../flow.validators.js';
 
 describe('Flow ${flowKey} Data Tests — ${pascalName}', () => {
-  it('should uphold data integrity', () => {
-    const sampleAmount = 250.75;
-    expect(sampleAmount).toBeGreaterThan(0);
+  it('should accept valid positive amounts and quantities', () => {
+    const validAmount = validate${pascalName}Input(250.75, 10);
+    expect(validAmount.isValid).toBe(true);
+    expect(validAmount.error).toBeUndefined();
+  });
+
+  it('should reject non-positive amounts and quantities', () => {
+    const zeroAmount = validate${pascalName}Input(0);
+    expect(zeroAmount.isValid).toBe(false);
+    expect(zeroAmount.error).toBeDefined();
+
+    const negativeAmount = validate${pascalName}Input(-50);
+    expect(negativeAmount.isValid).toBe(false);
+
+    const negativeQuantity = validate${pascalName}Input(100, -5);
+    expect(negativeQuantity.isValid).toBe(false);
   });
 });
 `;
   writeFileSync(join(testsDir, 'flow.data.spec.ts'), dataSpec, 'utf8');
+
+  // 16. flow.plugin.ts
+  const pluginContent = `import type { FlowPlugin } from '@alsaada/core-components';
+import { ${pascalName}Handler } from './flow.handler.js';
+import { ${pascalName}Service } from './flow.service.js';
+import { ${pascalName}Repository } from './flow.repository.js';
+import type { PrismaClient } from '@alsaada/database';
+
+export function create${pascalName}Plugin(prisma: PrismaClient): FlowPlugin {
+  const repo = new ${pascalName}Repository(prisma);
+  const service = new ${pascalName}Service(repo);
+  const handler = new ${pascalName}Handler(service, repo);
+
+  return {
+    flowKey: '${flowKey}',
+    flowSlug: '${flowSlug}',
+    titleArabic: '${flowTitleArabic}',
+    module: '${moduleName}',
+    contract: {
+      flowCode: '${flowKey}',
+      flowName: '${flowTitleArabic}',
+      module: '${moduleName}',
+      status: 'Implemented',
+      allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
+      menuButton: {
+        label: '${flowTitleArabic}',
+        callbackData: 'action:${flowSlug}:start',
+        subSection: 'onboarding',
+        order: 10,
+      },
+    },
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
+    menuButton: {
+      label: '${flowTitleArabic}',
+      callbackData: 'action:${flowSlug}:start',
+      subSection: 'onboarding',
+      order: 10,
+    },
+    registerRoutes: (bot) => {
+      bot.callbackQuery('action:${flowSlug}:start', async (ctx) => {
+        await handler.handleStart(ctx);
+      });
+      bot.callbackQuery('action:${flowKey}:confirm', async (ctx) => {
+        await handler.handleConfirm(ctx);
+      });
+    },
+    handleTextInput: async (ctx, text) => {
+      return false;
+    },
+  };
+}
+`;
+  writeFileSync(join(targetDir, 'flow.plugin.ts'), pluginContent, 'utf8');
+
+  // 17. Register in src/flows.manifest.ts if manifest exists
+  const manifestPath = join(root, 'modules', moduleName, 'src', 'flows.manifest.ts');
+  if (existsSync(manifestPath)) {
+    try {
+      let manifestText = readFileSync(manifestPath, 'utf8');
+      const importStatement = `import { create${pascalName}Plugin } from './flows/${flowDirName}/flow.plugin.js';\n`;
+      if (!manifestText.includes(importStatement.trim())) {
+        manifestText = importStatement + manifestText;
+      }
+
+      if (!manifestText.includes(`flowCode: '${flowKey}'`)) {
+        const metadataPattern = /(const\s+[A-Z0-9_]*FLOW_METADATA\s*:\s*FlowContractMetadata(?:<[^>]+>)?\[\]\s*=\s*\[)/;
+        const metaMatch = metadataPattern.exec(manifestText);
+        if (metaMatch && metaMatch.index !== undefined) {
+          const arrayEnd = manifestText.indexOf('];', metaMatch.index);
+          if (arrayEnd !== -1) {
+            const metaEntry = `  {
+    flowCode: '${flowKey}',
+    flowName: '${flowTitleArabic}',
+    module: '${moduleName}',
+    status: 'Draft',
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
+    menuButton: {
+      label: '${flowTitleArabic}',
+      callbackData: 'action:${flowSlug}:start',
+      subSection: 'onboarding',
+      order: 10,
+    },
+  },\n`;
+            manifestText = manifestText.slice(0, arrayEnd) + metaEntry + manifestText.slice(arrayEnd);
+          }
+        }
+      }
+
+      writeFileSync(manifestPath, manifestText, 'utf8');
+    } catch {
+      // ignore
+    }
+  }
 
   return targetDir;
 }

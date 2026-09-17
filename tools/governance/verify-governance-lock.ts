@@ -1,7 +1,7 @@
-﻿import { createHash } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { createResult, isCliEntrypoint, listFilesRecursive, printAndExit, toRepoPath, type VerificationResult } from './common.js';
+import { createResult, fail, isCliEntrypoint, listFilesRecursive, printAndExit, toRepoPath, type VerificationResult } from './common.js';
 
 export const APPROVAL_PHRASE = 'موافق على التعديل او الايقاف او الحذف';
 export const GOVERNANCE_LOCK_PATH = 'governance.lock.json';
@@ -9,6 +9,44 @@ export const GOVERNANCE_LOCK_PATH = 'governance.lock.json';
 export interface GovernanceLockFileEntry {
   path: string;
   sha256: string;
+}
+
+export interface LockedFlowEntry {
+  flowKey: string;
+  flowSlug?: string | undefined;
+  titleArabic?: string | undefined;
+  directory: string;
+  lockedAt: string;
+  files: GovernanceLockFileEntry[];
+}
+
+export interface LockedDashboardFeatureEntry {
+  featureId: string;
+  title: string;
+  directory: string;
+  lockedAt: string;
+  files: GovernanceLockFileEntry[];
+}
+
+export interface LockedSpeedEngineEntry {
+  engineId: string;
+  title: string;
+  lockedAt: string;
+  files: GovernanceLockFileEntry[];
+}
+
+export interface LockedModuleEntry {
+  moduleName: string;
+  titleArabic?: string | undefined;
+  directory: string;
+  lockedAt: string;
+  files: GovernanceLockFileEntry[];
+}
+
+export interface LockedDockerEntry {
+  directory: string;
+  lockedAt: string;
+  files: GovernanceLockFileEntry[];
 }
 
 export interface GovernanceLock {
@@ -20,6 +58,11 @@ export interface GovernanceLock {
     directories: string[];
   };
   files: GovernanceLockFileEntry[];
+  lockedFlows?: Record<string, LockedFlowEntry> | undefined;
+  lockedDashboardFeatures?: Record<string, LockedDashboardFeatureEntry> | undefined;
+  lockedModules?: Record<string, LockedModuleEntry> | undefined;
+  lockedSpeedEngine?: LockedSpeedEngineEntry | undefined;
+  lockedDocker?: LockedDockerEntry | undefined;
 }
 
 export const PROTECTED_GOVERNANCE_FILES = [
@@ -34,9 +77,65 @@ export const PROTECTED_GOVERNANCE_FILES = [
   'docs/ai-execution-evidence/README.md',
 ] as const;
 
-export const PROTECTED_GOVERNANCE_DIRECTORIES = ['tools/governance', '.github/workflows'] as const;
+export const PROTECTED_GOVERNANCE_DIRECTORIES = [
+  'tools/governance',
+  '.github/workflows',
+  'tools/scaffold',
+  '.githooks',
+] as const;
 
-const GOVERNANCE_FILE_EXTENSIONS = new Set(['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs', '.json', '.md', '.yml', '.yaml']);
+export const DOCKER_INFRASTRUCTURE_FILES = [
+  'docker-compose.yml',
+  'docker-compose.yaml',
+  '.dockerignore',
+] as const;
+
+export const DOCKER_INFRASTRUCTURE_DIRECTORIES = [
+  'docker',
+] as const;
+
+export function listDockerFiles(root = process.cwd()): string[] {
+  const files = new Set<string>();
+
+  for (const file of DOCKER_INFRASTRUCTURE_FILES) {
+    const fullPath = join(root, file);
+    if (existsSync(fullPath)) files.add(file);
+  }
+
+  for (const dir of DOCKER_INFRASTRUCTURE_DIRECTORIES) {
+    const fullDir = join(root, dir);
+    if (!existsSync(fullDir)) continue;
+    for (const file of listFilesRecursive(fullDir)) {
+      const repoPath = normalized(toRepoPath(root, file));
+      if (
+        repoPath.includes('/data/') ||
+        repoPath.includes('/node_modules/') ||
+        repoPath.endsWith('.log') ||
+        repoPath.endsWith('.tmp')
+      ) {
+        continue;
+      }
+      files.add(repoPath);
+    }
+  }
+
+  return [...files].sort((left, right) => left.localeCompare(right));
+}
+
+const GOVERNANCE_FILE_EXTENSIONS = new Set([
+  '.ts',
+  '.mts',
+  '.cts',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.json',
+  '.md',
+  '.yml',
+  '.yaml',
+  '.sh',
+  '.cmd',
+]);
 
 function normalized(path: string): string {
   return path.replace(/\\/g, '/');
@@ -44,6 +143,7 @@ function normalized(path: string): string {
 
 function hasGovernanceExtension(path: string): boolean {
   const normalizedPath = normalized(path).toLowerCase();
+  if (normalizedPath.startsWith('.githooks/') || normalizedPath.includes('/.githooks/')) return true;
   for (const extension of GOVERNANCE_FILE_EXTENSIONS) {
     if (normalizedPath.endsWith(extension)) return true;
   }
@@ -82,9 +182,49 @@ export function sha256File(path: string): string {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
 }
 
-export function buildGovernanceLock(root = process.cwd(), generatedAt = new Date().toISOString()): GovernanceLock {
+export function hashDirectoryFiles(dir: string, root = process.cwd()): GovernanceLockFileEntry[] {
+  if (!existsSync(dir)) return [];
+  const files = listFilesRecursive(dir)
+    .map((filePath) => normalized(toRepoPath(root, filePath)))
+    .filter((repoPath) => !repoPath.includes('/node_modules/') && !repoPath.includes('/dist/'))
+    .sort((a, b) => a.localeCompare(b));
+
+  return files.map((file) => ({
+    path: file,
+    sha256: sha256File(join(root, file)),
+  }));
+}
+
+export function buildGovernanceLock(
+  root = process.cwd(),
+  generatedAt = new Date().toISOString(),
+  existingLock?: GovernanceLock | null
+): GovernanceLock {
   const protectedFiles = listProtectedGovernanceFiles(root);
-  return {
+
+  let lockedFlows: Record<string, LockedFlowEntry> | undefined = existingLock?.lockedFlows;
+  let lockedDashboardFeatures: Record<string, LockedDashboardFeatureEntry> | undefined = existingLock?.lockedDashboardFeatures;
+  let lockedModules: Record<string, LockedModuleEntry> | undefined = existingLock?.lockedModules;
+  let lockedSpeedEngine: LockedSpeedEngineEntry | undefined = existingLock?.lockedSpeedEngine;
+  let lockedDocker: LockedDockerEntry | undefined = existingLock?.lockedDocker;
+
+  if (!existingLock) {
+    const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+    if (existsSync(lockPath)) {
+      try {
+        const parsed = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+        if (parsed.lockedFlows) lockedFlows = parsed.lockedFlows;
+        if (parsed.lockedDashboardFeatures) lockedDashboardFeatures = parsed.lockedDashboardFeatures;
+        if (parsed.lockedModules) lockedModules = parsed.lockedModules;
+        if (parsed.lockedSpeedEngine) lockedSpeedEngine = parsed.lockedSpeedEngine;
+        if (parsed.lockedDocker) lockedDocker = parsed.lockedDocker;
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  const lock: GovernanceLock = {
     schemaVersion: 1,
     generatedAt,
     approvalPhrase: APPROVAL_PHRASE,
@@ -94,20 +234,462 @@ export function buildGovernanceLock(root = process.cwd(), generatedAt = new Date
     },
     files: protectedFiles.map((file) => ({ path: file, sha256: sha256File(join(root, file)) })),
   };
+
+  if (lockedFlows && Object.keys(lockedFlows).length > 0) {
+    lock.lockedFlows = lockedFlows;
+  }
+  if (lockedDashboardFeatures && Object.keys(lockedDashboardFeatures).length > 0) {
+    lock.lockedDashboardFeatures = lockedDashboardFeatures;
+  }
+  if (lockedModules && Object.keys(lockedModules).length > 0) {
+    lock.lockedModules = lockedModules;
+  }
+  if (lockedSpeedEngine) {
+    lock.lockedSpeedEngine = lockedSpeedEngine;
+  }
+  if (lockedDocker) {
+    lock.lockedDocker = lockedDocker;
+  }
+
+  return lock;
 }
 
-export function writeGovernanceLock(root = process.cwd(), generatedAt = new Date().toISOString()): GovernanceLock {
-  const lock = buildGovernanceLock(root, generatedAt);
+export function writeGovernanceLock(
+  root = process.cwd(),
+  generatedAt = new Date().toISOString(),
+  existingLock?: GovernanceLock | null
+): GovernanceLock {
+  const lock = buildGovernanceLock(root, generatedAt, existingLock);
   const outputPath = join(root, GOVERNANCE_LOCK_PATH);
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${JSON.stringify(lock, null, 2)}\n`, 'utf8');
   return lock;
 }
 
+export function lockFlowEntry(
+  root: string,
+  flowKey: string,
+  flowDir: string,
+  metadata?: { titleArabic?: string; flowSlug?: string }
+): GovernanceLock {
+  const existingLockPath = join(root, GOVERNANCE_LOCK_PATH);
+  let existingLock: GovernanceLock | null = null;
+  if (existsSync(existingLockPath)) {
+    try {
+      existingLock = JSON.parse(readFileSync(existingLockPath, 'utf8')) as GovernanceLock;
+    } catch {
+      existingLock = null;
+    }
+  }
+
+  const files = hashDirectoryFiles(flowDir, root);
+  const repoDir = normalized(toRepoPath(root, flowDir));
+  const entry: LockedFlowEntry = {
+    flowKey,
+    flowSlug: metadata?.flowSlug,
+    titleArabic: metadata?.titleArabic,
+    directory: repoDir,
+    lockedAt: new Date().toISOString(),
+    files,
+  };
+
+  const lockedFlows = { ...(existingLock?.lockedFlows || {}), [flowKey]: entry };
+  const updatedLock = buildGovernanceLock(root, new Date().toISOString(), {
+    ...existingLock,
+    lockedFlows,
+  } as GovernanceLock);
+
+  const outputPath = join(root, GOVERNANCE_LOCK_PATH);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(updatedLock, null, 2)}\n`, 'utf8');
+  return updatedLock;
+}
+
+export function lockDashboardFeatureEntry(
+  root: string,
+  featureId: string,
+  featureDir: string,
+  title: string
+): GovernanceLock {
+  const existingLockPath = join(root, GOVERNANCE_LOCK_PATH);
+  let existingLock: GovernanceLock | null = null;
+  if (existsSync(existingLockPath)) {
+    try {
+      existingLock = JSON.parse(readFileSync(existingLockPath, 'utf8')) as GovernanceLock;
+    } catch {
+      existingLock = null;
+    }
+  }
+
+  const files = hashDirectoryFiles(featureDir, root);
+  const repoDir = normalized(toRepoPath(root, featureDir));
+  const entry: LockedDashboardFeatureEntry = {
+    featureId,
+    title,
+    directory: repoDir,
+    lockedAt: new Date().toISOString(),
+    files,
+  };
+
+  const lockedDashboardFeatures = { ...(existingLock?.lockedDashboardFeatures || {}), [featureId]: entry };
+  const updatedLock = buildGovernanceLock(root, new Date().toISOString(), {
+    ...existingLock,
+    lockedDashboardFeatures,
+  } as GovernanceLock);
+
+  const outputPath = join(root, GOVERNANCE_LOCK_PATH);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(updatedLock, null, 2)}\n`, 'utf8');
+  return updatedLock;
+}
+
+export function unlockFlowEntry(root: string, flowKey: string): { ok: boolean; error?: string } {
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  if (!existsSync(lockPath)) return { ok: false, error: 'governance.lock.json not found' };
+  try {
+    const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+    if (!lock.lockedFlows || !lock.lockedFlows[flowKey]) {
+      return { ok: false, error: `Flow '${flowKey}' is not locked in governance.lock.json` };
+    }
+    delete lock.lockedFlows[flowKey];
+    const updated = buildGovernanceLock(root, new Date().toISOString(), lock);
+    writeFileSync(lockPath, `${JSON.stringify(updated, null, 2)}\n`, 'utf8');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+export function unlockDashboardFeatureEntry(root: string, featureId: string): { ok: boolean; error?: string } {
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  if (!existsSync(lockPath)) return { ok: false, error: 'governance.lock.json not found' };
+  try {
+    const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+    if (!lock.lockedDashboardFeatures || !lock.lockedDashboardFeatures[featureId]) {
+      return { ok: false, error: `Dashboard feature '${featureId}' is not locked in governance.lock.json` };
+    }
+    delete lock.lockedDashboardFeatures[featureId];
+    const updated = buildGovernanceLock(root, new Date().toISOString(), lock);
+    writeFileSync(lockPath, `${JSON.stringify(updated, null, 2)}\n`, 'utf8');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+export function lockModuleEntry(
+  root: string,
+  moduleName: string,
+  moduleDir: string,
+  titleArabic?: string
+): GovernanceLock {
+  const existingLockPath = join(root, GOVERNANCE_LOCK_PATH);
+  let existingLock: GovernanceLock | null = null;
+  if (existsSync(existingLockPath)) {
+    try {
+      existingLock = JSON.parse(readFileSync(existingLockPath, 'utf8')) as GovernanceLock;
+    } catch {
+      existingLock = null;
+    }
+  }
+
+  const files = hashDirectoryFiles(moduleDir, root);
+  const repoDir = normalized(toRepoPath(root, moduleDir));
+  const entry: LockedModuleEntry = {
+    moduleName,
+    titleArabic,
+    directory: repoDir,
+    lockedAt: new Date().toISOString(),
+    files,
+  };
+
+  const lockedModules = { ...(existingLock?.lockedModules || {}), [moduleName]: entry };
+  const updatedLock = buildGovernanceLock(root, new Date().toISOString(), {
+    ...existingLock,
+    lockedModules,
+  } as GovernanceLock);
+
+  const outputPath = join(root, GOVERNANCE_LOCK_PATH);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(updatedLock, null, 2)}\n`, 'utf8');
+  return updatedLock;
+}
+
+export function unlockModuleEntry(root: string, moduleName: string): { ok: boolean; error?: string } {
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  if (!existsSync(lockPath)) return { ok: false, error: 'governance.lock.json not found' };
+  try {
+    const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+    if (!lock.lockedModules || !lock.lockedModules[moduleName]) {
+      return { ok: false, error: `Module '${moduleName}' is not locked in governance.lock.json` };
+    }
+    delete lock.lockedModules[moduleName];
+    const updated = buildGovernanceLock(root, new Date().toISOString(), lock);
+    writeFileSync(lockPath, `${JSON.stringify(updated, null, 2)}\n`, 'utf8');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+export function lockSpeedEngineEntry(
+  root: string,
+  speedFiles: string[],
+  title = 'Enterprise Permanent Speed Engine'
+): GovernanceLock {
+  const existingLockPath = join(root, GOVERNANCE_LOCK_PATH);
+  let existingLock: GovernanceLock | null = null;
+  if (existsSync(existingLockPath)) {
+    try {
+      existingLock = JSON.parse(readFileSync(existingLockPath, 'utf8')) as GovernanceLock;
+    } catch {
+      existingLock = null;
+    }
+  }
+
+  const files: GovernanceLockFileEntry[] = speedFiles.map((file) => {
+    const repoPath = normalized(toRepoPath(root, file));
+    return {
+      path: repoPath,
+      sha256: sha256File(join(root, repoPath)),
+    };
+  });
+
+  const entry: LockedSpeedEngineEntry = {
+    engineId: 'speed-engine',
+    title,
+    lockedAt: new Date().toISOString(),
+    files,
+  };
+
+  const updatedLock = buildGovernanceLock(root, new Date().toISOString(), {
+    ...existingLock,
+    lockedSpeedEngine: entry,
+  } as GovernanceLock);
+
+  const outputPath = join(root, GOVERNANCE_LOCK_PATH);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(updatedLock, null, 2)}\n`, 'utf8');
+  return updatedLock;
+}
+
+export function unlockSpeedEngineEntry(root: string): { ok: boolean; error?: string } {
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  if (!existsSync(lockPath)) return { ok: false, error: 'governance.lock.json not found' };
+  try {
+    const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+    if (!lock.lockedSpeedEngine) {
+      return { ok: false, error: 'Speed engine is not locked in governance.lock.json' };
+    }
+    delete lock.lockedSpeedEngine;
+    const updated = buildGovernanceLock(root, new Date().toISOString(), lock);
+    writeFileSync(lockPath, `${JSON.stringify(updated, null, 2)}\n`, 'utf8');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+export function lockDockerEntry(root = process.cwd()): GovernanceLock {
+  const existingLockPath = join(root, GOVERNANCE_LOCK_PATH);
+  let existingLock: GovernanceLock | null = null;
+  if (existsSync(existingLockPath)) {
+    try {
+      existingLock = JSON.parse(readFileSync(existingLockPath, 'utf8')) as GovernanceLock;
+    } catch {
+      existingLock = null;
+    }
+  }
+
+  const dockerFiles = listDockerFiles(root);
+  const files: GovernanceLockFileEntry[] = dockerFiles.map((file) => ({
+    path: file,
+    sha256: sha256File(join(root, file)),
+  }));
+
+  const entry: LockedDockerEntry = {
+    directory: 'docker',
+    lockedAt: new Date().toISOString(),
+    files,
+  };
+
+  const updatedLock = buildGovernanceLock(root, new Date().toISOString(), {
+    ...existingLock,
+    lockedDocker: entry,
+  } as GovernanceLock);
+
+  const outputPath = join(root, GOVERNANCE_LOCK_PATH);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(updatedLock, null, 2)}\n`, 'utf8');
+  return updatedLock;
+}
+
+export function unlockDockerEntry(root = process.cwd()): { ok: boolean; error?: string } {
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  if (!existsSync(lockPath)) return { ok: false, error: 'governance.lock.json not found' };
+  try {
+    const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+    if (!lock.lockedDocker) {
+      return { ok: false, error: 'Docker infrastructure is not locked in governance.lock.json' };
+    }
+    delete lock.lockedDocker;
+    const updated = buildGovernanceLock(root, new Date().toISOString(), lock);
+    writeFileSync(lockPath, `${JSON.stringify(updated, null, 2)}\n`, 'utf8');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
 export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
   const result = createResult();
-  const lock = buildGovernanceLock(root);
-  result.checked = lock.files.length;
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  if (!existsSync(lockPath)) {
+    fail(result, `Missing ${GOVERNANCE_LOCK_PATH}.`);
+    return result;
+  }
+
+  let lock: GovernanceLock;
+  try {
+    lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
+  } catch (err) {
+    fail(result, `Failed to parse ${GOVERNANCE_LOCK_PATH}: ${err}`);
+    return result;
+  }
+
+  let count = lock.files.length;
+
+  for (const entry of lock.files) {
+    const fullPath = join(root, entry.path);
+    if (!existsSync(fullPath)) {
+      fail(result, `Protected file missing: ${entry.path}`);
+      continue;
+    }
+    if (sha256File(fullPath) !== entry.sha256) {
+      fail(result, `Protected file sha256 mismatch: ${entry.path}`);
+    }
+  }
+
+  if (lock.lockedFlows) {
+    for (const [flowKey, flow] of Object.entries(lock.lockedFlows)) {
+      count += flow.files.length;
+      const flowDir = join(root, flow.directory);
+      if (!existsSync(flowDir)) {
+        fail(result, `Locked flow '${flowKey}' directory is missing: ${flow.directory}`);
+        continue;
+      }
+      const expectedPaths = new Set(flow.files.map((f) => f.path));
+      for (const entry of flow.files) {
+        const fullPath = join(root, entry.path);
+        if (!existsSync(fullPath)) {
+          fail(result, `Locked flow '${flowKey}' file is missing: ${entry.path}`);
+          continue;
+        }
+        if (sha256File(fullPath) !== entry.sha256) {
+          fail(result, `Locked flow '${flowKey}' cryptographic integrity violated! Modified: ${entry.path}`);
+        }
+      }
+      const actualFiles = hashDirectoryFiles(flowDir, root);
+      for (const actual of actualFiles) {
+        if (!expectedPaths.has(actual.path)) {
+          fail(result, `Locked flow '${flowKey}' contains unrecorded file: ${actual.path}`);
+        }
+      }
+    }
+  }
+
+  if (lock.lockedDashboardFeatures) {
+    for (const [featureId, feature] of Object.entries(lock.lockedDashboardFeatures)) {
+      count += feature.files.length;
+      const featureDir = join(root, feature.directory);
+      if (!existsSync(featureDir)) {
+        fail(result, `Locked dashboard feature '${featureId}' directory is missing: ${feature.directory}`);
+        continue;
+      }
+      const expectedPaths = new Set(feature.files.map((f) => f.path));
+      for (const entry of feature.files) {
+        const fullPath = join(root, entry.path);
+        if (!existsSync(fullPath)) {
+          fail(result, `Locked dashboard feature '${featureId}' file is missing: ${entry.path}`);
+          continue;
+        }
+        if (sha256File(fullPath) !== entry.sha256) {
+          fail(result, `Locked dashboard feature '${featureId}' cryptographic integrity violated! Modified: ${entry.path}`);
+        }
+      }
+      const actualFiles = hashDirectoryFiles(featureDir, root);
+      for (const actual of actualFiles) {
+        if (!expectedPaths.has(actual.path)) {
+          fail(result, `Locked dashboard feature '${featureId}' contains unrecorded file: ${actual.path}`);
+        }
+      }
+    }
+  }
+
+  if (lock.lockedModules) {
+    for (const [moduleName, mod] of Object.entries(lock.lockedModules)) {
+      count += mod.files.length;
+      const modDir = join(root, mod.directory);
+      if (!existsSync(modDir)) {
+        fail(result, `Locked module '${moduleName}' directory is missing: ${mod.directory}`);
+        continue;
+      }
+      const expectedPaths = new Set(mod.files.map((f) => f.path));
+      for (const entry of mod.files) {
+        const fullPath = join(root, entry.path);
+        if (!existsSync(fullPath)) {
+          fail(result, `Locked module '${moduleName}' file is missing: ${entry.path}`);
+          continue;
+        }
+        if (sha256File(fullPath) !== entry.sha256) {
+          fail(result, `Locked module '${moduleName}' cryptographic integrity violated! Modified: ${entry.path}`);
+        }
+      }
+      const actualFiles = hashDirectoryFiles(modDir, root);
+      for (const actual of actualFiles) {
+        if (!expectedPaths.has(actual.path)) {
+          fail(result, `Locked module '${moduleName}' contains unrecorded file: ${actual.path}`);
+        }
+      }
+    }
+  }
+
+  if (lock.lockedSpeedEngine) {
+    count += lock.lockedSpeedEngine.files.length;
+    for (const entry of lock.lockedSpeedEngine.files) {
+      const fullPath = join(root, entry.path);
+      if (!existsSync(fullPath)) {
+        fail(result, `Locked speed engine file is missing: ${entry.path}`);
+        continue;
+      }
+      if (sha256File(fullPath) !== entry.sha256) {
+        fail(result, `Locked speed engine cryptographic integrity violated! Modified: ${entry.path}`);
+      }
+    }
+  }
+
+  if (lock.lockedDocker) {
+    count += lock.lockedDocker.files.length;
+    const expectedPaths = new Set(lock.lockedDocker.files.map((f) => f.path));
+    for (const entry of lock.lockedDocker.files) {
+      const fullPath = join(root, entry.path);
+      if (!existsSync(fullPath)) {
+        fail(result, `Locked Docker infrastructure file is missing: ${entry.path}`);
+        continue;
+      }
+      if (sha256File(fullPath) !== entry.sha256) {
+        fail(result, `Locked Docker infrastructure cryptographic integrity violated! Modified: ${entry.path}`);
+      }
+    }
+    const actualDockerFiles = listDockerFiles(root);
+    for (const actualPath of actualDockerFiles) {
+      if (!expectedPaths.has(actualPath)) {
+        fail(result, `Locked Docker infrastructure contains unrecorded file: ${actualPath}`);
+      }
+    }
+  }
+
+  result.checked = count;
   return result;
 }
 
@@ -116,6 +698,11 @@ if (isCliEntrypoint(import.meta.url)) {
     const lock = writeGovernanceLock(process.cwd());
     console.log(`governance:lock: PASS`);
     console.log(`Protected files: ${lock.files.length}`);
+    if (lock.lockedFlows) console.log(`Locked flows: ${Object.keys(lock.lockedFlows).length}`);
+    if (lock.lockedDashboardFeatures) console.log(`Locked dashboard features: ${Object.keys(lock.lockedDashboardFeatures).length}`);
+    if (lock.lockedModules) console.log(`Locked modules: ${Object.keys(lock.lockedModules).length}`);
+    if (lock.lockedSpeedEngine) console.log(`Locked speed engine files: ${lock.lockedSpeedEngine.files.length}`);
+    if (lock.lockedDocker) console.log(`Locked Docker infrastructure files: ${lock.lockedDocker.files.length}`);
     console.log(`Output: ${GOVERNANCE_LOCK_PATH}`);
   } else {
     printAndExit('governance:lock', verifyGovernanceLock(process.cwd()));

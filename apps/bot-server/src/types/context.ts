@@ -20,5 +20,10 @@ export interface MyContext extends Context {
   workerId?: string;
   workerCode?: string;
   assignedSiteId?: string;
+  traceId?: string;
+  module?: string;
+  flowId?: string;
+  cacheSource?: string;
 }
+
 

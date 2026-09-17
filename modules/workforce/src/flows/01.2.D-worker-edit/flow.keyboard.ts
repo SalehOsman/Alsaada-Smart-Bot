@@ -206,7 +206,9 @@ export class WorkerEditKeyboards {
       kb.text('🥾 مقاس حذاء السيفتي', `action:w_edit:pk:ppes:${workerId}`)
         .text('👕 مقاس اليونيفورم', `action:w_edit:pk:ppeu:${workerId}`)
         .row();
-      kb.text('🔗 ربط / تعديل معرف تليجرام', `action:w_edit:f:tgid:${workerId}`).row();
+      kb.text('🔗 ربط / تعديل معرف تليجرام', `action:w_edit:f:tgid:${workerId}`)
+        .text('🔓 إلغاء ربط حساب تليجرام', `act:wrk:unlink:${workerId}`)
+        .row();
     }
 
     kb.text('◀️ العودة لدليل العاملين', 'action:worker:directory').row();

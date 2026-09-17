@@ -48,6 +48,35 @@ export interface WorkerProfile360 {
   completionPercentage: number;
   missingItems: string[];
   missingDataWhatsAppUrl?: string | undefined;
+  telegramId?: bigint | null | undefined;
+  documentsCount?: number | undefined;
+  commitmentBadge?: string | undefined;
+}
+
+export interface WorkerDocumentItem {
+  id: string;
+  workerId: string;
+  title: string;
+  category: string;
+  fileName: string;
+  fileType: string;
+  fileUri: string;
+  driveFileId?: string | null | undefined;
+  fileSizeBytes?: bigint | null | undefined;
+  uploadedBy?: bigint | null | undefined;
+  createdAt: Date;
+  updatedAt?: Date | undefined;
+}
+
+export interface WorkerDocUploadState {
+  workerId: string;
+  workerCode: string;
+  workerName: string;
+  step: 'PICK_CATEGORY' | 'CUSTOM_TITLE' | 'AWAIT_FILE';
+  category?: string | undefined;
+  title?: string | undefined;
+  activeMessageId?: number | undefined;
+  chatId?: number | undefined;
 }
 
 export interface WorkerDirectoryQuery {

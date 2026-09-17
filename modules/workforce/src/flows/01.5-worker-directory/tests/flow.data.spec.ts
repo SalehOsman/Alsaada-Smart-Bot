@@ -141,6 +141,7 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     expect(decodeURIComponent(profile?.missingDataWhatsAppUrl || '')).toContain('هيما');
 
     // Test keyboard contains missing data WhatsApp button
+    // When URL exceeds Telegram 512-byte limit, it safely falls back to interactive callback action:worker:mwa:...
     const { WorkerDirectoryKeyboards } = await import('../flow.keyboard.js');
     const kb = WorkerDirectoryKeyboards.profile360ActionsKeyboard(
       'wrk-inc',
@@ -150,7 +151,21 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     );
     const flat = kb.inline_keyboard.flat();
     const missingBtn = flat.find((b) => b.text.includes('طلب استكمال النواقص عبر واتساب'));
-    expect(missingBtn && 'url' in missingBtn ? missingBtn.url : undefined).toBe(profile?.missingDataWhatsAppUrl);
+    expect(missingBtn).toBeDefined();
+    // Since missingDataWhatsAppUrl is ~2000 bytes, it must fall back to safe callback to prevent Telegram BUTTON_DATA_INVALID
+    expect(missingBtn && 'callback_data' in missingBtn ? missingBtn.callback_data : undefined).toBe('action:worker:mwa:wrk-inc');
+
+    // Verify that when URL is within Telegram 512-byte limit, it renders as a direct URL button
+    const safeShortUrl = 'https://wa.me/201012345678';
+    const kbShort = WorkerDirectoryKeyboards.profile360ActionsKeyboard(
+      'wrk-inc',
+      undefined,
+      false,
+      safeShortUrl
+    );
+    const flatShort = kbShort.inline_keyboard.flat();
+    const missingBtnShort = flatShort.find((b) => b.text.includes('طلب استكمال النواقص عبر واتساب'));
+    expect(missingBtnShort && 'url' in missingBtnShort ? missingBtnShort.url : undefined).toBe(safeShortUrl);
   });
 
   it('should evaluate 100% complete profile without missing data button', async () => {

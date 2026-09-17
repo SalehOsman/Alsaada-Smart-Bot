@@ -17,7 +17,10 @@ import {
 export class GhostModeHandler {
   constructor(
     private readonly service: GhostModeService,
-    private readonly onStateChanged?: (telegramId: bigint) => Promise<void>
+    private readonly onStateChanged?: (telegramId: bigint, role?: string) => Promise<void>,
+    private readonly screenFlow?: {
+      ensurePersistentKeyboard: (ctx: SettingsModuleContext, customText?: string, forceRefresh?: boolean) => Promise<void>;
+    }
   ) {}
 
   async renderGhostModeMenu(ctx: SettingsModuleContext): Promise<void> {
@@ -79,21 +82,30 @@ export class GhostModeHandler {
 
     ctx.effectiveRole = 'WORKER';
     ctx.isImpersonating = true;
+    if (res.entity) {
+      ctx.impersonatedEntity = res.entity;
+      ctx.workerId = res.entity.id;
+      if (res.entity.code) ctx.workerCode = res.entity.code;
+      if (res.entity.siteId) ctx.assignedSiteId = res.entity.siteId;
+    }
     if (this.onStateChanged) {
-      await this.onStateChanged(telegramId);
+      await this.onStateChanged(telegramId, 'WORKER');
     }
 
-    const keyboard = buildExitGhostKeyboard();
     const text = formatImpersonateSuccess('WORKER', res.workerName);
 
     if (ctx.callbackQuery) {
       await ctx.answerCallbackQuery({ text: '🎭 تم تقمص دور العامل' }).catch(() => {});
       try {
-        await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
-        return;
+        await ctx.editMessageText(text, { parse_mode: 'Markdown' });
       } catch {}
+    } else {
+      await ctx.reply(text, { parse_mode: 'Markdown' });
     }
-    await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+
+    if (this.screenFlow) {
+      await this.screenFlow.ensurePersistentKeyboard(ctx, undefined, true);
+    }
   }
 
   async handlePickSupplier(ctx: SettingsModuleContext): Promise<void> {
@@ -127,21 +139,27 @@ export class GhostModeHandler {
 
     ctx.effectiveRole = 'SUPPLIER';
     ctx.isImpersonating = true;
+    if (res.entity) {
+      ctx.impersonatedEntity = res.entity;
+    }
     if (this.onStateChanged) {
-      await this.onStateChanged(telegramId);
+      await this.onStateChanged(telegramId, 'SUPPLIER');
     }
 
-    const keyboard = buildExitGhostKeyboard();
     const text = formatImpersonateSuccess('SUPPLIER', res.supplierName);
 
     if (ctx.callbackQuery) {
       await ctx.answerCallbackQuery({ text: '🎭 تم تقمص دور المورد' }).catch(() => {});
       try {
-        await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
-        return;
+        await ctx.editMessageText(text, { parse_mode: 'Markdown' });
       } catch {}
+    } else {
+      await ctx.reply(text, { parse_mode: 'Markdown' });
     }
-    await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+
+    if (this.screenFlow) {
+      await this.screenFlow.ensurePersistentKeyboard(ctx, undefined, true);
+    }
   }
 
   async handleImpersonateRole(ctx: SettingsModuleContext, roleStr: string): Promise<void> {
@@ -165,34 +183,69 @@ export class GhostModeHandler {
 
     ctx.effectiveRole = res.role;
     ctx.isImpersonating = true;
+    if (res.entity) {
+      ctx.impersonatedEntity = res.entity;
+      if (res.entity.siteId) ctx.assignedSiteId = res.entity.siteId;
+    }
     if (this.onStateChanged) {
-      await this.onStateChanged(telegramId);
+      await this.onStateChanged(telegramId, res.role);
     }
 
-    const keyboard = buildExitGhostKeyboard();
     const text = formatImpersonateSuccess(res.role);
 
     if (ctx.callbackQuery) {
       await ctx.answerCallbackQuery({ text: '🎭 تم تفعيل المحاكاة' }).catch(() => {});
       try {
-        await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
-        return;
+        await ctx.editMessageText(text, { parse_mode: 'Markdown' });
       } catch {
         // fallback
       }
+    } else {
+      await ctx.reply(text, { parse_mode: 'Markdown' });
     }
-    await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+
+    if (this.screenFlow) {
+      await this.screenFlow.ensurePersistentKeyboard(ctx, undefined, true);
+    }
   }
 
   async handleExitImpersonate(ctx: SettingsModuleContext): Promise<void> {
     if (!ctx.from) return;
+    if (!ctx.isRealSuperAdmin) {
+      if (ctx.callbackQuery) {
+        await ctx.answerCallbackQuery({
+          text: '🔒 خاصية إنهاء المحاكاة مخصصة حصرياً للمدير العام.',
+          show_alert: true,
+        }).catch(() => {});
+      } else {
+        await ctx.reply('🔒 خاصية إنهاء المحاكاة مخصصة حصرياً للمدير العام.');
+      }
+      return;
+    }
+
+    if (!ctx.isImpersonating) {
+      if (ctx.callbackQuery) {
+        await ctx.answerCallbackQuery({
+          text: 'ℹ️ أنت تعمل حالياً بصلاحياتك الأصلية كمدير عام.',
+          show_alert: true,
+        }).catch(() => {});
+      } else {
+        await ctx.reply('ℹ️ أنت تعمل حالياً بصلاحياتك الأصلية كمدير عام.');
+      }
+      return;
+    }
+
     const telegramId = BigInt(ctx.from.id);
 
     await this.service.exitImpersonate(telegramId);
     ctx.effectiveRole = 'SUPER_ADMIN';
     ctx.isImpersonating = false;
+    delete ctx.impersonatedEntity;
+    delete ctx.workerId;
+    delete ctx.workerCode;
+    delete ctx.assignedSiteId;
     if (this.onStateChanged) {
-      await this.onStateChanged(telegramId);
+      await this.onStateChanged(telegramId, 'SUPER_ADMIN');
     }
 
     const text = formatExitGhostSuccess();
@@ -204,12 +257,20 @@ export class GhostModeHandler {
       await ctx.answerCallbackQuery({ text: '👑 تم استعادة صلاحيات المدير العام' }).catch(() => {});
       try {
         await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: keyboard });
-        return;
       } catch {
         // fallback
       }
+      if (this.screenFlow) {
+        await this.screenFlow.ensurePersistentKeyboard(ctx, undefined, true);
+      }
+      return;
     }
-    await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+
+    if (this.screenFlow) {
+      await this.screenFlow.ensurePersistentKeyboard(ctx, text, true);
+    } else {
+      await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+    }
   }
 }
 

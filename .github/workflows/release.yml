@@ -1,0 +1,52 @@
+name: Release / Enterprise Monorepo Changesets Engine
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Changesets Automated Release & Tagging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.0.8
+
+      - name: Setup Node.js v22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Verify Git Hygiene & Version Parity
+        run: pnpm git-hygiene:verify
+        env:
+          CI: 'true'
+
+      - name: Create Release Pull Request or Tag Release
+        uses: changesets/action@v1
+        with:
+          version: pnpm version-packages
+          publish: pnpm release:tag
+          title: 'chore(release): version packages and automated release'
+          commit: 'chore(release): version packages [skip ci]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,9 +4,11 @@ import fs from 'fs';
 import { TelemetryLogger } from '@alsaada/telemetry';
 
 import {
+  DashboardAuthConfigError,
   validateDashboardAuthOrigins,
   type DashboardAuthOrigins,
 } from '@alsaada/rbac';
+
 
 const logger = new TelemetryLogger({
   service: 'bot-server',
@@ -239,6 +241,10 @@ export function validateDashboardAuthEnv(): DashboardAuthOrigins {
   const localUrl = process.env.DASHBOARD_LOCAL_URL || 'http://localtest.me:3002';
   const rawDashboardUrl = process.env.DASHBOARD_URL || process.env.ADMIN_DASHBOARD_URL || '';
   const tunnelUrl = resolveTunnelUrl(rawDashboardUrl, process.env.DASHBOARD_TUNNEL_URL);
-  return validateDashboardAuthOrigins({ localUrl, tunnelUrl });
+  const res = validateDashboardAuthOrigins({ localUrl, tunnelUrl });
+  if (!res.ok) {
+    throw new DashboardAuthConfigError(`DASHBOARD_AUTH_CONFIG_ERROR: ${res.code}`);
+  }
+  return res.origins;
 }
 

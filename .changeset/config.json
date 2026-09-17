@@ -1,0 +1,30 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "alsaada-smart-bot",
+      "@alsaada/bot-server",
+      "@alsaada/admin-dashboard",
+      "@alsaada/rbac",
+      "@alsaada/core-components",
+      "@alsaada/database",
+      "@alsaada/regional-engine",
+      "@alsaada/national-id-engine",
+      "@alsaada/telemetry",
+      "@alsaada/ai-vision-engine",
+      "@alsaada/settings",
+      "@alsaada/workforce"
+    ]
+  ],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "privatePackages": {
+    "version": true,
+    "tag": true
+  }
+}

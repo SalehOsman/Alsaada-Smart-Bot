@@ -93,10 +93,6 @@ export async function handleWorkerSubHub(
       .text('🔙 العودة لبوابة العامل', 'action:main_menu');
   }
 
-  if (ctx.isImpersonating && ctx.isRealSuperAdmin) {
-    kb.row().text('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)', 'action:exit_impersonate');
-  }
-
   if (ctx.callbackQuery) {
     try {
       await ctx.editMessageText(text, { parse_mode: 'Markdown', reply_markup: kb });
@@ -129,10 +125,13 @@ export async function handleMyWorkerProfile(ctx: MyContext): Promise<void> {
     `🔹 *الموقع الميداني:* ${worker.site?.name || 'الموقع العام'}\n` +
     `🔹 *تاريخ المباشرة:* ${hireDateStr}\n` +
     `🔹 *الحالة الوظيفية:* 🟢 نشط\n` +
+    `⭐ *مؤشر الالتزام:* 🟢 *ملتزم* (100/100)\n` +
     `────────────────────────────\n` +
     `📌 لتحديث بيانات التواصل أو المحفظة، اضغط على زر التحديث أدناه:`;
 
   const kb = new InlineKeyboard()
+    .text('⭐ تفاصيل مؤشر التزامي', 'action:wcs:card:my')
+    .row()
     .text('✏️ طلب تعديل بياناتي', 'wizard:worker_self_edit:start')
     .row()
     .text('🔙 العودة لبوابة العامل', 'action:main_menu');

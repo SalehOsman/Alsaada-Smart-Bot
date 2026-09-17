@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { WorkerRegistrationHandler } from '../flow.handler.js';
 import { WorkerRegistrationService } from '../flow.service.js';
 import { WorkerRegistrationRepository } from '../flow.repository.js';
+import { WorkerRegistrationMessages } from '../flow.messages.js';
+import { WorkerWizardStep } from '../flow.types.js';
 import type { WorkforceModuleContext } from '../../../shared/module.types.js';
 import type { PrismaClient } from '@alsaada/database';
 
@@ -142,5 +144,53 @@ describe('Flow 01.1 RBAC Tests — Access Control & Role Masking', () => {
     );
 
     expect(sentText).toContain('موقع العمل الميداني');
+  });
+
+  it('should strictly hide all 3 salary lines from confirmation card for FIELD_ADMIN and unauthorized roles', () => {
+    const dummyState = {
+      currentStep: WorkerWizardStep.CONFIRMATION,
+      name: 'علي حسن',
+      nickname: 'أبو علي',
+      idType: 'NATIONAL_ID' as const,
+      idNumber: '29001012701234',
+      phone: '01012345678',
+      jobTitleName: 'سائق لودر',
+      siteName: 'موقع السباعية',
+      basicSalary: 6000,
+      additionalSalary: 3000,
+    };
+
+    const maskedRoles = ['FIELD_ADMIN', 'WORKER_SUPERVISOR', 'WORKER', 'SUPPLIER', 'GUEST', undefined];
+
+    for (const role of maskedRoles) {
+      const card = WorkerRegistrationMessages.confirmationCard(dummyState, role);
+      expect(card).not.toContain('الراتب الأساسي الشهري');
+      expect(card).not.toContain('الراتب الإضافي الشهري');
+      expect(card).not.toContain('إجمالي الراتب الشهري');
+    }
+  });
+
+  it('should display all 3 salary lines in confirmation card for SUPER_ADMIN and GENERAL_ADMIN', () => {
+    const dummyState = {
+      currentStep: WorkerWizardStep.CONFIRMATION,
+      name: 'علي حسن',
+      nickname: 'أبو علي',
+      idType: 'NATIONAL_ID' as const,
+      idNumber: '29001012701234',
+      phone: '01012345678',
+      jobTitleName: 'سائق لودر',
+      siteName: 'موقع السباعية',
+      basicSalary: 6000,
+      additionalSalary: 3000,
+    };
+
+    const authorizedRoles = ['SUPER_ADMIN', 'GENERAL_ADMIN'];
+
+    for (const role of authorizedRoles) {
+      const card = WorkerRegistrationMessages.confirmationCard(dummyState, role);
+      expect(card).toContain('الراتب الأساسي الشهري');
+      expect(card).toContain('الراتب الإضافي الشهري');
+      expect(card).toContain('إجمالي الراتب الشهري');
+    }
   });
 });

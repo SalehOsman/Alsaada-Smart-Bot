@@ -1,4 +1,4 @@
-import { formatBreadcrumbs } from '@alsaada/core-components';
+import { formatBreadcrumbs, formatLocationPromptCard } from '@alsaada/core-components';
 import type { SiteDto } from './flow.types.js';
 
 export function formatSitesListCard(sites: SiteDto[], noticeText?: string): string {
@@ -50,7 +50,7 @@ export function formatSiteDetailCard(site: SiteDto, noticeText?: string): string
 export function formatAddSiteNamePrompt(): string {
   return (
     formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع']) +
-    `➕ *إضافة موقع ميداني جديد — الخطوة 1 من 4*\n` +
+    `➕ *إضافة موقع ميداني جديد — الخطوة 1 من 5*\n` +
     `────────────────────────────\n` +
     `💬 *أرسل اسم الموقع أو الفرع الجديد الآن في رسالة نصية:*\n` +
     `(مثال: موقع العاصمة الإدارية R3 أو محجر السويس)`
@@ -60,7 +60,7 @@ export function formatAddSiteNamePrompt(): string {
 export function formatConfirmCodePrompt(name: string, suggestedCode: string): string {
   return (
     formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'كود الموقع']) +
-    `➕ *تأكيد كود الموقع — الخطوة 2 من 4*\n` +
+    `➕ *تأكيد كود الموقع — الخطوة 2 من 5*\n` +
     `────────────────────────────\n` +
     `اسم الموقع: *${name}*\n` +
     `الكود التلقائي المقترح: \`${suggestedCode}\`\n\n` +
@@ -71,19 +71,47 @@ export function formatConfirmCodePrompt(name: string, suggestedCode: string): st
 export function formatSelectGovPrompt(name: string): string {
   return (
     formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'المحافظة']) +
-    `➕ *تحديد المحافظة — الخطوة 3 من 4*\n` +
+    `➕ *تحديد المحافظة — الخطوة 3 من 5*\n` +
     `────────────────────────────\n` +
     `موقع: *${name}*\n\n` +
     `اختر المحافظة أو الإقليم التابع له الموقع من الأزرار أدناه:`
   );
 }
 
+export function formatSiteLocationPrompt(name: string): string {
+  return formatLocationPromptCard({
+    breadcrumbs: ['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'الموقع الجغرافي'],
+    title: '📍 *تحديد الموقع الجغرافي (GPS) — الخطوة 4 من 5*',
+    siteName: name,
+  });
+}
+
 export function formatSelectGeofencePrompt(name: string): string {
   return (
     formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'السياج الجغرافي']) +
-    `➕ *تحديد السياج الجغرافي (Geofence) — الخطوة 4 من 4*\n` +
+    `➕ *تحديد السياج الجغرافي (Geofence) — الخطوة 5 من 5*\n` +
     `────────────────────────────\n` +
     `موقع: *${name}*\n\n` +
     `حدد نصف قطر السياج الجغرافي المسموح بتسجيل الحضور وتحديد النطاق بداخله:`
+  );
+}
+
+export function formatSiteCreationSuccessCard(site: SiteDto): string {
+  const locationText =
+    site.latitude && site.longitude
+      ? `\`${site.latitude}, ${site.longitude}\`\n[🗺️ فتح الموقع على Google Maps](https://maps.google.com/?q=${site.latitude},${site.longitude})`
+      : 'غير محدد (تم التخطي)';
+
+  return (
+    formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '🏗️ إضافة موقع', 'نجاح التسجيل']) +
+    `✅ *تم تسجيل وإنشاء الموقع بنجاح!*\n` +
+    `────────────────────────────\n` +
+    `🏗️ *اسم الموقع:* *${site.name}*\n` +
+    `🔹 *كود الموقع المعياري:* \`${site.code}\`\n` +
+    `🔹 *المحافظة:* \`${site.governorate || 'غير محدد'}\`\n` +
+    `🔹 *نطاق السياج الجغرافي:* \`${site.geofenceRadiusMeters} متر\`\n` +
+    `🔹 *إحداثيات الـ GPS:*\n${locationText}\n` +
+    `────────────────────────────\n` +
+    `اختر الإجراء التالي المطلوب أدناه:`
   );
 }

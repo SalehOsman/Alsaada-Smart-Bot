@@ -18,6 +18,30 @@ import fs from 'fs';
   }
 })();
 
+// Ensure NODE_ENV is set to development if next dev CLI is running
+if (!process.env.NODE_ENV && (process.argv.includes('dev') || process.env.npm_lifecycle_event === 'dev')) {
+  Reflect.set(process.env, 'NODE_ENV', 'development');
+}
+
+// Ensure CommonJS package.json exists in distDir to avoid ESM require errors
+(() => {
+  try {
+    const targetDir = path.resolve(
+      process.cwd(),
+      process.env.NODE_ENV === 'development' ? '.next-dev' : '.next'
+    );
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    const pkgJson = path.join(targetDir, 'package.json');
+    if (!fs.existsSync(pkgJson)) {
+      fs.writeFileSync(pkgJson, '{"type": "commonjs"}', 'utf8');
+    }
+  } catch {
+    // safe fallback
+  }
+})();
+
 const nextConfig: NextConfig = {
   distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   reactStrictMode: true,
