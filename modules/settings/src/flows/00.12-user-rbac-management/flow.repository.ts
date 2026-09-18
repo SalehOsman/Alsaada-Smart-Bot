@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@alsaada/database';
 import type { Redis } from 'ioredis';
+import { WORKER_SUPERVISOR_PROFILES, type WorkerSupervisorProfileKey } from '@alsaada/rbac';
 import type {
   UserListItemDto,
   UserDetailDto,
@@ -186,6 +187,70 @@ export class UserRbacRepository {
     return this.finishUserMutation(telegramId);
   }
 
+  async assignWorkerSupervisorProfile(
+    actorTelegramId: bigint,
+    targetTelegramId: bigint,
+    profileKey: WorkerSupervisorProfileKey,
+    siteId?: string | null
+  ): Promise<UserDetailDto> {
+    const profile = WORKER_SUPERVISOR_PROFILES[profileKey];
+    if (!profile) {
+      throw new Error('قالب صلاحيات المشرف غير صالح.');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { telegramId: targetTelegramId } });
+    if (!user) throw new Error('المستخدم المطلوب غير موجود.');
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Update user role and optional site
+      await tx.user.update({
+        where: { telegramId: targetTelegramId },
+        data: {
+          role: 'WORKER_SUPERVISOR',
+          assignedSiteId: siteId !== undefined ? siteId : user.assignedSiteId,
+          isActive: true,
+        },
+      });
+
+      // 2. Clear old custom user permissions
+      await tx.botMenuPermission.deleteMany({
+        where: { scopeType: 'USER', scopeId: user.id },
+      });
+
+      // 3. Grant profile permissions to user scope
+      for (const perm of profile.permissions) {
+        for (const act of perm.actions) {
+          await tx.botMenuPermission.create({
+            data: {
+              scopeType: 'USER',
+              scopeId: user.id,
+              featureKey: perm.permissionKey,
+              action: act,
+              policy: 'ALLOW',
+            },
+          });
+        }
+      }
+    });
+
+    // Notify Redis Pub/Sub for sub-5ms invalidation
+    if (this.redis) {
+      try {
+        await this.redis.publish(
+          'channel:rbac:sync',
+          JSON.stringify({
+            eventType: 'USER_PERMISSION_MUTATED',
+            scopeType: 'USER',
+            scopeId: user.id,
+            timestamp: Date.now(),
+          })
+        );
+      } catch {}
+    }
+
+    return this.finishUserMutation(targetTelegramId);
+  }
+
   async revokeUser(telegramId: bigint): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { telegramId } });
     if (!user) return;
@@ -194,11 +259,31 @@ export class UserRbacRepository {
       if (user.workerId) {
         await tx.worker.update({ where: { id: user.workerId }, data: { telegramId: null } });
       }
+      // Remove custom user permissions
+      await tx.botMenuPermission.deleteMany({
+        where: { scopeType: 'USER', scopeId: user.id },
+      });
       await tx.user.update({
         where: { telegramId },
         data: { role: 'GUEST', workerId: null, assignedSiteId: null, isActive: false },
       });
     });
+
+    if (this.redis) {
+      try {
+        await this.redis.publish(
+          'channel:rbac:sync',
+          JSON.stringify({
+            eventType: 'USER_REVOKED',
+            scopeType: 'USER',
+            scopeId: user.id,
+            timestamp: Date.now(),
+          })
+        );
+      } catch {}
+    }
+
+    await this.invalidateUserCache(telegramId);
   }
 
   async findWorkerById(workerId: string): Promise<WorkerCandidateDto | null> {
@@ -217,9 +302,14 @@ export class UserRbacRepository {
     return w ? this.toWorkerCandidate(w) : null;
   }
 
-  async listUnlinkedWorkers(): Promise<WorkerCandidateDto[]> {
+  async listUnlinkedWorkers(siteId?: string): Promise<WorkerCandidateDto[]> {
     const records = await this.prisma.worker.findMany({
-      where: { isDeleted: false, telegramId: null, status: 'ACTIVE' },
+      where: {
+        isDeleted: false,
+        telegramId: null,
+        status: 'ACTIVE',
+        ...(siteId ? { siteId } : {}),
+      },
       include: this.siteSelect,
       orderBy: { code: 'asc' },
       take: 50,

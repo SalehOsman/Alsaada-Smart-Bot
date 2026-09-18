@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { TransactionalOutboxQueue } from '../src/outbox-queue/worker.js';
 
 describe('Transactional Outbox Queue — Tests', () => {
-  it('should enqueue outbox events with PENDING status and default retries', () => {
+  it('should enqueue outbox events with PENDING status and default retries', async () => {
     const queue = new TransactionalOutboxQueue();
     const event = queue.enqueue({
       eventType: 'SHEETS_APPEND_ROW',
@@ -14,7 +14,7 @@ describe('Transactional Outbox Queue — Tests', () => {
     expect(event.status).toBe('PENDING');
     expect(event.retryCount).toBe(0);
     expect(event.maxRetries).toBe(5);
-    expect(queue.getPendingCount()).toBe(1);
+    expect(await queue.getPendingCount()).toBe(1);
   });
 
   it('should process pending events via registered handler and mark COMPLETED', async () => {
@@ -33,7 +33,7 @@ describe('Transactional Outbox Queue — Tests', () => {
     expect(res.successCount).toBe(1);
     expect(res.failureCount).toBe(0);
     expect(mockHandler).toHaveBeenCalledTimes(1);
-    expect(queue.getPendingCount()).toBe(0);
+    expect(await queue.getPendingCount()).toBe(0);
   });
 
   it('should retry failed events and mark dead letter when max retries exceeded', async () => {
@@ -52,12 +52,12 @@ describe('Transactional Outbox Queue — Tests', () => {
     const attempt1 = await queue.processBatch();
     expect(attempt1.failureCount).toBe(1);
     expect(attempt1.deadLetterCount).toBe(0);
-    expect(queue.getPendingCount()).toBe(1);
+    expect(await queue.getPendingCount()).toBe(1);
 
     // 2nd attempt: fails, retryCount = 2, reaches maxRetries -> becomes FAILED
     const attempt2 = await queue.processBatch();
     expect(attempt2.failureCount).toBe(1);
     expect(attempt2.deadLetterCount).toBe(1);
-    expect(queue.getPendingCount()).toBe(0);
+    expect(await queue.getPendingCount()).toBe(0);
   });
 });

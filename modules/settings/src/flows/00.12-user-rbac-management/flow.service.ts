@@ -1,4 +1,5 @@
 import type { UserRbacRepository } from './flow.repository.js';
+import type { WorkerSupervisorProfileKey } from '@alsaada/rbac';
 import type {
   UserListItemDto,
   UserDetailDto,
@@ -46,8 +47,8 @@ export class UserRbacService {
     return this.repository.getUserByTelegramId(telegramId);
   }
 
-  async listUnlinkedWorkers(): Promise<WorkerCandidateDto[]> {
-    return this.repository.listUnlinkedWorkers();
+  async listUnlinkedWorkers(siteId?: string): Promise<WorkerCandidateDto[]> {
+    return this.repository.listUnlinkedWorkers(siteId);
   }
 
   async findWorkerById(workerId: string): Promise<WorkerCandidateDto | null> {
@@ -91,6 +92,50 @@ export class UserRbacService {
 
     const updated = await this.repository.changeUserRole(targetTelegramId, newRole, assignedSiteId);
     return { success: true, user: updated };
+  }
+
+  async assignWorkerSupervisorProfile(
+    actorTelegramId: bigint,
+    targetTelegramId: bigint,
+    profileKey: WorkerSupervisorProfileKey,
+    siteId?: string | null
+  ): Promise<{ success: boolean; user?: UserDetailDto; error?: string }> {
+    if (actorTelegramId === targetTelegramId) {
+      return {
+        success: false,
+        error: 'أمان النظام: لا يمكنك ترقية أو تعديل رتبة حسابك الشخصي بنفسك.',
+      };
+    }
+
+    const targetUser = await this.repository.getUserByTelegramId(targetTelegramId);
+    if (!targetUser) {
+      return { success: false, error: 'المستخدم المطلوب غير موجود.' };
+    }
+
+    if (targetUser.role === 'SUPER_ADMIN') {
+      const activeSuperCount = await this.repository.countActiveSuperAdmins();
+      if (activeSuperCount <= 1) {
+        return {
+          success: false,
+          error: 'أمان الحوكمة: لا يمكن خفض صلاحية المشرف العام الوحيد بالمنظومة.',
+        };
+      }
+    }
+
+    try {
+      const updated = await this.repository.assignWorkerSupervisorProfile(
+        actorTelegramId,
+        targetTelegramId,
+        profileKey,
+        siteId
+      );
+      return { success: true, user: updated };
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'فشلت عملية تعيين المشرف.',
+      };
+    }
   }
 
   async toggleUserBan(

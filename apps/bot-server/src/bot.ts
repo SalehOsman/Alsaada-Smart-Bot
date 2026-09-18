@@ -44,10 +44,13 @@ export const undiciDispatcher = new UndiciAgent({
 setGlobalDispatcher(undiciDispatcher);
 import { clearAllPendingUserActions, redis, safeRedisGet } from './redis.js';
 import { screenFlowService } from './services/screen-flow.service.js';
+import { dynamicMenuService } from './services/dynamic-menu.service.js';
 import { authMiddleware, invalidateUserCache } from './middlewares/auth.middleware.js';
+
 import { telemetryMiddleware } from './middlewares/telemetry.middleware.js';
 import { telemetryService } from './services/telemetry.service.js';
 import { errorVaultService } from './services/error-vault.service.js';
+import { telegramGroupEnforcer } from './services/telegram-group-enforcer.service.js';
 import {
   handleStart,
   renderRoleHome,
@@ -124,6 +127,10 @@ export function createBot(): Bot<MyContext> {
   telemetryService.setConnectionPoolWarmer(async () => {
     await bot.api.getMe().catch(() => {});
   });
+
+  // Initialize Dynamic Bot Catalog Pub/Sub Synchronization Listener
+  dynamicMenuService.initializeSyncListener();
+
 
   // Configure Global Multi-Channel Notification Dispatcher & Helper
   const policyEngine = new NotificationPolicyEngine({
@@ -329,7 +336,25 @@ export function createBot(): Bot<MyContext> {
     return next();
   });
 
+  // 4.0.2. 🛡️ Dynamic Feature Gate & Maintenance Modal Alert Guard (Plan-71 / NEW-85)
+  bot.use(async (ctx, next) => {
+    if (ctx.callbackQuery?.data) {
+      const data = ctx.callbackQuery.data;
+      const check = await dynamicMenuService.verifyCallbackAccess(data, ctx.effectiveRole);
+      if (check.found && !check.allowed) {
+        const alertText = check.maintenanceMessage || 'عذراً، هذه الوظيفة موقوفة مؤقتاً تحت الصيانة المجدولة.';
+        await ctx.answerCallbackQuery({
+          text: alertText,
+          show_alert: true,
+        }).catch(() => {});
+        return; // Halt: intercepted so inactive/maintenance features do not run!
+      }
+    }
+    return next();
+  });
+
   // 5. Build and Initialize Unified Module Bus (Plan 43 Microkernel)
+
   const runtimeContext: ModuleRuntimeContext<MyContext> = {
     prisma,
     redis,
@@ -536,20 +561,100 @@ export function createBot(): Bot<MyContext> {
     );
   });
   bot.hears(/قسيمة راتبي/, async (ctx) => {
-    await ctx.reply('🧾 *خدمة قسائم الرواتب (تحت التجهيز)*\nسيتم عرض مفردات الراتب والبدلات فور ربط محرك الرواتب المالي.', { parse_mode: 'Markdown' });
+    if (!ctx.workerId) {
+      await ctx.reply(
+        '⚠️ *عذراً، حسابك غير مرتبط بملف عامل ميداني.*\n\nيرجى التواصل مع مشرف الموقع للحصول على كود الدعوة الخاص بك لربط حسابك الوظيفي.',
+        { parse_mode: 'Markdown' }
+      );
+      return;
+    }
+    const worker = await prisma.worker.findUnique({
+      where: { id: ctx.workerId },
+      select: { 
+        basicSalary: true, 
+        additionalSalary: true, 
+        name: true, 
+        jobTitle: true,
+        customAllowances: { where: { isActive: true } },
+        dutyRosters: { where: { status: 'PRESENT' } },
+        leaves: { where: { status: 'APPROVED' } }
+      }
+    });
+    if (!worker) return;
+
+    const allowances = worker.customAllowances.reduce((acc, curr) => acc + Number(curr.amount), 0);
+    const presentDays = worker.dutyRosters.length;
+    const leaveDays = worker.leaves.length;
+
+    await ctx.reply(
+      `🧾 *قسيمة راتبي*\n\nالاسم: ${worker.name}\nالوظيفة: ${worker.jobTitle}\n\nالراتب الأساسي: ${worker.basicSalary} ج.م\nالراتب الإضافي: ${worker.additionalSalary} ج.م\nالبدلات: ${allowances} ج.م\n\nأيام الحضور: ${presentDays}\nأيام الإجازات المعتمدة: ${leaveDays}\n\n_سيتم دمج تفاصيل الحضور والانصراف والمكافآت فور إغلاق دورة الرواتب الشهرية._`,
+      { parse_mode: 'Markdown' }
+    );
   });
   bot.hears(/كشف حسابي/, async (ctx) => {
-    await ctx.reply('📊 *خدمة كشف الحساب والمسحوبات (تحت التجهيز)*\nسيتم استعراض السلف والمسحوبات فور اعتماد الربط المحاسبي.', { parse_mode: 'Markdown' });
+    if (!ctx.workerId) {
+      await ctx.reply('⚠️ *عذراً، حسابك غير مرتبط بملف عامل.*', { parse_mode: 'Markdown' });
+      return;
+    }
+
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    const ledgers = await prisma.financialLedger.findMany({
+      where: {
+        workerId: ctx.workerId,
+        transactionType: { in: ['ADVANCE_CASH', 'WITHDRAWAL_CIGARETTES', 'WITHDRAWAL_PURCHASES'] },
+        accountingMonth: currentMonth,
+        isDeleted: false
+      }
+    });
+
+    const cashAdvances = ledgers.filter(l => l.transactionType === 'ADVANCE_CASH').reduce((acc, l) => acc + Number(l.amount), 0);
+    const canteenWithdrawals = ledgers.filter(l => l.transactionType === 'WITHDRAWAL_CIGARETTES' || l.transactionType === 'WITHDRAWAL_PURCHASES').reduce((acc, l) => acc + Number(l.amount), 0);
+
+    if (cashAdvances === 0 && canteenWithdrawals === 0) {
+      await ctx.reply('📊 *كشف حسابي*\n\nلا توجد سلف أو مسحوبات (كانتين/نقدي) مسجلة لك خلال الشهر الحالي.\n\n_يتم تحديث الرصيد لحظياً بعد كل عملية سحب._', { parse_mode: 'Markdown' });
+      return;
+    }
+
+    await ctx.reply(
+      `📊 *كشف حسابي لشهر ${currentMonth}*\n\nسلف نقدية: ${cashAdvances} ج.م\nمسحوبات (كانتين/عينية): ${canteenWithdrawals} ج.م\n\n_يتم تحديث الرصيد لحظياً بعد كل عملية سحب._`,
+      { parse_mode: 'Markdown' }
+    );
   });
-  bot.hears(/لوحة المؤشرات/, async (ctx) => {
-    await ctx.reply('📊 *لوحة المؤشرات التنفيذية*\nمؤشرات السيولة والإنتاجية تحت التجهيز.', { parse_mode: 'Markdown' });
-  });
+  bot.hears(/لوحة المؤشرات/, handleDashboardCommand);
   bot.hears(/فواتيري ومستخلصاتي/, async (ctx) => {
-    await ctx.reply('🧾 *بوابة مستخلصات الموردين*\nعرض الفواتير المعتمدة تحت التجهيز.', { parse_mode: 'Markdown' });
+    if (ctx.effectiveRole !== 'SUPPLIER') {
+      await ctx.reply('⚠️ *عذراً، هذه البوابة مخصصة للموردين المعتمدين فقط.*', { parse_mode: 'Markdown' });
+      return;
+    }
+    
+    if (!ctx.from?.id) return;
+    
+    const supplier = await prisma.supplier.findUnique({
+      where: { telegramId: BigInt(ctx.from.id) },
+      include: { invoices: { take: 5, orderBy: { invoiceDate: 'desc' } } }
+    });
+    
+    if (!supplier) {
+        await ctx.reply('⚠️ *عذراً، حسابك غير مرتبط بملف مورد.*', { parse_mode: 'Markdown' });
+        return;
+    }
+
+    if (supplier.invoices.length === 0) {
+      await ctx.reply('🧾 *بوابة مستخلصات الموردين*\n\nلا توجد فواتير مسجلة للمراجعة.', { parse_mode: 'Markdown' });
+      return;
+    }
+    
+    let text = `🧾 *بوابة مستخلصات الموردين*\n\n`;
+    for (const inv of supplier.invoices) {
+        const date = inv.invoiceDate.toISOString().split('T')[0];
+        text += `فاتورة: ${inv.invoiceNumber} | التاريخ: ${date} | الإجمالي: ${inv.totalAmount} ج.م | الحالة: ${inv.paymentStatus}\n`;
+    }
+    
+    await ctx.reply(text, { parse_mode: 'Markdown' });
   });
   bot.hears(/🚜 تسجيل منسوب/, async (ctx) => {
     await ctx.reply(
-      '🚜 *خدمة تسجيل منسوب السولار الميداني (تحت التجهيز)*\nسيتم إتاحة تسجيل قراءات الخزانات فور تفعيل موديول الوقود والمحروقات.',
+      '🚜 *تسجيل منسوب*\n\nيرجى التوجه إلى وحدة القياس بالموقع ورفع صورة واضحة لشريط القياس والمؤشر الخاص بالخزان لإتمام المطابقة الميدانية.',
       { parse_mode: 'Markdown' }
     );
   });
@@ -592,7 +697,46 @@ export function createBot(): Bot<MyContext> {
   // 10. Sub-Menu Placeholders (Catch-all for unbuilt domain buttons)
   bot.callbackQuery(/^menu:.+$/, handleMenuPlaceholder);
 
-  // 11. ⚡ Keep-Alive Socket Warmer: Telegram Bot API closes idle connections after 55s.
+  // 11. 🛡️ Telegram Group Enforcer & Join Request Security
+  telegramGroupEnforcer.setBot(bot);
+
+  // Group Migration Listener (Normal group converted to Supergroup)
+  bot.on('message:migrate_to_chat_id', async (ctx) => {
+    const oldChatId = ctx.chat.id;
+    const newChatId = ctx.message.migrate_to_chat_id;
+    await telegramGroupEnforcer.handleGroupMigration(oldChatId, newChatId);
+  });
+
+  // Single-use Invite Link Join Request Guard
+  bot.on('chat_join_request', async (ctx) => {
+    const userId = ctx.chatJoinRequest.user_chat_id;
+    const chatId = ctx.chatJoinRequest.chat.id;
+
+    try {
+      const authorizedUser = await prisma.user.findFirst({
+        where: {
+          telegramId: BigInt(userId),
+          isActive: true,
+          isBanned: false,
+          assignedSite: {
+            telegramGroupId: BigInt(chatId),
+          },
+        },
+      });
+
+      if (authorizedUser) {
+        await ctx.approveChatJoinRequest(userId);
+        console.log(`✅ [JOIN REQUEST] Approved supervisor/worker ${userId} for group ${chatId}`);
+      } else {
+        await ctx.declineChatJoinRequest(userId);
+        console.warn(`🛡️ [JOIN REQUEST] Declined unauthorized user ${userId} for group ${chatId}`);
+      }
+    } catch (err: any) {
+      console.error(`❌ [JOIN REQUEST] Error handling join request for ${userId} in ${chatId}:`, err.message);
+    }
+  });
+
+  // 12. ⚡ Keep-Alive Socket Warmer: Telegram Bot API closes idle connections after 55s.
   // Periodically pulse Telegram API every 20s so user clicks NEVER suffer a cold 2s TLS handshake!
   const keepAliveWarmer = setInterval(() => {
     bot.api.getMe().catch(() => {});

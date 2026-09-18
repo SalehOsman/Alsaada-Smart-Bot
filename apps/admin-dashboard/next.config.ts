@@ -63,6 +63,16 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer, nextRuntime }) => {
     if (!isServer || nextRuntime === 'edge') {
       config.resolve = config.resolve || {};
+      config.resolve.fallback = {
+        ...(config.resolve.fallback || {}),
+        fs: false,
+        crypto: false,
+        child_process: false,
+        events: false,
+        stream: false,
+        path: false,
+        os: false,
+      };
       const targetAdapter = path.resolve(
         process.cwd(),
         process.cwd().endsWith('admin-dashboard')

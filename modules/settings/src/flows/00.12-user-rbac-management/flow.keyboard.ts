@@ -1,4 +1,5 @@
 import { InlineKeyboard } from 'grammy';
+import { getWorkerDisplayName } from '@alsaada/core-components';
 import type { UserListItemDto, UserDetailDto, WorkerCandidateDto } from './flow.types.js';
 
 export function buildRoleBadge(role: string): string {
@@ -65,6 +66,8 @@ export function buildUserDetailKeyboard(user: UserDetailDto): InlineKeyboard {
 
   keyboard
     .text('🔄 تغيير الرتبة والصلاحية', `urb:r:${user.telegramId}`)
+    .row()
+    .text('🛡️ تعيين كمشرف مهام ميداني', `urb:prm:${user.telegramId}`)
     .row();
 
   if (user.isBanned) {
@@ -74,7 +77,7 @@ export function buildUserDetailKeyboard(user: UserDetailDto): InlineKeyboard {
   }
 
   keyboard
-    .text('🗑️ سحب الصلاحيات وفك الارتباط', `urb:rv:${user.telegramId}`)
+    .text('🗑️ سحب الصلاحيات وفك الارتباط الفوري', `urb:rv:${user.telegramId}`)
     .row();
 
   keyboard
@@ -95,6 +98,8 @@ export function buildRoleSelectionKeyboard(targetTelegramId: bigint): InlineKeyb
     .row()
     .text('🛡️ مشرف موقع وميداني', `urb:sr:${idStr}:FIELD_ADMIN`)
     .row()
+    .text('🛡️ مشرف مهام عمالية (Worker Supervisor)', `urb:prm:${idStr}`)
+    .row()
     .text('💼 محاسب مالي', `urb:sr:${idStr}:ACCOUNTANT`)
     .row()
     .text('👷 عامل (بوابة ذاتية)', `urb:sr:${idStr}:WORKER`)
@@ -109,12 +114,33 @@ export function buildRoleSelectionKeyboard(targetTelegramId: bigint): InlineKeyb
   return keyboard;
 }
 
+export function buildWorkerSupervisorProfilesKeyboard(targetTelegramId: bigint): InlineKeyboard {
+  const keyboard = new InlineKeyboard();
+  const idStr = targetTelegramId.toString();
+
+  keyboard
+    .text('⛽ مشرف الوقود والمحروقات', `urb:sp:${idStr}:FUEL_SUPERVISOR`)
+    .row()
+    .text('🛒 مشرف الكانتين والمقصف', `urb:sp:${idStr}:CANTEEN_SUPERVISOR`)
+    .row()
+    .text('🏠 مشرف السكن والإعاشة', `urb:sp:${idStr}:HOUSING_SUPERVISOR`)
+    .row()
+    .text('⏱️ مشرف التشغيل والورديات', `urb:sp:${idStr}:SHIFT_SUPERVISOR`)
+    .row();
+
+  keyboard
+    .text('◀️ إلغاء ورجوع', `urb:u:${idStr}`)
+    .text('🏠 الرئيسية', 'action:main_menu');
+
+  return keyboard;
+}
+
 export function buildWorkerCandidatesKeyboard(workers: WorkerCandidateDto[]): InlineKeyboard {
   const keyboard = new InlineKeyboard();
 
   workers.slice(0, 10).forEach((w) => {
-    const name = w.nickname || w.name;
-    const label = `👷 [${w.code}] ${name}`.slice(0, 36);
+    const displayName = getWorkerDisplayName({ name: w.name, nickname: w.nickname });
+    const label = `👷 [${w.code}] ${displayName}`.slice(0, 36);
     keyboard.text(label, `urb:w:${w.id}`).row();
   });
 

@@ -4,7 +4,7 @@ import { config } from '../config/env.js';
 import { prisma } from '../db.js';
 import { formatDate } from '@alsaada/regional-engine';
 import { invalidateUserCache } from '../middlewares/auth.middleware.js';
-import { buildMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
+import { buildMainMenuKeyboard, buildDynamicMainMenuKeyboard } from '../keyboards/main-menu.keyboard.js';
 import { buildPersistentReplyKeyboard } from '../keyboards/reply-bar.keyboard.js';
 import { screenFlowService } from '../services/screen-flow.service.js';
 import { verifyWorkerInviteToken, validateLinkingTokenConsumption, GuestJoinRepository, GuestJoinService } from '@alsaada/workforce';
@@ -21,7 +21,8 @@ export async function renderRoleHome(ctx: MyContext, inPlace = false): Promise<v
   const telegramId = ctx.from ? BigInt(ctx.from.id) : 0n;
   const companyName = await systemDataService.getCompanyTradeName();
   const text = buildWelcomeMessage(ctx, companyName);
-  const keyboard = buildMainMenuKeyboard(ctx);
+  const keyboard = await buildDynamicMainMenuKeyboard(ctx);
+
 
   if (inPlace && ctx.callbackQuery?.message && ctx.chat) {
     try {

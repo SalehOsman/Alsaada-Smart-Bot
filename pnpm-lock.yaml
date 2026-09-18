@@ -206,6 +206,9 @@ importers:
       '@alsaada/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@alsaada/rbac':
+        specifier: workspace:*
+        version: link:../../packages/rbac
       '@alsaada/regional-engine':
         specifier: workspace:*
         version: link:../../packages/regional-engine

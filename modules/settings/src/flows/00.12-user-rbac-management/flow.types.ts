@@ -1,3 +1,5 @@
+import type { WorkerSupervisorProfileKey } from '@alsaada/rbac';
+
 export interface UserListItemDto {
   id: string;
   telegramId: bigint;
@@ -17,6 +19,7 @@ export interface UserListItemDto {
 export interface UserDetailDto extends UserListItemDto {
   phoneEncrypted?: string | null | undefined;
   approvedBySuperAdminId?: bigint | null | undefined;
+  supervisorProfileKey?: WorkerSupervisorProfileKey | null | undefined;
 }
 
 export interface WorkerCandidateDto {

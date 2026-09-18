@@ -1,6 +1,27 @@
 import { InlineKeyboard } from 'grammy';
 import { MyContext } from '../types/context.js';
 import { fastCache } from '../services/fast-cache.service.js';
+import { dynamicMenuService } from '../services/dynamic-menu.service.js';
+
+/**
+ * Dynamically builds the main menu keyboard using the dynamic menu service and database catalog.
+ * Falls back to the static menu if database is unseeded or unreachable.
+ */
+export async function buildDynamicMainMenuKeyboard(ctx: MyContext): Promise<InlineKeyboard> {
+  const role = ctx.effectiveRole || 'GUEST';
+  const isDual = !!ctx.isDualWorkerMode;
+
+  try {
+    const dynamicKb = await dynamicMenuService.buildMainMenuKeyboard(role, isDual);
+    if (dynamicKb) {
+      return dynamicKb;
+    }
+  } catch (err) {
+    console.warn('⚠️ [MAIN MENU] Dynamic keyboard fetch failed, falling back to static keyboard:', err);
+  }
+
+  return buildMainMenuKeyboard(ctx);
+}
 
 /**
  * Builds the enterprise main menu keyboard dynamically based on the effective user role.
@@ -13,6 +34,7 @@ export function buildMainMenuKeyboard(ctx: MyContext): InlineKeyboard {
   const cacheKey = `kb:main_menu:${role}:${isDual}`;
 
   return fastCache.memoizeKeyboard(cacheKey, () => {
+
     const keyboard = new InlineKeyboard();
 
   switch (role) {

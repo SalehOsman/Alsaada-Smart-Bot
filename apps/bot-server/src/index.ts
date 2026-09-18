@@ -10,6 +10,7 @@ import { createBot } from './bot.js';
 import { config, validateStartupEnv } from './config/env.js';
 import { systemDataService } from './services/system-data.service.js';
 import { sessionMonitorService } from './services/session-monitor.service.js';
+import { initializeRbacSyncListener } from './services/rbac-sync-listener.js';
 
 async function bootstrap() {
   console.log('================================================================');
@@ -31,6 +32,8 @@ async function bootstrap() {
     await connectDatabase();
     // ⚡ Prime L1 in-memory RAM cache for instant sub-millisecond responses
     await systemDataService.warmup();
+    // 📡 Start Redis RBAC targeted invalidation listener
+    initializeRbacSyncListener();
   } catch (error) {
     console.error('❌ [FATAL] Failed to connect to PostgreSQL database:', error);
     process.exit(1);

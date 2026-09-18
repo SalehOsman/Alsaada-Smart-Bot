@@ -55,4 +55,42 @@ export class AdminAssignmentService {
     const updated = await this.repository.setAssignment(telegramId, siteId);
     return { success: true, user: updated };
   }
+
+  async toggleFreezeBotAccess(
+    telegramId: bigint,
+    actorTelegramId?: bigint
+  ): Promise<{ success: boolean; user?: AdminAssignmentDto; error?: string }> {
+    if (actorTelegramId !== undefined && actorTelegramId === telegramId) {
+      return { success: false, error: 'أمان النظام: لا يمكنك تعديل سياسة حسابك الشخصي بنفسك.' };
+    }
+    const updated = await this.repository.toggleFreezeBotAccessOnLeave(telegramId);
+    if (!updated) return { success: false, error: 'المشرف المطلوب غير موجود.' };
+    return { success: true, user: updated };
+  }
+
+  async toggleEjectTelegram(
+    telegramId: bigint,
+    actorTelegramId?: bigint
+  ): Promise<{ success: boolean; user?: AdminAssignmentDto; error?: string }> {
+    if (actorTelegramId !== undefined && actorTelegramId === telegramId) {
+      return { success: false, error: 'أمان النظام: لا يمكنك تعديل سياسة حسابك الشخصي بنفسك.' };
+    }
+    const updated = await this.repository.toggleEjectTelegramOnLeave(telegramId);
+    if (!updated) return { success: false, error: 'المشرف المطلوب غير موجود.' };
+    return { success: true, user: updated };
+  }
+
+  async setLeaveStatus(
+    telegramId: bigint,
+    isOnLeave: boolean,
+    actorTelegramId?: bigint,
+    actorName?: string
+  ): Promise<{ success: boolean; user?: AdminAssignmentDto; error?: string }> {
+    if (actorTelegramId !== undefined && actorTelegramId === telegramId) {
+      return { success: false, error: 'أمان النظام: لا يمكنك تغيير حالة إجازة حسابك الشخصي بنفسك.' };
+    }
+    const updated = await this.repository.setLeaveStatus(telegramId, isOnLeave, actorTelegramId, actorName);
+    if (!updated) return { success: false, error: 'المشرف المطلوب غير موجود.' };
+    return { success: true, user: updated };
+  }
 }

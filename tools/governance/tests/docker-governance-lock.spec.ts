@@ -12,9 +12,22 @@ import {
   type GovernanceLock,
 } from '../verify-governance-lock.js';
 import { verifyGovernanceTamper } from '../verify-governance-tamper.js';
-import { lockDocker } from '../../scaffold/lock-docker.js';
-import { unlockDocker } from '../../scaffold/unlock-docker.js';
-import { unlockFeature } from '../../scaffold/unlock-feature.js';
+import { lockEntity } from '../unified-lock-engine.js';
+import { unlockEntity } from '../unified-unlock-engine.js';
+
+function lockDocker(root: string) {
+  const lockPath = join(root, 'governance.lock.json');
+  if (!existsSync(lockPath)) {
+    const initialLock = buildGovernanceLock(root);
+    writeFileSync(lockPath, JSON.stringify(initialLock, null, 2), 'utf8');
+  }
+  const res = lockEntity(root, 'infra:docker');
+  return {
+    ok: res.ok,
+    files: res.entity?.files.map((f) => f.path) ?? [],
+    entity: res.entity,
+  };
+}
 
 function fixtureRoot(name: string): string {
   const root = join(tmpdir(), `alsaada-docker-lock-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -54,10 +67,10 @@ describe('Docker infrastructure cryptographic governance lock', () => {
 
     const lockRaw = readFileSync(join(root, 'governance.lock.json'), 'utf8');
     const lock = JSON.parse(lockRaw) as GovernanceLock;
-    expect(lock.lockedDocker).toBeDefined();
-    expect(lock.lockedDocker?.directory).toBe('docker');
-    expect(lock.lockedDocker?.files.length).toBe(5);
-    expect(lock.lockedDocker?.files.every((f) => /^[a-f0-9]{64}$/.test(f.sha256))).toBe(true);
+    const dockerEntry = lock.lockedEntities?.['infra:docker'] ?? lock.lockedDocker;
+    expect(dockerEntry).toBeDefined();
+    expect(dockerEntry?.files.length).toBe(5);
+    expect(dockerEntry?.files.every((f) => /^[a-f0-9]{64}$/.test(f.sha256))).toBe(true);
 
     const lockVerify = verifyGovernanceLock(root);
     expect(lockVerify.ok).toBe(true);
@@ -111,31 +124,35 @@ describe('Docker infrastructure cryptographic governance lock', () => {
     expect(tamperVerify.failures.some((f) => f.includes('unrecorded file') && f.includes('backdoor.sh'))).toBe(true);
   });
 
-  test('unlockDocker rejects invalid approval phrase or short reason', () => {
+  test('unlockEntity rejects invalid approval phrase or short reason', () => {
     const root = fixtureRoot('docker-unlock-invalid');
-    lockDocker(root);
+    lockEntity(root, 'infra:docker');
 
-    const res1 = unlockDocker('تمام يا ريس', 'Detailed reason about upgrade', root);
+    const res1 = unlockEntity('infra:docker', { phrase: 'تمام يا ريس', reason: 'Detailed reason about upgrade', root });
     expect(res1.ok).toBe(false);
     expect(res1.error).toContain('Invalid approval phrase');
 
-    const res2 = unlockDocker('نعم موافق على التعديل', 'short', root);
+    const res2 = unlockEntity('infra:docker', { phrase: 'نعم موافق على التعديل', reason: 'sh', root });
     expect(res2.ok).toBe(false);
-    expect(res2.error).toContain('minimum 10 characters');
+    expect(res2.error).toContain('minimum 5 characters');
   });
 
-  test('unlockDocker succeeds with approved phrase and allows modifications, then re-locks cleanly', () => {
+  test('unlockEntity succeeds with approved phrase and allows modifications, then re-locks cleanly', () => {
     const root = fixtureRoot('docker-unlock-valid');
-    lockDocker(root);
+    lockEntity(root, 'infra:docker');
 
-    const unlockRes = unlockDocker('نعم موافق على التعديل', 'Upgrading PostgreSQL from 16 to 17', root);
+    const unlockRes = unlockEntity('infra:docker', {
+      phrase: 'نعم موافق على التعديل',
+      reason: 'Upgrading PostgreSQL from 16 to 17',
+      root,
+    });
     expect(unlockRes.ok).toBe(true);
     expect(unlockRes.evidenceFile).toBeDefined();
-    expect(existsSync(join(root, unlockRes.evidenceFile!))).toBe(true);
+    expect(existsSync(unlockRes.evidenceFile!)).toBe(true);
 
     const lockRaw = readFileSync(join(root, 'governance.lock.json'), 'utf8');
     const lock = JSON.parse(lockRaw) as GovernanceLock;
-    expect(lock.lockedDocker).toBeUndefined();
+    expect(lock.lockedEntities?.['infra:docker']).toBeUndefined();
 
     // Now modifying docker-compose is permitted because lock was removed
     writeFileSync(join(root, 'docker-compose.yml'), 'name: alsaada-upgraded\n', 'utf8');
@@ -143,32 +160,11 @@ describe('Docker infrastructure cryptographic governance lock', () => {
     expect(lockVerify.ok).toBe(true);
 
     // Re-lock after modification
-    const reLockRes = lockDocker(root);
+    const reLockRes = lockEntity(root, 'infra:docker');
     expect(reLockRes.ok).toBe(true);
 
     const postReLockVerify = verifyGovernanceLock(root);
     expect(postReLockVerify.ok).toBe(true);
-  });
-
-  test('unlockFeature delegates to unlockDocker when type is docker', () => {
-    const root = fixtureRoot('docker-unlock-feature');
-    lockDocker(root);
-
-    const unlockRes = unlockFeature({
-      type: 'docker',
-      targetKey: 'docker',
-      phrase: 'موافق على الفتح',
-      reason: 'Updating network configuration for container isolation',
-      root,
-    });
-
-    expect(unlockRes.ok).toBe(true);
-    expect(unlockRes.type).toBe('docker');
-    expect(unlockRes.evidenceFile).toBeDefined();
-
-    const lockRaw = readFileSync(join(root, 'governance.lock.json'), 'utf8');
-    const lock = JSON.parse(lockRaw) as GovernanceLock;
-    expect(lock.lockedDocker).toBeUndefined();
   });
 
   test('repo docker infrastructure is cryptographically sealed in governance.lock.json', () => {
@@ -176,12 +172,12 @@ describe('Docker infrastructure cryptographic governance lock', () => {
     const lockPath = join(root, 'governance.lock.json');
     if (existsSync(lockPath) && existsSync(join(root, 'docker-compose.yml'))) {
       const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
-      expect(lock.lockedDocker).toBeDefined();
-      expect(lock.lockedDocker?.directory).toBe('docker');
-      expect(lock.lockedDocker?.files.length).toBeGreaterThanOrEqual(4);
-      expect(lock.lockedDocker?.files.some((f) => f.path === 'docker-compose.yml')).toBe(true);
-      expect(lock.lockedDocker?.files.some((f) => f.path === 'docker/Dockerfile')).toBe(true);
-      expect(lock.lockedDocker?.files.every((f) => /^[a-f0-9]{64}$/.test(f.sha256))).toBe(true);
+      const dockerEntity = lock.lockedEntities?.['infra:docker'] ?? lock.lockedDocker;
+      expect(dockerEntity).toBeDefined();
+      expect(dockerEntity?.files.length).toBeGreaterThanOrEqual(4);
+      expect(dockerEntity?.files.some((f) => f.path === 'docker-compose.yml')).toBe(true);
+      expect(dockerEntity?.files.some((f) => f.path === 'docker/Dockerfile')).toBe(true);
+      expect(dockerEntity?.files.every((f) => /^[a-f0-9]{64}$/.test(f.sha256))).toBe(true);
     }
   });
 

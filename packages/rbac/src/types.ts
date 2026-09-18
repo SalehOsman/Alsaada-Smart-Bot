@@ -54,15 +54,15 @@ export interface WorkerDelegationContract {
 export interface AccessContext {
   role: CanonicalRole | string;
   permissionKey: string;
-  action?: PermissionAction;
-  siteId?: string | null;
-  targetSiteId?: string | null;
-  resourceId?: string | null;
-  isSelf?: boolean;
-  isActive?: boolean;
-  isBanned?: boolean;
-  channel?: ChannelKind;
-  delegations?: WorkerDelegationContract[];
+  action?: PermissionAction | undefined;
+  siteId?: string | null | undefined;
+  targetSiteId?: string | null | undefined;
+  resourceId?: string | null | undefined;
+  isSelf?: boolean | undefined;
+  isActive?: boolean | undefined;
+  isBanned?: boolean | undefined;
+  channel?: ChannelKind | undefined;
+  delegations?: WorkerDelegationContract[] | undefined;
 }
 
 export interface AccessDecision {
@@ -89,4 +89,51 @@ export interface FeatureContract {
     kpiKeys: string[];
     hasDrilldown: boolean;
   };
+}
+
+export type PermissionScopeType = 'ROLE' | 'DEPARTMENT' | 'JOB_TITLE' | 'SITE' | 'USER';
+
+export interface ScopePermissionRule {
+  scopeType: PermissionScopeType;
+  scopeId: string;
+  featureKey: string;
+  action: PermissionAction;
+  policy: 'ALLOW' | 'DENY';
+}
+
+export interface CascadingAccessContext {
+  role: CanonicalRole | string;
+  userId?: string | undefined;
+  departmentId?: string | null | undefined;
+  jobTitleId?: string | null | undefined;
+  siteId?: string | null | undefined;
+  targetSiteId?: string | null | undefined;
+  permissionKey: string;
+  action?: PermissionAction | undefined;
+  resourceId?: string | null | undefined;
+  isSelf?: boolean | undefined;
+  isActive?: boolean | undefined;
+  isBanned?: boolean | undefined;
+  isOnLeave?: boolean | undefined;
+  freezeBotAccessOnLeave?: boolean | undefined;
+  ejectTelegramOnLeave?: boolean | undefined;
+  rules?: ScopePermissionRule[] | undefined;
+  channel?: ChannelKind | undefined;
+  delegations?: WorkerDelegationContract[] | undefined;
+}
+
+export type WorkerSupervisorProfileKey =
+  | 'FUEL_SUPERVISOR'
+  | 'CANTEEN_SUPERVISOR'
+  | 'HOUSING_SUPERVISOR'
+  | 'SHIFT_SUPERVISOR';
+
+export interface WorkerSupervisorProfile {
+  key: WorkerSupervisorProfileKey;
+  nameAr: string;
+  descriptionAr: string;
+  permissions: Array<{
+    permissionKey: string;
+    actions: PermissionAction[];
+  }>;
 }

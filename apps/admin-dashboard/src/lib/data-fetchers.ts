@@ -338,13 +338,17 @@ export interface UserManagementItem {
   telegramId: string;
   role: string;
   assignedSite: string;
+  assignedSiteId?: string | null;
   status: 'ACTIVE' | 'REVOKED';
   lastActive: string;
+  freezeBotAccessOnLeave: boolean;
+  ejectTelegramOnLeave: boolean;
+  isOnLeave: boolean;
 }
 
 /**
  * 5. Users Management Server Data Fetcher
- * - Queries User records with worker and site relations.
+ * - Queries User records with worker, site, and supervisorLifecycleLogs relations.
  */
 export async function getUsersManagementData(): Promise<UserManagementItem[]> {
   try {
@@ -354,14 +358,37 @@ export async function getUsersManagementData(): Promise<UserManagementItem[]> {
       orderBy: { createdAt: 'desc' },
     });
 
+    const leaveUserIds = new Set<string>();
+    try {
+      const recentLogs = await prisma.supervisorLifecycleLog.findMany({
+        where: {
+          actionType: { in: ['LEAVE_START', 'LEAVE_RETURN', 'TERMINATION'] },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      const seen = new Set<string>();
+      for (const log of recentLogs) {
+        if (!seen.has(log.userId)) {
+          seen.add(log.userId);
+          if (log.actionType === 'LEAVE_START') {
+            leaveUserIds.add(log.userId);
+          }
+        }
+      }
+    } catch {}
+
     return users.map((u) => ({
       id: u.id,
       name: u.fullName,
       telegramId: u.telegramId.toString(),
       role: u.role,
       assignedSite: u.assignedSite?.name || 'كافة المواقع والمشاريع',
+      assignedSiteId: u.assignedSiteId,
       status: u.isActive && !u.isBanned ? 'ACTIVE' : 'REVOKED',
       lastActive: u.updatedAt.toISOString().replace('T', ' ').substring(0, 16),
+      freezeBotAccessOnLeave: Boolean(u.freezeBotAccessOnLeave),
+      ejectTelegramOnLeave: Boolean(u.ejectTelegramOnLeave),
+      isOnLeave: leaveUserIds.has(u.id),
     }));
   } catch (err) {
     console.error('Error fetching users management data:', err);

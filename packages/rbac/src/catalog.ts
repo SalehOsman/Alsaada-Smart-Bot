@@ -54,6 +54,17 @@ export const FEATURE_CATALOG: Record<string, FeatureContract> = {
     dataScope: 'all-sites',
     sensitiveFields: ['basicSalary', 'overtimeRate', 'allowances', 'totalCompensation'],
   },
+  'workforce.worker.edit': {
+    flowCode: '01.5.E',
+    nameAr: 'تعديل بيانات العامل',
+    permissionKey: 'workforce.worker.edit',
+    module: 'workforce',
+    delegatable: false,
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
+    allowedActions: ['edit', 'view'],
+    dataScope: 'assigned-site',
+    dashboardRoute: '/admin/workforce/[id]/edit',
+  },
   'workforce.clearance.create': {
     flowCode: '01.8',
     nameAr: 'مخالصات إنهاء الخدمة',
@@ -65,6 +76,17 @@ export const FEATURE_CATALOG: Record<string, FeatureContract> = {
     dataScope: 'assigned-site',
     dashboardRoute: '/admin/workforce/clearances',
     botCommand: '/offboard',
+  },
+  'workforce.clearance.view': {
+    flowCode: '01.8.V',
+    nameAr: 'استعراض مخالصات الخدمة',
+    permissionKey: 'workforce.clearance.view',
+    module: 'workforce',
+    delegatable: false,
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'],
+    allowedActions: ['view', 'export', 'print'],
+    dataScope: 'assigned-site',
+    dashboardRoute: '/admin/workforce/clearances',
   },
 
   // -------------------------------------------------------------
@@ -123,6 +145,17 @@ export const FEATURE_CATALOG: Record<string, FeatureContract> = {
       hasDrilldown: true,
     },
   },
+  'canteen.sale.view': {
+    flowCode: '03.2',
+    nameAr: 'استعراض مبيعات الكانتين',
+    permissionKey: 'canteen.sale.view',
+    module: 'canteen',
+    delegatable: true,
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN', 'WORKER_SUPERVISOR'],
+    allowedActions: ['view', 'export'],
+    dataScope: 'assigned-site',
+    dashboardRoute: '/admin/logistics/canteen',
+  },
 
   // -------------------------------------------------------------
   // 04. Custody Module
@@ -179,6 +212,16 @@ export const FEATURE_CATALOG: Record<string, FeatureContract> = {
       hasDrilldown: true,
     },
   },
+  'inventory.housing.manage': {
+    flowCode: '05.3',
+    nameAr: 'إدارة وتسكين العمالة الميدانية',
+    permissionKey: 'inventory.housing.manage',
+    module: 'inventory',
+    delegatable: true,
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN', 'WORKER_SUPERVISOR'],
+    allowedActions: ['view', 'manage', 'create'],
+    dataScope: 'assigned-resource',
+  },
 
   // -------------------------------------------------------------
   // 06. Requests & Approvals
@@ -209,13 +252,57 @@ export const FEATURE_CATALOG: Record<string, FeatureContract> = {
   // -------------------------------------------------------------
   // 00. System Governance & Settings (Sovereign)
   // -------------------------------------------------------------
-  'system.roles.manage': {
+  'system.users.manage': {
     flowCode: '00.12',
-    nameAr: 'إدارة المستخدمين والأدوار',
+    nameAr: 'إدارة المستخدمين والمشرفين',
+    permissionKey: 'system.users.manage',
+    module: 'settings',
+    delegatable: false,
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN'],
+    allowedActions: ['manage', 'view', 'edit'],
+    dataScope: 'system',
+    dashboardRoute: '/admin/settings/users',
+  },
+  'system.roles.manage': {
+    flowCode: '00.12.R',
+    nameAr: 'إدارة الأدوار والصلاحيات',
     permissionKey: 'system.roles.manage',
     module: 'settings',
     delegatable: false,
     allowedRoles: ['SUPER_ADMIN'],
+    allowedActions: ['manage', 'view', 'edit'],
+    dataScope: 'system',
+    dashboardRoute: '/admin/settings/users',
+  },
+  'system.matrix.manage': {
+    flowCode: '00.12.M',
+    nameAr: 'مصفوفة الصلاحيات المتوارثة',
+    permissionKey: 'system.matrix.manage',
+    module: 'settings',
+    delegatable: false,
+    allowedRoles: ['SUPER_ADMIN'],
+    allowedActions: ['manage', 'view', 'edit'],
+    dataScope: 'system',
+    dashboardRoute: '/admin/settings/matrix',
+  },
+  'system.telegram_groups.manage': {
+    flowCode: '00.11',
+    nameAr: 'إدارة مجموعات وتوبيكات تيليجرام',
+    permissionKey: 'system.telegram_groups.manage',
+    module: 'settings',
+    delegatable: false,
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN'],
+    allowedActions: ['manage', 'view', 'edit'],
+    dataScope: 'system',
+    dashboardRoute: '/admin/settings/telegram-groups',
+  },
+  'system.supervisors.lifecycle': {
+    flowCode: '00.5',
+    nameAr: 'أتمتة دورة حياة المشرفين ومجموعات المواقع',
+    permissionKey: 'system.supervisors.lifecycle',
+    module: 'settings',
+    delegatable: false,
+    allowedRoles: ['SUPER_ADMIN', 'GENERAL_ADMIN'],
     allowedActions: ['manage', 'view', 'edit'],
     dataScope: 'system',
     dashboardRoute: '/admin/settings/users',
@@ -245,6 +332,17 @@ export const FEATURE_CATALOG: Record<string, FeatureContract> = {
       kpiKeys: ['incidentCount', 'p95Latency', 'activeSessionsCount'],
       hasDrilldown: true,
     },
+  },
+  'system.telemetry.view': {
+    flowCode: '00.10',
+    nameAr: 'مؤشرات الأداء ورصد النظام',
+    permissionKey: 'system.telemetry.view',
+    module: 'settings',
+    delegatable: false,
+    allowedRoles: ['SUPER_ADMIN'],
+    allowedActions: ['view', 'export'],
+    dataScope: 'system',
+    dashboardRoute: '/admin/settings/telemetry',
   },
 };
 

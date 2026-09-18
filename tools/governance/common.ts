@@ -68,6 +68,10 @@ export function listFlowDirs(root: string): string[] {
   return flowDirs;
 }
 
+export function normalized(path: string): string {
+  return path.replace(/\\/g, '/');
+}
+
 export function toRepoPath(root: string, path: string): string {
   return relative(root, path).split(sep).join('/');
 }

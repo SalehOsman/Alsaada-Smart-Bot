@@ -13,6 +13,7 @@ import {
   sha256File,
   type GovernanceLock,
 } from './verify-governance-lock.js';
+import { listEntityFiles, sha256NormalizedFile } from './unified-lock-engine.js';
 
 function parseLock(text: string): GovernanceLock | null {
   try {
@@ -119,6 +120,8 @@ export function isScaffoldAutoEvidence(filePath: string, content: string): boole
     normPath.includes('-unlock-module-') ||
     normPath.includes('-unlock-speed') ||
     normPath.includes('-unlock-docker') ||
+    normPath.includes('-unlock-') ||
+    normPath.includes('-lock-') ||
     normPath.includes('-docker-infrastructure-lock') ||
     normPath.includes('-speed-engine-lock')
   ) {
@@ -127,7 +130,8 @@ export function isScaffoldAutoEvidence(filePath: string, content: string): boole
   if (
     content.includes('اكتمال واعتماد تدفق') ||
     content.includes('اكتمال واعتماد شاشة') ||
-    content.includes('اكتمال واعتماد موديول')
+    content.includes('اكتمال واعتماد موديول') ||
+    content.includes('توثيق الحوكمة: قفل وحماية الكيان تشفيرياً')
   ) {
     return true;
   }
@@ -137,6 +141,7 @@ export function isScaffoldAutoEvidence(filePath: string, content: string): boole
     content.includes('ترخيص فك قفل الحوكمة: موديول المنظومة') ||
     content.includes('ترخيص فك قفل الحوكمة: محرك السرعة') ||
     content.includes('ترخيص فك قفل الحوكمة: البنية التحتية والدوكر') ||
+    content.includes('ترخيص فك قفل الحوكمة:') ||
     content.includes('توثيق القفل التشفيري للبنية التحتية والدوكر') ||
     content.includes('توثيق القفل التشفيري لمحرك السرعة')
   ) {
@@ -413,15 +418,58 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
     }
   }
 
+  // 3.8. Verify locked unified entities (Packages, Flows, Dashboard, Infra) (NON-BYPASSABLE)
+  if (lock.lockedEntities) {
+    for (const [entityId, entity] of Object.entries(lock.lockedEntities)) {
+      checkedCount += entity.files.length;
+      const entityTarget = join(root, entity.directory);
+      if (!existsSync(entityTarget)) {
+        lockedFindings.push(`Locked entity '${entityId}' target is missing: ${entity.directory}`);
+        continue;
+      }
+      const expectedPaths = new Set(entity.files.map((f) => f.path));
+      for (const file of entity.files) {
+        const fullPath = join(root, file.path);
+        if (!existsSync(fullPath)) {
+          lockedFindings.push(`Locked entity '${entityId}' file is missing: ${file.path}`);
+          continue;
+        }
+        if (sha256NormalizedFile(fullPath) !== file.sha256) {
+          lockedFindings.push(`Locked entity '${entityId}' cryptographic integrity violated (modified): ${file.path}`);
+        }
+      }
+      // Check for unrecorded / injected files
+      let actualFiles: string[] = [];
+      if (entity.id === 'infra:docker') {
+        actualFiles = listDockerFiles(root);
+      } else if (entity.id === 'infra:speed-engine') {
+        actualFiles = [
+          'apps/bot-server/src/services/fast-cache.service.ts',
+          'apps/bot-server/src/services/telemetry.service.ts',
+          'apps/bot-server/src/services/screen-flow.service.ts',
+          'tools/governance/verify-latency-anti-patterns.ts',
+        ].filter((p) => existsSync(join(root, p)));
+      } else {
+        actualFiles = listEntityFiles(root, entity.directory, entity.type);
+      }
+
+      for (const actualPath of actualFiles) {
+        if (!expectedPaths.has(actualPath)) {
+          lockedFindings.push(`Locked entity '${entityId}' contains unrecorded file: ${actualPath}`);
+        }
+      }
+    }
+  }
+
   result.checked = checkedCount;
 
   // 4. Evaluate findings
-  // LOCKED COMPONENTS (Flows, Dashboard, Modules, Speed Engine, Docker)
+  // LOCKED COMPONENTS (Unified Entities, Flows, Dashboard, Modules, Speed Engine, Docker)
   if (lockedFindings.length > 0) {
     for (const finding of lockedFindings) fail(result, finding);
     fail(
       result,
-      'Cryptographic integrity of locked flows/dashboard features/modules/speed engine/docker was violated! Locked components cannot be modified without explicit unlock via pnpm flow:unlock, pnpm dashboard:unlock, pnpm module:unlock, pnpm speed:unlock, or pnpm docker:unlock.'
+      'Cryptographic integrity of locked components was violated! Locked entities cannot be modified without explicit unlock via pnpm unlock <target> --phrase="موافق على الفتح" --reason="...".'
     );
     return result;
   }

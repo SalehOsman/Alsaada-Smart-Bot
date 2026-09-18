@@ -27,6 +27,22 @@ export function buildAdminAssignmentsHubKeyboard(users: AdminAssignmentDto[], is
 export function buildUserAssignmentCardKeyboard(user: AdminAssignmentDto, sites: SiteOptionDto[]): InlineKeyboard {
   const keyboard = new InlineKeyboard();
 
+  // 1. Leave Policy Switches (Configurable per supervisor)
+  const freezeIcon = user.freezeBotAccessOnLeave ? '🔒' : '🔓';
+  const ejectIcon = user.ejectTelegramOnLeave ? '🚫' : '👥';
+  keyboard
+    .text(`${freezeIcon} قفل البوت بالإجازة`, `adm:tfb:${user.telegramId}`)
+    .text(`${ejectIcon} طرد الجروب بالإجازة`, `adm:tet:${user.telegramId}`)
+    .row();
+
+  // 2. Lifecycle Actions (Leave Start / Return)
+  if (user.isOnLeave) {
+    keyboard.text('🔙 🟢 استئناف العمل (عودة من الإجازة)', `adm:rl:${user.telegramId}`).row();
+  } else {
+    keyboard.text('🌴 ⏸️ تسجيل بدء إجازة ميدانية', `adm:sl:${user.telegramId}`).row();
+  }
+
+  // 3. Site Assignment & Scoping
   const isGlobal = !user.assignedSiteId;
   keyboard
     .text(isGlobal ? '🔘 🌐 صلاحية عامة وشاملة (الحالي)' : '⚪ 🌐 صلاحية عامة وشاملة (إلغاء التقييد)', `adm:s:${user.telegramId}:GLOBAL`)

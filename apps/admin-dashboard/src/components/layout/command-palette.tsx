@@ -18,6 +18,7 @@ import {
   Sliders,
   Bell,
   Ghost,
+  Bot,
   ArrowRight,
   Sparkles,
   X,
@@ -140,6 +141,14 @@ const COMMAND_ITEMS: PaletteItem[] = [
     category: 'شاشات المنظومة',
     href: '/admin/settings/ghost-mode',
     icon: Ghost,
+  },
+  {
+    id: 'settings-bot-features',
+    title: 'هندسة موديولات وتدفقات البوت والتحكم السيادي',
+    category: 'شاشات المنظومة',
+    href: '/admin/settings/bot-features',
+    icon: Bot,
+    badge: 'سوبر أدمن',
   },
 ];
 

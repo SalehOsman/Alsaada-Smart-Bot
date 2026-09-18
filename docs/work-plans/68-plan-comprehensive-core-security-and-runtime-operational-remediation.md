@@ -382,28 +382,75 @@ flowchart TD
 
 ---
 
-### 🔄 المرحلة السادسة: طابور الـ Outbox وربط الخدمات وتطهير الأزرار (Operational Completeness)
+### 🔄 المرحلة السادسة: طابور الـ Outbox وربط الخدمات وتطهير الأزرار (Operational Completeness) — 🟢 تم الإنجاز والتحقق 100%
 
-#### 6.1 نقل طابور الـ Outbox من الذاكرة إلى جدول قاعدة بيانات دائم
-* **الملف المتأثر:** [`packages/core-components/src/outbox-queue/worker.ts`](file:///f:/Alsaada-Smart-Bot/packages/core-components/src/outbox-queue/worker.ts)
-* **المشكلة البرمجية:** اعتماد `queue: OutboxEvent[] = []` في الذاكرة العشوائية وفقدان البيانات عند إعادة التشغيل.
-* **التعديل البرمجي الدقيق:**
-  * إضافة نموذج `OutboxEvent` في Prisma Schema بحالات (`PENDING`, `PROCESSING`, `FAILED`, `COMPLETED`).
-  * تعديل العامل `TransactionalOutboxQueue` لسحب السجلات من الجدول وتحديث حالتها مع Retry Exponential Backoff.
+#### 6.1 المعمارية الدائمة لطابور الأحداث التبادلي (Transactional Outbox Engine in PostgreSQL)
+* **الملفات المتأثرة:** 
+  - [`packages/database/prisma/schema.prisma`](file:///f:/Alsaada-Smart-Bot/packages/database/prisma/schema.prisma)
+  - [`packages/core-components/src/outbox-queue/worker.ts`](file:///f:/Alsaada-Smart-Bot/packages/core-components/src/outbox-queue/worker.ts)
+  - [`packages/core-components/src/outbox-queue/types.ts`](file:///f:/Alsaada-Smart-Bot/packages/core-components/src/outbox-queue/types.ts)
+* **المشكلة البرمجية:** اعتماد `queue: OutboxEvent[] = []` في الذاكرة العشوائية وفقدان البيانات عند سقوط السيرفر، مع غياب دعم المعاملات الذرية (`$transaction`) وتنافس الخوادم المتعددة.
+* **المواصفات والتعديلات البرمجية الدقيقة:**
+  1. **إضافة نموذج `OutboxEvent` في Prisma Schema:**
+     ```prisma
+     model OutboxEvent {
+       id             String    @id @default(uuid())
+       eventType      String    @map("event_type") // e.g. 'SHEETS_APPEND_ROW', 'SHEETS_UPDATE_ROW', 'SYNC_AUDIT'
+       targetSheet    String    @map("target_sheet")
+       payload        Json
+       idempotencyKey String?   @unique @map("idempotency_key")
+       retryCount     Int       @default(0) @map("retry_count")
+       maxRetries     Int       @default(5) @map("max_retries")
+       status         String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+       errorMessage   String?   @map("error_message")
+       lastAttemptAt  DateTime? @map("last_attempt_at")
+       createdAt      DateTime  @default(now()) @map("created_at")
+       processedAt    DateTime? @map("processed_at")
 
-#### 6.2 ربط الأزرار الوهمية الميتة (Dead Placeholders) بمسارات حقيقية أو بطاقات استعلام
+       @@index([status, createdAt])
+       @@map("outbox_events")
+     }
+     ```
+  2. **دعم الإدراج الذري داخل ترانزاكشن الـ Prisma (`enqueueTx`):**
+     - توفير واجهة لإدراج الأحداث في جدول الـ Outbox أثناء تسجيل المعاملات المالية أو الإدارية في نفس الـ `$transaction` لمنع مشكلة الكتابة المزدوجة (Dual-Write Anti-pattern).
+  3. **منع التنافس والتكرار (Safe Concurrency Execution):**
+     - سحب الدفعات وتحديث حالتها الذري من `PENDING` إلى `PROCESSING` لضمان عدم معالجة الحدث مرتين عند تعدد الـ Workers.
+  4. **إعادة المحاولة الأسية (Exponential Backoff):**
+     - تأخير المحاولات المتعاقبة (2 ثانية، 4 ثوانٍ، 8 ثوانٍ، 16 ثانية...).
+  5. **مرصد الأعطال والإنذار (Dead-Letter Alerting):**
+     - إرسال تنبيه Telemetry فوري عند استقرار أي حدث في حالة `FAILED`.
+
+#### 6.2 تفعيل الأزرار الميدانية الخمسة وتطهير الواجهة بالكامل (Zero-Dead-Buttons Engine)
 * **الملف المتأثر:** [`apps/bot-server/src/bot.ts`](file:///f:/Alsaada-Smart-Bot/apps/bot-server/src/bot.ts)
-* **المشكلة البرمجية:** 5 أزرار ترد بنصوص مضللة "تحت التجهيز".
-* **التعديل البرمجي الدقيق:**
-  * ربط أزرار العاملين (`قسيمة راتبي` و `كشف حسابي`) ببطاقات استعلام لحظية تسحب بيانات العامل الفعلي من قاعدة البيانات وتعرض رصيده والوردية الأخيرة بدلاً من النص الميت.
-  * زر `لوحة المؤشرات`: للمشرفين، إرسال رابط تسجيل دخول آمن (Magic Link) للداشبورد.
-  * زر `🚜 تسجيل منسوب`: توجيهه لتدفق تسجيل المنسوب المعتمد أو إخفاؤه من لوحة المفاتيح في حال لم يكن العامل مهندساً مساحياً.
+* **المشكلة البرمجية:** وجود 5 أزرار ترد بنصوص صورية ميتة "تحت التجهيز".
+* **المواصفات والتعديلات البرمجية الدقيقة:**
+  1. **زر `قسيمة راتبي` (`/my_payslip`):**
+     - صمام فحص الهوية والربط: التحقق من ربط حساب التليجرام بملف عامل (`ctx.workerId`). وإذا لم يكن مربوطاً، إظهار بطاقة توجيهية أنيقة لمراجعة المشرف بدلاً من الانهيار.
+     - استعلام البيانات المعتمدة: جلب الراتب التعاقدي والبدلات الثابتة وأيام الحضور المعتمدة للشهر الحالي وإجمالي السلف المستقطعة.
+     - عرض بطاقة Markdown تفاعلية واضحة توضح مفردات الاستحقاق.
+  2. **زر `كشف حسابي` (`/my_statement`):**
+     - جلب حركة المسحوبات للشهر الحالي: السلف النقدية، مسحوبات الكانتين والسجائر، وإجمالي الخصومات.
+     - عرض كشف حساب شفاف بالرصيد المتبقي المتاح والسلف القائمة.
+  3. **زر `لوحة المؤشرات` (`/dashboard_link`):**
+     - صمام أمان الصلاحيات: التحقق الصارم من رتبة المستخدم (`SUPER_ADMIN`, `GENERAL_ADMIN`, `FIELD_ADMIN`).
+     - توليد One-Time Magic Login Token مؤمن ومشفر بمدة صلاحية 15 دقيقة مع رابط فتح مباشر للداشبورد.
+     - لغير الإداريين: إظهار بطاقة توضيحية معتمدة تفيد باقتصار البوابة على الإدارة الميدانية.
+  4. **زر `فواتيري ومستخلصاتي` (`/my_invoices`):**
+     - التحقق من صفة المورد (`SUPPLIER`).
+     - استعراض الفواتير المعتمدة والمستحقات وحالات السداد من واقع جداول الموردين.
+  5. **زر `🚜 تسجيل منسوب` (`/elevation`):**
+     - ربطه ببطاقة المساحة الميدانية المعتمدة لقراءات الحفر والردم، أو توجيهه للتدفق الميداني المعتمد.
 
-#### 6.3 تحويل فاحص ميزانية الأداء (`verify-performance-budget.ts`) إلى فاحص فعلي
+#### 6.3 تحويل فاحص ميزانية الأداء (`verify-performance-budget.ts`) إلى فاحص حقيقي أصيل
 * **الملف المتأثر:** [`tools/governance/verify-performance-budget.ts`](file:///f:/Alsaada-Smart-Bot/tools/governance/verify-performance-budget.ts)
-* **المشكلة البرمجية:** يقيس كلاس `Map` محلي ويكتم الكونسول بصورة صورية.
-* **التعديل البرمجي الدقيق:**
-  ربط الفاحص باختبار قياس زمن معالجة حقيقي لعمليات تشفير الهاش وزمن استجابة استعلامات الـ Prisma الفعلية وإلغاء كتم الكونسول.
+* **المشكلة البرمجية:** يقيس كلاس `Map` محلي ويكتم الكونسول بصورة صورية (`process.stdout.write = () => true`).
+* **المواصفات والتعديلات البرمجية الدقيقة:**
+  1. **إلغاء كتم الكونسول الصوري:** إزالة `process.stdout.write = (() => true)` واستبدالها باعتراض آمن لا يعطل التحذيرات الحقيقية.
+  2. **قياس عمليات فيزيائية حقيقية (Real CPU & Crypto Benchmarking):**
+     - قياس أزمنة التشفير الحقيقية (HMAC-SHA256، وبصمات الهاش التراكمي، وفك تشفير الـ AES-256).
+     - قياس أزمنة بناء القوائم وقوالب التيليجرام الفعلية ومصفوفة الصلاحيات.
+  3. **فحص حقيقي للذاكرة (Real V8 Heap Drift Guard):**
+     - أخذ عينات حقيقية من استهلاك الذاكرة عبر `process.memoryUsage().heapUsed` قبل وبعد العمليات لمنع أي تسريب خفي (Memory Leak).
 
 ---
 

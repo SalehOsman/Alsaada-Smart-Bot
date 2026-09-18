@@ -340,6 +340,18 @@ export function registerSettingsRoutes(
       await adminAssignmentHandler.handleSetUserSiteAssignment(ctx, BigInt(ctx.match[1]), ctx.match[2]);
     }
   });
+  bot.callbackQuery(/^adm:tfb:(\d+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await adminAssignmentHandler.handleToggleFreezeBotAccess(ctx, BigInt(ctx.match[1]));
+  });
+  bot.callbackQuery(/^adm:tet:(\d+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await adminAssignmentHandler.handleToggleEjectTelegram(ctx, BigInt(ctx.match[1]));
+  });
+  bot.callbackQuery(/^adm:sl:(\d+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await adminAssignmentHandler.handleStartLeave(ctx, BigInt(ctx.match[1]));
+  });
+  bot.callbackQuery(/^adm:rl:(\d+)$/, async (ctx) => {
+    if (ctx.match?.[1]) await adminAssignmentHandler.handleReturnFromLeave(ctx, BigInt(ctx.match[1]));
+  });
 
   // --- Flow 00.6 Ghost Mode ---
   bot.callbackQuery('action:settings:ghost_mode', (ctx) => ghostModeHandler.renderGhostModeMenu(ctx));

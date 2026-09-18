@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createResult, fail, isCliEntrypoint, listFilesRecursive, printAndExit, toRepoPath, type VerificationResult } from './common.js';
+import { listEntityFiles, sha256NormalizedFile } from './unified-lock-engine.js';
 
 export const APPROVAL_PHRASE = 'موافق على التعديل او الايقاف او الحذف';
 export const GOVERNANCE_LOCK_PATH = 'governance.lock.json';
@@ -63,6 +64,7 @@ export interface GovernanceLock {
   lockedModules?: Record<string, LockedModuleEntry> | undefined;
   lockedSpeedEngine?: LockedSpeedEngineEntry | undefined;
   lockedDocker?: LockedDockerEntry | undefined;
+  lockedEntities?: Record<string, import('./unified-lock-engine.js').LockedEntity> | undefined;
 }
 
 export const PROTECTED_GOVERNANCE_FILES = [
@@ -207,6 +209,7 @@ export function buildGovernanceLock(
   let lockedModules: Record<string, LockedModuleEntry> | undefined = existingLock?.lockedModules;
   let lockedSpeedEngine: LockedSpeedEngineEntry | undefined = existingLock?.lockedSpeedEngine;
   let lockedDocker: LockedDockerEntry | undefined = existingLock?.lockedDocker;
+  let lockedEntities: Record<string, import('./unified-lock-engine.js').LockedEntity> | undefined = existingLock?.lockedEntities;
 
   if (!existingLock) {
     const lockPath = join(root, GOVERNANCE_LOCK_PATH);
@@ -218,6 +221,7 @@ export function buildGovernanceLock(
         if (parsed.lockedModules) lockedModules = parsed.lockedModules;
         if (parsed.lockedSpeedEngine) lockedSpeedEngine = parsed.lockedSpeedEngine;
         if (parsed.lockedDocker) lockedDocker = parsed.lockedDocker;
+        if (parsed.lockedEntities) lockedEntities = parsed.lockedEntities;
       } catch {
         // ignore
       }
@@ -249,6 +253,9 @@ export function buildGovernanceLock(
   }
   if (lockedDocker) {
     lock.lockedDocker = lockedDocker;
+  }
+  if (lockedEntities && Object.keys(lockedEntities).length > 0) {
+    lock.lockedEntities = lockedEntities;
   }
 
   return lock;
@@ -689,6 +696,48 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
     }
   }
 
+  if (lock.lockedEntities) {
+    for (const [entityId, entity] of Object.entries(lock.lockedEntities)) {
+      count += entity.files.length;
+      const fullDirOrFile = join(root, entity.directory);
+      if (!existsSync(fullDirOrFile)) {
+        fail(result, `Locked entity '${entityId}' target is missing: ${entity.directory}`);
+        continue;
+      }
+      for (const entry of entity.files) {
+        const fullPath = join(root, entry.path);
+        if (!existsSync(fullPath)) {
+          fail(result, `Locked entity '${entityId}' file is missing: ${entry.path}`);
+          continue;
+        }
+        if (sha256NormalizedFile(fullPath) !== entry.sha256) {
+          fail(result, `Locked entity '${entityId}' cryptographic integrity violated! Modified: ${entry.path}`);
+        }
+      }
+      // Check for unrecorded / injected files
+      const expectedPaths = new Set(entity.files.map((f) => f.path));
+      let actualFiles: string[] = [];
+      if (entity.id === 'infra:docker') {
+        actualFiles = listDockerFiles(root);
+      } else if (entity.id === 'infra:speed-engine') {
+        actualFiles = [
+          'apps/bot-server/src/services/fast-cache.service.ts',
+          'apps/bot-server/src/services/telemetry.service.ts',
+          'apps/bot-server/src/services/screen-flow.service.ts',
+          'tools/governance/verify-latency-anti-patterns.ts',
+        ].filter((p) => existsSync(join(root, p)));
+      } else {
+        actualFiles = listEntityFiles(root, entity.directory, entity.type);
+      }
+
+      for (const actualPath of actualFiles) {
+        if (!expectedPaths.has(actualPath)) {
+          fail(result, `Locked entity '${entityId}' contains unrecorded file: ${actualPath}`);
+        }
+      }
+    }
+  }
+
   result.checked = count;
   return result;
 }
@@ -703,6 +752,7 @@ if (isCliEntrypoint(import.meta.url)) {
     if (lock.lockedModules) console.log(`Locked modules: ${Object.keys(lock.lockedModules).length}`);
     if (lock.lockedSpeedEngine) console.log(`Locked speed engine files: ${lock.lockedSpeedEngine.files.length}`);
     if (lock.lockedDocker) console.log(`Locked Docker infrastructure files: ${lock.lockedDocker.files.length}`);
+    if (lock.lockedEntities) console.log(`Locked unified entities: ${Object.keys(lock.lockedEntities).length}`);
     console.log(`Output: ${GOVERNANCE_LOCK_PATH}`);
   } else {
     printAndExit('governance:lock', verifyGovernanceLock(process.cwd()));

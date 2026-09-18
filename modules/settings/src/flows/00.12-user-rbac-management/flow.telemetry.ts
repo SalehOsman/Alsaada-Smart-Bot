@@ -1,9 +1,10 @@
 export interface UserRbacTelemetryPayload {
-  action: 'LIST' | 'SEARCH' | 'CHANGE_ROLE' | 'TOGGLE_BAN' | 'REVOKE' | 'DIRECT_LINK' | 'RADAR_CONFLICT';
+  action: 'LIST' | 'SEARCH' | 'CHANGE_ROLE' | 'TOGGLE_BAN' | 'REVOKE' | 'DIRECT_LINK' | 'RADAR_CONFLICT' | 'ASSIGN_SUPERVISOR_PROFILE';
   actorTelegramId?: bigint | undefined;
   targetTelegramId?: bigint | undefined;
   targetWorkerCode?: string | undefined;
   newRole?: string | undefined;
+  profileKey?: string | undefined;
   success: boolean;
   executionTimeMs?: number | undefined;
   error?: string | undefined;

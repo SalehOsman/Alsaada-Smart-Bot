@@ -26,16 +26,24 @@ export function formatUserAssignmentCard(user: AdminAssignmentDto, noticeText?: 
   }
 
   const currentScope = user.assignedSiteName ? `📍 موقع: *${user.assignedSiteName}*` : '🌐 *وصول عام وشامل (كافة المواقع)*';
+  const statusBadge = user.isOnLeave ? '🌴 *في إجازة رسمية (موقوف ميدانياً)*' : '🟢 *نشط بالخدمة الميدانية*';
+  const freezeBadge = user.freezeBotAccessOnLeave ? '🔒 مفعل (حجب البوت أثناء الإجازة)' : '🔓 معطل (دخول متاح دائماً)';
+  const ejectBadge = user.ejectTelegramOnLeave ? '🚫 مفعل (طرد مؤقت أثناء الإجازة)' : '👥 معطل (بقاء بالمجموعة)';
 
   return (
     formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان والمشاريع', '👥 المشرفين', user.fullName]) +
     `${banner}` +
-    `👤 *تعديل نطاق صلاحيات المشرف: ${user.fullName}*\n` +
+    `👤 *إدارة نطاق وسياسات المشرف: ${user.fullName}*\n` +
     `────────────────────────────\n` +
     `🔹 *المعرف الرقمي:* ${formatClickToCopy(user.telegramId)}\n` +
     `🔹 *الصفة الإدارية:* *${user.role}*\n` +
+    `🔹 *الحالة التشغيلية:* ${statusBadge}\n` +
     `🔹 *النطاق الميداني الحالي:* ${currentScope}\n` +
     `────────────────────────────\n` +
-    `👇 *اختر الموقع الميداني المراد تعيينه عليه، أو اختر صلاحية عامة:*`
+    `⚙️ *سياسات الإجازة الميدانية (Leave Policies):*\n` +
+    `• قفل دخول البوت: ${freezeBadge}\n` +
+    `• حجب جروب التيليجرام: ${ejectBadge}\n` +
+    `────────────────────────────\n` +
+    `👇 *اختر الموقع الميداني، أو عدل سياسات وحالة إجازة المشرف:*`
   );
 }

@@ -143,4 +143,45 @@ describe('Flow 00.12 Unit Tests — UserRbacService', () => {
     expect(preview.firstName).toBe('Saleh');
     expect(preview.username).toBe('saleh_o');
   });
+
+  it('assigns worker supervisor profile successfully', async () => {
+    const mockRepo = {
+      getUserByTelegramId: vi.fn().mockResolvedValue(sampleUser),
+      assignWorkerSupervisorProfile: vi.fn().mockResolvedValue({
+        ...sampleUser,
+        role: 'WORKER_SUPERVISOR',
+      }),
+    } as unknown as UserRbacRepository;
+
+    const service = new UserRbacService(mockRepo);
+    const res = await service.assignWorkerSupervisorProfile(
+      999888777n,
+      123456789n,
+      'FUEL_SUPERVISOR',
+      'site-1'
+    );
+
+    expect(res.success).toBe(true);
+    expect(res.user?.role).toBe('WORKER_SUPERVISOR');
+    expect(mockRepo.assignWorkerSupervisorProfile).toHaveBeenCalledWith(
+      999888777n,
+      123456789n,
+      'FUEL_SUPERVISOR',
+      'site-1'
+    );
+  });
+
+  it('blocks self-assignment of worker supervisor profile', async () => {
+    const mockRepo = {} as unknown as UserRbacRepository;
+    const service = new UserRbacService(mockRepo);
+
+    const res = await service.assignWorkerSupervisorProfile(
+      123456789n,
+      123456789n,
+      'CANTEEN_SUPERVISOR'
+    );
+
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('لا يمكنك ترقية أو تعديل رتبة حسابك الشخصي بنفسك');
+  });
 });

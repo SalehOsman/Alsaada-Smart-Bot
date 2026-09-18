@@ -12,6 +12,7 @@
   "dependencies": {
     "@alsaada/core-components": "workspace:*",
     "@alsaada/database": "workspace:*",
+    "@alsaada/rbac": "workspace:*",
     "@alsaada/regional-engine": "workspace:*",
     "exceljs": "^4.4.0",
     "grammy": "^1.35.0",

@@ -5,6 +5,10 @@ export interface AdminAssignmentDto {
   role: string;
   assignedSiteId: string | null;
   assignedSiteName: string | null;
+  isOnLeave: boolean;
+  freezeBotAccessOnLeave: boolean;
+  ejectTelegramOnLeave: boolean;
+  status: string;
 }
 
 export interface SiteOptionDto {

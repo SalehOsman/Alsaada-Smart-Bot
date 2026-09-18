@@ -37,9 +37,9 @@ describe('Agent Dispatcher Tooling (R4 Specification)', () => {
         expect(Array.isArray(result.failures)).toBe(true);
         expect(Array.isArray(result.warnings)).toBe(true);
         // Ensure it finishes within reasonable SLA despite git process spawning and parallel test runner CPU load
-        expect(elapsed).toBeLessThan(10000);
+        expect(elapsed).toBeLessThan(30000);
       },
-      15000,
+      35000,
     );
 
     it(

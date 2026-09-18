@@ -11,6 +11,10 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
     role: 'FIELD_ADMIN',
     assignedSiteId: 's-1',
     assignedSiteName: 'موقع السويس',
+    isOnLeave: false,
+    freezeBotAccessOnLeave: true,
+    ejectTelegramOnLeave: true,
+    status: 'ACTIVE',
   };
 
   it('should list admin users correctly', async () => {
@@ -101,6 +105,55 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
     expect(res.success).toBe(false);
     expect(res.error).toContain('المشرف العام الوحيد');
     expect(mockRepo.setAssignment).not.toHaveBeenCalled();
+  });
+
+  it('should toggle freezeBotAccessOnLeave policy successfully', async () => {
+    const mockRepo = {
+      toggleFreezeBotAccessOnLeave: vi.fn().mockResolvedValue({
+        ...sampleUser,
+        freezeBotAccessOnLeave: false,
+      }),
+    } as unknown as AdminAssignmentRepository;
+
+    const service = new AdminAssignmentService(mockRepo);
+    const res = await service.toggleFreezeBotAccess(111222333n, 999888777n);
+
+    expect(res.success).toBe(true);
+    expect(res.user?.freezeBotAccessOnLeave).toBe(false);
+    expect(mockRepo.toggleFreezeBotAccessOnLeave).toHaveBeenCalledWith(111222333n);
+  });
+
+  it('should toggle ejectTelegramOnLeave policy successfully', async () => {
+    const mockRepo = {
+      toggleEjectTelegramOnLeave: vi.fn().mockResolvedValue({
+        ...sampleUser,
+        ejectTelegramOnLeave: false,
+      }),
+    } as unknown as AdminAssignmentRepository;
+
+    const service = new AdminAssignmentService(mockRepo);
+    const res = await service.toggleEjectTelegram(111222333n, 999888777n);
+
+    expect(res.success).toBe(true);
+    expect(res.user?.ejectTelegramOnLeave).toBe(false);
+    expect(mockRepo.toggleEjectTelegramOnLeave).toHaveBeenCalledWith(111222333n);
+  });
+
+  it('should transition leave status cleanly', async () => {
+    const mockRepo = {
+      setLeaveStatus: vi.fn().mockResolvedValue({
+        ...sampleUser,
+        isOnLeave: true,
+        status: 'INACTIVE',
+      }),
+    } as unknown as AdminAssignmentRepository;
+
+    const service = new AdminAssignmentService(mockRepo);
+    const res = await service.setLeaveStatus(111222333n, true, 999888777n, 'المدير العام');
+
+    expect(res.success).toBe(true);
+    expect(res.user?.isOnLeave).toBe(true);
+    expect(mockRepo.setLeaveStatus).toHaveBeenCalledWith(111222333n, true, 999888777n, 'المدير العام');
   });
 });
 

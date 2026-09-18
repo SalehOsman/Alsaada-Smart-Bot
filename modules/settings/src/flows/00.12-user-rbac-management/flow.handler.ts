@@ -1,10 +1,12 @@
 import type { Bot } from 'grammy';
+import type { WorkerSupervisorProfileKey } from '@alsaada/rbac';
 import type { SettingsModuleContext } from '../../shared/module.types.js';
 import type { UserRbacService } from './flow.service.js';
 import {
   buildUserDirectoryKeyboard,
   buildUserDetailKeyboard,
   buildRoleSelectionKeyboard,
+  buildWorkerSupervisorProfilesKeyboard,
   buildWorkerCandidatesKeyboard,
   buildPreviewConfirmKeyboard,
   buildConflictConfirmKeyboard,
@@ -28,65 +30,20 @@ export class UserRbacHandler {
   constructor(private readonly service: UserRbacService) {}
 
   registerRoutes(bot: Bot<SettingsModuleContext>): void {
-    bot.callbackQuery('action:settings:user_rbac', async (ctx) => {
-      await this.handleOpenDirectory(ctx, 1);
-    });
-
-    bot.callbackQuery(/^urb:p:(\d+)$/, async (ctx) => {
-      const page = parseInt(ctx.match[1] || '1', 10);
-      await this.handleOpenDirectory(ctx, page);
-    });
-
-    bot.callbackQuery(/^urb:u:(\d+)$/, async (ctx) => {
-      const targetId = BigInt(ctx.match[1] || '0');
-      await this.handleOpenUserCard(ctx, targetId);
-    });
-
-    bot.callbackQuery(/^urb:r:(\d+)$/, async (ctx) => {
-      const targetId = BigInt(ctx.match[1] || '0');
-      await this.handlePromptRoleChange(ctx, targetId);
-    });
-
-    bot.callbackQuery(/^urb:sr:(\d+):([A-Z_]+)$/, async (ctx) => {
-      const targetId = BigInt(ctx.match[1] || '0');
-      const newRole = ctx.match[2] || '';
-      await this.handleApplyRoleChange(ctx, targetId, newRole);
-    });
-
-    bot.callbackQuery(/^urb:tb:(\d+)$/, async (ctx) => {
-      const targetId = BigInt(ctx.match[1] || '0');
-      await this.handleToggleBan(ctx, targetId);
-    });
-
-    bot.callbackQuery(/^urb:rv:(\d+)$/, async (ctx) => {
-      const targetId = BigInt(ctx.match[1] || '0');
-      await this.handleRevokeUser(ctx, targetId);
-    });
-
-    bot.callbackQuery('urb:lw', async (ctx) => {
-      await this.handleListUnlinkedWorkers(ctx);
-    });
-
-    bot.callbackQuery(/^urb:w:([0-9a-fA-F-]+)$/, async (ctx) => {
-      const workerId = ctx.match[1] || '';
-      await this.handlePromptWorkerTelegramId(ctx, workerId);
-    });
-
-    bot.callbackQuery('urb:s', async (ctx) => {
-      await this.handlePromptSearch(ctx);
-    });
-
-    bot.callbackQuery(/^urb:cp:([^:]+):(\d+)$/, async (ctx) => {
-      const workerId = ctx.match[1] || '';
-      const telegramId = BigInt(ctx.match[2] || '0');
-      await this.handleExecuteLink(ctx, workerId, telegramId, false);
-    });
-
-    bot.callbackQuery(/^urb:cc:([^:]+):(\d+)$/, async (ctx) => {
-      const workerId = ctx.match[1] || '';
-      const telegramId = BigInt(ctx.match[2] || '0');
-      await this.handleExecuteLink(ctx, workerId, telegramId, true);
-    });
+    bot.callbackQuery('action:settings:user_rbac', (ctx) => this.handleOpenDirectory(ctx, 1));
+    bot.callbackQuery(/^urb:p:(\d+)$/, (ctx) => this.handleOpenDirectory(ctx, parseInt(ctx.match[1] || '1', 10)));
+    bot.callbackQuery(/^urb:u:(\d+)$/, (ctx) => this.handleOpenUserCard(ctx, BigInt(ctx.match[1] || '0')));
+    bot.callbackQuery(/^urb:r:(\d+)$/, (ctx) => this.handlePromptRoleChange(ctx, BigInt(ctx.match[1] || '0')));
+    bot.callbackQuery(/^urb:sr:(\d+):([A-Z_]+)$/, (ctx) => this.handleApplyRoleChange(ctx, BigInt(ctx.match[1] || '0'), ctx.match[2] || ''));
+    bot.callbackQuery(/^urb:prm:(\d+)$/, (ctx) => this.handlePromptSupervisorProfile(ctx, BigInt(ctx.match[1] || '0')));
+    bot.callbackQuery(/^urb:sp:(\d+):([A-Z_]+)$/, (ctx) => this.handleApplySupervisorProfile(ctx, BigInt(ctx.match[1] || '0'), ctx.match[2] as WorkerSupervisorProfileKey));
+    bot.callbackQuery(/^urb:tb:(\d+)$/, (ctx) => this.handleToggleBan(ctx, BigInt(ctx.match[1] || '0')));
+    bot.callbackQuery(/^urb:rv:(\d+)$/, (ctx) => this.handleRevokeUser(ctx, BigInt(ctx.match[1] || '0')));
+    bot.callbackQuery('urb:lw', (ctx) => this.handleListUnlinkedWorkers(ctx));
+    bot.callbackQuery(/^urb:w:([0-9a-fA-F-]+)$/, (ctx) => this.handlePromptWorkerTelegramId(ctx, ctx.match[1] || ''));
+    bot.callbackQuery('urb:s', (ctx) => this.handlePromptSearch(ctx));
+    bot.callbackQuery(/^urb:cp:([^:]+):(\d+)$/, (ctx) => this.handleExecuteLink(ctx, ctx.match[1] || '', BigInt(ctx.match[2] || '0'), false));
+    bot.callbackQuery(/^urb:cc:([^:]+):(\d+)$/, (ctx) => this.handleExecuteLink(ctx, ctx.match[1] || '', BigInt(ctx.match[2] || '0'), true));
   }
 
   async handleOpenDirectory(ctx: SettingsModuleContext, page = 1): Promise<void> {
@@ -145,6 +102,46 @@ export class UserRbacHandler {
 
     if (ctx.callbackQuery) {
       await showModalAlert(ctx as unknown as { answerCallbackQuery: (opts: { text: string; show_alert: boolean }) => Promise<unknown> }, `✅ تم تعديل الرتبة إلى: ${newRole}`);
+    }
+    await this.handleOpenUserCard(ctx, targetTelegramId);
+  }
+
+  async handlePromptSupervisorProfile(ctx: SettingsModuleContext, targetTelegramId: bigint): Promise<void> {
+    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
+    const keyboard = buildWorkerSupervisorProfilesKeyboard(targetTelegramId);
+    const text = `🛡️ *ترقية وتعيين مشرف مهام ميداني (Worker Supervisor)*\nاختر قالب الصلاحيات المطلوب تطبيقه فورياً:`;
+    await this.renderInPlace(ctx, text, keyboard);
+  }
+
+  async handleApplySupervisorProfile(
+    ctx: SettingsModuleContext,
+    targetTelegramId: bigint,
+    profileKey: WorkerSupervisorProfileKey
+  ): Promise<void> {
+    if (!ctx.from) return;
+    const actorId = BigInt(ctx.from.id);
+
+    const res = await this.service.assignWorkerSupervisorProfile(actorId, targetTelegramId, profileKey);
+    if (!res.success || !res.user) {
+      if (ctx.callbackQuery) {
+        await showModalAlert(ctx as unknown as { answerCallbackQuery: (opts: { text: string; show_alert: boolean }) => Promise<unknown> }, res.error || 'فشلت العملية.');
+      }
+      return;
+    }
+
+    logUserRbacTelemetry({
+      action: 'ASSIGN_SUPERVISOR_PROFILE',
+      actorTelegramId: actorId,
+      targetTelegramId,
+      profileKey,
+      success: true,
+    });
+
+    if (ctx.callbackQuery) {
+      await showModalAlert(
+        ctx as unknown as { answerCallbackQuery: (opts: { text: string; show_alert: boolean }) => Promise<unknown> },
+        `✅ تم تعيين قالب الصلاحيات للمشرف بنجاح!`
+      );
     }
     await this.handleOpenUserCard(ctx, targetTelegramId);
   }

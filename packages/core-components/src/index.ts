@@ -50,3 +50,7 @@ export * from './wizard-session/wizard-session.engine.js';
 
 // Worker Commitment & Evaluation Engine (NEW-80)
 export * from './worker-commitment/index.js';
+
+// Enterprise Bot Dynamic Module & Flow Control Center (Plan-71 / NEW-84)
+export * from './bot-catalog/index.js';
+

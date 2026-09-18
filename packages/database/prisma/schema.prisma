@@ -92,6 +92,7 @@ model Site {
   geofenceRadiusMeters Int?     @default(1000)
   status               String   @default("ACTIVE") // ACTIVE, INACTIVE
   telegramGroupId      BigInt?
+  telegramTopicId      Int?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -623,10 +624,10 @@ model WorkerCommitmentScore {
   disciplinaryScore     Decimal  @default(30) @db.Decimal(5, 2) // max 30
   ppeScore              Decimal  @default(15) @db.Decimal(5, 2) // max 15
   financialScore        Decimal  @default(15) @db.Decimal(5, 2) // max 15
-  breakdown             Json?    // Detailed statistics (leaves, penalties, bonuses, PPE loss, advance compliance)
-  recoveryGuidance      String?  // Actionable advice for improving the score
-  sha256Checksum        String?  // Cryptographic forensic audit hash
-  snapshotKey           String?  // e.g. "2026-09" for monthly snapshot, null for live
+  breakdown             Json? // Detailed statistics (leaves, penalties, bonuses, PPE loss, advance compliance)
+  recoveryGuidance      String? // Actionable advice for improving the score
+  sha256Checksum        String? // Cryptographic forensic audit hash
+  snapshotKey           String? // e.g. "2026-09" for monthly snapshot, null for live
   calculatedBy          String?  @default("SYSTEM") // SYSTEM or Admin TelegramId
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -1533,19 +1534,22 @@ model User {
   phoneBlindIndex        String?
   isActive               Boolean   @default(true)
   isBanned               Boolean   @default(false)
+  freezeBotAccessOnLeave Boolean   @default(true)
+  ejectTelegramOnLeave   Boolean   @default(true)
   approvedBySuperAdminId BigInt?
   isDeleted              Boolean   @default(false)
   deletedAt              DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  tenant            Tenant?             @relation(fields: [tenantId], references: [id])
-  worker            Worker?             @relation(fields: [workerId], references: [id])
-  supplier          Supplier?           @relation(fields: [supplierId], references: [id])
-  assignedSite      Site?               @relation(fields: [assignedSiteId], references: [id])
-  notifications     NotificationQueue[]
-  dashboardSessions DashboardSession[]
-  workerDelegations WorkerDelegation[]
+  tenant                  Tenant?                  @relation(fields: [tenantId], references: [id])
+  worker                  Worker?                  @relation(fields: [workerId], references: [id])
+  supplier                Supplier?                @relation(fields: [supplierId], references: [id])
+  assignedSite            Site?                    @relation(fields: [assignedSiteId], references: [id])
+  notifications           NotificationQueue[]
+  dashboardSessions       DashboardSession[]
+  workerDelegations       WorkerDelegation[]
+  supervisorLifecycleLogs SupervisorLifecycleLog[]
 
   @@index([phoneBlindIndex])
   @@index([role])
@@ -1553,16 +1557,60 @@ model User {
 }
 
 model BotMenuPermission {
-  id           String   @id @default(uuid())
-  role         String
-  featureKey   String
-  isEnabled    Boolean  @default(true)
-  displayOrder Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(uuid())
+  scopeType  String // "ROLE" | "DEPARTMENT" | "JOB_TITLE" | "SITE" | "USER"
+  scopeId    String // Role name (e.g. 'FIELD_ADMIN') or UUID of (Department, JobTitle, Site, User)
+  featureKey String // e.g. "advances.cash.create", "canteen.sale.create"
+  action     String   @default("view") // "view" | "create" | "edit" | "approve" | "export" | "manage"
+  policy     String   @default("ALLOW") // "ALLOW" | "DENY" (Explicit DENY trumps ALLOW)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@unique([role, featureKey])
+  @@unique([scopeType, scopeId, featureKey, action])
+  @@index([scopeType, scopeId])
+  @@index([featureKey, action])
   @@map("bot_menu_permissions")
+}
+
+model SupervisorLifecycleLog {
+  id              String   @id @default(uuid())
+  userId          String
+  workerId        String?
+  actionType      String // "SITE_TRANSFER" | "LEAVE_START" | "LEAVE_RETURN" | "TERMINATION" | "PROMOTION" | "DEMOTION"
+  previousSiteId  String?
+  newSiteId       String?
+  telegramGroupId BigInt?
+  telegramTopicId Int?
+  telegramAction  String? // "KICKED" | "BANNED" | "INVITE_SENT" | "RESTORED" | "SKIPPED_POLICY" | "FAILED"
+  telegramError   String? // توثيق سبب تعثر استدعاء تيليجرام (مثل CANNOT_REMOVE_ADMIN)
+  notes           String?
+  actorTelegramId BigInt
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, actionType])
+  @@index([createdAt])
+  @@map("supervisor_lifecycle_logs")
+}
+
+model TelegramEnforcementTask {
+  id          String    @id @default(uuid())
+  siteId      String
+  telegramId  BigInt
+  chatId      BigInt
+  topicId     Int?
+  taskType    String // "KICK_MEMBER" | "BAN_MEMBER" | "GENERATE_INVITE" | "VERIFY_MEMBERSHIP"
+  status      String    @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(5)
+  lastError   String?
+  executeAt   DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, executeAt])
+  @@map("telegram_enforcement_tasks")
 }
 
 model AuditLog {
@@ -1658,15 +1706,19 @@ model NotificationQueue {
 // -------------------------------------------------------------
 
 model OutboxEvent {
-  id           String    @id @default(uuid())
-  eventType    String
-  aggregateId  String?
-  payload      Json
-  status       String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED_RETRY
-  retryCount   Int       @default(0)
-  errorMessage String?
-  createdAt    DateTime  @default(now())
-  processedAt  DateTime?
+  id             String    @id @default(uuid())
+  eventType      String    @default("LEGACY") @map("event_type")
+  aggregateId    String?   @map("aggregate_id")
+  targetSheet    String    @default("LEGACY") @map("target_sheet")
+  payload        Json
+  idempotencyKey String?   @unique @map("idempotency_key")
+  retryCount     Int       @default(0) @map("retry_count")
+  maxRetries     Int       @default(5) @map("max_retries")
+  status         String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  errorMessage   String?   @map("error_message")
+  lastAttemptAt  DateTime? @map("last_attempt_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  processedAt    DateTime? @map("processed_at")
 
   @@index([status, createdAt])
   @@map("outbox_events")
@@ -1780,4 +1832,64 @@ model WorkerDelegation {
   @@index([siteId, status])
   @@index([permissionKey])
   @@map("worker_delegations")
+}
+
+// -------------------------------------------------------------
+// 13. Dynamic Bot Modules, Flows & Menu Hierarchy (Plan-71)
+// -------------------------------------------------------------
+
+enum BotNodeType {
+  MODULE // النطاق العام (الموارد البشرية، المالية، التشغيل، اللوجستيات، الحوكمة)
+  SECTION // القسم الرئيسي (شؤون العاملين، السلف، العهد...)
+  SUBSECTION // القسم الفرعي (إن وجد)
+  FLOW // زر التدفق الإجرائي المباشر (مثل: تسجيل عامل 01.1)
+}
+
+enum BotNodeStatus {
+  ACTIVE // مفعل ويعمل بكفاءة
+  DISABLED // موقوف
+  MAINTENANCE // تحت الصيانة والتحديث
+}
+
+enum DisabledBehavior {
+  HIDE // إخفاء الزر تماماً من لوحة مفاتيح البوت
+  LOCK_WITH_ALERT // إبقاء الزر مع رمز قفل 🔒 ورسالة تنبيه منبثقة Modal Alert
+}
+
+model BotMenuNode {
+  id                 String           @id @default(uuid())
+  code               String           @unique // e.g. "mod:hr", "sec:workforce", "flow:01.1"
+  parentId           String? // ربط هرمي بالعنصر الأب
+  type               BotNodeType
+  title              String // المسمى العربي على الزر
+  icon               String? // الرمز التعبيري (مثل: 👥, 💰, 🚜)
+  callbackData       String? // كود الكولباك في تليجرام (e.g. "flow:01.1:start")
+  status             BotNodeStatus    @default(ACTIVE)
+  disabledBehavior   DisabledBehavior @default(LOCK_WITH_ALERT)
+  maintenanceMessage String? // نص التنبيه المخصص عند الضغط
+  sortOrder          Int              @default(0)
+  isProtected        Boolean          @default(false) // وظيفة سيادية غير قابلة للإيقاف مطلقاً
+  allowedRoles       String[]         @default(["SUPER_ADMIN", "GENERAL_ADMIN", "FIELD_ADMIN"])
+  metadata           Json? // إعدادات التنسيق، عدد الأعمدة، مسار الشريحة
+
+  parent   BotMenuNode?  @relation("MenuHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children BotMenuNode[] @relation("MenuHierarchy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId, sortOrder])
+  @@index([status])
+  @@map("bot_menu_nodes")
+}
+
+// سجل لقطات النسخ الاحتياطي للقوائم واستعادة التكوينات
+model BotMenuSnapshot {
+  id          String   @id @default(uuid())
+  title       String // e.g. "قبل صيانة رمضان 2026", "الترتيب الافتراضي للمنظومة"
+  data        Json // لقطة كاملة للشجرة
+  createdById String
+  createdAt   DateTime @default(now())
+
+  @@map("bot_menu_snapshots")
 }

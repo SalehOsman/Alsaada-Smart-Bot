@@ -14,6 +14,7 @@ import {
   ArrowUpRight,
   Sparkles,
   Sliders,
+  Bot,
 } from 'lucide-react';
 
 const SETTINGS_SECTIONS = [
@@ -79,6 +80,13 @@ const SETTINGS_SECTIONS = [
     href: '/admin/settings/preferences',
     icon: Sliders,
     badge: 'مظهر وتوقيت',
+  },
+  {
+    title: 'هندسة موديولات وتدفقات البوت',
+    desc: 'التحكم الكامل في إيقاف وتشغيل وإعادة ترتيب أقسام وتدفقات البوت مع المعاينة الحية (Plan 71 / NEW-84).',
+    href: '/admin/settings/bot-features',
+    icon: Bot,
+    badge: 'تحكم سيادي ولحظي',
   },
 ];
 

@@ -95,4 +95,56 @@ export class AdminAssignmentHandler {
     await showModalAlert(ctx, `✅ تم تحديث نطاق المشرف بنجاح إلى: ${scopeName}`);
     await this.renderUserAssignmentCard(ctx, targetTelegramId, true, `✅ تم تحديث نطاق الصلاحيات إلى: ${scopeName}`);
   }
+
+  async handleToggleFreezeBotAccess(ctx: SettingsModuleContext, targetTelegramId: bigint): Promise<void> {
+    if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') return;
+    const actorTelegramId = ctx.from?.id ? BigInt(ctx.from.id) : undefined;
+    const res = await this.service.toggleFreezeBotAccess(targetTelegramId, actorTelegramId);
+    if (!res.success || !res.user) {
+      await showModalAlert(ctx, res.error || 'فشلت العملية.');
+      return;
+    }
+    const state = res.user.freezeBotAccessOnLeave ? 'تفعيل حجب البوت بالإجازة 🔒' : 'إلغاء حجب البوت بالإجازة (سماح بالدخول) 🔓';
+    await showModalAlert(ctx, `✅ تم ${state}`);
+    await this.renderUserAssignmentCard(ctx, targetTelegramId, true, `✅ تم ${state}`);
+  }
+
+  async handleToggleEjectTelegram(ctx: SettingsModuleContext, targetTelegramId: bigint): Promise<void> {
+    if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') return;
+    const actorTelegramId = ctx.from?.id ? BigInt(ctx.from.id) : undefined;
+    const res = await this.service.toggleEjectTelegram(targetTelegramId, actorTelegramId);
+    if (!res.success || !res.user) {
+      await showModalAlert(ctx, res.error || 'فشلت العملية.');
+      return;
+    }
+    const state = res.user.ejectTelegramOnLeave ? 'تفعيل حجب التيليجرام بالإجازة 🚫' : 'إلغاء حجب التيليجرام بالإجازة (بقاء بالمجموعة) 👥';
+    await showModalAlert(ctx, `✅ تم ${state}`);
+    await this.renderUserAssignmentCard(ctx, targetTelegramId, true, `✅ تم ${state}`);
+  }
+
+  async handleStartLeave(ctx: SettingsModuleContext, targetTelegramId: bigint): Promise<void> {
+    if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') return;
+    const actorTelegramId = ctx.from?.id ? BigInt(ctx.from.id) : undefined;
+    const actorName = ctx.from?.first_name || 'مدير عام';
+    const res = await this.service.setLeaveStatus(targetTelegramId, true, actorTelegramId, actorName);
+    if (!res.success || !res.user) {
+      await showModalAlert(ctx, res.error || 'فشلت العملية.');
+      return;
+    }
+    await showModalAlert(ctx, '🌴 تم تسجيل بدء إجازة للمشرف وإنفاذ السياسات بنجاح.');
+    await this.renderUserAssignmentCard(ctx, targetTelegramId, true, '🌴 تم تسجيل بدء إجازة للمشرف بنجاح');
+  }
+
+  async handleReturnFromLeave(ctx: SettingsModuleContext, targetTelegramId: bigint): Promise<void> {
+    if (!ctx.isRealSuperAdmin && ctx.effectiveRole !== 'SUPER_ADMIN') return;
+    const actorTelegramId = ctx.from?.id ? BigInt(ctx.from.id) : undefined;
+    const actorName = ctx.from?.first_name || 'مدير عام';
+    const res = await this.service.setLeaveStatus(targetTelegramId, false, actorTelegramId, actorName);
+    if (!res.success || !res.user) {
+      await showModalAlert(ctx, res.error || 'فشلت العملية.');
+      return;
+    }
+    await showModalAlert(ctx, '🟢 تم تسجيل استئناف عمل المشرف والعودة من الإجازة بنجاح.');
+    await this.renderUserAssignmentCard(ctx, targetTelegramId, true, '🟢 تم تسجيل استئناف عمل المشرف بنجاح');
+  }
 }
