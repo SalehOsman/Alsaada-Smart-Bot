@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T11:17:30.329Z",
+  "generatedAt": "2026-09-18T11:19:43.185Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -267,7 +267,7 @@
     "01.1": {
       "flowKey": "01.1",
       "directory": "modules/workforce/src/flows/01.1-worker-registration",
-      "lockedAt": "2026-09-18T10:09:40.128Z",
+      "lockedAt": "2026-09-18T11:19:43.185Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
