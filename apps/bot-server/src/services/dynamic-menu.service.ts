@@ -117,7 +117,7 @@ export class DynamicMenuService {
     }
 
     // Main menu displays MODULE nodes (top level)
-    const moduleNodes = nodes.filter((n) => n.type === BotNodeType.MODULE || !n.parentId);
+    const moduleNodes = nodes.filter((n) => n.type === BotNodeType.MODULE);
     const visibleModules = BotFeatureRegistryService.filterNodesForUser(moduleNodes, role);
 
     if (visibleModules.length === 0) {

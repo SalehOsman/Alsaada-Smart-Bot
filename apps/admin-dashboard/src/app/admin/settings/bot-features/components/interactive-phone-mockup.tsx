@@ -102,7 +102,7 @@ export function InteractivePhoneMockup({
   // Filter items at current depth
   const currentItems = nodes.filter((n) => {
     if (currentParentId === null) {
-      return n.type === 'MODULE' || !n.parentId;
+      return n.type === 'MODULE';
     }
     return n.parentId === currentParentId;
   });

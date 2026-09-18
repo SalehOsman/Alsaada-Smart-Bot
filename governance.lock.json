@@ -3017,7 +3017,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/database",
       "directory": "packages/database",
-      "lockedAt": "2026-09-18T15:59:36.368Z",
+      "lockedAt": "2026-09-18T16:23:43.014Z",
       "files": [
         {
           "path": "packages/database/package.json",
@@ -3121,7 +3121,7 @@
         },
         {
           "path": "packages/database/src/scripts/seed-bot-menu-catalog.ts",
-          "sha256": "6f7c4b99a597c2fc0d11ddfc904d6216dcce35cbe7092f9ee3de542882dc8724"
+          "sha256": "6c03bbce1e6d63f00d404d75649cc68045b0357e6eafefc30acaa7f2072528c0"
         },
         {
           "path": "packages/database/src/scripts/seed-canteen-cigarettes.ts",

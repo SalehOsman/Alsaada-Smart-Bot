@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-18 (2026-09-18T15:59:36.368Z)
+- **تاريخ القفل:** 2026-09-18 (2026-09-18T16:23:43.014Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
@@ -37,7 +37,7 @@
 | `packages/database/src/scripts/purge-test-data.ts` | `3eb9b849847d1fab5317c7dfb649d8a0400667148ce147b6fd5c829ee43040d6` |
 | `packages/database/src/scripts/remediate-job-matrix-and-cycles.ts` | `76fef90859a7a8267842a0feaa22e484519581f777fd811d3c5d8e840d21dc66` |
 | `packages/database/src/scripts/remediate-shift-templates-and-jobs.ts` | `9e02b228b4bf1fa6285020cd74fb76b807db39cdb42eaf73808f0d7bd45188c1` |
-| `packages/database/src/scripts/seed-bot-menu-catalog.ts` | `6f7c4b99a597c2fc0d11ddfc904d6216dcce35cbe7092f9ee3de542882dc8724` |
+| `packages/database/src/scripts/seed-bot-menu-catalog.ts` | `6c03bbce1e6d63f00d404d75649cc68045b0357e6eafefc30acaa7f2072528c0` |
 | `packages/database/src/scripts/seed-canteen-cigarettes.ts` | `1d4d459240605ba1b8f57abb59edbb9e0894b681880041ed05c1ccb56853fc40` |
 | `packages/database/src/scripts/seed-company-profile.ts` | `816be27bcfdd3f7b15500436c4fda674d50c4b8e1ebc69f94558cc0e28c0bd7d` |
 | `packages/database/src/scripts/seed-hq-site.ts` | `6b86f905aa941ed038d3863043c21d291eee26d9969b68db11c319dcc58ad33e` |
