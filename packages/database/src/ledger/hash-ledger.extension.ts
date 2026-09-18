@@ -14,6 +14,18 @@ export const FINANCIAL_MODELS = new Set<string>([
   'hospitalityExpense',
   'WorkerExpenseClaim',
   'workerExpenseClaim',
+  'AttendanceRecord',
+  'attendanceRecord',
+  'PayrollTransaction',
+  'payrollTransaction',
+  'WorkerAdvance',
+  'workerAdvance',
+  'CustodyTransaction',
+  'custodyTransaction',
+  'ExpenseRecord',
+  'expenseRecord',
+  'SupplierInvoice',
+  'supplierInvoice',
 ]);
 
 export class ImmutableLedgerError extends Error {
@@ -38,31 +50,15 @@ export interface LedgerRecordPayload extends Record<string, unknown> {
   hashTimestamp?: Date | string;
 }
 
-// In-process mutex for serializing hash calculations per model
-class AsyncMutex {
-  private mutex = Promise.resolve();
-
-  lock(): Promise<() => void> {
-    let unlock: () => void;
-    const next = new Promise<void>((resolve) => {
-      unlock = resolve;
-    });
-    const wait = this.mutex.then(() => unlock);
-    this.mutex = this.mutex.then(() => next);
-    return wait;
-  }
-}
-
-const modelMutexes = new Map<string, AsyncMutex>();
-function getMutex(model: string): AsyncMutex {
-  const key = model.toLowerCase();
-  let m = modelMutexes.get(key);
-  if (!m) {
-    m = new AsyncMutex();
-    modelMutexes.set(key, m);
-  }
-  return m;
-}
+const LEDGER_LOCK_NAMESPACE = 0x53414144; // 'SAAD' in hex
+const MODEL_LOCK_IDS: Record<string, number> = {
+  attendancerecord: 1,
+  payrolltransaction: 2,
+  workeradvance: 3,
+  custodytransaction: 4,
+  expenserecord: 5,
+  supplierinvoice: 6,
+};
 
 export function extractAmount(data: Record<string, unknown>): number {
   if (data.amount !== undefined && data.amount !== null) return Number(data.amount);
@@ -111,53 +107,50 @@ export const hashLedgerExtension: any = Prisma.defineExtension((client: any) => 
             return query(args);
           }
 
-          const mutex = getMutex(model);
-          const unlock = await mutex.lock();
-          try {
-            const delegate = getModelDelegate(client, model);
-            const canonicalModel = normalizeModelName(model);
+          const modelId = MODEL_LOCK_IDS[model.toLowerCase()] || 99;
+          await client.$executeRawUnsafe('SELECT pg_advisory_xact_lock($1, $2)', LEDGER_LOCK_NAMESPACE, modelId);
 
-            // Fetch the latest committed record in this ledger table
-            let previousHash = GENESIS_HASH;
-            if (delegate) {
-              const latest = await delegate.findFirst({
-                orderBy: [
-                  { hashTimestamp: 'desc' },
-                  { createdAt: 'desc' },
-                  { id: 'desc' },
-                ],
-                select: { recordHash: true },
-              });
-              if (latest?.recordHash && latest.recordHash.trim() !== '') {
-                previousHash = latest.recordHash;
-              }
-            }
+          const delegate = getModelDelegate(client, model);
+          const canonicalModel = normalizeModelName(model);
 
-            const recordData = args.data as LedgerRecordPayload;
-
-            const timestamp = recordData.hashTimestamp instanceof Date
-              ? recordData.hashTimestamp
-              : (recordData.hashTimestamp ? new Date(recordData.hashTimestamp) : new Date());
-
-            const amount = extractAmount(recordData);
-            const actorId = extractActorId(recordData);
-
-            const recordHash = computeRecordHash({
-              previousHash,
-              model: canonicalModel,
-              amount,
-              actorId,
-              timestamp,
+          // Fetch the latest committed record in this ledger table
+          let previousHash = GENESIS_HASH;
+          if (delegate) {
+            const latest = await delegate.findFirst({
+              orderBy: [
+                { hashTimestamp: 'desc' },
+                { createdAt: 'desc' },
+                { id: 'desc' },
+              ],
+              select: { recordHash: true },
             });
-
-            recordData.previousHash = previousHash;
-            recordData.recordHash = recordHash;
-            recordData.hashTimestamp = timestamp;
-
-            return await query(args);
-          } finally {
-            unlock();
+            if (latest?.recordHash && latest.recordHash.trim() !== '') {
+              previousHash = latest.recordHash;
+            }
           }
+
+          const recordData = args.data as LedgerRecordPayload;
+
+          const timestamp = recordData.hashTimestamp instanceof Date
+            ? recordData.hashTimestamp
+            : (recordData.hashTimestamp ? new Date(recordData.hashTimestamp) : new Date());
+
+          const amount = extractAmount(recordData);
+          const actorId = extractActorId(recordData);
+
+          const recordHash = computeRecordHash({
+            previousHash,
+            model: canonicalModel,
+            amount,
+            actorId,
+            timestamp,
+          });
+
+          recordData.previousHash = previousHash;
+          recordData.recordHash = recordHash;
+          recordData.hashTimestamp = timestamp;
+
+          return await query(args);
         },
 
         async createMany({ model, operation, args, query }: LedgerQueryArgs) {
@@ -168,65 +161,64 @@ export const hashLedgerExtension: any = Prisma.defineExtension((client: any) => 
           const records = Array.isArray(args.data) ? args.data : [args.data];
           if (records.length === 0) return query(args);
 
-          const mutex = getMutex(model);
-          const unlock = await mutex.lock();
-          try {
-            const delegate = getModelDelegate(client, model);
-            const canonicalModel = normalizeModelName(model);
+          const modelId = MODEL_LOCK_IDS[model.toLowerCase()] || 99;
+          await client.$executeRawUnsafe('SELECT pg_advisory_xact_lock($1, $2)', LEDGER_LOCK_NAMESPACE, modelId);
 
-            let currentPreviousHash = GENESIS_HASH;
-            if (delegate) {
-              const latest = await delegate.findFirst({
-                orderBy: [
-                  { hashTimestamp: 'desc' },
-                  { createdAt: 'desc' },
-                  { id: 'desc' },
-                ],
-                select: { recordHash: true },
-              });
-              if (latest?.recordHash && latest.recordHash.trim() !== '') {
-                currentPreviousHash = latest.recordHash;
-              }
+          const delegate = getModelDelegate(client, model);
+          const canonicalModel = normalizeModelName(model);
+
+          let currentPreviousHash = GENESIS_HASH;
+          if (delegate) {
+            const latest = await delegate.findFirst({
+              orderBy: [
+                { hashTimestamp: 'desc' },
+                { createdAt: 'desc' },
+                { id: 'desc' },
+              ],
+              select: { recordHash: true },
+            });
+            if (latest?.recordHash && latest.recordHash.trim() !== '') {
+              currentPreviousHash = latest.recordHash;
             }
-
-            for (const record of records) {
-              const recordData = record as LedgerRecordPayload;
-
-              const timestamp = recordData.hashTimestamp instanceof Date
-                ? recordData.hashTimestamp
-                : (recordData.hashTimestamp ? new Date(recordData.hashTimestamp) : new Date());
-
-              const amount = extractAmount(recordData);
-              const actorId = extractActorId(recordData);
-
-              const recordHash = computeRecordHash({
-                previousHash: currentPreviousHash,
-                model: canonicalModel,
-                amount,
-                actorId,
-                timestamp,
-              });
-
-              recordData.previousHash = currentPreviousHash;
-              recordData.recordHash = recordHash;
-              recordData.hashTimestamp = timestamp;
-
-              currentPreviousHash = recordHash;
-            }
-
-            return await query(args);
-          } finally {
-            unlock();
           }
+
+          for (const record of records) {
+            const recordData = record as LedgerRecordPayload;
+
+            const timestamp = recordData.hashTimestamp instanceof Date
+              ? recordData.hashTimestamp
+              : (recordData.hashTimestamp ? new Date(recordData.hashTimestamp) : new Date());
+
+            const amount = extractAmount(recordData);
+            const actorId = extractActorId(recordData);
+
+            const recordHash = computeRecordHash({
+              previousHash: currentPreviousHash,
+              model: canonicalModel,
+              amount,
+              actorId,
+              timestamp,
+            });
+
+            recordData.previousHash = currentPreviousHash;
+            recordData.recordHash = recordHash;
+            recordData.hashTimestamp = timestamp;
+
+            currentPreviousHash = recordHash;
+          }
+
+          return await query(args);
         },
 
         async update({ model, operation, args, query }: LedgerQueryArgs) {
           if (FINANCIAL_MODELS.has(model)) {
-            const forbiddenFields = ['recordHash', 'previousHash', 'amount', 'hashTimestamp'];
+            const forbiddenFields = ['amount', 'workerId', 'siteId', 'currentHash', 'prevHash', 'sourceOfFunds', 'currency', 'createdAt', 'recordHash', 'previousHash', 'hashTimestamp'];
+            const allowedFields = ['isDeleted', 'approvalStatus', 'reviewedBy', 'auditNotes'];
+            
             for (const field of forbiddenFields) {
               if (field in (args.data || {})) {
                 throw new ImmutableLedgerError(
-                  `Cannot update immutable financial ledger field '${field}' on model '${model}'. Accounting entries are append-only.`
+                  `FINANCIAL_LEDGER_MUTATION_FORBIDDEN: Cannot update immutable financial ledger field '${field}' on model '${model}'. Accounting entries are append-only.`
                 );
               }
             }
@@ -236,11 +228,11 @@ export const hashLedgerExtension: any = Prisma.defineExtension((client: any) => 
 
         async updateMany({ model, operation, args, query }: LedgerQueryArgs) {
           if (FINANCIAL_MODELS.has(model)) {
-            const forbiddenFields = ['recordHash', 'previousHash', 'amount', 'hashTimestamp'];
+            const forbiddenFields = ['amount', 'workerId', 'siteId', 'currentHash', 'prevHash', 'sourceOfFunds', 'currency', 'createdAt', 'recordHash', 'previousHash', 'hashTimestamp'];
             for (const field of forbiddenFields) {
               if (field in (args.data || {})) {
                 throw new ImmutableLedgerError(
-                  `Cannot update immutable financial ledger field '${field}' on model '${model}'. Accounting entries are append-only.`
+                  `FINANCIAL_LEDGER_MUTATION_FORBIDDEN: Cannot update immutable financial ledger field '${field}' on model '${model}'. Accounting entries are append-only.`
                 );
               }
             }

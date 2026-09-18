@@ -13,7 +13,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { nationalId, phone } = body as { nationalId?: string; phone?: string };
 
-    const salt = process.env.BLIND_INDEX_SALT || process.env.DATABASE_ENCRYPTION_KEY || 'alsaada-blind-index-salt-secret';
+    const configuredSalt = process.env.BLIND_INDEX_SALT || process.env.DATABASE_ENCRYPTION_KEY;
+    if (!configuredSalt && process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL_SECURITY_ERROR: BLIND_INDEX_SALT or DATABASE_ENCRYPTION_KEY environment variable is required');
+    }
+    const salt = configuredSalt || 'alsaada-dev-blind-index-salt-fallback';
 
     // 1. Check National ID if provided and 14 digits
     if (nationalId) {

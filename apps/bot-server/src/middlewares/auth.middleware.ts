@@ -109,10 +109,12 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
         ctx.isImpersonating = false;
       }
     } else {
-      if (user && !user.isActive) {
+      if (user && (!user.isActive || user.isBanned)) {
         ctx.effectiveRole = 'GUEST';
+        ctx.isBanned = Boolean(user.isBanned);
       } else {
         ctx.effectiveRole = user?.role || 'GUEST';
+        ctx.isBanned = false;
         if (user?.assignedSiteId) {
           ctx.assignedSiteId = user.assignedSiteId;
         }
@@ -146,6 +148,20 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
     ctx.effectiveRole = isSuperAdminEnv ? 'SUPER_ADMIN' : 'GUEST';
     ctx.isImpersonating = false;
     ctx.isDualWorkerMode = false;
+  }
+
+  if (ctx.isBanned) {
+    if (ctx.callbackQuery) {
+      await ctx.answerCallbackQuery({
+        text: '⛔ تم تعليق حسابك من قِبل إدارة المنظومة. يرجى مراجعة المسؤول المباشر.',
+        show_alert: true,
+      }).catch(() => {});
+    } else {
+      await ctx.reply('⛔ *تم تعليق حسابك من قِبل إدارة المنظومة.*\nيرجى مراجعة المسؤول المباشر.', {
+        parse_mode: 'Markdown',
+      }).catch(() => {});
+    }
+    return; // إيقاف تمرير الطلب نهائياً
   }
 
   return next();

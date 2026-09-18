@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@alsaada/database';
 import { getApmTelemetryData } from '@/lib/data-fetchers';
+import { getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== 'SUPER_ADMIN' && user.role !== 'GENERAL_ADMIN')) {
+      return NextResponse.json({ error: 'Unauthorized: Admin privileges required' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const timeRange = searchParams.get('timeRange') as 'all' | '24h' | '7d' | '1h' | null;
     const page = searchParams.get('page');

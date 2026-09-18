@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { isFieldMasked, projectSafeWorkerFields } from '@alsaada/rbac';
 import ExcelJS from 'exceljs';
+import { sanitizeExcelCell } from '../src/lib/excel-utils';
 
 describe('Phase 9 / Task 12: Secure Excel & PDF Export with Server-Side Field Masking', () => {
   const sampleWorkers = [
@@ -119,6 +120,19 @@ describe('Phase 9 / Task 12: Secure Excel & PDF Export with Server-Side Field Ma
 
       expect(headerRowValues).toContain('basicSalary');
       expect(headerRowValues).toContain('totalMonthlySalary');
+    });
+
+    it('sanitizes dangerous characters to neutralize CSV/Excel formula injection', () => {
+      expect(sanitizeExcelCell('=1+1')).toBe("'=1+1");
+      expect(sanitizeExcelCell('+cmd')).toBe("'+cmd");
+      expect(sanitizeExcelCell('-100')).toBe("'-100");
+      expect(sanitizeExcelCell('@SUM(A1:A10)')).toBe("'@SUM(A1:A10)");
+      expect(sanitizeExcelCell('\tformula')).toBe("'\tformula");
+      expect(sanitizeExcelCell('\rformula')).toBe("'\rformula");
+      expect(sanitizeExcelCell('Normal String')).toBe('Normal String');
+      expect(sanitizeExcelCell(12345)).toBe(12345);
+      expect(sanitizeExcelCell(null)).toBe(null);
+      expect(sanitizeExcelCell(undefined)).toBe(undefined);
     });
   });
 });

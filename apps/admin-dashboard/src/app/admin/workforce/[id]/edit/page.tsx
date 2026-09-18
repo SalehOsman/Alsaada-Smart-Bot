@@ -50,7 +50,7 @@ export default async function EditWorkerPage({ params }: PageProps) {
     if (worker.nationalIdEncrypted) {
       try {
         const raw = decryptField(worker.nationalIdEncrypted, key);
-        nationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role)
+        nationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role)
           ? raw
           : `**********${raw.slice(-4)}`;
       } catch {

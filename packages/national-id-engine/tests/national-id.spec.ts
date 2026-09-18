@@ -4,6 +4,8 @@ import {
   isValidEgyptianNationalId,
   detectGovernorateFromAddress,
   getGovernorateCodeByName,
+  calculateNationalIdCheckDigit,
+  validateNationalIdCheckDigit,
 } from '../src/index.js';
 
 describe('@alsaada/national-id-engine', () => {
@@ -109,4 +111,36 @@ describe('@alsaada/national-id-engine', () => {
     expect(getGovernorateCodeByName('الجيزة')).toBe('21');
     expect(getGovernorateCodeByName('خارج الجمهورية (وافد)')).toBe('88');
   });
+
+  it('calculates and validates 14th check digit (Modulo-11) correctly', () => {
+    // Test calculateNationalIdCheckDigit
+    const first13 = '2950515120153';
+    // Weights: [2,7,6,5,4,3,2,7,6,5,4,3,2]
+    // sum = 4+63+30+0+20+3+10+7+12+0+4+15+6 = 174
+    // 174 % 11 = 9 => 11 - 9 = 2
+    const calculated = calculateNationalIdCheckDigit(first13);
+    expect(calculated).toBe(2);
+
+    const validIdWithCalculatedDigit = `${first13}${calculated}`;
+    expect(validateNationalIdCheckDigit(validIdWithCalculatedDigit)).toBe(true);
+
+    // Non-matching check digit
+    expect(validateNationalIdCheckDigit(`${first13}9`)).toBe(false);
+  });
+
+  it('defaults to non-blocking warning when check digit differs to support legacy civil status exceptions', () => {
+    const idWithDiffCheckDigit = '29505151201531'; // last digit is 1 instead of 2
+    const result = parseEgyptianNationalId(idWithDiffCheckDigit);
+    expect(result.isValid).toBe(true);
+    expect(result.info?.isCheckDigitValid).toBe(false);
+    expect(result.warning).toContain('تحذير إرشادي');
+  });
+
+  it('strictly rejects invalid check digit when strictCheckDigit option is set', () => {
+    const idWithDiffCheckDigit = '29505151201531';
+    const result = parseEgyptianNationalId(idWithDiffCheckDigit, { strictCheckDigit: true });
+    expect(result.isValid).toBe(false);
+    expect(result.error).toContain('Modulo-11');
+  });
 });
+

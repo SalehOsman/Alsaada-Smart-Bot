@@ -78,6 +78,7 @@ export class WorkerDirectoryService {
       'FIELD_ADMIN',
       'HR_MANAGER',
       'PROJECT_MANAGER',
+      'ACCOUNTANT',
     ].includes(viewerRole);
 
     const idNumberFull = canViewFullId && rawId ? rawId : undefined;

@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
   });
 
   const canViewFinances = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
-  const canViewFullNationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
+  const canViewFullNationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role);
   const key = getNormalizedEncryptionKey();
 
   const workerRows = workers

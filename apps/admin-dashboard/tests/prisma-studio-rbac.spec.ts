@@ -35,7 +35,7 @@ describe('Plan 66: Sovereign Prisma Studio Launchpad & Ngrok Extension Configura
 
       const prismaStudioFeature = settingsSection?.features?.find((f) => f.id === 'settings/prisma-studio');
       expect(prismaStudioFeature).toBeDefined();
-      expect(prismaStudioFeature?.title).toBe('استوديو قاعدة البيانات (Prisma)');
+      expect(prismaStudioFeature?.title).toBe('أدوات المطور والمعمارية والتوثيق');
       expect(prismaStudioFeature?.href).toBe('/admin/settings/prisma-studio');
       expect(prismaStudioFeature?.allowedRoles).toEqual(['SUPER_ADMIN']);
       expect(prismaStudioFeature?.status).toBe('Implemented');
@@ -46,7 +46,7 @@ describe('Plan 66: Sovereign Prisma Studio Launchpad & Ngrok Extension Configura
       const settingsGroup = superNav.find((n) => n.href === '/admin/settings');
       const studioLink = settingsGroup?.children?.find((c) => c.href === '/admin/settings/prisma-studio');
       expect(studioLink).toBeDefined();
-      expect(studioLink?.title).toBe('استوديو قاعدة البيانات (Prisma)');
+      expect(studioLink?.title).toBe('أدوات المطور والمعمارية والتوثيق');
     });
 
     it('strictly masks prisma-studio navigation child from GENERAL_ADMIN and FIELD_ADMIN', () => {

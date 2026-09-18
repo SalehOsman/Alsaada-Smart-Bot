@@ -5,7 +5,9 @@
 
 # Dependencies & package managers
 node_modules
+**/node_modules
 .pnpm-store
+**/.pnpm-store
 
 # Environment variables & secrets
 .env
@@ -16,9 +18,15 @@ node_modules
 
 # Build outputs
 dist
+**/dist
 .next
+**/.next
 build
+**/build
 out
+**/out
+.astro
+**/.astro
 
 # Logs
 *.log

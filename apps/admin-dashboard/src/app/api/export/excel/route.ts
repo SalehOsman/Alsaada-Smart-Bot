@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ExcelJS from 'exceljs';
 import { prisma, decryptField } from '@alsaada/database';
-import { getCurrentUser } from '@/lib/auth';
-import { getNormalizedEncryptionKey } from '@/lib/data-fetchers';
+import { getCurrentUser } from '../../../../lib/auth';
+import { getNormalizedEncryptionKey } from '../../../../lib/data-fetchers';
 import { extractTraceId } from '@alsaada/telemetry';
+import { sanitizeExcelCell } from '../../../../lib/excel-utils';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
   });
 
   const canViewFinances = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
-  const canViewFullNationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
+  const canViewFullNationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role);
   const key = getNormalizedEncryptionKey();
 
   const workbook = new ExcelJS.Workbook();
@@ -128,18 +129,18 @@ export async function GET(req: NextRequest) {
     const dailyWage = Number(w.dailyWage || 0);
 
     const rowData: Record<string, unknown> = {
-      code: w.code,
-      nickname: w.nickname || w.name.split(' ')[0],
-      name: w.name,
-      siteName: w.site?.name || 'غير مسند',
-      jobTitle: w.jobRef?.name || w.jobTitle,
-      contractType: w.contractType || 'DAILY_LABOR',
-      status: w.status,
-      phone,
-      nationalId,
-      canteenPolicy: w.canteenCigarettePolicy,
-      cigaretteBrand: w.cigaretteBrand || '-',
-      insuranceNumber: w.insuranceNumber || '-',
+      code: sanitizeExcelCell(w.code),
+      nickname: sanitizeExcelCell(w.nickname || w.name.split(' ')[0]),
+      name: sanitizeExcelCell(w.name),
+      siteName: sanitizeExcelCell(w.site?.name || 'غير مسند'),
+      jobTitle: sanitizeExcelCell(w.jobRef?.name || w.jobTitle),
+      contractType: sanitizeExcelCell(w.contractType || 'DAILY_LABOR'),
+      status: sanitizeExcelCell(w.status),
+      phone: sanitizeExcelCell(phone),
+      nationalId: sanitizeExcelCell(nationalId),
+      canteenPolicy: sanitizeExcelCell(w.canteenCigarettePolicy),
+      cigaretteBrand: sanitizeExcelCell(w.cigaretteBrand || '-'),
+      insuranceNumber: sanitizeExcelCell(w.insuranceNumber || '-'),
     };
 
     if (canViewFinances) {

@@ -231,7 +231,7 @@ export const DASHBOARD_SECTIONS_MANIFEST: DashboardSectionManifest[] = [
       {
         id: 'settings/prisma-studio',
         module: 'settings',
-        title: 'استوديو قاعدة البيانات (Prisma)',
+        title: 'أدوات المطور والمعمارية والتوثيق',
         href: '/admin/settings/prisma-studio',
         allowedRoles: ['SUPER_ADMIN'],
         status: 'Implemented',

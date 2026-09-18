@@ -19,6 +19,8 @@
     "node_modules",
     "dist",
     "apps/admin-dashboard",
+    "apps/docs",
+    ".astro",
     ".next"
   ]
 }

@@ -11,6 +11,9 @@ out/
 .next-dev/
 **/.next/
 **/.next-dev/
+.astro/
+apps/docs/.astro/
+apps/docs/dist/
 *.tsbuildinfo
 **/*.tsbuildinfo
 packages/database/src/generated/

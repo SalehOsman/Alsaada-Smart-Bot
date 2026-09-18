@@ -24,6 +24,7 @@ export interface MyContext extends Context {
   module?: string;
   flowId?: string;
   cacheSource?: string;
+  isBanned?: boolean;
 }
 
 

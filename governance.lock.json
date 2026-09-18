@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T00:20:47.594Z",
+  "generatedAt": "2026-09-18T11:17:30.329Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -40,11 +40,11 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "5e7c60571fccbbfe7d4109b37f13534b9b4fe7af0327e2cae14ea8932820f5eb"
+      "sha256": "910dbfcfa2e4044f6acc321bdf79a050f49e394677729f6e4df02cbd7bf4684b"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "7a37f30d98b432a77d8363f8cc58a14be3f672ba292bcf57f817be5ab930204d"
+      "sha256": "baab45e588af7f62b3e538d9b7924f88c10bb930b6c7637f34cd029614e88a9f"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
@@ -64,11 +64,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "4fe35e764514335c54fa2423d00ffd51f2bc375ee93072298a5c07a16b776984"
+      "sha256": "7a5d5830f71eb7e9ab339d1f8553e8aa4bb054aecefd806052a7cac2aadd9027"
     },
     {
       "path": "package.json",
-      "sha256": "6ac94130ac4324c7b1d413914d5be6406dbd40c5bebed775dfe115685e11b1c5"
+      "sha256": "062b8f1a56d212f6881eab1380cfe6eded676778c354cd3a3cc8b5c87b002c57"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -267,7 +267,7 @@
     "01.1": {
       "flowKey": "01.1",
       "directory": "modules/workforce/src/flows/01.1-worker-registration",
-      "lockedAt": "2026-09-17T22:37:27.900Z",
+      "lockedAt": "2026-09-18T10:09:40.128Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
@@ -535,15 +535,15 @@
       "featureId": "settings/prisma-studio",
       "title": "settings/prisma-studio",
       "directory": "apps/admin-dashboard/src/app/admin/settings/prisma-studio",
-      "lockedAt": "2026-09-18T00:20:26.777Z",
+      "lockedAt": "2026-09-18T09:42:42.555Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/prisma-studio/page.tsx",
-          "sha256": "5a61652b2963b4c6c4b83685d6162ea2cae3649d54f5801f4151092d278d4505"
+          "sha256": "b9d2cff636ea4e429cf64a43a715307a8b8ff7c127c4ca64cd81a7bc00dc87a6"
         },
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/prisma-studio/prisma-studio-client.tsx",
-          "sha256": "77cffd7ba8ac0bbf05752f9559b8314fa0d8af7245cd89bb4e16256cc6647005"
+          "sha256": "8c920411f9e4c25db56493233bab1356da4ec108e821c2f31bab41adc9e4cc59"
         }
       ]
     }
@@ -573,15 +573,15 @@
   },
   "lockedDocker": {
     "directory": "docker",
-    "lockedAt": "2026-09-18T00:20:12.620Z",
+    "lockedAt": "2026-09-18T08:57:56.674Z",
     "files": [
       {
         "path": ".dockerignore",
-        "sha256": "88fdceab587d2bfbbee134bda990fe94a8c41a3ab4c7b65f9c90ec543a3fbb43"
+        "sha256": "865f3560cd73f005a383c3215541b20dc4e796866ac0d0a0fcecbed1ffffb270"
       },
       {
         "path": "docker-compose.yml",
-        "sha256": "3485def5b8797fe1e1e4aaee57d93a6b76fff0de0ded89b6e7f0ea7d182b33a5"
+        "sha256": "b96468c5159dc5a4401e3af96f96e028dffb0c082ba844a2e80bfe107eff6698"
       },
       {
         "path": "docker/Dockerfile",
@@ -590,6 +590,14 @@
       {
         "path": "docker/Dockerfile.dashboard",
         "sha256": "7d0eae5f706fbfcc7e4325fe286e07657746689eed256b077533c98e2a5315b2"
+      },
+      {
+        "path": "docker/Dockerfile.docs",
+        "sha256": "3b853dcb4d899eef774fcc9f3d4e2c12219dd8a05d9d5eafa39841982873aa79"
+      },
+      {
+        "path": "docker/nginx-docs.conf",
+        "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
       },
       {
         "path": "docker/postgres/init-scripts/01-init-security.sql",

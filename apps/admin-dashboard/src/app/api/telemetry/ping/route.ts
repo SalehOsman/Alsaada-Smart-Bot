@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@alsaada/database';
+import { getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(): Promise<NextResponse> {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== 'SUPER_ADMIN' && user.role !== 'GENERAL_ADMIN')) {
+    return NextResponse.json({ error: 'Unauthorized: Admin privileges required' }, { status: 401 });
+  }
+
   const timestamp = new Date().toISOString();
 
   // 1. Measure Internal Database Ping

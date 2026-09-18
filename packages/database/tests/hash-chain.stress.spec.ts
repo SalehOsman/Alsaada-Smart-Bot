@@ -426,9 +426,25 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
           }
           return { count: arr.length };
         }),
+        update: vi.fn(async ({ where, data }: any) => ({ ...supplierStore[0], ...data })),
+        updateMany: vi.fn(async ({ where, data }: any) => ({ count: 1 })),
+        delete: vi.fn(async () => supplierStore.pop()),
+        deleteMany: vi.fn(async () => ({ count: supplierStore.length })),
       };
 
+      class TestMutex {
+        private mutex = Promise.resolve();
+        lock(): Promise<() => void> {
+          let unlock: () => void;
+          const next = new Promise<void>((resolve) => { unlock = resolve; });
+          const wait = this.mutex.then(() => unlock);
+          this.mutex = this.mutex.then(() => next);
+          return wait;
+        }
+      }
+      const testMutex = new TestMutex();
       const client: any = {
+        $executeRawUnsafe: vi.fn(async () => {}),
         financialLedger: mockDelegate,
         supplierPayment: mockSupplierDelegate,
         $extends: (extensionOrFn: any) => {
@@ -441,26 +457,50 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
 
             extended.financialLedger = {
               ...mockDelegate,
-              create: (args: any) =>
-                ext.create({ model: 'FinancialLedger', operation: 'create', args, query: mockDelegate.create }),
-              createMany: (args: any) =>
-                ext.createMany({ model: 'FinancialLedger', operation: 'createMany', args, query: mockDelegate.createMany }),
-              update: (args: any) =>
-                ext.update({ model: 'FinancialLedger', operation: 'update', args, query: mockDelegate.update }),
-              updateMany: (args: any) =>
-                ext.updateMany({ model: 'FinancialLedger', operation: 'updateMany', args, query: mockDelegate.updateMany }),
-              delete: (args: any) =>
-                ext.delete({ model: 'FinancialLedger', operation: 'delete', args, query: mockDelegate.delete }),
-              deleteMany: (args: any) =>
-                ext.deleteMany({ model: 'FinancialLedger', operation: 'deleteMany', args, query: mockDelegate.deleteMany }),
+              create: async (args: any) => {
+                const unlock = await testMutex.lock();
+                try {
+                  return await ext.create({ model: 'FinancialLedger', operation: 'create', args, query: mockDelegate.create });
+                } finally {
+                  unlock();
+                }
+              },
+              createMany: async (args: any) => {
+                const unlock = await testMutex.lock();
+                try {
+                  return await ext.createMany({ model: 'FinancialLedger', operation: 'createMany', args, query: mockDelegate.createMany });
+                } finally {
+                  unlock();
+                }
+              },
+              update: async (args: any) => ext.update({ model: 'FinancialLedger', operation: 'update', args, query: mockDelegate.update }),
+              updateMany: async (args: any) => ext.updateMany({ model: 'FinancialLedger', operation: 'updateMany', args, query: mockDelegate.updateMany }),
+              delete: async (args: any) => ext.delete({ model: 'FinancialLedger', operation: 'delete', args, query: mockDelegate.delete }),
+              deleteMany: async (args: any) => ext.deleteMany({ model: 'FinancialLedger', operation: 'deleteMany', args, query: mockDelegate.deleteMany }),
             };
 
             extended.supplierPayment = {
               ...mockSupplierDelegate,
-              create: (args: any) =>
-                ext.create({ model: 'SupplierPayment', operation: 'create', args, query: mockSupplierDelegate.create }),
-              createMany: (args: any) =>
-                ext.createMany({ model: 'SupplierPayment', operation: 'createMany', args, query: mockSupplierDelegate.createMany }),
+              create: async (args: any) => {
+                const unlock = await testMutex.lock();
+                try {
+                  return await ext.create({ model: 'SupplierPayment', operation: 'create', args, query: mockSupplierDelegate.create });
+                } finally {
+                  unlock();
+                }
+              },
+              createMany: async (args: any) => {
+                const unlock = await testMutex.lock();
+                try {
+                  return await ext.createMany({ model: 'SupplierPayment', operation: 'createMany', args, query: mockSupplierDelegate.createMany });
+                } finally {
+                  unlock();
+                }
+              },
+              update: async (args: any) => ext.update({ model: 'SupplierPayment', operation: 'update', args, query: mockSupplierDelegate.update }),
+              updateMany: async (args: any) => ext.updateMany({ model: 'SupplierPayment', operation: 'updateMany', args, query: mockSupplierDelegate.updateMany }),
+              delete: async (args: any) => ext.delete({ model: 'SupplierPayment', operation: 'delete', args, query: mockSupplierDelegate.delete }),
+              deleteMany: async (args: any) => ext.deleteMany({ model: 'SupplierPayment', operation: 'deleteMany', args, query: mockSupplierDelegate.deleteMany }),
             };
 
             return extended;

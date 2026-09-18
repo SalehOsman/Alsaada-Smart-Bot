@@ -77,7 +77,7 @@ export async function getWorkforceDirectory(user: DashboardUser): Promise<Workfo
     });
 
     const canViewFinances = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
-    const canViewFullNationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(user.role);
+    const canViewFullNationalId = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'].includes(user.role);
     const normalizedKey = getNormalizedEncryptionKey();
 
     return workers.map((w) => {

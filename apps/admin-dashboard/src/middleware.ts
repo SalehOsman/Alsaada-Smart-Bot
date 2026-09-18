@@ -72,6 +72,7 @@ export const config = {
     '/api/approvals/:path*',
     '/api/delegations/:path*',
     '/api/workers/:path*',
+    '/api/telemetry/:path*',
   ],
 };
 

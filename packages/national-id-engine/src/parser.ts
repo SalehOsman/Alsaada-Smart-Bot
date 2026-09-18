@@ -1,11 +1,44 @@
 import { normalizeDigits } from '@alsaada/regional-engine';
 import { EGYPTIAN_GOVERNORATES } from './constants.js';
-import type { Gender, NationalIdInfo, NationalIdValidationResult } from './types.js';
+import type { Gender, NationalIdInfo, NationalIdValidationResult, ParseNationalIdOptions } from './types.js';
+
+/**
+ * Calculates the expected Egyptian National ID check digit (14th digit) from the first 13 digits.
+ * Weights: [2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+ */
+export function calculateNationalIdCheckDigit(first13Digits: string): number {
+  if (!first13Digits || first13Digits.length < 13 || !/^\d{13}/.test(first13Digits)) {
+    return -1;
+  }
+  const weights = [2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  let sum = 0;
+  for (let i = 0; i < 13; i++) {
+    sum += parseInt(first13Digits.charAt(i), 10) * weights[i]!;
+  }
+  const remainder = sum % 11;
+  return remainder === 0 ? 0 : (remainder === 1 ? 1 : 11 - remainder);
+}
+
+/**
+ * Validates the 14th check digit using Egyptian Civil Status Modulo-11 algorithm.
+ */
+export function validateNationalIdCheckDigit(nationalId: string): boolean {
+  if (!nationalId || nationalId.length !== 14 || !/^\d{14}$/.test(nationalId)) {
+    return false;
+  }
+  const expected = calculateNationalIdCheckDigit(nationalId.substring(0, 13));
+  if (expected === -1) return false;
+  const actual = parseInt(nationalId.charAt(13), 10);
+  return expected === actual || (expected === 10 && (actual === 0 || actual === 1));
+}
 
 /**
  * Validates and parses a 14-digit Egyptian National ID.
  */
-export function parseEgyptianNationalId(rawInput: string | null | undefined): NationalIdValidationResult {
+export function parseEgyptianNationalId(
+  rawInput: string | null | undefined,
+  options?: ParseNationalIdOptions
+): NationalIdValidationResult {
   if (!rawInput) {
     return { isValid: false, error: 'الرقم القومي مطلوب ولا يمكن أن يكون فارغاً' };
   }
@@ -89,6 +122,15 @@ export function parseEgyptianNationalId(rawInput: string | null | undefined): Na
   const ddStr = String(day).padStart(2, '0');
   const birthDateString = `${fullYear}-${mmStr}-${ddStr}`;
 
+  // 8. 14th Check Digit Validation (Modulo-11)
+  const isCheckDigitValid = validateNationalIdCheckDigit(cleanId);
+  if (options?.strictCheckDigit && !isCheckDigitValid) {
+    return {
+      isValid: false,
+      error: 'الرقم التحققي للخانة الـ 14 غير متطابق مع خوارزمية السجل المدني (Modulo-11)',
+    };
+  }
+
   const info: NationalIdInfo = {
     nationalId: cleanId,
     isValid: true,
@@ -101,10 +143,14 @@ export function parseEgyptianNationalId(rawInput: string | null | undefined): Na
     governorateNameAr: gov.nameAr,
     governorateNameEn: gov.nameEn,
     century: centuryYear,
+    isCheckDigitValid,
   };
 
   return {
     isValid: true,
+    warning: !isCheckDigitValid
+      ? 'الرقم التحققي للخانة الـ 14 قد يحتوي على خطأ مطبعي (تحذير إرشادي)'
+      : undefined,
     info,
   };
 }
@@ -112,8 +158,11 @@ export function parseEgyptianNationalId(rawInput: string | null | undefined): Na
 /**
  * Returns true if the provided National ID is strictly valid.
  */
-export function isValidEgyptianNationalId(rawInput: string | null | undefined): boolean {
-  return parseEgyptianNationalId(rawInput).isValid;
+export function isValidEgyptianNationalId(
+  rawInput: string | null | undefined,
+  options?: ParseNationalIdOptions
+): boolean {
+  return parseEgyptianNationalId(rawInput, options).isValid;
 }
 
 /**

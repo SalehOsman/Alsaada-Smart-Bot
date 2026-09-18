@@ -248,6 +248,54 @@ export function createBot(): Bot<MyContext> {
     return next();
   });
 
+  // 2.5 🛡️ In-Memory Rate Limiting / Debounce Middleware
+  const userRateLimits = new Map<string, number[]>();
+  const userLastCallback = new Map<string, number>();
+
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, timestamp] of userLastCallback.entries()) {
+      if (now - timestamp > 60000) userLastCallback.delete(key);
+    }
+    for (const [key, limits] of userRateLimits.entries()) {
+      const lastLimit = limits[limits.length - 1];
+      if (limits.length === 0 || (lastLimit !== undefined && now - lastLimit > 60000)) {
+        userRateLimits.delete(key);
+      }
+    }
+  }, 60000).unref();
+
+  bot.use(async (ctx, next) => {
+    const key = ctx.chat?.id.toString() || ctx.from?.id.toString();
+    if (!key) return next();
+
+    const now = Date.now();
+
+    if (ctx.callbackQuery) {
+      const last = userLastCallback.get(key) || 0;
+      if (now - last < 400) {
+        await ctx.answerCallbackQuery({ text: '⏳ يرجى التمهل...', show_alert: false }).catch(() => {});
+        return;
+      }
+      userLastCallback.set(key, now);
+    }
+
+    const limits = userRateLimits.get(key) || [];
+    const windowStart = now - 1000;
+    const currentLimits = limits.filter((t) => t > windowStart);
+    currentLimits.push(now);
+    userRateLimits.set(key, currentLimits);
+
+    if (currentLimits.length > 5) {
+      if (ctx.callbackQuery) {
+        await ctx.answerCallbackQuery({ text: '⏳ يرجى التمهل...', show_alert: false }).catch(() => {});
+      }
+      return; // Drop flooded requests
+    }
+
+    return next();
+  });
+
   // 3. ⚡ PERFORMANCE ENGINE: Parallel Per-User Concurrency (Zero queuing / No cross-user blocking)
   bot.use(sequentialize((ctx) => ctx.chat?.id.toString() || ctx.from?.id.toString() || 'global'));
 

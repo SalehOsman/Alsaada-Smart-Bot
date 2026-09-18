@@ -1,0 +1,74 @@
+# ==============================================================================
+# Al-Saada Smart Bot Enterprise — Documentation & Architecture Portal
+# Multi-Stage Production Dockerfile (Astro Starlight + Nginx Alpine)
+# ==============================================================================
+
+# -------------------------------------------------------------
+# Stage 1: Build & Static Generation
+# -------------------------------------------------------------
+FROM node:22-alpine AS builder
+
+ARG APP_VERSION=2.0.0-alpha.1
+ENV APP_VERSION=$APP_VERSION
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+# Install pnpm & build tools
+RUN npm install -g pnpm@11.0.8
+RUN apk add --no-cache git
+
+# Copy monorepo manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.json ./
+COPY packages/database/package.json packages/database/
+COPY packages/rbac/package.json packages/rbac/
+COPY packages/regional-engine/package.json packages/regional-engine/
+COPY packages/national-id-engine/package.json packages/national-id-engine/
+COPY packages/core-components/package.json packages/core-components/
+COPY packages/telemetry/package.json packages/telemetry/
+COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
+COPY modules/workforce/package.json modules/workforce/
+COPY modules/settings/package.json modules/settings/
+COPY apps/admin-dashboard/package.json apps/admin-dashboard/
+COPY apps/bot-server/package.json apps/bot-server/
+COPY apps/docs/package.json apps/docs/
+
+# Install dependencies needed for docs build
+ENV GIT_DIR=/tmp/alsaada-build.git
+RUN git init --bare "$GIT_DIR" \
+    && pnpm config set fetch-retries 5 \
+    && pnpm config set fetch-retry-maxtimeout 120000 \
+    && pnpm config set network-concurrency 4 \
+    && pnpm install --frozen-lockfile=false
+
+# Copy documentation sources and transform pipeline without replacing workspace-local node_modules links
+COPY docs/ docs/
+COPY tools/docs/ tools/docs/
+COPY apps/docs/src/ apps/docs/src/
+COPY apps/docs/astro.config.mjs apps/docs/
+COPY apps/docs/tsconfig.json apps/docs/
+
+# Execute pipeline sync & Astro Starlight static build
+RUN pnpm docs:build
+
+# -------------------------------------------------------------
+# Stage 2: Ultra-Lightweight Web Server (Nginx Alpine < 25MB)
+# -------------------------------------------------------------
+FROM nginx:1.27-alpine AS runner
+
+LABEL maintainer="Al-Saada Enterprise Architecture Team"
+LABEL description="Al-Saada Smart Bot Enterprise Documentation & Architecture Portal"
+
+# Replace default Nginx configuration with WebAssembly & security optimized config
+COPY docker/nginx-docs.conf /etc/nginx/conf.d/default.conf
+
+# Copy static site artifacts from builder stage
+COPY --from=builder /app/apps/docs/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+# Internal healthcheck to verify Nginx and docs availability
+HEALTHCHECK --interval=15s --timeout=5s --retries=3 --start-period=5s \
+    CMD wget -qO- http://127.0.0.1:80/healthz || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

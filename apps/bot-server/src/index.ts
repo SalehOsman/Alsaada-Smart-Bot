@@ -9,6 +9,7 @@ import { connectDatabase, disconnectDatabase } from './db.js';
 import { createBot } from './bot.js';
 import { config, validateStartupEnv } from './config/env.js';
 import { systemDataService } from './services/system-data.service.js';
+import { sessionMonitorService } from './services/session-monitor.service.js';
 
 async function bootstrap() {
   console.log('================================================================');
@@ -63,6 +64,9 @@ async function bootstrap() {
       },
     });
 
+    // ⚡ Start Session Monitor
+    sessionMonitorService.startMonitoring(bot.api);
+
     // 4. Lightweight Native HTTP Health Endpoint (for Docker Healthcheck & Provenance Verification)
     const healthServer = http.createServer((req, res) => {
       const url = req.url || '';
@@ -93,6 +97,7 @@ async function bootstrap() {
 
     const shutdown = async () => {
       console.log('\n🛑 [SHUTDOWN] Received termination signal. Stopping bot...');
+      sessionMonitorService.stopMonitoring();
       healthServer.close();
       if (runner.isRunning()) {
         await runner.stop();

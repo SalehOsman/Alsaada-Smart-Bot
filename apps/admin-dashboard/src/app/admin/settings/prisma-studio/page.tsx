@@ -4,8 +4,8 @@ import { requireDashboardUser } from '../../../../lib/auth';
 import { PrismaStudioClient } from './prisma-studio-client';
 
 export const metadata = {
-  title: 'استوديو قاعدة البيانات (Prisma Studio) | منظومة السعادة',
-  description: 'قمرة استوديو قاعدة البيانات الحصرية للسوبر أدمن مع صمام الإغلاق التلقائي والدرع الجنائي',
+  title: 'مركز أدوات المطور والمعمارية والتوثيق (Developer & Architecture Cockpit) | منظومة السعادة',
+  description: 'قمرة أدوات المطور واستوديو قاعدة البيانات وبوابة التوثيق والمعمارية الحية الحصرية للسوبر أدمن',
 };
 
 export default async function PrismaStudioPage() {

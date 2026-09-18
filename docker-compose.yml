@@ -135,6 +135,8 @@ services:
       DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localtest.me:3002}
       PRISMA_STUDIO_URL: ${PRISMA_STUDIO_URL:-http://studio:5555}
       PRISMA_STUDIO_TUNNEL_URL: ${PRISMA_STUDIO_TUNNEL_URL:-}
+      DOCS_URL: ${DOCS_URL:-http://docs:80}
+      DOCS_TUNNEL_URL: ${DOCS_TUNNEL_URL:-}
       TZ: ${TZ:-Africa/Cairo}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
@@ -142,6 +144,27 @@ services:
       timeout: 5s
       retries: 6
       start_period: 30s
+    networks:
+      - alsaada-enterprise-internal
+      - alsaada-enterprise-public
+
+  # -------------------------------------------------------------
+  # 6. Alsaada Enterprise Documentation & Living Architecture Portal
+  # -------------------------------------------------------------
+  docs:
+    container_name: alsaada_enterprise_docs
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.docs
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${DOCS_PORT:-4321}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - alsaada-enterprise-internal
       - alsaada-enterprise-public

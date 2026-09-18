@@ -35,6 +35,7 @@ describe('hashLedgerExtension', () => {
     };
 
     const client: any = {
+      $executeRawUnsafe: vi.fn(async () => {}),
       financialLedger: mockDelegate,
       supplierPayment: mockDelegate,
       worker: {
