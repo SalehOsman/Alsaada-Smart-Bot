@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-17T22:54:17.333Z",
+  "generatedAt": "2026-09-18T00:20:47.594Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -530,6 +530,22 @@
           "sha256": "d237586edd24c15429f9d70d4d0b3849fda7ffd7a3da0f3528a801274f87c984"
         }
       ]
+    },
+    "settings/prisma-studio": {
+      "featureId": "settings/prisma-studio",
+      "title": "settings/prisma-studio",
+      "directory": "apps/admin-dashboard/src/app/admin/settings/prisma-studio",
+      "lockedAt": "2026-09-18T00:20:26.777Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/src/app/admin/settings/prisma-studio/page.tsx",
+          "sha256": "5a61652b2963b4c6c4b83685d6162ea2cae3649d54f5801f4151092d278d4505"
+        },
+        {
+          "path": "apps/admin-dashboard/src/app/admin/settings/prisma-studio/prisma-studio-client.tsx",
+          "sha256": "77cffd7ba8ac0bbf05752f9559b8314fa0d8af7245cd89bb4e16256cc6647005"
+        }
+      ]
     }
   },
   "lockedSpeedEngine": {
@@ -557,7 +573,7 @@
   },
   "lockedDocker": {
     "directory": "docker",
-    "lockedAt": "2026-09-17T12:43:38.283Z",
+    "lockedAt": "2026-09-18T00:20:12.620Z",
     "files": [
       {
         "path": ".dockerignore",
@@ -565,7 +581,7 @@
       },
       {
         "path": "docker-compose.yml",
-        "sha256": "39f816845bdcb1b2a64b6143e9b040d941ec8ddd307adeed9e0f9efc64b75445"
+        "sha256": "3485def5b8797fe1e1e4aaee57d93a6b76fff0de0ded89b6e7f0ea7d182b33a5"
       },
       {
         "path": "docker/Dockerfile",

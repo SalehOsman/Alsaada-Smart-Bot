@@ -18,6 +18,7 @@ export interface StudioStatus {
   startedAt: string | null;
   lastActivityAt: string | null;
   targetUrl: string;
+  tunnelUrl?: string | null;
 }
 
 export class StudioProcessManager {
@@ -65,7 +66,7 @@ export class StudioProcessManager {
 
   /**
    * Resets the 15-minute inactivity watchdog timer.
-   * Called on every proxy request to keep the studio alive while active.
+   * Kept for internal activity tracking.
    */
   public touch(): void {
     if (!this.isActive()) {
@@ -75,8 +76,33 @@ export class StudioProcessManager {
     this.armWatchdog();
   }
 
+  /**
+   * Extends the Prisma Studio session by resetting the 15-minute watchdog timer
+   * and recording an interactive extension audit event.
+   * Attaches and arms the watchdog if Prisma Studio is running or listening.
+   */
+  public async extendSession(actorTelegramId: string, ipAddress: string): Promise<StudioStatus> {
+    const isRunning = this.isActive() || (await this.isHealthy());
+    if (!isRunning) {
+      return this.getStatus();
+    }
+
+    this.lastActorTelegramId = actorTelegramId;
+    this.lastIpAddress = ipAddress;
+    this.startedAtTime = this.startedAtTime || Date.now();
+    this.lastActivityTime = Date.now();
+    this.armWatchdog();
+
+    await this.recordAuditLog(actorTelegramId, 'PRISMA_STUDIO_EXTEND', ipAddress, {
+      remainingSeconds: Math.ceil(this.IDLE_TIMEOUT_MS / 1000),
+      url: this.getTargetUrl(),
+    });
+
+    return this.getStatus();
+  }
+
   public isActive(): boolean {
-    return this.startedAtTime !== null;
+    return this.startedAtTime !== null || this.childProcess !== null;
   }
 
   /**
@@ -84,17 +110,18 @@ export class StudioProcessManager {
    */
   public async isHealthy(): Promise<boolean> {
     const url = this.getTargetUrl();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1500);
       const res = await fetch(url, {
         method: 'GET',
         signal: controller.signal,
       });
-      clearTimeout(timeoutId);
       return res.status < 500;
     } catch {
       return false;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -267,7 +294,10 @@ export class StudioProcessManager {
       try {
         if (process.platform === 'win32' && this.childProcess.pid) {
           try {
-            spawn('taskkill', ['/pid', String(this.childProcess.pid), '/T', '/F']);
+            const killer = spawn('taskkill', ['/pid', String(this.childProcess.pid), '/T', '/F']);
+            killer.on('error', () => {
+              this.childProcess?.kill('SIGTERM');
+            });
           } catch {
             this.childProcess.kill('SIGTERM');
           }
@@ -347,6 +377,7 @@ export class StudioProcessManager {
       startedAt: this.startedAtTime ? new Date(this.startedAtTime).toISOString() : null,
       lastActivityAt: this.lastActivityTime ? new Date(this.lastActivityTime).toISOString() : null,
       targetUrl: this.getTargetUrl(),
+      tunnelUrl: process.env.PRISMA_STUDIO_TUNNEL_URL || null,
     };
   }
 }

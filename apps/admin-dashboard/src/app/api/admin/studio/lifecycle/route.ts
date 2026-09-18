@@ -22,9 +22,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const action = body?.action;
 
-    if (!['start', 'stop', 'restart'].includes(action)) {
+    if (!['start', 'stop', 'restart', 'extend'].includes(action)) {
       return NextResponse.json(
-        { error: 'INVALID_ACTION', message: 'الإجراء المطلوب غير صالح. الإجراءات المتاحة: start, stop, restart' },
+        { error: 'INVALID_ACTION', message: 'الإجراء المطلوب غير صالح. الإجراءات المتاحة: start, stop, restart, extend' },
         { status: 400 }
       );
     }
@@ -50,6 +50,11 @@ export async function POST(req: NextRequest) {
       await studioProcessManager.stop(actorTelegramId, ipAddress, 'MANUAL_RESTART');
       const status = await studioProcessManager.start(actorTelegramId, ipAddress);
       return NextResponse.json({ ok: true, action: 'restart', status });
+    }
+
+    if (action === 'extend') {
+      const status = await studioProcessManager.extendSession(actorTelegramId, ipAddress);
+      return NextResponse.json({ ok: true, action: 'extend', status });
     }
 
     return NextResponse.json({ error: 'UNHANDLED_ACTION' }, { status: 400 });

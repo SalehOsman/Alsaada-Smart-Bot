@@ -3,10 +3,9 @@ import { NextRequest } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
 import { getCurrentUser } from '../src/lib/auth';
-import { filterNavItemsForUser, DASHBOARD_NAV_ITEMS } from '../src/lib/rbac';
+import { filterNavItemsForUser } from '../src/lib/rbac';
 import { DASHBOARD_SECTIONS_MANIFEST } from '../src/dashboard.manifest';
 import { StudioProcessManager } from '../src/lib/studio-process';
-import { GET as proxyGet, POST as proxyPost } from '../src/app/api/admin/studio/proxy/[[...path]]/route';
 import { GET as statusGet } from '../src/app/api/admin/studio/status/route';
 import { POST as lifecyclePost } from '../src/app/api/admin/studio/lifecycle/route';
 import { prisma } from '@alsaada/database';
@@ -24,7 +23,7 @@ vi.mock('../src/lib/auth', () => ({
   requireDashboardUser: vi.fn(),
 }));
 
-describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
+describe('Plan 66: Sovereign Prisma Studio Launchpad & Ngrok Extension Configuration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -63,109 +62,17 @@ describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
     });
   });
 
-  describe('2. Reverse Proxy Route Guard (/api/admin/studio/proxy)', () => {
-    it('rejects unauthenticated requests with 401 Unauthorized', async () => {
+  describe('2. Studio Status API Route Guard & Access (/api/admin/studio/status)', () => {
+    it('status route rejects unauthenticated requests with 401', async () => {
       vi.mocked(getCurrentUser).mockResolvedValue(null);
-      const req = new NextRequest('http://localhost:3002/api/admin/studio/proxy');
-      const res = await proxyGet(req, { params: Promise.resolve({ path: [] }) });
+      const req = new NextRequest('http://localhost:3002/api/admin/studio/status');
+      const res = await statusGet(req);
 
       expect(res.status).toBe(401);
       const data = await res.json();
       expect(data.error).toBe('UNAUTHORIZED');
     });
 
-    it('rejects GENERAL_ADMIN with 403 Forbidden', async () => {
-      vi.mocked(getCurrentUser).mockResolvedValue({
-        id: 'usr-gen-1',
-        name: 'مدير عام',
-        role: 'GENERAL_ADMIN',
-        isRealSuperAdmin: false,
-      });
-
-      const req = new NextRequest('http://localhost:3002/api/admin/studio/proxy');
-      const res = await proxyGet(req, { params: Promise.resolve({ path: [] }) });
-
-      expect(res.status).toBe(403);
-      const data = await res.json();
-      expect(data.error).toBe('FORBIDDEN');
-    });
-
-    it('rejects FIELD_ADMIN with 403 Forbidden', async () => {
-      vi.mocked(getCurrentUser).mockResolvedValue({
-        id: 'usr-field-1',
-        name: 'مشرف ميداني',
-        role: 'FIELD_ADMIN',
-        isRealSuperAdmin: false,
-      });
-
-      const req = new NextRequest('http://localhost:3002/api/admin/studio/proxy/assets/index.js');
-      const res = await proxyGet(req, { params: Promise.resolve({ path: ['assets', 'index.js'] }) });
-
-      expect(res.status).toBe(403);
-      const data = await res.json();
-      expect(data.error).toBe('FORBIDDEN');
-    });
-
-    it('allows SUPER_ADMIN to proxy requests (returning 503 offline card if studio is stopped)', async () => {
-      vi.mocked(getCurrentUser).mockResolvedValue({
-        id: 'usr-super-1',
-        telegramId: '7594239391',
-        name: 'صالح عثمان',
-        role: 'SUPER_ADMIN',
-        isRealSuperAdmin: true,
-      });
-
-      const req = new NextRequest('http://localhost:3002/api/admin/studio/proxy', {
-        headers: { accept: 'application/json' },
-      });
-      const res = await proxyGet(req, { params: Promise.resolve({ path: [] }) });
-
-      // Either upstream proxies (200) or fails safely with STUDIO_OFFLINE (503)
-      expect([200, 503]).toContain(res.status);
-      if (res.status === 503) {
-        const data = await res.json();
-        expect(data.error).toBe('STUDIO_OFFLINE');
-      }
-    });
-
-    it('rewrites hardcoded `${window.location.origin}/api` in JavaScript responses', async () => {
-      vi.mocked(getCurrentUser).mockResolvedValue({
-        id: 'usr-super-1',
-        telegramId: '7594239391',
-        name: 'صالح عثمان',
-        role: 'SUPER_ADMIN',
-        isRealSuperAdmin: true,
-      });
-
-      // Mock global fetch for upstream studio responding with JavaScript
-      const originalFetch = global.fetch;
-      global.fetch = vi.fn().mockResolvedValue({
-        status: 200,
-        headers: new Headers({
-          'content-type': 'application/javascript; charset=utf-8',
-          'content-length': '120',
-        }),
-        text: vi.fn().mockResolvedValue(
-          'window.databrowser({transport:{type:"http",url:`${window.location.origin}/api`}});'
-        ),
-      } as unknown as Response);
-
-      try {
-        const req = new NextRequest('http://localhost:3002/api/admin/studio/proxy/http/databrowser.js');
-        const res = await proxyGet(req, { params: Promise.resolve({ path: ['http', 'databrowser.js'] }) });
-
-        expect(res.status).toBe(200);
-        expect(res.headers.get('content-type')).toContain('javascript');
-        const text = await res.text();
-        expect(text).toContain('${window.location.origin}/api/admin/studio/proxy/api');
-        expect(text).not.toContain('${window.location.origin}/api`');
-      } finally {
-        global.fetch = originalFetch;
-      }
-    });
-  });
-
-  describe('3. Studio Status & Lifecycle API (/api/admin/studio/status & /lifecycle)', () => {
     it('status route rejects non-SUPER_ADMIN with 403', async () => {
       vi.mocked(getCurrentUser).mockResolvedValue({
         id: 'usr-gen-1',
@@ -178,6 +85,8 @@ describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
       const res = await statusGet(req);
 
       expect(res.status).toBe(403);
+      const data = await res.json();
+      expect(data.error).toBe('FORBIDDEN');
     });
 
     it('status route returns status object to SUPER_ADMIN', async () => {
@@ -197,6 +106,22 @@ describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
       expect(data).toHaveProperty('port', 5555);
       expect(data).toHaveProperty('remainingSeconds');
     });
+  });
+
+  describe('3. Studio Lifecycle API Route Guard & Actions (/api/admin/studio/lifecycle)', () => {
+    it('lifecycle route rejects unauthenticated requests with 401', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue(null);
+      const req = new NextRequest('http://localhost:3002/api/admin/studio/lifecycle', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'start' }),
+      });
+      const res = await lifecyclePost(req);
+
+      expect(res.status).toBe(401);
+      const data = await res.json();
+      expect(data.error).toBe('UNAUTHORIZED');
+    });
 
     it('lifecycle route rejects non-SUPER_ADMIN with 403', async () => {
       vi.mocked(getCurrentUser).mockResolvedValue({
@@ -214,9 +139,11 @@ describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
       const res = await lifecyclePost(req);
 
       expect(res.status).toBe(403);
+      const data = await res.json();
+      expect(data.error).toBe('FORBIDDEN');
     });
 
-    it('lifecycle route validates action payloads', async () => {
+    it('lifecycle route validates action payloads and rejects invalid action with 400', async () => {
       vi.mocked(getCurrentUser).mockResolvedValue({
         id: 'usr-super-1',
         name: 'سوبر أدمن',
@@ -234,6 +161,29 @@ describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
       expect(res.status).toBe(400);
       const data = await res.json();
       expect(data.error).toBe('INVALID_ACTION');
+    });
+
+    it('lifecycle route executes start action for SUPER_ADMIN', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        id: 'usr-super-1',
+        telegramId: '7594239391',
+        name: 'سوبر أدمن',
+        role: 'SUPER_ADMIN',
+        isRealSuperAdmin: true,
+      });
+
+      const req = new NextRequest('http://localhost:3002/api/admin/studio/lifecycle', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'start' }),
+      });
+      const res = await lifecyclePost(req);
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.ok).toBe(true);
+      expect(data.action).toBe('start');
+      expect(data.status).toHaveProperty('isRunning');
     });
 
     it('lifecycle route executes stop action and records forensic audit log', async () => {
@@ -257,6 +207,52 @@ describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
       expect(data.ok).toBe(true);
       expect(data.action).toBe('stop');
       expect(prisma.auditLog.create).toHaveBeenCalled();
+    });
+
+    it('lifecycle route executes restart action for SUPER_ADMIN', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        id: 'usr-super-1',
+        telegramId: '7594239391',
+        name: 'سوبر أدمن',
+        role: 'SUPER_ADMIN',
+        isRealSuperAdmin: true,
+      });
+
+      const req = new NextRequest('http://localhost:3002/api/admin/studio/lifecycle', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'restart' }),
+      });
+      const res = await lifecyclePost(req);
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.ok).toBe(true);
+      expect(data.action).toBe('restart');
+      expect(data.status).toHaveProperty('isRunning');
+    });
+
+    it('lifecycle route executes extend action and records PRISMA_STUDIO_EXTEND audit log', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        id: 'usr-super-1',
+        telegramId: '7594239391',
+        name: 'سوبر أدمن',
+        role: 'SUPER_ADMIN',
+        isRealSuperAdmin: true,
+      });
+
+      const req = new NextRequest('http://localhost:3002/api/admin/studio/lifecycle', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'extend' }),
+      });
+      const res = await lifecyclePost(req);
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.ok).toBe(true);
+      expect(data.action).toBe('extend');
+      expect(data.status).toHaveProperty('isRunning');
     });
   });
 
@@ -299,6 +295,55 @@ describe('Plan 57: Sovereign Prisma Studio Cockpit & Ngrok DMZ Ingress', () => {
           }),
         })
       );
+    });
+
+    it('records PRISMA_STUDIO_EXTEND when session is extended while active', async () => {
+      const manager = new StudioProcessManager();
+      // Simulate active session
+      (manager as unknown as { startedAtTime: number }).startedAtTime = Date.now();
+      const status = await manager.extendSession('7594239391', '127.0.0.1');
+
+      expect(status.remainingSeconds).toBeGreaterThan(0);
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actorTelegramId: BigInt('7594239391'),
+            action: 'PRISMA_STUDIO_EXTEND',
+            entityType: 'PRISMA_STUDIO',
+            entityId: 'studio:5555',
+          }),
+        })
+      );
+    });
+
+    it('attaches and extends session when Prisma Studio is healthy even if startedAtTime was null', async () => {
+      const manager = new StudioProcessManager();
+      (manager as unknown as { startedAtTime: number | null }).startedAtTime = null;
+      vi.spyOn(manager, 'isHealthy').mockResolvedValue(true);
+
+      const status = await manager.extendSession('999888777', '10.0.0.5');
+
+      expect(status.isRunning).toBe(true);
+      expect(status.remainingSeconds).toBe(900);
+      expect(manager.isActive()).toBe(true);
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            actorTelegramId: BigInt('999888777'),
+            action: 'PRISMA_STUDIO_EXTEND',
+            ipAddress: '10.0.0.5',
+          }),
+        })
+      );
+    });
+
+    it('extendSession returns current status if session is not active and not healthy without throwing', async () => {
+      const manager = new StudioProcessManager();
+      (manager as unknown as { startedAtTime: number | null }).startedAtTime = null;
+      vi.spyOn(manager, 'isHealthy').mockResolvedValue(false);
+      const status = await manager.extendSession('7594239391', '127.0.0.1');
+
+      expect(status.isRunning).toBe(false);
     });
 
     it('resolves database package directory containing schema.prisma correctly', () => {

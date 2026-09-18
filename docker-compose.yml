@@ -134,6 +134,7 @@ services:
       DASHBOARD_TUNNEL_URL: ${DASHBOARD_TUNNEL_URL}
       DASHBOARD_LOCAL_URL: ${DASHBOARD_LOCAL_URL:-http://localtest.me:3002}
       PRISMA_STUDIO_URL: ${PRISMA_STUDIO_URL:-http://studio:5555}
+      PRISMA_STUDIO_TUNNEL_URL: ${PRISMA_STUDIO_TUNNEL_URL:-}
       TZ: ${TZ:-Africa/Cairo}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
