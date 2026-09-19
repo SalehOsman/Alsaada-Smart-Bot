@@ -184,13 +184,21 @@ Dockerfile text eol=lf
 ---
 
 ### 6️⃣ مصفوفة الحالة والتسليم (Status & Sign-off)
-* **الحالة:** 🟢 مكتمل وموثق 100% (Completed & Verified).
+* **الحالة:** 🟢 مكتمل وموثق 100% — كافة مسارات GitHub Actions خضراء وناجحة (100% Green & Verified).
 * **التاريخ:** 2026-09-19
-* **رقم الالتزام (Git Commit):** `8706fa9` (`fix(ci,docs): resolve CI clean tree drift, harden Dockerfile, and establish Plan 79 governance`)
+* **تشغيلات GitHub Actions المعتمدة والخضراء:**
+  - `CI / Enterprise Quality & Governance Gate`: تشغيل رقم **`35452305128`** (🟢 SUCCESS في 5m11s - كافة الخطوات والبوابات الـ 20 وبناء Docker اجتازت بنجاح).
+  - `Release / Enterprise Monorepo Changesets Engine`: تشغيل رقم **`35452305180`** (🟢 SUCCESS في 25s).
+* **سجل الالتزامات المعتمدة (Git Commits):**
+  - `4f83a73`: `fix(ci,governance): initialize isolated test database in CI workflow and financial integrity gate`
+  - `e7402ff`: `fix(docs): renormalize legacy evidence file and sanitize control characters to ensure clean CI tree`
+  - `b817422`: `docs(work-plans): update plan 79 status and sign-off verification matrix`
+  - `8706fa9`: `fix(ci,docs): resolve CI clean tree drift, harden Dockerfile, and establish Plan 79 governance`
 * **الملفات المعتمدة والمنفذة:**
-  - `.gitattributes` (توحيد نهايات الأسطر LF على مستوى المستودع).
-  - `.github/workflows/ci.yml` (إضافة concurrency auto-cancel، خطوة docs:check، وجدول الملخص في $GITHUB_STEP_SUMMARY).
+  - `.gitattributes` (توحيد نهايات الأسطر LF على مستوى المستودع لمنع تباين البيئات).
+  - `.github/workflows/ci.yml` (إضافة concurrency auto-cancel، تهيئة قاعدة الاختبارات alsaada_test_db، خطوة docs:check، وجدول الملخص في $GITHUB_STEP_SUMMARY).
   - `.github/workflows/code-review.yml` (سير عمل مراجعة الكود الآلية بالذكاء الاصطناعي Alibaba OCR على الـ PRs).
+  - `tools/governance/verify-financial-integrity.ts` (الاستدعاء الذاتي لتهيئة قاعدة بيانات الاختبارات الحية المعزولة).
   - `tools/docs/transform-pipeline.ts` (دعم كتل الأكواد المزاحة، تطبيع LF، وضع الفحص الجاف dryRun، ومنع الانحراف).
   - `tools/docs/verify-docs.ts` (ربط الفاحص بوضع dryRun لمنع الكتابة العشوائية في CI).
   - `apps/docs/tests/docs-portal.spec.ts` (اختبار التماثل الصريح، والتحقق الجاف 100% دون تلويث شجرة العمل).
