@@ -16,7 +16,6 @@ sidebar:
 
 ## ⚙️ كيف يعمل محرك التوليد الآلي؟ (Architecture & Data Flow)
 
-
 ```mermaid
 flowchart TD
     Config["ملف إعدادات الشركة<br/>(tenants/company.config.ts)"] --> Engine["محرك التوليد الآلي<br/>(Google Sheets Auto-Provisioner)"]
@@ -34,13 +33,11 @@ flowchart TD
     Execution --> Output["توليد ملف الربط الحي (sheets-registry.json) وجاهزية البوت الفورية 🚀"]
 ```
 
-
 ---
 
 ## 📐 معجم المخططات القياسي (The Schema Registry Contract)
 
 يتم تعريف كل شيت في النظام ككائن برمجي معلن بدقة:
-
 
 ```typescript
 export interface SheetColumnSchema {
@@ -61,7 +58,6 @@ export interface SheetDefinition {
   seedData?: any[][];      // بيانات البداية الافتراضية
 }
 ```
-
 
 ---
 

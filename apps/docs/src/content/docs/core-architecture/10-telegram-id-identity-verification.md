@@ -27,7 +27,6 @@ sidebar:
 
 ## 🧭 2. آلية التحقق عند بدء المحادثة (Lifecycle Flow)
 
-
 ```mermaid
 flowchart TD
     Update["وصول تفاعل من المستخدم (/start أو ضغط زر)"] --> Extract["استخراج معرف تليجرام: ctx.from.id"]
@@ -42,7 +41,6 @@ flowchart TD
     Found -- "لا: معرف غير مسجل" --> Guest["تعيين الدور كـ GUEST (حجب شامل لكافة الأزرار)"]
     Guest --> RenderGuest["عرض بطاقة المعرف للمستخدم لتسليمه للإدارة"]
 ```
-
 
 ---
 

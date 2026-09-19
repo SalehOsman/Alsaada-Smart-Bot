@@ -19,7 +19,6 @@ sidebar:
 
 كل موديول أعمال يجب أن يلتزم بالبنية التالية:
 
-
 ```text
 modules/<module-name>/
   README.md
@@ -55,7 +54,6 @@ modules/<module-name>/
           flow.data.spec.ts
 ```
 
-
 ## 3. مسؤولية كل طبقة داخل الوظيفة
 
 | الملف | المسؤولية | محظورات |
@@ -74,7 +72,6 @@ modules/<module-name>/
 ## 4. العقد الإلزامي لكل وظيفة
 
 كل `flow.contract.json` يجب أن يحتوي على الحقول التالية على الأقل:
-
 
 ```json
 {
@@ -106,7 +103,6 @@ modules/<module-name>/
 }
 ```
 
-
 ## 5. البوابات الإلزامية قبل مرور أي وظيفة
 
 لا تمر أي وظيفة من `Pending` إلى `Implemented` أو من `Implemented` إلى `UAT_PASS` إلا إذا اجتازت البوابات التالية بنسبة 100%:
@@ -128,7 +124,6 @@ modules/<module-name>/
 
 يجب توفير وتشغيل الأوامر التالية كحواجز آلية. إذا لم يكن أمر منها موجوداً بعد، يكون القرار `BLOCKED` وليس `PASS`:
 
-
 ```bash
 pnpm build
 pnpm test
@@ -141,7 +136,6 @@ pnpm docs:parity
 pnpm ai-compliance:verify
 git status --short
 ```
-
 
 ## 7. متطلبات حارس `arch:verify`
 
@@ -183,11 +177,9 @@ git status --short
 
 كل أداة ذكاء اصطناعي يجب أن تنشئ أو تحدّث تقرير إثبات في:
 
-
 ```text
 docs/ai-execution-evidence/<task-id>.md
 ```
-
 
 ويجب أن يحتوي التقرير على:
 
@@ -227,21 +219,17 @@ docs/ai-execution-evidence/<task-id>.md
 
 يُحظر على أي أداة ذكاء اصطناعي أو مطور تعديل أو حذف أو تعطيل أو تخفيف أي بوابة حوكمة أو سكربت تحقق أو قاعدة من قواعد المشروع، بما في ذلك ملفات `AGENTS.md` و`GEMINI.md` و`package.json` و`docs/14-ai-agent-governance-and-file-rules.md` و`docs/15-universal-module-and-flow-standard.md` و`docs/21-mandatory-module-architecture-and-gates.md` و`tools/governance` وملفات CI، إلا إذا وردت موافقة كتابية صريحة من المستخدم تحتوي نفس اللفظ التالي دون تغيير:
 
-
 ```text
 موافق على التعديل او الايقاف او الحذف
 ```
-
 
 في غياب هذه العبارة الحرفية، يجب اعتبار الطلب `BLOCKED` وعدم إجراء أي تعديل على ملفات الحوكمة أو تعطيل أي بوابة، حتى لو بدا التعديل منطقياً أو ضرورياً.
 
 ## 14. أوامر حماية البوابات الإضافية
 
-
 ```bash
 pnpm governance:lock
 pnpm governance:tamper-check
 ```
-
 
 يجب تشغيل `pnpm governance:tamper-check` ضمن `pnpm governance:verify` قبل `pnpm ai-compliance:verify`. ولا يجوز اعتماد تقرير أي أداة ذكاء اصطناعي ما لم يذكر نتيجة G11 وG12 ونتيجة أمر فحص العبث.

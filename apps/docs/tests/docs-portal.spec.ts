@@ -109,9 +109,45 @@ Reference to [F:\\HR](file:///F:/HR) and [packages/core-components](file:///F:/A
     }
   });
 
+  it('should verify sanitizeHtmlTags is strictly idempotent across multiple runs', () => {
+    const raw = `
+# Sample Title
+
+Here is a generic <T> type and <module_name> placeholder.
+<div class="test">Valid Div</div>
+Result<T, AppError> is used.
+\`<code_tag>\` should remain untouched.
+<!-- Valid HTML comment -->
+\`\`\`bash
+echo "$1" and "$@" and "$&"
+\`\`\`
+
+    \`\`\`ts
+    // Indented code block
+    function test<U>(x: U): U {
+      return x;
+    }
+    \`\`\`
+
+Paragraph after code fence.
+`;
+    const run1 = sanitizeHtmlTags(raw);
+    const run2 = sanitizeHtmlTags(run1);
+    const run3 = sanitizeHtmlTags(run2);
+
+    expect(run1).toBe(run2);
+    expect(run2).toBe(run3);
+    expect(run1).toContain('&lt;T&gt;');
+    expect(run1).toContain('&lt;module_name&gt;');
+    expect(run1).toContain('echo "$1" and "$@" and "$&"');
+    expect(run1).toContain('function test<U>(x: U): U');
+  });
+
   it('should execute full transform pipeline and pass docs verification gate with zero errors', () => {
-    // Run full pipeline
-    runTransformPipeline(root);
+    // Run pipeline in non-mutating dry-run mode to verify zero drift
+    const result = runTransformPipeline(root, { dryRun: true });
+    expect(result.changedDocs).toBe(0);
+    expect(result.errors).toHaveLength(0);
 
     // Verify all 5 tracks have output files
     const targetBase = join(root, 'apps', 'docs', 'src', 'content', 'docs');
@@ -134,8 +170,8 @@ Reference to [F:\\HR](file:///F:/HR) and [packages/core-components](file:///F:/A
       }
     }
 
-    // Run verification gate
-    const gateResult = verifyDocumentationPortal(root);
+    // Run verification gate in dry-run mode
+    const gateResult = verifyDocumentationPortal(root, { dryRun: true });
     expect(gateResult.success).toBe(true);
     expect(gateResult.errors).toHaveLength(0);
   });

@@ -172,14 +172,15 @@ const VALID_HTML_TAGS = new Set([
 ]);
 
 export function sanitizeHtmlTags(markdown: string): string {
+  markdown = markdown.replace(/\r\n/g, '\n');
   const codeBlocks: string[] = [];
   let placeholderCount = 0;
 
   // 1. Stash fenced code blocks (``` or ~~~ with any fence length >= 3)
-  let text = markdown.replace(/(?:^|\n)(```+|~~~+)[\s\S]*?\n\1(?:\n|$)/g, (match) => {
+  let text = markdown.replace(/(^|\n)([ \t]*)(```+|~~~+)[\s\S]*?\n\2\3(?=\n|$)/g, (match) => {
     const id = `__FENCED_CODE_BLOCK_${placeholderCount++}__`;
     codeBlocks.push(match);
-    return `\n${id}\n`;
+    return id;
   });
 
   // 2. Stash inline code spans
@@ -747,23 +748,60 @@ sidebar:
 `;
 }
 
-function safeWriteFileSync(filePath: string, content: string, maxRetries = 5): void {
+export interface SafeWriteOptions {
+  dryRun?: boolean;
+  maxRetries?: number;
+}
+
+export interface TransformOptions {
+  dryRun?: boolean;
+  targetDir?: string;
+}
+
+export interface TransformResult {
+  totalDocs: number;
+  changedDocs: number;
+  errors: string[];
+}
+
+export function safeWriteFileSync(
+  filePath: string,
+  content: string,
+  options: SafeWriteOptions = {}
+): { changed: boolean; error?: string } {
+  const dryRun = options.dryRun ?? false;
+  const maxRetries = options.maxRetries ?? 5;
+  const normalizedContent = content.replace(/\r\n/g, '\n');
+
   if (existsSync(filePath)) {
     try {
       const existing = readFileSync(filePath, 'utf8');
-      if (existing === content || existing.replace(/\r\n/g, '\n') === content.replace(/\r\n/g, '\n')) {
-        return;
+      const normalizedExisting = existing.replace(/\r\n/g, '\n');
+      if (normalizedExisting === normalizedContent) {
+        return { changed: false };
       }
     } catch {
       // proceed to write
     }
   }
+
+  if (dryRun) {
+    return { changed: true };
+  }
+
+  const dir = dirname(filePath);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      writeFileSync(filePath, content, 'utf8');
-      return;
+      writeFileSync(filePath, normalizedContent, 'utf8');
+      return { changed: true };
     } catch (err: unknown) {
-      if (attempt === maxRetries) throw err;
+      if (attempt === maxRetries) {
+        return { changed: false, error: String(err) };
+      }
       const delay = attempt * 50;
       const start = Date.now();
       while (Date.now() - start < delay) {
@@ -771,31 +809,55 @@ function safeWriteFileSync(filePath: string, content: string, maxRetries = 5): v
       }
     }
   }
+
+  return { changed: true };
 }
 
-export function runTransformPipeline(inputRoot?: string): void {
+export function runTransformPipeline(inputRoot?: string, options?: TransformOptions): TransformResult {
   const root = inputRoot ? resolve(inputRoot) : findRepoRoot();
-  console.log('🚀 [DOCS-PIPELINE] Starting AST Markdown Transformation & Synchronization...');
+  const dryRun = options?.dryRun ?? false;
+  const targetBase = options?.targetDir ? resolve(options.targetDir) : join(root, 'apps', 'docs', 'src', 'content', 'docs');
+
+  console.log(`🚀 [DOCS-PIPELINE] Starting AST Markdown Transformation & Synchronization${dryRun ? ' (dry-run mode)' : ''}...`);
+
+  const errors: string[] = [];
+  let totalDocs = 0;
+  let changedDocs = 0;
 
   const docsDir = join(root, 'docs');
-  const targetBase = join(root, 'apps', 'docs', 'src', 'content', 'docs');
-
   if (!existsSync(docsDir)) {
-    throw new Error(`SSOT docs directory not found at: ${docsDir}`);
+    const errorMsg = `SSOT docs directory not found at: ${docsDir}`;
+    errors.push(errorMsg);
+    if (!dryRun) throw new Error(errorMsg);
+    return { totalDocs: 0, changedDocs: 0, errors };
   }
 
   // Clean up legacy content config if present
-  const legacyConfig = join(root, 'apps', 'docs', 'src', 'content', 'config.ts');
-  if (existsSync(legacyConfig)) {
-    unlinkSync(legacyConfig);
+  if (!dryRun) {
+    const legacyConfig = join(root, 'apps', 'docs', 'src', 'content', 'config.ts');
+    if (existsSync(legacyConfig)) {
+      unlinkSync(legacyConfig);
+    }
   }
 
   const docMap = buildDocMapping(root);
 
+  function writeDoc(filePath: string, content: string, label: string) {
+    totalDocs++;
+    const res = safeWriteFileSync(filePath, content, { dryRun });
+    if (res.error) {
+      errors.push(`Failed to write ${filePath}: ${res.error}`);
+    }
+    if (res.changed) {
+      changedDocs++;
+    }
+    console.log(`  ✓ ${label}${res.changed ? (dryRun ? ' [DRIFT]' : ' [UPDATED]') : ''}`);
+  }
+
   // 1. Process 28 root docs into the 5 tracks
   for (const track of TRACK_DEFINITIONS) {
     const trackTargetDir = join(targetBase, track.dir);
-    if (!existsSync(trackTargetDir)) {
+    if (!dryRun && !existsSync(trackTargetDir)) {
       mkdirSync(trackTargetDir, { recursive: true });
     }
 
@@ -829,62 +891,58 @@ export function runTransformPipeline(inputRoot?: string): void {
 
       const finalOutput = `${frontmatter}\n${body}`;
       const targetFilePath = join(trackTargetDir, docFile);
-      safeWriteFileSync(targetFilePath, finalOutput);
-      console.log(`  ✓ Transformed [Track ${track.id}]: ${docFile}`);
+      writeDoc(targetFilePath, finalOutput, `Transformed [Track ${track.id}]: ${docFile}`);
     }
   }
 
   // 2. Process Track 6: ADRs (ADR-001 to ADR-037)
   const adrsTargetDir = join(targetBase, 'adrs');
-  if (!existsSync(adrsTargetDir)) {
+  if (!dryRun && !existsSync(adrsTargetDir)) {
     mkdirSync(adrsTargetDir, { recursive: true });
   }
 
   // Write ADR index
   const adrIndexContent = generateAdrsIndex();
-  safeWriteFileSync(join(adrsTargetDir, 'index.md'), adrIndexContent);
-  console.log('  ✓ Generated Track 6 ADR Master Register (index.md)');
+  writeDoc(join(adrsTargetDir, 'index.md'), adrIndexContent, 'Generated Track 6 ADR Master Register (index.md)');
 
   // Write ADR individual records
   for (let i = 0; i < ADR_RECORDS.length; i++) {
     const numStr = (i + 1).toString().padStart(3, '0');
     const adrContent = generateAdrDetail(i);
-    safeWriteFileSync(join(adrsTargetDir, `adr-${numStr}.md`), adrContent);
+    writeDoc(join(adrsTargetDir, `adr-${numStr}.md`), adrContent, `Generated 37 ADR Records (adr-${numStr}.md)`);
   }
-  console.log(`  ✓ Generated 37 ADR Records (adr-001.md to adr-037.md)`);
 
   // 3. Write Portal Index (Home) Page
   const portalIndexContent = generatePortalIndexPage();
-  safeWriteFileSync(join(targetBase, 'index.md'), portalIndexContent);
-  console.log('  ✓ Generated Portal Landing Page (index.md)');
+  writeDoc(join(targetBase, 'index.md'), portalIndexContent, 'Generated Portal Landing Page (index.md)');
 
   // 4. Write English Landing Page (en/index.md)
   const enTargetDir = join(targetBase, 'en');
-  if (!existsSync(enTargetDir)) {
+  if (!dryRun && !existsSync(enTargetDir)) {
     mkdirSync(enTargetDir, { recursive: true });
   }
   const enPortalContent = generateEnglishLandingPage();
-  safeWriteFileSync(join(enTargetDir, 'index.md'), enPortalContent);
-  console.log('  ✓ Generated English Portal Landing Page (en/index.md)');
+  writeDoc(join(enTargetDir, 'index.md'), enPortalContent, 'Generated English Portal Landing Page (en/index.md)');
 
   // 5. Clean up any conflicting 404.md so Starlight built-in 404 route renders cleanly
-  const conflict404 = join(targetBase, '404.md');
-  if (existsSync(conflict404)) {
-    unlinkSync(conflict404);
+  if (!dryRun) {
+    const conflict404 = join(targetBase, '404.md');
+    if (existsSync(conflict404)) {
+      unlinkSync(conflict404);
+    }
   }
 
   // 6. Write Living Architecture Page (dynamically scanned from workspace)
   const livingArchContent = generateLivingArchitecturePage(root);
-  safeWriteFileSync(join(targetBase, 'living-architecture.md'), livingArchContent);
-  console.log('  ✓ Generated Living Architecture Map (living-architecture.md)');
+  writeDoc(join(targetBase, 'living-architecture.md'), livingArchContent, 'Generated Living Architecture Map (living-architecture.md)');
 
   // 7. Ensure hero asset exists
   const assetsDir = join(root, 'apps', 'docs', 'src', 'assets');
-  if (!existsSync(assetsDir)) {
+  if (!dryRun && !existsSync(assetsDir)) {
     mkdirSync(assetsDir, { recursive: true });
   }
   const heroSvgPath = join(assetsDir, 'hero-logo.svg');
-  if (!existsSync(heroSvgPath)) {
+  if (!existsSync(heroSvgPath) && !dryRun) {
     const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <circle cx="50" cy="50" r="45" stroke="#0284c7" stroke-width="4" fill="#0369a1" fill-opacity="0.1"/>
   <path d="M30 50 L45 65 L70 35" stroke="#10b981" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -892,9 +950,15 @@ export function runTransformPipeline(inputRoot?: string): void {
     writeFileSync(heroSvgPath, sampleSvg, 'utf8');
   }
 
-  console.log('✅ [DOCS-PIPELINE] Documentation transformation & synchronization completed successfully!');
+  console.log(`✅ [DOCS-PIPELINE] Documentation transformation & synchronization completed successfully! Total: ${totalDocs}, Changed: ${changedDocs}`);
+  return { totalDocs, changedDocs, errors };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname.replace(/^\/([a-zA-Z]:)/, '$1'))) {
-  runTransformPipeline();
+  const isCheck = process.argv.includes('--check');
+  const result = runTransformPipeline(undefined, { dryRun: isCheck });
+  if (isCheck && result.changedDocs > 0) {
+    console.error(`❌ [DOCS-PIPELINE] Documentation drift detected: ${result.changedDocs} files need synchronization.`);
+    process.exit(1);
+  }
 }

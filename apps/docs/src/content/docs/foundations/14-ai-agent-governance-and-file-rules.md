@@ -151,7 +151,7 @@ flowchart TD
 أي وظيفة جديدة أو مُرحّلة يجب أن تعيش داخل:
 
 ```text
-modules/&lt;module-name&gt;/src/flows/&lt;flow-code&gt;-&lt;flow-slug&gt;/
+modules/<module-name>/src/flows/<flow-code>-<flow-slug>/
 ```
 
 ولا يجوز اعتبار أي وظيفة مكتملة أو مقبولة ما لم تجتاز بوابات G1 إلى G10 الموثقة في الوثيقة الحاكمة بنسبة 100%، مع تقرير إثبات داخل `docs/ai-execution-evidence/`.

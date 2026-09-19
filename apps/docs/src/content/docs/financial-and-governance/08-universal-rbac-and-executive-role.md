@@ -16,7 +16,6 @@ sidebar:
 
 ## 🏛️ 1. مصفوفة الطبقات السباعية المعتمدة (The 7-Tier RBAC Hierarchy)
 
-
 ```mermaid
 flowchart TD
     subgraph Governance [الطبقة الإدارية والرقابية الاستراتيجية]
@@ -35,7 +34,6 @@ flowchart TD
         GST["7️⃣ زائر (Guest)<br/>مستخدم جديد يطلب ربط هويته أو التسجيل أو الدعم الفني"]
     end
 ```
-
 
 ### توصيف الأدوار ومسؤولياتها:
 
@@ -77,7 +75,6 @@ flowchart TD
 ### المعمارية البرمجية:
 كل زر أو تدفق في البوت يرتبط بـ **إذن ذري (`PermissionKey`)**:
 
-
 ```typescript
 export enum Permission {
   // صلاحيات الإدارة العليا والتقارير
@@ -98,7 +95,6 @@ export enum Permission {
   WORKER_SELF_VIEW = 'worker:self:view',
 }
 ```
-
 
 ### آلية تصفية الأزرار قبل الإرسال (Pre-render Pipeline):
 1. عند استدعاء أي لوحة مفاتيح (`InlineKeyboard`)، يتم تمرير مصفوفة الأزرار لمحرك الحجب (`RBACGuard`).

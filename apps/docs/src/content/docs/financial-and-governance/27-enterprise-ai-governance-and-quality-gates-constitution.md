@@ -62,7 +62,6 @@ sidebar:
 تخضع المنظومة لبروتوكول قفل تشفيري صارم تديره ملفات `governance.lock.json` وأداة `tools/governance/verify-governance-tamper.ts`.  
 **يُحظر تماماً قبول أي عبارات مبهمة (مثل: "تمام", "نفذ", "موافق", "اوك", "توكل على الله")**، وتقتصر الموافقات حصراً على الصيغ الثلاث التالية:
 
-
 ```mermaid
 stateDiagram-v2
     [*] --> InProgress: تطوير وبناء الميزة
@@ -81,7 +80,6 @@ stateDiagram-v2
     GovChange --> GovUpdated: المستخدم يرسل حرفياً: «موافق على التعديل او الايقاف او الحذف»
     GovChange --> Blocked3: أي عبارة أخرى (مرفوض ومحجوب BLOCKED)
 ```
-
 
 1. **صيغة قفل الوظائف والميزات المنجزة تشفيرياً:**
    - بعد اجتياز الوظيفة لبوابات الفحص بنسبة 100%، يسأل الوكيل:  
@@ -121,11 +119,9 @@ stateDiagram-v2
 | **G16** | **الإثبات الجنائي المادي ونظافة المستودع** | `pnpm ai-compliance:verify`<br>`git status --short` | • تقرير إثبات إلزامي داخل `docs/ai-execution-evidence/`.<br>• إرفاق نتائج فحص البوابات الـ 16 بالأرقام والميلي ثانية.<br>• نظافة تامة لشجرة Git وتوثيق Commit بمعيار Conventional. | `GIT_AND_COMPLIANCE_FAIL` |
 
 ### أمر التحقق الشامل الموحد:
-
 ```bash
 pnpm governance:verify
 ```
-
 يُحظر تسليم أي مهمة دون نجاح هذا الأمر وخروجه بـ `Exit Code 0`.
 
 ---

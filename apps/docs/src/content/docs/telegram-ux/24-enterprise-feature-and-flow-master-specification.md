@@ -17,7 +17,6 @@ sidebar:
 
 ## 🧭 خريطة المعايير الـ 14 الحاكمة لأي تدفق (The 14 Pillars of Universal Flow UX)
 
-
 ```mermaid
 graph TD
     Flow["أي وظيفة أو تدفق بالبوت (Universal Flow)"] --> B1["1️⃣ مسار التتبع وتسلسل الخطوات في الوصف (Breadcrumbs & Step Sequence)"]
@@ -35,7 +34,6 @@ graph TD
     Flow --> B13["1️⃣3️⃣ المعمارية الهجينة وطابور المزامنة الخلفي (Hybrid Outbox Architecture)"]
     Flow --> B14["1️⃣4️⃣ العمارة النظيفة وسقف الأسطر والاختبارات (< 350 Lines & TDD)"]
 ```
-
 
 ---
 
@@ -59,7 +57,6 @@ graph TD
 5. **شريط الأخطاء التفاعلي (عند الخطأ):**
    في حال إدخال قيمة غير صالحة، تُعدل نفس الرسالة موضعياً مع إبراز رسالة التحذير `⚠️ [سبب الخطأ]` مع زر `[ 🔄 إعادة الإدخال ]` وزر `[ ◀️ رجوع ]` دون إرسال رسالة جديدة.
 
-
 ```typescript
 // مثال تطبيقي معياري
 export function formatNamePrompt(): string {
@@ -72,7 +69,6 @@ export function formatNamePrompt(): string {
   );
 }
 ```
-
 
 ---
 

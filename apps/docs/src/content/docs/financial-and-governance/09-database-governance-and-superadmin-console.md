@@ -16,7 +16,6 @@ sidebar:
 
 ## 🏛️ 1. المعمارية المزدوجة لإدارة وتصحيح البيانات (Dual Governance Architecture)
 
-
 ```mermaid
 flowchart TD
     SA["👑 السوبر أدمن"] --> Choice{"طريقة الوصول للبيانات"}
@@ -44,7 +43,6 @@ flowchart TD
     Engine --> Audit[("سجل التدقيق والتتبع<br/>(Audit Logs)")]
     Engine --> Sync["محرك ترحيل الأثر لشيت جوجل 📊"]
 ```
-
 
 ---
 
@@ -94,7 +92,6 @@ flowchart TD
 ### 2️⃣ سجل التدقيق والتتبع التلقائي (Immutable Audit Log):
 كل عملية تعديل أو شطب يقوم بها السوبر أدمن يتم توثيقها تلقائياً في جدول رقابي دائم:
 
-
 ```typescript
 export interface AuditLogRecord {
   id: string;
@@ -108,7 +105,6 @@ export interface AuditLogRecord {
   timestamp: Date;           // التوقيت الدقيق بالمللي ثانية
 }
 ```
-
 
 ---
 

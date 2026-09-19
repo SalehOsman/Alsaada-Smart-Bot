@@ -3,7 +3,10 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runTransformPipeline, TRACK_DEFINITIONS } from './transform-pipeline.js';
 
-export function verifyDocumentationPortal(root: string = process.cwd()): { success: boolean; errors: string[] } {
+export function verifyDocumentationPortal(
+  root: string = process.cwd(),
+  options: { dryRun?: boolean } = {}
+): { success: boolean; errors: string[] } {
   const errors: string[] = [];
   console.log('🔍 [DOCS-VERIFY] Running Documentation Verification Gate...');
 
@@ -26,8 +29,14 @@ export function verifyDocumentationPortal(root: string = process.cwd()): { succe
   }
 
   // 2. Execute transform pipeline
+  const dryRun = options.dryRun ?? false;
   try {
-    runTransformPipeline(root);
+    const pipelineResult = runTransformPipeline(root, { dryRun });
+    if (dryRun && pipelineResult.changedDocs > 0) {
+      errors.push(
+        `Documentation drift detected: ${pipelineResult.changedDocs} files need synchronization. Run "pnpm docs:sync".`
+      );
+    }
   } catch (err) {
     errors.push(`Transform pipeline execution failed: ${String(err)}`);
     return { success: false, errors };

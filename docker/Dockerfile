@@ -18,7 +18,7 @@ ENV DATABASE_URL="postgresql://build_placeholder:dummy@127.0.0.1:5432/build_db?s
 WORKDIR /app
 
 # Install pnpm & necessary build tools
-RUN npm install -g pnpm@10.6.2
+RUN npm install -g pnpm@11.0.8
 RUN apk add --no-cache openssl git
 
 # Copy monorepo manifests
@@ -32,6 +32,8 @@ COPY packages/telemetry/package.json packages/telemetry/
 COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
 COPY modules/workforce/package.json modules/workforce/
 COPY modules/settings/package.json modules/settings/
+COPY apps/admin-dashboard/package.json apps/admin-dashboard/
+COPY apps/docs/package.json apps/docs/
 COPY apps/bot-server/package.json apps/bot-server/
 
 # Install all dependencies (including devDependencies for build)
@@ -40,7 +42,7 @@ RUN git init --bare "$GIT_DIR" \
     && pnpm config set fetch-retries 5 \
     && pnpm config set fetch-retry-maxtimeout 120000 \
     && pnpm config set network-concurrency 4 \
-    && pnpm install --frozen-lockfile=false
+    && pnpm install --frozen-lockfile=true
 
 # Copy source without replacing workspace-local node_modules links.
 COPY packages/database/prisma/ packages/database/prisma/
@@ -100,7 +102,7 @@ ENV BUILD_TIME=$BUILD_TIME
 
 WORKDIR /app
 
-RUN npm install -g pnpm@10.6.2
+RUN npm install -g pnpm@11.0.8
 RUN apk add --no-cache openssl dumb-init tzdata
 
 ENV NODE_ENV=production

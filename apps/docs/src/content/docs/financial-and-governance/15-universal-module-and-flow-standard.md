@@ -174,7 +174,7 @@ modules/canteen/
 أي وظيفة جديدة أو مُرحّلة يجب أن تعيش داخل:
 
 ```text
-modules/&lt;module-name&gt;/src/flows/&lt;flow-code&gt;-&lt;flow-slug&gt;/
+modules/<module-name>/src/flows/<flow-code>-<flow-slug>/
 ```
 
 ولا يجوز اعتبار أي وظيفة مكتملة أو مقبولة ما لم تجتاز بوابات G1 إلى G10 الموثقة في الوثيقة الحاكمة بنسبة 100%، مع تقرير إثبات داخل `docs/ai-execution-evidence/`.
@@ -196,7 +196,7 @@ modules/&lt;module-name&gt;/src/flows/&lt;flow-code&gt;-&lt;flow-slug&gt;/
 1. **أداة التوليد الآلي بالقوالب النمطية (`pnpm make:flow`):**  
    لتطبيق معايير الوثيقة 21 بدقة ودون أي اجتهاد يدوي، يُلزم استخدام أداة السقالات المعيارية مع القالب المناسب:
    ```bash
-   pnpm make:flow &lt;module-name&gt; &lt;flow-name&gt; [title] [--template=<cash-outflow|in-kind-clearing|approval-request|excel-export>]
+   pnpm make:flow <module-name> <flow-name> [title] [--template=<cash-outflow|in-kind-clearing|approval-request|excel-export>]
    ```
    تولد الأداة تلقائياً كافة ملفات الشريحة الرأسية (العقد، المعالج، الأنواع، ومجموعة الاختبارات الأربعة) مجهزة بنسبة 90% مع محركات النواة تحت سقف 350 سطراً مع مطابقة بوابات الحوكمة فورياً.
 

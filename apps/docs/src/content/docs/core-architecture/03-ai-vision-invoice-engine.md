@@ -16,7 +16,6 @@ sidebar:
 
 ## 🔍 كيف يعمل المحرك ميدانياً؟ (System Architecture)
 
-
 ```mermaid
 sequenceDiagram
     autonumber
@@ -41,7 +40,6 @@ sequenceDiagram
     end
     Bot->>Supervisor: إظهار إشعار النجاح + رابط واتساب + أزرار المتابعة
 ```
-
 
 ---
 
@@ -77,7 +75,6 @@ sequenceDiagram
 
 ## 💻 المخطط البرمجي للمخرجات (Extraction Schema via Zod)
 
-
 ```typescript
 export const InvoiceExtractionSchema = z.object({
   vendorName: z.string().describe('اسم المحل أو المورد أو محطة الوقود'),
@@ -97,4 +94,3 @@ export const InvoiceExtractionSchema = z.object({
   confidenceScore: z.number().min(0).max(1).describe('نسبة دقة القراءة بالذكاء الاصطناعي'),
 });
 ```
-

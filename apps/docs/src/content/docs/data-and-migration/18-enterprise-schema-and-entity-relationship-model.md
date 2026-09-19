@@ -38,7 +38,6 @@ sidebar:
 
 ## 2️⃣ مخطط الكيانات والعلاقات العام (Enterprise Entity-Relationship Diagram)
 
-
 ```mermaid
 erDiagram
     TENANT ||--o{ COMPANY_PROFILE : owns
@@ -83,7 +82,6 @@ erDiagram
     FINANCIAL_LEDGER ||--o{ FINANCIAL_LEDGER : chains_hashes
     NOTIFICATION_QUEUE ||--o{ USER : delivers
 ```
-
 
 ---
 

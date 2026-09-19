@@ -16,7 +16,6 @@ sidebar:
 
 ## 🧰 خريطة المكونات المشتركة (Shared Component Map)
 
-
 ```
 packages/core-components/
 ├── worker-picker/         # محرك اختيار العمال الموحد
@@ -28,7 +27,6 @@ packages/core-components/
 ├── photo-attachment/      # محرك توثيق المرفقات والصور
 └── multi-channel/         # موجه الإشعارات والتوبيكات المركزي
 ```
-
 
 ---
 

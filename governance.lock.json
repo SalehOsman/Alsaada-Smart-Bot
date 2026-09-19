@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T07:33:02.128Z",
+  "generatedAt": "2026-09-19T08:42:39.917Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -32,7 +32,11 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "a36dacd09dba85457e23aa24b1398a3ae9ded550af53ede8c7e87c2ee043ff9d"
+      "sha256": "5fbf4a67ee14718223b2cb088417b82b4afc5952f73bd6fc600a0f3533bb8211"
+    },
+    {
+      "path": ".github/workflows/code-review.yml",
+      "sha256": "10b9b8296339c0c46924f5031ad720e92ca2ae619ea4f3962ce2882141062011"
     },
     {
       "path": ".github/workflows/release.yml",
@@ -68,7 +72,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "94d99e97a86961a0356f7cf8fd299ffd601076f46d2f9db2f2b2c9766f4b6978"
+      "sha256": "41d804f1d9d4a3985b93a9c0a4cf77da695f0dfd817fe679a333ef162e9032dd"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -569,7 +573,7 @@
       },
       {
         "path": "docker/Dockerfile",
-        "sha256": "c0f6a2a6a10bc3dd20bb64169f521bcc0cbbf876b1656b6f140909a72ab4b33b"
+        "sha256": "017912a6cb681ddb05fc0233397904b0825c3a956090475b352f0b541c3bc89b"
       },
       {
         "path": "docker/Dockerfile.dashboard",
@@ -2260,7 +2264,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-18T12:47:56.671Z",
+      "lockedAt": "2026-09-19T08:48:29.277Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -2272,7 +2276,7 @@
         },
         {
           "path": "docker/Dockerfile",
-          "sha256": "c0f6a2a6a10bc3dd20bb64169f521bcc0cbbf876b1656b6f140909a72ab4b33b"
+          "sha256": "017912a6cb681ddb05fc0233397904b0825c3a956090475b352f0b541c3bc89b"
         },
         {
           "path": "docker/Dockerfile.dashboard",

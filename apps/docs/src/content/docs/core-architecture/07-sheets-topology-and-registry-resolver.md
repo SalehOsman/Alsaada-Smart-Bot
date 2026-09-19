@@ -29,7 +29,6 @@ sidebar:
 ### 2️⃣ النمط الثاني: الملفات القطاعية المعزولة (`MULTI_SPREADSHEET`) - *الموصى به مؤسسياً*
 * **الآلية:** يتم توليد **4 ملفات سبريدشيت مستقلة** داخل مجلد Google Drive المخصص للشركة، ويتم توزيع التبويبات الـ 66 عليها حسب المجال الوظيفي (`Domain-Driven Segregation`):
 
-
 ```mermaid
 flowchart TD
     DriveFolder["📁 مجلد الشركة السحابي (Google Drive)"]
@@ -56,7 +55,6 @@ flowchart TD
     end
 ```
 
-
 * **جدول توزيع المجالات الوظيفية:**
 
 | المعرف القطاعي (`Domain`) | اسم الملف المنشأ في Drive | أهم التبويبات التابعة له | الصلاحية الإدارية المقترحة |
@@ -71,7 +69,6 @@ flowchart TD
 ## 🧭 2. محرك التوجيه البرمجي الموحد (`SheetRegistryResolver`)
 
 ### العقد البرمجي لمحرك التوجيه (Interface Contract):
-
 
 ```typescript
 export enum SheetDomain {
@@ -91,7 +88,6 @@ export interface ISheetRegistryResolver {
   resolve(sheetKey: string): SheetTargetResolution;
 }
 ```
-
 
 ### كيف يضمن المحرك عدم تأثر كود البوت؟
 * عند كتابة أو قراءة أي معاملة (مثل تسجيل سلفة لعامل):

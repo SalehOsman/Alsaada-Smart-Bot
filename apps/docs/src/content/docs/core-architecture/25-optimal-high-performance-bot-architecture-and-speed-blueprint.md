@@ -58,13 +58,11 @@ $$\mathbf{T_{total} = T_{client\_to\_tg} + T_{polling/webhook} + T_{internal\_lo
   * **Hetzner Cloud:** باقة `CPX21` أو `CX22` (3 Dedicated vCPU, 4GB RAM, NVMe SSD) بتكلفة ~5-7 يورو/شهرياً.
   * **DigitalOcean:** Frankfurt Droplet (2 vCPU, 4GB RAM).
 - **نظام التشغيل:** Ubuntu 24.04 LTS مع تفعيل BBR Congestion Control:
-
 ```bash
 echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 sysctl -p
 ```
-
 
 ---
 
@@ -129,7 +127,6 @@ sysctl -p
 ### 7️⃣ ملحق التكوينات الجاهزة للتنفيذ المباشر (Production Ready Configurations)
 
 #### أ. تكوين Docker Compose لخادم Telegram Bot API المحلي المسرع:
-
 ```yaml
 # docker-compose.telegram-bot-api.yml
 version: '3.8'
@@ -158,9 +155,7 @@ networks:
     external: true
 ```
 
-
 #### ب. تكوين Nginx Reverse Proxy لاستقبال الـ Webhook الفوري عبر HTTP/2:
-
 ```nginx
 # /etc/nginx/sites-available/bot-webhook.conf
 server {
@@ -188,7 +183,6 @@ server {
     }
 }
 ```
-
 
 ---
 

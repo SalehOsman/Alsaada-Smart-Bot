@@ -19,7 +19,6 @@ sidebar:
 
 ## 🏛️ خريطة العلاقة بين المشروعين (The Two-Repository Architecture)
 
-
 ```mermaid
 flowchart LR
     subgraph Baseline [المشروع الحالي F:\HR - المرجع الوظيفي الكامل]
@@ -39,7 +38,6 @@ flowchart LR
 
     Baseline -.->|نقل المنطق ومطابقة المواصفات 100%| Target
 ```
-
 
 ---
 
