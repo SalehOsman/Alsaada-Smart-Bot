@@ -19,5 +19,6 @@ paths = [
 ]
 regexes = [
   '''0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef''',
-  '''test-secret-key-123456'''
+  '''test-secret-key-123456''',
+  '''123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ_testmock'''
 ]

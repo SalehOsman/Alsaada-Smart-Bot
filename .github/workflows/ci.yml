@@ -42,6 +42,7 @@ jobs:
       DATABASE_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       BLIND_INDEX_SALT: abcdef0123456789abcdef0123456789
       REDIS_URL: redis://127.0.0.1:6379
+      BOT_TOKEN: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ_testmock
 
     steps:
       - name: Checkout Repository
