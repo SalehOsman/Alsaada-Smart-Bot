@@ -180,3 +180,20 @@ Dockerfile text eol=lf
 4. تفعيل الخيار الإلزامي:
    ☑️ **Allow GitHub Actions to create and approve pull requests**.
 5. الضغط على **Save**.
+
+---
+
+### 6️⃣ مصفوفة الحالة والتسليم (Status & Sign-off)
+* **الحالة:** 🟢 مكتمل وموثق 100% (Completed & Verified).
+* **التاريخ:** 2026-09-19
+* **رقم الالتزام (Git Commit):** `8706fa9` (`fix(ci,docs): resolve CI clean tree drift, harden Dockerfile, and establish Plan 79 governance`)
+* **الملفات المعتمدة والمنفذة:**
+  - `.gitattributes` (توحيد نهايات الأسطر LF على مستوى المستودع).
+  - `.github/workflows/ci.yml` (إضافة concurrency auto-cancel، خطوة docs:check، وجدول الملخص في $GITHUB_STEP_SUMMARY).
+  - `.github/workflows/code-review.yml` (سير عمل مراجعة الكود الآلية بالذكاء الاصطناعي Alibaba OCR على الـ PRs).
+  - `tools/docs/transform-pipeline.ts` (دعم كتل الأكواد المزاحة، تطبيع LF، وضع الفحص الجاف dryRun، ومنع الانحراف).
+  - `tools/docs/verify-docs.ts` (ربط الفاحص بوضع dryRun لمنع الكتابة العشوائية في CI).
+  - `apps/docs/tests/docs-portal.spec.ts` (اختبار التماثل الصريح، والتحقق الجاف 100% دون تلويث شجرة العمل).
+  - `docker/Dockerfile` (ترقية pnpm 11.0.8، نسخ كافة حزم المونوريبو، وفرض --frozen-lockfile=true).
+  - `package.json` (إضافة سكريبتات docs:sync، docs:check، ci:simulate).
+  - `governance.lock.json` (تحديث القفل التشفيري للبنية التحتية وملفات الحوكمة).
