@@ -3,7 +3,7 @@
 
 > **تاريخ الاعتماد والمطابقة:** سبتمبر 2026  
 > **حالة المطابقة:** 🟢 **مطابقة تامة بنسبة 100% مع كافة تدفقات المنظومة الـ 126 وشيتات النظام القديم الـ 66**  
-> **محرك البيانات:** PostgreSQL 16 + Prisma ORM  
+> **محرك البيانات:** PostgreSQL 16 + Prisma 7.10.0 (Driver Adapter Engine: @prisma/adapter-pg + pg)  
 > **العملة المعتمدة:** الجنيه المصري (EGP - ج.م) حصراً في كافة الحسابات والفواتير والقيود  
 > **المرجع الوظيفي:** `f:\HR\docs\01-architecture\live-sheet-registry.md` & `full-sheet-field-dictionary.md`
 
@@ -26,6 +26,9 @@
    - كل صورة إيصال، فاتورة مورد، أو مستند يتم رفعها، يُحسب لها تجزئة `sha256Checksum` لمنع تكرار قيد نفس الفاتورة مرتين.
 7. **طابور الإشعارات المقيد بمعدل التيليجرام (Rate-Limited Notification Queue):**
    - تجنب حظر البوت عبر طابور مجدول مقسم حسب الأولوية (`CRITICAL_ALERT`, `RECEIPT`, `GENERAL_UPDATE`).
+8. **محرك البيانات والمولد الحديث (Prisma 7.10.0 Client Generator):**
+   - يعتمد المولد `provider = "prisma-client"` ومسار التوليد الموحد `src/generated/client`.
+   - مركزية إعدادات الاتصال عبر `packages/database/prisma.config.ts` بدلاً من خواص الـ schema القديمة.
 
 ---
 

@@ -1,6 +1,6 @@
 {
     "name": "alsaada-smart-bot",
-    "version": "2.0.0-alpha.84",
+    "version": "2.0.0-alpha.85",
     "private": true,
     "type": "module",
     "packageManager": "pnpm@12.4.2",

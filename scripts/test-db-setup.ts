@@ -102,7 +102,7 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
 
     // 2. Push schema to test database
     console.log('🚀 [TEST-DB] Synchronizing schema via prisma db push...');
-    execSync('pnpm --filter @alsaada/database exec prisma db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss', {
+    execSync('pnpm --filter @alsaada/database exec prisma db push --schema=prisma/schema.prisma --accept-data-loss', {
       env: {
         ...process.env,
         DATABASE_URL: testDbUrl,

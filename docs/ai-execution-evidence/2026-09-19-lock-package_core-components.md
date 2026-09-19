@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:core-components)
 
-- **تاريخ القفل:** 2026-09-19 (2026-09-19T16:55:46.334Z)
+- **تاريخ القفل:** 2026-09-19 (2026-09-19T19:21:32.851Z)
 - **معرف الكيان:** `package:core-components`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/core-components
@@ -96,7 +96,7 @@
 | `packages/core-components/tests/quantity-picker.spec.ts` | `60822eb8cb9f5f2975f47595c4d1db016cabba11d728b4d30a5f6979b1b920c4` |
 | `packages/core-components/tests/shift-accrual.spec.ts` | `3694b82def11e13b3bc7905c4cce0734d9d8f99b04e97d85fb28b3ea51696cb2` |
 | `packages/core-components/tests/source-picker.spec.ts` | `1a97ba3cef9064fcb91a6c36c3b21603cc105b375718f0c7d3fd13457c72afbd` |
-| `packages/core-components/tests/sovereign-auto-loader.spec.ts` | `242ff40752a33b07cd57a63daac2a82d7fef63b33b013ec9f902df3411e8e6a4` |
+| `packages/core-components/tests/sovereign-auto-loader.spec.ts` | `19f680bc8ab83f32ac5e46162ae07edae771daff013272c8fe4b02dacc1ff3aa` |
 | `packages/core-components/tests/telegram-formatters.spec.ts` | `7874f155b2d84ba699fd8b45499a76efb2e617173753641dff97ce0490f7e720` |
 | `packages/core-components/tests/topic-router.spec.ts` | `6ee21fe6fa6175f78643d084263eb8aa6de3fb8b3c085446cdece0fdaf6c4517` |
 | `packages/core-components/tests/wizard-session.spec.ts` | `e99a5f1eb57f55416e5a02079432899279d8f10d9950f3b6cb2490b1b30423b8` |

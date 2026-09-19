@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
 import { createSoftDeleteExtension, getSoftDeleteModels } from '../src/index.js';
 
@@ -171,5 +173,33 @@ describe('createSoftDeleteExtension', () => {
       })
     );
     expect(workerStore.find((w) => w.id === 'w1')?.isDeleted).toBe(true);
+  });
+
+  it('schema drift guard: guarantees every model in schema.prisma with isDeleted is registered in SOFT_DELETE_MODELS', () => {
+    const schemaPath = resolve(__dirname, '../prisma/schema.prisma');
+    const schemaContent = readFileSync(schemaPath, 'utf-8');
+
+    const modelRegex = /model\s+(\w+)\s*\{([\s\S]*?)\}/g;
+    const schemaModelsWithSoftDelete: string[] = [];
+    let match: RegExpExecArray | null;
+
+    while ((match = modelRegex.exec(schemaContent)) !== null) {
+      const modelName = match[1];
+      const modelBody = match[2];
+      if (modelName && modelBody && modelBody.includes('isDeleted')) {
+        schemaModelsWithSoftDelete.push(modelName);
+      }
+    }
+
+    const registeredModels = getSoftDeleteModels();
+
+    for (const model of schemaModelsWithSoftDelete) {
+      expect(
+        registeredModels.has(model),
+        `Schema model "${model}" contains isDeleted but is NOT registered in soft-delete-metadata.ts!`
+      ).toBe(true);
+    }
+
+    expect(schemaModelsWithSoftDelete.sort()).toEqual(['FinancialLedger', 'User', 'Worker']);
   });
 });

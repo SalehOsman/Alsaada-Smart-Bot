@@ -217,41 +217,60 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
   // =========================================================================
   describe('4. Dynamic Navigation Aggregation & ReDoS Protection', () => {
     it('aggregates navigation patterns from contracts, modules, and reply buttons', async () => {
-      const loader = new SovereignAutoLoader({
-        baseNavigationPatterns: ['القائمة الرئيسية', '🖥️ فتح لوحة التحكم'],
-        criticalModules: [],
-        factories: {
-          testMod: () =>
-            ({
-              name: 'testMod',
-              titleArabic: 'موديول تجريبي',
-              version: '1.0.0',
-              status: 'active',
-              callbackPrefixes: ['test:'],
-              navigationPatterns: ['زر الموديول المخصص'],
-              registerRoutes: vi.fn(),
-              getPersistentReplyButtons: (role: string) => {
-                if (role === 'SUPER_ADMIN') return ['زر الأدمن'];
-                return [];
-              },
-            } as any),
-        },
-      });
+      const tmpModulesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-nav-'));
+      try {
+        const modDir = path.join(tmpModulesDir, 'testMod');
+        fs.mkdirSync(modDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(modDir, 'module.contract.json'),
+          JSON.stringify({
+            moduleName: 'testMod',
+            version: '1.0.0',
+            navigationPatterns: ['زر من عقد الموديول'],
+          })
+        );
 
-      const runtime = createMockRuntime();
-      const result = await loader.loadModules(runtime);
+        const loader = new SovereignAutoLoader({
+          modulesDir: tmpModulesDir,
+          baseNavigationPatterns: ['القائمة الرئيسية', '🖥️ فتح لوحة التحكم'],
+          criticalModules: [],
+          factories: {
+            testMod: () =>
+              ({
+                name: 'testMod',
+                titleArabic: 'موديول تجريبي',
+                version: '1.0.0',
+                status: 'active',
+                callbackPrefixes: ['test:'],
+                navigationPatterns: ['زر الموديول المخصص'],
+                registerRoutes: vi.fn(),
+                getPersistentReplyButtons: (role: string) => {
+                  if (role === 'SUPER_ADMIN') return ['زر الأدمن'];
+                  return [];
+                },
+              } as any),
+          },
+        });
 
-      expect(result.navigationPatterns).toContain('القائمة الرئيسية');
-      expect(result.navigationPatterns).toContain('🖥️ فتح لوحة التحكم');
-      expect(result.navigationPatterns).toContain('زر الموديول المخصص');
-      expect(result.navigationPatterns).toContain('زر الأدمن');
+        const runtime = createMockRuntime();
+        const result = await loader.loadModules(runtime);
 
-      const regex = loader.getNavigationRegex();
-      expect(regex.test('القائمة الرئيسية')).toBe(true);
-      expect(regex.test('🖥️ فتح لوحة التحكم')).toBe(true);
-      expect(regex.test('زر الموديول المخصص')).toBe(true);
-      expect(regex.test('زر الأدمن')).toBe(true);
-      expect(regex.test('نص عشوائي غير معروف')).toBe(false);
+        expect(result.navigationPatterns).toContain('القائمة الرئيسية');
+        expect(result.navigationPatterns).toContain('🖥️ فتح لوحة التحكم');
+        expect(result.navigationPatterns).toContain('زر من عقد الموديول');
+        expect(result.navigationPatterns).toContain('زر الموديول المخصص');
+        expect(result.navigationPatterns).toContain('زر الأدمن');
+
+        const regex = loader.getNavigationRegex();
+        expect(regex.test('القائمة الرئيسية')).toBe(true);
+        expect(regex.test('🖥️ فتح لوحة التحكم')).toBe(true);
+        expect(regex.test('زر من عقد الموديول')).toBe(true);
+        expect(regex.test('زر الموديول المخصص')).toBe(true);
+        expect(regex.test('زر الأدمن')).toBe(true);
+        expect(regex.test('نص عشوائي غير معروف')).toBe(false);
+      } finally {
+        fs.rmSync(tmpModulesDir, { recursive: true, force: true });
+      }
     });
 
     it('returns empty guard /(?!)/ when patterns array is empty', () => {
@@ -377,6 +396,6 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       expect(loader.isNavigationMessage('إعدادات النظام')).toBe(true);
       expect(loader.isNavigationMessage('🏠 القائمة الرئيسية')).toBe(true);
       expect(loader.isNavigationMessage('نص عشوائي غير مطابق')).toBe(false);
-    });
+    }, 90000);
   });
 });

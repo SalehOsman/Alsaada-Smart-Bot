@@ -208,6 +208,7 @@ export class StudioProcessManager {
       const port = this.getPort();
       const dbDir = this.findDatabasePackageDir();
       const schemaPath = path.join(dbDir, 'prisma', 'schema.prisma');
+      const configPath = path.join(dbDir, 'prisma.config.ts');
 
       const args = [
         'prisma',
@@ -221,6 +222,10 @@ export class StudioProcessManager {
         '--hostname',
         '0.0.0.0',
       ];
+
+      if (fs.existsSync(configPath)) {
+        args.push('--config', configPath);
+      }
 
       const child = spawn(
         process.platform === 'win32' ? 'npx.cmd' : 'npx',

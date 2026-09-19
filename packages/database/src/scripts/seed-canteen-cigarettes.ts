@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../client.js';
 
 export const DEFAULT_CIGARETTES = [
   { code: 'CAN-CIG-01', name: 'كليوباترا بوكس أبيض', costPrice: 32, sellingPrice: 35 },

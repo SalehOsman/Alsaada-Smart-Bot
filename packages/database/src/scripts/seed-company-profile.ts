@@ -1,12 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../client.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
 try {
   process.loadEnvFile('.env');
 } catch {}
-
-const prisma = new PrismaClient();
 
 export async function seedCompanyProfile(): Promise<void> {
   console.log('================================================================');
