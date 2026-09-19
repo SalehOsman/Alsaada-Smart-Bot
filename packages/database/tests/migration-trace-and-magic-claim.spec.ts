@@ -1,8 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/client/index.js';
-
-const prisma = new PrismaClient();
+import { prisma, disconnectDatabase } from '../src/client.js';
 
 const canConnect = async () => {
   try {
@@ -22,7 +20,7 @@ type ColumnDefinitionRow = {
 
 describe('Audit Traceability, Hash Ledger & Dashboard Auth Claim Contract', () => {
   afterAll(async () => {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   });
 
   it('contains every trace and financial hash column required by the Prisma schema', async () => {

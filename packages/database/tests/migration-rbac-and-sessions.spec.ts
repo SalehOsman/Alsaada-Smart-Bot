@@ -1,8 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/client/index.js';
+import { prisma, disconnectDatabase } from '../src/client.js';
 
-const prisma = new PrismaClient();
 const canConnect = async () => {
   try {
     await prisma.$queryRawUnsafe('SELECT 1');
@@ -14,7 +13,7 @@ const canConnect = async () => {
 
 describe('Database RBAC, Sessions & Delegation Schema Contract', () => {
   afterAll(async () => {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   });
 
   it('verifies the existence of new migration tables in postgres', async () => {

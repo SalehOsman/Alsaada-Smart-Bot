@@ -1,4 +1,4 @@
-import { prisma } from '../index.js';
+import { prisma, disconnectDatabase } from '../client.js';
 
 async function main() {
   console.log('🔄 [REMEDIATION] Starting shift templates seeding and job remediation...');
@@ -89,5 +89,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   });

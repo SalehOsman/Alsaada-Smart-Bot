@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { Prisma } from '../src/generated/client/index.js';
-import { prisma } from '../src/client.js';
+import { prisma, disconnectDatabase } from '../src/client.js';
 
 const canConnect = async () => {
   try {
@@ -83,7 +83,7 @@ const getModel = (name: string) => models.find((m) => m.name === name);
 
 describe('Milestone 1 — Schema Contract & Model Verification', () => {
   afterAll(async () => {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   });
 
   it('verifies Worker model has additionalSalary and default contractType PERMANENT', () => {

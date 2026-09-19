@@ -1,10 +1,9 @@
-import { PrismaClient, BotNodeType, BotNodeStatus, DisabledBehavior } from '../generated/client/index.js';
+import { prisma, disconnectDatabase } from '../client.js';
+import { BotNodeType, BotNodeStatus, DisabledBehavior } from '../generated/client/index.js';
 
 try {
   process.loadEnvFile('.env');
 } catch {}
-
-const prisma = new PrismaClient();
 
 interface SeedItem {
   code: string;
@@ -741,7 +740,7 @@ export async function seedBotMenuCatalog(): Promise<void> {
     console.log('✅ [SNAPSHOT] Default baseline snapshot created successfully.');
   }
 
-  await prisma.$disconnect();
+  await disconnectDatabase();
 }
 
 if (process.argv[1]?.endsWith('seed-bot-menu-catalog.ts')) {
