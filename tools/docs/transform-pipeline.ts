@@ -748,6 +748,16 @@ sidebar:
 }
 
 function safeWriteFileSync(filePath: string, content: string, maxRetries = 5): void {
+  if (existsSync(filePath)) {
+    try {
+      const existing = readFileSync(filePath, 'utf8');
+      if (existing === content || existing.replace(/\r\n/g, '\n') === content.replace(/\r\n/g, '\n')) {
+        return;
+      }
+    } catch {
+      // proceed to write
+    }
+  }
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       writeFileSync(filePath, content, 'utf8');

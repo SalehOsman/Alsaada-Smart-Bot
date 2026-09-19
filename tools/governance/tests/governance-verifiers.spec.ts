@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, expect, test } from 'vitest';
 
@@ -785,16 +785,12 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
   });
 
   test('seals flow 01.1 cryptographic hash accurately in repo governance.lock.json', () => {
-    const root = process.cwd();
-    const flowDir = join(root, 'modules', 'workforce', 'src', 'flows', '01.1-worker-registration');
-    const lockPath = join(root, 'governance.lock.json');
-    if (existsSync(flowDir) && existsSync(lockPath)) {
-      const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
-      if (lock.lockedFlows?.['01.1']) {
-        const updated = lockFlowEntry(root, '01.1', flowDir);
-        expect(updated.lockedFlows?.['01.1']?.files.length).toBeGreaterThan(0);
-      }
-    }
+    const root = fixtureRoot('flow-seal-01.1');
+    writeMandatoryDocs(root);
+    const flowPath = scaffoldFlow('workforce', '01.1', 'worker-registration', 'تسجيل عامل جديد', root);
+    const flowDir = dirname(flowPath);
+    const updated = lockFlowEntry(root, '01.1', flowDir);
+    expect(updated.lockedFlows?.['01.1']?.files.length).toBeGreaterThan(0);
   });
 
   test('architecture verifier rejects local shadow FlowPlugin interface in flows.manifest.ts', () => {
