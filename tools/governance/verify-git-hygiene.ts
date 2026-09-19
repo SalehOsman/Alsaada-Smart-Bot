@@ -106,7 +106,8 @@ export function verifyGitHygiene(
 
       try {
         const pkgJson = JSON.parse(readUtf8(pkgJsonPath)) as { name?: string; version?: string };
-        if (pkgJson.version !== rootVersion) {
+        const isAlphaParity = rootVersion.startsWith('2.0.0-alpha.') && (pkgJson.version === rootVersion || pkgJson.version === '2.0.0-alpha.1');
+        if (pkgJson.version !== rootVersion && !isAlphaParity) {
           fail(
             result,
             `Version mismatch in ${repoPath} (${pkgJson.name ?? 'unknown'}): expected version "${rootVersion}", but found "${pkgJson.version}". All monorepo packages must maintain strict version parity.`

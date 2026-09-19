@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T17:56:43.285Z",
+  "generatedAt": "2026-09-19T18:36:13.548Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -48,7 +48,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "91ebc06acee15635d8a1af345ef1e21199d8b3e63cb7a15745035b46556217de"
+      "sha256": "71b0eeb6860b9fa67bd3e2574081683b601604b19e7989cad6558f64ccf53f2f"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
@@ -68,11 +68,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "0b9cd5334b4311bb561d6f1cb6a565fa7d83e52c3509cd4d39968740a607bb8f"
+      "sha256": "d474c73671b913a72649812d65891bf725835b458ee727efe2f3b94e9f0a4cb4"
     },
     {
       "path": "package.json",
-      "sha256": "ce233a737c980fd388b88712bdac47acd9e368948c61fc853166326501b35554"
+      "sha256": "a02242c8d5fee1ca749ef994444cd85e86cf2e698b78a71bd7453a55b845c707"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -200,11 +200,11 @@
     },
     {
       "path": "tools/governance/verify-git-hygiene.ts",
-      "sha256": "4e15276232b9497baf286ea35eed0242998154a684258d364bf39114371cc446"
+      "sha256": "7f551435c99f9eb0e75185c4e715b2bfbf6e47cbd8339538501bfabe61089e37"
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
-      "sha256": "ce453ff60b87ebbd579f0fca6e8caa50d6e46c58f18563b9c8d08d99df9229fd"
+      "sha256": "b6df424e02630985161d95d3aafc4bc4abd5f92f975114f1d9d2ed54c4023923"
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
@@ -233,6 +233,10 @@
     {
       "path": "tools/governance/verify-rbac-matrix.ts",
       "sha256": "2ad7ecfa43c2bca64b0482e52ad2cb5cd161d1deab07d097e61fd187630e85cd"
+    },
+    {
+      "path": "tools/governance/verify-release-sync.ts",
+      "sha256": "32a0d165e9dfa2a0cf9c8e3c4afd55fac1a5730abf0d4a561777eab19efc99fb"
     },
     {
       "path": "tools/governance/verify-secret-leakage.ts",
@@ -561,7 +565,7 @@
   },
   "lockedDocker": {
     "directory": "docker",
-    "lockedAt": "2026-09-19T17:56:43.285Z",
+    "lockedAt": "2026-09-19T18:36:13.548Z",
     "files": [
       {
         "path": ".dockerignore",
@@ -2363,7 +2367,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-19T16:55:46.408Z",
+      "lockedAt": "2026-09-19T18:36:13.548Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2395,7 +2399,7 @@
         },
         {
           "path": "packages/telemetry/src/index.ts",
-          "sha256": "65ac687b0d0cff5ccb31624ff5e2dac967bf9721dd3c9a41d972cf55cf548beb"
+          "sha256": "1e0682e1a9591a55a3f54e6f8c5b196a22678718a15001b068cc9909c4aa2239"
         },
         {
           "path": "packages/telemetry/src/logger.ts",
@@ -2408,6 +2412,10 @@
         {
           "path": "packages/telemetry/src/types.ts",
           "sha256": "b73556b2448f975d8abcaa8218bf2fb3816ce8cd5bcf5d91459618beebeb419e"
+        },
+        {
+          "path": "packages/telemetry/src/version.ts",
+          "sha256": "46b346175618b3e45cc73150368924861b4114ed81ff1c23f1a92aba7f3d8ca6"
         },
         {
           "path": "packages/telemetry/tests/adapters.spec.ts",
@@ -3266,7 +3274,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-19T17:56:43.285Z",
+      "lockedAt": "2026-09-19T18:36:13.548Z",
       "files": [
         {
           "path": ".dockerignore",

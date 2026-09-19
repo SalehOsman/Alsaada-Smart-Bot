@@ -90,3 +90,15 @@ export {
   formatHexToUuid,
   isValidTraceId,
 } from './adapters/next.js';
+
+// Living Version & Runtime Telemetry Provider
+export type { ReleasePhase, SystemVersionInfo } from './version.js';
+export {
+  COMPLETED_PLANS_COUNT,
+  PLATFORM_BUILD_TIME,
+  PLATFORM_PHASE,
+  PLATFORM_VERSION,
+  formatVersionBanner,
+  getSystemVersion,
+} from './version.js';
+
