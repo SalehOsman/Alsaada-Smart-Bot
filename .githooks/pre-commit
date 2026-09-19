@@ -1,5 +1,23 @@
 #!/usr/bin/env sh
 # Al-Saada Smart Bot Enterprise — Pre-Commit Governance Guard
+
+# ==============================================================================
+# 0. صمام الحماية السيادي: حظر الـ Commit المباشر على main (Main Branch Immunity)
+# ==============================================================================
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+if [ "$CURRENT_BRANCH" = "main" ]; then
+  MERGE_HEAD_FILE=$(git rev-parse --git-path MERGE_HEAD 2>/dev/null)
+  if [ -z "$MERGE_HEAD_FILE" ] || [ ! -f "$MERGE_HEAD_FILE" ]; then
+    echo ""
+    echo "🛑 [GOVERNANCE ERROR] يُحظر تماماً ارتكاب أي Commit مباشر على فرع 'main'."
+    echo "📌 منهجية العمل تلزم بإنشاء فرع منفصل لكل مهمة (مثال: git checkout -b feat/<name>)."
+    echo "🔒 لا يُدمج الفرع إلى main إلا بعد الاختبار الكامل وبإذن صريح ومطابق حرفياً: «ادمج الفرع»."
+    echo ""
+    exit 1
+  fi
+fi
+
 echo "🔍 [PRE-COMMIT] Running strict TypeScript, contracts, and architecture checks..."
 
 pnpm typecheck || {

@@ -52,4 +52,56 @@ describe('⚡ pre-commit-test-guard smart test runner', () => {
     const result = parsePorcelainStatus(raw, repoRoot);
     expect(result).toContain('apps/bot-server/src/handlers/start.handler.ts');
   });
+
+  it('5. verifies .githooks/pre-commit contains strict main branch immunity guard', async () => {
+    const { readFileSync, existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const hookPath = join(repoRoot, '.githooks/pre-commit');
+    expect(existsSync(hookPath)).toBe(true);
+
+    const content = readFileSync(hookPath, 'utf8');
+    expect(content).toContain('CURRENT_BRANCH=');
+    expect(content).toContain('[ "$CURRENT_BRANCH" = "main" ]');
+    expect(content).toContain('git rev-parse --git-path MERGE_HEAD');
+    expect(content).toContain('GOVERNANCE ERROR');
+    expect(content).toContain('ادمج الفرع');
+    expect(content).toContain('exit 1');
+  });
+
+  it('6. verifies .githooks/pre-commit.cmd contains Windows branch immunity guard', async () => {
+    const { readFileSync, existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const hookPath = join(repoRoot, '.githooks/pre-commit.cmd');
+    expect(existsSync(hookPath)).toBe(true);
+
+    const content = readFileSync(hookPath, 'utf8');
+    expect(content).toContain('CURRENT_BRANCH=');
+    expect(content).toContain('if "%CURRENT_BRANCH%"=="main"');
+    expect(content).toContain('git rev-parse --git-path MERGE_HEAD');
+    expect(content).toContain('GOVERNANCE ERROR');
+    expect(content).toContain('ادمج الفرع');
+    expect(content).toContain('exit /b 1');
+  });
+
+  it('7. verifies branch guard decision logic: rejects direct main, permits merge and feature branches', () => {
+    function shouldRejectCommit(branch: string, hasMergeHead: boolean): boolean {
+      if (branch === 'main') {
+        return !hasMergeHead;
+      }
+      return false;
+    }
+
+    // Direct commit on main without merge -> REJECTED
+    expect(shouldRejectCommit('main', false)).toBe(true);
+
+    // Merge commit on main with MERGE_HEAD present -> PERMITTED
+    expect(shouldRejectCommit('main', true)).toBe(false);
+
+    // Feature branches -> PERMITTED
+    expect(shouldRejectCommit('feat/strict-branch-governance', false)).toBe(false);
+    expect(shouldRejectCommit('feat/worker-advances', false)).toBe(false);
+    expect(shouldRejectCommit('fix/canteen-stock-leak', false)).toBe(false);
+    expect(shouldRejectCommit('plan/81-git-branching', false)).toBe(false);
+    expect(shouldRejectCommit('chore/docs-update', false)).toBe(false);
+  });
 });
