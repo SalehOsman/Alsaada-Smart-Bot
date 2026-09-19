@@ -7,7 +7,7 @@
 *مستوحى من أفضل ممارسات معمارية Tempot v11 مع توجيه متخصص لقطاعات المقاولات والمشاريع والتوريدات*
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9_Strict-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-22.12+-green?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-24+-green?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![grammY](https://img.shields.io/badge/grammY-1.41+-blueviolet?logo=telegram&logoColor=white)](https://grammy.dev/)
 [![Architecture](https://img.shields.io/badge/Architecture-Modular_Monolith-success)](#)
 [![Database](https://img.shields.io/badge/Storage-Hybrid_(DB_%2B_Google_Sheets)-34A853?logo=sqlite&logoColor=white)](#)

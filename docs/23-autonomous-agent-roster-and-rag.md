@@ -149,7 +149,7 @@
   1. صيانة وتطوير الحزم المشتركة في `packages/*` وضمان توافقها التام مع كافة الموديولات.
   2. ضمان سرعة الاستجابة الميدانية للبوت (< 15ms) عبر منع أي استدعاء شبكي تزامني لشيتات جوجل داخل معالجات الرسائل، وترحيلها لطابور `TransactionalOutboxQueue`.
   3. إدارة محرك التوليد الآلي لشيتات جوجل (`packages/sheets-provisioner`).
-  4. ضمان سلامة حاويات Docker Compose (PostgreSQL 16+, Redis 7+, Node 22+) وسرعة بناء المشروع (`pnpm build`).
+  4. ضمان سلامة حاويات Docker Compose (PostgreSQL 16+, Redis 7+, Node 24+) وسرعة بناء المشروع (`pnpm build`).
 * **المستندات المرجعية الحاكمة (SSOT):**
   - `docs/01-architecture-and-tempot-synergy.md` — المعمارية العامة والاستفادة من Tempot v11.
   - `docs/04-google-sheets-auto-provisioner.md` — محرك التوليد الآلي لشيتات جوجل.

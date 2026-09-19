@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-19 (2026-09-19T05:52:30.024Z)
+- **تاريخ القفل:** 2026-09-19 (2026-09-19T16:55:46.348Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
@@ -12,7 +12,7 @@
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/database/package.json` | `d43c4364b646bb0c86ef2c2e968a95cd521d38249173af50f50de28498887c71` |
+| `packages/database/package.json` | `e16cf04782e15faf721c4025c438b9365fa4585f302276f1750cb6d6368deef7` |
 | `packages/database/prisma/migrations/20260911000000_init_enterprise_hash_ledger/migration.sql` | `30ca6a54b21f14cc6233e8e667b69c437522f77453ebe2cd9e4b45e9c7cecaee` |
 | `packages/database/prisma/migrations/20260912090000_add_trace_incidents_and_magic_claim/migration.sql` | `dc6fcabbc939db2b4f9e3a55a359e975da821101425cf50fbc749b990a232118` |
 | `packages/database/prisma/migrations/20260913010000_align_financial_ledger_hash_defaults/migration.sql` | `4871d26a537ecee548e54aa2ce493ed386ea84e42e7e48830f20ff4b5fe243b7` |
