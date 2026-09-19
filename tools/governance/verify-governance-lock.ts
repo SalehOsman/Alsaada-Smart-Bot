@@ -290,6 +290,14 @@ export function buildGovernanceLock(
       }));
       lockedEntities['infra:docker'].lockedAt = generatedAt;
     }
+    if (lockedEntities['package:telemetry']) {
+      const telemetryFiles = listEntityFiles(root, 'packages/telemetry', 'package');
+      lockedEntities['package:telemetry'].files = telemetryFiles.map((file) => ({
+        path: file,
+        sha256: sha256NormalizedFile(join(root, file)),
+      }));
+      lockedEntities['package:telemetry'].lockedAt = generatedAt;
+    }
     lock.lockedEntities = lockedEntities;
   }
 

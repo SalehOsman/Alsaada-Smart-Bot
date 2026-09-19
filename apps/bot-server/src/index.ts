@@ -11,10 +11,11 @@ import { config, validateStartupEnv } from './config/env.js';
 import { systemDataService } from './services/system-data.service.js';
 import { sessionMonitorService } from './services/session-monitor.service.js';
 import { initializeRbacSyncListener } from './services/rbac-sync-listener.js';
+import { formatVersionBanner } from '@alsaada/telemetry';
 
 async function bootstrap() {
   console.log('================================================================');
-  console.log('🚀 Al-Saada Enterprise Engine v2.0 Starting...');
+  console.log(formatVersionBanner());
   console.log(`🌐 Node Environment: ${config.nodeEnv}`);
   console.log(`🔌 HTTP Port: ${config.port}`);
   console.log('================================================================');
@@ -22,10 +23,11 @@ async function bootstrap() {
   // 1. Strict Fail-Fast Environment Validation
   try {
     validateStartupEnv(config);
-  } catch (error: any) {
-    console.error(error.message || error);
+  } catch (error: unknown) {
+    console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
+
 
   // 2. Connect to PostgreSQL
   try {
