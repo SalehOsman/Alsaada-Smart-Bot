@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T07:23:25.973Z",
+  "generatedAt": "2026-09-19T07:33:02.128Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -48,19 +48,19 @@
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
-      "sha256": "794afbe78666a3e115e694f86cf1b2d901db41ddcd29151d1f21c1fa7e0fee3d"
+      "sha256": "007430e4c797e004ea3dc1ee0a036d9364d93c648a6923f4186e550cbbfc186b"
     },
     {
       "path": "docs/15-universal-module-and-flow-standard.md",
-      "sha256": "257502508402797fcc70e727459d87f1037a3d1a2f39c0abfff4a5e8e67f1eb2"
+      "sha256": "e86a6882d77628baf946459d6f4d1e27ca0bef1cfe45086feab478549d840501"
     },
     {
       "path": "docs/21-mandatory-module-architecture-and-gates.md",
-      "sha256": "138e696805f75109deba6339aad4fc36c7a6d78a010ed1cd756d4e50afcd02eb"
+      "sha256": "c8276c3d3c4244c32f2f008ebe3900e4cc358dd328cd51fc77f97b571f77711a"
     },
     {
       "path": "docs/ai-execution-evidence/README.md",
-      "sha256": "7e8dac3c3dbd6a413e24298a68685be0d005e4db8b96b660b9ae1ad9c5f2d6a3"
+      "sha256": "0b585a73102030830b6103fc8617b338e591f6f8f4e043fbff623a0d1446fc31"
     },
     {
       "path": "GEMINI.md",
@@ -68,7 +68,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "b20d72c2ce71b65448cda1764bbab512c084a5463680973c6ec212d0a969f29d"
+      "sha256": "94d99e97a86961a0356f7cf8fd299ffd601076f46d2f9db2f2b2c9766f4b6978"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -80,7 +80,7 @@
     },
     {
       "path": "tools/governance/common.ts",
-      "sha256": "fe203eee8aff11c4880463111464a779ce8425df468cc1e63ba9aa26d7ff78c5"
+      "sha256": "f721b0b42082cd53d6839a55fc1a34caeddd151dc4114ce96259a9a32f8765f7"
     },
     {
       "path": "tools/governance/pre-commit-test-guard.ts",
@@ -100,7 +100,7 @@
     },
     {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
-      "sha256": "923c23e8ac3a4eedef78813ce729f775644ea624e4e44e45f5f6bbfc680382c7"
+      "sha256": "d5dc23c50b19abbd944aa34d67bf2049796c98a5dbd592faf95f9d0b983f06f9"
     },
     {
       "path": "tools/governance/tests/legacy-parity-verifier.spec.ts",
@@ -156,7 +156,7 @@
     },
     {
       "path": "tools/governance/verify-ai-compliance.ts",
-      "sha256": "b056308a24e3c2e949142db2cc4256b5e5ae1e74897f8bd43e798de7282e96cf"
+      "sha256": "aad92156b1eecbdb0b06a1c358c938b1db866ab5c632922138f4df877b4fde03"
     },
     {
       "path": "tools/governance/verify-architecture.ts",
@@ -172,11 +172,11 @@
     },
     {
       "path": "tools/governance/verify-docs-audit.ts",
-      "sha256": "436b44d8a95c300f6f256e48b8bd58a9738852cec612cf541d2a5bf168d842f2"
+      "sha256": "89e79e05070a33f783d5892ce49071694722393aa78f800e21029cfe327bb177"
     },
     {
       "path": "tools/governance/verify-docs-parity.ts",
-      "sha256": "0e949d4daa25f5b44ce117d6c129c37b2862da64455c4f80baae3c4b9881c9af"
+      "sha256": "dc5879b8733f25e033b1c2aac5eb476264015eb7753b5c622cbf30daec8708e7"
     },
     {
       "path": "tools/governance/verify-field-masking.ts",
@@ -188,11 +188,11 @@
     },
     {
       "path": "tools/governance/verify-flow-contracts.ts",
-      "sha256": "3f4e85d1caca7501bcb678f59102a1c0afd2aead3971fe67b75ef8983be1f62f"
+      "sha256": "0c0ee1d30dd2ed4e20c190087015a6928437fdd419b0486dd1ed16b04f2c29a1"
     },
     {
       "path": "tools/governance/verify-flow-fast.ts",
-      "sha256": "47985eff3732520bc6a19cb8074ce5091000e6dbdb810cb062cd1be4e9fad5c7"
+      "sha256": "f5e4c08c19d76ae250ff596d5673c713fd53a776d2ac206d6385d6ce22f17315"
     },
     {
       "path": "tools/governance/verify-git-hygiene.ts",
@@ -200,11 +200,11 @@
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
-      "sha256": "fcf279299b3db9eef004a7534347ebe8dc70013ce4253ac010984acb1df92713"
+      "sha256": "8b74497f3afb0c1105c9af9223de80bf0c02eed0eb811ae6df872636f8dd4dd5"
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
-      "sha256": "08cc874f57fc9353d174cd721bebd259a1df5cd2d907a40219a13a4354b69bc5"
+      "sha256": "0bc869959f1ba0c9aaae320231a484bf25ce46c3eaff2b56ac8f6db6de4cd3cf"
     },
     {
       "path": "tools/governance/verify-latency-anti-patterns.ts",
@@ -216,7 +216,7 @@
     },
     {
       "path": "tools/governance/verify-migration-registry.ts",
-      "sha256": "efa3633d49939030af70906c02a43f6ba16713645f21390dab66e273e10bc72b"
+      "sha256": "97e59e9e224181936da6bc82b07885c563877d02302d39786e51488a8abfd21c"
     },
     {
       "path": "tools/governance/verify-observability-contract.ts",
@@ -252,7 +252,7 @@
     },
     {
       "path": "tools/scaffold/scaffold-flow.ts",
-      "sha256": "1eef6bb7330a951012642333a43ee38b53dcdc6c8a2ccf316302f793dcf7360a"
+      "sha256": "c63ccb0bd394ef795db136243a10e0a94ba94b3b09d83b672c504b73b4a54c13"
     },
     {
       "path": "tools/scaffold/scaffold-module.ts",

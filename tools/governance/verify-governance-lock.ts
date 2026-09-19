@@ -190,6 +190,9 @@ export function fileHashMatches(path: string, expectedHash: string): boolean {
     const actualHash = createHash('sha256').update(raw).digest('hex');
     if (actualHash === expectedHash) return true;
 
+    const normalizedHash = sha256NormalizedFile(path);
+    if (normalizedHash === expectedHash) return true;
+
     const text = raw.toString('utf8');
     const lfHash = createHash('sha256').update(Buffer.from(text.replace(/\r\n/g, '\n'), 'utf8')).digest('hex');
     if (lfHash === expectedHash) return true;
@@ -211,7 +214,7 @@ export function hashDirectoryFiles(dir: string, root = process.cwd()): Governanc
 
   return files.map((file) => ({
     path: file,
-    sha256: sha256File(join(root, file)),
+    sha256: sha256NormalizedFile(join(root, file)),
   }));
 }
 
@@ -254,7 +257,7 @@ export function buildGovernanceLock(
       files: [...PROTECTED_GOVERNANCE_FILES],
       directories: [...PROTECTED_GOVERNANCE_DIRECTORIES],
     },
-    files: protectedFiles.map((file) => ({ path: file, sha256: sha256File(join(root, file)) })),
+    files: protectedFiles.map((file) => ({ path: file, sha256: sha256NormalizedFile(join(root, file)) })),
   };
 
   if (lockedFlows && Object.keys(lockedFlows).length > 0) {
