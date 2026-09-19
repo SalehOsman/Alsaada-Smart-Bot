@@ -20,7 +20,7 @@
 
 - **نظام التشغيل:** Windows (x64)
 - **إصدار Node.js:** v24.11.1
-- **مدير الحزم:** pnpm v11.0.8
+- **مدير الحزم:** pnpm v12.4.2
 - **TypeScript:** v5.9.3
 - **Vitest:** v3.0.8
 - **Git Commit الأساس (Base Commit):** `27ae25e` (على فرع main)

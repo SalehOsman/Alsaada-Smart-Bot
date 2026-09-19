@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T17:00:33.217Z",
+  "generatedAt": "2026-09-19T17:56:43.285Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -32,15 +32,15 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "abf50107b112a0531de194aea763e63c68dccf80921fff78ff4a7c9c0fd64286"
+      "sha256": "8b965bc4a86c0e636dd4d53d675c1f2d698ffe0548e9b779f2ccc8712b3998de"
     },
     {
       "path": ".github/workflows/code-review.yml",
-      "sha256": "94d2acaef5fc765be8c181baccea448b3b35844be8c1b904665e6cf9f0680c7c"
+      "sha256": "b33cc64d670351ff73538ca97369f0dc87b9f47da64be85515a2f59002504cb4"
     },
     {
       "path": ".github/workflows/release.yml",
-      "sha256": "8d746639d21163445f71b4a46c88e693e94c304ce69b20e92f40786a53ab076c"
+      "sha256": "67323acc73aa2d057c4f0af67adfdfdecdd1834257ca63b1f77858f4b6c81ca9"
     },
     {
       "path": ".gitignore",
@@ -72,11 +72,11 @@
     },
     {
       "path": "package.json",
-      "sha256": "6194e191b94de55897b363eff59bd5dee6986ec3fc7a2067b77297fc310cee27"
+      "sha256": "ce233a737c980fd388b88712bdac47acd9e368948c61fc853166326501b35554"
     },
     {
       "path": "pnpm-workspace.yaml",
-      "sha256": "083c6211ce8728804414afe58266cfbbf0f2fcb17792f2ca4ca4c2dd6de245a5"
+      "sha256": "91c7f69b61d3935eb84eff2b959c06efe4e99dd2d4e21d40bea102d108c2eb73"
     },
     {
       "path": "tools/governance/agent-dispatcher.ts",
@@ -204,7 +204,7 @@
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
-      "sha256": "8b74497f3afb0c1105c9af9223de80bf0c02eed0eb811ae6df872636f8dd4dd5"
+      "sha256": "ce453ff60b87ebbd579f0fca6e8caa50d6e46c58f18563b9c8d08d99df9229fd"
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
@@ -561,7 +561,7 @@
   },
   "lockedDocker": {
     "directory": "docker",
-    "lockedAt": "2026-09-19T16:57:21.847Z",
+    "lockedAt": "2026-09-19T17:56:43.285Z",
     "files": [
       {
         "path": ".dockerignore",
@@ -569,19 +569,19 @@
       },
       {
         "path": "docker-compose.yml",
-        "sha256": "b96468c5159dc5a4401e3af96f96e028dffb0c082ba844a2e80bfe107eff6698"
+        "sha256": "88633948450480ced0616039901a250d9c1ddc5d2aad96c7efe495118a833718"
       },
       {
         "path": "docker/Dockerfile",
-        "sha256": "472fa9fcd16136487a0abd0e2e554b5187e1ebad75726fcec4a89d400454e4b4"
+        "sha256": "82326a040f1326943b286a49ee989e9f847b900ff848b2aa4de00cf55b866b63"
       },
       {
         "path": "docker/Dockerfile.dashboard",
-        "sha256": "5d96133627347855e62eedea611a5a04f28a71338e3d993666b9fd7a38f80503"
+        "sha256": "328d47cd399cd21aac6b3367767aece6464914929e651d370ea2863ca1de7280"
       },
       {
         "path": "docker/Dockerfile.docs",
-        "sha256": "0a832ce3e1307b306262a6748373ea8154fe207ccd96ec5c1c488ecd2ff37310"
+        "sha256": "fb31a40ff0a75248a4648d3a4291e246722754a600066841c740657b7a0f00db"
       },
       {
         "path": "docker/nginx-docs.conf",
@@ -3266,7 +3266,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-19T16:55:46.303Z",
+      "lockedAt": "2026-09-19T17:56:43.285Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3278,15 +3278,15 @@
         },
         {
           "path": "docker/Dockerfile",
-          "sha256": "472fa9fcd16136487a0abd0e2e554b5187e1ebad75726fcec4a89d400454e4b4"
+          "sha256": "82326a040f1326943b286a49ee989e9f847b900ff848b2aa4de00cf55b866b63"
         },
         {
           "path": "docker/Dockerfile.dashboard",
-          "sha256": "5d96133627347855e62eedea611a5a04f28a71338e3d993666b9fd7a38f80503"
+          "sha256": "328d47cd399cd21aac6b3367767aece6464914929e651d370ea2863ca1de7280"
         },
         {
           "path": "docker/Dockerfile.docs",
-          "sha256": "0a832ce3e1307b306262a6748373ea8154fe207ccd96ec5c1c488ecd2ff37310"
+          "sha256": "fb31a40ff0a75248a4648d3a4291e246722754a600066841c740657b7a0f00db"
         },
         {
           "path": "docker/nginx-docs.conf",
