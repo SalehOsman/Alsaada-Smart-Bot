@@ -1,0 +1,23 @@
+title = "Al-Saada Smart Bot Enterprise Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for testing mocks, test fixtures, environment templates, and governance locks"
+paths = [
+  '''^\.env\.example$''',
+  '''(^|/)tests/''',
+  '''(^|/)__tests__/''',
+  '''\.spec\.(ts|js|tsx|jsx)$''',
+  '''\.test\.(ts|js|tsx|jsx)$''',
+  '''governance\.lock\.json''',
+  '''pnpm-lock\.yaml''',
+  '''dist/''',
+  '''\.next/''',
+  '''\.agents/'''
+]
+regexes = [
+  '''0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef''',
+  '''test-secret-key-123456'''
+]

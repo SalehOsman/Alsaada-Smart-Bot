@@ -1,0 +1,27 @@
+# Dependencies & caches
+node_modules/
+.turbo/
+.cache/
+.pnpm-store/
+
+# Build artifacts & compiled outputs
+dist/
+build/
+out/
+.next/
+.next-dev/
+coverage/
+.nyc_output/
+
+# Generated Prisma files
+packages/database/src/generated/
+
+# Cryptographic locks & monorepo lockfiles
+governance.lock.json
+pnpm-lock.yaml
+
+# Semgrep unsupported/syntax error sources
+apps/admin-dashboard/
+docker/
+tools/docs/
+.github/

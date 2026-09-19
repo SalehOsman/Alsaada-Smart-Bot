@@ -84,3 +84,14 @@ export function buildPersistentReplyKeyboard(ctx: MyContext): Keyboard {
 
   return keyboard.resized().persistent().placeholder('اختر إجراءً من القائمة بالأسفل...');
 }
+
+/**
+ * 🧹 عزل لوحة المفاتيح الدائمة أثناء المعالجات المتسلسلة (ReplyKeyboardRemove)
+ * يعزل لوحة المفاتيح السفلية مؤقتاً لضمان عدم تشتيت المستخدم أو تداخل حالات التنقل
+ */
+export function buildRemoveReplyKeyboard(): { remove_keyboard: true } {
+  return { remove_keyboard: true };
+}
+
+export const REMOVE_REPLY_KEYBOARD = { remove_keyboard: true } as const;
+

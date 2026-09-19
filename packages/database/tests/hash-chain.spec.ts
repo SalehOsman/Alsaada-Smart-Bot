@@ -13,14 +13,19 @@ describe('Cryptographic Hash-Chain Ledger Engine', () => {
     it('computes exact SHA-256 recordHash matching canonical specification', () => {
       const payload = {
         previousHash: GENESIS_HASH,
-        model: 'FinancialLedger',
+        voucherNumber: '#ADV-2026-0001',
+        transactionType: 'ADVANCE_CASH',
         amount: 5000,
-        actorId: '123456789',
+        currency: 'EGP',
+        sourceAccount: 'MAIN_TREASURY',
+        destinationAccount: 'WORKER_001',
+        beneficiaryId: 'w-1',
+        actorTelegramId: '123456789',
         timestamp: '2026-09-11T10:00:00.000Z',
       };
 
       const hash = computeRecordHash(payload);
-      const expectedCanonicalString = `${GENESIS_HASH}:FinancialLedger:5000.00:123456789:2026-09-11T10:00:00.000Z`;
+      const expectedCanonicalString = `${GENESIS_HASH}:#ADV-2026-0001:ADVANCE_CASH:5000.00:EGP:MAIN_TREASURY:WORKER_001:w-1:123456789:2026-09-11T10:00:00.000Z`;
       const expectedHash = crypto.createHash('sha256').update(expectedCanonicalString).digest('hex');
 
       expect(hash).toBe(expectedHash);

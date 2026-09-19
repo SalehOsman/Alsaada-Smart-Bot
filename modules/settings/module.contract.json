@@ -2,7 +2,19 @@
   "moduleName": "settings",
   "displayName": "قطاع الإعدادات السيادية والإدارة العامة",
   "version": "1.0.0",
+  "critical": true,
   "owner": "Executive & General Administration",
+  "requiredServices": [
+    "prisma",
+    "redis",
+    "screenFlow"
+  ],
+  "navigationPatterns": [
+    "⚙️ إعدادات النظام",
+    "إعدادات النظام",
+    "👤 ملفي الشخصي",
+    "ملفي (الشخصي|وإعداداتي)"
+  ],
   "flows": [
     "00.1-corporate-profile",
     "00.2-sites-hub",

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { getApmTelemetryData } from '@/lib/data-fetchers';
 import { getServerPreferences } from '@/lib/formatters';
 import TelemetryClient from './telemetry-client';
+import TelemetryLoading from './loading';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,13 +14,15 @@ export default async function TelemetryPage() {
 
   return (
     <div className="space-y-6 text-slate-900 dark:text-slate-100 dark:bg-slate-950/20 border-transparent dark:border-transparent">
-      <TelemetryClient
-        initialData={telemetry}
-        userPreferences={{
-          numberFormat,
-          timezone,
-        }}
-      />
+      <Suspense fallback={<TelemetryLoading />}>
+        <TelemetryClient
+          initialData={telemetry}
+          userPreferences={{
+            numberFormat,
+            timezone,
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

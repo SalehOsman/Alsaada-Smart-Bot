@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -28,7 +30,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --frozen-lockfile=true
 
       - name: Generate Prisma Client
         run: pnpm --filter @alsaada/database db:generate
@@ -38,6 +40,14 @@ jobs:
 
       - name: Run Automated Test Suites
         run: pnpm test
+
+      - name: Install Security Scanners (Gitleaks & Semgrep)
+        run: |
+          GITLEAKS_VERSION="8.24.0"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+          python3 -m pip install --break-system-packages semgrep || pipx install semgrep || python3 -m pip install semgrep
+          semgrep --version
 
       - name: Verify Git Hygiene & Version Parity
         run: pnpm git-hygiene:verify

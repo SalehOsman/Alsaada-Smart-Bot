@@ -1,5 +1,4 @@
 ---
-"alsaada-smart-bot": patch
 "@alsaada/bot-server": patch
 "@alsaada/admin-dashboard": patch
 "@alsaada/rbac": patch

@@ -51,7 +51,7 @@ export function registerWorkforceRoutes(
 
   const editRepo = new WorkerEditRepository(prisma);
   const editService = new WorkerEditService(editRepo, encryptionKey);
-  const editHandler = new WorkerEditHandler(editService, editRepo);
+  const editHandler = new WorkerEditHandler(editService, editRepo, redis);
 
   const selfEditRepo = new WorkerSelfEditRepository(prisma);
   const selfEditService = new WorkerSelfEditService(selfEditRepo, encryptionKey);

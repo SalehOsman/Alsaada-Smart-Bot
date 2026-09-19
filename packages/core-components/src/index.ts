@@ -54,3 +54,6 @@ export * from './worker-commitment/index.js';
 // Enterprise Bot Dynamic Module & Flow Control Center (Plan-71 / NEW-84)
 export * from './bot-catalog/index.js';
 
+// Sovereign Module Bus & Zero-Touch Auto-Loader
+export * from './module-bus/index.js';
+

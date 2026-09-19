@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma, decryptField, encryptField } from '@alsaada/database';
+import { prisma, decryptField, encryptField, createBlindIndex } from '@alsaada/database';
+import { normalizeDigits } from '@alsaada/regional-engine';
 import { getCurrentUser } from '@/lib/auth';
 import { getNormalizedEncryptionKey } from '@/lib/data-fetchers';
 import { projectSafeWorkerFields, type CanonicalRole } from '@alsaada/rbac';
@@ -25,9 +26,11 @@ export async function GET(
     return NextResponse.json({ error: 'العامل غير موجود أو تم حذفه' }, { status: 404 });
   }
 
-  // If FIELD_ADMIN, ensure worker belongs to their assigned site
-  if (user.role === 'FIELD_ADMIN' && user.assignedSiteId && worker.siteId !== user.assignedSiteId) {
-    return NextResponse.json({ error: 'غير مصرح لك بالوصول لبيانات عمال هذا الموقع' }, { status: 403 });
+  // Strict BOLA/IDOR Gate: If FIELD_ADMIN, ensure worker belongs to their assigned site
+  if (user.role === 'FIELD_ADMIN') {
+    if (!user.assignedSiteId || worker.siteId !== user.assignedSiteId) {
+      return NextResponse.json({ error: 'غير مصرح لك بالوصول لبيانات عمال هذا الموقع' }, { status: 403 });
+    }
   }
 
   const key = getNormalizedEncryptionKey();
@@ -95,11 +98,16 @@ export async function PUT(
     return NextResponse.json({ error: 'العامل غير موجود' }, { status: 404 });
   }
 
-  if (user.role === 'FIELD_ADMIN' && user.assignedSiteId && existing.siteId !== user.assignedSiteId) {
-    return NextResponse.json({ error: 'غير مصرح لك بتعديل عمال هذا الموقع' }, { status: 403 });
-  }
-
   const body = await req.json();
+
+  if (user.role === 'FIELD_ADMIN') {
+    if (!user.assignedSiteId || existing.siteId !== user.assignedSiteId) {
+      return NextResponse.json({ error: 'غير مصرح لك بتعديل عمال هذا الموقع' }, { status: 403 });
+    }
+    if (body.siteId && body.siteId !== user.assignedSiteId) {
+      return NextResponse.json({ error: 'غير مصرح لك بنقل العامل إلى موقع آخر خارج نطاق إشرافك' }, { status: 403 });
+    }
+  }
 
   // Strict Sovereign Gate: Compensation modification is strictly restricted to SUPER_ADMIN
   const touchesCompensation =
@@ -120,7 +128,10 @@ export async function PUT(
   if (body.name) updateData.name = body.name.trim();
   if (body.nickname !== undefined) updateData.nickname = body.nickname?.trim() || null;
   if (body.phone && key) {
-    updateData.phoneEncrypted = encryptField(body.phone.trim(), key);
+    const cleanPhone = normalizeDigits(body.phone.trim().replace(/[\s\-_()]/g, ''));
+    updateData.phoneEncrypted = encryptField(cleanPhone, key);
+    const salt = process.env.BLIND_INDEX_SECRET || process.env.DATABASE_ENCRYPTION_KEY || 'default-salt-value-for-alsaada-2026';
+    updateData.phoneBlindIndex = createBlindIndex(cleanPhone, salt);
   }
   if (body.siteId) updateData.siteId = body.siteId;
   if (body.jobTitleId) updateData.jobTitleId = body.jobTitleId;
@@ -140,29 +151,31 @@ export async function PUT(
     if (body.dailyWage !== undefined) updateData.dailyWage = body.dailyWage;
   }
 
-  const updated = await prisma.worker.update({
-    where: { id },
-    data: updateData,
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.worker.update({
+      where: { id },
+      data: updateData,
+    });
 
-  await prisma.auditLog.create({
-    data: {
-      actorTelegramId: BigInt(user.telegramId || '0'),
-      action: 'WORKER_UPDATED',
-      entityType: 'Worker',
-      entityId: id,
-      beforePayload: {
-        name: existing.name,
-        nickname: existing.nickname,
-        siteId: existing.siteId,
-        status: existing.status,
+    await tx.auditLog.create({
+      data: {
+        actorTelegramId: BigInt(user.telegramId || '0'),
+        action: 'WORKER_UPDATED',
+        entityType: 'Worker',
+        entityId: id,
+        beforePayload: {
+          name: existing.name,
+          nickname: existing.nickname,
+          siteId: existing.siteId,
+          status: existing.status,
+        },
+        afterPayload: {
+          traceId,
+          updatedFields: Object.keys(updateData),
+          editorRole: user.role,
+        },
       },
-      afterPayload: {
-        traceId,
-        updatedFields: Object.keys(updateData),
-        editorRole: user.role,
-      },
-    },
+    });
   });
 
   return NextResponse.json({ success: true, message: 'تم حفظ التعديلات بنجاح' });

@@ -39,11 +39,48 @@ describe('@alsaada/database security', () => {
     it('fails decryption when ciphertext or authTag is tampered with', () => {
       const encrypted = encryptField('secret_financial_data', testKey);
       const parts = encrypted.split(':');
-      // Tamper with ciphertext
-      parts[2] = 'ff' + parts[2]!.substring(2);
-      const tampered = parts.join(':');
 
-      expect(() => decryptField(tampered, testKey)).toThrow();
+      // 1. Tamper with ciphertext deterministically (flip first hex character)
+      const tamperedCipherParts = [...parts];
+      tamperedCipherParts[2] =
+        (tamperedCipherParts[2]![0] === '0' ? '1' : '0') + tamperedCipherParts[2]!.slice(1);
+      expect(() => decryptField(tamperedCipherParts.join(':'), testKey)).toThrow();
+
+      // 2. Tamper with authTag deterministically (flip first hex character)
+      const tamperedTagParts = [...parts];
+      tamperedTagParts[1] =
+        (tamperedTagParts[1]![0] === '0' ? '1' : '0') + tamperedTagParts[1]!.slice(1);
+      expect(() => decryptField(tamperedTagParts.join(':'), testKey)).toThrow();
+
+      // 3. Tamper with IV deterministically (flip first hex character)
+      const tamperedIvParts = [...parts];
+      tamperedIvParts[0] =
+        (tamperedIvParts[0]![0] === '0' ? '1' : '0') + tamperedIvParts[0]!.slice(1);
+      expect(() => decryptField(tamperedIvParts.join(':'), testKey)).toThrow();
+    });
+
+    it('fails decryption when payload format is invalid or parts are missing', () => {
+      expect(() => decryptField('invalid_single_part', testKey)).toThrow(
+        'Invalid encrypted payload format: expected iv:authTag:ciphertext'
+      );
+      expect(() => decryptField('part1:part2', testKey)).toThrow(
+        'Invalid encrypted payload format: expected iv:authTag:ciphertext'
+      );
+      expect(() => decryptField('part1:part2:part3:part4', testKey)).toThrow(
+        'Invalid encrypted payload format: expected iv:authTag:ciphertext'
+      );
+    });
+
+    it('returns empty string when encrypting or decrypting empty or falsy values', () => {
+      expect(encryptField('', testKey)).toBe('');
+      expect(decryptField('', testKey)).toBe('');
+    });
+
+    it('fails encryption when key length is not 32 bytes', () => {
+      const shortKey = crypto.randomBytes(16).toString('hex');
+      expect(() => encryptField('secret_financial_data', shortKey)).toThrow(
+        'Invalid encryption key length: expected 32 bytes (64 hex characters), got 16 bytes'
+      );
     });
 
     it('normalizes 64-hex keys and passphrase keys properly', () => {

@@ -19,6 +19,15 @@ vi.mock('../src/redis.js', () => ({
       const matched = Array.from(mockRedisStore.keys()).filter((k) => k.startsWith(prefix));
       return Promise.resolve(matched);
     }),
+    scanStream: vi.fn().mockImplementation((options: { match: string; count?: number }) => {
+      const prefix = options.match.replace('*', '');
+      const matched = Array.from(mockRedisStore.keys()).filter((k) => k.startsWith(prefix));
+      return (async function* () {
+        if (matched.length > 0) {
+          yield matched;
+        }
+      })();
+    }),
   },
 }));
 
@@ -122,7 +131,7 @@ describe('⚡ FastCacheService & SystemDataService Architecture', () => {
       expect(mockRedisStore.has('fastcache:test:inv')).toBe(false);
     });
 
-    it('should invalidate keys matching pattern from both L1 and L2', async () => {
+    it('should invalidate keys matching pattern from both L1 and L2 using non-blocking scanStream', async () => {
       await fastCache.set('site:ste-01', { name: 'Site 1' }, 60);
       await fastCache.set('site:ste-02', { name: 'Site 2' }, 60);
       await fastCache.set('user:100', { name: 'User 100' }, 60);
@@ -132,6 +141,23 @@ describe('⚡ FastCacheService & SystemDataService Architecture', () => {
       expect(await fastCache.get('site:ste-01')).toBeNull();
       expect(await fastCache.get('site:ste-02')).toBeNull();
       expect(await fastCache.get('user:100')).toEqual({ name: 'User 100' });
+    });
+
+    it('should manage L1 capacity and touch items for LRU freshness', async () => {
+      // Prime two keys
+      await fastCache.set('lru:item:1', 'val1', 60);
+      await fastCache.set('lru:item:2', 'val2', 60);
+
+      // Access item 1 to refresh its LRU position
+      const val1 = await fastCache.get('lru:item:1');
+      expect(val1).toBe('val1');
+
+      // Both should exist and be retrievable
+      const memKeys = fastCache.getMemoryKeys();
+      expect(memKeys).toContain('lru:item:1');
+      expect(memKeys).toContain('lru:item:2');
+      // Verify item 1 was touched and moved to the end of insertion order
+      expect(memKeys[memKeys.length - 1]).toBe('lru:item:1');
     });
 
     it('should execute callback with distributed mutex lock', async () => {

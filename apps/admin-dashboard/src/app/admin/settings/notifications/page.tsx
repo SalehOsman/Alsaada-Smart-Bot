@@ -27,6 +27,18 @@ export default async function NotificationsPage() {
         </div>
       </div>
 
+      <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl p-4 flex items-center justify-between">
+        <div className="text-sm text-orange-900 dark:text-orange-200">
+          تم دمج إدارة سياسات الإشعارات والتوبيكات في جناح التيليجرام الموحد لتسهيل الإدارة الميدانية.
+        </div>
+        <Link
+          href="/admin/settings/telegram-groups?tab=notifications"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold transition-colors"
+        >
+          الانتقال للجناح الموحد
+        </Link>
+      </div>
+
       {topics.length === 0 ? (
         <ZeroStateCard
           icon={BellRing}

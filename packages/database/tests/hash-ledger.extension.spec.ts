@@ -6,6 +6,9 @@ import {
   FINANCIAL_MODELS,
   GENESIS_HASH,
   computeRecordHash,
+  acquireModelLocks,
+  MODEL_LOCK_IDS,
+  LEDGER_UPDATE_WHITELIST,
 } from '../src/index.js';
 
 describe('hashLedgerExtension', () => {
@@ -32,6 +35,16 @@ describe('hashLedgerExtension', () => {
       updateMany: vi.fn(async ({ where, data }) => ({ count: 1 })),
       delete: vi.fn(async () => store.pop()),
       deleteMany: vi.fn(async () => ({ count: store.length })),
+      upsert: vi.fn(async ({ where, create, update }) => {
+        const existing = store.find((s) => s.id === where?.id);
+        if (existing) {
+          Object.assign(existing, update);
+          return existing;
+        }
+        const created = { id: where?.id || 'rec-' + (store.length + 1), ...create };
+        store.push(created);
+        return created;
+      }),
     };
 
     const client: any = {
@@ -85,6 +98,14 @@ describe('hashLedgerExtension', () => {
                 operation: 'delete',
                 args,
                 query: mockDelegate.delete,
+              });
+            },
+            upsert: async (args: any) => {
+              return extensionQueries.upsert({
+                model: 'FinancialLedger',
+                operation: 'upsert',
+                args,
+                query: mockDelegate.upsert,
               });
             },
           };
@@ -157,6 +178,7 @@ describe('hashLedgerExtension', () => {
     expect(created.recordHash).toBe(
       computeRecordHash({
         previousHash: GENESIS_HASH,
+        voucherNumber: '#ADV-2026-0001',
         model: 'FinancialLedger',
         amount: 5000,
         actorId: '123456789',
@@ -197,6 +219,7 @@ describe('hashLedgerExtension', () => {
     expect(second.recordHash).toBe(
       computeRecordHash({
         previousHash: firstHash,
+        voucherNumber: '#ADV-2026-0002',
         model: 'FinancialLedger',
         amount: 2500,
         actorId: '987654321',
@@ -268,5 +291,115 @@ describe('hashLedgerExtension', () => {
 
     const updated = await extended.worker.update({ where: { id: '1' }, data: { name: 'Hassan' } });
     expect(updated.name).toBe('Hassan');
+  });
+
+  it('allows updating fields present in LEDGER_UPDATE_WHITELIST', async () => {
+    const { client } = createMockBaseClient([{ id: '1', amount: 1000, approvalStatus: 'PENDING' }]);
+    const extended = hashLedgerExtension(client);
+
+    const updated = await extended.financialLedger.update({
+      where: { id: '1' },
+      data: { approvalStatus: 'APPROVED', auditNotes: 'Verified and approved' },
+    });
+
+    expect(updated.approvalStatus).toBe('APPROVED');
+    expect(updated.auditNotes).toBe('Verified and approved');
+  });
+
+  it('rejects updating fields outside LEDGER_UPDATE_WHITELIST', async () => {
+    const { client } = createMockBaseClient([{ id: '1', amount: 1000 }]);
+    const extended = hashLedgerExtension(client);
+
+    await expect(
+      extended.financialLedger.update({
+        where: { id: '1' },
+        data: { description: 'Unauthorized description edit' },
+      })
+    ).rejects.toThrow(ImmutableLedgerError);
+  });
+
+  it('verifies MODEL_LOCK_IDS covers all 12 core financial models and payrollrecord alias', () => {
+    expect(MODEL_LOCK_IDS.financialledger).toBe(1);
+    expect(MODEL_LOCK_IDS.financialcustody).toBe(2);
+    expect(MODEL_LOCK_IDS.custodyexpenseitem).toBe(3);
+    expect(MODEL_LOCK_IDS.custodysettlement).toBe(4);
+    expect(MODEL_LOCK_IDS.hospitalityexpense).toBe(5);
+    expect(MODEL_LOCK_IDS.workerexpenseclaim).toBe(6);
+    expect(MODEL_LOCK_IDS.supplierpayment).toBe(7);
+    expect(MODEL_LOCK_IDS.supplierinvoice).toBe(8);
+    expect(MODEL_LOCK_IDS.advancerequest).toBe(9);
+    expect(MODEL_LOCK_IDS.advanceinstallment).toBe(10);
+    expect(MODEL_LOCK_IDS.payrolltransaction).toBe(11);
+    expect(MODEL_LOCK_IDS.payrollrecord).toBe(11);
+    expect(MODEL_LOCK_IDS.attendancerecord).toBe(12);
+  });
+
+  it('includes PayrollRecord in FINANCIAL_MODELS', () => {
+    expect(FINANCIAL_MODELS.has('PayrollRecord')).toBe(true);
+    expect(FINANCIAL_MODELS.has('payrollRecord')).toBe(true);
+  });
+
+  it('acquires advisory locks in strict ascending order to prevent deadlocks', async () => {
+    const executedQueries: string[] = [];
+    const client = {
+      $executeRawUnsafe: vi.fn(async (sql: string, ns: number, lockId: number) => {
+        executedQueries.push(`lock_${lockId}`);
+      }),
+    };
+
+    // Pass models in reverse order: SupplierPayment (7) and FinancialLedger (1)
+    const acquired = await acquireModelLocks(client, ['supplierpayment', 'financialledger']);
+
+    expect(acquired).toEqual([1, 7]);
+    expect(executedQueries).toEqual(['lock_1', 'lock_7']);
+  });
+
+  describe('upsert interception', () => {
+    it('allows upsert update when modified fields are within LEDGER_UPDATE_WHITELIST', async () => {
+      const { client } = createMockBaseClient([{ id: 'FL-UP-1', amount: 1000, approvalStatus: 'PENDING' }]);
+      const extended = hashLedgerExtension(client);
+
+      const result = await extended.financialLedger.upsert({
+        where: { id: 'FL-UP-1' },
+        update: { approvalStatus: 'APPROVED', auditNotes: 'Approved via upsert' },
+        create: { voucherNumber: '#V-NEW', amount: 500 },
+      });
+
+      expect(result.approvalStatus).toBe('APPROVED');
+      expect(result.auditNotes).toBe('Approved via upsert');
+    });
+
+    it('rejects upsert update when fields violate LEDGER_UPDATE_WHITELIST', async () => {
+      const { client } = createMockBaseClient([{ id: 'FL-UP-1', amount: 1000 }]);
+      const extended = hashLedgerExtension(client);
+
+      await expect(
+        extended.financialLedger.upsert({
+          where: { id: 'FL-UP-1' },
+          update: { amount: 2000 },
+          create: { voucherNumber: '#V-NEW', amount: 2000 },
+        })
+      ).rejects.toThrow(ImmutableLedgerError);
+    });
+
+    it('computes cryptographic record hash when upsert triggers create branch', async () => {
+      const { client } = createMockBaseClient([]);
+      const extended = hashLedgerExtension(client);
+
+      const created = await extended.financialLedger.upsert({
+        where: { id: 'FL-NEW' },
+        update: { approvalStatus: 'APPROVED' },
+        create: {
+          id: 'FL-NEW',
+          voucherNumber: '#V-UPSERT-001',
+          amount: 3500,
+          actorTelegramId: '123456789',
+        },
+      });
+
+      expect(created.recordHash).toBeDefined();
+      expect(created.recordHash.length).toBe(64);
+      expect(created.previousHash).toBe(GENESIS_HASH);
+    });
   });
 });

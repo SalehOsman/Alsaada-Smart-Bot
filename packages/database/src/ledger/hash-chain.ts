@@ -3,11 +3,18 @@ import crypto from 'node:crypto';
 export const GENESIS_HASH = 'GENESIS_ALSAADA_LEDGER_2026';
 
 export interface RecordHashPayload {
-  previousHash: string;
-  model: string;
+  previousHash?: string;
+  voucherNumber?: string;
+  transactionType?: string;
   amount: number | string;
-  actorId: string | number | bigint;
+  currency?: string;
+  sourceAccount?: string;
+  destinationAccount?: string;
+  beneficiaryId?: string;
+  actorTelegramId?: string | number | bigint;
+  actorId?: string | number | bigint;
   timestamp: string | Date;
+  model?: string;
 }
 
 export interface TransactionHashPayload {
@@ -24,21 +31,59 @@ export interface TransactionHashPayload {
 
 export interface ChainedRecord extends TransactionHashPayload {
   recordHash: string;
+  voucherNumber?: string;
+  beneficiaryId?: string;
+  actorId?: string | number | bigint;
+  model?: string;
 }
 
 /**
- * Computes canonical SHA-256 hash according to Plan 13 & enterprise integrity mandate:
- * recordHash = SHA-256(previousHash + ":" + model + ":" + amount + ":" + actorId + ":" + timestamp)
+ * Computes canonical closed 10-field SHA-256 hash according to Plan 74 forensic genesis standard:
+ * Hash_n = SHA256(Hash_{n-1} : voucherNumber : transactionType : normalizedAmount : currency : sourceAccount : destinationAccount : beneficiaryId : actorTelegramId : timestamp)
  */
 export function computeRecordHash(payload: RecordHashPayload): string {
   const ts = payload.timestamp instanceof Date ? payload.timestamp.toISOString() : String(payload.timestamp);
   const normalizedAmount = typeof payload.amount === 'number'
     ? payload.amount.toFixed(2)
     : Number(payload.amount || 0).toFixed(2);
-  const normalizedActor = String(payload.actorId);
-  const normalizedPrev = payload.previousHash || GENESIS_HASH;
+  const normalizedPrev = (payload.previousHash && payload.previousHash.trim() !== '')
+    ? payload.previousHash
+    : GENESIS_HASH;
+  const voucherNumber = payload.voucherNumber !== undefined && payload.voucherNumber !== null
+    ? String(payload.voucherNumber)
+    : '';
+  const transactionType = payload.transactionType !== undefined && payload.transactionType !== null
+    ? String(payload.transactionType)
+    : (payload.model !== undefined && payload.model !== null ? String(payload.model) : '');
+  const currency = payload.currency !== undefined && payload.currency !== null
+    ? String(payload.currency).toUpperCase()
+    : 'EGP';
+  const sourceAccount = payload.sourceAccount !== undefined && payload.sourceAccount !== null
+    ? String(payload.sourceAccount)
+    : '';
+  const destinationAccount = payload.destinationAccount !== undefined && payload.destinationAccount !== null
+    ? String(payload.destinationAccount)
+    : '';
+  const beneficiaryId = payload.beneficiaryId !== undefined && payload.beneficiaryId !== null
+    ? String(payload.beneficiaryId)
+    : '';
+  const actorTelegramId = payload.actorTelegramId !== undefined && payload.actorTelegramId !== null
+    ? String(payload.actorTelegramId)
+    : (payload.actorId !== undefined && payload.actorId !== null ? String(payload.actorId) : 'system');
 
-  const canonicalString = `${normalizedPrev}:${payload.model}:${normalizedAmount}:${normalizedActor}:${ts}`;
+  const canonicalString = [
+    normalizedPrev,
+    voucherNumber,
+    transactionType,
+    normalizedAmount,
+    currency,
+    sourceAccount,
+    destinationAccount,
+    beneficiaryId,
+    actorTelegramId,
+    ts,
+  ].join(':');
+
   return crypto.createHash('sha256').update(canonicalString).digest('hex');
 }
 
@@ -96,8 +141,14 @@ export function verifyLedgerChainMemory(
       };
     }
 
-    // 2. Verify record hash integrity
-    const calculatedHash = computeTransactionHash(record);
+    // 2. Verify record hash integrity (canonical 10-field check, fallback to legacy pipe-hash)
+    let calculatedHash = computeRecordHash(record);
+    if (calculatedHash !== record.recordHash) {
+      const legacyHash = computeTransactionHash(record);
+      if (legacyHash === record.recordHash) {
+        calculatedHash = legacyHash;
+      }
+    }
     if (calculatedHash !== record.recordHash) {
       return {
         isValid: false,

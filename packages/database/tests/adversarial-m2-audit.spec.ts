@@ -28,6 +28,7 @@ describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification',
 
         const recordHash = computeRecordHash({
           previousHash,
+          voucherNumber: `#VOUCHER-${i + 1}`,
           model: 'FinancialLedger',
           amount,
           actorId: actorTelegramId,

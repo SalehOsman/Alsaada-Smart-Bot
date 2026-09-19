@@ -41,7 +41,7 @@ async function bootstrap() {
 
   // 3. Initialize & Start Telegram Bot
   try {
-    const bot = createBot();
+    const bot = await createBot();
 
     // ⚡ Register universal fallback commands in the Telegram Side Menu (Menu Button)
     bot.api

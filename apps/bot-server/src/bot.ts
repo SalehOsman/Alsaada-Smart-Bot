@@ -70,7 +70,7 @@ import {
   handleSwitchToFieldAdmin,
   type WorkforceModuleContext,
 } from '@alsaada/workforce';
-import { handleSettingsHub, type SettingsModuleContext } from '@alsaada/settings';
+import { handleSettingsHub } from '@alsaada/settings';
 import { buildRegisteredModules } from './modules.registry.js';
 import type { ModuleRuntimeContext } from '@alsaada/core-components';
 import { prisma } from './db.js';
@@ -95,7 +95,7 @@ import {
   type ForumTopicConfig,
 } from '@alsaada/core-components';
 
-export function createBot(): Bot<MyContext> {
+export async function createBot(): Promise<Bot<MyContext>> {
   const token = config.botToken;
   if (!token || token === 'YOUR_NEW_BOT_TOKEN_HERE') {
     throw new Error('❌ [BOT FATAL] BOT_TOKEN is not set in .env. Please configure your bot token.');
@@ -362,7 +362,7 @@ export function createBot(): Bot<MyContext> {
     telemetry: telemetryService,
     screenFlow: screenFlowService,
   };
-  const { router, modules } = buildRegisteredModules(runtimeContext, {
+  const { router, modules, loader } = await buildRegisteredModules(runtimeContext, {
     onImpersonationChange: async (telegramId: bigint, targetRole?: string) => {
       // 1. تفريغ كاش الصلاحيات اللحظي في L1 fastCache و L2 Redis
       await fastCache.invalidate(`auth:imp:${telegramId}`);
@@ -445,7 +445,7 @@ export function createBot(): Bot<MyContext> {
     }
 
     // If message is a persistent keyboard navigation button, clean up unfinished flow & ephemeral inputs
-    const isNav = /القائمة الرئيسية|إعدادات النظام|🖥️ فتح لوحة التحكم|ملفي (الشخصي|وإعداداتي)|فحص الكفاءة|التبديل لحسابي كعامل|العودة لبوابة الإشراف|بطاقة معرفي|قسيمة راتبي|كشف حسابي|لوحة المؤشرات|فواتيري ومستخلصاتي|إنهاء وضع المحاكاة|العودة كمدير عام|🚜 تسجيل منسوب/.test(ctx.message.text);
+    const isNav = loader.getNavigationRegex().test(ctx.message.text);
     if (isNav) {
       await screenFlowService.cleanupIncomingUserMessage(ctx);
       await screenFlowService.cleanupUnfinishedFlow(ctx);

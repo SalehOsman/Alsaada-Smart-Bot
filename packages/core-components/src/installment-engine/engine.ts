@@ -1,5 +1,31 @@
 import type { InstallmentPlanParams, InstallmentPlanResult, SingleInstallment } from './types.js';
 
+/**
+ * 📅 Safe month addition algorithm that prevents month-end overflow bugs in JavaScript Date.
+ * When baseDate is on day 29, 30, or 31 and the target month has fewer days,
+ * clamps the day to the last valid day of the target month (e.g. 31 Jan -> 28/29 Feb).
+ * Preserves the original anchor day across subsequent cycles when allowed.
+ */
+export function addMonthsSafe(baseDate: Date, monthsToAdd: number): Date {
+  if (!baseDate || isNaN(baseDate.getTime())) {
+    throw new Error('[INSTALLMENT_CALENDAR_ERROR] Invalid baseDate provided to addMonthsSafe.');
+  }
+  const result = new Date(baseDate.getTime());
+  const originalDay = baseDate.getUTCDate();
+
+  // Anchor to day 1 first to prevent intermediate overflow
+  result.setUTCDate(1);
+  result.setUTCMonth(result.getUTCMonth() + monthsToAdd);
+
+  // Compute last day of target month
+  const lastDayOfTargetMonth = new Date(
+    Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0)
+  ).getUTCDate();
+
+  result.setUTCDate(Math.min(originalDay, lastDayOfTargetMonth));
+  return result;
+}
+
 export class UniversalInstallmentEngine {
   /**
    * 📊 حساب خطة الأقساط الشهرية الآمنة مع قفل كسور القروش في القسط الأول
@@ -25,22 +51,19 @@ export class UniversalInstallmentEngine {
     const remainder = Math.round((totalAmount - baseAmount * installmentsCount) * 100) / 100;
 
     const installments: SingleInstallment[] = [];
-    const currentMonth = new Date(startCycleDate);
 
     for (let i = 1; i <= installmentsCount; i++) {
       // يضاف باقي الكسور للقسط الأول لضمان التوازن المالي التام
       const installmentAmount = i === 1 ? Math.round((baseAmount + remainder) * 100) / 100 : baseAmount;
 
-      const dueDateStr = currentMonth.toISOString().substring(0, 10);
+      const dueDate = addMonthsSafe(startCycleDate, i - 1);
+      const dueDateStr = dueDate.toISOString().substring(0, 10);
       installments.push({
         installmentNumber: i,
         dueDate: dueDateStr,
         amount: installmentAmount,
         status: 'SCHEDULED',
       });
-
-      // الشهر التالي
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
     }
 
     const firstMonthDeduction = installments[0]?.amount || 0;

@@ -1,7 +1,9 @@
 import type { MyContext } from './types/context.js';
-import type { AppModuleDefinition, ModuleRuntimeContext } from '@alsaada/core-components';
-import { createWorkforceAppModule } from '@alsaada/workforce';
-import { createSettingsAppModule } from '@alsaada/settings';
+import {
+  type AppModuleDefinition,
+  type ModuleRuntimeContext,
+  SovereignAutoLoader,
+} from '@alsaada/core-components';
 
 export class ModulePrefixRouter<C extends MyContext = MyContext> {
   private readonly prefixMap = new Map<string, AppModuleDefinition<C>>();
@@ -30,24 +32,46 @@ export class ModulePrefixRouter<C extends MyContext = MyContext> {
   }
 }
 
-export function buildRegisteredModules(
+export interface BuildModulesOptions {
+  onImpersonationChange?: (telegramId: bigint, targetRole?: string) => Promise<void>;
+  modulesDir?: string;
+  criticalModules?: string[];
+  baseNavigationPatterns?: string[];
+  factories?: Record<string, (runtime: ModuleRuntimeContext<MyContext>, options?: any) => AppModuleDefinition<MyContext>>;
+  moduleOptions?: Record<string, any>;
+}
+
+/**
+ * Enterprise Microkernel Module Bus & Sovereign Auto-Loader:
+ * Fully decoupled, zero-touch dynamic module discovery and contract verification.
+ */
+export async function buildRegisteredModules(
   runtime: ModuleRuntimeContext<MyContext>,
-  options?: {
-    onImpersonationChange?: (telegramId: bigint, targetRole?: string) => Promise<void>;
-  }
-): {
+  options?: BuildModulesOptions
+): Promise<{
   router: ModulePrefixRouter<MyContext>;
   modules: AppModuleDefinition<MyContext>[];
-} {
-  const modules: AppModuleDefinition<MyContext>[] = [
-    createWorkforceAppModule(runtime as any) as unknown as AppModuleDefinition<MyContext>,
-    createSettingsAppModule(
-      runtime as any,
-      options?.onImpersonationChange
+  loader: SovereignAutoLoader<MyContext>;
+}> {
+  const loader = new SovereignAutoLoader<MyContext>({
+    modulesDir: options?.modulesDir,
+    criticalModules: options?.criticalModules,
+    baseNavigationPatterns: options?.baseNavigationPatterns,
+    factories: options?.factories,
+    moduleOptions: {
+      settings: options?.onImpersonationChange
         ? { onImpersonationChange: options.onImpersonationChange }
-        : undefined
-    ) as unknown as AppModuleDefinition<MyContext>,
-  ];
-  const router = new ModulePrefixRouter(modules);
-  return { router, modules };
+        : undefined,
+      ...(options?.moduleOptions || {}),
+    },
+  });
+
+  const result = await loader.loadModules(runtime);
+  const router = new ModulePrefixRouter(result.activeModules);
+
+  return {
+    router,
+    modules: result.activeModules,
+    loader,
+  };
 }

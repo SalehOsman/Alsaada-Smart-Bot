@@ -12,9 +12,10 @@ import { WorkerTicketHandler } from './flow.ticket-handler.js';
 import { WorkerCigaretteHandler } from './flow.cigarette-handler.js';
 import { WorkerEntityPickersHandler } from './flow.entity-pickers.js';
 import { WorkerFieldInputHandler } from './flow.field-input.js';
+import { WorkerEditDraftStore, type MinimalRedisDraftClient } from './flow.draft-store.js';
 
 export class WorkerEditHandler {
-  private readonly editDrafts = new Map<string, PendingWorkerEditState>();
+  readonly draftStore: WorkerEditDraftStore;
   readonly salaryWizard: WorkerSalaryWizardHandler;
   readonly cigaretteHandler: WorkerCigaretteHandler;
   readonly ticketHandler: WorkerTicketHandler;
@@ -22,20 +23,26 @@ export class WorkerEditHandler {
   readonly fieldInputHandler: WorkerFieldInputHandler;
 
   hasActiveDraft(userId: string): boolean {
-    const editDraft = this.editDrafts.get(userId);
+    const editDraft = this.draftStore.get(userId);
     const hasFieldEdit = Boolean(editDraft && editDraft.fieldKey);
     return hasFieldEdit || this.salaryWizard.hasSalaryDraft(userId);
   }
 
   clearDraft(userId: string): void {
-    this.editDrafts.delete(userId);
+    this.draftStore.delete(userId);
     this.salaryWizard.clearSalaryDraft(userId);
   }
 
   constructor(
     private readonly service: WorkerEditService,
-    private readonly repository: WorkerEditRepository
+    private readonly repository: WorkerEditRepository,
+    redisOrDraftStore?: WorkerEditDraftStore | MinimalRedisDraftClient
   ) {
+    this.draftStore =
+      redisOrDraftStore instanceof WorkerEditDraftStore
+        ? redisOrDraftStore
+        : new WorkerEditDraftStore(redisOrDraftStore);
+
     const r = async (c: Context, t: string, k?: InlineKeyboard): Promise<void> => {
       await this.replyOrEdit(c, t, k);
     };
@@ -43,10 +50,10 @@ export class WorkerEditHandler {
     const sa = (c: WorkforceModuleContext) => this.isSuperAdmin(c);
 
     this.salaryWizard = new WorkerSalaryWizardHandler(service, repository, r, p);
-    this.cigaretteHandler = new WorkerCigaretteHandler(service, repository, r, p, this.editDrafts, sa);
+    this.cigaretteHandler = new WorkerCigaretteHandler(service, repository, r, p, this.draftStore, sa);
     this.ticketHandler = new WorkerTicketHandler(service, r, sa);
     this.entityPickersHandler = new WorkerEntityPickersHandler(service, r, p, sa);
-    this.fieldInputHandler = new WorkerFieldInputHandler(service, repository, r, p, sa, this.salaryWizard, this.editDrafts);
+    this.fieldInputHandler = new WorkerFieldInputHandler(service, repository, r, p, sa, this.salaryWizard, this.draftStore);
   }
 
   private checkRbac(ctx: WorkforceModuleContext): boolean {
@@ -105,7 +112,7 @@ export class WorkerEditHandler {
       activeTab = 'PERSONAL';
     }
     if (ctx.from) {
-      this.editDrafts.set(String(ctx.from.id), {
+      this.draftStore.set(String(ctx.from.id), {
         workerId: worker.id,
         workerCode: worker.code,
         workerName: worker.name,
@@ -155,7 +162,7 @@ export class WorkerEditHandler {
     }
     const fieldName = FIELD_LABELS[fieldKey];
     if (ctx.from) {
-      this.editDrafts.set(String(ctx.from.id), {
+      this.draftStore.set(String(ctx.from.id), {
         workerId: worker.id,
         workerCode: worker.code,
         workerName: worker.name,
@@ -169,7 +176,7 @@ export class WorkerEditHandler {
     const kb = WorkerEditKeyboards.cancelEditKeyboard(workerId, returnTab);
     const promptMsgId = await this.replyOrEdit(ctx, text, kb);
     if (ctx.from && promptMsgId) {
-      const currentDraft = this.editDrafts.get(String(ctx.from.id));
+      const currentDraft = this.draftStore.get(String(ctx.from.id));
       if (currentDraft) {
         currentDraft.promptMsgId = promptMsgId;
       }

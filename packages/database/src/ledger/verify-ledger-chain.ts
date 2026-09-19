@@ -5,7 +5,17 @@ import {
   type ChainedRecord,
   type VerificationResult,
 } from './hash-chain.js';
-import { extractAmount, extractActorId, normalizeModelName } from './hash-ledger.extension.js';
+import {
+  extractAmount,
+  extractVoucherNumber,
+  extractTransactionType,
+  extractCurrency,
+  extractSourceAccount,
+  extractDestinationAccount,
+  extractBeneficiaryId,
+  extractActorTelegramId,
+  normalizeModelName,
+} from './hash-ledger.extension.js';
 
 export interface VerifyLedgerChainOptions {
   model?: string;
@@ -94,7 +104,7 @@ export async function verifyLedgerChainDb(
       const recordId = String(record.id);
 
       // 1. Verify previous hash pointer integrity
-      const storedPrev = record.previousHash || GENESIS_HASH;
+      const storedPrev = record.previousHash || genesisHash;
       if (storedPrev !== expectedPreviousHash) {
         return {
           isValid: false,
@@ -114,14 +124,25 @@ export async function verifyLedgerChainDb(
 
       // 2. Verify record hash computation integrity
       const amount = extractAmount(record);
-      const actorId = extractActorId(record);
+      const voucherNumber = extractVoucherNumber(record);
+      const transactionType = extractTransactionType(record, canonicalModel);
+      const currency = extractCurrency(record);
+      const sourceAccount = extractSourceAccount(record);
+      const destinationAccount = extractDestinationAccount(record);
+      const beneficiaryId = extractBeneficiaryId(record);
+      const actorTelegramId = extractActorTelegramId(record);
       const timestamp = record.hashTimestamp ?? record.createdAt;
 
       const calculatedHash = computeRecordHash({
-        previousHash: record.previousHash || GENESIS_HASH,
-        model: canonicalModel,
+        previousHash: record.previousHash || genesisHash,
+        voucherNumber,
+        transactionType,
         amount,
-        actorId,
+        currency,
+        sourceAccount,
+        destinationAccount,
+        beneficiaryId,
+        actorTelegramId,
         timestamp,
       });
 

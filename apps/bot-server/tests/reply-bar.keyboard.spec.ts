@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildPersistentReplyKeyboard,
+  buildRemoveReplyKeyboard,
+  REMOVE_REPLY_KEYBOARD,
   DASHBOARD_KEYBOARD_BUTTON_TEXT,
 } from '../src/keyboards/reply-bar.keyboard.js';
 import type { MyContext } from '../src/types/context.js';
@@ -308,5 +310,12 @@ describe('Ghost Mode Persistent Reply Keyboard & Zero RBAC UI Leakage (Plan 55)'
 
     // Simulation exit button must NOT appear in native mode
     expect(allButtons).not.toContain('🎭 إنهاء وضع المحاكاة (العودة كمدير عام)');
+  });
+
+  describe('Wizard Keyboard Isolation (ReplyKeyboardRemove)', () => {
+    it('should generate valid remove_keyboard payload for multi-step wizards', () => {
+      expect(buildRemoveReplyKeyboard()).toEqual({ remove_keyboard: true });
+      expect(REMOVE_REPLY_KEYBOARD).toEqual({ remove_keyboard: true });
+    });
   });
 });

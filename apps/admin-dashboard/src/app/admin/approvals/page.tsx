@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { requireDashboardUser } from '@/lib/auth';
 import { getApprovalsData } from '@/lib/data-fetchers';
 import { hasAccess } from '@/lib/rbac';
 import { ApprovalsClient } from './approvals-client';
+import ApprovalsLoading from './loading';
 import { ZeroStateCard } from '@/components/ui/zero-state-card';
 import { ShieldAlert } from 'lucide-react';
 
@@ -28,5 +29,9 @@ export default async function ApprovalsPage() {
 
   const approvalsData = await getApprovalsData(user);
 
-  return <ApprovalsClient initialData={approvalsData} userRole={user.role} />;
+  return (
+    <Suspense fallback={<ApprovalsLoading />}>
+      <ApprovalsClient initialData={approvalsData} userRole={user.role} />
+    </Suspense>
+  );
 }

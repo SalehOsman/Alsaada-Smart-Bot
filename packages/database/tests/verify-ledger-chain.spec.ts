@@ -24,6 +24,7 @@ describe('verifyLedgerChain (Database Audit)', () => {
 
       let hash = computeRecordHash({
         previousHash: prev,
+        voucherNumber: `#ADV-2026-${i + 1}`,
         model: 'FinancialLedger',
         amount,
         actorId: '123456789',
@@ -127,5 +128,41 @@ describe('verifyLedgerChain (Database Audit)', () => {
     expect(report.totalVerified).toBe(10);
     // 10 items with batch size 3 requires 4 queries (3 + 3 + 3 + 1)
     expect(mockPrisma.financialLedger.findMany).toHaveBeenCalledTimes(4);
+  });
+
+  it('supports custom genesisHash for sub-ledger chains', async () => {
+    const customGenesis = 'CUSTOM_GENESIS_CHAIN_2026';
+    const timestamp = new Date('2026-09-12T10:00:00.000Z');
+    const hash = computeRecordHash({
+      previousHash: customGenesis,
+      voucherNumber: '#SUB-001',
+      model: 'FinancialLedger',
+      amount: 500,
+      actorId: '123456789',
+      timestamp,
+    });
+
+    const records = [
+      {
+        id: 'TXN-CUSTOM-1',
+        voucherNumber: '#SUB-001',
+        recordHash: hash,
+        previousHash: customGenesis,
+        hashTimestamp: timestamp,
+        createdAt: timestamp,
+        amount: 500,
+        actorTelegramId: '123456789',
+      },
+    ];
+
+    const mockPrisma = createMockAuditPrisma(records);
+    const report = await verifyLedgerChainDb(mockPrisma, {
+      model: 'FinancialLedger',
+      genesisHash: customGenesis,
+    });
+
+    expect(report.isValid).toBe(true);
+    expect(report.totalVerified).toBe(1);
+    expect(report.genesisHash).toBe(customGenesis);
   });
 });

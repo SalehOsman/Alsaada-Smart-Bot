@@ -62,4 +62,39 @@ describe('Middleware Session Guard & Bot Redirect Gate', () => {
     expect(traceId).toBeDefined();
     expect(traceId?.length).toBeGreaterThan(0);
   });
+
+  it('strictly protects /api/:path* routes returning 401 UNAUTHORIZED at Edge boundary when session missing', async () => {
+    const apiPaths = [
+      'http://localhost:3002/api/workers/worker-123',
+      'http://localhost:3002/api/settings/telegram-groups',
+      'http://localhost:3002/api/canteen/transactions',
+      'http://localhost:3002/api/custom-endpoint/test',
+    ];
+
+    for (const url of apiPaths) {
+      const req = new NextRequest(url);
+      const res = await middleware(req);
+
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error).toBe('UNAUTHORIZED');
+      expect(res.headers.get('x-trace-id')).toBeDefined();
+    }
+  });
+
+  it('permits public /api/auth and /api/health routes without session requirement', async () => {
+    const publicPaths = [
+      'http://localhost:3002/api/auth/claim',
+      'http://localhost:3002/api/health',
+    ];
+
+    for (const url of publicPaths) {
+      const req = new NextRequest(url);
+      const res = await middleware(req);
+
+      // Should not be 401 and should not redirect
+      expect(res.status).toBe(200);
+      expect(res.headers.get('location')).toBeNull();
+    }
+  });
 });

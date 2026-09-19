@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@alsaada/database';
 import { getCurrentUser } from '@/lib/auth';
+import { getNotificationTopicsData } from '@/lib/data-fetchers';
 
 export async function GET() {
   try {
@@ -19,7 +20,7 @@ export async function GET() {
       );
     }
 
-    const [sites, recentTasks] = await Promise.all([
+    const [sites, recentTasks, notificationTopics] = await Promise.all([
       prisma.site.findMany({
         where: { status: 'ACTIVE' },
         select: {
@@ -39,6 +40,7 @@ export async function GET() {
         take: 15,
         orderBy: { createdAt: 'desc' },
       }),
+      getNotificationTopicsData(),
     ]);
 
     const formattedSites = sites.map((s) => ({
@@ -79,6 +81,7 @@ export async function GET() {
       centralHq: centralHqConfig,
       sites: formattedSites,
       recentTasks: formattedTasks,
+      notificationTopics,
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'فشل جلب إعدادات تليجرام';

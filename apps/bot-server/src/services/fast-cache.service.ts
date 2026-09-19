@@ -24,6 +24,24 @@ export class FastCacheService {
   private inflightRequests = new Map<string, Promise<any>>();
   private memoizedKeyboards = new Map<string, any>();
   private readonly DEFAULT_TTL = 300; // 5 minutes
+  private readonly MAX_L1_SIZE = 5000; // Maximum items in L1 memory cache (LRU)
+
+  private setL1Entry<T>(key: string, entry: MemoryCacheEntry<T>): void {
+    if (this.l1Store.has(key)) {
+      this.l1Store.delete(key);
+    } else if (this.l1Store.size >= this.MAX_L1_SIZE) {
+      const oldestKey = this.l1Store.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.l1Store.delete(oldestKey);
+      }
+    }
+    this.l1Store.set(key, entry);
+  }
+
+  private touchL1Entry(key: string, entry: MemoryCacheEntry<any>): void {
+    this.l1Store.delete(key);
+    this.l1Store.set(key, entry);
+  }
 
   private serialize(value: any): string {
     return JSON.stringify(value, (_key, val) =>
@@ -51,6 +69,7 @@ export class FastCacheService {
     // 1. فحص المستوى الأول: L1 In-Memory RAM (< 0.1ms)
     const l1Entry = this.l1Store.get(fullKey);
     if (l1Entry && l1Entry.expiresAt > now) {
+      this.touchL1Entry(fullKey, l1Entry);
       return l1Entry.value as T;
     }
 
@@ -68,7 +87,7 @@ export class FastCacheService {
             if (cachedJson) {
               const parsed = JSON.parse(cachedJson) as T;
               // حفظ في L1 للطلبات القادمة
-              this.l1Store.set(fullKey, {
+              this.setL1Entry(fullKey, {
                 value: parsed,
                 expiresAt: now + ttlSeconds * 2 * 1000,
                 staleAt: now + ttlSeconds * 1000,
@@ -112,6 +131,7 @@ export class FastCacheService {
         // انتهت الصلاحية الكلية القصوى - حذف القيمة واللجوء لـ fetcher الفوري
         this.l1Store.delete(fullKey);
       } else {
+        this.touchL1Entry(fullKey, l1Entry);
         // إذا تجاوزت البيانات فترة الحداثة ولم تنتهِ صلاحيتها تماماً، نبدأ التحديث الخلفي
         if (now > l1Entry.staleAt && !this.backgroundRefreshPromises.has(fullKey)) {
           const refreshPromise = fetcher()
@@ -144,8 +164,8 @@ export class FastCacheService {
     const staleAt = now + ttlSeconds * 1000;
     const expiresAt = now + ttlSeconds * 2 * 1000;
 
-    // 1. حفظ في L1 (كائن حقيقي بالذاكرة بدون overhead التسلسل)
-    this.l1Store.set(fullKey, { value, expiresAt, staleAt });
+    // 1. حفظ في L1 (كائن حقيقي بالذاكرة بدون overhead التسلسل مع سياسة تفريغ LRU)
+    this.setL1Entry(fullKey, { value, expiresAt, staleAt });
 
     // 2. حفظ في L2 Redis الموزع
     if (this.isRedisReady()) {
@@ -165,14 +185,17 @@ export class FastCacheService {
     const now = Date.now();
 
     const l1 = this.l1Store.get(fullKey);
-    if (l1 && l1.expiresAt > now) return l1.value as T;
+    if (l1 && l1.expiresAt > now) {
+      this.touchL1Entry(fullKey, l1);
+      return l1.value as T;
+    }
 
     if (this.isRedisReady()) {
       try {
         const raw = await redis.get(fullKey);
         if (raw) {
           const parsed = JSON.parse(raw) as T;
-          this.l1Store.set(fullKey, {
+          this.setL1Entry(fullKey, {
             value: parsed,
             expiresAt: now + this.DEFAULT_TTL * 2 * 1000,
             staleAt: now + this.DEFAULT_TTL * 1000,
@@ -219,15 +242,28 @@ export class FastCacheService {
       }
     }
 
-    // تطهير L2 Redis
-    try {
-      const redisPattern = `fastcache:${cleanPattern.includes('*') ? cleanPattern : `${cleanPattern}*`}`;
-      const keys = await redis.keys(redisPattern);
-      if (keys.length > 0) {
-        await redis.del(...keys);
+    // تطهير L2 Redis الموزع بشكل متدفق غير حاجب لـ Event Loop (Non-blocking scanStream)
+    if (this.isRedisReady()) {
+      try {
+        const redisPattern = `fastcache:${cleanPattern.includes('*') ? cleanPattern : `${cleanPattern}*`}`;
+        if (typeof (redis as any).scanStream === 'function') {
+          const stream = (redis as any).scanStream({ match: redisPattern, count: 100 });
+          for await (const chunk of stream) {
+            const keys = chunk as string[];
+            if (keys && keys.length > 0) {
+              await redis.del(...keys);
+            }
+          }
+        } else if (typeof (redis as any).keys === 'function') {
+          // Fallback for mocked/custom environments without scanStream
+          const keys = await (redis as any).keys(redisPattern);
+          if (keys && keys.length > 0) {
+            await redis.del(...keys);
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ [FastCache] Redis invalidatePattern error for ${pattern}:`, err);
       }
-    } catch (err) {
-      console.warn(`⚠️ [FastCache] Redis invalidatePattern error for ${pattern}:`, err);
     }
   }
 

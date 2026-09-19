@@ -7,6 +7,7 @@ import { WorkerEditKeyboards, PICKER_OPTIONS } from './flow.keyboard.js';
 import { FIELD_KEY_SHORT_MAP, FIELD_LABELS, validateFieldValue, getReturnTab } from './flow.validators.js';
 import type { PendingWorkerEditState, WorkerProfileTab } from './flow.types.js';
 import type { WorkerSalaryWizardHandler } from './flow.salary-wizard.js';
+import type { WorkerEditDraftStore } from './flow.draft-store.js';
 
 export class WorkerFieldInputHandler {
   constructor(
@@ -16,7 +17,7 @@ export class WorkerFieldInputHandler {
     private readonly handlePickWorker: (ctx: WorkforceModuleContext, workerId: string, tab?: WorkerProfileTab) => Promise<void>,
     private readonly isSuperAdmin: (ctx: WorkforceModuleContext) => boolean,
     private readonly salaryWizard: WorkerSalaryWizardHandler,
-    private readonly editDrafts: Map<string, PendingWorkerEditState>
+    private readonly editDrafts: WorkerEditDraftStore | Map<string, PendingWorkerEditState>
   ) {}
 
   async handleSelectPickerValue(

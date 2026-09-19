@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   MessageSquare,
   Building2,
@@ -19,10 +20,15 @@ import {
   Layers,
   HelpCircle,
   X,
+  BellRing,
+  Search,
 } from 'lucide-react';
+import type { NotificationTopicItem } from '@/lib/data-fetchers';
 
 interface TelegramGroupsClientProps {
   currentUserRole: string;
+  initialTopics?: NotificationTopicItem[];
+  initialTab?: 'groups' | 'notifications';
 }
 
 interface SiteTelegramItem {
@@ -60,10 +66,20 @@ interface CentralHqData {
   topics: CentralTopic[];
 }
 
-export function TelegramGroupsClient({ currentUserRole }: TelegramGroupsClientProps) {
+export function TelegramGroupsClient({
+  currentUserRole,
+  initialTopics = [],
+  initialTab = 'groups',
+}: TelegramGroupsClientProps) {
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Tab State
+  const [activeTab, setActiveTab] = useState<'groups' | 'notifications'>(initialTab);
+  const [notificationTopics, setNotificationTopics] = useState<NotificationTopicItem[]>(initialTopics);
+  const [topicSearch, setTopicSearch] = useState('');
 
   const [centralHq, setCentralHq] = useState<CentralHqData | null>(null);
   const [sites, setSites] = useState<SiteTelegramItem[]>([]);
@@ -78,6 +94,46 @@ export function TelegramGroupsClient({ currentUserRole }: TelegramGroupsClientPr
 
   const canEdit = ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(currentUserRole);
 
+  // Sync tab with URL query param and browser history back/forward
+  useEffect(() => {
+    const tab = searchParams?.get('tab');
+    if (tab === 'notifications' || tab === 'groups') {
+      setActiveTab(tab);
+    }
+
+    const onPopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const currentTab = params.get('tab');
+      if (currentTab === 'notifications' || currentTab === 'groups') {
+        setActiveTab(currentTab);
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'groups' | 'notifications') => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState(null, '', url.toString());
+    }
+  };
+
+  const filteredTopics = useMemo(() => {
+    if (!topicSearch.trim()) return notificationTopics;
+    const q = topicSearch.toLowerCase();
+    return notificationTopics.filter(
+      (t) =>
+        t.category.toLowerCase().includes(q) ||
+        t.topicName.toLowerCase().includes(q) ||
+        t.channel.toLowerCase().includes(q) ||
+        t.topicId.toLowerCase().includes(q)
+    );
+  }, [notificationTopics, topicSearch]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -89,6 +145,9 @@ export function TelegramGroupsClient({ currentUserRole }: TelegramGroupsClientPr
       setCentralHq(data.centralHq || null);
       setSites(data.sites || []);
       setRecentTasks(data.recentTasks || []);
+      if (data.notificationTopics && Array.isArray(data.notificationTopics)) {
+        setNotificationTopics(data.notificationTopics);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
@@ -204,20 +263,20 @@ export function TelegramGroupsClient({ currentUserRole }: TelegramGroupsClientPr
               <span>مركز الإعدادات</span>
             </Link>
             <span className="text-slate-400">/</span>
-            <span className="text-xs font-semibold text-orange-600">مجموعات وتوبيكات تليجرام</span>
+            <span className="text-xs font-semibold text-orange-600">إدارة تليجرام والتوبيكات والإشعارات</span>
           </div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 mt-1">
             <MessageSquare className="w-5 h-5 text-orange-600" />
-            <span>جناح إدارة وتوجيه مجموعات تليجرام (Telegram Groups & Topics Hub)</span>
+            <span>إدارة تليجرام والتوبيكات والإشعارات (Telegram & Notifications Hub)</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            ربط ومراقبة المجموعات السيادية للمقر الرئيسي وتوبيكات المشاريع الميدانية وطابور فرض السياسات اللحظي.
+            ربط ومراقبة مجموعات وتوبيكات تليجرام وسياسات توجيه التنبيهات الميدانية التلقائية.
           </p>
         </div>
 
         <button
           onClick={fetchData}
-          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>تحديث البيانات</span>
@@ -238,8 +297,38 @@ export function TelegramGroupsClient({ currentUserRole }: TelegramGroupsClientPr
         </div>
       )}
 
-      {/* Central HQ Supergroup & Topics Card */}
-      {centralHq && (
+      {/* Tabs Bar */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <button
+          onClick={() => handleTabChange('groups')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'groups'
+              ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/40 shadow-2xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent'
+          }`}
+        >
+          <span className="text-sm">🏷️</span>
+          <span>المجموعات والتوبيكات ({sites.length + (centralHq ? 1 : 0)})</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('notifications')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'notifications'
+              ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/40 shadow-2xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-transparent'
+          }`}
+        >
+          <span className="text-sm">🔔</span>
+          <span>سياسات توجيه الإشعارات ({notificationTopics.length})</span>
+        </button>
+      </div>
+
+      {/* Tab 1: Groups & Topics */}
+      {activeTab === 'groups' && (
+        <div className="space-y-6">
+          {/* Central HQ Supergroup & Topics Card */}
+          {centralHq && (
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-6 shadow-md">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-700/80 pb-4">
             <div className="flex items-center gap-3">
@@ -468,6 +557,83 @@ export function TelegramGroupsClient({ currentUserRole }: TelegramGroupsClientPr
           </table>
         </div>
       </div>
+    </div>
+      )}
+
+      {/* Tab 2: Notification Routing Policies */}
+      {activeTab === 'notifications' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={topicSearch}
+                onChange={(e) => setTopicSearch(e.target.value)}
+                placeholder="بحث في سياسات الإشعارات (المعاملة، التوبيك، المجموعة)..."
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pr-9 pl-8 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              {topicSearch && (
+                <button
+                  type="button"
+                  onClick={() => setTopicSearch('')}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer"
+                  title="مسح البحث"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                إجمالي السياسات المعرفة: <strong className="text-orange-600 dark:text-orange-400">{filteredTopics.length}</strong> من {notificationTopics.length}
+              </span>
+            </div>
+          </div>
+
+          {filteredTopics.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-3 shadow-2xs">
+              <BellRing className="w-10 h-10 text-slate-400 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">لا توجد سياسات توجيه مطابقة</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                لم يتم العثور على أي سياسات توجيه تطابق معايير البحث الحالية. جرب البحث بكلمات أخرى.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[700px] text-right text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-semibold">
+                    <tr>
+                      <th className="py-3 px-4">نوع المعاملة والحدث</th>
+                      <th className="py-3 px-4">معرف التوبيك (Topic ID)</th>
+                      <th className="py-3 px-4">مسمى التوبيك في التيليجرام</th>
+                      <th className="py-3 px-4">المجموعة الموجه إليها</th>
+                      <th className="py-3 px-4">الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    {filteredTopics.map((t) => (
+                      <tr key={t.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">{t.category}</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-orange-700 dark:text-orange-400">{t.topicId}</td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">{t.topicName}</td>
+                        <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">{t.channel}</td>
+                        <td className="py-3.5 px-4">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded border border-orange-200/60 dark:border-orange-800/50">
+                            <CheckCircle2 className="w-3 h-3 text-orange-600 dark:text-orange-500" />
+                            <span>توجيه تلقائي</span>
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Edit Binding Modal */}
       {editingSite && (

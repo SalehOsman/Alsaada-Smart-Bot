@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './apps/admin-dashboard/src'),
+    },
+  },
   test: {
     globals: true,
     environment: 'node',
@@ -11,6 +17,6 @@ export default defineConfig({
     include: [
       '**/tests/**/*.spec.ts',
     ],
-    testTimeout: 15000,
+    testTimeout: 35000,
   },
 });

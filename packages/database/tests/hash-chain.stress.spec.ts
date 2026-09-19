@@ -58,7 +58,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
         timestamp: ts,
       });
 
-      const expectedString = `${GENESIS_HASH}:FinancialLedger:-500.50:reversal-actor:${ts}`;
+      const expectedString = `${GENESIS_HASH}::FinancialLedger:-500.50:EGP::::reversal-actor:${ts}`;
       const expectedHash = crypto.createHash('sha256').update(expectedString).digest('hex');
 
       expect(hashNegNum).toBe(expectedHash);
@@ -74,7 +74,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       });
       const expectedMicro = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:FinancialLedger:-0.01:reversal-actor:${ts}`)
+        .update(`${GENESIS_HASH}::FinancialLedger:-0.01:EGP::::reversal-actor:${ts}`)
         .digest('hex');
       expect(hashMicroNeg).toBe(expectedMicro);
     });
@@ -83,7 +83,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       const ts = '2026-09-11T12:00:00.000Z';
       const expectedZeroHash = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:CustodySettlement:0.00:sys-settle:${ts}`)
+        .update(`${GENESIS_HASH}::CustodySettlement:0.00:EGP::::sys-settle:${ts}`)
         .digest('hex');
 
       // Integer 0
@@ -166,7 +166,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       });
       const expectedUp = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:SupplierPayment:100.46:procurement:${ts}`)
+        .update(`${GENESIS_HASH}::SupplierPayment:100.46:EGP::::procurement:${ts}`)
         .digest('hex');
       expect(hashRoundUp).toBe(expectedUp);
 
@@ -180,7 +180,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       });
       const expectedDown = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:SupplierPayment:100.45:procurement:${ts}`)
+        .update(`${GENESIS_HASH}::SupplierPayment:100.45:EGP::::procurement:${ts}`)
         .digest('hex');
       expect(hashRoundDown).toBe(expectedDown);
 
@@ -193,7 +193,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
         timestamp: ts,
       });
       expect(hashSubCentLow).toBe(
-        crypto.createHash('sha256').update(`${GENESIS_HASH}:SupplierPayment:0.00:procurement:${ts}`).digest('hex')
+        crypto.createHash('sha256').update(`${GENESIS_HASH}::SupplierPayment:0.00:EGP::::procurement:${ts}`).digest('hex')
       );
 
       const hashSubCentHigh = computeRecordHash({
@@ -204,7 +204,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
         timestamp: ts,
       });
       expect(hashSubCentHigh).toBe(
-        crypto.createHash('sha256').update(`${GENESIS_HASH}:SupplierPayment:0.01:procurement:${ts}`).digest('hex')
+        crypto.createHash('sha256').update(`${GENESIS_HASH}::SupplierPayment:0.01:EGP::::procurement:${ts}`).digest('hex')
       );
     });
 
@@ -222,7 +222,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       });
       const expectedArabic = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:FinancialLedger:500.00:${arabicActor}:${ts}`)
+        .update(`${GENESIS_HASH}::FinancialLedger:500.00:EGP::::${arabicActor}:${ts}`)
         .digest('hex');
       expect(hashArabic).toBe(expectedArabic);
 
@@ -237,7 +237,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       });
       const expectedEmoji = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:FinancialLedger:750.00:${emojiActor}:${ts}`)
+        .update(`${GENESIS_HASH}::FinancialLedger:750.00:EGP::::${emojiActor}:${ts}`)
         .digest('hex');
       expect(hashEmoji).toBe(expectedEmoji);
 
@@ -252,7 +252,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       });
       const expectedColon = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:FinancialLedger:1000.00:${colonActor}:${ts}`)
+        .update(`${GENESIS_HASH}::FinancialLedger:1000.00:EGP::::${colonActor}:${ts}`)
         .digest('hex');
       expect(hashColon).toBe(expectedColon);
     });
@@ -299,7 +299,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
 
       const expected = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:FinancialLedger:250.00:9007199254740993:${ts}`)
+        .update(`${GENESIS_HASH}::FinancialLedger:250.00:EGP::::9007199254740993:${ts}`)
         .digest('hex');
 
       expect(hash).toBe(expected);
@@ -328,7 +328,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
 
       const expected = crypto
         .createHash('sha256')
-        .update(`${GENESIS_HASH}:FinancialLedger:1850.25:dec-actor:${ts}`)
+        .update(`${GENESIS_HASH}::FinancialLedger:1850.25:EGP::::dec-actor:${ts}`)
         .digest('hex');
       expect(hash).toBe(expected);
     });
@@ -889,22 +889,31 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       ).rejects.toThrow(LedgerHardDeleteForbiddenError);
     });
 
-    it('3.6: Permits updating mutable non-financial audit fields (description, notes, isReversal)', async () => {
+    it('3.6: Permits updating mutable non-financial audit fields in LEDGER_UPDATE_WHITELIST', async () => {
       const client = createMockImmutabilityClient();
       const extended = hashLedgerExtension(client);
 
-      // Allowed updates do not throw
+      // Allowed whitelist updates do not throw
       const updated = await extended.financialLedger.update({
         where: { id: 'FL-1' },
         data: {
-          description: 'Updated accounting memorandum',
-          isReversal: true,
-          reversalOfVoucherId: '#V-ORIG',
+          approvalStatus: 'APPROVED',
+          auditNotes: 'Updated accounting memorandum',
+          syncedToSheets: true,
         },
       });
 
-      expect(updated.description).toBe('Updated accounting memorandum');
-      expect(updated.isReversal).toBe(true);
+      expect(updated.approvalStatus).toBe('APPROVED');
+      expect(updated.auditNotes).toBe('Updated accounting memorandum');
+      expect(updated.syncedToSheets).toBe(true);
+
+      // Updates outside whitelist throw
+      await expect(
+        extended.financialLedger.update({
+          where: { id: 'FL-1' },
+          data: { description: 'Updated accounting memorandum' },
+        })
+      ).rejects.toThrow(ImmutableLedgerError);
     });
 
     it('3.7: Non-financial models are exempt from ledger immutability constraints', async () => {

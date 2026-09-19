@@ -1,0 +1,23 @@
+# ⚖️ سجل تقارير التدقيق والمراجعات الجنائية الدورية (Periodic Forensic Audits)
+## Enterprise Periodic Audits, Adversarial Reviews & Forensic Architecture Records
+
+> [!IMPORTANT]
+> يحتوي هذا المجلد على سجلات وتقارير التدقيق الجنائي الفني الشامل والمراجعات الهندسية الدورية المستقلة لمنظومة **Al-Saada Smart Bot**.
+> تخضع هذه التقارير لأعلى معايير الحياد والمصداقية ومطابقة الواقع البرمجي بنسبة 100% (`Zero Documentation Drift`).
+
+---
+
+### 📅 التقارير والتدقيقات الجنائية المعتمدة مرتبة زمنياً:
+
+| تاريخ التدقيق | مسار تقرير التدقيق | موضوع التدقيق والهيئة الفاحصة | القرار والحالة |
+| :---: | :--- | :--- | :---: |
+| **2026-09-19** | [`2026-09-19/comprehensive-forensic-engineering-audit.md`](./2026-09-19/comprehensive-forensic-engineering-audit.md) | **وثيقة التدقيق الجنائي الفني الشامل للمنظومة** (الهيئة القضائية العليا الرباعية: معمارية الإضافات، النزاهة المالية، أمن الداشبورد، بوابات الجودة، الإجابات الحاسمة، والمخطط التنفيذي - التقرير المعتمد والمعاير جنائياً). | 🟢 **جاهزية مشروطة معتمدة** (CERI: 70.40%) |
+| **2026-09-17** | [`2026-09-17/comprehensive-forensic-codebase-audit.md`](./2026-09-17/comprehensive-forensic-codebase-audit.md) | **تقرير المراجعة والتدقيق الفني الشامل للمنظومة** (فحص 7 محاور معمارية وسيبرانية ونقد ذاتي استقصائي). | ⚠️ **تحذير مشروط** (CPHI: 80.0%) |
+| **2026-09-17** | [`2026-09-17/enterprise-governance-gates-audit-and-critique.md`](./2026-09-17/enterprise-governance-gates-audit-and-critique.md) | **فحص ونقد بوابات الحوكمة والمعايير الدستورية** (نقد أدوات التفتيش والـ Git Hooks). | ⚠️ **تحذير واقتراح إصلاح** |
+| **2026-09-13** | [`2026-09-13/legacy-and-current-inventory-audit.md`](./2026-09-13/legacy-and-current-inventory-audit.md) | **جرد التدفقات والشيتات بين القديم والحديث** (حصر الـ 126 وظيفة والـ 66 شيت). | 🟢 **جرد موثق** |
+| **2026-09-13** | [`2026-09-13/pre-change-verification-log.md`](./2026-09-13/pre-change-verification-log.md) | **سجل التحقق المسبق للتغييرات** (فحص الجاهزية قبل إطلاق الحزم). | 🟢 **مجتاز** |
+| **2026-09-12** | [`2026-09-12/project-assessment-and-remediation-evidence.md`](./2026-09-12/project-assessment-and-remediation-evidence.md) | **تقييم المشروع وأدلة المعالجة التأسيسية**. | 🟢 **معتمد** |
+| **2026-09-12** | [`2026-09-12/pre-change-verification-log.md`](./2026-09-12/pre-change-verification-log.md) | **سجل التحقق المسبق قبل التعديلات البرمجية**. | 🟢 **مجتاز** |
+| **2026-09-11** | [`2026-09-11/architecture-audit-report.md`](./2026-09-11/architecture-audit-report.md) | **تقرير التدقيق المعماري الأولي للمنظومة** (فحص النواة الأولى ومقارنة Tempot v11). | 🟢 **معتمد** |
+
+---

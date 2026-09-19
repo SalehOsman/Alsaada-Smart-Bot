@@ -6,6 +6,7 @@ import { WorkerEditMessages } from './flow.messages.js';
 import { WorkerEditKeyboards, POLICY_SHORT_TO_CODE } from './flow.keyboard.js';
 import type { PendingWorkerEditState } from './flow.types.js';
 import type { ReplyOrEditFn, PickWorkerFn } from './flow.salary-wizard.js';
+import type { WorkerEditDraftStore } from './flow.draft-store.js';
 
 export class WorkerCigaretteHandler {
   constructor(
@@ -13,7 +14,7 @@ export class WorkerCigaretteHandler {
     private readonly repository: WorkerEditRepository,
     private readonly replyOrEdit: ReplyOrEditFn,
     private readonly pickWorker: PickWorkerFn,
-    private readonly editDrafts: Map<string, PendingWorkerEditState>,
+    private readonly editDrafts: WorkerEditDraftStore | Map<string, PendingWorkerEditState>,
     private readonly isSuperAdmin: (ctx: WorkforceModuleContext) => boolean
   ) {}
 

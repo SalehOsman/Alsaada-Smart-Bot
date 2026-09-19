@@ -4,7 +4,6 @@
   "commit": false,
   "fixed": [
     [
-      "alsaada-smart-bot",
       "@alsaada/bot-server",
       "@alsaada/admin-dashboard",
       "@alsaada/rbac",
