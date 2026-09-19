@@ -74,6 +74,9 @@ jobs:
       - name: Push Database Schema
         run: pnpm --filter @alsaada/database db:push --accept-data-loss
 
+      - name: Setup Isolated Test Database
+        run: pnpm tsx scripts/test-db-setup.ts --require-live
+
       - name: Build Core Packages and Modules
         run: pnpm --filter "./packages/**" --filter "./modules/**" build
 

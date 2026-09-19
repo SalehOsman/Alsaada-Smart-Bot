@@ -275,6 +275,7 @@ export async function verifyFinancialIntegrity(
     try {
       const isLive = await isPortOpen(DEFAULT_POSTGRES_HOST, DEFAULT_POSTGRES_PORT);
       if (isLive) {
+        await setupTestDatabase();
         const testDbUrl = getTestDatabaseUrl();
         const { createExtendedPrismaClient } = await import('../../packages/database/src/client.js');
         client = createExtendedPrismaClient({

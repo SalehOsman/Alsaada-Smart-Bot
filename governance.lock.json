@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T08:42:39.917Z",
+  "generatedAt": "2026-09-19T15:32:18.131Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -32,7 +32,7 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "5fbf4a67ee14718223b2cb088417b82b4afc5952f73bd6fc600a0f3533bb8211"
+      "sha256": "8e8e3feecc9379b0a48b5999ade4ac4f39971b06271fc7a9758a7be8f8779bac"
     },
     {
       "path": ".github/workflows/code-review.yml",
@@ -188,7 +188,7 @@
     },
     {
       "path": "tools/governance/verify-financial-integrity.ts",
-      "sha256": "30fae808fec7c8307bd756a6d52265a5283d95fbcf7f0232348b0f5e72aa89d8"
+      "sha256": "db4e72d81ccdb4e20f1285e279cc751e2d2f3c1639107fe04a597fc00064553d"
     },
     {
       "path": "tools/governance/verify-flow-contracts.ts",
