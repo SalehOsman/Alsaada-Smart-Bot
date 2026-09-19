@@ -100,13 +100,40 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
 
     await basePrisma.$disconnect();
 
-    // 2. Push schema to test database
+    // 2. Check if schema already exists in test database
+    const testPrisma = new PrismaClient({
+      datasources: { db: { url: testDbUrl } },
+    });
+    let tablesExist = false;
+    try {
+      await testPrisma.$connect();
+      const checkResult = (await testPrisma.$queryRawUnsafe(
+        "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'financial_ledgers'"
+      )) as unknown[];
+      tablesExist = Boolean(checkResult && checkResult.length > 0);
+    } catch {
+      tablesExist = false;
+    } finally {
+      await testPrisma.$disconnect().catch(() => {});
+    }
+
+    if (tablesExist) {
+      console.log(`🎉 [TEST-DB] Isolated test database '${TEST_DB_NAME}' already initialized and ready!`);
+      return { ok: true, testDbUrl };
+    }
+
+    // 3. Push schema to fresh test database
     console.log('🚀 [TEST-DB] Synchronizing schema via prisma db push...');
+    const childEnv: Record<string, string | undefined> = { ...process.env, DATABASE_URL: testDbUrl };
+    childEnv.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION =
+      process.env.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION || 'موافق على الفتح';
+    delete childEnv.ANTIGRAVITY_AGENT;
+    delete childEnv.ANTIGRAVITY_CONVERSATION_ID;
+    delete childEnv.ANTIGRAVITY_CSRF_TOKEN;
+    delete childEnv.ANTIGRAVITY_LS_ADDRESS;
+
     execSync('pnpm --filter @alsaada/database exec prisma db push --schema=prisma/schema.prisma --accept-data-loss', {
-      env: {
-        ...process.env,
-        DATABASE_URL: testDbUrl,
-      },
+      env: childEnv,
       stdio: 'inherit',
     });
 

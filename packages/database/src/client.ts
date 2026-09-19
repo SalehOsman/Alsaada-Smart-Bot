@@ -50,9 +50,7 @@ export function createExtendedPrismaClient(options?: any): PrismaClient {
 
 export const prisma: PrismaClient = globalForPrisma.prismaInstance ?? createExtendedPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prismaInstance = prisma;
-}
+globalForPrisma.prismaInstance = prisma;
 
 export type ExtendedPrismaClient = PrismaClient;
 
@@ -67,6 +65,7 @@ export async function disconnectDatabase(): Promise<void> {
     await globalForPrisma.pgPoolInstance.end();
     globalForPrisma.pgPoolInstance = undefined;
   }
+  globalForPrisma.prismaInstance = undefined;
   console.log('🛑 [DATABASE] Disconnected from PostgreSQL');
 }
 
