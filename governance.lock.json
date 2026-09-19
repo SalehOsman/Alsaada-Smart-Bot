@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T15:32:18.131Z",
+  "generatedAt": "2026-09-19T16:39:51.116Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -24,11 +24,11 @@
   "files": [
     {
       "path": ".githooks/pre-commit",
-      "sha256": "0fe5c1f66bd6a11307395d9b5e986bcabab4531bd2d9f3c9bcb7f9b434dcdfe0"
+      "sha256": "934cfbe267664160adf75647499a94e142f64b2f12e573a517eaf0139bf3082e"
     },
     {
       "path": ".githooks/pre-commit.cmd",
-      "sha256": "62244edab4a90482815ab44a3f1ba8ae4df723c0414c907c8d114423c0aa55c5"
+      "sha256": "a193fc1d87fc809afde3aa5cbf50db951d9d2e36f74100ae7e8179fe6896d626"
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -48,7 +48,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "16abef96ce46dc4d47f55314f999573408a79e0106454b230112324b5132162a"
+      "sha256": "91ebc06acee15635d8a1af345ef1e21199d8b3e63cb7a15745035b46556217de"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
@@ -68,7 +68,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "17a226bf711e3d43419aee3eb5d939e2a810cb29afcaf615f66a94e4c00e79de"
+      "sha256": "0b9cd5334b4311bb561d6f1cb6a565fa7d83e52c3509cd4d39968740a607bb8f"
     },
     {
       "path": "package.json",
@@ -112,7 +112,7 @@
     },
     {
       "path": "tools/governance/tests/pre-commit-test-guard.spec.ts",
-      "sha256": "1c367f5f14c3d38ce710196e9e32511c25b6e82a7707e883d46f0989bb252045"
+      "sha256": "084509f51860962cc0c2126f398be9d74a66b1ce929dbc6ce4bbe0f4d181b93f"
     },
     {
       "path": "tools/governance/tests/rag-engine.spec.ts",

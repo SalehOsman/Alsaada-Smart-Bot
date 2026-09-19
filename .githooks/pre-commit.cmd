@@ -1,5 +1,22 @@
 @echo off
+setlocal enabledelayedexpansion
 rem Al-Saada Smart Bot Enterprise — Pre-Commit Governance Guard (Windows)
+
+REM 0. فحص الفرع الحالي لمنع الـ Commit المباشر على main
+for /f "tokens=*" %%i in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set CURRENT_BRANCH=%%i
+
+if "%CURRENT_BRANCH%"=="main" (
+  for /f "tokens=*" %%m in ('git rev-parse --git-path MERGE_HEAD 2^>nul') do set MERGE_HEAD_FILE=%%m
+  if not exist "!MERGE_HEAD_FILE!" (
+    echo.
+    echo 🛑 [GOVERNANCE ERROR] Direct commits to 'main' branch are strictly prohibited.
+    echo 📌 Create a dedicated branch: git checkout -b feat/^<name^>
+    echo 🔒 Merge to main requires full verification and explicit approval: "ادمج الفرع"
+    echo.
+    exit /b 1
+  )
+)
+
 echo [PRE-COMMIT] Running strict TypeScript, contracts, and architecture checks...
 
 call pnpm typecheck
