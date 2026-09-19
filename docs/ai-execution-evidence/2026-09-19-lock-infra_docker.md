@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (infra:docker)
 
-- **تاريخ القفل:** 2026-09-19 (2026-09-19T08:48:29.277Z)
+- **تاريخ القفل:** 2026-09-19 (2026-09-19T16:55:46.303Z)
 - **معرف الكيان:** `infra:docker`
 - **نوع الكيان:** `infra`
 - **العنوان:** البنية التحتية والدوكر وقواعد البيانات
@@ -14,9 +14,9 @@
 | :--- | :--- |
 | `.dockerignore` | `865f3560cd73f005a383c3215541b20dc4e796866ac0d0a0fcecbed1ffffb270` |
 | `docker-compose.yml` | `88633948450480ced0616039901a250d9c1ddc5d2aad96c7efe495118a833718` |
-| `docker/Dockerfile` | `017912a6cb681ddb05fc0233397904b0825c3a956090475b352f0b541c3bc89b` |
-| `docker/Dockerfile.dashboard` | `7d0eae5f706fbfcc7e4325fe286e07657746689eed256b077533c98e2a5315b2` |
-| `docker/Dockerfile.docs` | `3b853dcb4d899eef774fcc9f3d4e2c12219dd8a05d9d5eafa39841982873aa79` |
+| `docker/Dockerfile` | `472fa9fcd16136487a0abd0e2e554b5187e1ebad75726fcec4a89d400454e4b4` |
+| `docker/Dockerfile.dashboard` | `5d96133627347855e62eedea611a5a04f28a71338e3d993666b9fd7a38f80503` |
+| `docker/Dockerfile.docs` | `0a832ce3e1307b306262a6748373ea8154fe207ccd96ec5c1c488ecd2ff37310` |
 | `docker/nginx-docs.conf` | `2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa` |
 | `docker/postgres/init-scripts/01-init-security.sql` | `98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f` |
 

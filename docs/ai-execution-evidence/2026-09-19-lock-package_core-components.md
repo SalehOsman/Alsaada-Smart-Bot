@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:core-components)
 
-- **تاريخ القفل:** 2026-09-19 (2026-09-19T03:26:08.105Z)
+- **تاريخ القفل:** 2026-09-19 (2026-09-19T16:55:46.334Z)
 - **معرف الكيان:** `package:core-components`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/core-components
@@ -12,7 +12,7 @@
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/core-components/package.json` | `1b9569764beb6269ed750e22651e2a0206edb0c18bd11437117f1f7e60453fd4` |
+| `packages/core-components/package.json` | `9944fba369c8856154ddb973e542fce6903a09a78dd68259c76b7840729b4222` |
 | `packages/core-components/src/amount-picker/keyboard.ts` | `66d4fbd3bb18ca571b349726a79f04ac36b9d3e5f151bf452edceb05faaa3bf0` |
 | `packages/core-components/src/amount-picker/validator.ts` | `55c099d019ff486498ec8a1eac35bf155dcd97f3d348e84f7680f51283c7b284` |
 | `packages/core-components/src/approval-workflow/types.ts` | `9caeefbcabbce16738ad05e5ff3858edd3677dd164b6e48ef8f3c8b91d34dbca` |

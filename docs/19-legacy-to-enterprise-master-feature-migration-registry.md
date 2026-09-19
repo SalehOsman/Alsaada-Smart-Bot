@@ -35,11 +35,11 @@
 
 | كود الوظيفة القديم | مسمى الوظيفة في المشروع السابق | القسم المستهدف في الجديد | الحالة الحالية | المسار الجديد في المشروع (`F:\Alsaada-Smart-Bot`) | الاعتماد و الـ Commit |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| **`01.1`** | تسجيل وتعيين عامل / موظف جديد | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.1-worker-registration` | `2026-09-18` (`Plan-70-Lock`) |
+| **`01.1`** | تسجيل وتعيين عامل / موظف جديد | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.1-worker-registration` | `2026-09-19` (`Plan-70-Lock`) |
 | **`01.2`** | طلب تسجيل وانضمام ذاتي للعامل وربط التيليجرام بـ Deep Link و HMAC مشفر 24 ساعة (Self-Registration & Linking) | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.7-guest-join-and-linking` | `2026-09-10` (`Workforce-P07-Completion`) |
 | **`01.3`** | إنهاء خدمة وتصفية مستحقات ومخالصة وفصل التيليجرام وتنزيل الصلاحية لزائر فوراً ومطابقة الخطة 14 (Worker Offboarding) | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.8-worker-offboarding` | `2026-09-11` (`Plan-14-Completion`) |
-| **`01.4`** | تصدير واستخراج كشوف العمالة المتقدم إكسيل RTL | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.4-worker-export` | `2026-09-18` (`Plan-70-Lock`) |
-| **`01.5`** | سجل وأرشيف العاملين ودليل 360° | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.5-worker-directory` | `2026-09-18` (`Plan-70-Lock`) |
+| **`01.4`** | تصدير واستخراج كشوف العمالة المتقدم إكسيل RTL | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.4-worker-export` | `2026-09-19` (`Plan-70-Lock`) |
+| **`01.5`** | سجل وأرشيف العاملين ودليل 360° | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.5-worker-directory` | `2026-09-19` (`Plan-70-Lock`) |
 | **`01.2.D`**| تعديل وتحديث بيانات عامل (كارت شامل بـ 4 تبويبات + مخصص السجائر الميداني والتأمينات) | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.2.D-worker-edit` | `2026-09-19` (`Plan-70-Lock`) |
 | **`03.1`** | تسجيل ونزول الإجازات الفردية والمجمعة | الموارد البشرية والعمال | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/leaves/record-leave.ts` | — |
 | **`03.2`** | تقديم طلب إجازة رسمية من العامل | الموارد البشرية والعمال | ⏳ بانتظار الترحيل | `apps/bot-server/src/flows/leaves/worker-leave-req.ts` | — |
@@ -282,20 +282,20 @@
 | **`NEW-85`** | **مركز التحكم السيادي في موديولات وتدفقات وقوائم البوت، الشجرة الهرمية بمطابقة البوت، السحب والإفلات وتوحيد تليجرام** (`Enterprise Bot Dynamic Module & Flow Control Center, Hierarchical Accordion Parity, Native Drag-and-Drop, Sibling Shift & Unified Telegram Hub`) مركز تحكم متكامل بالداشبورد وخادم البوت؛ إدارة ديناميكية للشجرة الهرمية للـ 126 وظيفة وموديول، إيقاف وتشغيل فوري (< 5ms) عبر Redis Pub/Sub مع خيارات الإخفاء أو القفل التنبيهي Modal Alert، حصانة مشفرة غير قابلة للتعطيل للوظائف السيادية (/dashboard, /start, /cancel, /ping, /unghost)، شجرة هرمية مطابقة لعرض البوت تبدأ بالموديولات الـ 5 ومغلقة افتراضياً مع أزرار توسيع/طي الكل والبحث الذكي المتسلسل، دعم السحب والإفلات القياسي (HTML5) وأسهم التحريك اللحظي بين الأشقاء مع التراجع المتفائل، توحيد مجموعات وتوبيكات تليجرام وسياسات توجيه الإشعارات في جناح موحد بتبويبات سريعة، وتطهير تكرار القائمة الجانبية | إدارة النظام والتحكم السيادي والداشبورد | 🟢 **مفعل باللوحة وموثق 100% (PLAN-73)** | `apps/admin-dashboard/src/app/admin/settings/bot-features` | `2026-09-19` (`Plan-73-Done`) |
 | **`NEW-86`** | **بوابة الحوكمة التاسعة عشرة: فحص ومنع تسريب الأسرار والبيانات الحساسة** (`Gate 19: Enterprise Secret Leakage & Gitleaks Governance Verifier`) حظر تسريب المفاتيح ورموز الوصول والأسرار عبر فحص سجل الكوميتات التاريخي وملفات شجرة العمل قيد التثبيت بأداة Gitleaks مع الحجب التلقائي | الحوكمة والأمان السيادي | 🟢 **مفعل كبوابة حوكمة وموثق 100% (PLAN-76)** | `tools/governance/verify-secret-leakage.ts` | `2026-09-19` (`Plan-76-Done`) |
 | **`NEW-87`** | **بوابة الحوكمة العشرون: فحص أمان الكود الساكن واكتشاف الثغرات وتحصين التشفير** (`Gate 20: Enterprise SAST Code Security & Semgrep Governance Verifier`) فحص الكود الساكن بحزم القواعد الأمنية TypeScript و OWASP Top 10 و Node.js عبر أداة Semgrep مع استثناء الملفات المؤقتة والمولدة، وتحصين خوارزمية AES-GCM بطول وسم المصادقة الصريح `{ authTagLength: 16 }` | الحوكمة والأمان السيادي | 🟢 **مفعل كبوابة حوكمة وموثق 100% (PLAN-77)** | `tools/governance/verify-code-security.ts` | `2026-09-19` (`Plan-77-Done`) |
-| **`01.9`** | **مؤشر التزام وموثوقية العاملين واستعلام التقييمات** (`Worker Commitment & Reliability Index`) | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.9-worker-commitment-index` | `2026-09-18` (`Plan-70-Lock`) |
+| **`01.9`** | **مؤشر التزام وموثوقية العاملين واستعلام التقييمات** (`Worker Commitment & Reliability Index`) | الموارد البشرية والعمال | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.9-worker-commitment-index` | `2026-09-19` (`Plan-70-Lock`) |
 
-| **`00.6`** | **00.6** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.6-ghost-mode` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.1`** | **تدفق 00.1** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.1-corporate-profile` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.10`** | **تدفق 00.10** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.10-notification-policies` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.12`** | **تدفق 00.12** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.12-user-rbac-management` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.2`** | **تدفق 00.2** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.2-sites-hub` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.3`** | **تدفق 00.3** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.3-job-matrix` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.4`** | **تدفق 00.4** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.4-admin-profile` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.5`** | **تدفق 00.5** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.5-admin-assignment` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.7`** | **تدفق 00.7** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.7-audit-incident-vault` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.8`** | **تدفق 00.8** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.8-apm-telemetry` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.9`** | **تدفق 00.9** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.9-emergency-cache` | `2026-09-18` (`Plan-70-Lock`) |
-| **`01.6`** | **تدفق 01.6** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.6-worker-self-edit` | `2026-09-18` (`Plan-70-Lock`) |
-| **`01.7`** | **تدفق 01.7** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.7-guest-join-and-linking` | `2026-09-18` (`Plan-70-Lock`) |
-| **`01.8`** | **تدفق 01.8** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.8-worker-offboarding` | `2026-09-18` (`Plan-70-Lock`) |
-| **`00.11`** | **تدفق 00.11** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.11-telegram-groups` | `2026-09-18` (`Plan-70-Lock`) |
+| **`00.6`** | **00.6** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.6-ghost-mode` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.1`** | **تدفق 00.1** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.1-corporate-profile` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.10`** | **تدفق 00.10** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.10-notification-policies` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.12`** | **تدفق 00.12** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.12-user-rbac-management` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.2`** | **تدفق 00.2** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.2-sites-hub` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.3`** | **تدفق 00.3** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.3-job-matrix` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.4`** | **تدفق 00.4** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.4-admin-profile` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.5`** | **تدفق 00.5** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.5-admin-assignment` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.7`** | **تدفق 00.7** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.7-audit-incident-vault` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.8`** | **تدفق 00.8** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.8-apm-telemetry` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.9`** | **تدفق 00.9** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.9-emergency-cache` | `2026-09-19` (`Plan-70-Lock`) |
+| **`01.6`** | **تدفق 01.6** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.6-worker-self-edit` | `2026-09-19` (`Plan-70-Lock`) |
+| **`01.7`** | **تدفق 01.7** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.7-guest-join-and-linking` | `2026-09-19` (`Plan-70-Lock`) |
+| **`01.8`** | **تدفق 01.8** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.8-worker-offboarding` | `2026-09-19` (`Plan-70-Lock`) |
+| **`00.11`** | **تدفق 00.11** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.11-telegram-groups` | `2026-09-19` (`Plan-70-Lock`) |

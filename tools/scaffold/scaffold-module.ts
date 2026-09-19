@@ -87,7 +87,7 @@ export function scaffoldModule(options: ScaffoldModuleOptions): {
       grammy: '^1.35.0',
     },
     devDependencies: {
-      '@types/node': '^22.13.9',
+      '@types/node': '^24.13.6',
       typescript: '^5.9.3',
       vitest: '^3.0.8',
     },

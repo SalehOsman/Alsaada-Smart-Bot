@@ -3,9 +3,11 @@ setlocal enabledelayedexpansion
 rem Al-Saada Smart Bot Enterprise — Pre-Commit Governance Guard (Windows)
 
 REM 0. فحص الفرع الحالي لمنع الـ Commit المباشر على main
+set CURRENT_BRANCH=
 for /f "tokens=*" %%i in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set CURRENT_BRANCH=%%i
 
 if "%CURRENT_BRANCH%"=="main" (
+  set MERGE_HEAD_FILE=
   for /f "tokens=*" %%m in ('git rev-parse --git-path MERGE_HEAD 2^>nul') do set MERGE_HEAD_FILE=%%m
   if not exist "!MERGE_HEAD_FILE!" (
     echo.
