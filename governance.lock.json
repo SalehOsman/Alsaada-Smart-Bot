@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T06:31:46.784Z",
+  "generatedAt": "2026-09-19T07:05:38.318Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -32,7 +32,7 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "89e63a12ed41339d326bab4e3acfe295a041b8009ec485220911bda430fae6d8"
+      "sha256": "8ee06dea8054fb682a695f45d7356093455614a0b4f1495454cc857b01fe598f"
     },
     {
       "path": ".github/workflows/release.yml",

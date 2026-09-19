@@ -69,8 +69,8 @@ jobs:
       - name: Push Database Schema
         run: pnpm --filter @alsaada/database db:push --accept-data-loss
 
-      - name: Build Core Packages
-        run: pnpm --filter "./packages/**" build
+      - name: Build Core Packages and Modules
+        run: pnpm --filter "./packages/**" --filter "./modules/**" build
 
       - name: Compile TypeScript Across Monorepo
         run: pnpm typecheck
