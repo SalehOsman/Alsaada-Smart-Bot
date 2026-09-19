@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T20:08:46.285Z",
+  "generatedAt": "2026-09-19T22:33:51.063Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -560,40 +560,6 @@
       {
         "path": "tools/governance/verify-latency-anti-patterns.ts",
         "sha256": "6a995ade43beda40bdb9f8d3ebaff995e0c563a44a52ae1d9b32674cd9758fcf"
-      }
-    ]
-  },
-  "lockedDocker": {
-    "directory": "docker",
-    "lockedAt": "2026-09-19T20:08:46.285Z",
-    "files": [
-      {
-        "path": ".dockerignore",
-        "sha256": "865f3560cd73f005a383c3215541b20dc4e796866ac0d0a0fcecbed1ffffb270"
-      },
-      {
-        "path": "docker-compose.yml",
-        "sha256": "88633948450480ced0616039901a250d9c1ddc5d2aad96c7efe495118a833718"
-      },
-      {
-        "path": "docker/Dockerfile",
-        "sha256": "e1e12eee6a0d9c46bfb640d80918af4de8e6b3da09fa2806b198e2fea2d902fb"
-      },
-      {
-        "path": "docker/Dockerfile.dashboard",
-        "sha256": "860487f9d6bafaeb004c4eb4ab78fd25fac534f3c3a55d2ba54c8d8c5d01176a"
-      },
-      {
-        "path": "docker/Dockerfile.docs",
-        "sha256": "fb31a40ff0a75248a4648d3a4291e246722754a600066841c740657b7a0f00db"
-      },
-      {
-        "path": "docker/nginx-docs.conf",
-        "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
-      },
-      {
-        "path": "docker/postgres/init-scripts/01-init-security.sql",
-        "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
       }
     ]
   },
@@ -2367,7 +2333,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-19T20:08:46.285Z",
+      "lockedAt": "2026-09-19T22:33:51.063Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",

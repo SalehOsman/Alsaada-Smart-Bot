@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 import net from 'node:net';
-import { PrismaClient } from '../packages/database/src/generated/client/index.js';
+import { createExtendedPrismaClient } from '../packages/database/src/client.js';
 
 export const TEST_DB_NAME = 'alsaada_test_db';
 export const DEFAULT_POSTGRES_PORT = 5432;
@@ -79,7 +79,10 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
     return { ok: false, error: errorMsg };
   }
 
-  const basePrisma = new PrismaClient();
+  const baseDbUrl =
+    process.env.DATABASE_URL ||
+    'postgresql://alsaada_admin:alsaada_secure_pass_2026@127.0.0.1:5432/alsaada_db?schema=public';
+  const basePrisma = createExtendedPrismaClient({ connectionString: baseDbUrl });
   const testDbUrl = getTestDatabaseUrl();
 
   try {
@@ -101,9 +104,7 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
     await basePrisma.$disconnect();
 
     // 2. Check if schema already exists in test database
-    const testPrisma = new PrismaClient({
-      datasources: { db: { url: testDbUrl } },
-    });
+    const testPrisma = createExtendedPrismaClient({ connectionString: testDbUrl });
     let tablesExist = false;
     try {
       await testPrisma.$connect();

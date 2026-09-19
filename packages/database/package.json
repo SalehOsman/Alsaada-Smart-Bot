@@ -9,7 +9,7 @@
     "build": "tsc && node -e \"const fs = require('fs'); fs.cpSync('src/generated', 'dist/generated', {recursive: true});\"",
     "test": "vitest run",
     "db:format": "prisma format",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate && node -e \"const fs = require('fs'); fs.writeFileSync('src/generated/client/index.ts', 'export * from \\\"./client.js\\\";\\nexport { Prisma } from \\\"./client.js\\\";\\n');\"",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",

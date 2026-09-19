@@ -39,7 +39,7 @@ RUN git init --bare "$GIT_DIR" \
     && pnpm config set fetch-retries 5 \
     && pnpm config set fetch-retry-maxtimeout 120000 \
     && pnpm config set network-concurrency 4 \
-    && pnpm install --frozen-lockfile=false
+    && pnpm install --frozen-lockfile=true
 
 # Copy documentation sources and transform pipeline without replacing workspace-local node_modules links
 COPY docs/ docs/

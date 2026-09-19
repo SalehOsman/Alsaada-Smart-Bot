@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import pg, { Pool } from 'pg';
 import { PrismaClient } from './generated/client/index.js';
 import { createSoftDeleteExtension } from './extensions/soft-delete.extension.js';
 import { hashLedgerExtension } from './ledger/hash-ledger.extension.js';
@@ -43,9 +43,19 @@ export function createExtendedPrismaClient(options?: any): PrismaClient {
     ...prismaOptions,
   });
 
-  return baseClient
+  const client = baseClient
     .$extends(createSoftDeleteExtension())
     .$extends(hashLedgerExtension) as unknown as PrismaClient;
+
+  if (customUrl) {
+    const originalDisconnect = client.$disconnect.bind(client);
+    client.$disconnect = async () => {
+      await originalDisconnect();
+      await pool.end().catch(() => {});
+    };
+  }
+
+  return client;
 }
 
 export const prisma: PrismaClient = globalForPrisma.prismaInstance ?? createExtendedPrismaClient();
@@ -53,6 +63,8 @@ export const prisma: PrismaClient = globalForPrisma.prismaInstance ?? createExte
 globalForPrisma.prismaInstance = prisma;
 
 export type ExtendedPrismaClient = PrismaClient;
+export type DatabaseClient = ExtendedPrismaClient;
+export { pg, PrismaPg };
 
 export async function connectDatabase(): Promise<void> {
   await prisma.$connect();
