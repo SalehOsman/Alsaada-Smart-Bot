@@ -11,6 +11,7 @@ import {
   listDockerFiles,
   listProtectedGovernanceFiles,
   sha256File,
+  fileHashMatches,
   type GovernanceLock,
 } from './verify-governance-lock.js';
 import { listEntityFiles, sha256NormalizedFile } from './unified-lock-engine.js';
@@ -277,8 +278,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
       modifiedGovernancePaths.add(normalizePath(path));
       continue;
     }
-    const actualHash = sha256File(fullPath);
-    if (actualHash !== expectedHash) {
+    if (!fileHashMatches(fullPath, expectedHash)) {
       governanceDocFindings.push(`Protected governance file was modified: ${path}`);
       modifiedGovernancePaths.add(normalizePath(path));
     }
@@ -307,7 +307,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
           lockedFindings.push(`Locked flow '${flowKey}' file is missing: ${file.path}`);
           continue;
         }
-        if (sha256File(fullPath) !== file.sha256) {
+        if (!fileHashMatches(fullPath, file.sha256)) {
           lockedFindings.push(`Locked flow '${flowKey}' cryptographic integrity violated (modified): ${file.path}`);
         }
       }
@@ -337,7 +337,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
           lockedFindings.push(`Locked dashboard feature '${featureId}' file is missing: ${file.path}`);
           continue;
         }
-        if (sha256File(fullPath) !== file.sha256) {
+        if (!fileHashMatches(fullPath, file.sha256)) {
           lockedFindings.push(`Locked dashboard feature '${featureId}' cryptographic integrity violated (modified): ${file.path}`);
         }
       }
@@ -360,7 +360,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
         lockedFindings.push(`Locked speed engine file is missing: ${file.path}`);
         continue;
       }
-      if (sha256File(fullPath) !== file.sha256) {
+      if (!fileHashMatches(fullPath, file.sha256)) {
         lockedFindings.push(`Locked speed engine cryptographic integrity violated (modified): ${file.path}`);
       }
     }
@@ -382,7 +382,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
           lockedFindings.push(`Locked module '${moduleName}' file is missing: ${file.path}`);
           continue;
         }
-        if (sha256File(fullPath) !== file.sha256) {
+        if (!fileHashMatches(fullPath, file.sha256)) {
           lockedFindings.push(`Locked module '${moduleName}' cryptographic integrity violated (modified): ${file.path}`);
         }
       }
@@ -406,7 +406,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
         lockedFindings.push(`Locked Docker infrastructure file is missing: ${file.path}`);
         continue;
       }
-      if (sha256File(fullPath) !== file.sha256) {
+      if (!fileHashMatches(fullPath, file.sha256)) {
         lockedFindings.push(`Locked Docker infrastructure cryptographic integrity violated (modified): ${file.path}`);
       }
     }
@@ -434,7 +434,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
           lockedFindings.push(`Locked entity '${entityId}' file is missing: ${file.path}`);
           continue;
         }
-        if (sha256NormalizedFile(fullPath) !== file.sha256) {
+        if (!fileHashMatches(fullPath, file.sha256)) {
           lockedFindings.push(`Locked entity '${entityId}' cryptographic integrity violated (modified): ${file.path}`);
         }
       }

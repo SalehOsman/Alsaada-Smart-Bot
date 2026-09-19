@@ -12,6 +12,37 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: alsaada_db
+          POSTGRES_USER: alsaada_admin
+          POSTGRES_PASSWORD: alsaada_secure_pass_2026
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://alsaada_admin:alsaada_secure_pass_2026@127.0.0.1:5432/alsaada_db?schema=public
+      DATABASE_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      BLIND_INDEX_SALT: abcdef0123456789abcdef0123456789
+      REDIS_URL: redis://127.0.0.1:6379
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -34,6 +65,9 @@ jobs:
 
       - name: Generate Prisma Client
         run: pnpm --filter @alsaada/database db:generate
+
+      - name: Push Database Schema
+        run: pnpm --filter @alsaada/database db:push --accept-data-loss
 
       - name: Build Core Packages
         run: pnpm --filter "./packages/**" build

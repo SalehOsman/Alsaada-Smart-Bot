@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T06:20:52.652Z",
+  "generatedAt": "2026-09-19T06:31:46.784Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -32,7 +32,7 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "9fbdfd59cbf328728f2e94855651f7fafd94fdb6bd685902f72be58439b55df3"
+      "sha256": "89e63a12ed41339d326bab4e3acfe295a041b8009ec485220911bda430fae6d8"
     },
     {
       "path": ".github/workflows/release.yml",
@@ -200,11 +200,11 @@
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
-      "sha256": "89cafbd8f8eacb4d5aa63b559138afe62229497ce33e1ace92d6749706e3e1fc"
+      "sha256": "fcf279299b3db9eef004a7534347ebe8dc70013ce4253ac010984acb1df92713"
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
-      "sha256": "a59d85f044bf853d6987e34f9b3854f87d88ae842d67f2947c686d42c4f53819"
+      "sha256": "08cc874f57fc9353d174cd721bebd259a1df5cd2d907a40219a13a4354b69bc5"
     },
     {
       "path": "tools/governance/verify-latency-anti-patterns.ts",

@@ -184,6 +184,24 @@ export function sha256File(path: string): string {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
 }
 
+export function fileHashMatches(path: string, expectedHash: string): boolean {
+  try {
+    const raw = readFileSync(path);
+    const actualHash = createHash('sha256').update(raw).digest('hex');
+    if (actualHash === expectedHash) return true;
+
+    const text = raw.toString('utf8');
+    const lfHash = createHash('sha256').update(Buffer.from(text.replace(/\r\n/g, '\n'), 'utf8')).digest('hex');
+    if (lfHash === expectedHash) return true;
+
+    const crlfHash = createHash('sha256').update(Buffer.from(text.replace(/\r?\n/g, '\r\n'), 'utf8')).digest('hex');
+    if (crlfHash === expectedHash) return true;
+  } catch {
+    return false;
+  }
+  return false;
+}
+
 export function hashDirectoryFiles(dir: string, root = process.cwd()): GovernanceLockFileEntry[] {
   if (!existsSync(dir)) return [];
   const files = listFilesRecursive(dir)
@@ -572,7 +590,7 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
       fail(result, `Protected file missing: ${entry.path}`);
       continue;
     }
-    if (sha256File(fullPath) !== entry.sha256) {
+    if (!fileHashMatches(fullPath, entry.sha256)) {
       fail(result, `Protected file sha256 mismatch: ${entry.path}`);
     }
   }
@@ -592,7 +610,7 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
           fail(result, `Locked flow '${flowKey}' file is missing: ${entry.path}`);
           continue;
         }
-        if (sha256File(fullPath) !== entry.sha256) {
+        if (!fileHashMatches(fullPath, entry.sha256)) {
           fail(result, `Locked flow '${flowKey}' cryptographic integrity violated! Modified: ${entry.path}`);
         }
       }
@@ -620,7 +638,7 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
           fail(result, `Locked dashboard feature '${featureId}' file is missing: ${entry.path}`);
           continue;
         }
-        if (sha256File(fullPath) !== entry.sha256) {
+        if (!fileHashMatches(fullPath, entry.sha256)) {
           fail(result, `Locked dashboard feature '${featureId}' cryptographic integrity violated! Modified: ${entry.path}`);
         }
       }
@@ -648,7 +666,7 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
           fail(result, `Locked module '${moduleName}' file is missing: ${entry.path}`);
           continue;
         }
-        if (sha256File(fullPath) !== entry.sha256) {
+        if (!fileHashMatches(fullPath, entry.sha256)) {
           fail(result, `Locked module '${moduleName}' cryptographic integrity violated! Modified: ${entry.path}`);
         }
       }
@@ -669,7 +687,7 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
         fail(result, `Locked speed engine file is missing: ${entry.path}`);
         continue;
       }
-      if (sha256File(fullPath) !== entry.sha256) {
+      if (!fileHashMatches(fullPath, entry.sha256)) {
         fail(result, `Locked speed engine cryptographic integrity violated! Modified: ${entry.path}`);
       }
     }
@@ -684,7 +702,7 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
         fail(result, `Locked Docker infrastructure file is missing: ${entry.path}`);
         continue;
       }
-      if (sha256File(fullPath) !== entry.sha256) {
+      if (!fileHashMatches(fullPath, entry.sha256)) {
         fail(result, `Locked Docker infrastructure cryptographic integrity violated! Modified: ${entry.path}`);
       }
     }
@@ -710,7 +728,7 @@ export function verifyGovernanceLock(root = process.cwd()): VerificationResult {
           fail(result, `Locked entity '${entityId}' file is missing: ${entry.path}`);
           continue;
         }
-        if (sha256NormalizedFile(fullPath) !== entry.sha256) {
+        if (!fileHashMatches(fullPath, entry.sha256)) {
           fail(result, `Locked entity '${entityId}' cryptographic integrity violated! Modified: ${entry.path}`);
         }
       }
