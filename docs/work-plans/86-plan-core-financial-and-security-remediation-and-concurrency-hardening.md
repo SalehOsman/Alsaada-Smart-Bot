@@ -1,155 +1,170 @@
-# 📜 خطة العمل المعمارية رقم 86 (النسخة المعتمدة والموثقة)
-## المعالجة الشاملة لثغرات النواة المالية والأمنية وتحصين التزامن وقفل قاعدة البيانات
-### Plan 86: Core Financial, Security & Concurrency Hardening with Multi-Agent Teamwork Specification
+# 📜 خطة العمل المعمارية رقم 86 (النسخة الموسعة الشاملة)
+## المعالجة الجنائية الشاملة لثغرات النواة المالية والأمنية والصلاحيات والـ Outbox وتحصين التزامن
+### Plan 86: Comprehensive 17-Point Forensic Remediation & Multi-Squad Hardening Specification
 
 ---
 
 > [!IMPORTANT]
-> **حالة الوثيقة:** 🟡 مسودة معتمدة موثقة وجاهزة للتنفيذ (`Documented & Ready for Multi-Agent Execution`)  
+> **حالة الوثيقة:** 🟡 مسودة معتمدة موسعة وموثقة وجاهزة للتنفيذ (`Approved Comprehensive Draft — Ready for Squad Execution`)  
 > **الفرع المقترح للعمل:** `plan/86-core-financial-and-security-hardening`  
 > **الإصدار المستهدف:** `v2.0.0-alpha.86`  
-> **المرجعية الدستورية:** ميثاق الحوكمة `AGENTS.md` و `GEMINI.md` + تقرير التدقيق الجنائي المعتمد.
+> **المرجعية الدستورية:** ميثاق الحوكمة `AGENTS.md` و `GEMINI.md` + التقرير الجنائي الميداني الشامل للثغرات الـ 17.
 
 ---
 
-### 1️⃣ خلفية التدقيق والدوافع المعمارية (Audit Background & Rationale)
+### 1️⃣ خلفية المراجعة الشاملة والدوافع المعمارية (Comprehensive Forensic Rationale)
 
-كشف التدقيق الفني والجنائي المتقدم للنواة المشتركة وقواعد البيانات عن 7 ثغرات وفجوات هيكلية حاسمة كانت ستقود إلى **«وهم كاذب بالأمان» (False Sense of Security)** في حال اعتماد القفل التشفيري للنواة المالية والأمنية في هذا التوقيت. 
+أسفر التدقيق الجنائي الفني الشامل لكافة قطاعات ومصادر المنظومة (`packages/*`, `apps/*`, `modules/*`, `tools/governance/*`) عن رصد **17 ثغرة وفجوة معمارية حاسمة** تتوزع بين:
+1. تسرب أقفال التزامن وكسر السلسلة الجنائية.
+2. تزييف اختبارات الضغط والتحقق بـ Mutexes واختبارات تسلسلية شكلية.
+3. ثغرات تصعيد الصلاحيات وتجاوز الحدود الجغرافية ومفاتيح السيادة.
+4. ثغرات حسابية تقبل `NaN` و `Infinity` في محركات العهد، المقاصة، والأقساط.
+5. تسريب الحذف الآمن (Soft Delete) في عمليات التعديل والدمج.
+6. انفصال طابور الـ Outbox ومستودعات الأقفال عن الواقع التشغيلي الفعلي.
+7. تعطيل الخوارزميات الرسمية للهوية وتسريب المفاتيح وتسمم أنواع الكاش في الذاكرة.
 
-توضح هذه الخطة المعمارية بنود المعالجة الجذرية بالتفصيل، وتحدد هيكلية فريق الوكلاء المتخصصين، ومعايير القبول الصارمة للتحقق قبل إعادة النظر في قفل النواة تشفيرياً.
-
----
-
-### 2️⃣ الثغرات الـ 7 المرصودة ونطاق المعالجة الفنية (Forensic Vulnerability Catalog)
-
-#### 1. ثغرة التريجرز والـ Migration الصامت ([migration.sql:26](file:///F:/Alsaada-Smart-Bot/packages/database/prisma/migrations/20260918_immutable_financial_ledger_triggers/migration.sql#L26))
-* **الوصف:** استهداف أسماء جداول بصيغة PascalCase قديمة (`SupplierInvoice`, `PayrollTransaction`...) محاطة بـ `IF EXISTS` بينما الجداول الحقيقية في PostgreSQL منشأة بصيغة snake_case (`supplier_invoices`, `financial_ledgers`). النتيجة: نجاح تشغيل الـ Migration بصمت دون تطبيق التريجر على أي جدول فعلي، وغياب جدول `financial_ledgers` كلياً عن المصفوفة.
-* **المعالجة:**
-  - تعديل مصفوفة الجداول لتشمل أسماء الجداول الفعلية: `financial_ledgers`, `supplier_invoices`, `custody_settlements`, `advance_installments`, `payroll_transactions`, `attendance_records`.
-  - إزالة التخطي الصامت وفرض تثبيت التريجر الصارم `enforce_financial_ledger_integrity_trg` لحظر أي تعديل أو حذف للأعمدة المحمية.
-
-#### 2. تسرب القفل الاستشاري وكسر سلسلة الهاش المتزامنة ([hash-ledger.extension.ts:255](file:///F:/Alsaada-Smart-Bot/packages/database/src/ledger/hash-ledger.extension.ts#L255))
-* **الوصف:** استدعاء `pg_advisory_xact_lock` عبر كائن `client` العام المفصول عن المعاملة؛ في PostgreSQL يتحرر القفل فور انتهاء الجملة، مما يترك جلب `previousHash` وكتابة السجل الجديد خارج القفل، متيحاً لعمليات متزامنة القراءة المشتركة لنفس الهاش السابق وتفكك السلسلة.
-* **المعالجة:**
-  - إلزام عمليات إدراج القيود المالية بالدخول في سياق معاملة تفاعلية موحدة (`prisma.$transaction(async (tx) => { ... })`).
-  - تنفيذ القفل وقراءة آخر هاش وكتابة القيد الجديد وحساب الهاش كعملية ذرية غير قابلة للتجزئة (Atomic Unit of Work).
-
-#### 3. زيف اختبار الضغط بـ TestMutex اصطناعي ([hash-chain.stress.spec.ts:445](file:///F:/Alsaada-Smart-Bot/packages/database/tests/hash-chain.stress.spec.ts#L445))
-* **الوصف:** استخدام كلاس `TestMutex` في الذاكرة داخل الاختبار لجدولة الاستدعاءات ومنع التزامن محلياً في Node.js، مع تزييف `$executeRawUnsafe`.
-* **المعالجة:**
-  - إزالة `TestMutex` تماماً من الاختبار.
-  - كتابة اختبارات تكامل وتزامن حقيقية تطلق طلبات متوازية فعلية للتأكد من قدرة محرك الهاش وقاعدة البيانات على حسم التنافس دون تكرار للهاشات.
-
-#### 4. ثغرة تصعيد الصلاحيات وتجاوز الحدود الجغرافية ([evaluator.ts:331](file:///F:/Alsaada-Smart-Bot/packages/rbac/src/evaluator.ts#L331))
-* **الوصف:** إرجاع `{ granted: true }` فور العثور على قاعدة `ALLOW` في مستوى المستخدم أو الدور، وذلك **قبل** التحقق من شرط الموقع الجغرافي `targetSiteId !== siteId` و **قبل** فحص مفاتيح السوبر أدمن السيادية `SOVEREIGN_SUPER_ADMIN_KEYS`.
-* **المعالجة:**
-  - تقديم فحص حدود الموقع (`SITE_BOUNDARY_VIOLATION`) وفحص المفاتيح السيادية (`ROLE_NOT_AUTHORIZED_FOR_FEATURE`) ليتم تنفيذهما قطيعاً **قبل** فحص قواعد المنح `ALLOW`.
-  - تحصين الكتالوج لمنع منح أدوار عادية كـ `WORKER` أي صلاحيات إدارية كـ `workforce.compensation.edit`.
-
-#### 5. طابور الـ Outbox غير المستهلك عملياً ([worker.ts:75](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/outbox-queue/worker.ts#L75))
-* **الوصف:** كود معالجة الطابور `processBatch` موجود ومختبر في التيست فقط، ولا يوجد في أي من تطبيقات المنظومة (`apps/bot-server`, `apps/admin-dashboard`) أي Background Daemon أو Worker يقوم باستهلاك وترحيل الأحداث فعلياً لشيتات جوجل.
-* **المعالجة:**
-  - بناء وتفعيل مستهلك خلفي (Background Polling / Tick Runner) داخل `apps/bot-server` يقوم بتشغيل `processBatch` دورياً.
-  - تسجيل المعالجات الحقيقية (Handlers) وتمريرها للمستهلك مع مفاتيح عدم التكرار (Idempotency Keys).
-
-#### 6. مخاطر السقوط للذاكرة في المعاملات المالية ([worker.ts:36](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/outbox-queue/worker.ts#L36))
-* **الوصف:** دالة `enqueueTx` تضع الحدث في الذاكرة عند غياب `db`، وتتجاهل التراجع `rollback`، وتفقده عند إعادة التشغيل.
-* **المعالجة:**
-  - منع التراجع الصامت للذاكرة عند استدعاء `enqueueTx`، وفرض وجود اتصال قاعدة بيانات حقيقي أو إلقاء خطأ تشغيلي صريح.
-
-#### 7. ثغرة قبول قيم NaN المالية ([gate.ts:23](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/custody-gate/gate.ts#L23) و [clearing.ts:85](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/clearing-engine/clearing.ts#L85))
-* **الوصف:** استخدام الفحص التقليدي `<= 0` الذي يُرجع `false` عند تمرير `NaN`، مما يسمح بتجاوز الفحص والموافقة على الصرف بمبلغ NaN.
-* **المعالجة:**
-  - فرض فحص الصلاحية العددية الصارمة: `!Number.isFinite(amount) || amount <= 0`.
-  - تطبيق الفحص في كافة محركات العهد، المقاصة، الصرف، وفواتير الموردين.
+تهدف هذه الخطة إلى هندسة المعالجة الجذرية لكافة هذه النقاط الـ 17 وفق مبدأ **«العلاج الهيكلي الشامل والأثر الصفري على استقرار المنظومة»** قبل السماح بأي قفل تشفيري للنواة.
 
 ---
 
-### 3️⃣ هيكلية ومسؤوليات فريق الوكلاء المتخصصين (Teamwork Preview Squad)
+### 2️⃣ الفهرس الجنائي المعتمد للثغرات الـ 17 ونطاق المعالجة (The 17 Forensic Pillars)
 
-| الوكيل المتخصص (Specialist Agent) | نطاق التكليف والمسؤوليات |
+#### 🛡️ أولاً: محور الأمان والصلاحيات والهوية (Security & RBAC Squad)
+
+1. **تصحيح فاحص الصلاحيات وتقديم حواجز المواقع والسيادة على المنح ([evaluator.ts:331](file:///F:/Alsaada-Smart-Bot/packages/rbac/src/evaluator.ts#L331)):**
+   - تقديم فحص حدود الموقع (`SITE_BOUNDARY_VIOLATION`) وفحص مفاتيح السوبر أدمن السيادية (`ROLE_NOT_AUTHORIZED_FOR_FEATURE`) ليتم تنفيذهما قطيعاً **قبل** فحص قواعد المنح `ALLOW`.
+2. **حظر حقن الصلاحيات السيادية من قِبل الـ `GENERAL_ADMIN` ([route.ts:79](file:///F:/Alsaada-Smart-Bot/apps/admin-dashboard/src/app/api/permissions/matrix/route.ts#L79)):**
+   - إضافة فحص في نقطة النهاية `POST /api/permissions/matrix` يمنع منعاً باتاً غير السوبر أدمن من تعيين سياسة `ALLOW` على أي ميزة مدرجة في `SOVEREIGN_SUPER_ADMIN_KEYS`.
+3. **فرض قيود الموقع الجغرافي في واجهة برمجة تسجيل العمال ([workers/route.ts:14-25](file:///F:/Alsaada-Smart-Bot/apps/admin-dashboard/src/app/api/workers/route.ts#L14-L25)):**
+   - إلزام التحقق من مطابقة `body.siteId === user.assignedSiteId` عندما يكون المستخدم `FIELD_ADMIN`، وإرجاع `403 Forbidden` عند أي محاولة لتسجيل عمال في مواقع أخرى.
+4. **استئصال التتويج العشوائي لمسؤولي المواقع غير المعينين ([auth.middleware.ts:24-37](file:///F:/Alsaada-Smart-Bot/apps/bot-server/src/middlewares/auth.middleware.ts#L24-L37)):**
+   - إلغاء دالة `resolveDefaultFieldAdminSiteId()` تماماً؛ وإذا كان الـ `FIELD_ADMIN` غير مسند لموقع صريح في قاعدة البيانات، يتم حجب وصوله وإظهار رسالة تحذيرية صريحة تطالبه بمراجعة الإدارة بدلاً من منحه أول موقع نشط عشوائياً.
+5. **استئصال الملح التشفيري الثابت من الكود المصدري ([workers/[id]/route.ts:133](file:///F:/Alsaada-Smart-Bot/apps/admin-dashboard/src/app/api/workers/%5Bid%5D/route.ts#L133)):**
+   - إزالة النص الثابت `'default-salt-value-for-alsaada-2026'` وإلزام جلب `BLIND_INDEX_SECRET` من البيئة المشفرة، وإلقاء استثناء فوري عند غيابه.
+6. **تفعيل خوارزمية Modulo-11 للرقم القومي المصري إلزامياً ([parser.ts:126](file:///F:/Alsaada-Smart-Bot/packages/national-id-engine/src/parser.ts#L126)):**
+   - جعل التحقق من الخانة الـ 14 (Check Digit) عبر خوارزمية السجل المدني **مفعلاً افتراضياً (Default: Strict)** لرفض أي بطاقات قومية عشوائية أو مزورة في كافة التدفقات والـ OCR.
+
+---
+
+#### 💰 ثانياً: محور المحركات المالية والحسابات والتزامن (Financial & Concurrency Squad)
+
+7. **تصحيح تريجرز قاعدة البيانات والـ Migration الصامت ([migration.sql:26](file:///F:/Alsaada-Smart-Bot/packages/database/prisma/migrations/20260918_immutable_financial_ledger_triggers/migration.sql#L26)):**
+   - تصحيح مصفوفة الجداول لتستهدف الأسماء الفعلية في PostgreSQL بصيغة `snake_case` (`financial_ledgers`, `supplier_invoices`, `custody_settlements`, `advance_installments`, `payroll_transactions`)، وحذف التجاوز الصامت `IF EXISTS`.
+8. **حصر القفل الاستشاري وسلسلة الهاش في معاملة ذرية موحدة ([hash-ledger.extension.ts:255](file:///F:/Alsaada-Smart-Bot/packages/database/src/ledger/hash-ledger.extension.ts#L255)):**
+   - ربط `pg_advisory_xact_lock` وجلب `previousHash` وحساب الهاش وكتابة السجل داخل معاملة تفاعلية موحدة (`prisma.$transaction`) تمنع تفكك السلسلة عند التزامن.
+9. **استئصال `TestMutex` الاصطناعي وبناء اختبارات تزامن حقيقية ([hash-chain.stress.spec.ts:445](file:///F:/Alsaada-Smart-Bot/packages/database/tests/hash-chain.stress.spec.ts#L445)):**
+   - إزالة كلاس `TestMutex` من الاختبار واختبار المحرك ضد استدعاءات متوازية فعلية تثبت عدم توليد أي تضارب أو تجزئة في الهاش.
+10. **تحصين محركات الصرف والعهد والمقاصة ضد قيم `NaN` ([gate.ts:23](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/custody-gate/gate.ts#L23) و [clearing.ts:85](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/clearing-engine/clearing.ts#L85)):**
+    - تطبيق الفحص الرياضي الصارم `!Number.isFinite(amount) || amount <= 0` ورفض أي قيم شاذة بإلقاء خطأ عربي صريح.
+11. **تحصين محرك الأقساط الشهرية ضد `NaN` ([installment-engine/engine.ts:37](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/installment-engine/engine.ts#L37)):**
+    - إلزام فحص `Number.isFinite(totalAmount) && totalAmount > 0` في `UniversalInstallmentEngine`.
+12. **سد ثغرة تسرب قيمة `Infinity` في المبالغ والكميات ([numbers.ts:38](file:///F:/Alsaada-Smart-Bot/packages/regional-engine/src/numbers.ts#L38) و [validator.ts:28](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/amount-picker/validator.ts#L28)):**
+    - تعديل `parseRegionalNumber` و `validateAmount` و `validateQuantity` لرفض `Infinity` وفحص `Number.isFinite` قطيعاً.
+13. **ضبط حدود محرك احتساب أيام الراحة المكتسبة ([shift-accrual/engine.ts:16](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/shift-accrual/engine.ts#L16)):**
+    - التحقق الصارم من أن `presenceDays` رقم موجب ومحدود لا يتجاوز 365 يوماً في الاستدعاء الواحد.
+14. **ربط وتفعيل مستودع العهد الذري `CustodyTransactionRepository` في التدفقات الفعلية ([custody-transaction.repository.ts](file:///F:/Alsaada-Smart-Bot/packages/database/src/repositories/custody-transaction.repository.ts)):**
+    - استيراد واستخدام المستودع في تدفقات الصرف المالي الفعلي وحصر استدعاء `findAndLock` داخل معاملة ذرية إلزامية.
+
+---
+
+#### 🗄️ ثالثاً: محور البنية التحتية والـ Outbox وقواعد البيانات والذكاء الاصطناعي (Infrastructure & Data Squad)
+
+15. **تحصين الحذف الآمن ومنع تسريب التعديل والدمج ([soft-delete.extension.ts:150-205](file:///F:/Alsaada-Smart-Bot/packages/database/src/extensions/soft-delete.extension.ts#L150-L205)):**
+    - إضافة اعتراض صريح لعمليات `update`, `updateMany`, و `upsert` لضمان حقن شرط `where: { isDeleted: false }` ومنع تعديل أو إحياء السجلات المفصولة أو المحذوفة.
+16. **تشغيل مستهلك الـ Outbox وضمان ذرية انبعاث الأحداث ([worker.ts:75](file:///F:/Alsaada-Smart-Bot/packages/core-components/src/outbox-queue/worker.ts#L75) و [flow.repository.ts:574](file:///F:/Alsaada-Smart-Bot/modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts#L574)):**
+    - بناء مشغل خلفي دوري (Background Poller) في `apps/bot-server` يستدعي `processBatch` دورياً لترحيل الأحداث لشيتات جوجل.
+    - تصحيح استدعاءات الـ Outbox في تدفقات إنهاء الخدمة والتسجيل لتكون حصراً ضمن المعاملة الذرية `tx.outboxEvent.create`.
+17. **معالجة تسريب مفاتيح الذكاء الاصطناعي وتسمم كاش Redis ([ai-vision-engine/engine.ts:121](file:///F:/Alsaada-Smart-Bot/packages/ai-vision-engine/src/engine.ts#L121) و [fast-cache.service.ts:48](file:///F:/Alsaada-Smart-Bot/apps/bot-server/src/services/fast-cache.service.ts#L48)):**
+    - نقل مفتاح Gemini API من الـ URL إلى الـ Header الرسمي `x-goog-api-key`.
+    - تصحيح تسلسل واسترجاع الـ `BigInt` في كاش Redis لمنع تحويل `telegramId` إلى نصوص وكسر مقارنات الهوية.
+    - تحديث `docker/Dockerfile` وبوابة `verify-financial-integrity.ts` لتشمل فحص التزامن المتوازي الحقيقي ودعم كافة الموديولات ديناميكياً.
+
+---
+
+### 3️⃣ هيكلية ومسؤوليات فرق العمل المتخصصة (Multi-Squad Execution Matrix)
+
+| الفريق المتخصص (Specialist Squad) | نطاق المسؤوليات والملفات المستهدفة |
 | :--- | :--- |
-| **🛡️ مهندس الأمان والسيادة (Security & RBAC Architect)** | إعادة هندسة `packages/rbac/src/evaluator.ts`، تقديم حواجز المواقع والمفاتيح السيادية، وتحصين بوابات الصلاحيات. |
-| **🗄️ خبير قواعد البيانات والتزامن (Database & Concurrency Specialist)** | تصحيح `migration.sql`، ربط القفل الاستشاري بسياق المعاملة الذرية في `hash-ledger.extension.ts`، وضمان سلامة الهاش شين. |
-| **💰 مدقق المحركات المالية والعهد (Financial Engine & Integrity Auditor)** | تحصين `gate.ts` و `clearing.ts` ضد `NaN` و `Infinity`، وضبط حسابات الأرصدة بدقة سنتات. |
-| **⚙️ مهندس البنية التحتية والـ Outbox (Core Infrastructure & DevOps Engineer)** | بناء مشغل الـ Outbox في خادم البوت، تصحيح `scaffold-module.ts` لضمان عزل الملفات، وتحديث `docker/Dockerfile`. |
-| **🧪 مراجع الجودة والتدقيق الجنائي (Independent QA & Verification Auditor)** | استبدال `TestMutex` باختبارات تزامن حقيقية، كتابة سيناريوهات الاختراق، والتحقق الجنائي الشامل قبل القفل. |
+| **🛡️ فريق الأمان والسيادة والهوية (Security & RBAC Squad)** | معالجة البنود (1، 2، 3، 4، 5، 6) في `packages/rbac`, `apps/admin-dashboard/src/app/api`, `apps/bot-server/src/middlewares`, `packages/national-id-engine`. |
+| **💰 فريق المحركات المالية والعمليات والتزامن (Financial & Concurrency Squad)** | معالجة البنود (7، 8، 9، 10، 11، 12، 13، 14) في `packages/database`, `packages/core-components`, `packages/regional-engine`. |
+| **🗄️ فريق قواعد البيانات والـ Outbox والدوكر (Database & Infrastructure Squad)** | معالجة البنود (15، 16، 17) في `packages/database/src/extensions`, `packages/core-components/src/outbox-queue`, `apps/bot-server`, `packages/ai-vision-engine`, `docker/Dockerfile`. |
+| **🧪 هيئة المحلفين والتحقق الجنائي المستقل (Independent QA & Forensic Auditors)** | كتابة اختبارات إحباط التسلل والتنافس المتوازي الحقيقي، التحقق من عدم وجود أي Mocking خادع، وفحص التراجع الشامل. |
 
 ---
 
-### 4️⃣ وثيقة مسودة التكليف الفني المعتمدة (Teamwork Preview Prompt Draft)
+### 4️⃣ وثيقة مسودة التكليف الفني المعتمدة لفريق الوكلاء (Teamwork Preview Prompt Draft)
 
 ```markdown
-# Teamwork Project Prompt — Official Sealed Draft
+# Teamwork Project Prompt — Official Sealed 17-Point Remediation
 
 > Status: Ready for launch — awaiting user approval
-> Goal: Multi-agent execution of Core Financial, Security & Concurrency Remediation
-> Requested team: Full multi-agent team (Database Specialist, Financial Security Architect, Core Infrastructure Engineer, and QA/Verification Auditor)
+> Goal: Comprehensive 17-point forensic hardening across core financial, security, RBAC, outbox, and data layers
+> Requested team: Full multi-agent team (Security & RBAC Architect, Database & Concurrency Specialist, Financial Auditor, Infrastructure & Outbox Engineer, and QA Verifier)
 
-Comprehensive remediation, concurrency hardening, and cryptographic integrity restoration for the core financial ledger, database immutability triggers, RBAC security gates, transactional outbox queue, and arithmetic validation pipelines across the Alsaada-Smart-Bot system.
+Execute complete forensic remediation of the 17 architectural and security vulnerabilities discovered in Al-Saada Smart Bot core packages, apps, and database layers, ensuring authentic concurrency safety, strict role and site isolation, numerical immutability, and zero false-pass testing.
 
 Working directory: F:/Alsaada-Smart-Bot
 Integrity mode: development
 
 ## Requirements
 
-### R1. PostgreSQL Database Immutability Triggers & Schema Alignment
-- Re-align the database migration triggers (packages/database/prisma/migrations/20260918_immutable_financial_ledger_triggers/migration.sql) to target the actual physical table names (financial_ledgers, supplier_invoices, custody_settlements, advance_installments, payroll_transactions, etc.) as defined in schema.prisma.
-- Eliminate silent failures from table checks so triggers are guaranteed to attach to all financial tables, and include financial_ledgers explicitly.
-- Prohibit any direct row updates or deletions on immutable financial columns (amount, worker_id, created_at, current_hash, prev_hash).
+### R1. RBAC Prioritization & Sovereign Protection
+- Refactor `packages/rbac/src/evaluator.ts` so Site Boundary (`targetSiteId !== siteId`) and Sovereign Super Admin Keys (`SOVEREIGN_SUPER_ADMIN_KEYS`) checks execute strictly before any `ALLOW` rule returns `granted: true`.
+- Guard `POST /api/permissions/matrix` in `apps/admin-dashboard` so non-super admins (`GENERAL_ADMIN`) are explicitly prohibited from mutating policies on sovereign feature keys.
 
-### R2. Atomic Advisory Locking & Transactional Ledger Chain Integrity
-- Refactor hashLedgerExtension in packages/database/src/ledger/hash-ledger.extension.ts so that PostgreSQL advisory locks (pg_advisory_xact_lock), reading the previous hash (previousHash), and writing the new row with the computed recordHash execute within a single atomic interactive transaction ($transaction).
-- Guarantee that concurrent record insertions cannot acquire identical previous hashes or interleave uncommitted states.
+### R2. Field Admin Site Boundary & Fallback Hardening
+- Enforce strict site boundary checks in `apps/admin-dashboard/src/app/api/workers/route.ts` requiring `body.siteId === user.assignedSiteId` for `FIELD_ADMIN`.
+- Eliminate `resolveDefaultFieldAdminSiteId()` in `apps/bot-server/src/middlewares/auth.middleware.ts`; unassigned field admins must be denied operational site access until explicitly assigned.
+- Eliminate hardcoded fallback secret in `apps/admin-dashboard/src/app/api/workers/[id]/route.ts`, enforcing strict environment variable resolution for blind indexing.
 
-### R3. Removal of Synthetic Mutexes & Genuine Database Concurrency Testing
-- Overhaul packages/database/tests/hash-chain.stress.spec.ts by removing synthetic in-memory serialization (TestMutex) and mock implementations of $executeRawUnsafe.
-- Implement rigorous integration stress tests that execute truly concurrent queries against the database layer to prove race-condition immunity and hash chain continuity.
+### R3. Mandatory National ID Check-Digit Enforcement
+- In `packages/national-id-engine/src/parser.ts`, make the Modulo-11 14th check digit validation strictly active by default across all workflows and OCR pipelines.
 
-### R4. Strict RBAC Boundary Immunity & Sovereign Guardrails
-- Refactor packages/rbac/src/evaluator.ts so that Site Boundary checks (targetSiteId !== siteId) and sovereign super-admin permission restrictions (SOVEREIGN_SUPER_ADMIN_KEYS) are strictly enforced before any ALLOW rule returns granted: true.
-- Ensure role hierarchies prevent lower-tier roles (e.g. WORKER) from claiming administrative capabilities via user-level override misuse.
+### R4. Database Immutability Triggers & Atomic Hash Chain Transaction
+- Fix `20260918_immutable_financial_ledger_triggers/migration.sql` to bind triggers to actual PostgreSQL snake_case tables (`financial_ledgers`, `supplier_invoices`, etc.) and prevent silent bypasses.
+- Refactor `hashLedgerExtension` so that `pg_advisory_xact_lock`, previous hash fetching, and record creation execute inside an atomic interactive transaction.
+- Remove synthetic `TestMutex` in `packages/database/tests/hash-chain.stress.spec.ts` and verify authentic database concurrency.
 
-### R5. Financial Arithmetic Hardening & NaN Immunization
-- Harden packages/core-components/src/custody-gate/gate.ts and packages/core-components/src/clearing-engine/clearing.ts to strictly validate Number.isFinite(amount) && amount > 0.
-- Explicitly reject NaN, Infinity, negative numbers, and non-numeric inputs, returning structured error payloads with localized Arabic error descriptions.
+### R5. Numerical & Arithmetic Validation Hardening (NaN & Infinity)
+- Update `packages/core-components/src/custody-gate/gate.ts` and `clearing.ts` to strictly validate `Number.isFinite(amount) && amount > 0`.
+- Update `packages/core-components/src/installment-engine/engine.ts` to strictly reject non-finite and `<= 0` total amounts.
+- Update `packages/regional-engine/src/numbers.ts`, `amount-picker`, and `quantity-picker` to strictly reject `Infinity` and `-Infinity`.
+- Validate `presenceDays` in `packages/core-components/src/shift-accrual/engine.ts` to prevent negative or non-finite leave accruals.
 
-### R6. Outbox Queue Consumer Runtime & Safe Fallback Architecture
-- Implement an active background consumer runtime / daemon for TransactionalOutboxQueue that periodically triggers processBatch with registered handlers in apps/bot-server.
-- Fix enqueueTx in packages/core-components/src/outbox-queue/worker.ts so that transactions rolled back in PostgreSQL do not leak orphaned events into memory.
-- Enforce idempotency keys and at-least-once delivery guarantees.
+### R6. Custody Repository Integration & Soft Delete Mutation Protection
+- Integrate `CustodyTransactionRepository` into active financial flows with mandatory transaction wrapping.
+- Intercept `update`, `updateMany`, and `upsert` in `packages/database/src/extensions/soft-delete.extension.ts` to inject `where: { isDeleted: false }`.
 
-### R7. Module Scaffolding Blast-Radius & Dockerfile Hardening
-- Refactor tools/scaffold/scaffold-module.ts to eliminate direct mutation of files in apps/bot-server (package.json, modules.registry.ts), relying instead on dynamic discovery or explicit modular registration.
-- Update docker/Dockerfile to dynamically support all workspace modules instead of hardcoded dependencies on workforce and settings.
-- Reconcile governance.lock.json and documentation so that entity lock states reflect reality.
+### R7. Outbox Background Daemon & Integration Hygiene
+- Implement an active background runner in `apps/bot-server` executing `processBatch` for `TransactionalOutboxQueue`.
+- Ensure all outbox events (including offboarding in `01.8`) emit strictly within transactional boundaries (`tx.outboxEvent.create`).
+- Move Gemini API key from query param to `x-goog-api-key` header in `packages/ai-vision-engine/src/engine.ts`.
+- Fix BigInt serialization/deserialization in `apps/bot-server/src/services/fast-cache.service.ts`.
+- Update `docker/Dockerfile` to dynamically discover and build all workspace modules.
 
 ## Acceptance Criteria
 
-### Security & RBAC Criteria
-- [ ] RBAC evaluator test demonstrates that a FIELD_ADMIN assigned to Site A is strictly denied access to Site B (SITE_BOUNDARY_VIOLATION), even if an explicit USER ALLOW rule exists.
-- [ ] RBAC evaluator test demonstrates that sovereign admin keys are strictly denied to non-super admin roles regardless of user-level rules.
+### Security & Identity Criteria
+- [ ] Automated test proves a `FIELD_ADMIN` assigned to Site A is denied creating workers in Site B (`403 Forbidden`).
+- [ ] Automated test proves a `GENERAL_ADMIN` cannot grant `ALLOW` on sovereign super admin features via the matrix API.
+- [ ] National ID parser rejects invalid 14th check digit by default without requiring explicit options.
+- [ ] Unassigned field admins in bot-server are denied site actions without acquiring random company sites.
 
-### Database & Concurrency Criteria
-- [ ] PostgreSQL migration script creates active BEFORE UPDATE OR DELETE triggers on financial_ledgers, supplier_invoices, and all other financial tables.
-- [ ] Direct SQL UPDATE or DELETE on protected columns in financial_ledgers raises CRITICAL_SECURITY_VIOLATION.
-- [ ] Concurrent insertion tests execute parallel workers without in-test mutexes, producing a valid, unbroken cryptographic hash chain where no two consecutive records share identical hashes or timestamps.
+### Financial & Concurrency Criteria
+- [ ] Unit tests prove `NaN`, `Infinity`, and negative amounts are rejected with `INVALID_AMOUNT` in custody gate, clearing engine, installment engine, and amount pickers.
+- [ ] Concurrent insertion test against database executes parallel workers without in-test mutexes and produces an unbroken, monotonic cryptographic hash chain.
+- [ ] PostgreSQL trigger strictly blocks direct SQL `UPDATE` or `DELETE` on protected columns in `financial_ledgers` and `supplier_invoices`.
 
-### Financial Validation Criteria
-- [ ] Unit tests for verifyCustodyBalance and processCashAdvanceClearing pass asserting that NaN, Infinity, -100, null, and undefined are rejected with INVALID_AMOUNT.
-- [ ] Zero financial calculations produce NaN in downstream balances.
-
-### Outbox & Infrastructure Criteria
-- [ ] Outbox queue tests verify that aborted/rolled-back transactions leave zero events in queue.
-- [ ] Background worker successfully processes pending outbox batches and marks them COMPLETED.
-- [ ] tools/scaffold/scaffold-module.ts runs cleanly without touching files outside the newly created module folder.
-- [ ] Monorepo passes typecheck (pnpm tsc --noEmit) and all test suites (pnpm test) cleanly.
+### Database & Outbox Criteria
+- [ ] Soft delete test proves `prisma.worker.update` and `updateMany` cannot mutate records where `isDeleted: true`.
+- [ ] Outbox queue tests verify background processing drains pending events, and failed transactions roll back outbox events cleanly.
+- [ ] All monorepo packages compile strictly under TypeScript 5.9+ with zero lint errors and pass all Vitest suites.
 ```
 
 ---
 
-### 5️⃣ معايير القفل النهائي وتوثيق الإنجاز (Final Lock Criteria)
-1. اجتياز كافة الاختبارات الآلية بنسبة 100%.
+### 5️⃣ معايير القفل النهائي وتوثيق الإنجاز (Final Immutability Protocol)
+1. اجتياز كافة الاختبارات الآلية واليدوية بنسبة 100%.
 2. إثبات عدم التراجع في أي من بوابات الجودة الـ 21 للمشروع.
 3. تقديم تقرير إنجاز ميداني موثق في `docs/ai-execution-evidence/`.
 4. طلب إذن القفل التشفيري الحرفي: **«نعم اقفل»** وفق دستور الحوكمة.
