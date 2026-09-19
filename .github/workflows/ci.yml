@@ -57,7 +57,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 11.0.8
+          version: 12.4.2
 
       - name: Setup Node.js v24
         uses: actions/setup-node@v4
@@ -121,4 +121,4 @@ jobs:
           echo "| **Automated Test Suites** | Postgres 16 + Redis 7 + Vitest | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
           echo "| **Git Hygiene (Gate 17)** | Version parity & clean working tree | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
           echo "| **Enterprise Governance** | 20 Mandatory Architecture & Financial Gates | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Docker Production Build** | Multi-stage image with pnpm 11 & frozen lockfile | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Docker Production Build** | Multi-stage image with pnpm 12 & frozen lockfile | ✅ PASS |" >> $GITHUB_STEP_SUMMARY

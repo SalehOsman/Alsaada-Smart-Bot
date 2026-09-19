@@ -273,9 +273,23 @@ export function buildGovernanceLock(
     lock.lockedSpeedEngine = lockedSpeedEngine;
   }
   if (lockedDocker) {
+    const dockerFiles = listDockerFiles(root);
+    lockedDocker.files = dockerFiles.map((file) => ({
+      path: file,
+      sha256: sha256NormalizedFile(join(root, file)),
+    }));
+    lockedDocker.lockedAt = generatedAt;
     lock.lockedDocker = lockedDocker;
   }
   if (lockedEntities && Object.keys(lockedEntities).length > 0) {
+    if (lockedEntities['infra:docker']) {
+      const dockerFiles = listDockerFiles(root);
+      lockedEntities['infra:docker'].files = dockerFiles.map((file) => ({
+        path: file,
+        sha256: sha256NormalizedFile(join(root, file)),
+      }));
+      lockedEntities['infra:docker'].lockedAt = generatedAt;
+    }
     lock.lockedEntities = lockedEntities;
   }
 

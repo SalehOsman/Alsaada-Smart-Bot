@@ -15,7 +15,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Install pnpm & build tools
-RUN npm install -g pnpm@11.0.8
+RUN npm install -g pnpm@12.4.2
 RUN apk add --no-cache git
 
 # Copy monorepo manifests

@@ -22,7 +22,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 
 # Install pnpm & necessary build tools
-RUN npm install -g pnpm@11.0.8
+RUN npm install -g pnpm@12.4.2
 RUN apk add --no-cache openssl git
 
 # Copy monorepo manifests
@@ -111,7 +111,7 @@ ENV NEXT_PUBLIC_BUILD_TIME=$BUILD_TIME
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@12.4.2
 RUN apk add --no-cache openssl dumb-init tzdata
 
 ENV NODE_ENV=production

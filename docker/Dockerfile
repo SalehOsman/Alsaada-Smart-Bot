@@ -18,7 +18,7 @@ ENV DATABASE_URL="postgresql://build_placeholder:dummy@127.0.0.1:5432/build_db?s
 WORKDIR /app
 
 # Install pnpm & necessary build tools
-RUN npm install -g pnpm@11.0.8
+RUN npm install -g pnpm@12.4.2
 RUN apk add --no-cache openssl git
 
 # Copy monorepo manifests
@@ -102,7 +102,7 @@ ENV BUILD_TIME=$BUILD_TIME
 
 WORKDIR /app
 
-RUN npm install -g pnpm@11.0.8
+RUN npm install -g pnpm@12.4.2
 RUN apk add --no-cache openssl dumb-init tzdata
 
 ENV NODE_ENV=production

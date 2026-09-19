@@ -1,7 +1,7 @@
-settings:
-  blockExoticSubdeps: true
-  minimumReleaseAge: 10080
-  trustPolicy: no-downgrade
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+trustLockfile: true
 packages:
   - 'packages/*'
   - 'modules/*'
