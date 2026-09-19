@@ -35,6 +35,9 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @alsaada/database db:generate
 
+      - name: Build Core Packages
+        run: pnpm --filter "./packages/**" build
+
       - name: Compile TypeScript Across Monorepo
         run: pnpm typecheck
 
@@ -46,7 +49,8 @@ jobs:
           GITLEAKS_VERSION="8.24.0"
           curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | sudo tar -xz -C /usr/local/bin gitleaks
           gitleaks version
-          python3 -m pip install --break-system-packages semgrep || pipx install semgrep || python3 -m pip install semgrep
+          sudo python3 -m pip install --break-system-packages semgrep || python3 -m pip install --break-system-packages semgrep || pipx install semgrep
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           semgrep --version
 
       - name: Verify Git Hygiene & Version Parity
