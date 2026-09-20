@@ -7,7 +7,7 @@
 
 ---
 
-### 🏛️ أولاً: الوثائق التأسيسية والمعايير المعمارية الحاكمة (00 إلى 27)
+### 🏛️ أولاً: الوثائق التأسيسية والمعايير المعمارية الحاكمة (00 إلى 28)
 
 | رقم الوثيقة | مسار الملف | موضوع الوثيقة والهدف المعماري |
 | :---: | :--- | :--- |
@@ -39,6 +39,8 @@
 | **25** | [`25-optimal-high-performance-bot-architecture-and-speed-blueprint.md`](./25-optimal-high-performance-bot-architecture-and-speed-blueprint.md) | المخطط المعماري المؤسسي للسرعة القصوى والأداء الفائق للبوت (< 100ms). |
 | **26** | [`26-locked-flows-and-features-registry.md`](./26-locked-flows-and-features-registry.md) | السجل المرجعي الشامل للوظائف المقفلة والحصانة التشفيرية ومحرك القفل المركزي. |
 | **27** | [`27-enterprise-ai-governance-and-quality-gates-constitution.md`](./27-enterprise-ai-governance-and-quality-gates-constitution.md) | دستور حوكمة الذكاء الاصطناعي وبوابات الجودة المؤسسية الموحدة. |
+| **28** | [`28-enterprise-safe-upgrade-and-living-release-standard.md`](./28-enterprise-safe-upgrade-and-living-release-standard.md) | دستور إدارة الإصدارات الحية ومنهجية التحديثات الآمنة بنمط الأثر الصفري وبوابة الحوكمة رقم 21. |
+| **28** | [`28-master-tests-physical-reality-and-compliance-ledger.md`](./28-master-tests-physical-reality-and-compliance-ledger.md) | السجل المرجعي الشامل للواقع الفيزيائي للاختبارات (235 ملفاً) والامتثال الدستوري. |
 
 ---
 
