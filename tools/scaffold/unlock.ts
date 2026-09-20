@@ -17,6 +17,7 @@ export function runUnlockCli(argv = process.argv.slice(2), root = process.cwd())
     console.error('  pnpm unlock package:regional-engine --phrase="موافق على الفتح" --reason="تحديث العملة"');
     console.error('  pnpm unlock flow:01.1 --phrase="موافق على الفتح" --reason="معالجة حقل السن"');
     console.error('  pnpm unlock dashboard:workforce/new --phrase="موافق على الفتح" --reason="إضافة زر بحث"');
+    console.error('  pnpm unlock test:packages/rbac/tests/rbac.spec.ts --phrase="موافق على الفتح" --reason="ترقية التوكيدات"');
     process.exit(1);
   }
 

@@ -33,6 +33,7 @@ export function runLockCli(argv = process.argv.slice(2), root = process.cwd()): 
     console.error('  pnpm lock dashboard:workforce/new');
     console.error('  pnpm lock infra:docker');
     console.error('  pnpm lock infra:speed-engine');
+    console.error('  pnpm lock test:packages/rbac/tests/rbac.spec.ts');
     process.exit(1);
   }
 
