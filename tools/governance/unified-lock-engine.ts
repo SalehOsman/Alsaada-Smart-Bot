@@ -4,10 +4,10 @@ import { basename, dirname, extname, join } from 'node:path';
 import { normalized, toRepoPath } from './common.js';
 import { APPROVAL_PHRASE, GOVERNANCE_LOCK_PATH, buildGovernanceLock, listDockerFiles, type GovernanceLock } from './verify-governance-lock.js';
 
-export type LockedEntityType = 'flow' | 'dashboard' | 'package' | 'infra' | 'module';
+export type LockedEntityType = 'flow' | 'dashboard' | 'package' | 'infra' | 'module' | 'test';
 
 export interface LockedEntity {
-  id: string; // Standard format: "package:<name>" | "flow:<code>" | "dashboard:<path>" | "infra:<name>" | "module:<name>"
+  id: string; // Standard format: "package:<name>" | "flow:<code>" | "dashboard:<path>" | "infra:<name>" | "module:<name>" | "test:<path>"
   type: LockedEntityType;
   title: string;
   directory: string;
@@ -90,23 +90,30 @@ export function listEntityFiles(root: string, directoryOrFile: string, type: Loc
           continue;
         }
 
-        // Packages: skip build caches and generated code
+        // Packages: skip build caches, generated code, and tests (tests are locked independently under test:<path>)
         if (type === 'package') {
-          if (entry.name === 'generated' || entry.name === 'coverage') {
+          if (entry.name === 'generated' || entry.name === 'coverage' || entry.name === 'tests') {
             continue;
           }
         }
 
-        // Dashboard Zero Blast Radius: do not descend into child route directories that have their own page.tsx
+        // Flows: skip tests (tests are locked independently under test:<path>)
+        if (type === 'flow') {
+          if (entry.name === 'tests') {
+            continue;
+          }
+        }
+
+        // Dashboard Zero Blast Radius: do not descend into child route directories that have their own page.tsx, and skip tests
         if (type === 'dashboard') {
-          if (hasChildPageRoute(entryPath)) {
+          if (entry.name === 'tests' || hasChildPageRoute(entryPath)) {
             continue;
           }
         }
 
-        // Modules: do not descend into flows because flows are locked independently
+        // Modules: do not descend into flows because flows are locked independently, and skip tests
         if (type === 'module') {
-          if (entry.name === 'flows') {
+          if (entry.name === 'flows' || entry.name === 'tests') {
             continue;
           }
         }
@@ -122,6 +129,14 @@ export function listEntityFiles(root: string, directoryOrFile: string, type: Loc
             continue;
           }
         }
+
+        // Skip test spec files from non-test entities (tests are locked independently under test:<path>)
+        if (type !== 'test') {
+          if (entry.name.endsWith('.spec.ts') || entry.name.endsWith('.test.ts')) {
+            continue;
+          }
+        }
+
         files.push(relRepoPath);
       }
     }
@@ -196,6 +211,33 @@ export function resolveLockTarget(root: string, rawTarget: string): ResolvedTarg
       title: 'المحرك المؤسسي للسرعة الفائقة واستجابة البوت APM',
       directoryOrFile: 'apps/bot-server/src/services',
     };
+  }
+
+  // 1.5. Individual Test Target Resolution
+  if (trimmed.startsWith('test:')) {
+    const testPath = trimmed.replace(/^test:/, '').replace(/^\.\//, '');
+    const fullPath = join(root, testPath);
+    if (existsSync(fullPath) && statSync(fullPath).isFile()) {
+      return {
+        id: `test:${testPath}`,
+        type: 'test',
+        title: `ملف الاختبار المعتمد: ${testPath}`,
+        directoryOrFile: testPath,
+      };
+    }
+  }
+
+  if (trimmed.endsWith('.spec.ts') || trimmed.endsWith('.test.ts')) {
+    const testPath = trimmed.replace(/^test:/, '').replace(/^\.\//, '');
+    const fullPath = join(root, testPath);
+    if (existsSync(fullPath) && statSync(fullPath).isFile()) {
+      return {
+        id: `test:${testPath}`,
+        type: 'test',
+        title: `ملف الاختبار المعتمد: ${testPath}`,
+        directoryOrFile: testPath,
+      };
+    }
   }
 
   // 2. Relative file paths matching

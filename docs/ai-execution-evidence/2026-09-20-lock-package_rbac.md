@@ -1,11 +1,11 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:rbac)
 
-- **تاريخ القفل:** 2026-09-20 (2026-09-20T07:17:28.770Z)
+- **تاريخ القفل:** 2026-09-20 (2026-09-20T11:30:27.560Z)
 - **معرف الكيان:** `package:rbac`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/rbac
 - **المسار الأساسي:** `packages/rbac`
-- **عدد الملفات المقفلة:** 14 ملفاً
+- **عدد الملفات المقفلة:** 11 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
@@ -22,9 +22,6 @@
 | `packages/rbac/src/request-origin.ts` | `41bf25c161d08c753be32ee99760acc63ec6c1beeb22c2aa641263dc65793f76` |
 | `packages/rbac/src/roles.ts` | `ecb2bc5e8b6270dc3e5e9af852156f0853d19e308d307e3ce3b3e0c8e26732da` |
 | `packages/rbac/src/types.ts` | `75cbdeb4f17b0aa3af105fde0a12ed81e927a7c971e2e9e58d85bf4529a28d95` |
-| `packages/rbac/tests/cascading-rbac.spec.ts` | `7577603de94ed1af0c2793a5eda07971fb4535b0f209fbb9c308db04c8e6e0b4` |
-| `packages/rbac/tests/dashboard-auth.spec.ts` | `8e4f3bfad025a7b6ecb29d335e4eca28ca729156fa23c2156a0d6d16c9c582fb` |
-| `packages/rbac/tests/rbac.spec.ts` | `9797c03dcffdf2ccd5acd597b69e48538e9f022043f3522b659515d5fa45c3eb` |
 | `packages/rbac/tsconfig.json` | `c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280` |
 
 ## بوابات التحقق المعتمدة

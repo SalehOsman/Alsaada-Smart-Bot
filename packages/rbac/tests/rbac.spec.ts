@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   evaluateAccess,
   canAccessDashboard,
@@ -16,7 +16,10 @@ import {
 
 describe('Central RBAC Engine Specification (@alsaada/rbac)', () => {
   describe('1. Canonical Roles & Dashboard Access Gate', () => {
-    it('defines exactly the 7 canonical roles', () => {
+    it('defines exactly the 7 canonical roles with no additions or removals', () => {
+      // Assert — التحقق من العدد الدقيق للأدوار الكنسية
+      expect(CANONICAL_ROLES).toHaveLength(7);
+      // Assert — التحقق من القيم الحرفية المعتمدة والترتيب
       expect(CANONICAL_ROLES).toEqual([
         'SUPER_ADMIN',
         'GENERAL_ADMIN',
@@ -119,6 +122,18 @@ describe('Central RBAC Engine Specification (@alsaada/rbac)', () => {
   });
 
   describe('3. Worker Supervisor Delegation Lifecycles', () => {
+    // Arrange — تثبيت الوقت لضمان حتمية اختبارات انتهاء التفويض (R5)
+    const PINNED_DATE = new Date('2026-01-15T10:00:00Z');
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(PINNED_DATE);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('validates active worker supervisor delegation on matching site', () => {
       const decision = evaluateAccess({
         role: 'WORKER_SUPERVISOR',
@@ -156,8 +171,9 @@ describe('Central RBAC Engine Specification (@alsaada/rbac)', () => {
       expect(decision.reason).toBe('NO_ACTIVE_DELEGATION_FOR_PERMISSION_OR_SITE');
     });
 
-    it('denies worker supervisor when delegation is inactive or expired', () => {
-      const decisionInactive = evaluateAccess({
+    it('denies worker supervisor when delegation is explicitly deactivated', () => {
+      // Arrange — تفويض موجود لكنه معطّل صراحةً
+      const decision = evaluateAccess({
         role: 'WORKER_SUPERVISOR',
         permissionKey: 'inventory.fuel.level.create',
         action: 'create',
@@ -170,9 +186,14 @@ describe('Central RBAC Engine Specification (@alsaada/rbac)', () => {
           },
         ],
       });
-      expect(decisionInactive.granted).toBe(false);
+      // Assert — يُرفض مع بيان السبب الدقيق
+      expect(decision.granted).toBe(false);
+      expect(decision.reason).toBe('NO_ACTIVE_DELEGATION_FOR_PERMISSION_OR_SITE');
+    });
 
-      const decisionExpired = evaluateAccess({
+    it('denies worker supervisor when delegation has expired past its end date', () => {
+      // Arrange — تفويض نشط لكنه منتهي الصلاحية (10 ثوانٍ قبل الوقت المثبت)
+      const decision = evaluateAccess({
         role: 'WORKER_SUPERVISOR',
         permissionKey: 'inventory.fuel.level.create',
         action: 'create',
@@ -182,11 +203,27 @@ describe('Central RBAC Engine Specification (@alsaada/rbac)', () => {
             permissionKey: 'inventory.fuel.level.create',
             siteId: 'STE-KHA',
             isActive: true,
-            endsAt: new Date(Date.now() - 10000), // in the past
+            endsAt: new Date(PINNED_DATE.getTime() - 10_000),
           },
         ],
       });
-      expect(decisionExpired.granted).toBe(false);
+      // Assert — يُرفض مع بيان السبب الدقيق
+      expect(decision.granted).toBe(false);
+      expect(decision.reason).toBe('NO_ACTIVE_DELEGATION_FOR_PERMISSION_OR_SITE');
+    });
+
+    it('denies worker supervisor when delegations array is empty', () => {
+      // Arrange — لا توجد تفويضات أصلاً (Edge Case — R7)
+      const decision = evaluateAccess({
+        role: 'WORKER_SUPERVISOR',
+        permissionKey: 'inventory.fuel.level.create',
+        action: 'create',
+        siteId: 'STE-KHA',
+        delegations: [],
+      });
+      // Assert — يُرفض لعدم وجود أي تفويض نشط
+      expect(decision.granted).toBe(false);
+      expect(decision.reason).toBe('NO_ACTIVE_DELEGATION_FOR_PERMISSION_OR_SITE');
     });
 
     it('strictly forbids delegation of sovereign/non-delegatable permissions', () => {
