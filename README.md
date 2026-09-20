@@ -47,7 +47,7 @@
 
 ```
 F:\Alsaada-Smart-Bot/
-├── docs/                        # 📚 التوثيق المعماري الشامل والمواصفات القياسية (00 إلى 26)
+├── docs/                        # 📚 التوثيق المعماري الشامل والمواصفات القياسية (00 إلى 28)
 ├── packages/                    # 🧱 الحزم التقنية المشتركة والنواة المستقلة (Core Shared Kernel)
 │   ├── core-components/         # مكونات الواجهة والمحركات (Pickers, Clearing, CustodyGate, Installments, Outbox, etc.)
 │   ├── database/                # قاعدة البيانات (Prisma 6.4+ + PostgreSQL + التشفير والهاش التراكمي ونظام التدقيق الجنائي)
@@ -121,6 +121,8 @@ F:\Alsaada-Smart-Bot/
 * [25. المخطط المعماري المؤسسي للسرعة القصوى والأداء الفائق للبوت (< 100ms)](./docs/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md)
 * [26. السجل المرجعي الشامل للوظائف المقفلة والحصانة التشفيرية](./docs/26-locked-flows-and-features-registry.md)
 * [27. دستور حوكمة الذكاء الاصطناعي وبوابات الجودة المؤسسية الموحدة](./docs/27-enterprise-ai-governance-and-quality-gates-constitution.md)
+* [28. دستور إدارة الإصدارات الحية ومنهجية التحديثات الآمنة بنمط الأثر الصفري](./docs/28-enterprise-safe-upgrade-and-living-release-standard.md)
+* [28. السجل المرجعي الشامل للواقع الفيزيائي للاختبارات والامتثال الدستوري](./docs/28-master-tests-physical-reality-and-compliance-ledger.md)
 
 ---
 
