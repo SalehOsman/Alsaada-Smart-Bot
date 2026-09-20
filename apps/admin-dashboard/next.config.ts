@@ -45,7 +45,7 @@ if (!process.env.NODE_ENV && (process.argv.includes('dev') || process.env.npm_li
 const nextConfig: NextConfig = {
   distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   reactStrictMode: true,
-  serverExternalPackages: ['@prisma/client', 'prisma', '@alsaada/database'],
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-pg', 'pg', 'prisma', '@alsaada/database'],
   transpilePackages: [
     '@alsaada/core-components',
     '@alsaada/regional-engine',

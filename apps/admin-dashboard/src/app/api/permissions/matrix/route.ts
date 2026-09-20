@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@alsaada/database';
-import { FEATURE_CATALOG } from '@alsaada/rbac';
+import { FEATURE_CATALOG, SOVEREIGN_SUPER_ADMIN_KEYS } from '@alsaada/rbac';
 import { getCurrentUser } from '@/lib/auth';
 import { notifyRbacSync } from '@/lib/redis-sync';
 
@@ -97,6 +97,18 @@ export async function POST(request: Request) {
         { error: 'معلمات الصلاحية غير مكتملة' },
         { status: 400 }
       );
+    }
+
+    if (user.role !== 'SUPER_ADMIN') {
+      if (
+        SOVEREIGN_SUPER_ADMIN_KEYS.has(featureKey as any) ||
+        (scopeType === 'ROLE' && scopeId === 'SUPER_ADMIN')
+      ) {
+        return NextResponse.json(
+          { error: 'غير مصرح لمدير النظام العام بتعديل صلاحيات السوبر أدمن السيادية' },
+          { status: 403 }
+        );
+      }
     }
 
     if (policy === 'RESET') {

@@ -1,10 +1,9 @@
-import { PrismaClient, Prisma } from '../generated/client/index.js';
+import { prisma, disconnectDatabase } from '../client.js';
+import type { Prisma } from '../generated/client/index.js';
 
 try {
   process.loadEnvFile('.env');
 } catch {}
-
-const prisma = new PrismaClient();
 
 export async function remediateJobMatrixAndCycles(): Promise<void> {
   console.log('================================================================');
@@ -109,10 +108,15 @@ export async function remediateJobMatrixAndCycles(): Promise<void> {
     console.error('❌ Data remediation error:', err);
     throw err;
   } finally {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   }
 }
 
 if (process.argv[1]?.endsWith('remediate-job-matrix-and-cycles.ts')) {
-  remediateJobMatrixAndCycles();
+  remediateJobMatrixAndCycles()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
 }

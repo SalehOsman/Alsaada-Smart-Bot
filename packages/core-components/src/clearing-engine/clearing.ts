@@ -13,7 +13,12 @@ export class TripleBalanceClearingEngine {
    * القاعدة: عيني، خصم من مخزون الكانتين، تخفيض تكلفة الموقع، صفر خروج نقدية كاش.
    */
   static processCigaretteClearing(input: CigaretteClearingInput): CigaretteClearingResult {
-    if (input.packsCount <= 0 || input.packPrice <= 0) {
+    if (
+      !Number.isFinite(input.packsCount) ||
+      input.packsCount <= 0 ||
+      !Number.isFinite(input.packPrice) ||
+      input.packPrice <= 0
+    ) {
       return {
         success: false,
         totalAmount: 0,
@@ -26,7 +31,7 @@ export class TripleBalanceClearingEngine {
       };
     }
 
-    if (input.canteenStockAvailable < input.packsCount) {
+    if (!Number.isFinite(input.canteenStockAvailable) || input.canteenStockAvailable < input.packsCount) {
       return {
         success: false,
         totalAmount: 0,
@@ -57,7 +62,7 @@ export class TripleBalanceClearingEngine {
    * القاعدة: عيني، مقاصة تخفيض مستحقات المورد، صفر خروج نقدية كاش.
    */
   static processSupplierPurchaseClearing(input: SupplierPurchaseClearingInput): SupplierPurchaseClearingResult {
-    if (input.purchaseAmount <= 0) {
+    if (!Number.isFinite(input.purchaseAmount) || input.purchaseAmount <= 0) {
       return {
         success: false,
         totalAmount: 0,
@@ -82,14 +87,18 @@ export class TripleBalanceClearingEngine {
    * القاعدة: إلزامية تحديد مصدر التمويل (عهدة أو خزينة)، فحص الرصيد اللحظي، خروج نقدية حقيقي.
    */
   static processCashAdvanceClearing(input: CashAdvanceClearingInput): CashAdvanceClearingResult {
-    if (input.requestedAmount <= 0) {
+    if (
+      !Number.isFinite(input.requestedAmount) ||
+      input.requestedAmount <= 0 ||
+      !Number.isFinite(input.availableBalance)
+    ) {
       return {
         success: false,
         approvedAmount: 0,
         cashOutflow: 0,
         sourceEntityId: input.sourceEntityId,
         remainingSourceBalance: input.availableBalance,
-        clearingSummaryArabic: 'فشل: مبلغ السلفة المطلوب يجب أن يكون أكبر من الصفر.',
+        clearingSummaryArabic: 'فشل: مبلغ السلفة المطلوب يجب أن يكون أكبر من الصفر ورصيد المصدر صالح.',
         error: 'INVALID_ADVANCE_AMOUNT',
       };
     }

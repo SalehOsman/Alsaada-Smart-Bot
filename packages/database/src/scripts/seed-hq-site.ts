@@ -1,10 +1,8 @@
-﻿import { PrismaClient } from '@prisma/client';
+import { prisma, disconnectDatabase } from '../client.js';
 
 try {
   process.loadEnvFile('.env');
 } catch {}
-
-const prisma = new PrismaClient();
 
 export async function seedHqSite(): Promise<void> {
   console.log('================================================================');
@@ -56,10 +54,15 @@ export async function seedHqSite(): Promise<void> {
   } catch (err) {
     console.error('❌ Error seeding HQ site:', err);
   } finally {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   }
 }
 
 if (process.argv[1]?.includes('seed-hq-site')) {
-  seedHqSite();
+  seedHqSite()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
 }

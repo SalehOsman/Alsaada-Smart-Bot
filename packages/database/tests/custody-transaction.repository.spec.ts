@@ -91,8 +91,14 @@ describe('CustodyTransactionRepository — Forensic Atomic Repository', () => {
   });
 
   describe('findAndLock', () => {
-    it('executes SELECT FOR UPDATE with custody ID', async () => {
-      const result = await repository.findAndLock('custody-001');
+    it('throws error when tx is absent to prevent illusory locks outside transactions', async () => {
+      await expect(repository.findAndLock('custody-001', undefined as any)).rejects.toThrow(
+        'findAndLock requires an active interactive transaction client'
+      );
+    });
+
+    it('executes SELECT FOR UPDATE with custody ID within transaction', async () => {
+      const result = await repository.findAndLock('custody-001', mockPrisma);
 
       expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(
         expect.stringContaining('SELECT * FROM "financial_custodies" WHERE "id" = $1 FOR UPDATE'),
@@ -103,12 +109,12 @@ describe('CustodyTransactionRepository — Forensic Atomic Repository', () => {
       expect(result?.currentBalance).toBe(15000);
     });
 
-    it('returns null when custody does not exist', async () => {
-      const result = await repository.findAndLock('non-existent');
+    it('returns null when custody does not exist within transaction', async () => {
+      const result = await repository.findAndLock('non-existent', mockPrisma);
       expect(result).toBeNull();
     });
 
-    it('uses provided interactive transaction client if supplied', async () => {
+    it('uses provided interactive transaction client', async () => {
       const mockTx = {
         $queryRawUnsafe: vi.fn(async () => [{ ...initialCustody }]),
       };

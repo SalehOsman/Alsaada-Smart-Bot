@@ -20,7 +20,7 @@ export class UniversalCustodyGate {
       };
     }
 
-    if (requiredAmount <= 0) {
+    if (typeof requiredAmount !== 'number' || !Number.isFinite(requiredAmount) || isNaN(requiredAmount) || requiredAmount <= 0) {
       return {
         isAllowed: false,
         custodyId: custody.id,
@@ -29,6 +29,18 @@ export class UniversalCustodyGate {
         projectedBalance: custody.currentBalance,
         error: 'INVALID_AMOUNT',
         errorArabic: '⚠️ المبلغ المطلوب صرفه يجب أن يكون أكبر من الصفر.',
+      };
+    }
+
+    if (typeof custody.currentBalance !== 'number' || !Number.isFinite(custody.currentBalance) || isNaN(custody.currentBalance)) {
+      return {
+        isAllowed: false,
+        custodyId: custody.id,
+        requestedAmount: requiredAmount,
+        availableBalance: custody.currentBalance,
+        projectedBalance: custody.currentBalance,
+        error: 'INVALID_CUSTODY_BALANCE',
+        errorArabic: '⚠️ رصيد العهدة الحالي غير صالح رياضياً.',
       };
     }
 
@@ -55,3 +67,5 @@ export class UniversalCustodyGate {
     };
   }
 }
+
+export const verifyCustodyBalance = UniversalCustodyGate.verifyCustodyFunds;

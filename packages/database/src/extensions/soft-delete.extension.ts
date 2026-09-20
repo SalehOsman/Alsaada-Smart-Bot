@@ -1,65 +1,17 @@
 import { Prisma } from '../generated/client/index.js';
+import {
+  type RelationMetadata,
+  getSoftDeleteModels,
+  getRelationMetadataMap,
+  SOFT_DELETE_MODELS,
+} from './soft-delete-metadata.js';
 
-let cachedSoftDeleteModels: Set<string> | null = null;
-
-export function getSoftDeleteModels(): Set<string> {
-  if (cachedSoftDeleteModels) return cachedSoftDeleteModels;
-
-  const models = new Set<string>();
-  if (Prisma.dmmf?.datamodel?.models) {
-    for (const m of Prisma.dmmf.datamodel.models) {
-      if (m.fields.some((f) => f.name === 'isDeleted')) {
-        models.add(m.name);
-        models.add(m.name.charAt(0).toLowerCase() + m.name.slice(1));
-      }
-    }
-  }
-
-  // Guaranteed schema baseline models
-  models.add('Worker');
-  models.add('worker');
-  models.add('FinancialLedger');
-  models.add('financialLedger');
-  models.add('User');
-  models.add('user');
-
-  cachedSoftDeleteModels = models;
-  return cachedSoftDeleteModels;
-}
-
-export interface RelationMetadata {
-  targetModel: string;
-  isList: boolean;
-  supportsSoftDelete: boolean;
-}
-
-let relationCache: Map<string, Map<string, RelationMetadata>> | null = null;
-
-export function getRelationMetadataMap(): Map<string, Map<string, RelationMetadata>> {
-  if (relationCache) return relationCache;
-
-  relationCache = new Map();
-  const models = Prisma.dmmf?.datamodel?.models || [];
-  
-  const softDeleteModels = getSoftDeleteModels();
-  
-  for (const m of models) {
-    const relationMap = new Map<string, RelationMetadata>();
-    for (const f of m.fields) {
-      if (f.kind === 'object') {
-        relationMap.set(f.name, {
-          targetModel: f.type,
-          isList: f.isList,
-          supportsSoftDelete: softDeleteModels.has(f.type) || softDeleteModels.has(f.type.charAt(0).toLowerCase() + f.type.slice(1)),
-        });
-      }
-    }
-    relationCache.set(m.name, relationMap);
-    relationCache.set(m.name.charAt(0).toLowerCase() + m.name.slice(1), relationMap);
-  }
-
-  return relationCache;
-}
+export {
+  type RelationMetadata,
+  getSoftDeleteModels,
+  getRelationMetadataMap,
+  SOFT_DELETE_MODELS,
+};
 
 export function sanitizeNestedRelations(
   model: string,
@@ -327,7 +279,7 @@ export function createSoftDeleteExtension() {
               'Record required but not found (soft-deleted or does not exist)',
               {
                 code: 'P2025',
-                clientVersion: Prisma.prismaVersion?.client ?? '6.4.1',
+                clientVersion: Prisma.prismaVersion?.client ?? '7.10.0',
               }
             );
           }
@@ -373,6 +325,32 @@ export function createSoftDeleteExtension() {
               });
             }
           }
+          return query(args);
+        },
+
+        async update({ model, operation, args, query }: SoftDeleteQueryArgs) {
+          args = args ?? {};
+          if (softDeleteModels.has(model) && args.data?.isDeleted !== true) {
+            args.where = injectSoftDeleteFilter(args.where);
+          }
+          sanitizeNestedRelations(model, args);
+          return query(args);
+        },
+
+        async updateMany({ model, operation, args, query }: SoftDeleteQueryArgs) {
+          args = args ?? {};
+          if (softDeleteModels.has(model) && args.data?.isDeleted !== true) {
+            args.where = injectSoftDeleteFilter(args.where);
+          }
+          return query(args);
+        },
+
+        async upsert({ model, operation, args, query }: SoftDeleteQueryArgs) {
+          args = args ?? {};
+          if (softDeleteModels.has(model)) {
+            args.where = injectSoftDeleteFilter(args.where);
+          }
+          sanitizeNestedRelations(model, args);
           return query(args);
         },
       },

@@ -51,6 +51,10 @@ coverage/
 scratch/
 tmp/
 temp/
+*-output.txt
+vitest-list-output.txt
+gap-*.ps1
+gap-*.txt
 .agents/*
 !.agents/skills/
 !.agents/rules/

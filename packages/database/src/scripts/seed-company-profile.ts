@@ -1,12 +1,14 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma, disconnectDatabase } from '../client.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 try {
   process.loadEnvFile('.env');
 } catch {}
-
-const prisma = new PrismaClient();
 
 export async function seedCompanyProfile(): Promise<void> {
   console.log('================================================================');
@@ -14,9 +16,14 @@ export async function seedCompanyProfile(): Promise<void> {
   console.log('================================================================');
 
   try {
-    const jsonPath = path.resolve(process.cwd(), 'prisma/seed-data/company-profile.json');
-    if (!fs.existsSync(jsonPath)) {
-      throw new Error(`Profile seed file not found at: ${jsonPath}`);
+    const candidates = [
+      path.resolve(__dirname, '../../prisma/seed-data/company-profile.json'),
+      path.resolve(process.cwd(), 'prisma/seed-data/company-profile.json'),
+      path.resolve(process.cwd(), 'packages/database/prisma/seed-data/company-profile.json'),
+    ];
+    const jsonPath = candidates.find((p) => fs.existsSync(p));
+    if (!jsonPath) {
+      throw new Error(`Profile seed file not found in any of: ${candidates.join(', ')}`);
     }
 
     const raw = fs.readFileSync(jsonPath, 'utf-8');
@@ -81,10 +88,15 @@ export async function seedCompanyProfile(): Promise<void> {
     console.error('❌ Failed to seed company profile:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   }
 }
 
 if (process.argv[1]?.endsWith('seed-company-profile.ts')) {
-  seedCompanyProfile();
+  seedCompanyProfile()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
 }

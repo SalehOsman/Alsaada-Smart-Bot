@@ -20,23 +20,6 @@ export async function invalidateUserCache(telegramId: bigint): Promise<void> {
   } catch {}
 }
 
-
-async function resolveDefaultFieldAdminSiteId(): Promise<string | null> {
-  return fastCache.rememberSWR('system:default_field_admin_site', 300, async () => {
-    let activeSite = await prisma.site.findFirst({
-      where: { status: 'ACTIVE', workers: { some: { isDeleted: false } } },
-      select: { id: true },
-    });
-    if (!activeSite) {
-      activeSite = await prisma.site.findFirst({
-        where: { status: 'ACTIVE' },
-        select: { id: true },
-      });
-    }
-    return activeSite?.id ?? null;
-  });
-}
-
 export async function authMiddleware(ctx: MyContext, next: NextFunction): Promise<void> {
   const from = ctx.from;
   if (!from) {
@@ -100,10 +83,6 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
             if (impEntity.siteId) ctx.assignedSiteId = impEntity.siteId;
           }
         }
-        if (ctx.effectiveRole === 'FIELD_ADMIN' && !ctx.assignedSiteId) {
-          const defaultSiteId = await resolveDefaultFieldAdminSiteId();
-          if (defaultSiteId) ctx.assignedSiteId = defaultSiteId;
-        }
       } else {
         ctx.effectiveRole = 'SUPER_ADMIN';
         ctx.isImpersonating = false;
@@ -120,10 +99,6 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
         }
         if (user?.workerId) {
           ctx.workerId = user.workerId;
-        }
-        if (ctx.effectiveRole === 'FIELD_ADMIN' && !ctx.assignedSiteId) {
-          const defaultSiteId = await resolveDefaultFieldAdminSiteId();
-          if (defaultSiteId) ctx.assignedSiteId = defaultSiteId;
         }
       }
       ctx.isImpersonating = false;

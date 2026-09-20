@@ -28,12 +28,15 @@ export function normalizeDigits(input: string): string {
  */
 export function parseRegionalNumber(input: string | number | null | undefined): number | null {
   if (input === null || input === undefined) return null;
-  if (typeof input === 'number') return isNaN(input) ? null : input;
+  if (typeof input === 'number') return (!Number.isFinite(input) || isNaN(input)) ? null : input;
 
-  const normalized = normalizeDigits(input.trim())
+  const rawStr = typeof input === 'string' ? input.trim() : String(input).trim();
+  if (/^[+-]?infinity$/i.test(rawStr)) return null;
+
+  const normalized = normalizeDigits(rawStr)
     .replace(/[,٬\s]/g, '') // remove thousands separators (Latin and Arabic) and whitespace
     .replace(/٫/g, '.');   // convert Arabic decimal comma to dot
 
   const parsed = Number(normalized);
-  return isNaN(parsed) ? null : parsed;
+  return (!Number.isFinite(parsed) || isNaN(parsed)) ? null : parsed;
 }

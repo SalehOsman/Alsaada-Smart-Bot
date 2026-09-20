@@ -46,6 +46,7 @@ export class TransactionalOutboxQueue {
         payload: input.payload as Prisma.InputJsonValue,
         maxRetries: input.maxRetries ?? 5,
         status: 'PENDING',
+        nextRetryAt: new Date(),
       },
     });
   }

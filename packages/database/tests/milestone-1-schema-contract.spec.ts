@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { Prisma, PrismaClient } from '../src/generated/client/index.js';
+import { Prisma } from '../src/generated/client/index.js';
+import { prisma, disconnectDatabase } from '../src/client.js';
 
-const prisma = new PrismaClient();
 const canConnect = async () => {
   try {
     await prisma.$queryRawUnsafe('SELECT 1');
@@ -13,13 +13,78 @@ const canConnect = async () => {
   }
 };
 
+interface SchemaField {
+  name: string;
+  type: string;
+  isList: boolean;
+  isRequired: boolean;
+  default?: any;
+}
+
+interface SchemaModel {
+  name: string;
+  fields: SchemaField[];
+}
+
+function parseSchemaModels(schemaContent: string): SchemaModel[] {
+  const modelRegex = /model\s+(\w+)\s*\{([\s\S]*?)\}/g;
+  const models: SchemaModel[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = modelRegex.exec(schemaContent)) !== null) {
+    const modelName = match[1];
+    const body = match[2];
+    if (!modelName || !body) continue;
+
+    const fields: SchemaField[] = [];
+
+    for (const line of body.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('@@')) continue;
+
+      const tokens = trimmed.split(/\s+/);
+      const name = tokens[0];
+      let type = tokens[1];
+      if (!name || !type) continue;
+
+      const isList = type.endsWith('[]');
+      if (isList) type = type.slice(0, -2);
+      const isOptional = type.endsWith('?');
+      if (isOptional) type = type.slice(0, -1);
+
+      let defaultValue: any = undefined;
+      const defaultMatch = trimmed.match(/@default\(([^)]+)\)/);
+      if (defaultMatch && defaultMatch[1]) {
+        const rawDef = defaultMatch[1].trim();
+        if (rawDef === 'true') defaultValue = true;
+        else if (rawDef === 'false') defaultValue = false;
+        else if (!isNaN(Number(rawDef))) defaultValue = Number(rawDef);
+        else if (rawDef.startsWith('"') && rawDef.endsWith('"')) defaultValue = rawDef.slice(1, -1);
+        else defaultValue = rawDef;
+      }
+
+      fields.push({
+        name,
+        type,
+        isList,
+        isRequired: !isOptional,
+        default: defaultValue,
+      });
+    }
+    models.push({ name: modelName, fields });
+  }
+  return models;
+}
+
+const schemaPath = resolve(__dirname, '../prisma/schema.prisma');
+const schemaContent = readFileSync(schemaPath, 'utf-8');
+const models = parseSchemaModels(schemaContent);
+const getModel = (name: string) => models.find((m) => m.name === name);
+
 describe('Milestone 1 — Schema Contract & Model Verification', () => {
   afterAll(async () => {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   });
-
-  const models = Prisma.dmmf.datamodel.models;
-  const getModel = (name: string) => models.find((m) => m.name === name);
 
   it('verifies Worker model has additionalSalary and default contractType PERMANENT', () => {
     const workerModel = getModel('Worker');

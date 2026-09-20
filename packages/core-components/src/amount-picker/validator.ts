@@ -1,4 +1,5 @@
 import { parseRegionalNumber } from '@alsaada/regional-engine';
+import { type PositiveFiniteAmount, toPositiveFiniteAmount } from '../types.js';
 
 export interface AmountValidationOptions {
   minAmount?: number;
@@ -8,7 +9,7 @@ export interface AmountValidationOptions {
 
 export interface AmountValidationResult {
   isValid: boolean;
-  amount?: number;
+  amount?: PositiveFiniteAmount;
   error?: string;
 }
 
@@ -25,7 +26,7 @@ export function validateAmount(
 
   const parsed = parseRegionalNumber(input);
 
-  if (parsed === null || isNaN(parsed)) {
+  if (parsed === null || isNaN(parsed) || !Number.isFinite(parsed)) {
     return {
       isValid: false,
       error: 'المبلغ المُدخل غير صالح. برجاء كتابة أرقام صحيحة.',
@@ -62,7 +63,7 @@ export function validateAmount(
 
   return {
     isValid: true,
-    amount: parsed,
+    amount: toPositiveFiniteAmount(parsed),
   };
 }
 

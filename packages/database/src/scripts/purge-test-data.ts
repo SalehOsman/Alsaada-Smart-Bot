@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma, disconnectDatabase } from '../client.js';
 
 try {
   process.loadEnvFile('.env');
 } catch {}
-
-const prisma = new PrismaClient();
 
 /**
  * Al-Saada Enterprise Test Data Purge & Sanitization Protocol
@@ -92,7 +90,7 @@ export async function purgeTestData(confirm: boolean = false): Promise<void> {
     console.error('❌ Error during test data purge:', error);
     throw error;
   } finally {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   }
 }
 

@@ -130,7 +130,10 @@ export async function PUT(
   if (body.phone && key) {
     const cleanPhone = normalizeDigits(body.phone.trim().replace(/[\s\-_()]/g, ''));
     updateData.phoneEncrypted = encryptField(cleanPhone, key);
-    const salt = process.env.BLIND_INDEX_SECRET || process.env.DATABASE_ENCRYPTION_KEY || 'default-salt-value-for-alsaada-2026';
+    const salt = process.env.BLIND_INDEX_SECRET || process.env.DATABASE_ENCRYPTION_KEY;
+    if (!salt) {
+      throw new Error('Missing BLIND_INDEX_SECRET or DATABASE_ENCRYPTION_KEY for blind index generation');
+    }
     updateData.phoneBlindIndex = createBlindIndex(cleanPhone, salt);
   }
   if (body.siteId) updateData.siteId = body.siteId;

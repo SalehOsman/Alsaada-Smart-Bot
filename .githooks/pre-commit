@@ -18,6 +18,19 @@ if [ "$CURRENT_BRANCH" = "main" ]; then
   fi
 fi
 
+# ==============================================================================
+# 0.1. حماية من تلف ملفات الاختبار (Redirect Poisoning Guard)
+# ==============================================================================
+FORBIDDEN_PATTERN='^\{"numTotalTestSuites'
+for f in $(git diff --cached --name-only --diff-filter=ACM); do
+  if [ -f "$f" ] && echo "$f" | grep -Eq '\.(spec|test)\.[jt]sx?$'; then
+    if grep -Eq "$FORBIDDEN_PATTERN" "$f" 2>/dev/null; then
+      echo "❌ [PRE-COMMIT ERROR] ملف اختبار مُتلف باسم $f — يحتوي مخرجات vitest JSON"
+      exit 1
+    fi
+  fi
+done
+
 echo "🔍 [PRE-COMMIT] Running strict TypeScript, contracts, and architecture checks..."
 
 pnpm typecheck || {

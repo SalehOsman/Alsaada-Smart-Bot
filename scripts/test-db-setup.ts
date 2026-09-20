@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 import net from 'node:net';
-import { PrismaClient } from '../packages/database/src/generated/client/index.js';
+import { createExtendedPrismaClient } from '../packages/database/src/client.js';
 
 export const TEST_DB_NAME = 'alsaada_test_db';
 export const DEFAULT_POSTGRES_PORT = 5432;
@@ -79,7 +79,10 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
     return { ok: false, error: errorMsg };
   }
 
-  const basePrisma = new PrismaClient();
+  const baseDbUrl =
+    process.env.DATABASE_URL ||
+    'postgresql://alsaada_admin:alsaada_secure_pass_2026@127.0.0.1:5432/alsaada_db?schema=public';
+  const basePrisma = createExtendedPrismaClient({ connectionString: baseDbUrl });
   const testDbUrl = getTestDatabaseUrl();
 
   try {
@@ -100,13 +103,38 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
 
     await basePrisma.$disconnect();
 
-    // 2. Push schema to test database
+    // 2. Check if schema already exists in test database
+    const testPrisma = createExtendedPrismaClient({ connectionString: testDbUrl });
+    let tablesExist = false;
+    try {
+      await testPrisma.$connect();
+      const checkResult = (await testPrisma.$queryRawUnsafe(
+        "SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'financial_ledgers' AND column_name = 'ledger_seq'"
+      )) as unknown[];
+      tablesExist = Boolean(checkResult && checkResult.length > 0);
+    } catch {
+      tablesExist = false;
+    } finally {
+      await testPrisma.$disconnect().catch(() => {});
+    }
+
+    if (tablesExist) {
+      console.log(`🎉 [TEST-DB] Isolated test database '${TEST_DB_NAME}' already initialized and ready!`);
+      return { ok: true, testDbUrl };
+    }
+
+    // 3. Push schema to fresh test database
     console.log('🚀 [TEST-DB] Synchronizing schema via prisma db push...');
-    execSync('pnpm --filter @alsaada/database exec prisma db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss', {
-      env: {
-        ...process.env,
-        DATABASE_URL: testDbUrl,
-      },
+    const childEnv: Record<string, string | undefined> = { ...process.env, DATABASE_URL: testDbUrl };
+    childEnv.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION =
+      process.env.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION || 'موافق على الفتح';
+    delete childEnv.ANTIGRAVITY_AGENT;
+    delete childEnv.ANTIGRAVITY_CONVERSATION_ID;
+    delete childEnv.ANTIGRAVITY_CSRF_TOKEN;
+    delete childEnv.ANTIGRAVITY_LS_ADDRESS;
+
+    execSync('pnpm --filter @alsaada/database exec prisma db push --schema=prisma/schema.prisma --accept-data-loss', {
+      env: childEnv,
       stdio: 'inherit',
     });
 

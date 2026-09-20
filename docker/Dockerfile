@@ -48,6 +48,7 @@ RUN git init --bare "$GIT_DIR" \
 COPY packages/database/prisma/ packages/database/prisma/
 COPY packages/database/src/ packages/database/src/
 COPY packages/database/tsconfig.json packages/database/
+COPY packages/database/prisma.config.ts packages/database/
 COPY packages/rbac/src/ packages/rbac/src/
 COPY packages/rbac/tsconfig.json packages/rbac/
 COPY packages/regional-engine/src/ packages/regional-engine/src/

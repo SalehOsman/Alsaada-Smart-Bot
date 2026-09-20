@@ -10,13 +10,13 @@ import {
 
 describe('@alsaada/national-id-engine', () => {
   it('parses valid male National ID from 20th century (1995)', () => {
-    // 2 (century 1900) 95 (1995) 05 (May) 15 (15th) 12 (Dakahlia) 015 (sequence) 3 (odd=male) 1 (checksum)
-    const result = parseEgyptianNationalId('29505151201531');
+    // 2 (century 1900) 95 (1995) 05 (May) 15 (15th) 12 (Dakahlia) 015 (sequence) 3 (odd=male) 2 (valid Modulo-11 checksum)
+    const result = parseEgyptianNationalId('29505151201532');
     expect(result.isValid).toBe(true);
     expect(result.info).toBeDefined();
 
     const info = result.info!;
-    expect(info.nationalId).toBe('29505151201531');
+    expect(info.nationalId).toBe('29505151201532');
     expect(info.birthDateString).toBe('1995-05-15');
     expect(info.gender).toBe('MALE');
     expect(info.genderArabic).toBe('ذكر');
@@ -28,13 +28,13 @@ describe('@alsaada/national-id-engine', () => {
   });
 
   it('parses valid female National ID from 21st century (2002)', () => {
-    // 3 (century 2000) 02 (2002) 08 (August) 10 (10th) 01 (Cairo) 024 (sequence) 2 (even=female) 2 (checksum)
-    const result = parseEgyptianNationalId('30208100102422');
+    // 3 (century 2000) 02 (2002) 08 (August) 10 (10th) 01 (Cairo) 024 (sequence) 2 (even=female) 5 (valid Modulo-11 checksum)
+    const result = parseEgyptianNationalId('30208100102425');
     expect(result.isValid).toBe(true);
     expect(result.info).toBeDefined();
 
     const info = result.info!;
-    expect(info.nationalId).toBe('30208100102422');
+    expect(info.nationalId).toBe('30208100102425');
     expect(info.birthDateString).toBe('2002-08-10');
     expect(info.gender).toBe('FEMALE');
     expect(info.genderArabic).toBe('أنثى');
@@ -45,16 +45,16 @@ describe('@alsaada/national-id-engine', () => {
   });
 
   it('handles Eastern Arabic numerals seamlessly', () => {
-    const result = parseEgyptianNationalId('٢٩٥٠٥١٥١٢٠١٥٣١');
+    const result = parseEgyptianNationalId('٢٩٥٠٥١٥١٢٠١٥٣٢');
     expect(result.isValid).toBe(true);
-    expect(result.info?.nationalId).toBe('29505151201531');
+    expect(result.info?.nationalId).toBe('29505151201532');
     expect(result.info?.birthDateString).toBe('1995-05-15');
   });
 
   it('handles spaces and hyphens gracefully', () => {
-    const result = parseEgyptianNationalId(' 2-950515-12-01531 ');
+    const result = parseEgyptianNationalId(' 2-950515-12-01532 ');
     expect(result.isValid).toBe(true);
-    expect(result.info?.nationalId).toBe('29505151201531');
+    expect(result.info?.nationalId).toBe('29505151201532');
   });
 
   it('rejects invalid lengths', () => {
@@ -128,17 +128,17 @@ describe('@alsaada/national-id-engine', () => {
     expect(validateNationalIdCheckDigit(`${first13}9`)).toBe(false);
   });
 
-  it('defaults to non-blocking warning when check digit differs to support legacy civil status exceptions', () => {
+  it('allows non-blocking warning when strictCheckDigit is explicitly set to false', () => {
     const idWithDiffCheckDigit = '29505151201531'; // last digit is 1 instead of 2
-    const result = parseEgyptianNationalId(idWithDiffCheckDigit);
+    const result = parseEgyptianNationalId(idWithDiffCheckDigit, { strictCheckDigit: false });
     expect(result.isValid).toBe(true);
     expect(result.info?.isCheckDigitValid).toBe(false);
     expect(result.warning).toContain('تحذير إرشادي');
   });
 
-  it('strictly rejects invalid check digit when strictCheckDigit option is set', () => {
+  it('strictly rejects invalid check digit by default', () => {
     const idWithDiffCheckDigit = '29505151201531';
-    const result = parseEgyptianNationalId(idWithDiffCheckDigit, { strictCheckDigit: true });
+    const result = parseEgyptianNationalId(idWithDiffCheckDigit);
     expect(result.isValid).toBe(false);
     expect(result.error).toContain('Modulo-11');
   });

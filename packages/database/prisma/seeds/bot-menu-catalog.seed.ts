@@ -1,4 +1,6 @@
-import { PrismaClient, BotNodeType, BotNodeStatus, DisabledBehavior } from '../../src/generated/client/index.js';
+import { prisma as defaultPrisma } from '../../src/client.js';
+import type { DatabaseClient } from '../../src/client.js';
+import { BotNodeType, BotNodeStatus, DisabledBehavior } from '../../src/generated/client/index.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -68,11 +70,12 @@ const PROTECTED_FLOW_CODES = new Set([
   'flow:10.6', // unghost
 ]);
 
-export async function seedBotMenuCatalog(prisma = new PrismaClient()): Promise<{
+export async function seedBotMenuCatalog(prismaInstance?: DatabaseClient): Promise<{
   modulesCount: number;
   sectionsCount: number;
   flowsCount: number;
 }> {
+  const prisma = prismaInstance ?? defaultPrisma;
   console.log('================================================================');
   console.log('🤖 Seeding/Updating Enterprise Bot Menu Catalog (Plan-71)...');
   console.log('================================================================');

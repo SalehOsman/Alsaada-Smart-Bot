@@ -34,6 +34,11 @@ describe('@alsaada/regional-engine', () => {
       expect(parseRegionalNumber('invalid_text')).toBeNull();
       expect(parseRegionalNumber(null)).toBeNull();
       expect(parseRegionalNumber(undefined)).toBeNull();
+      expect(parseRegionalNumber(Infinity)).toBeNull();
+      expect(parseRegionalNumber(-Infinity)).toBeNull();
+      expect(parseRegionalNumber('Infinity')).toBeNull();
+      expect(parseRegionalNumber('-Infinity')).toBeNull();
+      expect(parseRegionalNumber(NaN)).toBeNull();
     });
   });
 

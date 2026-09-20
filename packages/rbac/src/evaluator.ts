@@ -35,30 +35,53 @@ export function evaluateAccess(context: AccessContext): AccessDecision {
     delegations = [],
   } = context;
 
+  const trace: string[] = [];
+
   // 1. Hard Account Status Checks
+  trace.push('ACCOUNT_STATUS_CHECKED');
   if (isBanned) {
-    return { granted: false, reason: 'ACCOUNT_BANNED' };
+    return { granted: false, reason: 'ACCOUNT_BANNED', decisionTrace: Object.freeze([...trace]) };
   }
   if (!isActive) {
-    return { granted: false, reason: 'ACCOUNT_INACTIVE' };
+    return { granted: false, reason: 'ACCOUNT_INACTIVE', decisionTrace: Object.freeze([...trace]) };
   }
 
   // 2. Canonical Role Enforcement (Strict DENY_BY_DEFAULT)
+  trace.push('CANONICAL_ROLE_CHECKED');
   if (!isCanonicalRole(role)) {
-    return { granted: false, reason: 'INVALID_OR_DEPRECATED_ROLE' };
+    return { granted: false, reason: 'INVALID_OR_DEPRECATED_ROLE', decisionTrace: Object.freeze([...trace]) };
   }
 
   const canonicalRole = role as CanonicalRole;
 
   // 3. Channel / Dashboard Matrix Check
+  trace.push('CHANNEL_CHECKED');
   if (channel === 'DASHBOARD' && !canAccessDashboard(canonicalRole)) {
-    return { granted: false, reason: 'DASHBOARD_ACCESS_DENIED' };
+    return { granted: false, reason: 'DASHBOARD_ACCESS_DENIED', decisionTrace: Object.freeze([...trace]) };
   }
 
   // 4. Resolve Feature Contract
+  trace.push('FEATURE_CONTRACT_RESOLVED');
   const contract = getFeatureContract(permissionKey);
 
-  // 5. SUPER_ADMIN Sovereign Evaluation
+  // 5. Site Boundary Check
+  trace.push('SITE_BOUNDARY_CHECKED');
+  if (canonicalRole === 'FIELD_ADMIN') {
+    if (targetSiteId && siteId && targetSiteId !== siteId) {
+      return { granted: false, reason: 'SITE_BOUNDARY_VIOLATION', decisionTrace: Object.freeze([...trace]) };
+    }
+    if (targetSiteId && !siteId) {
+      return { granted: false, reason: 'SITE_BOUNDARY_VIOLATION', decisionTrace: Object.freeze([...trace]) };
+    }
+  }
+
+  // 6. Sovereign / Super Admin Keys Check
+  trace.push('SOVEREIGN_KEYS_CHECKED');
+  if (canonicalRole === 'FIELD_ADMIN' && SOVEREIGN_SUPER_ADMIN_KEYS.has(permissionKey)) {
+    return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE', decisionTrace: Object.freeze([...trace]) };
+  }
+
+  // 7. SUPER_ADMIN Sovereign Evaluation
   if (canonicalRole === 'SUPER_ADMIN') {
     const masked = getMaskedFields(canonicalRole, permissionKey, { isSelf });
     return {
@@ -66,30 +89,31 @@ export function evaluateAccess(context: AccessContext): AccessDecision {
       allowedActions: contract?.allowedActions ?? ['view', 'create', 'submit', 'edit', 'withdraw', 'approve', 'reject', 'settle', 'export', 'print', 'manage'],
       fieldMask: masked,
       scope: 'system',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 6. Sovereign / Non-Delegatable Safety Lock
+  // 8. Sovereign / Non-Delegatable Safety Lock
   if (isNonDelegatable(permissionKey)) {
     // Exception: GENERAL_ADMIN for delegations management or approvals if specified in contract
     if (contract && contract.allowedRoles.includes(canonicalRole) && (contract.allowedActions.includes(action) || action === 'view')) {
       // Allowed if explicitly listed in feature contract
     } else {
-      return { granted: false, reason: 'FEATURE_NOT_DELEGATABLE' };
+      return { granted: false, reason: 'FEATURE_NOT_DELEGATABLE', decisionTrace: Object.freeze([...trace]) };
     }
   }
 
   if (!contract) {
-    return { granted: false, reason: 'PERMISSION_NOT_FOUND_IN_CATALOG' };
+    return { granted: false, reason: 'PERMISSION_NOT_FOUND_IN_CATALOG', decisionTrace: Object.freeze([...trace]) };
   }
 
   // Check if role is allowed directly on the contract
   const isDirectlyAllowedRole = contract.allowedRoles.includes(canonicalRole);
 
-  // 7. GENERAL_ADMIN Evaluation
+  // 9. GENERAL_ADMIN Evaluation
   if (canonicalRole === 'GENERAL_ADMIN') {
     if (!isDirectlyAllowedRole) {
-      return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE' };
+      return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE', decisionTrace: Object.freeze([...trace]) };
     }
     const masked = getMaskedFields(canonicalRole, permissionKey, { isSelf });
     return {
@@ -97,23 +121,19 @@ export function evaluateAccess(context: AccessContext): AccessDecision {
       allowedActions: contract.allowedActions,
       fieldMask: masked,
       scope: 'all-sites',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 8. FIELD_ADMIN Evaluation
+  // 10. FIELD_ADMIN Evaluation
   if (canonicalRole === 'FIELD_ADMIN') {
     if (!isDirectlyAllowedRole) {
-      return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE' };
-    }
-
-    // Site boundary enforcement: If targetSiteId is specified and differs from assigned siteId
-    if (targetSiteId && siteId && targetSiteId !== siteId) {
-      return { granted: false, reason: 'SITE_BOUNDARY_VIOLATION' };
+      return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE', decisionTrace: Object.freeze([...trace]) };
     }
 
     // Check specific action
     if (!contract.allowedActions.includes(action)) {
-      return { granted: false, reason: 'ACTION_NOT_PERMITTED_FOR_FEATURE' };
+      return { granted: false, reason: 'ACTION_NOT_PERMITTED_FOR_FEATURE', decisionTrace: Object.freeze([...trace]) };
     }
 
     const masked = getMaskedFields(canonicalRole, permissionKey, { isSelf });
@@ -122,24 +142,26 @@ export function evaluateAccess(context: AccessContext): AccessDecision {
       allowedActions: contract.allowedActions,
       fieldMask: masked,
       scope: 'assigned-site',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 9. WORKER_SUPERVISOR Evaluation
+  // 11. WORKER_SUPERVISOR Evaluation
   if (canonicalRole === 'WORKER_SUPERVISOR') {
-    // 9a. Self-service action check (allowed if WORKER is allowed and isSelf)
+    // Self-service action check (allowed if WORKER is allowed and isSelf)
     if (contract.allowedRoles.includes('WORKER') && isSelf) {
       return {
         granted: true,
         allowedActions: contract.allowedActions,
         fieldMask: getMaskedFields(canonicalRole, permissionKey, { isSelf: true }),
         scope: 'self',
+        decisionTrace: Object.freeze([...trace]),
       };
     }
 
-    // 9b. Delegated supervisor action check
+    // Delegated supervisor action check
     if (!contract.delegatable) {
-      return { granted: false, reason: 'FEATURE_NOT_DELEGATABLE' };
+      return { granted: false, reason: 'FEATURE_NOT_DELEGATABLE', decisionTrace: Object.freeze([...trace]) };
     }
 
     const effectiveTargetSite = targetSiteId || siteId;
@@ -156,7 +178,7 @@ export function evaluateAccess(context: AccessContext): AccessDecision {
     });
 
     if (!activeDelegation) {
-      return { granted: false, reason: 'NO_ACTIVE_DELEGATION_FOR_PERMISSION_OR_SITE' };
+      return { granted: false, reason: 'NO_ACTIVE_DELEGATION_FOR_PERMISSION_OR_SITE', decisionTrace: Object.freeze([...trace]) };
     }
 
     return {
@@ -164,52 +186,56 @@ export function evaluateAccess(context: AccessContext): AccessDecision {
       allowedActions: contract.allowedActions,
       fieldMask: getMaskedFields(canonicalRole, permissionKey, { isSelf: false }),
       scope: 'assigned-resource',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 10. WORKER Evaluation
+  // 12. WORKER Evaluation
   if (canonicalRole === 'WORKER') {
     if (!isDirectlyAllowedRole) {
-      return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE' };
+      return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE', decisionTrace: Object.freeze([...trace]) };
     }
     if (contract.dataScope === 'self' && !isSelf) {
-      return { granted: false, reason: 'WORKER_LIMITED_TO_SELF_SERVICE' };
+      return { granted: false, reason: 'WORKER_LIMITED_TO_SELF_SERVICE', decisionTrace: Object.freeze([...trace]) };
     }
     return {
       granted: true,
       allowedActions: contract.allowedActions,
       fieldMask: getMaskedFields(canonicalRole, permissionKey, { isSelf }),
       scope: 'self',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 11. SUPPLIER Evaluation
+  // 13. SUPPLIER Evaluation
   if (canonicalRole === 'SUPPLIER') {
     if (!isDirectlyAllowedRole || !isSelf) {
-      return { granted: false, reason: 'SUPPLIER_LIMITED_TO_OWN_ACCOUNT' };
+      return { granted: false, reason: 'SUPPLIER_LIMITED_TO_OWN_ACCOUNT', decisionTrace: Object.freeze([...trace]) };
     }
     return {
       granted: true,
       allowedActions: contract.allowedActions,
       fieldMask: getMaskedFields(canonicalRole, permissionKey, { isSelf: true }),
       scope: 'self',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 12. GUEST Evaluation
+  // 14. GUEST Evaluation
   if (canonicalRole === 'GUEST') {
     if (!isDirectlyAllowedRole) {
-      return { granted: false, reason: 'GUEST_ACCESS_DENIED' };
+      return { granted: false, reason: 'GUEST_ACCESS_DENIED', decisionTrace: Object.freeze([...trace]) };
     }
     return {
       granted: true,
       allowedActions: contract.allowedActions,
       fieldMask: [],
       scope: 'self',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  return { granted: false, reason: 'DENIED_BY_DEFAULT' };
+  return { granted: false, reason: 'DENIED_BY_DEFAULT', decisionTrace: Object.freeze([...trace]) };
 }
 
 /**
@@ -238,23 +264,49 @@ export function evaluateCascadingAccess(context: CascadingAccessContext): Access
     delegations = [],
   } = context;
 
+  const trace: string[] = [];
+
   // 1. Hard Account Status Checks
+  trace.push('ACCOUNT_STATUS_CHECKED');
   if (isBanned) {
-    return { granted: false, reason: 'ACCOUNT_BANNED' };
+    return { granted: false, reason: 'ACCOUNT_BANNED', decisionTrace: Object.freeze([...trace]) };
   }
   if (!isActive) {
-    return { granted: false, reason: 'ACCOUNT_INACTIVE' };
+    return { granted: false, reason: 'ACCOUNT_INACTIVE', decisionTrace: Object.freeze([...trace]) };
   }
 
   // 2. Canonical Role Check
+  trace.push('CANONICAL_ROLE_CHECKED');
   if (!isCanonicalRole(role)) {
-    return { granted: false, reason: 'INVALID_OR_DEPRECATED_ROLE' };
+    return { granted: false, reason: 'INVALID_OR_DEPRECATED_ROLE', decisionTrace: Object.freeze([...trace]) };
   }
 
   const canonicalRole = role as CanonicalRole;
 
-  // 3. SUPER_ADMIN Sovereign Evaluation (IMMUTABLE_BYPASS)
-  // Super Admin cannot be blocked by leave policies, explicit DENYs, or matrix rules.
+  // 3. Channel / Dashboard Matrix Check
+  trace.push('CHANNEL_CHECKED');
+  if (channel === 'DASHBOARD' && !canAccessDashboard(canonicalRole)) {
+    return { granted: false, reason: 'DASHBOARD_ACCESS_DENIED', decisionTrace: Object.freeze([...trace]) };
+  }
+
+  // 4. Site Boundary Check
+  trace.push('SITE_BOUNDARY_CHECKED');
+  if (canonicalRole === 'FIELD_ADMIN') {
+    if (targetSiteId && siteId && targetSiteId !== siteId) {
+      return { granted: false, reason: 'SITE_BOUNDARY_VIOLATION', decisionTrace: Object.freeze([...trace]) };
+    }
+    if (targetSiteId && !siteId) {
+      return { granted: false, reason: 'SITE_BOUNDARY_VIOLATION', decisionTrace: Object.freeze([...trace]) };
+    }
+  }
+
+  // 5. Sovereign Keys Check
+  trace.push('SOVEREIGN_KEYS_CHECKED');
+  if (canonicalRole === 'FIELD_ADMIN' && SOVEREIGN_SUPER_ADMIN_KEYS.has(permissionKey)) {
+    return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE', decisionTrace: Object.freeze([...trace]) };
+  }
+
+  // 6. SUPER_ADMIN Sovereign Evaluation (IMMUTABLE_BYPASS)
   if (canonicalRole === 'SUPER_ADMIN') {
     const contract = getFeatureContract(permissionKey);
     const masked = getMaskedFields(canonicalRole, permissionKey, { isSelf });
@@ -276,31 +328,24 @@ export function evaluateCascadingAccess(context: CascadingAccessContext): Access
       fieldMask: masked,
       scope: 'system',
       reason: 'IMMUTABLE_BYPASS',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 4. Configurable Leave Policy Check
+  // 7. Configurable Leave Policy Check
   if (isOnLeave) {
     if (freezeBotAccessOnLeave) {
-      // If self-service personal records (compensation slip or personal withdrawal history), allow view
       const isPersonalSelfRecord =
         isSelf &&
         (permissionKey === 'workforce.compensation.view' ||
           permissionKey === 'advances.withdrawals.view');
       if (!isPersonalSelfRecord) {
-        return { granted: false, reason: 'ON_LEAVE_FREEZE' };
+        return { granted: false, reason: 'ON_LEAVE_FREEZE', decisionTrace: Object.freeze([...trace]) };
       }
     }
-    // If freezeBotAccessOnLeave === false, management has allowed remote monitoring, continue evaluation
   }
 
-  // 5. Channel / Dashboard Matrix Check
-  if (channel === 'DASHBOARD' && !canAccessDashboard(canonicalRole)) {
-    return { granted: false, reason: 'DASHBOARD_ACCESS_DENIED' };
-  }
-
-  // 6. Explicit Cascading Rules Evaluation (Precedence: USER > SITE > JOB_TITLE > DEPARTMENT > ROLE)
-  // Rule: Layer N checks its rules. Explicit DENY halts immediately. If ALLOW found and no DENY, grants.
+  // 8. Explicit Cascading Rules Evaluation (Precedence: USER > SITE > JOB_TITLE > DEPARTMENT > ROLE)
   if (rules && rules.length > 0) {
     const hierarchyOrder: Array<{ type: ScopePermissionRule['scopeType']; id?: string | null | undefined }> = [
       { type: 'USER', id: userId },
@@ -322,10 +367,9 @@ export function evaluateCascadingAccess(context: CascadingAccessContext): Access
       );
 
       if (matchingRules.length > 0) {
-        // If conflicting rules within the same level, DENY wins (Least Privilege)
         const hasDeny = matchingRules.some((r) => r.policy === 'DENY');
         if (hasDeny) {
-          return { granted: false, reason: 'EXPLICIT_DENIED' };
+          return { granted: false, reason: 'EXPLICIT_DENIED', decisionTrace: Object.freeze([...trace]) };
         }
 
         const allowRule = matchingRules.find((r) => r.policy === 'ALLOW');
@@ -340,40 +384,31 @@ export function evaluateCascadingAccess(context: CascadingAccessContext): Access
                   ? 'assigned-site'
                   : 'all-sites',
             fieldMask: getMaskedFields(canonicalRole, permissionKey, { isSelf }),
+            decisionTrace: Object.freeze([...trace]),
           };
         }
       }
     }
   }
 
-  // 7. Site Boundary Check for Site-scoped roles (FIELD_ADMIN / WORKER_SUPERVISOR)
-  if (targetSiteId && siteId && targetSiteId !== siteId) {
-    return { granted: false, reason: 'SITE_BOUNDARY_VIOLATION' };
-  }
-
-  // 8. Special Scope: FIELD_ADMIN Site Full Operational Scope
+  // 9. Special Scope: FIELD_ADMIN Site Full Operational Scope
   if (canonicalRole === 'FIELD_ADMIN') {
-    // Sovereign admin keys are strictly restricted to SUPER_ADMIN / GENERAL_ADMIN
-    if (SOVEREIGN_SUPER_ADMIN_KEYS.has(permissionKey)) {
-      return { granted: false, reason: 'ROLE_NOT_AUTHORIZED_FOR_FEATURE' };
-    }
-
     const contract = getFeatureContract(permissionKey);
     if (!contract) {
-      return { granted: false, reason: 'PERMISSION_NOT_FOUND_IN_CATALOG' };
+      return { granted: false, reason: 'PERMISSION_NOT_FOUND_IN_CATALOG', decisionTrace: Object.freeze([...trace]) };
     }
 
-    // FIELD_ADMIN automatically inherits access to all operational site flows
     const masked = getMaskedFields(canonicalRole, permissionKey, { isSelf });
     return {
       granted: true,
       allowedActions: contract.allowedActions,
       fieldMask: masked,
       scope: isSelf ? 'self' : 'assigned-site',
+      decisionTrace: Object.freeze([...trace]),
     };
   }
 
-  // 9. Fallback to Standard evaluateAccess
+  // 10. Fallback to Standard evaluateAccess
   return evaluateAccess({
     role: canonicalRole,
     permissionKey,
@@ -388,4 +423,3 @@ export function evaluateCascadingAccess(context: CascadingAccessContext): Access
     delegations,
   });
 }
-

@@ -1,5 +1,5 @@
 import { Prisma } from '../generated/client/index.js';
-import { computeRecordHash, GENESIS_HASH } from './hash-chain.js';
+import { computeRecordHash, GENESIS_HASH, computeHmacSignature, DEFAULT_KEYRING } from './hash-chain.js';
 
 export const FINANCIAL_MODELS = new Set<string>([
   'FinancialLedger',
@@ -72,6 +72,9 @@ export interface LedgerRecordPayload extends Record<string, unknown> {
   previousHash?: string;
   recordHash?: string;
   hashTimestamp?: Date | string;
+  ledgerSeq?: bigint | number;
+  hmacKid?: string;
+  hmacSignature?: string;
 }
 
 export const LEDGER_LOCK_NAMESPACE = 0x53414144; // 'SAAD' in hex
@@ -245,6 +248,33 @@ function getModelDelegate(client: any, model: string): any {
   return client[camel] ?? client[model];
 }
 
+async function resolveNextLedgerSeq(client: any, delegate: any, model: string): Promise<bigint | null> {
+  const canonicalModel = normalizeModelName(model);
+  if (canonicalModel !== 'FinancialLedger') {
+    return null;
+  }
+  try {
+    if (typeof client.$queryRawUnsafe === 'function') {
+      const rows = await client.$queryRawUnsafe(
+        'SELECT COALESCE(MAX(ledger_seq), 0) + 1 AS next_seq FROM financial_ledgers'
+      );
+      if (Array.isArray(rows) && rows.length > 0 && rows[0]?.next_seq !== undefined) {
+        return BigInt(rows[0].next_seq);
+      }
+    }
+  } catch {}
+  if (delegate && typeof delegate.findFirst === 'function') {
+    try {
+      const maxRec = await delegate.findFirst({
+        orderBy: { ledgerSeq: 'desc' },
+        select: { ledgerSeq: true },
+      });
+      return maxRec?.ledgerSeq ? BigInt(maxRec.ledgerSeq) + 1n : 1n;
+    } catch {}
+  }
+  return 1n;
+}
+
 interface LedgerQueryArgs {
   model: string;
   operation: string;
@@ -274,12 +304,15 @@ export const hashLedgerExtension: any = Prisma.defineExtension((client: any) => 
           // Fetch the latest committed record in this ledger table
           let previousHash = GENESIS_HASH;
           if (delegate) {
+            const orderBy = canonicalModel === 'FinancialLedger'
+              ? [{ ledgerSeq: 'desc' }, { id: 'desc' }]
+              : [
+                  { hashTimestamp: 'desc' },
+                  { createdAt: 'desc' },
+                  { id: 'desc' },
+                ];
             const latest = await delegate.findFirst({
-              orderBy: [
-                { hashTimestamp: 'desc' },
-                { createdAt: 'desc' },
-                { id: 'desc' },
-              ],
+              orderBy,
               select: { recordHash: true },
             });
             if (latest?.recordHash && latest.recordHash.trim() !== '') {
@@ -319,6 +352,32 @@ export const hashLedgerExtension: any = Prisma.defineExtension((client: any) => 
           recordData.recordHash = recordHash;
           recordData.hashTimestamp = timestamp;
 
+          if (canonicalModel === 'FinancialLedger') {
+            if (recordData.ledgerSeq === undefined || recordData.ledgerSeq === null) {
+              const nextSeq = await resolveNextLedgerSeq(client, delegate, model);
+              if (nextSeq !== null) {
+                recordData.ledgerSeq = nextSeq;
+              }
+            }
+            const hmacKid = (recordData.hmacKid as string) || DEFAULT_KEYRING.activeKid;
+            const activeKey =
+              DEFAULT_KEYRING.keys[hmacKid]?.key ||
+              process.env.HMAC_SECRET_KEY ||
+              'alsaada-default-sovereign-hmac-key-2026-q1-do-not-leak';
+            const hmacSignature = computeHmacSignature(
+              {
+                ledgerSeq: recordData.ledgerSeq ?? 1n,
+                prevHash: previousHash,
+                currentHash: recordHash,
+                createdAt: timestamp,
+                amount,
+              },
+              activeKey
+            );
+            recordData.hmacKid = hmacKid;
+            recordData.hmacSignature = hmacSignature;
+          }
+
           return await query(args);
         },
 
@@ -341,18 +400,25 @@ export const hashLedgerExtension: any = Prisma.defineExtension((client: any) => 
 
           let currentPreviousHash = GENESIS_HASH;
           if (delegate) {
+            const orderBy = canonicalModel === 'FinancialLedger'
+              ? [{ ledgerSeq: 'desc' }, { id: 'desc' }]
+              : [
+                  { hashTimestamp: 'desc' },
+                  { createdAt: 'desc' },
+                  { id: 'desc' },
+                ];
             const latest = await delegate.findFirst({
-              orderBy: [
-                { hashTimestamp: 'desc' },
-                { createdAt: 'desc' },
-                { id: 'desc' },
-              ],
+              orderBy,
               select: { recordHash: true },
             });
             if (latest?.recordHash && latest.recordHash.trim() !== '') {
               currentPreviousHash = latest.recordHash;
             }
           }
+
+          let nextSeq = canonicalModel === 'FinancialLedger'
+            ? await resolveNextLedgerSeq(client, delegate, model)
+            : null;
 
           for (const record of records) {
             const recordData = record as LedgerRecordPayload;
@@ -386,6 +452,32 @@ export const hashLedgerExtension: any = Prisma.defineExtension((client: any) => 
             recordData.previousHash = currentPreviousHash;
             recordData.recordHash = recordHash;
             recordData.hashTimestamp = timestamp;
+
+            if (canonicalModel === 'FinancialLedger') {
+              if (recordData.ledgerSeq === undefined || recordData.ledgerSeq === null) {
+                if (nextSeq !== null) {
+                  recordData.ledgerSeq = nextSeq;
+                  nextSeq = nextSeq + 1n;
+                }
+              }
+              const hmacKid = (recordData.hmacKid as string) || DEFAULT_KEYRING.activeKid;
+              const activeKey =
+                DEFAULT_KEYRING.keys[hmacKid]?.key ||
+                process.env.HMAC_SECRET_KEY ||
+                'alsaada-default-sovereign-hmac-key-2026-q1-do-not-leak';
+              const hmacSignature = computeHmacSignature(
+                {
+                  ledgerSeq: recordData.ledgerSeq ?? 1n,
+                  prevHash: currentPreviousHash,
+                  currentHash: recordHash,
+                  createdAt: timestamp,
+                  amount,
+                },
+                activeKey
+              );
+              recordData.hmacKid = hmacKid;
+              recordData.hmacSignature = hmacSignature;
+            }
 
             currentPreviousHash = recordHash;
           }

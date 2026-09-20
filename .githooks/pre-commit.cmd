@@ -19,6 +19,21 @@ if "%CURRENT_BRANCH%"=="main" (
   )
 )
 
+REM 0.1. حماية من تلف ملفات الاختبار (Redirect Poisoning Guard)
+for /f "tokens=*" %%f in ('git diff --cached --name-only --diff-filter=ACM') do (
+  set "FILE_PATH=%%f"
+  echo !FILE_PATH! | findstr /R /C:"\.[spec|test]\.[jt]s" /C:"\.[spec|test]\.[jt]sx" >nul
+  if not errorlevel 1 (
+    if exist "!FILE_PATH!" (
+      findstr /R /C:"^{\"numTotalTestSuites" "!FILE_PATH!" >nul 2>&1
+      if not errorlevel 1 (
+        echo ❌ [PRE-COMMIT ERROR] ملف اختبار مُتلف باسم !FILE_PATH! — يحتوي مخرجات vitest JSON
+        exit /b 1
+      )
+    )
+  )
+)
+
 echo [PRE-COMMIT] Running strict TypeScript, contracts, and architecture checks...
 
 call pnpm typecheck

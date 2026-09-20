@@ -1,6 +1,6 @@
 {
   "name": "@alsaada/database",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.85",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -9,7 +9,7 @@
     "build": "tsc && node -e \"const fs = require('fs'); fs.cpSync('src/generated', 'dist/generated', {recursive: true});\"",
     "test": "vitest run",
     "db:format": "prisma format",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate && node -e \"const fs = require('fs'); fs.writeFileSync('src/generated/client/index.ts', 'export * from \\\"./client.js\\\";\\nexport { Prisma } from \\\"./client.js\\\";\\n');\"",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
@@ -19,11 +19,15 @@
     "db:remediate": "tsx src/scripts/remediate-job-matrix-and-cycles.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.4.1"
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.6",
-    "prisma": "^6.4.1",
+    "@types/pg": "^8.11.11",
+    "dotenv": "^16.4.7",
+    "prisma": "7.10.0",
     "typescript": "^5.9.3",
     "vitest": "^3.0.8"
   }

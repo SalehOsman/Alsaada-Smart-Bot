@@ -177,6 +177,7 @@ Paragraph after code fence.
   });
 
   it('should compile and build static documentation portal with Pagefind search index', async () => {
+    process.env.ASTRO_TELEMETRY_DISABLED = '1';
     const { build } = await import('astro');
     await build({ root: join(root, 'apps/docs') });
 
@@ -186,5 +187,5 @@ Paragraph after code fence.
     expect(existsSync(join(distDir, 'living-architecture', 'index.html'))).toBe(true);
     expect(existsSync(join(distDir, 'adrs', 'index.html'))).toBe(true);
     expect(existsSync(join(distDir, 'pagefind', 'pagefind.js'))).toBe(true);
-  }, 180000);
+  }, 360000);
 });

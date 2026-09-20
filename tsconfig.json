@@ -21,6 +21,7 @@
     "apps/admin-dashboard",
     "apps/docs",
     ".astro",
-    ".next"
+    ".next",
+    "scratch"
   ]
 }

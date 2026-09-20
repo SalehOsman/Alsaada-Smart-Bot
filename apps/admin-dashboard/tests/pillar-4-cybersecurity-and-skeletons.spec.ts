@@ -47,6 +47,8 @@ vi.mock('@alsaada/database', async () => {
 describe('Plan 74 — Pillar 4: Cybersecurity, Blind Index Sync, BOLA/IDOR Site-Scoping & Suspense Skeletons', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.BLIND_INDEX_SECRET = 'test-blind-index-secret-2026';
+    process.env.DATABASE_ENCRYPTION_KEY = '01234567890123456789012345678901';
   });
 
   // =========================================================================
@@ -278,8 +280,9 @@ describe('Plan 74 — Pillar 4: Cybersecurity, Blind Index Sync, BOLA/IDOR Site-
 
       // Blind index must match deterministic HMAC of cleaned phone
       const cleanPhone = '01012345678';
-      const salt = process.env.BLIND_INDEX_SECRET || process.env.DATABASE_ENCRYPTION_KEY || 'default-salt-value-for-alsaada-2026';
-      const expectedBlindIndex = createBlindIndex(cleanPhone, salt);
+      const salt = process.env.BLIND_INDEX_SECRET || process.env.DATABASE_ENCRYPTION_KEY;
+      expect(salt).toBeDefined();
+      const expectedBlindIndex = createBlindIndex(cleanPhone, salt!);
       expect(txWorkerUpdateData.phoneBlindIndex).toBe(expectedBlindIndex);
 
       // Verify audit log captured inside the transaction
@@ -288,6 +291,35 @@ describe('Plan 74 — Pillar 4: Cybersecurity, Blind Index Sync, BOLA/IDOR Site-
       expect(txAuditLogData.entityId).toBe('w-1');
       expect(txAuditLogData.afterPayload.updatedFields).toContain('phoneBlindIndex');
       expect(txAuditLogData.afterPayload.updatedFields).toContain('phoneEncrypted');
+    });
+
+    it('PUT /api/workers/[id] throws an error if both BLIND_INDEX_SECRET and DATABASE_ENCRYPTION_KEY are missing', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        id: 'u-super',
+        telegramId: '999999',
+        role: 'SUPER_ADMIN',
+        name: 'سوبر أدمن',
+        isRealSuperAdmin: true,
+      } as any);
+
+      vi.mocked(prisma.worker.findUnique).mockResolvedValue(mockWorker as any);
+
+      const oldSecret = process.env.BLIND_INDEX_SECRET;
+      const oldKey = process.env.DATABASE_ENCRYPTION_KEY;
+      delete process.env.BLIND_INDEX_SECRET;
+      delete process.env.DATABASE_ENCRYPTION_KEY;
+
+      const req = new NextRequest('http://localhost:3002/api/workers/w-1', {
+        method: 'PUT',
+        body: JSON.stringify({ phone: '01012345678' }),
+      });
+
+      await expect(updateWorker(req, { params: Promise.resolve({ id: 'w-1' }) })).rejects.toThrow(
+        'Missing BLIND_INDEX_SECRET or DATABASE_ENCRYPTION_KEY'
+      );
+
+      process.env.BLIND_INDEX_SECRET = oldSecret;
+      process.env.DATABASE_ENCRYPTION_KEY = oldKey;
     });
   });
 

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, disconnectDatabase } from '../client.js';
 
 export const DEFAULT_CIGARETTES = [
   { code: 'CAN-CIG-01', name: 'كليوباترا بوكس أبيض', costPrice: 32, sellingPrice: 35 },
@@ -60,9 +58,13 @@ export async function seedCanteenCigarettes(siteId?: string): Promise<number> {
 
 if (process.argv[1] && process.argv[1].includes('seed-canteen-cigarettes')) {
   seedCanteenCigarettes()
-    .then(() => process.exit(0))
-    .catch((err) => {
+    .then(async () => {
+      await disconnectDatabase();
+      process.exit(0);
+    })
+    .catch(async (err) => {
       console.error('❌ Failed to seed canteen cigarettes:', err);
+      await disconnectDatabase().catch(() => {});
       process.exit(1);
     });
 }

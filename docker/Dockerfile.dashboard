@@ -37,6 +37,8 @@ COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
 COPY modules/workforce/package.json modules/workforce/
 COPY modules/settings/package.json modules/settings/
 COPY apps/admin-dashboard/package.json apps/admin-dashboard/
+COPY apps/docs/package.json apps/docs/
+COPY apps/bot-server/package.json apps/bot-server/
 
 # Install dependencies
 ENV GIT_DIR=/tmp/alsaada-build.git
@@ -44,12 +46,13 @@ RUN git init --bare "$GIT_DIR" \
     && pnpm config set fetch-retries 5 \
     && pnpm config set fetch-retry-maxtimeout 120000 \
     && pnpm config set network-concurrency 4 \
-    && pnpm install --frozen-lockfile=false
+    && pnpm install --frozen-lockfile=true
 
 # Copy source without replacing workspace-local node_modules links.
 COPY packages/database/prisma/ packages/database/prisma/
 COPY packages/database/src/ packages/database/src/
 COPY packages/database/tsconfig.json packages/database/
+COPY packages/database/prisma.config.ts packages/database/
 COPY packages/rbac/src/ packages/rbac/src/
 COPY packages/rbac/tsconfig.json packages/rbac/
 COPY packages/regional-engine/src/ packages/regional-engine/src/
