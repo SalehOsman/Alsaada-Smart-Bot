@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-20T02:42:09.242Z",
+  "generatedAt": "2026-09-20T06:57:35.719Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -24,11 +24,11 @@
   "files": [
     {
       "path": ".githooks/pre-commit",
-      "sha256": "934cfbe267664160adf75647499a94e142f64b2f12e573a517eaf0139bf3082e"
+      "sha256": "25899131300ea0e5e4d8a134bcc01893b7b605d86a499a13b5f90970276228df"
     },
     {
       "path": ".githooks/pre-commit.cmd",
-      "sha256": "a44784bbfe1e845b04cf7305baf8e932d492d7b346d47616a9d33e86395cb807"
+      "sha256": "e4feaafcc04b023492e3b7cb0c389557550002b389e22040d8ec6b37f34f700c"
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -2178,7 +2178,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-20T02:42:09.242Z",
+      "lockedAt": "2026-09-20T06:57:35.719Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2570,7 +2570,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-20T02:42:09.242Z",
+      "lockedAt": "2026-09-20T06:57:35.719Z",
       "files": [
         {
           "path": ".dockerignore",
