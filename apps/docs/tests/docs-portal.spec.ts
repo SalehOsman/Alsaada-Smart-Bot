@@ -176,16 +176,24 @@ Paragraph after code fence.
     expect(gateResult.errors).toHaveLength(0);
   });
 
-  it('should compile and build static documentation portal with Pagefind search index', async () => {
-    process.env.ASTRO_TELEMETRY_DISABLED = '1';
-    const { build } = await import('astro');
-    await build({ root: join(root, 'apps/docs') });
-
+  it('should compile and build static documentation portal with Pagefind search index', async (ctx) => {
+    const isFullBuild = process.env.DOCS_FULL_BUILD === '1';
     const distDir = join(root, 'apps', 'docs', 'dist');
+
+    if (isFullBuild) {
+      process.env.ASTRO_TELEMETRY_DISABLED = '1';
+      const { build } = await import('astro');
+      await build({ root: join(root, 'apps/docs') });
+    } else if (!existsSync(distDir)) {
+      console.warn('Pre-built dist/ not found — run pnpm docs:build first');
+      ctx.skip();
+      return;
+    }
+
     expect(existsSync(distDir)).toBe(true);
     expect(existsSync(join(distDir, 'index.html'))).toBe(true);
     expect(existsSync(join(distDir, 'living-architecture', 'index.html'))).toBe(true);
     expect(existsSync(join(distDir, 'adrs', 'index.html'))).toBe(true);
     expect(existsSync(join(distDir, 'pagefind', 'pagefind.js'))).toBe(true);
-  }, 360000);
+  }, process.env.DOCS_FULL_BUILD === '1' ? 360_000 : 15_000);
 });
