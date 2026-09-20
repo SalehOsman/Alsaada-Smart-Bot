@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-20T11:30:51.183Z",
+  "generatedAt": "2026-09-20T18:02:34.260Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -48,7 +48,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "bfc28ba3639b715d36dbb666b6d1b3ddf8f954f45bf14a2c238ddda8bf3988b0"
+      "sha256": "1dfc1bb091fc58caa416fe70b6a3c507d81d1aa2bb553bd3a8de1e6f707d99cd"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
@@ -68,7 +68,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "98c46f781546866e4f32abf42f4dd7067823f1ad568d4a2692d5e39d64dc4661"
+      "sha256": "a5bbfb60ab8d8b7ea2229825eed60e7795bda98b2e7337b3605d07efca67dd14"
     },
     {
       "path": "package.json",
@@ -100,7 +100,7 @@
     },
     {
       "path": "tools/governance/tests/docker-governance-lock.spec.ts",
-      "sha256": "23d86d57c3204e6a91ce525050ea3fe30e53c2df780c5ed5c2ba750b7b2b21f8"
+      "sha256": "92a2c2630361d5a2cfc27c78504d9b3d8c48fe6d888bdf1af037b05031d64f9d"
     },
     {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
@@ -2178,7 +2178,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-20T11:30:51.183Z",
+      "lockedAt": "2026-09-20T18:02:34.260Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2542,7 +2542,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-20T11:30:51.183Z",
+      "lockedAt": "2026-09-20T18:02:34.260Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3230,6 +3230,45 @@
         {
           "path": "packages/rbac/tests/rbac.spec.ts",
           "sha256": "6585ba9d045f58e6f453d810ade96050aa7d3521e52193f622a4bffd288bd016"
+        }
+      ]
+    },
+    "test:tools/governance/tests/docker-governance-lock.spec.ts": {
+      "id": "test:tools/governance/tests/docker-governance-lock.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/docker-governance-lock.spec.ts",
+      "directory": "tools/governance/tests/docker-governance-lock.spec.ts",
+      "lockedAt": "2026-09-20T11:54:34.273Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/docker-governance-lock.spec.ts",
+          "sha256": "92a2c2630361d5a2cfc27c78504d9b3d8c48fe6d888bdf1af037b05031d64f9d"
+        }
+      ]
+    },
+    "test:apps/docs/tests/docs-portal.spec.ts": {
+      "id": "test:apps/docs/tests/docs-portal.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/docs/tests/docs-portal.spec.ts",
+      "directory": "apps/docs/tests/docs-portal.spec.ts",
+      "lockedAt": "2026-09-20T14:35:01.955Z",
+      "files": [
+        {
+          "path": "apps/docs/tests/docs-portal.spec.ts",
+          "sha256": "d6dde74b742ed29d931f76c9c9c7a0eee5c03b46fd4a0d5795003bd0d247bc79"
+        }
+      ]
+    },
+    "test:packages/database/tests/hash-chain.stress.spec.ts": {
+      "id": "test:packages/database/tests/hash-chain.stress.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: packages/database/tests/hash-chain.stress.spec.ts",
+      "directory": "packages/database/tests/hash-chain.stress.spec.ts",
+      "lockedAt": "2026-09-20T17:54:51.952Z",
+      "files": [
+        {
+          "path": "packages/database/tests/hash-chain.stress.spec.ts",
+          "sha256": "c1cb57eb195de01d2df4170e7ca51ebccabe212eab3f683bdecc66e1064ce497"
         }
       ]
     }
