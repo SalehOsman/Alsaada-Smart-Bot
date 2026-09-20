@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-20T06:57:35.719Z",
+  "generatedAt": "2026-09-20T07:18:08.562Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -2178,7 +2178,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-20T06:57:35.719Z",
+      "lockedAt": "2026-09-20T07:18:08.562Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2570,7 +2570,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-20T06:57:35.719Z",
+      "lockedAt": "2026-09-20T07:18:08.562Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -2689,7 +2689,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.8-worker-offboarding (01.8)",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding",
-      "lockedAt": "2026-09-20T02:35:17.579Z",
+      "lockedAt": "2026-09-20T07:18:03.864Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/flow.actions.ts",
@@ -2786,7 +2786,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/ai-vision-engine",
       "directory": "packages/ai-vision-engine",
-      "lockedAt": "2026-09-20T02:35:55.348Z",
+      "lockedAt": "2026-09-20T07:17:45.853Z",
       "files": [
         {
           "path": "packages/ai-vision-engine/package.json",
@@ -2823,7 +2823,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/rbac",
       "directory": "packages/rbac",
-      "lockedAt": "2026-09-20T02:36:14.367Z",
+      "lockedAt": "2026-09-20T07:17:28.770Z",
       "files": [
         {
           "path": "packages/rbac/package.json",
@@ -2888,7 +2888,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/core-components",
       "directory": "packages/core-components",
-      "lockedAt": "2026-09-20T02:36:35.566Z",
+      "lockedAt": "2026-09-20T07:15:41.388Z",
       "files": [
         {
           "path": "packages/core-components/package.json",
