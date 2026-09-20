@@ -1,3 +1,53 @@
+import { parseRegionalNumber } from '@alsaada/regional-engine';
+
+declare const __positiveFiniteAmountBrand: unique symbol;
+export type PositiveFiniteAmount = number & { readonly [__positiveFiniteAmountBrand]: 'PositiveFiniteAmount' };
+
+declare const __safeFinancialQuantityBrand: unique symbol;
+export type SafeFinancialQuantity = number & { readonly [__safeFinancialQuantityBrand]: 'SafeFinancialQuantity' };
+
+/**
+ * Single Point of Re-Branding for financial amounts.
+ * Guarantees that the value is a positive, finite number (> 0) without NaN or Infinity.
+ */
+export function toPositiveFiniteAmount(val: unknown): PositiveFiniteAmount {
+  let num: number | null = null;
+  if (typeof val === 'number') {
+    num = (!Number.isFinite(val) || isNaN(val)) ? null : val;
+  } else if (typeof val === 'string') {
+    num = parseRegionalNumber(val);
+  } else if (val !== null && val !== undefined && typeof (val as any).toNumber === 'function') {
+    const n = Number((val as any).toNumber());
+    num = (!Number.isFinite(n) || isNaN(n)) ? null : n;
+  }
+
+  if (num === null || !Number.isFinite(num) || isNaN(num) || num <= 0) {
+    throw new Error(`[FINANCIAL_BOUNDARY_VIOLATION] [BOUNDARY_DESERIALIZATION_VIOLATION] Amount must be a positive finite number greater than 0, got: ${String(val)}`);
+  }
+  return num as PositiveFiniteAmount;
+}
+
+/**
+ * Single Point of Re-Branding for financial quantities.
+ * Guarantees that the value is a positive, finite number (> 0) without NaN or Infinity.
+ */
+export function toSafeFinancialQuantity(val: unknown): SafeFinancialQuantity {
+  let num: number | null = null;
+  if (typeof val === 'number') {
+    num = (!Number.isFinite(val) || isNaN(val)) ? null : val;
+  } else if (typeof val === 'string') {
+    num = parseRegionalNumber(val);
+  } else if (val !== null && val !== undefined && typeof (val as any).toNumber === 'function') {
+    const n = Number((val as any).toNumber());
+    num = (!Number.isFinite(n) || isNaN(n)) ? null : n;
+  }
+
+  if (num === null || !Number.isFinite(num) || isNaN(num) || num <= 0) {
+    throw new Error(`[FINANCIAL_BOUNDARY_VIOLATION] [BOUNDARY_DESERIALIZATION_VIOLATION] Quantity must be a positive finite number greater than 0, got: ${String(val)}`);
+  }
+  return num as SafeFinancialQuantity;
+}
+
 export interface WorkerItem {
   id: string;
   code: string; // Current active structured code (e.g. OP-DRV-0042)

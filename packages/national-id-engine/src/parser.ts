@@ -124,7 +124,8 @@ export function parseEgyptianNationalId(
 
   // 8. 14th Check Digit Validation (Modulo-11)
   const isCheckDigitValid = validateNationalIdCheckDigit(cleanId);
-  if (options?.strictCheckDigit && !isCheckDigitValid) {
+  const strictCheck = options?.strictCheckDigit ?? true;
+  if (strictCheck && !isCheckDigitValid) {
     return {
       isValid: false,
       error: 'الرقم التحققي للخانة الـ 14 غير متطابق مع خوارزمية السجل المدني (Modulo-11)',

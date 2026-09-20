@@ -167,3 +167,71 @@ export function verifyLedgerChainMemory(
     totalVerified: records.length,
   };
 }
+
+export interface HmacKeyEntry {
+  kid: string;
+  key: string;
+  status: 'active' | 'retired';
+  createdAt?: string;
+  retiredAt?: string;
+}
+
+export interface HmacKeyring {
+  activeKid: string;
+  keys: Record<string, HmacKeyEntry>;
+}
+
+export const DEFAULT_KEYRING: HmacKeyring = {
+  activeKid: 'v1-2026-q1',
+  keys: {
+    'v1-2026-q1': {
+      kid: 'v1-2026-q1',
+      key: process.env.HMAC_SECRET_KEY || 'alsaada-default-sovereign-hmac-key-2026-q1-do-not-leak',
+      status: 'active',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+  },
+};
+
+export function computeHmacSignature(
+  payload: {
+    ledgerSeq: bigint | number | string;
+    prevHash: string;
+    currentHash: string;
+    createdAt: Date | string;
+    amount: number | string;
+  },
+  key: string
+): string {
+  const ts = payload.createdAt instanceof Date ? payload.createdAt.toISOString() : String(payload.createdAt);
+  const normalizedAmount = typeof payload.amount === 'number'
+    ? payload.amount.toFixed(2)
+    : Number(payload.amount || 0).toFixed(2);
+  const message = `${payload.ledgerSeq}|${payload.prevHash}|${payload.currentHash}|${ts}|${normalizedAmount}`;
+  return crypto.createHmac('sha256', key).update(message).digest('hex');
+}
+
+export function verifyHmacSignature(
+  payload: {
+    ledgerSeq: bigint | number | string;
+    prevHash: string;
+    currentHash: string;
+    createdAt: Date | string;
+    amount: number | string;
+    signature: string;
+    kid: string;
+  },
+  keyring: HmacKeyring = DEFAULT_KEYRING
+): boolean {
+  const entry = keyring.keys[payload.kid];
+  if (!entry) {
+    return false;
+  }
+  const expected = computeHmacSignature(payload, entry.key);
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(payload.signature, 'hex'));
+  } catch {
+    return false;
+  }
+}
+

@@ -575,6 +575,8 @@ export class WorkerOffboardingRepository {
         data: {
           eventType: 'WORKER_CLEARANCE_FINALIZED',
           aggregateId: data.workerId,
+          targetSheet: 'WorkerClearance',
+          nextRetryAt: new Date(),
           payload: {
             clearanceNumber,
             clearanceReferenceId,
@@ -729,6 +731,8 @@ export class WorkerOffboardingRepository {
         data: {
           eventType: 'WORKER_OFFBOARDED_COMMITTED',
           aggregateId: input.workerId,
+          targetSheet: 'WorkerOffboarding',
+          nextRetryAt: new Date(),
           payload: {
             workerId: input.workerId,
             workerCode: input.workerCode,

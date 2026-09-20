@@ -972,6 +972,9 @@ model FinancialLedger {
   createdAt           DateTime  @default(now())
   syncedToSheets      Boolean   @default(false)
   syncedAt            DateTime?
+  ledgerSeq           BigInt?   @unique @map("ledger_seq")
+  hmacKid             String    @default("v1-2026-q1") @map("hmac_kid")
+  hmacSignature       String    @default("") @map("hmac_signature")
 
   worker        Worker?              @relation(fields: [workerId], references: [id])
   sourceCustody FinancialCustody?    @relation(fields: [sourceCustodyId], references: [id])
@@ -990,6 +993,7 @@ model FinancialLedger {
   @@index([workerId, transactionType])
   @@index([createdAt])
   @@index([accountingMonth])
+  @@index([ledgerSeq])
   @@map("financial_ledgers")
 }
 
@@ -1716,11 +1720,29 @@ model OutboxEvent {
   status         String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
   errorMessage   String?   @map("error_message")
   lastAttemptAt  DateTime? @map("last_attempt_at")
+  nextRetryAt    DateTime? @map("next_retry_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   processedAt    DateTime? @map("processed_at")
 
   @@index([status, createdAt])
+  @@index([status, nextRetryAt])
   @@map("outbox_events")
+}
+
+model DeadLetterEvent {
+  id          String   @id @default(uuid())
+  eventId     String   @unique @map("event_id")
+  eventType   String   @map("event_type")
+  aggregateId String?  @map("aggregate_id")
+  payload     Json
+  retryCount  Int      @map("retry_count")
+  lastError   String?  @map("last_error")
+  createdAt   DateTime @default(now()) @map("created_at")
+  movedAt     DateTime @default(now()) @map("moved_at")
+
+  @@index([eventType])
+  @@index([movedAt])
+  @@map("dead_letter_events")
 }
 
 // -------------------------------------------------------------

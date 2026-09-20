@@ -432,19 +432,27 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
         deleteMany: vi.fn(async () => ({ count: supplierStore.length })),
       };
 
-      class TestMutex {
-        private mutex = Promise.resolve();
-        lock(): Promise<() => void> {
-          let unlock: () => void;
-          const next = new Promise<void>((resolve) => { unlock = resolve; });
-          const wait = this.mutex.then(() => unlock);
-          this.mutex = this.mutex.then(() => next);
-          return wait;
-        }
-      }
-      const testMutex = new TestMutex();
+      let advisoryLock = Promise.resolve();
+      let releaseActiveLock: (() => void) | null = null;
+
       const client: any = {
-        $executeRawUnsafe: vi.fn(async () => {}),
+        $executeRawUnsafe: vi.fn(async (sql: string) => {
+          if (typeof sql === 'string' && sql.includes('pg_advisory_xact_lock')) {
+            let nextRelease: () => void;
+            const nextPromise = new Promise<void>((resolve) => { nextRelease = resolve; });
+            const wait = advisoryLock;
+            advisoryLock = advisoryLock.then(() => nextPromise);
+            await wait;
+            releaseActiveLock = nextRelease!;
+          }
+        }),
+        $queryRawUnsafe: vi.fn(async (sql: string) => {
+          if (typeof sql === 'string' && sql.includes('COALESCE(MAX(ledger_seq)')) {
+            const maxSeq = store.reduce((max, r) => (r.ledgerSeq && BigInt(r.ledgerSeq) > max ? BigInt(r.ledgerSeq) : max), 0n);
+            return [{ next_seq: maxSeq + 1n }];
+          }
+          return [];
+        }),
         financialLedger: mockDelegate,
         supplierPayment: mockSupplierDelegate,
         $extends: (extensionOrFn: any) => {
@@ -458,19 +466,25 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
             extended.financialLedger = {
               ...mockDelegate,
               create: async (args: any) => {
-                const unlock = await testMutex.lock();
                 try {
                   return await ext.create({ model: 'FinancialLedger', operation: 'create', args, query: mockDelegate.create });
                 } finally {
-                  unlock();
+                  if (releaseActiveLock) {
+                    const r = releaseActiveLock;
+                    releaseActiveLock = null;
+                    r();
+                  }
                 }
               },
               createMany: async (args: any) => {
-                const unlock = await testMutex.lock();
                 try {
                   return await ext.createMany({ model: 'FinancialLedger', operation: 'createMany', args, query: mockDelegate.createMany });
                 } finally {
-                  unlock();
+                  if (releaseActiveLock) {
+                    const r = releaseActiveLock;
+                    releaseActiveLock = null;
+                    r();
+                  }
                 }
               },
               update: async (args: any) => ext.update({ model: 'FinancialLedger', operation: 'update', args, query: mockDelegate.update }),
@@ -482,19 +496,25 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
             extended.supplierPayment = {
               ...mockSupplierDelegate,
               create: async (args: any) => {
-                const unlock = await testMutex.lock();
                 try {
                   return await ext.create({ model: 'SupplierPayment', operation: 'create', args, query: mockSupplierDelegate.create });
                 } finally {
-                  unlock();
+                  if (releaseActiveLock) {
+                    const r = releaseActiveLock;
+                    releaseActiveLock = null;
+                    r();
+                  }
                 }
               },
               createMany: async (args: any) => {
-                const unlock = await testMutex.lock();
                 try {
                   return await ext.createMany({ model: 'SupplierPayment', operation: 'createMany', args, query: mockSupplierDelegate.createMany });
                 } finally {
-                  unlock();
+                  if (releaseActiveLock) {
+                    const r = releaseActiveLock;
+                    releaseActiveLock = null;
+                    r();
+                  }
                 }
               },
               update: async (args: any) => ext.update({ model: 'SupplierPayment', operation: 'update', args, query: mockSupplierDelegate.update }),
@@ -512,18 +532,18 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       return { client, store, supplierStore, mockDelegate };
     }
 
-    it('2.1: Concurrency stress — 25 simultaneous concurrent create mutations produce an unbroken chain', async () => {
-      const { client, store } = createMockConcurrentClient({ simulatedDelayMs: 8 });
+    it('2.1: Concurrency stress — 50 simultaneous concurrent create mutations produce an unbroken chain with gap-free monotonicity', async () => {
+      const { client, store } = createMockConcurrentClient({ simulatedDelayMs: 4 });
       const extended = hashLedgerExtension(client);
 
-      const N = 25;
+      const N = 50;
       const tasks = Array.from({ length: N }, (_, i) => {
         return extended.financialLedger.create({
           data: {
             voucherNumber: `#ADV-CONCUR-${i + 1}`,
             amount: 100 * (i + 1),
             actorTelegramId: `actor-${i + 1}`,
-            hashTimestamp: new Date(`2026-09-11T10:${i < 10 ? '0' + i : i}:00.000Z`),
+            hashTimestamp: new Date(`2026-09-11T10:${i < 10 ? '0' + i : (i < 60 ? i : 59)}:00.000Z`),
           },
         });
       });
@@ -531,22 +551,33 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       // Fire all concurrently
       await Promise.all(tasks);
 
+      // Pillar 1: Exact cardinality
       expect(store).toHaveLength(N);
 
-      // Verify no two records share previousHash (zero forks)
+      // Pillar 2: Strict gap-free monotonicity [1, 2, ..., 50]
+      const sequences = store.map((r) => Number(r.ledgerSeq));
+      for (let i = 0; i < N; i++) {
+        expect(sequences[i]).toBe(i + 1);
+      }
+
+      // Pillar 3: Strict cryptographic lineage (zero forks)
       const previousHashes = store.map((r) => r.previousHash);
       const uniquePrevHashes = new Set(previousHashes);
       expect(uniquePrevHashes.size).toBe(N);
 
-      // First must link to GENESIS_HASH
       expect(store[0]!.previousHash).toBe(GENESIS_HASH);
-
-      // Every subsequent record i must link to record i-1's recordHash
       for (let i = 1; i < N; i++) {
         expect(store[i]!.previousHash).toBe(store[i - 1]!.recordHash);
       }
 
-      // Verify cryptographic validity with verifyLedgerChainDb
+      // Pillar 4: HMAC signature verification
+      for (const r of store) {
+        expect(r.hmacKid).toBe('v1-2026-q1');
+        expect(r.hmacSignature).toBeDefined();
+        expect(r.hmacSignature).toHaveLength(64);
+      }
+
+      // Out-of-band direct database probe verification
       const report = await verifyLedgerChainDb(client, { model: 'FinancialLedger' });
       expect(report.isValid).toBe(true);
       expect(report.totalVerified).toBe(N);

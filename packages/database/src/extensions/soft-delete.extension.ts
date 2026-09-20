@@ -327,6 +327,32 @@ export function createSoftDeleteExtension() {
           }
           return query(args);
         },
+
+        async update({ model, operation, args, query }: SoftDeleteQueryArgs) {
+          args = args ?? {};
+          if (softDeleteModels.has(model) && args.data?.isDeleted !== true) {
+            args.where = injectSoftDeleteFilter(args.where);
+          }
+          sanitizeNestedRelations(model, args);
+          return query(args);
+        },
+
+        async updateMany({ model, operation, args, query }: SoftDeleteQueryArgs) {
+          args = args ?? {};
+          if (softDeleteModels.has(model) && args.data?.isDeleted !== true) {
+            args.where = injectSoftDeleteFilter(args.where);
+          }
+          return query(args);
+        },
+
+        async upsert({ model, operation, args, query }: SoftDeleteQueryArgs) {
+          args = args ?? {};
+          if (softDeleteModels.has(model)) {
+            args.where = injectSoftDeleteFilter(args.where);
+          }
+          sanitizeNestedRelations(model, args);
+          return query(args);
+        },
       },
     },
   };

@@ -22,7 +22,18 @@ export function scanSpecContentForAuthenticity(filePath: string, content: string
       }
     }
 
-    // 2. Check call expressions for assertions
+    // 2. Check for synthetic concurrency primitives (Mutex / Semaphore classes)
+    if ((ts.isClassDeclaration(node) || ts.isClassExpression(node)) && node.name) {
+      const className = node.name.text;
+      if (className.includes('Mutex') || className.includes('Semaphore')) {
+        const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+        violations.push(
+          `[Synthetic Test Concurrency Gate] ${filePath}:${line + 1} declares synthetic concurrency control class '${className}'. Real database advisory locking (pg_advisory_xact_lock) must be tested without synthetic client-side mutexes.`
+        );
+      }
+    }
+
+    // 3. Check call expressions for assertions
     if (ts.isCallExpression(node)) {
       const expr = node.expression;
       if (ts.isPropertyAccessExpression(expr)) {

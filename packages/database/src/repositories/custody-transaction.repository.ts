@@ -69,10 +69,15 @@ export class CustodyTransactionRepository {
   /**
    * Retrieves custody row and acquires exclusive row lock (SELECT ... FOR UPDATE)
    * within an interactive transaction.
+   * tx is mandatory to guarantee the row lock is held within a transaction.
    */
-  async findAndLock(custodyId: string, tx?: any): Promise<CustodyRecord | null> {
-    const client = tx ?? this.prisma;
-    const rows = await client.$queryRawUnsafe(
+  async findAndLock(custodyId: string, tx: any): Promise<CustodyRecord | null> {
+    if (!tx) {
+      throw new Error(
+        `[TRANSACTION_REQUIRED] findAndLock requires an active interactive transaction client (tx) to hold the row-level lock (FOR UPDATE).`
+      );
+    }
+    const rows = await tx.$queryRawUnsafe(
       `SELECT * FROM "financial_custodies" WHERE "id" = $1 FOR UPDATE`,
       custodyId
     );

@@ -363,7 +363,7 @@ export class StudioProcessManager {
    * Calculates real-time status, health, and remaining seconds until auto-shutdown.
    */
   public async getStatus(): Promise<StudioStatus> {
-    const isRunning = (await this.isHealthy()) || this.childProcess !== null;
+    const isRunning = this.isActive() || this.childProcess !== null || (await this.isHealthy());
     let remainingSeconds = 0;
     let expiresAt: string | null = null;
 

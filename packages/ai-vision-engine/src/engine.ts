@@ -118,7 +118,7 @@ export class AiVisionEngine {
     for (const key of apiKeys) {
       for (const model of models) {
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
           const payload = {
             contents: [
               {
@@ -144,7 +144,10 @@ export class AiVisionEngine {
 
           const res = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': key,
+            },
             body: JSON.stringify(payload),
             signal: controller.signal,
           });

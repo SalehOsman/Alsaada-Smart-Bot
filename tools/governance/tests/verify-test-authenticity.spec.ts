@@ -91,4 +91,19 @@ describe('verify-test-authenticity AST Scanner', () => {
     const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
     expect(violations.length).toBe(0);
   });
+
+  it('7. rejects synthetic Mutex or Semaphore test concurrency classes', () => {
+    const code = `
+      describe('synthetic concurrency test', () => {
+        class TestMutex {
+          lock() {}
+        }
+        it('uses fake mutex', () => {});
+      });
+    `;
+    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
+    expect(violations.length).toBe(1);
+    expect(violations[0]).toContain('[Synthetic Test Concurrency Gate]');
+    expect(violations[0]).toContain('TestMutex');
+  });
 });

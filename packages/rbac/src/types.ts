@@ -71,6 +71,7 @@ export interface AccessDecision {
   allowedActions?: PermissionAction[];
   fieldMask?: string[];
   scope?: DataScope;
+  decisionTrace?: readonly string[];
 }
 
 export interface FeatureContract {

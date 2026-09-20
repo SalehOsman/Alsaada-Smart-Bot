@@ -5,7 +5,7 @@
 ---
 
 > [!IMPORTANT]
-> **حالة الوثيقة:** 🟢 مسودة معتمدة ونهائية v2.1 وموثقة بالكامل (`Approved Final Sealed Draft v2.1 — Ready for Squad Execution`)  
+> **حالة الوثيقة:** 🟢 مكتمل ومنفذ وموثق 100% بنجاح تام (`Completed & Fully Verified 100% — Defense-in-Depth v2.1`)  
 > **الفرع المخصص للعمل:** `plan/86-core-financial-and-security-hardening`  
 > **الإصدار المستهدف:** `v2.0.0-alpha.86`  
 > **المرجعية الدستورية:** ميثاق الحوكمة `AGENTS.md` و `GEMINI.md` + التقرير الجنائي الميداني + ميثاق الدفاع في العمق v2.1.

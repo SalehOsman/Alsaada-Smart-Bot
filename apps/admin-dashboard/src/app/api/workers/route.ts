@@ -16,6 +16,12 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
+    if (user.role === 'FIELD_ADMIN' && (!user.assignedSiteId || body.siteId !== user.assignedSiteId)) {
+      return NextResponse.json(
+        { error: 'غير مصرح: مدير الموقع مقيد بالموقع المخصص له فقط' },
+        { status: 403 }
+      );
+    }
     const {
       name,
       nickname,

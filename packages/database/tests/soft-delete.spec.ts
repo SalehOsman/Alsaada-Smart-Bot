@@ -108,6 +108,8 @@ describe('createSoftDeleteExtension', () => {
           count: (args: any) => queries.count.call(wrappedClient, { model: 'Worker', operation: 'count', args, query: mockDelegate.count }),
           findUnique: (args: any) => queries.findUnique.call(wrappedClient, { model: 'Worker', operation: 'findUnique', args, query: mockDelegate.findUnique }),
           findUniqueOrThrow: (args: any) => queries.findUniqueOrThrow.call(wrappedClient, { model: 'Worker', operation: 'findUniqueOrThrow', args, query: mockDelegate.findUniqueOrThrow }),
+          update: (args: any) => queries.update.call(wrappedClient, { model: 'Worker', operation: 'update', args, query: mockDelegate.update }),
+          updateMany: (args: any) => queries.updateMany.call(wrappedClient, { model: 'Worker', operation: 'updateMany', args, query: mockDelegate.updateMany }),
           delete: (args: any) => queries.delete.call(wrappedClient, { model: 'Worker', operation: 'delete', args, query: mockDelegate.delete }),
           deleteMany: (args: any) => queries.deleteMany.call(wrappedClient, { model: 'Worker', operation: 'deleteMany', args, query: mockDelegate.deleteMany }),
         };
@@ -173,6 +175,40 @@ describe('createSoftDeleteExtension', () => {
       })
     );
     expect(workerStore.find((w) => w.id === 'w1')?.isDeleted).toBe(true);
+  });
+
+  it('automatically injects { isDeleted: false } into update queries unless explicitly deleting', async () => {
+    const { client, mockDelegate } = createMockPrismaClient();
+    const extended = client.$extends(createSoftDeleteExtension());
+
+    await extended.worker.update({
+      where: { id: 'w1' },
+      data: { name: 'Updated Worker 1' },
+    });
+
+    expect(mockDelegate.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isDeleted: false }),
+        data: { name: 'Updated Worker 1' },
+      })
+    );
+  });
+
+  it('automatically injects { isDeleted: false } into updateMany queries', async () => {
+    const { client, mockDelegate } = createMockPrismaClient();
+    const extended = client.$extends(createSoftDeleteExtension());
+
+    await extended.worker.updateMany({
+      where: {},
+      data: { name: 'Bulk Updated' },
+    });
+
+    expect(mockDelegate.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isDeleted: false }),
+        data: { name: 'Bulk Updated' },
+      })
+    );
   });
 
   it('schema drift guard: guarantees every model in schema.prisma with isDeleted is registered in SOFT_DELETE_MODELS', () => {

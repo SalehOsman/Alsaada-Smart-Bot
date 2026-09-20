@@ -14,19 +14,22 @@ export class UniversalShiftAccrualEngine {
    */
   static calculateAccrual(params: AccrualCalculationParams): LeaveAccrualResult {
     const { presenceDays, cycleConfig } = params;
+    const safePresenceDays = (!Number.isFinite(presenceDays) || isNaN(presenceDays) || presenceDays < 0)
+      ? 0
+      : Math.min(presenceDays, 366);
 
     const workDays = cycleConfig.workDays > 0 ? cycleConfig.workDays : 20;
     const restDays = cycleConfig.restDays >= 0 ? cycleConfig.restDays : 10;
     const ratio = restDays / workDays;
 
-    const exactEarned = Math.round(presenceDays * ratio * 100) / 100;
+    const exactEarned = Math.round(safePresenceDays * ratio * 100) / 100;
     const roundedEarned = Math.floor(exactEarned);
     const fractionRemainder = Math.round((exactEarned - roundedEarned) * 100) / 100;
 
-    const summary = `${presenceDays} يوم تواجد × (${restDays} راحة / ${workDays} عمل) = ${exactEarned} يوم راحة مستحقة (${roundedEarned} يوم كامل + ${fractionRemainder} كسر يوم)`;
+    const summary = `${safePresenceDays} يوم تواجد × (${restDays} راحة / ${workDays} عمل) = ${exactEarned} يوم راحة مستحقة (${roundedEarned} يوم كامل + ${fractionRemainder} كسر يوم)`;
 
     return {
-      presenceDays,
+      presenceDays: safePresenceDays,
       workDaysInCycle: workDays,
       restDaysInCycle: restDays,
       cycleRatio: ratio,

@@ -261,6 +261,26 @@ describe('Central RBAC Engine Specification (@alsaada/rbac)', () => {
       });
       expect(decision.granted).toBe(false);
       expect(decision.reason).toBe('SITE_BOUNDARY_VIOLATION');
+      expect(decision.decisionTrace).toBeDefined();
+      expect(decision.decisionTrace).toContain('SITE_BOUNDARY_CHECKED');
+    });
+
+    it('proves decisionTrace includes SITE_BOUNDARY_CHECKED and SOVEREIGN_KEYS_CHECKED prior to ALLOW', () => {
+      const decision = evaluateAccess({
+        role: 'FIELD_ADMIN',
+        permissionKey: 'workforce.worker.view',
+        action: 'view',
+        siteId: 'STE-KHA',
+        targetSiteId: 'STE-KHA',
+      });
+      expect(decision.granted).toBe(true);
+      expect(decision.decisionTrace).toBeDefined();
+      const trace = decision.decisionTrace!;
+      const siteIdx = trace.indexOf('SITE_BOUNDARY_CHECKED');
+      const sovereignIdx = trace.indexOf('SOVEREIGN_KEYS_CHECKED');
+      expect(siteIdx).not.toBe(-1);
+      expect(sovereignIdx).not.toBe(-1);
+      expect(siteIdx).toBeLessThan(sovereignIdx);
     });
   });
 });

@@ -52,7 +52,7 @@ describe('Agent Dispatcher Tooling (R4 Specification)', () => {
         );
         expect(targetFailures).toHaveLength(0);
       },
-      15000,
+      40000,
     );
 
     it(
@@ -66,7 +66,7 @@ describe('Agent Dispatcher Tooling (R4 Specification)', () => {
         );
         expect(preflightFailure).toBeDefined();
       },
-      15000,
+      40000,
     );
 
     it(

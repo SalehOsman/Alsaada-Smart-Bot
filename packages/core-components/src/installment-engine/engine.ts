@@ -34,7 +34,17 @@ export class UniversalInstallmentEngine {
   static calculatePlan(params: InstallmentPlanParams): InstallmentPlanResult {
     const { totalAmount, installmentsCount, startCycleDate, monthlySalary, maxDeductionPercent = 40 } = params;
 
-    if (totalAmount <= 0 || installmentsCount <= 0 || !Number.isInteger(installmentsCount)) {
+    if (
+      typeof totalAmount !== 'number' ||
+      !Number.isFinite(totalAmount) ||
+      isNaN(totalAmount) ||
+      totalAmount <= 0 ||
+      typeof installmentsCount !== 'number' ||
+      !Number.isFinite(installmentsCount) ||
+      isNaN(installmentsCount) ||
+      installmentsCount <= 0 ||
+      !Number.isInteger(installmentsCount)
+    ) {
       return {
         isValid: false,
         totalAmount,
@@ -71,7 +81,7 @@ export class UniversalInstallmentEngine {
     let exceedsSafeLimit = false;
     let warningArabic: string | undefined;
 
-    if (monthlySalary && monthlySalary > 0) {
+    if (monthlySalary && Number.isFinite(monthlySalary) && monthlySalary > 0) {
       actualDeductionPercent = Math.round((firstMonthDeduction / monthlySalary) * 10000) / 100;
       if (actualDeductionPercent > maxDeductionPercent) {
         exceedsSafeLimit = true;

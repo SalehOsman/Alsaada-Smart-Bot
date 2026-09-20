@@ -109,7 +109,7 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
     try {
       await testPrisma.$connect();
       const checkResult = (await testPrisma.$queryRawUnsafe(
-        "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'financial_ledgers'"
+        "SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'financial_ledgers' AND column_name = 'ledger_seq'"
       )) as unknown[];
       tablesExist = Boolean(checkResult && checkResult.length > 0);
     } catch {
