@@ -1,9 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { isNonDelegatable, evaluateAccess } from '@alsaada/rbac';
+import { PINNED_BASE_TIME } from '@alsaada/shared/testing';
 
-describe('Phase 8 / Task 10: Settings & Worker Supervisor Delegations Parity Specification', () => {
+describe('Settings & Worker Supervisor Delegations Parity Specification', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe('1. Sovereign & Non-Delegatable Feature Guard', () => {
-    it('strictly forbids delegating sovereign features to worker supervisors', () => {
+    it('strictly forbids delegating sovereign system permissions to worker supervisors', () => {
+      // Arrange
       const sovereignPermissions = [
         'system.roles.manage',
         'system.users.manage',
@@ -14,68 +25,103 @@ describe('Phase 8 / Task 10: Settings & Worker Supervisor Delegations Parity Spe
         'approvals.sovereign.decide',
       ];
 
+      // Act & Assert
       for (const perm of sovereignPermissions) {
-        expect(isNonDelegatable(perm)).toBe(true);
+        // Arrange
+        const permissionKey = perm;
 
+        // Act
+        const isForbidden = isNonDelegatable(permissionKey);
         const decision = evaluateAccess({
           role: 'WORKER_SUPERVISOR',
-          permissionKey: perm,
+          permissionKey,
           action: 'edit',
           siteId: 'STE-ALM',
-          delegations: [{ permissionKey: perm, siteId: 'STE-ALM', isActive: true }],
+          delegations: [{ permissionKey, siteId: 'STE-ALM', isActive: true }],
         });
 
+        // Assert
+        expect(isForbidden).toBe(true);
         expect(decision.granted).toBe(false);
+        expect(decision.granted).not.toBe(true);
       }
     });
 
-    it('permits delegation of operational field permissions', () => {
+    it('permits delegation of operational field permissions and confirms delegatable status', () => {
+      // Arrange
       const operationalPermissions = [
         'inventory.fuel.level.create',
         'canteen.supplies.dispense',
         'workforce.attendance.record',
       ];
 
+      // Act & Assert
       for (const perm of operationalPermissions) {
-        expect(isNonDelegatable(perm)).toBe(false);
+        // Arrange
+        const permissionKey = perm;
+
+        // Act
+        const isForbidden = isNonDelegatable(permissionKey);
+
+        // Assert
+        expect(isForbidden).toBe(false);
+        expect(isForbidden).not.toBe(true);
       }
     });
   });
 
   describe('2. Site Boundary & Self-Approval Guard', () => {
-    it('restricts worker supervisor operational actions to their designated site', () => {
+    it('restricts worker supervisor operational actions to their designated site and rejects cross-site attempts', () => {
+      // Arrange
+      const homeSiteId = 'STE-ALM';
+      const foreignSiteId = 'STE-CAP';
+      const permissionKey = 'inventory.fuel.level.create';
+
+      // Act
       const decisionAllowed = evaluateAccess({
         role: 'WORKER_SUPERVISOR',
-        permissionKey: 'inventory.fuel.level.create',
+        permissionKey,
         action: 'create',
-        siteId: 'STE-ALM',
-        targetSiteId: 'STE-ALM',
-        delegations: [{ permissionKey: 'inventory.fuel.level.create', siteId: 'STE-ALM', isActive: true }],
+        siteId: homeSiteId,
+        targetSiteId: homeSiteId,
+        delegations: [{ permissionKey, siteId: homeSiteId, isActive: true }],
       });
-      expect(decisionAllowed.granted).toBe(true);
 
       const decisionDenied = evaluateAccess({
         role: 'WORKER_SUPERVISOR',
-        permissionKey: 'inventory.fuel.level.create',
+        permissionKey,
         action: 'create',
-        siteId: 'STE-ALM',
-        targetSiteId: 'STE-CAP', // Different site
-        delegations: [{ permissionKey: 'inventory.fuel.level.create', siteId: 'STE-ALM', isActive: true }],
+        siteId: homeSiteId,
+        targetSiteId: foreignSiteId,
+        delegations: [{ permissionKey, siteId: homeSiteId, isActive: true }],
       });
+
+      // Assert
+      expect(decisionAllowed.granted).toBe(true);
       expect(decisionDenied.granted).toBe(false);
+      expect(decisionAllowed.granted).not.toBe(false);
+      expect(decisionDenied.granted).not.toBe(true);
     });
 
-    it('enforces Self-Approval Prohibition for FIELD_ADMIN', () => {
-      // In delegation workflow: FIELD_ADMIN submissions have status = 'PENDING'
-      // Only SUPER_ADMIN and GENERAL_ADMIN can approve them.
+    it('enforces self-approval prohibition for FIELD_ADMIN and restricts approval authority to executive roles', () => {
+      // Arrange
       const canApproveDelegation = (role: string) => {
         return ['SUPER_ADMIN', 'GENERAL_ADMIN'].includes(role);
       };
 
-      expect(canApproveDelegation('FIELD_ADMIN')).toBe(false);
-      expect(canApproveDelegation('WORKER_SUPERVISOR')).toBe(false);
-      expect(canApproveDelegation('SUPER_ADMIN')).toBe(true);
-      expect(canApproveDelegation('GENERAL_ADMIN')).toBe(true);
+      // Act
+      const fieldAdminAllowed = canApproveDelegation('FIELD_ADMIN');
+      const supervisorAllowed = canApproveDelegation('WORKER_SUPERVISOR');
+      const superAdminAllowed = canApproveDelegation('SUPER_ADMIN');
+      const generalAdminAllowed = canApproveDelegation('GENERAL_ADMIN');
+
+      // Assert
+      expect(fieldAdminAllowed).toBe(false);
+      expect(supervisorAllowed).toBe(false);
+      expect(superAdminAllowed).toBe(true);
+      expect(generalAdminAllowed).toBe(true);
+      expect(fieldAdminAllowed).not.toBe(true);
+      expect(supervisorAllowed).not.toBe(true);
     });
   });
 
@@ -102,26 +148,38 @@ describe('Phase 8 / Task 10: Settings & Worker Supervisor Delegations Parity Spe
       };
     };
 
-    it('promotes WORKER to WORKER_SUPERVISOR upon receiving first active delegation', () => {
+    it('promotes WORKER to WORKER_SUPERVISOR upon receiving first active delegation and maintains it on second', () => {
+      // Arrange
       const initial: WorkerAccountState = { role: 'WORKER', activeDelegationsCount: 0 };
+
+      // Act
       const afterFirst = applyDelegationChange(initial, 'ADD_ACTIVE');
+      const afterSecond = applyDelegationChange(afterFirst, 'ADD_ACTIVE');
+
+      // Assert
       expect(afterFirst.role).toBe('WORKER_SUPERVISOR');
       expect(afterFirst.activeDelegationsCount).toBe(1);
-
-      const afterSecond = applyDelegationChange(afterFirst, 'ADD_ACTIVE');
+      expect(afterFirst.role).not.toBe('WORKER');
       expect(afterSecond.role).toBe('WORKER_SUPERVISOR');
       expect(afterSecond.activeDelegationsCount).toBe(2);
+      expect(afterSecond.activeDelegationsCount).toBeGreaterThan(1);
     });
 
-    it('reverts WORKER_SUPERVISOR back to WORKER when last active delegation is revoked', () => {
+    it('reverts WORKER_SUPERVISOR back to WORKER strictly when the last active delegation is revoked', () => {
+      // Arrange
       const withTwo: WorkerAccountState = { role: 'WORKER_SUPERVISOR', activeDelegationsCount: 2 };
+
+      // Act
       const afterOneRevoked = applyDelegationChange(withTwo, 'REVOKE_ACTIVE');
+      const afterLastRevoked = applyDelegationChange(afterOneRevoked, 'REVOKE_ACTIVE');
+
+      // Assert
       expect(afterOneRevoked.role).toBe('WORKER_SUPERVISOR');
       expect(afterOneRevoked.activeDelegationsCount).toBe(1);
-
-      const afterLastRevoked = applyDelegationChange(afterOneRevoked, 'REVOKE_ACTIVE');
+      expect(afterOneRevoked.role).not.toBe('WORKER');
       expect(afterLastRevoked.role).toBe('WORKER');
       expect(afterLastRevoked.activeDelegationsCount).toBe(0);
+      expect(afterLastRevoked.role).not.toBe('WORKER_SUPERVISOR');
     });
   });
 });

@@ -3218,6 +3218,240 @@
           "sha256": "7493300ae66bbf3a407c09c793a6d5b009facd2a58e7ef519b971e9ba6974f24"
         }
       ]
+    },
+    "test:apps/admin-dashboard/tests/middleware-session-guard.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/middleware-session-guard.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/middleware-session-guard.spec.ts",
+      "directory": "apps/admin-dashboard/tests/middleware-session-guard.spec.ts",
+      "lockedAt": "2026-09-21T11:13:57.394Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/middleware-session-guard.spec.ts",
+          "sha256": "1298bf600015d76835e9848a0f261f1e39f074080b2523e077561d3e65da5c8b"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/approvals-treasury.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/approvals-treasury.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/approvals-treasury.spec.ts",
+      "directory": "apps/admin-dashboard/tests/approvals-treasury.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.750Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/approvals-treasury.spec.ts",
+          "sha256": "6e1697b452ae48f92d3c08de695c94808b6c9c2f1afbe84b78f296406a82663a"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts",
+      "directory": "apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.758Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts",
+          "sha256": "5fbce854f1ba2889f2965893a91ef1232e93e3da57a88aa249ba02e5d126a9f8"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/health-route.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/health-route.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/health-route.spec.ts",
+      "directory": "apps/admin-dashboard/tests/health-route.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.783Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/health-route.spec.ts",
+          "sha256": "5aa4f50bb2aecad0e546fd2c92891fe1f552965bf9fad794444a79641ce783fc"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/middleware-trace.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/middleware-trace.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/middleware-trace.spec.ts",
+      "directory": "apps/admin-dashboard/tests/middleware-trace.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.789Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/middleware-trace.spec.ts",
+          "sha256": "7d629c6b97d29c9e36f787eed02bd1167985a4403a8532ba3950ffc44a73ef1e"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
+      "directory": "apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.795Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
+          "sha256": "99b5cc67b1924d680b2459891441f0e2c07ae39fae3b3d207022c815e2458a69"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts",
+      "directory": "apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.800Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts",
+          "sha256": "7071a465c045282999f001f5c20a6c48032c082e2ad865c7b9e917846c837dd2"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/parity/workforce-parity.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/parity/workforce-parity.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/workforce-parity.spec.ts",
+      "directory": "apps/admin-dashboard/tests/parity/workforce-parity.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.819Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/parity/workforce-parity.spec.ts",
+          "sha256": "fde621eece354020bd10ecb98f0c58a67b9f44c2a8e3b3333a324154afb6123c"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts",
+      "directory": "apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.824Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts",
+          "sha256": "526e0996b1546825dce936b97d905cdf7e36f16b9003cd55531a984444010e88"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts",
+      "directory": "apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.831Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts",
+          "sha256": "aa66b4f709f115ad4c515b381dd1a77c914e16db49d9dfd059401a06bd4c1ac4"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts",
+      "directory": "apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.836Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts",
+          "sha256": "db4fdf24c8604480c15c091cb5a9318e8643ed287e4a3a8b29d36e74fba15b15"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/rbac.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/rbac.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/rbac.spec.ts",
+      "directory": "apps/admin-dashboard/tests/rbac.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.841Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/rbac.spec.ts",
+          "sha256": "7a7a2574806e55bee18481385ce40db2f619c9612e3e949e92db6f9340d3eaf4"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/role-overview.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/role-overview.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/role-overview.spec.ts",
+      "directory": "apps/admin-dashboard/tests/role-overview.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.861Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/role-overview.spec.ts",
+          "sha256": "2564dd56432e969c0b081267a7c060fa97f00ccdb992753d2e3b39376a0bdbcd"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/screen-responsiveness.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/screen-responsiveness.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/screen-responsiveness.spec.ts",
+      "directory": "apps/admin-dashboard/tests/screen-responsiveness.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.866Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/screen-responsiveness.spec.ts",
+          "sha256": "4cf6012e4fb047f09d46fc7d8a2eb474ae90bb1a76cd2667e27f0f389b89615d"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/secure-export.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/secure-export.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/secure-export.spec.ts",
+      "directory": "apps/admin-dashboard/tests/secure-export.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.871Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/secure-export.spec.ts",
+          "sha256": "a2070bb53f0ced5207b8b786f1267081a2126e8e5ff9ec4e33e7fe99d407218d"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/sidebar-nav.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/sidebar-nav.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/sidebar-nav.spec.ts",
+      "directory": "apps/admin-dashboard/tests/sidebar-nav.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.878Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/sidebar-nav.spec.ts",
+          "sha256": "a24d9f581d0fb1662d0e9461ee1e89a7b5ec44678d60e5693fb574b80ac23b82"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/workforce-evaluations.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/workforce-evaluations.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/workforce-evaluations.spec.ts",
+      "directory": "apps/admin-dashboard/tests/workforce-evaluations.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.883Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/workforce-evaluations.spec.ts",
+          "sha256": "87099eac700307371c7dd62ba5834cd5f28ec987184f66b9be64f9daff63750a"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/workforce-onboarding.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
+      "directory": "apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
+      "lockedAt": "2026-09-21T11:14:13.888Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
+          "sha256": "d59b492a7c254b4d64418dbca0ae055d98ce0e984f0a48c16b1b594bd096953f"
+        }
+      ]
     }
   }
 }

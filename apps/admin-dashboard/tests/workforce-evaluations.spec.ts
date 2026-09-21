@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getWorkforceEvaluations } from '../src/lib/data-fetchers';
 import type { DashboardUser } from '../src/lib/rbac';
 import { prisma } from '@alsaada/database';
+import { PINNED_BASE_TIME } from '@alsaada/shared/testing';
 
 vi.mock('@alsaada/database', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@alsaada/database')>();
@@ -20,6 +21,22 @@ vi.mock('@alsaada/database', async (importOriginal) => {
 });
 
 describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)', () => {
+  let consoleErrorSpy: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(prisma.worker.findMany).mockResolvedValue(mockWorkers as unknown as Awaited<ReturnType<typeof prisma.worker.findMany>>);
+    vi.mocked(prisma.site.findMany).mockResolvedValue(mockSites as unknown as Awaited<ReturnType<typeof prisma.site.findMany>>);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore();
+    vi.useRealTimers();
+  });
+
   const superAdminUser: DashboardUser = {
     id: 'usr-admin-1',
     telegramId: '123456789',
@@ -92,15 +109,14 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
     { id: 'site-aswan', name: 'موقع أسوان' },
   ];
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(prisma.worker.findMany).mockResolvedValue(mockWorkers as unknown as Awaited<ReturnType<typeof prisma.worker.findMany>>);
-    vi.mocked(prisma.site.findMany).mockResolvedValue(mockSites as unknown as Awaited<ReturnType<typeof prisma.site.findMany>>);
-  });
+  it('1. fetches workforce evaluations and computes statistics for SUPER_ADMIN', async () => {
+    // Arrange
+    // Default mocks configured in beforeEach
 
-  it('1. should fetch workforce evaluations and compute statistics for SUPER_ADMIN', async () => {
+    // Act
     const data = await getWorkforceEvaluations(superAdminUser);
 
+    // Assert
     expect(data.evaluations).toHaveLength(2);
     expect(data.stats.totalEvaluated).toBe(2);
     expect(data.sites).toHaveLength(2);
@@ -120,11 +136,14 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
     expect(data.stats.committedCount).toBe(1);
     expect(data.stats.underReviewCount).toBe(1);
     expect(data.stats.averageScore).toBe(67);
+    expect(data.stats.probationCount).toBe(0);
   });
 
-  it('2. should enforce site scoping for FIELD_ADMIN by assignedSiteId', async () => {
+  it('2. enforces site scoping for FIELD_ADMIN by assignedSiteId', async () => {
+    // Arrange & Act
     await getWorkforceEvaluations(fieldAdminUser);
 
+    // Assert
     expect(prisma.worker.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -132,12 +151,7 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
         }),
       })
     );
-  });
-
-  it('3. should filter by siteId when filterSiteId is passed', async () => {
-    await getWorkforceEvaluations(superAdminUser, 'site-aswan');
-
-    expect(prisma.worker.findMany).toHaveBeenCalledWith(
+    expect(prisma.worker.findMany).not.toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           siteId: 'site-aswan',
@@ -146,12 +160,42 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
     );
   });
 
-  it('4. should gracefully return empty structure on database error', async () => {
+  it('3. filters by siteId when filterSiteId is passed', async () => {
+    // Arrange & Act
+    await getWorkforceEvaluations(superAdminUser, 'site-aswan');
+
+    // Assert
+    expect(prisma.worker.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          siteId: 'site-aswan',
+        }),
+      })
+    );
+    expect(prisma.worker.findMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          siteId: 'site-kharga',
+        }),
+      })
+    );
+  });
+
+  it('4. gracefully returns empty structure on database error without polluting console', async () => {
+    // Arrange
     vi.mocked(prisma.worker.findMany).mockRejectedValueOnce(new Error('DB connection failed'));
 
+    // Act
     const data = await getWorkforceEvaluations(superAdminUser);
+
+    // Assert
     expect(data.evaluations).toHaveLength(0);
     expect(data.stats.totalEvaluated).toBe(0);
+    expect(data.stats.committedCount).toBe(0);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error fetching workforce evaluations:',
+      expect.any(Error)
+    );
   });
 
   describe('Workforce Evaluations Dark Mode & Responsive Layout Parity', () => {
@@ -162,8 +206,10 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
     };
 
     it('5. evaluations-client.tsx supports dark mode across containers, filters, tables, and badges', () => {
+      // Arrange
       const src = readComponent('src/app/admin/workforce/evaluations/evaluations-client.tsx');
 
+      // Act & Assert
       // Containers & Borders
       expect(src).toContain('dark:border-slate-800');
       expect(src).toContain('dark:bg-slate-900');
@@ -189,11 +235,14 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
       expect(src).toContain('hidden md:block');
       expect(src).toContain('overflow-x-auto');
       expect(src).toContain('min-w-[800px]');
+      expect(src).not.toContain('table-layout: fixed; width: 100%');
     });
 
     it('6. evaluation-kpi-cards.tsx adapts to dashboard dark mode with appropriate contrasts', () => {
+      // Arrange
       const src = readComponent('src/app/admin/workforce/evaluations/evaluation-kpi-cards.tsx');
 
+      // Act & Assert
       expect(src).toContain('dark:bg-slate-900');
       expect(src).toContain('dark:border-slate-800');
       expect(src).toContain('dark:text-slate-100');
@@ -202,11 +251,14 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
       expect(src).toContain('dark:text-amber-400');
       expect(src).toContain('dark:text-rose-400');
       expect(src).toContain('dark:text-indigo-400');
+      expect(src).not.toContain('text-black');
     });
 
     it('7. evaluation-details-modal.tsx honors dark mode for modal surface, sub-scores, and guidance', () => {
+      // Arrange
       const src = readComponent('src/app/admin/workforce/evaluations/evaluation-details-modal.tsx');
 
+      // Act & Assert
       // Modal surface & backdrop
       expect(src).toContain('dark:bg-black/70');
       expect(src).toContain('dark:bg-slate-900');
@@ -222,13 +274,16 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
       expect(src).toContain('dark:text-amber-300');
       expect(src).toContain('dark:bg-slate-800');
       expect(src).toContain('dark:text-slate-200');
+      expect(src).not.toContain('background-color: white !important');
     });
 
     it('8. integrates with useDashboardPreferences and enforces numeral/date parity', () => {
+      // Arrange
       const clientSrc = readComponent('src/app/admin/workforce/evaluations/evaluations-client.tsx');
       const kpiSrc = readComponent('src/app/admin/workforce/evaluations/evaluation-kpi-cards.tsx');
       const modalSrc = readComponent('src/app/admin/workforce/evaluations/evaluation-details-modal.tsx');
 
+      // Act & Assert
       // Hook imports
       expect(clientSrc).toContain("from '@/components/providers/dashboard-preferences-provider'");
       expect(kpiSrc).toContain("from '@/components/providers/dashboard-preferences-provider'");
@@ -247,12 +302,15 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
 
       // ZeroState reset callback
       expect(clientSrc).toContain('onResetFilter');
+      expect(clientSrc).not.toContain('Number(item.totalScore).toLocaleString()');
     });
 
     it('9. ensures modal accessibility and dropdown options dark mode compliance', () => {
+      // Arrange
       const clientSrc = readComponent('src/app/admin/workforce/evaluations/evaluations-client.tsx');
       const modalSrc = readComponent('src/app/admin/workforce/evaluations/evaluation-details-modal.tsx');
 
+      // Act & Assert
       // Select option dark mode tokens
       expect(clientSrc).toContain('dark:bg-slate-900 text-slate-900 dark:text-slate-100');
 
@@ -261,6 +319,7 @@ describe('Admin Dashboard — Workforce Evaluations & Commitment Score (NEW-80)'
       expect(modalSrc).toContain('e.stopPropagation()');
       expect(modalSrc).toContain('role="dialog"');
       expect(modalSrc).toContain('aria-modal="true"');
+      expect(modalSrc).not.toContain('aria-hidden="true"');
     });
   });
 });
