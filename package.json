@@ -45,6 +45,8 @@
         "test:changed": "vitest related",
         "test:pre-commit": "tsx tools/governance/pre-commit-test-guard.ts",
         "test:audit": "tsx scripts/assertion-audit.ts --check",
+        "audit:saleh": "tsx tools/governance/saleh-audit-suite.ts",
+        "test:saleh": "vitest run tools/governance/tests/saleh-audit-suite.spec.ts",
         "system:provision": "tsx scripts/provision.ts",
         "db:purge:test": "pnpm --filter @alsaada/database db:purge:test",
         "lint": "pnpm typecheck",

@@ -73,10 +73,16 @@ export const PROTECTED_GOVERNANCE_FILES = [
   'package.json',
   'pnpm-workspace.yaml',
   '.gitignore',
+  'docs/00-baseline-and-ssot-charter.md',
   'docs/14-ai-agent-governance-and-file-rules.md',
   'docs/15-universal-module-and-flow-standard.md',
   'docs/21-mandatory-module-architecture-and-gates.md',
+  'docs/23-autonomous-agent-roster-and-rag.md',
+  'docs/27-enterprise-ai-governance-and-quality-gates-constitution.md',
   'docs/ai-execution-evidence/README.md',
+  '.cursorrules',
+  'CLAUDE.md',
+  '.github/copilot-instructions.md',
 ] as const;
 
 export const PROTECTED_GOVERNANCE_DIRECTORIES = [
@@ -84,6 +90,9 @@ export const PROTECTED_GOVERNANCE_DIRECTORIES = [
   '.github/workflows',
   'tools/scaffold',
   '.githooks',
+  '.agents/rules',
+  '.agents/skills',
+  '.agents/subagents',
 ] as const;
 
 export const DOCKER_INFRASTRUCTURE_FILES = [

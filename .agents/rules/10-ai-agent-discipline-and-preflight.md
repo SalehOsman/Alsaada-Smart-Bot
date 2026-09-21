@@ -22,6 +22,8 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
      - `pnpm make:incident`: Scaffolds 5-pillar postmortem reports.
 4. **Topology Map Direct Lookup:**
    - Use `.agents/topology.json` for O(1) instantaneous discovery of flows, database models, and active vertical slices rather than issuing expensive recursive scans.
+5. **Predefined Script Execution Standard:**
+   - Agents must exclusively run standardized npm scripts from `package.json` (`pnpm <script>`) rather than arbitrary ad-hoc command strings with custom dynamic flags, ensuring IDE command whitelist stability and zero approval prompt friction.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T07:46:08.627Z",
+  "generatedAt": "2026-09-21T09:12:13.088Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -9,19 +9,104 @@
       "package.json",
       "pnpm-workspace.yaml",
       ".gitignore",
+      "docs/00-baseline-and-ssot-charter.md",
       "docs/14-ai-agent-governance-and-file-rules.md",
       "docs/15-universal-module-and-flow-standard.md",
       "docs/21-mandatory-module-architecture-and-gates.md",
-      "docs/ai-execution-evidence/README.md"
+      "docs/23-autonomous-agent-roster-and-rag.md",
+      "docs/27-enterprise-ai-governance-and-quality-gates-constitution.md",
+      "docs/ai-execution-evidence/README.md",
+      ".cursorrules",
+      "CLAUDE.md",
+      ".github/copilot-instructions.md"
     ],
     "directories": [
       "tools/governance",
       ".github/workflows",
       "tools/scaffold",
-      ".githooks"
+      ".githooks",
+      ".agents/rules",
+      ".agents/skills",
+      ".agents/subagents"
     ]
   },
   "files": [
+    {
+      "path": ".agents/rules/01-fhr-baseline-parity.md",
+      "sha256": "4c181b45295fb5c15840dbc836765a026d080b34d3f52c2e88df1d6bb499871e"
+    },
+    {
+      "path": ".agents/rules/02-autonomous-execution-and-checkpoints.md",
+      "sha256": "e6071682c16ea8bfa74f11887df6b513133348e12e9b7dcde4b4a98f1e9f5d39"
+    },
+    {
+      "path": ".agents/rules/03-git-branch-lifecycle-and-immunity.md",
+      "sha256": "abf6da59ffb3a2b64b67302a49229e9a203b3773f9913a5ca14433a0d909ca88"
+    },
+    {
+      "path": ".agents/rules/04-cryptographic-immutability-engine.md",
+      "sha256": "c8c2b1e175f9a56a59b9fe29587779b3f9dc9427d901162f4efb418b9937d555"
+    },
+    {
+      "path": ".agents/rules/05-quality-gates-taxonomy-g1-g23.md",
+      "sha256": "9b0b8f3dc4e4c688c8e948b13738f9b12fa453d1f022107b38eb251ea4ef4bdb"
+    },
+    {
+      "path": ".agents/rules/06-testing-and-mutation-constitution.md",
+      "sha256": "9ee41bbd7b2c67b4a0ee4fac4b7e9c9f4c0cb14bfed9dbc6c897767d44af430f"
+    },
+    {
+      "path": ".agents/rules/07-telegram-ux-mobile-ergonomics.md",
+      "sha256": "1a2c5c2e7fc575676d3a619ddea74a63d2cba0295c03e7996482a5d584d86d2b"
+    },
+    {
+      "path": ".agents/rules/08-code-defect-and-regression-postmortem.md",
+      "sha256": "89d5d8831516826afa73ddaf1dd4e68e63b6a276c098495f901d9c9c9689d87f"
+    },
+    {
+      "path": ".agents/rules/09-enterprise-reliability-and-telemetry.md",
+      "sha256": "cb976e07d793583a2ef80154fddc95bad93ee84e7d50f42343139f648f614579"
+    },
+    {
+      "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
+      "sha256": "3ca62660db036377e21d87cbe76da4a2aabea91226279ca84ec6c977ca9c787f"
+    },
+    {
+      "path": ".agents/skills/chief-arbitrator/SKILL.md",
+      "sha256": "1cfc894d3c55736c1b48ef5c924df2db19204607d744c13b2d3b23608f5b5771"
+    },
+    {
+      "path": ".agents/skills/open-code-review/SKILL.md",
+      "sha256": "3dd08f1ab21519eb35149f09c0b870bb68c2b570f3f6c4bcd774bae833825db2"
+    },
+    {
+      "path": ".agents/skills/saleh/SKILL.md",
+      "sha256": "50279056e73808cd0cdf7c76974ad50059279cde36cd2f0b696c38338fe8b9bf"
+    },
+    {
+      "path": ".agents/skills/squad-architecture-devops/SKILL.md",
+      "sha256": "9fba4d72f934a85ab884dc60f00f8a567ba1790676909b7afb8e0a6440e044a3"
+    },
+    {
+      "path": ".agents/skills/squad-finance-security/SKILL.md",
+      "sha256": "88cafdaaf2a14c81e2eeedf9daa48ee573336e7bc7d5a77f8ba0774327862025"
+    },
+    {
+      "path": ".agents/skills/squad-implementation-ux/SKILL.md",
+      "sha256": "923737f2a306c79aff704e748a9b80dabb15a3f30b37757800b8527873e3fbf0"
+    },
+    {
+      "path": ".agents/skills/squad-qa-migration/SKILL.md",
+      "sha256": "fb4c96c7b1afb93e2f85957b57e9848be5ce80ae088c219ec6bb872d3d03c0e2"
+    },
+    {
+      "path": ".agents/subagents/code-reviewer.md",
+      "sha256": "1b042862c9be50298db57cd790f607956ea1a2328769da37cda8d10d49142347"
+    },
+    {
+      "path": ".cursorrules",
+      "sha256": "3166f579c6afc543163b31085440150283262ab7b111d16449f64b14f5dbc154"
+    },
     {
       "path": ".githooks/pre-commit",
       "sha256": "b815b5eecaca5f93f4cd02e10ce9aa7b6fb6f45753664e0a72985cff252bce89"
@@ -29,6 +114,10 @@
     {
       "path": ".githooks/pre-commit.cmd",
       "sha256": "2f0a348d8bd26432b5109bf128aa5e8c59db6dc601d57baad32e534516dffb01"
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "sha256": "90a6f5b0a5db60ff6222048c4c98804471c2119a844e429b4e5b2ae508df6875"
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -51,6 +140,14 @@
       "sha256": "4c61d9c9556d8cc9757ce04c59487986a47093e89ba33aa138f7f748883c1ae0"
     },
     {
+      "path": "CLAUDE.md",
+      "sha256": "f1a0ae3a8c4e2e828cda9cdefb6fd1ced53a73187e3f09984914a9eb8a8bce74"
+    },
+    {
+      "path": "docs/00-baseline-and-ssot-charter.md",
+      "sha256": "dd87886826d2cc26161b8e6ccf3c80ab25b20b38b36f5866d75424cef27be79b"
+    },
+    {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
       "sha256": "007430e4c797e004ea3dc1ee0a036d9364d93c648a6923f4186e550cbbfc186b"
     },
@@ -63,16 +160,24 @@
       "sha256": "c8276c3d3c4244c32f2f008ebe3900e4cc358dd328cd51fc77f97b571f77711a"
     },
     {
+      "path": "docs/23-autonomous-agent-roster-and-rag.md",
+      "sha256": "cde76d89a81afbf9ae0002fab12dffaab497164733415f2523720e90b1ed207d"
+    },
+    {
+      "path": "docs/27-enterprise-ai-governance-and-quality-gates-constitution.md",
+      "sha256": "35588d4562fb1eccc1574020edea468a8cc18845c09ebc93d42d11d1d4326e29"
+    },
+    {
       "path": "docs/ai-execution-evidence/README.md",
       "sha256": "0b585a73102030830b6103fc8617b338e591f6f8f4e043fbff623a0d1446fc31"
     },
     {
       "path": "GEMINI.md",
-      "sha256": "7437e1863d6c30cf83958184c1bba6e5aecc473840bb8dd2ae6e64473fc1e9b8"
+      "sha256": "a3b99cea43e41e111f28646c4286833c8856c5407eed27f554b30a5d7164307c"
     },
     {
       "path": "package.json",
-      "sha256": "ba5d484dfe7b7ff78e3412988515ca0a86d4e9fef35afb44fd48e1b0d29f20f6"
+      "sha256": "b4427c58b363fa2313793fe205971d2492abce537b88e438e937db8e68758856"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -103,6 +208,10 @@
       "sha256": "b7fe6c2367294846c600d6a95b6f3c1c378a2b5cb27c83bba97da186ce2e7bb6"
     },
     {
+      "path": "tools/governance/saleh-audit-suite.ts",
+      "sha256": "8e0337e7eda9ed309905170f5f19976c593b11683be368fc2dcd889bcb6e6a53"
+    },
+    {
       "path": "tools/governance/tests/agent-dispatcher.spec.ts",
       "sha256": "6f5eb4422f386e29b360f3c7fea3f4feea29754d0a730fdd3796a84e52256854"
     },
@@ -125,6 +234,10 @@
     {
       "path": "tools/governance/tests/rag-engine.spec.ts",
       "sha256": "4b0ac353964ac5d9c01afa10265fe50384643a60de0ac341c01ba7997ec05b75"
+    },
+    {
+      "path": "tools/governance/tests/saleh-audit-suite.spec.ts",
+      "sha256": "8d4a465a3b1a87921856b36c7d13bbacce6a1521901c30bd40454ca67ac46786"
     },
     {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
@@ -224,7 +337,7 @@
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
-      "sha256": "b6df424e02630985161d95d3aafc4bc4abd5f92f975114f1d9d2ed54c4023923"
+      "sha256": "1475afcf50a3a67a4360d6074d138b6b9eb74777c908c4a361b19ffbb49b5efc"
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
@@ -1850,7 +1963,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-21T07:46:08.627Z",
+      "lockedAt": "2026-09-21T09:12:13.088Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2174,7 +2287,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-21T07:46:08.627Z",
+      "lockedAt": "2026-09-21T09:12:13.088Z",
       "files": [
         {
           "path": ".dockerignore",
