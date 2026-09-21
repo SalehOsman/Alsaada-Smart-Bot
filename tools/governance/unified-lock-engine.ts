@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
-import { normalized, toRepoPath } from './common.js';
+import { isCliEntrypoint, normalized, toRepoPath } from './common.js';
 import { APPROVAL_PHRASE, GOVERNANCE_LOCK_PATH, buildGovernanceLock, listDockerFiles, type GovernanceLock } from './verify-governance-lock.js';
 
 export type LockedEntityType = 'flow' | 'dashboard' | 'package' | 'infra' | 'module' | 'test';
@@ -669,5 +669,17 @@ export function lockAllEntities(
   }
 
   return { total: targets.length, successful, failed };
+}
+
+if (isCliEntrypoint(import.meta.url)) {
+  console.log('🔒 Running unified lock engine...');
+  const result = lockAllEntities(process.cwd());
+  console.log(`✅ Unified lock engine complete: ${result.successful}/${result.total} entities locked.`);
+  if (result.failed.length > 0) {
+    for (const f of result.failed) {
+      console.error(`   - ${f.target}: ${f.error}`);
+    }
+    process.exit(1);
+  }
 }
 

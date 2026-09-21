@@ -1,0 +1,32 @@
+# Cursor Rules for Al-Saada Smart Bot Enterprise
+
+You are operating inside the Al-Saada Smart Bot enterprise repository.
+
+## Sovereign Single Source of Truth (SSOT)
+- Always read and strictly obey `GEMINI.md` as the supreme sovereign micro-kernel.
+- Consult the 10 modular English domain rulebooks in `.agents/rules/` for specialized tasks.
+- For legacy functional baselines, refer to `docs/archive/governance-v1-ar/` and `F:\HR`.
+
+## Core Architectural Invariants
+1. **F:\HR Baseline Parity (G3, G11):** 100% exact functional, accounting, and screen behavior parity with `F:\HR`. Zero flow divergence.
+2. **10-File Vertical Slice (G2):** Every flow under `modules/<module>/src/flows/<flow-slug>/` must contain exactly:
+   - `flow.contract.json`, `index.ts`, `controller.ts`, `menu.builder.ts`, `action.handler.ts`, `service.ts`, `types.ts`, `validator.ts`, `error.handler.ts`, and test in `<module>/tests/flows/`.
+3. **Telegram Mobile Budget (36/16/7/3) (G5, G22):**
+   - Max 36 bytes for callback data (hard limit 64 bytes).
+   - Max 16 characters per inline button label.
+   - Max 7 rows per inline keyboard; max 3 buttons per row.
+   - In-place message updates via `editMessageText`.
+4. **Zero Console Policy (G9):** Never use `console.log` or `console.error` in production. Use `@alsaada/shared/logger`.
+5. **Deterministic Time (G23):** Never call `Date.now()` or `new Date()` unpinned in tests. Use `PINNED_BASE_TIME` from `@alsaada/shared/testing`.
+
+## Untranslated Sovereign Arabic Approval Formulas
+Never translate or alter the following approval formulas:
+- Lock component: `«نعم اقفل»`
+- Unlock component: `«موافق على الفتح»` or `«نعم موافق على التعديل»`
+- Merge to main: `«ادمج الفرع»`
+- Universal governance change: `«موافق على التعديل او الايقاف او الحذف»`
+- Source code defect repair: `«موافق على تعديل الكود المصدري»`
+
+## Git Discipline
+- Direct commits or pushes to `main` are strictly forbidden (`Exit 1`).
+- Work on dedicated branches: `feat/<name>`, `fix/<name>`, `plan/<wp-number>-<slug>`, `chore/<name>`.
