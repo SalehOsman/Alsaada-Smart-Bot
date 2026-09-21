@@ -1,0 +1,647 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-21T07:29:53.460Z",
+  "totalFlows": 20,
+  "totalModules": 2,
+  "totalPackages": 8,
+  "totalApps": 3,
+  "flows": {
+    "00.1": {
+      "flowKey": "00.1",
+      "flowSlug": "00.1-corporate-profile",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.1-corporate-profile",
+      "files": [
+        "modules/settings/src/flows/00.1-corporate-profile/flow.contract.json",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.docs.md",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.handler.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.keyboard.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.messages.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.repository.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.service.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.telemetry.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.types.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/flow.validators.ts",
+        "modules/settings/src/flows/00.1-corporate-profile/tests"
+      ],
+      "models": [
+        "companyProfile",
+        "tenant"
+      ],
+      "tests": []
+    },
+    "00.10": {
+      "flowKey": "00.10",
+      "flowSlug": "00.10-notification-policies",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.10-notification-policies",
+      "files": [
+        "modules/settings/src/flows/00.10-notification-policies/flow.contract.json",
+        "modules/settings/src/flows/00.10-notification-policies/flow.docs.md",
+        "modules/settings/src/flows/00.10-notification-policies/flow.handler.ts",
+        "modules/settings/src/flows/00.10-notification-policies/flow.keyboard.ts",
+        "modules/settings/src/flows/00.10-notification-policies/flow.messages.ts",
+        "modules/settings/src/flows/00.10-notification-policies/flow.repository.ts",
+        "modules/settings/src/flows/00.10-notification-policies/flow.service.ts",
+        "modules/settings/src/flows/00.10-notification-policies/flow.telemetry.ts",
+        "modules/settings/src/flows/00.10-notification-policies/flow.types.ts",
+        "modules/settings/src/flows/00.10-notification-policies/flow.validators.ts",
+        "modules/settings/src/flows/00.10-notification-policies/tests"
+      ],
+      "models": [],
+      "tests": []
+    },
+    "00.11": {
+      "flowKey": "00.11",
+      "flowSlug": "00.11-telegram-groups",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.11-telegram-groups",
+      "files": [
+        "modules/settings/src/flows/00.11-telegram-groups/flow.contract.json",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.docs.md",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.handler.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.keyboard.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.messages.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.repository.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.service.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.telemetry.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.types.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/flow.validators.ts",
+        "modules/settings/src/flows/00.11-telegram-groups/tests"
+      ],
+      "models": [
+        "site"
+      ],
+      "tests": []
+    },
+    "00.12": {
+      "flowKey": "00.12",
+      "flowSlug": "00.12-user-rbac-management",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.12-user-rbac-management",
+      "files": [
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.contract.json",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.docs.md",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.handler.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.keyboard.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.messages.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.repository.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.service.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.telemetry.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.types.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/flow.validators.ts",
+        "modules/settings/src/flows/00.12-user-rbac-management/tests"
+      ],
+      "models": [
+        "user",
+        "worker"
+      ],
+      "tests": []
+    },
+    "00.2": {
+      "flowKey": "00.2",
+      "flowSlug": "00.2-sites-hub",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.2-sites-hub",
+      "files": [
+        "modules/settings/src/flows/00.2-sites-hub/flow.contract.json",
+        "modules/settings/src/flows/00.2-sites-hub/flow.docs.md",
+        "modules/settings/src/flows/00.2-sites-hub/flow.handler.ts",
+        "modules/settings/src/flows/00.2-sites-hub/flow.keyboard.ts",
+        "modules/settings/src/flows/00.2-sites-hub/flow.messages.ts",
+        "modules/settings/src/flows/00.2-sites-hub/flow.repository.ts",
+        "modules/settings/src/flows/00.2-sites-hub/flow.service.ts",
+        "modules/settings/src/flows/00.2-sites-hub/flow.telemetry.ts",
+        "modules/settings/src/flows/00.2-sites-hub/flow.types.ts",
+        "modules/settings/src/flows/00.2-sites-hub/flow.validators.ts",
+        "modules/settings/src/flows/00.2-sites-hub/tests"
+      ],
+      "models": [
+        "project",
+        "site",
+        "tenant"
+      ],
+      "tests": []
+    },
+    "00.3": {
+      "flowKey": "00.3",
+      "flowSlug": "00.3-job-matrix",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.3-job-matrix",
+      "files": [
+        "modules/settings/src/flows/00.3-job-matrix/flow.contract.json",
+        "modules/settings/src/flows/00.3-job-matrix/flow.docs.md",
+        "modules/settings/src/flows/00.3-job-matrix/flow.handler.ts",
+        "modules/settings/src/flows/00.3-job-matrix/flow.keyboard.ts",
+        "modules/settings/src/flows/00.3-job-matrix/flow.messages.ts",
+        "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts",
+        "modules/settings/src/flows/00.3-job-matrix/flow.service.ts",
+        "modules/settings/src/flows/00.3-job-matrix/flow.telemetry.ts",
+        "modules/settings/src/flows/00.3-job-matrix/flow.types.ts",
+        "modules/settings/src/flows/00.3-job-matrix/flow.validators.ts",
+        "modules/settings/src/flows/00.3-job-matrix/tests"
+      ],
+      "models": [
+        "department",
+        "jobTitle",
+        "shiftCycleTemplate"
+      ],
+      "tests": []
+    },
+    "00.4": {
+      "flowKey": "00.4",
+      "flowSlug": "00.4-admin-profile",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.4-admin-profile",
+      "files": [
+        "modules/settings/src/flows/00.4-admin-profile/flow.contract.json",
+        "modules/settings/src/flows/00.4-admin-profile/flow.docs.md",
+        "modules/settings/src/flows/00.4-admin-profile/flow.handler.ts",
+        "modules/settings/src/flows/00.4-admin-profile/flow.keyboard.ts",
+        "modules/settings/src/flows/00.4-admin-profile/flow.messages.ts",
+        "modules/settings/src/flows/00.4-admin-profile/flow.repository.ts",
+        "modules/settings/src/flows/00.4-admin-profile/flow.service.ts",
+        "modules/settings/src/flows/00.4-admin-profile/flow.telemetry.ts",
+        "modules/settings/src/flows/00.4-admin-profile/flow.types.ts",
+        "modules/settings/src/flows/00.4-admin-profile/flow.validators.ts",
+        "modules/settings/src/flows/00.4-admin-profile/tests"
+      ],
+      "models": [
+        "user"
+      ],
+      "tests": []
+    },
+    "00.5": {
+      "flowKey": "00.5",
+      "flowSlug": "00.5-admin-assignment",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.5-admin-assignment",
+      "files": [
+        "modules/settings/src/flows/00.5-admin-assignment/flow.contract.json",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.docs.md",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.handler.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.keyboard.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.messages.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.repository.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.service.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.telemetry.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.types.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/flow.validators.ts",
+        "modules/settings/src/flows/00.5-admin-assignment/tests"
+      ],
+      "models": [
+        "site",
+        "user"
+      ],
+      "tests": []
+    },
+    "00.6": {
+      "flowKey": "00.6",
+      "flowSlug": "00.6-ghost-mode",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.6-ghost-mode",
+      "files": [
+        "modules/settings/src/flows/00.6-ghost-mode/flow.contract.json",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.docs.md",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.handler.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.keyboard.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.messages.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.repository.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.service.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.telemetry.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.types.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/flow.validators.ts",
+        "modules/settings/src/flows/00.6-ghost-mode/tests"
+      ],
+      "models": [
+        "site",
+        "supplier",
+        "worker"
+      ],
+      "tests": []
+    },
+    "00.7": {
+      "flowKey": "00.7",
+      "flowSlug": "00.7-audit-incident-vault",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.7-audit-incident-vault",
+      "files": [
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.contract.json",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.docs.md",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.handler.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.keyboard.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.messages.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.repository.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.service.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.telemetry.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.types.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/flow.validators.ts",
+        "modules/settings/src/flows/00.7-audit-incident-vault/tests"
+      ],
+      "models": [
+        "botPerformanceLog",
+        "systemErrorLog",
+        "worker"
+      ],
+      "tests": []
+    },
+    "00.8": {
+      "flowKey": "00.8",
+      "flowSlug": "00.8-apm-telemetry",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.8-apm-telemetry",
+      "files": [
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.contract.json",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.docs.md",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.handler.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.keyboard.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.messages.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.repository.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.service.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.telemetry.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.types.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/flow.validators.ts",
+        "modules/settings/src/flows/00.8-apm-telemetry/tests"
+      ],
+      "models": [
+        "botPerformanceLog"
+      ],
+      "tests": []
+    },
+    "00.9": {
+      "flowKey": "00.9",
+      "flowSlug": "00.9-emergency-cache",
+      "module": "settings",
+      "directory": "modules/settings/src/flows/00.9-emergency-cache",
+      "files": [
+        "modules/settings/src/flows/00.9-emergency-cache/flow.contract.json",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.docs.md",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.handler.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.keyboard.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.messages.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.repository.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.service.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.telemetry.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.types.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/flow.validators.ts",
+        "modules/settings/src/flows/00.9-emergency-cache/tests"
+      ],
+      "models": [
+        "department",
+        "jobTitle",
+        "site",
+        "worker"
+      ],
+      "tests": []
+    },
+    "01.1": {
+      "flowKey": "01.1",
+      "flowSlug": "01.1-worker-registration",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.1-worker-registration",
+      "files": [
+        "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.docs.md",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.handler.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.messages.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.types.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/flow.validators.ts",
+        "modules/workforce/src/flows/01.1-worker-registration/tests"
+      ],
+      "models": [
+        "companyProfile",
+        "jobTitle",
+        "site",
+        "tenant",
+        "worker"
+      ],
+      "tests": []
+    },
+    "01.2.D": {
+      "flowKey": "01.2.D",
+      "flowSlug": "01.2.D-worker-edit",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.2.D-worker-edit",
+      "files": [
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.cigarette-handler.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.contract.json",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.docs.md",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.draft-store.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.entity-pickers.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.field-input.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.handler.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.salary-wizard.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.ticket-handler.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/flow.validators.ts",
+        "modules/workforce/src/flows/01.2.D-worker-edit/tests"
+      ],
+      "models": [
+        "canteenItem",
+        "department",
+        "jobTitle",
+        "salaryHistory",
+        "site",
+        "user",
+        "worker",
+        "workerChangeLog",
+        "workerEditRequest"
+      ],
+      "tests": []
+    },
+    "01.4": {
+      "flowKey": "01.4",
+      "flowSlug": "01.4-worker-export",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.4-worker-export",
+      "files": [
+        "modules/workforce/src/flows/01.4-worker-export/flow.contract.json",
+        "modules/workforce/src/flows/01.4-worker-export/flow.docs.md",
+        "modules/workforce/src/flows/01.4-worker-export/flow.handler.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.messages.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.service.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.template.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.types.ts",
+        "modules/workforce/src/flows/01.4-worker-export/flow.validators.ts",
+        "modules/workforce/src/flows/01.4-worker-export/tests"
+      ],
+      "models": [
+        "department",
+        "jobTitle",
+        "site",
+        "worker"
+      ],
+      "tests": []
+    },
+    "01.5": {
+      "flowKey": "01.5",
+      "flowSlug": "01.5-worker-directory",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.5-worker-directory",
+      "files": [
+        "modules/workforce/src/flows/01.5-worker-directory/flow.contract.json",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.docs.md",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.documents-handler.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.handler.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.messages.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.types.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/flow.validators.ts",
+        "modules/workforce/src/flows/01.5-worker-directory/tests"
+      ],
+      "models": [
+        "companyProfile",
+        "tenant",
+        "worker",
+        "workerDocument"
+      ],
+      "tests": []
+    },
+    "01.6": {
+      "flowKey": "01.6",
+      "flowSlug": "01.6-worker-self-edit",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.6-worker-self-edit",
+      "files": [
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.contract.json",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.docs.md",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.handler.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.messages.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.repository.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.service.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.types.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/flow.validators.ts",
+        "modules/workforce/src/flows/01.6-worker-self-edit/tests"
+      ],
+      "models": [
+        "auditLog",
+        "outboxEvent",
+        "worker"
+      ],
+      "tests": []
+    },
+    "01.7": {
+      "flowKey": "01.7",
+      "flowSlug": "01.7-guest-join-and-linking",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking",
+      "files": [
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.docs.md",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.handler.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.messages.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.service.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.types.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.validators.ts",
+        "modules/workforce/src/flows/01.7-guest-join-and-linking/tests"
+      ],
+      "models": [
+        "approvalTicket",
+        "auditLog",
+        "companyProfile",
+        "outboxEvent",
+        "tenant",
+        "user",
+        "worker"
+      ],
+      "tests": []
+    },
+    "01.8": {
+      "flowKey": "01.8",
+      "flowSlug": "01.8-worker-offboarding",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.8-worker-offboarding",
+      "files": [
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.actions.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.contract.json",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.docs.md",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.handler.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.inbox-handler.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.messages.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.service.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.steps.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.types.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/flow.validators.ts",
+        "modules/workforce/src/flows/01.8-worker-offboarding/tests"
+      ],
+      "models": [
+        "advanceInstallment",
+        "approvalTicket",
+        "auditLog",
+        "disciplinaryAndBonus",
+        "leave",
+        "outboxEvent",
+        "pPEAsset",
+        "user",
+        "worker",
+        "workerClearance"
+      ],
+      "tests": []
+    },
+    "01.9": {
+      "flowKey": "01.9",
+      "flowSlug": "01.9-worker-commitment-index",
+      "module": "workforce",
+      "directory": "modules/workforce/src/flows/01.9-worker-commitment-index",
+      "files": [
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.docs.md",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.handler.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.keyboard.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.messages.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.plugin.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.service.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.telemetry.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.types.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/flow.validators.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/index.ts",
+        "modules/workforce/src/flows/01.9-worker-commitment-index/tests"
+      ],
+      "models": [
+        "site",
+        "worker",
+        "workerCommitmentScore"
+      ],
+      "tests": []
+    }
+  },
+  "modules": {
+    "settings": {
+      "name": "settings",
+      "directory": "modules/settings",
+      "flows": [
+        "00.1",
+        "00.10",
+        "00.11",
+        "00.12",
+        "00.2",
+        "00.3",
+        "00.4",
+        "00.5",
+        "00.6",
+        "00.7",
+        "00.8",
+        "00.9"
+      ]
+    },
+    "workforce": {
+      "name": "workforce",
+      "directory": "modules/workforce",
+      "flows": [
+        "01.1",
+        "01.2.D",
+        "01.4",
+        "01.5",
+        "01.6",
+        "01.7",
+        "01.8",
+        "01.9"
+      ]
+    }
+  },
+  "packages": {
+    "@alsaada/ai-vision-engine": {
+      "name": "@alsaada/ai-vision-engine",
+      "directory": "packages/ai-vision-engine",
+      "main": "./dist/index.js",
+      "dependencies": [
+        "@alsaada/national-id-engine",
+        "@alsaada/regional-engine"
+      ]
+    },
+    "@alsaada/core-components": {
+      "name": "@alsaada/core-components",
+      "directory": "packages/core-components",
+      "main": "./dist/index.js",
+      "dependencies": [
+        "@alsaada/database",
+        "@alsaada/national-id-engine",
+        "@alsaada/regional-engine",
+        "grammy"
+      ]
+    },
+    "@alsaada/database": {
+      "name": "@alsaada/database",
+      "directory": "packages/database",
+      "main": "./dist/index.js",
+      "dependencies": [
+        "@prisma/adapter-pg",
+        "@prisma/client",
+        "pg"
+      ]
+    },
+    "@alsaada/national-id-engine": {
+      "name": "@alsaada/national-id-engine",
+      "directory": "packages/national-id-engine",
+      "main": "./dist/index.js",
+      "dependencies": [
+        "@alsaada/regional-engine"
+      ]
+    },
+    "@alsaada/rbac": {
+      "name": "@alsaada/rbac",
+      "directory": "packages/rbac",
+      "main": "./dist/index.js",
+      "dependencies": []
+    },
+    "@alsaada/regional-engine": {
+      "name": "@alsaada/regional-engine",
+      "directory": "packages/regional-engine",
+      "main": "./dist/index.js",
+      "dependencies": [
+        "date-fns",
+        "date-fns-tz"
+      ]
+    },
+    "@alsaada/shared": {
+      "name": "@alsaada/shared",
+      "directory": "packages/shared",
+      "main": "./dist/index.js",
+      "dependencies": []
+    },
+    "@alsaada/telemetry": {
+      "name": "@alsaada/telemetry",
+      "directory": "packages/telemetry",
+      "main": "./dist/index.js",
+      "dependencies": []
+    }
+  },
+  "apps": {
+    "admin-dashboard": {
+      "name": "admin-dashboard",
+      "directory": "apps/admin-dashboard"
+    },
+    "bot-server": {
+      "name": "bot-server",
+      "directory": "apps/bot-server"
+    },
+    "docs": {
+      "name": "docs",
+      "directory": "apps/docs"
+    }
+  }
+}

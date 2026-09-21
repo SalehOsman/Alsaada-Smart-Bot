@@ -1,0 +1,9 @@
+node_modules
+dist
+.turbo
+.next
+.astro
+coverage
+governance.lock.json
+vitest-list-output.txt
+vitest-full.log

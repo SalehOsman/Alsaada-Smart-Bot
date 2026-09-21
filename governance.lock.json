@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T06:59:04.724Z",
+  "generatedAt": "2026-09-21T07:33:47.965Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -44,7 +44,7 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "a34f12c163b10830b4b42ef89c5cc894fc6c17a736535ff574a0c7fb9e16a506"
+      "sha256": "6468a8dbb71c71e0f7603028402c99e563a100beda906e9f97145d8d28e20663"
     },
     {
       "path": "AGENTS.md",
@@ -72,7 +72,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "4704b691fd7c74b9e8ce76b0d3a485be1a00044bc3482ed22309b3b110105f4c"
+      "sha256": "ba5d484dfe7b7ff78e3412988515ca0a86d4e9fef35afb44fd48e1b0d29f20f6"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -85,6 +85,10 @@
     {
       "path": "tools/governance/common.ts",
       "sha256": "f721b0b42082cd53d6839a55fc1a34caeddd151dc4114ce96259a9a32f8765f7"
+    },
+    {
+      "path": "tools/governance/generate-topology.ts",
+      "sha256": "e09920b6fff7e5c92b842bda6870fd56b2c5e42d5287183ad18a064691db5dc1"
     },
     {
       "path": "tools/governance/incident-summary.ts",
@@ -263,6 +267,10 @@
       "sha256": "6aec42af1dc7ba2aebfb29a35b5767f8693a51a7de85f041947c749868bfc97e"
     },
     {
+      "path": "tools/governance/verify-shared-helpers.ts",
+      "sha256": "57845d0612b45c2b2874333aed26b5c821d285fe1df9cad89467068baa638ab8"
+    },
+    {
       "path": "tools/governance/verify-telegram-contracts.ts",
       "sha256": "f5fb4f7f133653fbdd1ccb7222095f7b8348c8c0ba5ad49b5975ea847ea4cb16"
     },
@@ -283,8 +291,16 @@
       "sha256": "c63ccb0bd394ef795db136243a10e0a94ba94b3b09d83b672c504b73b4a54c13"
     },
     {
+      "path": "tools/scaffold/scaffold-incident.ts",
+      "sha256": "74e0a887ca1fc49808897a1a780f0a7b6b455b37acd02577df055a5b1ec16466"
+    },
+    {
       "path": "tools/scaffold/scaffold-module.ts",
       "sha256": "22e14b20c8c459aa410ca4fb8b8494db3c76a6a0b06269f6fb4c21ef166e3579"
+    },
+    {
+      "path": "tools/scaffold/scaffold-test.ts",
+      "sha256": "647168a9f3f57d9cfbed6d1749aa9948f4e22c93c4639d101c073559d0581c68"
     },
     {
       "path": "tools/scaffold/unlock.ts",
@@ -2182,7 +2198,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-21T06:59:04.724Z",
+      "lockedAt": "2026-09-21T07:33:47.965Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2546,7 +2562,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-21T06:59:04.724Z",
+      "lockedAt": "2026-09-21T07:33:47.965Z",
       "files": [
         {
           "path": ".dockerignore",

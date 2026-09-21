@@ -59,6 +59,7 @@ gap-*.txt
 !.agents/skills/
 !.agents/rules/
 !.agents/subagents/
+!.agents/topology.json
 
 
 # OS metadata
