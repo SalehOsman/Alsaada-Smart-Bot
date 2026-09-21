@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T11:14:13.795Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T11:37:22.624Z)
 - **معرف الكيان:** `test:apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts
@@ -12,7 +12,7 @@
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts` | `99b5cc67b1924d680b2459891441f0e2c07ae39fae3b3d207022c815e2458a69` |
+| `apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts` | `57146527deed12ab5502c9e1049a10a909786e9c1aeb5a0f2bd696b0cc9b523e` |
 
 ## بوابات التحقق المعتمدة
 - **CRLF/LF Sanitization:** PASS

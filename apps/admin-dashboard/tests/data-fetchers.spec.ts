@@ -1098,7 +1098,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.avgInternalLatencyMs).not.toBe(6);
     });
 
-    it('caches APM responses in memory for 5 seconds and bypasses on forceRefresh', async () => {
+    it('fetches telemetry directly from database on initial un-cached request', async () => {
       // Arrange
       const sampleLogs = [
         {
@@ -1116,20 +1116,68 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
 
-      // Act & Assert 1: First call hits DB mock
-      const res1 = await getApmTelemetryData();
-      expect(res1.totalOps).toBe(1);
-      expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(1);
+      // Act
+      const result = await getApmTelemetryData();
 
-      // Act & Assert 2: Second call immediately hits in-memory cache
-      const res2 = await getApmTelemetryData();
-      expect(res2.totalOps).toBe(1);
+      // Assert
+      expect(result.totalOps).toBe(1);
       expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(1);
+      expect(result.totalOps).not.toBe(0);
+    });
 
-      // Act & Assert 3: Third call with forceRefresh bypasses cache
+    it('serves cached telemetry response within the 5-second TTL window', async () => {
+      // Arrange
+      const sampleLogs = [
+        {
+          id: 'c1',
+          callbackQueryOrCommand: 'cb:action:cache_test',
+          executionTimeMs: 50,
+          internalExecutionTimeMs: 10,
+          telegramNetworkTimeMs: 40,
+          performanceTier: 'GREEN_FAST',
+          cacheSource: 'L1_RAM_CACHE',
+          actorTelegramId: BigInt(100),
+          timestamp: new Date('2026-09-17T10:00:00Z'),
+        },
+      ];
+
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
-      const res3 = await getApmTelemetryData({ forceRefresh: true });
-      expect(res3.totalOps).toBe(1);
+      await getApmTelemetryData(); // Prime the cache
+
+      // Act
+      const cachedResult = await getApmTelemetryData();
+
+      // Assert
+      expect(cachedResult.totalOps).toBe(1);
+      expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(1);
+      expect(cachedResult.totalOps).not.toBe(0);
+    });
+
+    it('bypasses memory cache when forceRefresh flag is explicitly set', async () => {
+      // Arrange
+      const sampleLogs = [
+        {
+          id: 'c1',
+          callbackQueryOrCommand: 'cb:action:cache_test',
+          executionTimeMs: 50,
+          internalExecutionTimeMs: 10,
+          telegramNetworkTimeMs: 40,
+          performanceTier: 'GREEN_FAST',
+          cacheSource: 'L1_RAM_CACHE',
+          actorTelegramId: BigInt(100),
+          timestamp: new Date('2026-09-17T10:00:00Z'),
+        },
+      ];
+
+      vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
+      await getApmTelemetryData(); // Prime the cache
+      vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
+
+      // Act
+      const freshResult = await getApmTelemetryData({ forceRefresh: true });
+
+      // Assert
+      expect(freshResult.totalOps).toBe(1);
       expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(2);
       expect(prisma.botPerformanceLog.findMany).not.toHaveBeenCalledTimes(3);
     });
@@ -1199,7 +1247,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       isRealSuperAdmin: true,
     };
 
-    it('workforce: correctly aggregates active workers, new hires, job breakdown, and operations', async () => {
+    it('workforce: correctly aggregates active workers and new hires counts', async () => {
       // Arrange
       vi.mocked(prisma.worker.count)
         .mockResolvedValueOnce(45) // activeCount
@@ -1237,6 +1285,38 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.kpis[0].value).not.toBe(0);
       expect(result.kpis[1].value).toBe(8);
       expect(result.kpis[2].value).toBe('94%');
+    });
+
+    it('workforce: builds job title distribution and recent operations breakdown', async () => {
+      // Arrange
+      vi.mocked(prisma.worker.count)
+        .mockResolvedValueOnce(45)
+        .mockResolvedValueOnce(50)
+        .mockResolvedValueOnce(8);
+
+      vi.mocked(prisma.worker.findMany).mockResolvedValueOnce([
+        {
+          id: 'w-1',
+          code: 'OP-01',
+          name: 'محمد أحمد',
+          nickname: 'حمو',
+          jobTitle: 'سائق لودر',
+          dailyWage: 350 as any,
+          status: 'ACTIVE',
+          createdAt: new Date('2026-09-10'),
+          jobRef: { name: 'سائق لودر' },
+          site: { name: 'موقع الفوسفات' },
+        },
+      ] as any);
+
+      vi.mocked(prisma.workerCommitmentScore.aggregate).mockResolvedValueOnce({
+        _avg: { totalScore: 94 as any },
+      } as any);
+
+      // Act
+      const result = await getModuleAnalyticsData('workforce', 'ALL', 'month', mockSuperAdmin);
+
+      // Assert
       expect(result.breakdown.items.length).toBeGreaterThanOrEqual(1);
       expect(result.breakdown.items[0].label).toBe('سائق لودر');
       expect(result.recentOperations).toHaveLength(1);
@@ -1317,7 +1397,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.recentOperations).not.toHaveLength(0);
     });
 
-    it('canteen: computes sales sum, active items, and category distribution', async () => {
+    it('canteen: computes total sales sum and active item counts', async () => {
       // Arrange
       vi.mocked(prisma.canteenItem.count)
         .mockResolvedValueOnce(18) // active
@@ -1350,9 +1430,40 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.kpis[0].value).toContain('ج.م');
       expect(result.kpis[1].value).toBe(18);
       expect(result.kpis[1].value).not.toBe(0);
+    });
+
+    it('canteen: tracks stock levels and category distribution breakdown', async () => {
+      // Arrange
+      vi.mocked(prisma.canteenItem.count)
+        .mockResolvedValueOnce(18)
+        .mockResolvedValueOnce(20);
+      vi.mocked(prisma.canteenItem.findMany).mockResolvedValueOnce([
+        {
+          id: 'ci-1',
+          code: 'CIG-01',
+          name: 'سجائر كليوباترا بوكس',
+          category: 'CIGARETTES',
+          costPrice: 40 as any,
+          sellingPrice: 45 as any,
+          currentStock: 100 as any,
+          reorderThreshold: 10 as any,
+          isActive: true,
+          updatedAt: new Date('2026-09-16'),
+          site: { name: 'موقع أسوان' },
+        },
+      ] as any);
+      vi.mocked(prisma.financialLedger.aggregate).mockResolvedValueOnce({
+        _sum: { amount: 8500 as any },
+      } as any);
+
+      // Act
+      const result = await getModuleAnalyticsData('canteen', 'ALL', 'month', mockSuperAdmin);
+
+      // Assert
       expect(result.breakdown.items[0].label).toContain('سجائر');
       expect(result.breakdown.items).not.toHaveLength(0);
       expect(result.recentOperations[0].reference).toBe('CIG-01');
+      expect(result.recentOperations).toHaveLength(1);
     });
 
     it('equipment: returns operational ratio and technical status breakdown', async () => {

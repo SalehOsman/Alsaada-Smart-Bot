@@ -2814,11 +2814,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/rbac/tests/rbac.spec.ts",
       "directory": "packages/rbac/tests/rbac.spec.ts",
-      "lockedAt": "2026-09-20T11:30:39.595Z",
+      "lockedAt": "2026-09-21T11:37:18.075Z",
       "files": [
         {
           "path": "packages/rbac/tests/rbac.spec.ts",
-          "sha256": "6585ba9d045f58e6f453d810ade96050aa7d3521e52193f622a4bffd288bd016"
+          "sha256": "fd05a7b5e5fb002bb54557e3f0f871be3a9f0a2f906a519aeac20bd463361417"
         }
       ]
     },
@@ -2853,11 +2853,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/hash-chain.stress.spec.ts",
       "directory": "packages/database/tests/hash-chain.stress.spec.ts",
-      "lockedAt": "2026-09-20T17:54:51.952Z",
+      "lockedAt": "2026-09-21T11:37:03.411Z",
       "files": [
         {
           "path": "packages/database/tests/hash-chain.stress.spec.ts",
-          "sha256": "c1cb57eb195de01d2df4170e7ca51ebccabe212eab3f683bdecc66e1064ce497"
+          "sha256": "ba816289ff27f3f8861fb06fd3af2cc14652af2c4905ba458fe77b1939a81427"
         }
       ]
     },
@@ -3185,11 +3185,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/data-fetchers.spec.ts",
       "directory": "apps/admin-dashboard/tests/data-fetchers.spec.ts",
-      "lockedAt": "2026-09-21T10:14:34.728Z",
+      "lockedAt": "2026-09-21T11:37:10.072Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/data-fetchers.spec.ts",
-          "sha256": "73f0ae6e0bfa39f5020980a9c49e1e49744bea14d99211b779bd6bdd5b221462"
+          "sha256": "cef5ebcb86d9312881623ad464390b2448702a5cb4901e52a0245a4cbd3047a4"
         }
       ]
     },
@@ -3289,11 +3289,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
       "directory": "apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
-      "lockedAt": "2026-09-21T11:14:13.795Z",
+      "lockedAt": "2026-09-21T11:37:22.624Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
-          "sha256": "99b5cc67b1924d680b2459891441f0e2c07ae39fae3b3d207022c815e2458a69"
+          "sha256": "57146527deed12ab5502c9e1049a10a909786e9c1aeb5a0f2bd696b0cc9b523e"
         }
       ]
     },
