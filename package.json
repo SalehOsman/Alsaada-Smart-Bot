@@ -89,7 +89,8 @@
         "agent:audit": "tsx tools/governance/agent-dispatcher.ts audit",
         "ocr:review": "ocr review --concurrency 2",
         "ocr:preview": "ocr review --preview",
-        "ocr:viewer": "ocr viewer"
+        "ocr:viewer": "ocr viewer",
+        "incidents:summary": "tsx tools/governance/incident-summary.ts"
     },
     "devDependencies": {
         "@changesets/cli": "^3.0.3",

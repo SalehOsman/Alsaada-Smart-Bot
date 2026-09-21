@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-20T18:10:53.612Z",
+  "generatedAt": "2026-09-21T05:25:47.144Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -44,11 +44,11 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "8a2a6e8e400cc3e43c0bf732dafbb6e2fc8ff14dd6c52532dbde4ccbb86d666a"
+      "sha256": "a34f12c163b10830b4b42ef89c5cc894fc6c17a736535ff574a0c7fb9e16a506"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "1dfc1bb091fc58caa416fe70b6a3c507d81d1aa2bb553bd3a8de1e6f707d99cd"
+      "sha256": "9e21e30e8ee88a572902a35feff2f065127371d50c1dac6bc41b93758eddec06"
     },
     {
       "path": "docs/14-ai-agent-governance-and-file-rules.md",
@@ -68,11 +68,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "a5bbfb60ab8d8b7ea2229825eed60e7795bda98b2e7337b3605d07efca67dd14"
+      "sha256": "7bf8616d7b1a8cd5c76306c215795f4322c6cc474c98cbc8417e44f207db1873"
     },
     {
       "path": "package.json",
-      "sha256": "d3ac1268e64e08b5c611b16a7e6b85c98c05615ccd2d9fdbdf8f359ab82583f0"
+      "sha256": "4704b691fd7c74b9e8ce76b0d3a485be1a00044bc3482ed22309b3b110105f4c"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -85,6 +85,10 @@
     {
       "path": "tools/governance/common.ts",
       "sha256": "f721b0b42082cd53d6839a55fc1a34caeddd151dc4114ce96259a9a32f8765f7"
+    },
+    {
+      "path": "tools/governance/incident-summary.ts",
+      "sha256": "7b45224acb3a217ae7d304e87f1246a50109140510908ed2aaa5dea6458e2127"
     },
     {
       "path": "tools/governance/pre-commit-test-guard.ts",
@@ -212,7 +216,7 @@
     },
     {
       "path": "tools/governance/verify-git-hygiene.ts",
-      "sha256": "7f551435c99f9eb0e75185c4e715b2bfbf6e47cbd8339538501bfabe61089e37"
+      "sha256": "d9204b6dac354bc1ba892d340bb80c2aea91f974b70cde352369e30b289207cb"
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
@@ -2178,7 +2182,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-20T18:10:53.612Z",
+      "lockedAt": "2026-09-21T05:25:47.144Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2542,7 +2546,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-20T18:10:53.612Z",
+      "lockedAt": "2026-09-21T05:25:47.144Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3269,6 +3273,32 @@
         {
           "path": "packages/database/tests/hash-chain.stress.spec.ts",
           "sha256": "c1cb57eb195de01d2df4170e7ca51ebccabe212eab3f683bdecc66e1064ce497"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
+      "directory": "apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
+      "lockedAt": "2026-09-21T05:21:41.236Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
+          "sha256": "5cdf7d20c3efb2a7078e610c6c580a4ace0d73211cfebf074f12e7c64e1b1a79"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
+      "directory": "apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
+      "lockedAt": "2026-09-21T05:21:51.028Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
+          "sha256": "f070dd2b378ea7b3a5c9d08da1fe518bb83ee5ec4b223903ca071b09179f7647"
         }
       ]
     }
