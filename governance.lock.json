@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T07:39:10.596Z",
+  "generatedAt": "2026-09-21T07:41:50.246Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -44,7 +44,7 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "6468a8dbb71c71e0f7603028402c99e563a100beda906e9f97145d8d28e20663"
+      "sha256": "5364a413cf6781156dbaa857b226ba8f5c87080193144a0a70212587d5296e4e"
     },
     {
       "path": "AGENTS.md",
@@ -2198,7 +2198,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-21T07:39:10.596Z",
+      "lockedAt": "2026-09-21T07:41:50.246Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2562,7 +2562,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-21T07:39:10.596Z",
+      "lockedAt": "2026-09-21T07:41:50.246Z",
       "files": [
         {
           "path": ".dockerignore",

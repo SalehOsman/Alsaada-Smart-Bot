@@ -54,6 +54,7 @@ temp/
 *-output.txt
 vitest-list-output.txt
 gap-*.ps1
+!tools/governance/gap-audit.ps1
 gap-*.txt
 .agents/*
 !.agents/skills/
