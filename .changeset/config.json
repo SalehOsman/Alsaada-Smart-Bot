@@ -14,7 +14,8 @@
       "@alsaada/telemetry",
       "@alsaada/ai-vision-engine",
       "@alsaada/settings",
-      "@alsaada/workforce"
+      "@alsaada/workforce",
+      "@alsaada/shared"
     ]
   ],
   "linked": [],

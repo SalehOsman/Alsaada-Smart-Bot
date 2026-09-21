@@ -72,6 +72,8 @@
         "security:semgrep": "pnpm sast:verify",
         "release:bump": "tsx tools/release/release-engine.ts bump",
         "release:verify": "tsx tools/governance/verify-release-sync.ts",
+        "version-packages": "changeset version",
+        "release:tag": "changeset publish",
         "upgrade:wizard": "tsx tools/upgrade/wizard.ts",
         "upgrade:impact": "tsx tools/upgrade/impact-scanner.ts",
         "upgrade:rollback": "tsx tools/upgrade/rollback-manager.ts",
