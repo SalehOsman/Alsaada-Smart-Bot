@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T18:28:01.226Z",
+  "generatedAt": "2026-09-21T19:24:22.310Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -74,6 +74,10 @@
     {
       "path": ".agents/skills/chief-arbitrator/SKILL.md",
       "sha256": "1cfc894d3c55736c1b48ef5c924df2db19204607d744c13b2d3b23608f5b5771"
+    },
+    {
+      "path": ".agents/skills/jev/SKILL.md",
+      "sha256": "89907c31383240edc16a0ee5e1665c04edf70767e4c7dd6b696cecce14e97a26"
     },
     {
       "path": ".agents/skills/open-code-review/SKILL.md",
@@ -200,6 +204,10 @@
       "sha256": "7b45224acb3a217ae7d304e87f1246a50109140510908ed2aaa5dea6458e2127"
     },
     {
+      "path": "tools/governance/jev-auditor.ts",
+      "sha256": "207fa2a65866a070c3a7c5e309b60130e5cfebfabe4a9d2169fefa5587b302dc"
+    },
+    {
       "path": "tools/governance/pre-commit-test-guard.ts",
       "sha256": "3a8cc03b1d67988f7136f2964d22210fdb7fa5dab68175e16917bd061527847d"
     },
@@ -290,6 +298,10 @@
     {
       "path": "tools/governance/tests/verify-test-authenticity.spec.ts",
       "sha256": "6886492b426f39cd05ef9e7af020f90f01d18db8fd4182cb19d233c5e49a3410"
+    },
+    {
+      "path": "tools/governance/typesafe/audit-catalog.ts",
+      "sha256": "c7668bd82f7073bece6d54ef28818edba6daf74c29e54ad12ffd4dcaf31a4cec"
     },
     {
       "path": "tools/governance/unified-lock-engine.ts",
@@ -1983,7 +1995,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-21T18:28:01.226Z",
+      "lockedAt": "2026-09-21T19:24:22.310Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -2311,7 +2323,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-21T18:28:01.226Z",
+      "lockedAt": "2026-09-21T19:24:22.310Z",
       "files": [
         {
           "path": ".dockerignore",
