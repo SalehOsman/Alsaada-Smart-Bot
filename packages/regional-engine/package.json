@@ -1,6 +1,6 @@
 {
   "name": "@alsaada/regional-engine",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.86",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
