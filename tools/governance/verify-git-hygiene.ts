@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -156,6 +157,38 @@ export function verifyGitHygiene(
     if (status.length > 0) {
       warn(result, `Local working tree has uncommitted changes (${status.split('\n').length} entries). Ensure changes are committed before pushing.`);
     }
+  }
+
+  // 4. صمام حظر تتبع تقارير الحوادث في Git (Incident Reports Zero-Tracking Gate)
+  result.checked++;
+  try {
+    const trackedIncidentsRaw = execFileSync('git', ['ls-files', 'docs/code-incidents'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+    if (trackedIncidentsRaw.length > 0) {
+      const trackedIncidents = trackedIncidentsRaw
+        .split(/\r?\n/)
+        .map((f) => f.trim().replace(/\\/g, '/'))
+        .filter(
+          (f) =>
+            f.length > 0 &&
+            !f.endsWith('/.gitkeep') &&
+            !f.endsWith('/TEMPLATE.md') &&
+            f !== 'docs/code-incidents/.gitkeep' &&
+            f !== 'docs/code-incidents/TEMPLATE.md'
+        );
+
+      if (trackedIncidents.length > 0) {
+        fail(
+          result,
+          `Incident Postmortems Zero-Tracking violation: Internal defect reports found tracked in git: [${trackedIncidents.join(', ')}]. Defect reports under docs/code-incidents/ must remain strictly local and untracked.`
+        );
+      }
+    }
+  } catch (err) {
+    fail(result, `Failed executing git ls-files for docs/code-incidents: ${String(err)}`);
   }
 
   return result;
