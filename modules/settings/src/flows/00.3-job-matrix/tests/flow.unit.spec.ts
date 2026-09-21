@@ -1,9 +1,26 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JobMatrixService } from '../flow.service.js';
 import type { JobMatrixRepository } from '../flow.repository.js';
 import type { DepartmentDto, JobTitleDto } from '../flow.types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Flow 00.3 Unit Tests — JobMatrix', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   const sampleDepts: DepartmentDto[] = [
     {
       id: 'd-1',
@@ -31,50 +48,60 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
     workerCount: 4,
   };
 
-  it('should list departments correctly', async () => {
+  it('lists departments and validates entity structure', async () => {
+    // Arrange
     const mockRepo = {
       listDepartments: vi.fn().mockResolvedValue(sampleDepts),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const depts = await service.listDepartments();
 
+    // Assert
     expect(depts).toHaveLength(1);
-    expect(depts[0]!.code).toBe('ENG');
+    expect(depts[0]?.code).toBe('ENG');
     expect(mockRepo.listDepartments).toHaveBeenCalledTimes(1);
   });
 
-  it('should update job headcount delta', async () => {
+  it('updates job headcount delta correctly', async () => {
+    // Arrange
     const mockRepo = {
       updateJobHeadcountDelta: vi.fn().mockResolvedValue({
         ...sampleJob,
         minHeadcount: 3,
       }),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const updated = await service.updateHeadcountDelta('j-1', 1);
 
+    // Assert
     expect(updated.minHeadcount).toBe(3);
     expect(mockRepo.updateJobHeadcountDelta).toHaveBeenCalledWith('j-1', 1);
   });
 
-  it('should toggle job active status', async () => {
+  it('toggles job active status between states', async () => {
+    // Arrange
     const mockRepo = {
       toggleJobActive: vi.fn().mockResolvedValue({
         ...sampleJob,
         isActive: false,
       }),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const updated = await service.toggleJobActive('j-1');
 
+    // Assert
     expect(updated.isActive).toBe(false);
     expect(mockRepo.toggleJobActive).toHaveBeenCalledWith('j-1');
   });
 
-  it('should update job cycle work and rest days', async () => {
+  it('updates job cycle work and rest days configuration', async () => {
+    // Arrange
     const mockRepo = {
       updateJobCycle: vi.fn().mockResolvedValue({
         ...sampleJob,
@@ -82,16 +109,19 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
         restDays: 10,
       }),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const updated = await service.updateJobCycle('j-1', 40, 10);
 
+    // Assert
     expect(updated.workDays).toBe(40);
     expect(updated.restDays).toBe(10);
     expect(mockRepo.updateJobCycle).toHaveBeenCalledWith('j-1', 40, 10);
   });
 
-  it('should parse and import valid Excel matrix buffer successfully with additionalSalary', async () => {
+  it('parses and imports valid Excel matrix buffer successfully with additionalSalary', async () => {
+    // Arrange
     const ExcelJS = (await import('exceljs')).default;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('دليل الأقسام والوظائف');
@@ -129,10 +159,12 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
         jobsUpserted: 1,
       }),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const result = await service.parseAndImportExcel(buffer);
 
+    // Assert
     expect(result.success).toBe(true);
     expect(result.departmentsUpserted).toBe(1);
     expect(result.jobsUpserted).toBe(1);
@@ -152,12 +184,12 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
     ]);
   });
 
-  it('should reject Excel file with missing additionalSalary header or shifted columns (Strict Header Guard)', async () => {
+  it('rejects Excel file with missing additionalSalary header or shifted columns', async () => {
+    // Arrange
     const ExcelJS = (await import('exceljs')).default;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('دليل الأقسام والوظائف');
 
-    // Legacy columns missing additionalSalary
     worksheet.columns = [
       { header: 'كود القسم *', key: 'deptCode', width: 16 },
       { header: 'اسم القسم الوظيفي *', key: 'deptName', width: 28 },
@@ -186,16 +218,19 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
     const mockRepo = {
       importMatrixRowsAtomic: vi.fn(),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const result = await service.parseAndImportExcel(buffer);
 
+    // Assert
     expect(result.success).toBe(false);
     expect(result.errors[0]).toContain('عناوين أعمدة ملف الإكسيل غير مطابقة للقالب الرسمي المعتمد');
     expect(mockRepo.importMatrixRowsAtomic).not.toHaveBeenCalled();
   });
 
-  it('should reject rows with workDays > 60 or restDays > 30 (Sanity Range Guard)', async () => {
+  it('rejects rows with out of bounds workDays or restDays', async () => {
+    // Arrange
     const ExcelJS = (await import('exceljs')).default;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('دليل الأقسام والوظائف');
@@ -212,7 +247,6 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
       { header: 'حد كفاية الموقع', key: 'minHeadcount', width: 18 },
     ];
 
-    // Corrupted row with workDays = 3000
     worksheet.addRow({
       deptCode: 'OP',
       deptName: 'إدارة التشغيل',
@@ -231,30 +265,36 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
     const mockRepo = {
       importMatrixRowsAtomic: vi.fn(),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const result = await service.parseAndImportExcel(buffer);
 
+    // Assert
     expect(result.success).toBe(false);
     expect(result.errors.some((e) => e.includes('أيام العمل غير منطقية'))).toBe(true);
     expect(mockRepo.importMatrixRowsAtomic).not.toHaveBeenCalled();
   });
 
-  it('should handle corrupt or invalid buffer gracefully', async () => {
+  it('handles corrupt or non-excel buffer gracefully', async () => {
+    // Arrange
     const corruptBuffer = Buffer.from('not an excel file');
     const mockRepo = {
       importMatrixRowsAtomic: vi.fn(),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const result = await service.parseAndImportExcel(corruptBuffer);
 
+    // Assert
     expect(result.success).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
     expect(mockRepo.importMatrixRowsAtomic).not.toHaveBeenCalled();
   });
 
-  it('should delegate updateJobBaseSalaryWithPolicy and updateJobAdditionalSalaryWithPolicy correctly', async () => {
+  it('delegates base and additional salary updates with policy correctly', async () => {
+    // Arrange
     const mockRepo = {
       updateJobBaseSalaryWithPolicy: vi.fn().mockResolvedValue({
         affectedWorkers: [{ id: 'w-1', code: 'OP-01', name: 'عامل 1', telegramId: BigInt(123) }],
@@ -265,29 +305,33 @@ describe('Flow 00.3 Unit Tests — JobMatrix', () => {
         job: sampleJob,
       }),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
 
+    // Act
     const resBase = await service.updateJobBaseSalaryWithPolicy('j-1', 14000, 'ALL_ACTIVE_WORKERS', BigInt(999));
+    const resAdd = await service.updateJobAdditionalSalaryWithPolicy('j-1', 4000, 'NEW_HIRES_ONLY', BigInt(999));
+
+    // Assert
     expect(mockRepo.updateJobBaseSalaryWithPolicy).toHaveBeenCalledWith('j-1', 14000, 'ALL_ACTIVE_WORKERS', BigInt(999));
     expect(resBase.affectedWorkers).toHaveLength(1);
-
-    const resAdd = await service.updateJobAdditionalSalaryWithPolicy('j-1', 4000, 'NEW_HIRES_ONLY', BigInt(999));
     expect(mockRepo.updateJobAdditionalSalaryWithPolicy).toHaveBeenCalledWith('j-1', 4000, 'NEW_HIRES_ONLY', BigInt(999));
     expect(resAdd.affectedWorkers).toHaveLength(0);
   });
 
-  it('should delegate updateJobCycleWithPolicy correctly', async () => {
+  it('delegates shift cycle policy updates correctly', async () => {
+    // Arrange
     const mockRepo = {
       updateJobCycleWithPolicy: vi.fn().mockResolvedValue({
         affectedWorkersCount: 4,
         job: sampleJob,
       }),
     } as unknown as JobMatrixRepository;
-
     const service = new JobMatrixService(mockRepo);
+
+    // Act
     const res = await service.updateJobCycleWithPolicy('j-1', 24, 6, 'NEXT_CYCLE', BigInt(888));
 
+    // Assert
     expect(mockRepo.updateJobCycleWithPolicy).toHaveBeenCalledWith('j-1', 24, 6, 'NEXT_CYCLE', BigInt(888));
     expect(res.affectedWorkersCount).toBe(4);
   });

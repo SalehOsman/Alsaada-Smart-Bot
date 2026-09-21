@@ -1,24 +1,43 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ApmTelemetryHandler } from '../flow.handler.js';
 import type { ApmTelemetryService } from '../flow.service.js';
 import type { SettingsModuleContext } from '../../../shared/module.types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Flow 00.8 RBAC Tests — رادار الأداء ومراقبة الخدمات', () => {
-  const mockService = {
-    clearPendingEdit: vi.fn().mockResolvedValue(undefined),
-    clearWizardState: vi.fn().mockResolvedValue(undefined),
-    clearEditState: vi.fn().mockResolvedValue(undefined),
-    getProfile: vi.fn().mockResolvedValue(null),
-    listSites: vi.fn().mockResolvedValue([]),
-    listDepartments: vi.fn().mockResolvedValue([]),
-    listAdminUsers: vi.fn().mockResolvedValue([]),
-    getApmSummary: vi.fn().mockResolvedValue({ totalOps24h: 0, avgLatencyMs: 0, greenPct: 100, yellowPct: 0, redPct: 0 }),
-    getMaintenanceStatus: vi.fn().mockResolvedValue({ isMaintenanceActive: false }),
-  } as unknown as ApmTelemetryService;
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
 
-  const handler = new ApmTelemetryHandler(mockService);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
-  it('should deny or alert non-super admin users', async () => {
+  const createMockService = (): ApmTelemetryService =>
+    ({
+      clearPendingEdit: vi.fn().mockResolvedValue(undefined),
+      clearWizardState: vi.fn().mockResolvedValue(undefined),
+      clearEditState: vi.fn().mockResolvedValue(undefined),
+      getProfile: vi.fn().mockResolvedValue(null),
+      listSites: vi.fn().mockResolvedValue([]),
+      listDepartments: vi.fn().mockResolvedValue([]),
+      listAdminUsers: vi.fn().mockResolvedValue([]),
+      getApmSummary: vi.fn().mockResolvedValue({ totalOps24h: 0, avgLatencyMs: 0, greenPct: 100, yellowPct: 0, redPct: 0 }),
+      getMaintenanceStatus: vi.fn().mockResolvedValue({ isMaintenanceActive: false }),
+    } as unknown as ApmTelemetryService);
+
+  it('denies worker role attempting APM dashboard access', async () => {
+    // Arrange
+    const service = createMockService();
+    const handler = new ApmTelemetryHandler(service);
     const replyMock = vi.fn().mockResolvedValue({});
     const answerCallbackMock = vi.fn().mockResolvedValue(true);
     const ctxWorker = {
@@ -29,12 +48,18 @@ describe('Flow 00.8 RBAC Tests — رادار الأداء ومراقبة الخ
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
     await handler.renderApmDashboard(ctxWorker);
+
+    // Assert
     expect(replyMock).not.toHaveBeenCalled();
     expect(answerCallbackMock).not.toHaveBeenCalled();
   });
 
-  it('should allow access for verified Super Admin', async () => {
+  it('authorizes verified Super Admin access unconditionally', async () => {
+    // Arrange
+    const service = createMockService();
+    const handler = new ApmTelemetryHandler(service);
     const replyMock = vi.fn().mockResolvedValue({});
     const ctxSuper = {
       isRealSuperAdmin: true,
@@ -43,7 +68,10 @@ describe('Flow 00.8 RBAC Tests — رادار الأداء ومراقبة الخ
       from: { id: 7594239391 },
     } as unknown as SettingsModuleContext;
 
+    // Act
     await handler.renderApmDashboard(ctxSuper);
+
+    // Assert
     expect(replyMock).toHaveBeenCalledWith(
       expect.stringContaining('رادار قياس الأداء والسرعة الفائقة'),
       expect.objectContaining({})

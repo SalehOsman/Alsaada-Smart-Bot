@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { extractFirstTwoNames } from '@alsaada/regional-engine';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { extractFirstTwoNames, parseFlexibleDate } from '@alsaada/regional-engine';
 import { workerService, setWorkforcePrisma } from '@alsaada/workforce';
 import { prisma } from '../src/db.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 vi.mock('../src/db.js', () => {
   const mockPrisma: any = {
@@ -50,42 +52,80 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 
 describe('Worker Full 19-Step Wizard & Compound Nickname Engine', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     setWorkforcePrisma(prisma);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('Compound Name & Auto-Nickname Engine', () => {
-    it('should correctly handle compound prefix (عبد الله محمد محمود -> عبد الله محمد)', () => {
-      const nick = extractFirstTwoNames('عبد الله محمد محمود خليل');
+    it('correctly handles compound prefix such as Abd-Allah', () => {
+      // Arrange
+      const fullName = 'عبد الله محمد محمود خليل';
+
+      // Act
+      const nick = extractFirstTwoNames(fullName);
+
+      // Assert
       expect(nick).toBe('عبد الله محمد');
+      expect(nick).not.toBe('عبد الله');
     });
 
-    it('should correctly handle compound suffix (أحمد نور الدين علي إبراهيم -> أحمد نور الدين)', () => {
-      const nick = extractFirstTwoNames('أحمد نور الدين علي إبراهيم');
+    it('correctly handles compound suffix such as Nour-el-Din', () => {
+      // Arrange
+      const fullName = 'أحمد نور الدين علي إبراهيم';
+
+      // Act
+      const nick = extractFirstTwoNames(fullName);
+
+      // Assert
       expect(nick).toBe('أحمد نور الدين');
+      expect(nick).not.toBe('أحمد نور');
     });
 
-    it('should correctly handle standard two names (محمود حسن علي سالم -> محمود حسن)', () => {
-      const nick = extractFirstTwoNames('محمود حسن علي سالم');
+    it('correctly handles standard two names', () => {
+      // Arrange
+      const fullName = 'محمود حسن علي سالم';
+
+      // Act
+      const nick = extractFirstTwoNames(fullName);
+
+      // Assert
       expect(nick).toBe('محمود حسن');
+      expect(nick).not.toBe('محمود');
     });
 
-    it('should handle Abu/Umm prefixes (أبو بكر سالم محمد -> أبو بكر سالم)', () => {
-      const nick = extractFirstTwoNames('أبو بكر سالم محمد');
+    it('handles Abu and Umm prefixes cleanly', () => {
+      // Arrange
+      const fullName = 'أبو بكر سالم محمد';
+
+      // Act
+      const nick = extractFirstTwoNames(fullName);
+
+      // Assert
       expect(nick).toBe('أبو بكر سالم');
+      expect(nick).not.toBe('أبو بكر');
     });
   });
 
   describe('Worker Service Registration with Legacy Fields', () => {
-    it('should persist all legacy fields and add nickname to aliases', async () => {
-      const { worker, welcomeWhatsAppUrl } = await workerService.createWorker({
+    it('persists all legacy fields and adds nickname to aliases', async () => {
+      // Arrange
+      const newWorkerData = {
         name: 'عبد الرحمن علي محمود السيد',
         nickname: 'عبد الرحمن علي',
         legacyCode: '106',
-        idType: 'NATIONAL_ID',
+        idType: 'NATIONAL_ID' as const,
         idNumber: '29205150101234',
         nationality: 'مصر',
-        birthDate: new Date('1992-05-15'),
-        gender: 'MALE',
+        birthDate: new Date('1992-05-15T00:00:00.000Z'),
+        gender: 'MALE' as const,
         phone: '01012345678',
         emergencyPhone: '01298765432',
         drivingLicense: 'مهنية درجة أولى',
@@ -96,13 +136,18 @@ describe('Worker Full 19-Step Wizard & Compound Nickname Engine', () => {
         idCardBackPath: 'file_back_456',
         jobTitleId: 'job-1',
         siteId: 'site-1',
-        paymentMethod: 'CASH_SITE',
+        paymentMethod: 'CASH_SITE' as const,
         walletType: 'نقدي / كاش',
         walletNumber: '-',
-      });
+      };
 
+      // Act
+      const { worker, welcomeWhatsAppUrl } = await workerService.createWorker(newWorkerData);
+
+      // Assert
       expect(worker).toBeDefined();
       expect(worker.name).toBe('عبد الرحمن علي محمود السيد');
+      expect(worker.name).not.toBe('');
       expect(worker.nickname).toBe('عبد الرحمن علي');
       expect(worker.aliases).toContain('عبد الرحمن علي');
       expect(worker.aliases).toContain('106');
@@ -115,43 +160,51 @@ describe('Worker Full 19-Step Wizard & Compound Nickname Engine', () => {
   });
 
   describe('Worker Start Date Options & Flexible Manual Input', () => {
-    it('should generate accurate quick date options for today, yesterday, and day before yesterday', () => {
-      const today = new Date();
+    it('generates accurate quick date options for today, yesterday, and day before yesterday', () => {
+      // Arrange
+      const today = PINNED_BASE_TIME;
       const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
       const dayBefore = new Date(today.getTime() - 48 * 60 * 60 * 1000);
 
+      // Act
       const todayStr = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
       const yesterdayStr = `${String(yesterday.getDate()).padStart(2, '0')}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${yesterday.getFullYear()}`;
       const dayBeforeStr = `${String(dayBefore.getDate()).padStart(2, '0')}-${String(dayBefore.getMonth() + 1).padStart(2, '0')}-${dayBefore.getFullYear()}`;
 
-      expect(todayStr).toMatch(/^\d{2}-\d{2}-\d{4}$/);
-      expect(yesterdayStr).toMatch(/^\d{2}-\d{2}-\d{4}$/);
-      expect(dayBeforeStr).toMatch(/^\d{2}-\d{2}-\d{4}$/);
+      // Assert
+      expect(todayStr).toBe('21-09-2026');
+      expect(yesterdayStr).toBe('20-09-2026');
+      expect(dayBeforeStr).toBe('19-09-2026');
+      expect(todayStr).not.toBe(yesterdayStr);
     });
 
-    it('should accurately parse various manual date formats using parseFlexibleDate', async () => {
-      const { parseFlexibleDate } = await import('@alsaada/regional-engine');
+    it('accurately parses various manual date formats using parseFlexibleDate', () => {
+      // Arrange
+      const validDate1 = '08-09-2026';
+      const validDate2 = '2026-09-08';
+      const validDate3 = '8/9/2026';
+      const validDate4 = '٢٠٢٦/٠٩/٠٨';
+      const invalidDate = 'تاريخ غير صحيح';
 
-      const d1 = parseFlexibleDate('08-09-2026');
+      // Act
+      const d1 = parseFlexibleDate(validDate1);
+      const d2 = parseFlexibleDate(validDate2);
+      const d3 = parseFlexibleDate(validDate3);
+      const d4 = parseFlexibleDate(validDate4);
+      const invalid = parseFlexibleDate(invalidDate);
+
+      // Assert
       expect(d1.isValid).toBe(true);
       expect(d1.formattedDMY).toBe('08-09-2026');
-
-      const d2 = parseFlexibleDate('2026-09-08');
       expect(d2.isValid).toBe(true);
       expect(d2.formattedDMY).toBe('08-09-2026');
-
-      const d3 = parseFlexibleDate('8/9/2026');
       expect(d3.isValid).toBe(true);
       expect(d3.formattedDMY).toBe('08-09-2026');
-
-      const d4 = parseFlexibleDate('٢٠٢٦/٠٩/٠٨');
       expect(d4.isValid).toBe(true);
       expect(d4.formattedDMY).toBe('08-09-2026');
-
-      const invalid = parseFlexibleDate('تاريخ غير صحيح');
       expect(invalid.isValid).toBe(false);
+      expect(invalid.isValid).not.toBe(true);
       expect(invalid.error).toBeDefined();
     });
   });
 });
-

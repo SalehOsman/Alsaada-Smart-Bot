@@ -39,12 +39,14 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 ### 6. Cryptographic Immutability Engine (`governance.lock.json`)
 1. **Unified Lock Engine:** Monorepo entities are locked via `pnpm lock <target>` (`tools/governance/unified-lock-engine.ts`) with SHA-256 hashes in `governance.lock.json`.
 2. **Absolute Zero Blast Radius:** Unlocking one entity never touches other locked entities.
-3. **Mandatory Verbatim Approval Formulas (Strictly Untranslated):**
-   - Lock approval: **«نعم اقفل»**
-   - Unlock approval: **«موافق على الفتح»** or **«نعم موافق على التعديل»**
-   - Universal governance change / bypass: **«موافق على التعديل او الايقاف او الحذف»**
-4. **Strict Prohibition of Self-Authorization:** AI agents are strictly forbidden from generating or authoring approval formulas in evidence files or commit messages. Approval formulas must originate exclusively and verbatim from human chat input. Violations trigger an immediate `[REJECT]` verdict.
-5. **Pre-Edit Lock Inspection:** Before modifying any file, agents must verify that the file is not locked in `governance.lock.json`. Touching a locked file without prior authorized unlock execution (`pnpm unlock`) is a constitutional breach.
+3. **Mandatory Dynamic OTP Challenge-Response Protocol (Work Plan 90):**
+   - The `--phrase` CLI flag is **permanently abolished**. AI agents cannot pass approval phrases via CLI arguments.
+   - **Step 1 (Request):** Run `pnpm unlock:request <target> --reason="<justification>"`. A unique, cryptographically signed OTP nonce (`UNLOCK-XXXXXX`) is generated with a strict 300s (5-minute) TTL.
+   - **Step 2 (Hard Stop & Human Chat Authorization):** The agent MUST STOP immediately and request Saleh to send the approval in chat:
+     > **«موافق على الفتح <UNLOCK-XXXXXX>»** or **«نعم موافق على التعديل <UNLOCK-XXXXXX>»**
+   - **Step 3 (Forensic Confirmation):** Run `pnpm unlock:confirm <target>`. The engine forensically verifies physical provenance from `transcript.jsonl` ensuring the phrase and OTP nonce were issued strictly by `USER_EXPLICIT` (Saleh) and burns the OTP nonce (single-use anti-replay guard).
+4. **Strict Prohibition of Self-Authorization & Fraud Enforcement:** AI agents are strictly forbidden from generating, authoring, or simulating approval formulas or nonces. Any self-authorization attempt triggers an immediate `[REJECT]` verdict, exits code 1, and logs a forensic incident.
+5. **Pre-Edit Lock Inspection:** Before modifying any file, agents must verify that the file is not locked in `governance.lock.json`. Touching a locked file without prior authorized unlock execution (`pnpm unlock:confirm`) is a constitutional breach.
 
 ### 7. Code Defect Lifecycle, 5-Pillar RCA & Regression Guarantee
 1. **Hard Stop on Test Failures:** If a test reveals a bug in source code (`src/`), direct modification is prohibited.

@@ -45,7 +45,45 @@ export function verifyAiCompliance(root = process.cwd(), options: AiComplianceOp
   if (requireEvidence && evidenceFiles.length === 0) fail(result, 'No AI execution evidence files found');
 
   for (const file of evidenceFiles) {
+    const base = file.replace(/\\/g, '/').split('/').pop() ?? '';
     const text = readUtf8(file);
+
+    // Anti-Self-Authorization Check for Unlock Evidence (Work Plan 90)
+    if (/^\d{4}-\d{2}-\d{2}-unlock-/.test(base)) {
+      const dateMatch = base.match(/^(\d{4}-\d{2}-\d{2})/);
+      const dateStr = dateMatch?.[1] ?? '';
+      if (dateStr >= '2026-09-21') {
+        const hasOtpNonce = /رمز التحدي|OTP Nonce|UNLOCK-[A-F0-9]+/i.test(text);
+        const hasHumanProvenance = /USER_EXPLICIT|مصدر الاعتماد|التحقق الجنائي/i.test(text);
+        if (!hasOtpNonce || !hasHumanProvenance) {
+          fail(
+            result,
+            `Unlock evidence [${base}] lacks human OTP challenge provenance (Work Plan 90 violation).`
+          );
+        }
+      }
+      continue;
+    }
+
+    // Exclude non-gate documentation: lock receipts, authorization records, release notes, walkthroughs, audits, inventories, plans, and assessments
+    const isExcludedDoc =
+      /^\d{4}-\d{2}-\d{2}-lock-/.test(base) ||
+      /^\d{4}-\d{2}-\d{2}-unlock-/.test(base) ||
+      base.includes('walkthrough') ||
+      base.includes('authorized') ||
+      base.includes('release-scripts') ||
+      base.includes('audit') ||
+      base.includes('inventory') ||
+      base.includes('assessment') ||
+      base.includes('dashboard-') ||
+      base.includes('report') ||
+      base.includes('plan-') ||
+      base.startsWith('p00-');
+
+    if (isExcludedDoc) {
+      continue;
+    }
+
     const mustProve = claimsPass(text);
     if (!mustProve) continue;
 

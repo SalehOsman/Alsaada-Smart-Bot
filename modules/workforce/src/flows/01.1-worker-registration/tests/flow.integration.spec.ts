@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerRegistrationService } from '../flow.service.js';
 import { WorkerRegistrationRepository } from '../flow.repository.js';
 import { WorkerRegistrationMessages } from '../flow.messages.js';
@@ -6,7 +6,24 @@ import { WorkerWizardStep } from '../flow.types.js';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', () => {
-  it('should atomically persist worker, audit log, and outbox event upon registration', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('atomically persists worker, audit log, and outbox event upon registration', async () => {
+    // Arrange
     const createdWorkerMock = {
       id: 'worker-uuid-1',
       code: 'OP-DRV-001',
@@ -53,6 +70,7 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     const repo = new WorkerRegistrationRepository(mockPrisma);
     const service = new WorkerRegistrationService(repo);
 
+    // Act
     const result = await service.registerWorker(
       {
         name: 'محمود علي إبراهيم',
@@ -67,13 +85,15 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
       'FIELD_ADMIN'
     );
 
+    // Assert
     expect(result.code).toBe('OP-DRV-001');
     expect(result.name).toBe('محمود علي إبراهيم');
     expect(auditLogCreated).toBe(true);
     expect(outboxCreated).toBe(true);
   });
 
-  it('should block duplicate registrations when an existing worker shares the same national ID', async () => {
+  it('blocks duplicate registrations when an existing worker shares the same national ID', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findFirst: vi.fn().mockResolvedValue({
@@ -89,18 +109,22 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     const repo = new WorkerRegistrationRepository(mockPrisma);
     const service = new WorkerRegistrationService(repo);
 
-    await expect(
-      service.registerWorker({
-        name: 'سعيد عبد الله الجديد',
-        idType: 'NATIONAL_ID',
-        idNumber: '29001012701234',
-        phone: '01012345678',
-        jobTitleName: 'سائق',
-      })
-    ).rejects.toThrow(/تعارض/);
+    // Act & Assert
+    // Act
+    const registrationPromise = service.registerWorker({
+      name: 'سعيد عبد الله الجديد',
+      idType: 'NATIONAL_ID',
+      idNumber: '29001012701234',
+      phone: '01012345678',
+      jobTitleName: 'سائق',
+    });
+
+    // Assert
+    await expect(registrationPromise).rejects.toThrow(/تعارض/);
   });
 
-  it('should persist additionalSalary, default contractType to PERMANENT, and calculate dailyWage internally', async () => {
+  it('persists additionalSalary, default contractType to PERMANENT, and calculates dailyWage internally', async () => {
+    // Arrange
     let workerCreateData: Record<string, unknown> | null = null;
     let salaryHistoryData: Record<string, unknown> | null = null;
 
@@ -143,6 +167,7 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     const repo = new WorkerRegistrationRepository(mockPrisma);
     const service = new WorkerRegistrationService(repo);
 
+    // Act
     await service.registerWorker(
       {
         name: 'حسن إبراهيم علي',
@@ -159,6 +184,7 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
       'SUPER_ADMIN'
     );
 
+    // Assert
     expect(workerCreateData).not.toBeNull();
     if (!workerCreateData || !salaryHistoryData) throw new Error('Expected mock data to be defined');
     const wData = workerCreateData;
@@ -174,7 +200,8 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     expect(Number(sData['newGrossSalary'])).toBe(9000);
   });
 
-  it('should detect duplicate phone or wallet number via blind index', async () => {
+  it('detects duplicate phone or wallet number via blind index', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findFirst: vi.fn().mockResolvedValue({
@@ -190,13 +217,17 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     const repo = new WorkerRegistrationRepository(mockPrisma);
     const service = new WorkerRegistrationService(repo);
 
+    // Act
     const check = await service.checkPhoneOrWalletDuplicate('01012345678');
+
+    // Assert
     expect(check.isDuplicate).toBe(true);
     expect(check.existingWorker?.code).toBe('OP-HLP-010');
     expect(check.existingWorker?.name).toBe('سمير خليل');
   });
 
-  it('should detect duplicate phone or wallet number with +20 and 20 prefix normalization', async () => {
+  it('detects duplicate phone or wallet number with +20 and 20 prefix normalization', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findFirst: vi.fn().mockResolvedValue({
@@ -212,19 +243,22 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     const repo = new WorkerRegistrationRepository(mockPrisma);
     const service = new WorkerRegistrationService(repo);
 
+    // Act
     const checkWithPlus = await service.checkPhoneOrWalletDuplicate('+201012345678');
-    expect(checkWithPlus.isDuplicate).toBe(true);
-
     const checkWith20 = await service.checkPhoneOrWalletDuplicate('201012345678');
+
+    // Assert
+    expect(checkWithPlus.isDuplicate).toBe(true);
     expect(checkWith20.isDuplicate).toBe(true);
   });
 
-  it('should render confirmation card with basic and additional salary while strictly hiding dailyWage and translating payoutMethod', () => {
-    const card = WorkerRegistrationMessages.confirmationCard({
+  it('renders confirmation card with basic and additional salary while strictly hiding dailyWage and translating payoutMethod', () => {
+    // Arrange
+    const state = {
       currentStep: WorkerWizardStep.CONFIRMATION,
       name: 'أحمد سعيد منصور',
       nickname: 'أحمد سعيد',
-      idType: 'NATIONAL_ID',
+      idType: 'NATIONAL_ID' as const,
       idNumber: '29001012701234',
       phone: '01012345678',
       jobTitleName: 'مشغل كسارة',
@@ -235,8 +269,13 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
       additionalSalary: 2500,
       paymentMethod: 'VODAFONE_CASH',
       accountNumber: '01012345678',
-    }, 'SUPER_ADMIN');
+    };
 
+    // Act
+    const card = WorkerRegistrationMessages.confirmationCard(state, 'SUPER_ADMIN');
+    const maskedCard = WorkerRegistrationMessages.confirmationCard(state, 'FIELD_ADMIN');
+
+    // Assert
     expect(card).toContain('الراتب الأساسي الشهري');
     expect(card).toContain('الراتب الإضافي الشهري');
     expect(card).toContain('إجمالي الراتب الشهري');
@@ -247,29 +286,13 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     expect(card).not.toContain('dailyWage');
 
     // Verify FIELD_ADMIN completely hides all 3 salary lines
-    const maskedCard = WorkerRegistrationMessages.confirmationCard({
-      currentStep: WorkerWizardStep.CONFIRMATION,
-      name: 'أحمد سعيد منصور',
-      nickname: 'أحمد سعيد',
-      idType: 'NATIONAL_ID',
-      idNumber: '29001012701234',
-      phone: '01012345678',
-      jobTitleName: 'مشغل كسارة',
-      siteName: 'موقع السباعية',
-      hireDate: '2026-09-15',
-      shiftSystem: '20 يوم عمل / 10 راحة',
-      basicSalary: 7500,
-      additionalSalary: 2500,
-      paymentMethod: 'VODAFONE_CASH',
-      accountNumber: '01012345678',
-    }, 'FIELD_ADMIN');
-
     expect(maskedCard).not.toContain('الراتب الأساسي الشهري');
     expect(maskedCard).not.toContain('الراتب الإضافي الشهري');
     expect(maskedCard).not.toContain('إجمالي الراتب الشهري');
   });
 
-  it('should successfully register foreign worker with passport, storing birthDate and gender atomically', async () => {
+  it('successfully registers foreign worker with passport, storing birthDate and gender atomically', async () => {
+    // Arrange
     let workerCreateData: Record<string, unknown> | null = null;
 
     const mockPrisma = {
@@ -308,6 +331,7 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     const repo = new WorkerRegistrationRepository(mockPrisma);
     const service = new WorkerRegistrationService(repo);
 
+    // Act
     const result = await service.registerWorker({
       name: 'جون دو سميث',
       idType: 'PASSPORT',
@@ -322,6 +346,7 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
       additionalSalary: 4000,
     });
 
+    // Assert
     expect(result.code).toBe('OP-ENG-001');
     expect(workerCreateData).not.toBeNull();
     if (!workerCreateData) throw new Error('Expected workerCreateData to be defined');
@@ -332,7 +357,8 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     expect(Number(wData['dailyWage'])).toBe(533.33);
   });
 
-  it('should save front and back ID photos to worker directory and create WorkerDocument records', async () => {
+  it('saves front and back ID photos to worker directory and creates WorkerDocument records', async () => {
+    // Arrange
     const createdDocuments: Record<string, unknown>[] = [];
     let workerCreateData: Record<string, unknown> | null = null;
 
@@ -374,6 +400,7 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     const frontBuffer = Buffer.from('fake-front-id-photo-data');
     const backBuffer = Buffer.from('fake-back-id-photo-data');
 
+    // Act
     const result = await service.registerWorker({
       name: 'سعيد عبد الله',
       idType: 'NATIONAL_ID',
@@ -386,6 +413,7 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
       backPhotoBuffer: backBuffer,
     });
 
+    // Assert
     expect(result.code).toBe('OP-DRV-001');
     expect(String(workerCreateData?.['idCardFrontPath'])).toContain('attachments/workers/OP-DRV-001/OP-DRV-001_front.jpg');
     expect(String(workerCreateData?.['idCardBackPath'])).toContain('attachments/workers/OP-DRV-001/OP-DRV-001_back.jpg');
@@ -396,4 +424,3 @@ describe('Flow 01.1 Integration Tests — Atomic Worker Registration & Outbox', 
     expect(createdDocuments[1]!['fileUri']).toBe(workerCreateData?.['idCardBackPath']);
   });
 });
-

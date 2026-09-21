@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerDirectoryHandler } from '../flow.handler.js';
 import { WorkerDirectoryService } from '../flow.service.js';
 import { WorkerDirectoryRepository } from '../flow.repository.js';
@@ -6,7 +6,24 @@ import type { WorkforceModuleContext } from '../../../shared/module.types.js';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('Flow 01.5 RBAC Tests — Directory Access Control', () => {
-  it('should block unauthorized roles such as GUEST and WORKER from viewing the directory', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('blocks unauthorized roles such as GUEST and WORKER from viewing the directory', async () => {
+    // Arrange
     const repo = new WorkerDirectoryRepository({} as PrismaClient);
     const service = new WorkerDirectoryService(repo);
     const handler = new WorkerDirectoryHandler(service);
@@ -28,12 +45,17 @@ describe('Flow 01.5 RBAC Tests — Directory Access Control', () => {
         }),
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleDirectory(mockCtx);
+
+      // Assert
       expect(blockedMessage).toBe(true);
+      expect(mockCtx.reply).not.toHaveBeenCalledWith(expect.stringContaining('دليل وسجل العاملين'));
     }
   });
 
-  it('should allow authorized roles to access the directory', async () => {
+  it('allows authorized roles to access the directory', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         count: vi.fn().mockResolvedValue(0),
@@ -59,7 +81,11 @@ describe('Flow 01.5 RBAC Tests — Directory Access Control', () => {
       }),
     } as unknown as WorkforceModuleContext;
 
+    // Act
     await handler.handleDirectory(mockCtx);
+
+    // Assert
     expect(directoryRendered).toBe(true);
+    expect(mockCtx.reply).not.toHaveBeenCalledWith(expect.stringContaining('لا تملك الصلاحية'));
   });
 });

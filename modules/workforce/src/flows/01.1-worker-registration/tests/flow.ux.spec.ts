@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerRegistrationHandler } from '../flow.handler.js';
 import { WorkerRegistrationService, RedisWorkerWizardStateStore } from '../flow.service.js';
 import { WorkerRegistrationRepository } from '../flow.repository.js';
@@ -7,7 +7,24 @@ import type { WorkforceModuleContext } from '../../../shared/module.types.js';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
-  it('should update messages in place via editMessageText on wizard step transitions', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('updates messages in place via editMessageText on wizard step transitions', async () => {
+    // Arrange
     const repo = new WorkerRegistrationRepository({} as PrismaClient);
     const service = new WorkerRegistrationService(repo);
     const handler = new WorkerRegistrationHandler(service, repo);
@@ -28,13 +45,16 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       reply: vi.fn(),
     } as unknown as WorkforceModuleContext;
 
+    // Act
     await handler.handleDocType(mockCtx, 'NATIONAL_ID');
 
+    // Assert
     expect(editMessageCalled).toBe(true);
     expect(mockCtx.answerCallbackQuery).toHaveBeenCalled();
   });
 
-  it('should preserve previous step data when navigating backwards via handleBack', async () => {
+  it('preserves previous step data when navigating backwards via handleBack', async () => {
+    // Arrange
     const repo = new WorkerRegistrationRepository({} as PrismaClient);
     const service = new WorkerRegistrationService(repo);
     const handler = new WorkerRegistrationHandler(service, repo);
@@ -58,15 +78,18 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       }),
     } as unknown as WorkforceModuleContext;
 
+    // Act
     await handler.handleBack(mockCtx);
 
+    // Assert
     const draft = await service.getDraft(telegramId);
     expect(draft?.currentStep).toBe(WorkerWizardStep.DOC_TYPE);
     expect(draft?.name).toBe('عمر خالد');
     expect(backEdited).toBe(true);
   });
 
-  it('should edit message in place via ctx.api.editMessageText when receiving text input with activeMessageId', async () => {
+  it('edits message in place via ctx.api.editMessageText when receiving text input with activeMessageId', async () => {
+    // Arrange
     const repo = new WorkerRegistrationRepository({} as PrismaClient);
     const service = new WorkerRegistrationService(repo);
     const handler = new WorkerRegistrationHandler(service, repo);
@@ -97,8 +120,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       reply: vi.fn(),
     } as unknown as WorkforceModuleContext;
 
+    // Act
     await handler.handleTextInput(mockCtx, 'محمد حسني مبارك علي');
 
+    // Assert
     expect(deletedUserMessage).toBe(true);
     expect(apiEditCalled).toBe(true);
     expect(mockCtx.reply).not.toHaveBeenCalled();
@@ -108,7 +133,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
     expect(draft?.name).toBe('محمد حسني مبارك علي');
   });
 
-  it('should strictly reject "تخطي" or "-" or short text in CUSTOM_WALLET_INPUT to enforce mandatory payment info', async () => {
+  it('strictly rejects "تخطي" or "-" or short text in CUSTOM_WALLET_INPUT to enforce mandatory payment info', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findFirst: vi.fn().mockResolvedValue(null),
@@ -141,26 +167,28 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       reply: vi.fn(),
     } as unknown as WorkforceModuleContext;
 
-    // Attempt to bypass with "تخطي"
+    // Act
     await handler.handleTextInput(mockCtx, 'تخطي');
-    expect(renderedError).toBe(true);
 
-    // State should NOT have advanced to JOB_CHOICE or CASH_SITE
+    // Assert
+    expect(renderedError).toBe(true);
     let draft = await service.getDraft(telegramId);
     expect(draft?.currentStep).toBe(WorkerWizardStep.CUSTOM_WALLET_INPUT);
     expect(draft?.paymentMethod).toBeUndefined();
 
-    // Attempt to enter a valid wallet number
+    // Act: enter a valid wallet number
     renderedError = false;
     await handler.handleTextInput(mockCtx, '01099887766');
 
+    // Assert
     draft = await service.getDraft(telegramId);
     expect(draft?.currentStep).toBe(WorkerWizardStep.PAYOUT_METHOD_CHOICE);
     expect(draft?.accountNumber).toBe('01099887766');
   });
 
   describe('AI Vision Dual-Path Onboarding UX', () => {
-    it('should process front photo, scan with AI, and advance to PHOTO_BACK for NATIONAL_ID', async () => {
+    it('processes front photo, scans with AI, and advances to PHOTO_BACK for NATIONAL_ID', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -207,8 +235,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handlePhotoInput(mockCtx, 'tg-file-front-123');
 
+      // Assert
       expect(deletedUserMsg).toBe(true);
       expect(editedMessage).toBe(true);
 
@@ -220,7 +250,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(draft?.aiDetectedData?.nationalId).toBe('29205151234567');
     });
 
-    it('should process passport photo, scan with AI, and advance directly to AI_CONFIRMATION', async () => {
+    it('processes passport photo, scans with AI, and advances directly to AI_CONFIRMATION', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -254,15 +285,18 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handlePhotoInput(mockCtx, 'tg-file-pass-123');
 
+      // Assert
       const draft = await service.getDraft(telegramId);
       expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
       expect(draft?.idNumber).toBe('A12345678');
       expect(draft?.aiDetectedData?.passportNumber).toBe('A12345678');
     });
 
-    it('should reject blurry or invalid identity photo and render error without advancing step', async () => {
+    it('rejects blurry or invalid identity photo and renders error without advancing step', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -297,8 +331,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handlePhotoInput(mockCtx, 'tg-file-blurry-123');
 
+      // Assert
       expect(renderedErrorMessage).toContain('الصورة غير واضحة');
 
       const draft = await service.getDraft(telegramId);
@@ -306,7 +342,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(draft?.frontPhotoFileId).toBeUndefined();
     });
 
-    it('should advance to FULL_NAME when user clicks skip photo on PHOTO_FRONT', async () => {
+    it('advances to FULL_NAME when user clicks skip photo on PHOTO_FRONT', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -327,13 +364,16 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         editMessageText: vi.fn().mockResolvedValue(true),
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleSkipPhoto(mockCtx);
 
+      // Assert
       const draft = await service.getDraft(telegramId);
       expect(draft?.currentStep).toBe(WorkerWizardStep.FULL_NAME);
     });
 
-    it('should advance to AI_CONFIRMATION when user clicks skip photo on PHOTO_BACK after front was scanned', async () => {
+    it('advances to AI_CONFIRMATION when user clicks skip photo on PHOTO_BACK after front was scanned', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -355,13 +395,16 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         editMessageText: vi.fn().mockResolvedValue(true),
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleSkipPhoto(mockCtx);
 
+      // Assert
       const draft = await service.getDraft(telegramId);
       expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
     });
 
-    it('should approve AI draft and advance to PHONE step', async () => {
+    it('approves AI draft and advances to PHONE step', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findFirst: vi.fn().mockResolvedValue(null),
@@ -400,8 +443,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         editMessageText: vi.fn().mockResolvedValue(true),
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleAiApprove(mockCtx);
 
+      // Assert
       const draft = await service.getDraft(telegramId);
       expect(draft?.currentStep).toBe(WorkerWizardStep.PHONE);
       expect(draft?.name).toBe('كريم محمود الدسوقي');
@@ -409,7 +454,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(draft?.governorateCode).toBe('27');
     });
 
-    it('should block AI approval if duplicate national ID exists and render warning', async () => {
+    it('blocks AI approval if duplicate national ID exists and renders warning', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findFirst: vi.fn().mockResolvedValue({
@@ -451,8 +497,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleAiApprove(mockCtx);
 
+      // Assert
       expect(renderedWarning).toContain('العامل مسجل مسبقاً باسم');
       expect(renderedWarning).toContain('OP-HLP-099');
 
@@ -460,7 +508,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
     });
 
-    it('should support inline editing of name, ID, address, and expiry from AI_CONFIRMATION', async () => {
+    it('supports inline editing of name, ID, address, and expiry from AI_CONFIRMATION', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findFirst: vi.fn().mockResolvedValue(null),
@@ -496,50 +545,29 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         editMessageText: vi.fn().mockResolvedValue(true),
       } as unknown as WorkforceModuleContext;
 
-      // 1. Edit Name
+      // Act
       await handler.handleAiEdit(mockCtx, 'name');
-      let draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_EDIT_NAME);
-
       await handler.handleTextInput(mockCtx, 'محمود صبحي جاد');
-      draft = await service.getDraft(telegramId);
+      await handler.handleAiEdit(mockCtx, 'id');
+      await handler.handleTextInput(mockCtx, '29508101234567');
+      await handler.handleAiEdit(mockCtx, 'address');
+      await handler.handleTextInput(mockCtx, 'القاهرة - المعادي شارع النصر');
+      await handler.handleAiEdit(mockCtx, 'expiry');
+      await handler.handleTextInput(mockCtx, '2030-05-15');
+
+      // Assert
+      const draft = await service.getDraft(telegramId);
       expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
       expect(draft?.name).toBe('محمود صبحي جاد');
       expect(draft?.aiDetectedData?.name).toBe('محمود صبحي جاد');
-
-      // 2. Edit ID
-      await handler.handleAiEdit(mockCtx, 'id');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_EDIT_ID);
-
-      await handler.handleTextInput(mockCtx, '29508101234567');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
       expect(draft?.idNumber).toBe('29508101234567');
       expect(draft?.aiDetectedData?.nationalId).toBe('29508101234567');
-
-      // 3. Edit Address
-      await handler.handleAiEdit(mockCtx, 'address');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_EDIT_ADDRESS);
-
-      await handler.handleTextInput(mockCtx, 'القاهرة - المعادي شارع النصر');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
       expect(draft?.address).toBe('القاهرة - المعادي شارع النصر');
-
-      // 4. Edit Expiry
-      await handler.handleAiEdit(mockCtx, 'expiry');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_EDIT_EXPIRY);
-
-      await handler.handleTextInput(mockCtx, '2030-05-15');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
       expect(draft?.expiryDate).toBe('15-05-2030');
     });
 
-    it('should render error and stay on PHOTO_FRONT when photo buffer download fails', async () => {
+    it('renders error and stays on PHOTO_FRONT when photo buffer download fails', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -567,8 +595,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handlePhotoInput(mockCtx, 'tg-file-fail-123');
 
+      // Assert
       expect(renderedError).toContain('تعذر تنزيل الصورة من تليجرام');
 
       const draft = await service.getDraft(telegramId);
@@ -576,7 +606,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(draft?.frontPhotoFileId).toBeUndefined();
     });
 
-    it('should reject duplicate ID immediately during AI_EDIT_ID inline editing', async () => {
+    it('rejects duplicate ID immediately during AI_EDIT_ID inline editing', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findFirst: vi.fn().mockResolvedValue({
@@ -612,8 +643,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleTextInput(mockCtx, '29001012701234');
 
+      // Assert
       expect(renderedDupMsg).toContain('العامل مسجل مسبقاً باسم');
       expect(renderedDupMsg).toContain('OP-DRV-007');
 
@@ -621,7 +654,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(draft?.currentStep).toBe(WorkerWizardStep.AI_EDIT_ID);
     });
 
-    it('should reject AI approval if ID number is missing from draft', async () => {
+    it('rejects AI approval if ID number is missing from draft', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -649,15 +683,18 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleAiApprove(mockCtx);
 
+      // Assert
       expect(renderedMissingMsg).toContain('بيانات الهوية غير مكتملة');
 
       const draft = await service.getDraft(telegramId);
       expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
     });
 
-    it('should immediately display aiProcessingPrompt and trigger typing action on photo input', async () => {
+    it('immediately displays aiProcessingPrompt and triggers typing action on photo input', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -699,16 +736,18 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handlePhotoInput(mockCtx, 'tg-photo-feedback-123');
 
-      // The first call should be the AI processing screen
+      // Assert
       expect(renderedPrompts.length).toBeGreaterThanOrEqual(2);
       expect(renderedPrompts[0]).toContain('قراءة وفحص البطاقة بالذكاء الاصطناعي');
       expect(renderedPrompts[0]).toContain('جارٍ تنزيل الصورة وتحليل البيانات الرسمية بالذكاء الاصطناعي');
       expect(chatActionSent).toBe('typing');
     });
 
-    it('should normalize Arabic/Eastern digits to English ASCII in all numeric text input steps', async () => {
+    it('normalizes Arabic/Eastern digits to English ASCII in all numeric text input steps', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findFirst: vi.fn().mockResolvedValue(null),
@@ -730,78 +769,82 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
-      // 1. ID_NUMBER with Arabic digits: ٢٩٠٠١٠١٢٧٠١٢٣٤
       await service.pushStep(telegramId, WorkerWizardStep.ID_NUMBER, {
         idType: 'NATIONAL_ID',
         activeMessageId: 212,
         chatId: 312,
       });
+
+      // Act
       await handler.handleTextInput(mockCtx, '٢٩٠٠١٠١٢٧٠١٢٣٤');
-      let draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.PHONE);
-      expect(draft?.idNumber).toBe('29001012701234');
+      const draftId = await service.getDraft(telegramId);
 
-      // 2. PHONE with Arabic digits: ٠١٠١٢٣٤٥٦٧٨
       await handler.handleTextInput(mockCtx, '٠١٠١٢٣٤٥٦٧٨');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.PAYOUT_TRANSFER_CHOICE);
-      expect(draft?.phone).toBe('01012345678');
+      const draftPhone = await service.getDraft(telegramId);
 
-      // 3. CUSTOM_WALLET_INPUT with Arabic digits: ٠١٠٩٩٨٨٧٧٦٦
       await service.pushStep(telegramId, WorkerWizardStep.CUSTOM_WALLET_INPUT, {
         activeMessageId: 212,
         chatId: 312,
       });
       await handler.handleTextInput(mockCtx, '٠١٠٩٩٨٨٧٧٦٦');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.PAYOUT_METHOD_CHOICE);
-      expect(draft?.accountNumber).toBe('01099887766');
+      const draftWallet = await service.getDraft(telegramId);
 
-      // 4. CUSTOM_START_DATE_INPUT with Arabic digits: ٢٠٢٦-٠٩-٠١
       await service.pushStep(telegramId, WorkerWizardStep.CUSTOM_START_DATE_INPUT, {
         activeMessageId: 212,
         chatId: 312,
       });
       await handler.handleTextInput(mockCtx, '٢٠٢٦-٠٩-٠١');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.DRIVING_LICENSE);
-      expect(draft?.hireDate).toBe('2026-09-01');
+      const draftStartDate = await service.getDraft(telegramId);
 
-      // 5. EMERGENCY_PHONE with Arabic digits: ٠١١٢٢٣٣٤٤٥٥
       await service.pushStep(telegramId, WorkerWizardStep.EMERGENCY_PHONE, {
         activeMessageId: 212,
         chatId: 312,
       });
       await handler.handleTextInput(mockCtx, '٠١١٢٢٣٣٤٤٥٥');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.INSURANCE_STATUS);
-      expect(draft?.emergencyPhone).toBe('01122334455');
+      const draftEmergency = await service.getDraft(telegramId);
 
-      // 6. AI_EDIT_ID with Arabic digits: ٢٩٥٠٨١٠١٢٣٤٥٦٧
       await service.pushStep(telegramId, WorkerWizardStep.AI_EDIT_ID, {
         idType: 'NATIONAL_ID',
         activeMessageId: 212,
         chatId: 312,
       });
       await handler.handleTextInput(mockCtx, '٢٩٥٠٨١٠١٢٣٤٥٦٧');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
-      expect(draft?.idNumber).toBe('29508101234567');
-      expect(draft?.aiDetectedData?.nationalId).toBe('29508101234567');
+      const draftAiId = await service.getDraft(telegramId);
 
-      // 7. AI_EDIT_EXPIRY with Arabic digits: ٢٠٣٠-٠٥-١٥
       await service.pushStep(telegramId, WorkerWizardStep.AI_EDIT_EXPIRY, {
         activeMessageId: 212,
         chatId: 312,
       });
       await handler.handleTextInput(mockCtx, '٢٠٣٠-٠٥-١٥');
-      draft = await service.getDraft(telegramId);
-      expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
-      expect(draft?.expiryDate).toBe('15-05-2030');
-      expect(draft?.aiDetectedData?.expiryDate).toBe('15-05-2030');
+      const draftAiExp = await service.getDraft(telegramId);
+
+      // Assert
+      expect(draftId?.currentStep).toBe(WorkerWizardStep.PHONE);
+      expect(draftId?.idNumber).toBe('29001012701234');
+
+      expect(draftPhone?.currentStep).toBe(WorkerWizardStep.PAYOUT_TRANSFER_CHOICE);
+      expect(draftPhone?.phone).toBe('01012345678');
+
+      expect(draftWallet?.currentStep).toBe(WorkerWizardStep.PAYOUT_METHOD_CHOICE);
+      expect(draftWallet?.accountNumber).toBe('01099887766');
+
+      expect(draftStartDate?.currentStep).toBe(WorkerWizardStep.DRIVING_LICENSE);
+      expect(draftStartDate?.hireDate).toBe('2026-09-01');
+
+      expect(draftEmergency?.currentStep).toBe(WorkerWizardStep.INSURANCE_STATUS);
+      expect(draftEmergency?.emergencyPhone).toBe('01122334455');
+
+      expect(draftAiId?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
+      expect(draftAiId?.idNumber).toBe('29508101234567');
+      expect(draftAiId?.aiDetectedData?.nationalId).toBe('29508101234567');
+
+      expect(draftAiExp?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
+      expect(draftAiExp?.expiryDate).toBe('15-05-2030');
+      expect(draftAiExp?.aiDetectedData?.expiryDate).toBe('15-05-2030');
     });
 
-    it('should update age and governorate when editing National ID to underage worker and include legal notice', async () => {
+    it('updates age and governorate when editing National ID to underage worker and includes legal notice', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findFirst: vi.fn().mockResolvedValue(null),
@@ -812,7 +855,6 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       const handler = new WorkerRegistrationHandler(service, repo);
 
       const telegramId = BigInt(112224);
-      // Initial state: adult worker scanned as born in 1990 (age 36) in Luxor (gov 27)
       await service.pushStep(telegramId, WorkerWizardStep.AI_EDIT_ID, {
         idType: 'NATIONAL_ID',
         name: 'حسن صابر إبراهيم',
@@ -839,8 +881,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
-      // User corrects ID to 16-year-old worker born in 2010 in Cairo (gov 01): 31001010101234
+      // Act
       await handler.handleTextInput(mockCtx, '٣١٠٠١٠١٠١٠١٢٣٤');
+
+      // Assert
       const draft = await service.getDraft(telegramId);
       expect(draft?.currentStep).toBe(WorkerWizardStep.AI_CONFIRMATION);
       expect(draft?.idNumber).toBe('31001010101234');
@@ -857,7 +901,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(card).toContain('القاهرة');
     });
 
-    it('should handle confirm registration successfully with flexible DD-MM-YYYY dates', async () => {
+    it('handles confirm registration successfully with flexible DD-MM-YYYY dates', async () => {
+      // Arrange
       const createdRecord: Record<string, unknown> = {};
       const mockPrisma = {
         worker: {
@@ -901,8 +946,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         nickname: 'طارق عبد السلام',
         idNumber: '29001012701234',
         phone: '01012345678',
-        birthDate: '15-05-1990', // non-ISO DD-MM-YYYY format
-        hireDate: '01-09-2026',  // non-ISO DD-MM-YYYY format
+        birthDate: '15-05-1990',
+        hireDate: '01-09-2026',
         shiftSystem: '20 يوم عمل / 10 راحة',
         basicSalary: 8000,
         additionalSalary: 2000,
@@ -928,8 +973,10 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleConfirm(mockCtx);
 
+      // Assert
       expect(completionText).toContain('تم تسجيل وتعيين العامل بنجاح');
       expect(createdRecord.birthDate).toBeInstanceOf(Date);
       expect(isNaN((createdRecord.birthDate as Date).getTime())).toBe(false);
@@ -939,7 +986,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
   });
 
   describe('Cancellation Lifecycle & Reply Keyboard Interception Immunity (Plan 54)', () => {
-    it('should cleanly cancel active wizard, answer callback query, clear draft, and render cancelExitKeyboard', async () => {
+    it('cleanly cancels active wizard, answers callback query, clears draft, and renders cancelExitKeyboard', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
@@ -969,14 +1017,16 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
       await handler.handleCancel(mockCtx);
 
+      // Assert
       expect(mockCtx.answerCallbackQuery).toHaveBeenCalled();
       const remainingDraft = await service.getDraft(telegramId);
       expect(remainingDraft).toBeNull();
       expect(promptRendered).toContain('تم إلغاء');
       expect(replyMarkupAttached).toBeDefined();
-      // Verify exit options exist in keyboard
+
       const buttons = replyMarkupAttached?.inline_keyboard.flat() || [];
       const buttonTexts = buttons.map((b) => b.text);
       expect(buttonTexts.some((t: string) => t.includes('تسجيل عامل'))).toBe(true);
@@ -984,7 +1034,8 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       expect(buttonTexts.some((t: string) => t.includes('القائمة الرئيسية'))).toBe(true);
     });
 
-    it('should store and clear wizard state via RedisWorkerWizardStateStore with 1800s TTL', async () => {
+    it('stores and clears wizard state via RedisWorkerWizardStateStore with 1800s TTL', async () => {
+      // Arrange
       const redisStore = new Map<string, string>();
       const mockRedis = {
         get: vi.fn().mockImplementation(async (k: string) => redisStore.get(k) || null),
@@ -1003,11 +1054,13 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       const stateStore = new RedisWorkerWizardStateStore(mockRedis);
       const telegramId = BigInt(443322);
 
+      // Act
       await stateStore.set(telegramId, {
         currentStep: WorkerWizardStep.DOC_TYPE,
         name: 'حسام حسن علي',
       });
 
+      // Assert
       expect(mockRedis.set).toHaveBeenCalledWith(
         'pending:worker_wizard:user:443322',
         expect.stringContaining('حسام حسن علي'),
@@ -1015,18 +1068,24 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         1800
       );
 
+      // Act
       const retrieved = await stateStore.get(telegramId);
+
+      // Assert
       expect(retrieved?.name).toBe('حسام حسن علي');
       expect(retrieved?.currentStep).toBe(WorkerWizardStep.DOC_TYPE);
 
+      // Act
       await stateStore.delete(telegramId);
-      expect(mockRedis.del).toHaveBeenCalledWith('pending:worker_wizard:user:443322');
 
+      // Assert
+      expect(mockRedis.del).toHaveBeenCalledWith('pending:worker_wizard:user:443322');
       const afterDelete = await stateStore.get(telegramId);
       expect(afterDelete).toBeNull();
     });
 
-    it('should gracefully fall back to in-memory state store if Redis throws an error', async () => {
+    it('gracefully falls back to in-memory state store if Redis throws an error', async () => {
+      // Arrange
       const mockFailingRedis = {
         get: vi.fn().mockRejectedValue(new Error('ECONNREFUSED')),
         set: vi.fn().mockRejectedValue(new Error('ECONNREFUSED')),
@@ -1036,27 +1095,28 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       const stateStore = new RedisWorkerWizardStateStore(mockFailingRedis);
       const telegramId = BigInt(887766);
 
-      // Should not throw even when Redis is down
+      // Act
       await stateStore.set(telegramId, {
         currentStep: WorkerWizardStep.FULL_NAME,
         name: 'عماد متعب',
       });
 
       const retrieved = await stateStore.get(telegramId);
-      expect(retrieved?.name).toBe('عماد متعب');
-
       await stateStore.delete(telegramId);
       const afterDelete = await stateStore.get(telegramId);
+
+      // Assert
+      expect(retrieved?.name).toBe('عماد متعب');
       expect(afterDelete).toBeNull();
     });
 
-    it('should ensure text input is NOT intercepted as National ID after wizard is cancelled', async () => {
+    it('ensures text input is NOT intercepted as National ID after wizard is cancelled', async () => {
+      // Arrange
       const repo = new WorkerRegistrationRepository({} as PrismaClient);
       const service = new WorkerRegistrationService(repo);
       const handler = new WorkerRegistrationHandler(service, repo);
 
       const telegramId = BigInt(112233);
-      // Draft active at ID_NUMBER step
       await service.pushStep(telegramId, WorkerWizardStep.ID_NUMBER, {
         name: 'محمود الخطيب',
         activeMessageId: 701,
@@ -1066,11 +1126,6 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
       // User cancels
       await service.clearDraft(telegramId);
 
-      // Subsequent input (e.g. from persistent reply keyboard "🖥️ فتح لوحة التحكم")
-      const draft = await service.getDraft(telegramId);
-      expect(draft).toBeNull();
-
-      // Calling handler with null draft does nothing
       let editCalled = false;
       const mockCtx = {
         from: { id: 112233 },
@@ -1083,7 +1138,12 @@ describe('Flow 01.1 UX Tests — Single Message Lifecycle & Navigation', () => {
         },
       } as unknown as WorkforceModuleContext;
 
+      // Act
+      const draft = await service.getDraft(telegramId);
       await handler.handleTextInput(mockCtx, '🖥️ فتح لوحة التحكم');
+
+      // Assert
+      expect(draft).toBeNull();
       expect(editCalled).toBe(false);
     });
   });

@@ -56,6 +56,7 @@ export interface SalehAuditReport {
     testAuthenticity?: VerificationResult | undefined;
     fieldMasking?: VerificationResult | undefined;
     security?: VerificationResult | undefined;
+    unlockAudit?: VerificationResult | undefined;
   };
   presentationFindings: PresentationFinding[];
   summary: {
@@ -442,6 +443,51 @@ export function auditPresentationCompliance(root: string = process.cwd()): {
 }
 
 // ============================================================================
+// 1.5. Unlock Audit & Anti-Self-Authorization Provenance Sentinel (WP 90)
+// ============================================================================
+
+export function verifyUnlockAuditProvenance(root = process.cwd()): VerificationResult {
+  const result = createResult();
+  const evidenceDir = join(root, 'docs', 'ai-execution-evidence');
+  if (!existsSync(evidenceDir)) return result;
+
+  const files = readdirSync(evidenceDir)
+    .filter((f) => f.endsWith('.md') && f.toLowerCase() !== 'readme.md')
+    .map((f) => join(evidenceDir, f));
+
+  const unlockFiles = files.filter((f) => {
+    const base = f.replace(/\\/g, '/').split('/').pop() ?? '';
+    return /^\d{4}-\d{2}-\d{2}-unlock-/.test(base);
+  });
+
+  result.checked = unlockFiles.length;
+
+  for (const file of unlockFiles) {
+    const base = file.replace(/\\/g, '/').split('/').pop() ?? '';
+    const dateMatch = base.match(/^(\d{4}-\d{2}-\d{2})/);
+    const dateStr = dateMatch?.[1] ?? '';
+
+    // Legacy baseline check: records prior to WP 90 (2026-09-21) are legacy baseline
+    if (dateStr < '2026-09-21') {
+      continue;
+    }
+
+    const content = readUtf8(file);
+    const hasOtpNonce = /رمز التحدي|OTP Nonce|UNLOCK-[A-F0-9]+/i.test(content);
+    const hasHumanProvenance = /USER_EXPLICIT|مصدر الاعتماد|التحقق الجنائي/i.test(content);
+
+    if (!hasOtpNonce || !hasHumanProvenance) {
+      fail(
+        result,
+        `Unlock evidence file [${toRepoPath(file, root)}] lacks verified human OTP challenge provenance (Work Plan 90 violation). AI self-authorization detected!`
+      );
+    }
+  }
+
+  return result;
+}
+
+// ============================================================================
 // 2. Comprehensive Forensic Audit Runner
 // ============================================================================
 
@@ -454,6 +500,7 @@ export interface AuditSuiteOptions {
   tests?: boolean | undefined;
   fieldMasking?: boolean | undefined;
   security?: boolean | undefined;
+  unlockAudit?: boolean | undefined;
   strict?: boolean | undefined;
   json?: boolean | undefined;
 }
@@ -462,7 +509,15 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
   const root = resolve(options.root ?? process.cwd());
   const allFlowDirs = listFlowDirs(root);
   const totalFlowCount = allFlowDirs.length;
-  const runAll = options.all ?? (!options.presentation && !options.arch && !options.telegram && !options.tests && !options.fieldMasking && !options.security);
+  const runAll =
+    options.all ??
+    (!options.presentation &&
+      !options.arch &&
+      !options.telegram &&
+      !options.tests &&
+      !options.fieldMasking &&
+      !options.security &&
+      !options.unlockAudit);
 
   let presentationRes: VerificationResult | undefined;
   let presentationFindings: PresentationFinding[] = [];
@@ -504,6 +559,11 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     securityRes = checkCodeSecurity();
   }
 
+  let unlockAuditRes: VerificationResult | undefined;
+  if (runAll || options.unlockAudit) {
+    unlockAuditRes = verifyUnlockAuditProvenance(root);
+  }
+
   // Aggregate errors & warnings
   const allResults: VerificationResult[] = [
     ...(presentationRes ? [presentationRes] : []),
@@ -512,6 +572,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     ...(testAuthRes ? [testAuthRes] : []),
     ...(fieldMaskRes ? [fieldMaskRes] : []),
     ...(securityRes ? [securityRes] : []),
+    ...(unlockAuditRes ? [unlockAuditRes] : []),
   ];
 
   const totalErrors = allResults.reduce((acc, r) => acc + r.failures.length, 0);
@@ -533,6 +594,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
   if (testAuthRes) checkResults.testAuthenticity = testAuthRes;
   if (fieldMaskRes) checkResults.fieldMasking = fieldMaskRes;
   if (securityRes) checkResults.security = securityRes;
+  if (unlockAuditRes) checkResults.unlockAudit = unlockAuditRes;
 
   return {
     verdict,
@@ -578,8 +640,10 @@ export function formatSalehVerdictReport(report: SalehAuditReport): string {
   const hasArchViolations = (report.checkResults.architecture?.failures.length ?? 0) > 0;
   const hasMaskingViolations = (report.checkResults.fieldMasking?.failures.length ?? 0) > 0;
   const hasTelegramContractFailures = (report.checkResults.telegramContracts?.failures.length ?? 0) > 0;
+  const hasUnlockFraud = (report.checkResults.unlockAudit?.failures.length ?? 0) > 0;
 
   lines.push(`- [${hasShamAssertions ? 'x' : ' '}] **Sham Assertions & Test Cheating:** ${hasShamAssertions ? 'DETECTED' : 'Clean (No fake assertions)'}`);
+  lines.push(`- [${hasUnlockFraud ? 'x' : ' '}] **AI Self-Authorization & OTP Nonce Guard (WP 90):** ${hasUnlockFraud ? 'FRAUD/VIOLATIONS DETECTED' : 'Clean (Human OTP Provenance Verified)'}`);
   lines.push(`- [${hasRawMessageBypass ? 'x' : ' '}] **Presentation Bypass (Raw Replies):** ${hasRawMessageBypass ? 'DETECTED' : 'Clean (Unified Library used)'}`);
   lines.push(`- [${hasKeyboardOverflow ? 'x' : ' '}] **Mobile Ergonomics (36/16/7/3):** ${hasKeyboardOverflow ? 'WARNINGS/OVERFLOWS' : 'Clean (Within budget)'}`);
   lines.push(`- [${hasArchViolations ? 'x' : ' '}] **Architecture & 10-File Slice (G2):** ${hasArchViolations ? 'VIOLATIONS' : 'Clean (100% compliant)'}`);
@@ -618,6 +682,9 @@ export function formatSalehVerdictReport(report: SalehAuditReport): string {
     lines.push('### 🎯 Corrective Directive from /saleh:');
     lines.push(`- **Status:** Please remediate the ${report.summary.errorsCount} error(s) and ${report.summary.warningsCount} warning(s) listed below.`);
     lines.push('- **Enforcement Standard:** Domain Rulebook 07 (Telegram UX) & GEMINI.md Part 8.');
+    if (hasUnlockFraud) {
+      lines.push('- **Action Required:** Remediate unlock evidence files. All component unlocks must strictly follow the OTP Challenge-Response protocol (pnpm unlock:request / pnpm unlock:confirm) with verified human provenance from Saleh.');
+    }
     if (hasRawMessageBypass) {
       lines.push('- **Action Required:** Remove all hardcoded string literals and raw template strings from ctx.reply / editMessageText / sendMessage. Move all copy to flow.messages.ts using formatBreadcrumbs and Unified Presentation Library formatters.');
     }
@@ -656,6 +723,7 @@ Options:
   --tests           Run Test Authenticity & Sham Detection audit
   --field-masking   Run Field Masking & Privacy audit
   --security        Run Semgrep SAST security scan
+  --unlock-audit    Run Unlock Audit & Anti-Self-Authorization scan (WP 90)
   --strict          Treat warnings as failures (returns Exit 1 on warnings)
   --json            Output results as JSON
   --help, -h        Show this help message
@@ -671,6 +739,7 @@ Options:
     tests: args.includes('--tests'),
     fieldMasking: args.includes('--field-masking'),
     security: args.includes('--security'),
+    unlockAudit: args.includes('--unlock-audit') || args.includes('--unlock'),
     strict: args.includes('--strict'),
     json: args.includes('--json'),
   };

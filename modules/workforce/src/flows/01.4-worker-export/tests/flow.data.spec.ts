@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ExcelJS from 'exceljs';
 import { encryptField, normalizeKeyToHex } from '@alsaada/database';
 import { WorkerExportService } from '../flow.service.js';
@@ -6,7 +6,24 @@ import { WorkerExportRepository } from '../flow.repository.js';
 import type { WorkerExportEntity } from '../flow.types.js';
 
 describe('Flow 01.4 Data Tests — Formatting, RTL Alignment & Standard Dates', () => {
-  it('should format dates as DD-MM-YYYY and enforce RTL workbook views', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('formats dates as DD-MM-YYYY and enforces RTL workbook views', async () => {
+    // Arrange
     const mockWorker: WorkerExportEntity = {
       id: 'wrk-1',
       code: 'OP-DRV-0001',
@@ -57,35 +74,34 @@ describe('Flow 01.4 Data Tests — Formatting, RTL Alignment & Standard Dates', 
     } as unknown as WorkerExportRepository;
 
     const service = new WorkerExportService(mockRepo);
+
+    // Act
     const result = await service.generateWorkersExportBuffer({ type: 'ALL' }, true);
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(result.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
     const sheet = workbook.getWorksheet('كشف العاملين');
-    expect(sheet).toBeDefined();
 
-    // Verify RTL view
+    // Assert
+    expect(sheet).toBeDefined();
     const views = sheet?.views;
     expect(views?.[0]?.rightToLeft).toBe(true);
 
-    // Row 5 contains worker 1
     const workerRow = sheet?.getRow(5);
     expect(workerRow).toBeDefined();
 
-    // Column 11: Birth Date (DD-MM-YYYY)
     const birthDateCell = workerRow?.getCell(11).text;
     expect(birthDateCell).toMatch(/^\d{2}-\d{2}-\d{4}$/);
 
-    // Column 18: Hire Date (DD-MM-YYYY)
     const hireDateCell = workerRow?.getCell(18).text;
     expect(hireDateCell).toMatch(/^\d{2}-\d{2}-\d{4}$/);
 
-    // Column 24: Expiry Date (DD-MM-YYYY)
     const expiryDateCell = workerRow?.getCell(24).text;
     expect(expiryDateCell).toMatch(/^\d{2}-\d{2}-\d{4}$/);
   });
 
-  it('should decrypt encrypted fields accurately using normalized key (passphrase and 64-hex key)', async () => {
+  it('decrypts encrypted fields accurately using normalized key and hides encrypted artifacts', async () => {
+    // Arrange
     const rawPassphrase = 'my-custom-passphrase-key!';
     const normalizedKey = normalizeKeyToHex(rawPassphrase);
 
@@ -143,27 +159,27 @@ describe('Flow 01.4 Data Tests — Formatting, RTL Alignment & Standard Dates', 
       getWorkersForExport: vi.fn().mockResolvedValue([mockEncryptedWorker]),
     } as unknown as WorkerExportRepository;
 
-    // Service initialized with the unnormalized raw passphrase
     const service = new WorkerExportService(mockRepo, rawPassphrase);
+
+    // Act
     const result = await service.generateWorkersExportBuffer({ type: 'ALL' }, true);
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(result.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
     const sheet = workbook.getWorksheet('كشف العاملين');
-    expect(sheet).toBeDefined();
-
     const workerRow = sheet?.getRow(5);
+
+    // Assert
+    expect(sheet).toBeDefined();
     expect(workerRow).toBeDefined();
 
-    // Verify plaintext decryptions
-    // Column 10: National ID
     expect(workerRow?.getCell(10).text).toBe(plainNationalId);
-    // Column 15: Phone
+    expect(workerRow?.getCell(10).text).not.toBe(mockEncryptedWorker.nationalIdEncrypted);
+
     expect(workerRow?.getCell(15).text).toBe(plainPhone);
-    // Column 16: Emergency Phone
+    expect(workerRow?.getCell(15).text).not.toBe(mockEncryptedWorker.phoneEncrypted);
+
     expect(workerRow?.getCell(16).text).toBe(plainEmergency);
-    // Column 39: Account Number (SuperAdmin column)
     expect(workerRow?.getCell(39).text).toBe(plainAccount);
   });
 });
-

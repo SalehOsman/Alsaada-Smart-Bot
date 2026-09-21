@@ -1,11 +1,11 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T13:58:12.692Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T18:20:59.185Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
 - **المسار الأساسي:** `packages/database`
-- **عدد الملفات المقفلة:** 34 ملفاً
+- **عدد الملفات المقفلة:** 35 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
@@ -45,6 +45,7 @@
 | `packages/database/src/scripts/seed-canteen-cigarettes.ts` | `0407713651a05147e84a8ee1c7bf161b6f9945e5168d711765c0fa797f6d92b4` |
 | `packages/database/src/scripts/seed-company-profile.ts` | `bc69e640bd45b5e9cdc8bb2f391cff72405c018714de4f93c2cb5f3a2d37fe03` |
 | `packages/database/src/scripts/seed-hq-site.ts` | `79acc16318323a71a9dd963ac4dac3f854acb7d64edcc7a51fc6f73f31ba8dce` |
+| `packages/database/src/scripts/studio-bridge.mjs` | `be69d461ed600413a0c7f4c117cf99b31509c03eea9efc3551af902bd05444ea` |
 | `packages/database/tsconfig.json` | `c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280` |
 
 ## بوابات التحقق المعتمدة

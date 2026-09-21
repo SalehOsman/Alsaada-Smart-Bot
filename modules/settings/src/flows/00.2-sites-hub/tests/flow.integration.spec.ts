@@ -1,10 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 import { SitesHubHandler } from '../flow.handler.js';
 import type { SitesHubService } from '../flow.service.js';
 import type { SettingsModuleContext } from '../../../shared/module.types.js';
 
 describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والمواقع الميدانية', () => {
-  it('should coordinate handler execution with service', async () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('coordinates handler execution with service', async () => {
+    // Arrange
     const mockService = {
       clearPendingEdit: vi.fn().mockResolvedValue(undefined),
       clearWizardState: vi.fn().mockResolvedValue(undefined),
@@ -26,17 +43,21 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       from: { id: 7594239391 },
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.renderSitesHub(ctx);
+    // Assert
     expect(replyMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should navigate governorate pages in-place during site creation', async () => {
+  it('navigates governorate pages in-place during site creation', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'SELECT_GOV',
         name: 'موقع العاشر من رمضان',
         code: 'STE-05',
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
     } as unknown as SitesHubService;
 
@@ -51,7 +72,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleGovPageChange(ctx, 2);
+
+    // Assert
 
     expect(answerCallbackMock).toHaveBeenCalledTimes(1);
     expect(editMessageTextMock).toHaveBeenCalledTimes(1);
@@ -60,7 +85,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(callArgs[1]?.reply_markup?.inline_keyboard[3]?.[1]?.text).toBe('📄 صفحة 2 من 3');
   });
 
-  it('should navigate governorate pages in-place during site edit', async () => {
+  it('navigates governorate pages in-place during site edit', async () => {
+    // Arrange
     const mockService = {} as unknown as SitesHubService;
     const handler = new SitesHubHandler(mockService);
     const editMessageTextMock = vi.fn().mockResolvedValue({});
@@ -73,7 +99,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleGovPageChange(ctx, 3, 'STE-01');
+
+    // Assert
 
     expect(answerCallbackMock).toHaveBeenCalledTimes(1);
     expect(editMessageTextMock).toHaveBeenCalledTimes(1);
@@ -82,13 +112,14 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(callArgs[1]?.reply_markup?.inline_keyboard[3]?.[0]?.text).toBe('📄 صفحة 3 من 3');
   });
 
-  it('should navigate back to name step when handleBackToName is triggered', async () => {
+  it('navigates back to name step when handleBackToName is triggered', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'CONFIRM_CODE',
         name: 'موقع السويس',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
     } as unknown as SitesHubService;
@@ -104,7 +135,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleBackToName(ctx);
+
+    // Assert
 
     expect(mockService.setWizardState).toHaveBeenCalledWith(
       BigInt(7594239391),
@@ -114,14 +149,15 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('الخطوة 1 من 5');
   });
 
-  it('should accept custom site code via text and advance to SELECT_GOV', async () => {
+  it('accepts custom site code via text and advance to SELECT_GOV', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'CONFIRM_CODE',
         name: 'فرع القاهرة',
         code: 'STE-01',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       getSiteByCode: vi.fn().mockResolvedValue(null),
       setWizardState: vi.fn().mockResolvedValue(undefined),
@@ -138,7 +174,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       deleteMessage: deleteMessageMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleTextInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.setWizardState).toHaveBeenCalledWith(
@@ -149,14 +189,15 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('تحديد المحافظة');
   });
 
-  it('should warn and re-prompt when custom site code already exists', async () => {
+  it('warns and re-prompt when custom site code already exists', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'CONFIRM_CODE',
         name: 'فرع القاهرة',
         code: 'STE-01',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       getSiteByCode: vi.fn().mockResolvedValue({ id: 's-existing', code: 'CAI-01' }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
@@ -173,7 +214,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       deleteMessage: deleteMessageMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleTextInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.setWizardState).not.toHaveBeenCalled();
@@ -181,14 +226,15 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('مستخدم مسبقاً');
   });
 
-  it('should parse text coordinates in handleTextInput when at AWAIT_LOCATION', async () => {
+  it('parses text coordinates in handleTextInput when at AWAIT_LOCATION', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'AWAIT_LOCATION',
         name: 'موقع السويس',
         code: 'STE-01',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
       getEditState: vi.fn().mockResolvedValue(null),
@@ -205,7 +251,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       deleteMessage: deleteMessageMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleTextInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.setWizardState).toHaveBeenCalledWith(
@@ -218,14 +268,15 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     );
   });
 
-  it('should parse Telegram venue in handleLocationInput', async () => {
+  it('parses Telegram venue in handleLocationInput', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'AWAIT_LOCATION',
         name: 'موقع السويس',
         code: 'STE-01',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
       getEditState: vi.fn().mockResolvedValue(null),
@@ -249,7 +300,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       deleteMessage: deleteMessageMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleLocationInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.setWizardState).toHaveBeenCalledWith(
@@ -262,13 +317,14 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     );
   });
 
-  it('should navigate back to code step when handleBackToCode is triggered', async () => {
+  it('navigates back to code step when handleBackToCode is triggered', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'SELECT_GOV',
         name: 'موقع السويس',
         code: 'STE-01',
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
     } as unknown as SitesHubService;
@@ -284,7 +340,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleBackToCode(ctx);
+
+    // Assert
 
     expect(mockService.setWizardState).toHaveBeenCalledWith(
       BigInt(7594239391),
@@ -294,14 +354,15 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('تأكيد كود الموقع');
   });
 
-  it('should navigate back to governorate step when handleBackToGov is triggered', async () => {
+  it('navigates back to governorate step when handleBackToGov is triggered', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'SELECT_GEOFENCE',
         name: 'موقع السويس',
         code: 'STE-01',
         gov: 'السويس',
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
     } as unknown as SitesHubService;
@@ -317,7 +378,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleBackToGov(ctx);
+
+    // Assert
 
     expect(mockService.setWizardState).toHaveBeenCalledWith(
       BigInt(7594239391),
@@ -327,14 +392,15 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('تحديد المحافظة');
   });
 
-  it('should advance to AWAIT_LOCATION when governorate is selected in site creation', async () => {
+  it('advances to AWAIT_LOCATION when governorate is selected in site creation', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'SELECT_GOV',
         name: 'موقع السويس',
         code: 'STE-01',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
     } as unknown as SitesHubService;
@@ -350,7 +416,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleSelectGov(ctx, 'السويس');
+
+    // Assert
 
     expect(mockService.setWizardState).toHaveBeenCalledWith(
       BigInt(7594239391),
@@ -361,7 +431,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('الخطوة 4 من 5');
   });
 
-  it('should capture GPS location and advance to SELECT_GEOFENCE', async () => {
+  it('captures GPS location and advance to SELECT_GEOFENCE', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'AWAIT_LOCATION',
@@ -369,7 +440,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         code: 'STE-01',
         gov: 'السويس',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
       getEditState: vi.fn().mockResolvedValue(null),
@@ -389,7 +460,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       deleteMessage: deleteMessageMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleLocationInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.setWizardState).toHaveBeenCalledWith(
@@ -402,7 +477,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     );
   });
 
-  it('should advance to SELECT_GEOFENCE on skip location', async () => {
+  it('advances to SELECT_GEOFENCE on skip location', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'AWAIT_LOCATION',
@@ -410,7 +486,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         code: 'STE-01',
         gov: 'السويس',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
     } as unknown as SitesHubService;
@@ -426,7 +502,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleSkipLocation(ctx);
+
+    // Assert
 
     expect(mockService.setWizardState).toHaveBeenCalledWith(
       BigInt(7594239391),
@@ -441,7 +521,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('الخطوة 5 من 5');
   });
 
-  it('should navigate back to location step when handleBackToLocation is triggered', async () => {
+  it('navigates back to location step when handleBackToLocation is triggered', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue({
         step: 'SELECT_GEOFENCE',
@@ -449,7 +530,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         code: 'STE-01',
         gov: 'السويس',
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       setWizardState: vi.fn().mockResolvedValue(undefined),
     } as unknown as SitesHubService;
@@ -465,7 +546,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleBackToLocation(ctx);
+
+    // Assert
 
     expect(mockService.setWizardState).toHaveBeenCalledWith(
       BigInt(7594239391),
@@ -475,7 +560,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(editMessageTextMock.mock.calls[0]![0]).toContain('تحديد الموقع الجغرافي');
   });
 
-  it('should create site with coordinates and render completion keyboard', async () => {
+  it('creates site with coordinates and render completion keyboard', async () => {
+    // Arrange
     const mockCreatedSite = {
       id: 's-new',
       code: 'STE-09',
@@ -498,7 +584,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         latitude: 29.9668,
         longitude: 32.5498,
         promptMessageId: 100,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       createSite: vi.fn().mockResolvedValue({ success: true, site: mockCreatedSite }),
       clearWizardState: vi.fn().mockResolvedValue(undefined),
@@ -515,7 +601,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.handleSelectGeofence(ctx, 250);
+
+    // Assert
 
     expect(mockService.createSite).toHaveBeenCalledWith({
       name: 'موقع السويس للإنشاءات',
@@ -543,7 +633,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(keyboardRows[2]![0]!.callback_data).toBe('action:main_menu');
   });
 
-  it('should transform prompt message in-place and disable link preview when editing GPS location', async () => {
+  it('transforms prompt message in-place and disable link preview when editing GPS location', async () => {
+    // Arrange
     const mockSite = {
       id: 's-1',
       code: 'STE-01',
@@ -563,7 +654,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         siteCode: 'STE-01',
         fieldKey: 'location',
         promptMessageId: 777,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       clearEditState: vi.fn().mockResolvedValue(undefined),
       updateField: vi.fn().mockResolvedValue({ success: true }),
@@ -589,7 +680,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       },
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleLocationInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.clearEditState).toHaveBeenCalledWith(BigInt(7594239391));
@@ -612,7 +707,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(extra?.link_preview_options?.is_disabled).toBe(true);
   });
 
-  it('should transform prompt message in-place when editing text field', async () => {
+  it('transforms prompt message in-place when editing text field', async () => {
+    // Arrange
     const mockSite = {
       id: 's-1',
       code: 'STE-01',
@@ -632,7 +728,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         siteCode: 'STE-01',
         fieldKey: 'name',
         promptMessageId: 666,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       clearEditState: vi.fn().mockResolvedValue(undefined),
       updateField: vi.fn().mockResolvedValue({ success: true }),
@@ -658,7 +754,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       },
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleTextInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.clearEditState).toHaveBeenCalledWith(BigInt(7594239391));
@@ -677,14 +777,15 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(promptText).toContain('تم تحديث [name] بنجاح.');
   });
 
-  it('should display in-place warning when unparseable text is submitted during location edit', async () => {
+  it('displaies in-place warning when unparseable text is submitted during location edit', async () => {
+    // Arrange
     const mockService = {
       getWizardState: vi.fn().mockResolvedValue(null),
       getEditState: vi.fn().mockResolvedValue({
         siteCode: 'STE-01',
         fieldKey: 'location',
         promptMessageId: 777,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       clearEditState: vi.fn().mockResolvedValue(undefined),
       updateField: vi.fn(),
@@ -709,7 +810,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       },
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleTextInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(deleteMessageMock).toHaveBeenCalled();
@@ -722,7 +827,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(promptText).toContain('STE-01');
   });
 
-  it('should render in-place failure notice when location update fails in handleLocationInput', async () => {
+  it('renders in-place failure notice when location update fails in handleLocationInput', async () => {
+    // Arrange
     const mockSite = {
       id: 's-1',
       code: 'STE-01',
@@ -742,7 +848,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         siteCode: 'STE-01',
         fieldKey: 'location',
         promptMessageId: 777,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       clearEditState: vi.fn().mockResolvedValue(undefined),
       updateField: vi.fn().mockResolvedValue({ success: false, error: 'Database locked' }),
@@ -768,7 +874,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       },
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleLocationInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(mockService.updateField).toHaveBeenCalledWith('STE-01', 'location', '30.0444,31.2357');
@@ -778,7 +888,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(promptText).toContain('❌ فشل تحديث الموقع الجغرافي: Database locked');
   });
 
-  it('should render in-place failure notice when text update fails in handleTextInput without raw reply', async () => {
+  it('renders in-place failure notice when text update fails in handleTextInput without raw reply', async () => {
+    // Arrange
     const mockSite = {
       id: 's-1',
       code: 'STE-01',
@@ -798,7 +909,7 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
         siteCode: 'STE-01',
         fieldKey: 'name',
         promptMessageId: 666,
-        timestamp: Date.now(),
+        timestamp: PINNED_BASE_TIME.getTime(),
       }),
       clearEditState: vi.fn().mockResolvedValue(undefined),
       updateField: vi.fn().mockResolvedValue({ success: false, error: 'Name already taken' }),
@@ -826,7 +937,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       },
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     const handled = await handler.handleTextInput(ctx);
+
+    // Assert
 
     expect(handled).toBe(true);
     expect(rawReplyMock).not.toHaveBeenCalled();
@@ -836,7 +951,8 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
     expect(promptText).toContain('❌ فشل التحديث: Name already taken');
   });
 
-  it('should clear editState when renderSiteDetail is invoked to prevent state leakage', async () => {
+  it('clears editState when renderSiteDetail is invoked to prevent state leakage', async () => {
+    // Arrange
     const mockSite = {
       id: 's-1',
       code: 'STE-01',
@@ -868,7 +984,11 @@ describe('Flow 00.2 Integration Tests — مصفوفة المشاريع والم
       answerCallbackQuery: answerCallbackMock,
     } as unknown as SettingsModuleContext;
 
+    // Act
+
     await handler.renderSiteDetail(ctx, 'STE-01', true);
+
+    // Assert
 
     expect(mockService.clearEditState).toHaveBeenCalledWith(BigInt(7594239391));
     expect(editMessageTextMock).toHaveBeenCalledTimes(1);

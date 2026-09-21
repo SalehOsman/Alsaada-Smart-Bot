@@ -14,7 +14,7 @@
 1. **المحرك البرمجي الموحد للقفل والفتح (Single Unified Sovereign Engine):**
    - تخضع كافة أجزاء المنظومة (حزم النواة، تدفقات البوت، شاشات الداشبورد، البنية التحتية، ومحركات السرعة) لمحرك برمجي مركزي واحد:
      * **للقفل:** `pnpm lock <target>` (يستخدم `tools/governance/unified-lock-engine.ts`).
-     * **للفتح:** `pnpm unlock <target> --phrase="..." --reason="..."` (يستخدم `tools/governance/unified-unlock-engine.ts`).
+     * **للفتح:** بروتوكول التحدي والاستجابة المتغير (Work Plan 90): `pnpm unlock:request <target> --reason="..."` ثم موافقة صالح في الشات ثم `pnpm unlock:confirm <target>`.
    - تسجل كافة المكونات المقفلة في قاموس كيانات موحد بملف [`governance.lock.json`](file:///F:/Alsaada-Smart-Bot/governance.lock.json) تحت المفتاح المعياري `lockedEntities: Record<string, LockedEntity>`.
 2. **قاعدة العزل الفردي المطلق وحظر الفتح أو الغلق الشامل (Absolute Zero Blast Radius):**
    - يُحظر تماماً فك قفل النظام بأكمله أو فتح حزم أو تدفقات أخرى عند الرغبة في تعديل مكون محدد.
@@ -145,10 +145,12 @@ pnpm lock package:database
 pnpm lock dashboard:workforce/new
 pnpm lock infra:docker
 
-# 2. فك قفل كيان منفرد للتعديل بعد موافقة المستخدم «موافق على الفتح»:
-pnpm unlock <target> --phrase="موافق على الفتح" --reason="سبب التعديل المبرر"
-# مثال:
-pnpm unlock package:regional-engine --phrase="موافق على الفتح" --reason="إضافة عملة جديدة"
+# 2. فك قفل كيان منفرد للتعديل وفق بروتوكول التحدي والاستجابة (WP 90):
+# أ. طلب رمز التحدي المؤقت:
+pnpm unlock:request package:regional-engine --reason="إضافة عملة جديدة"
+# ب. توقف الوكيل وطلب اعتماد صالح في الشات بكتابة: «موافق على الفتح UNLOCK-XXXXXX»
+# ج. تأكيد فك القفل بعد التحقق الجنائي من سجل الشات:
+pnpm unlock:confirm package:regional-engine
 
 # 3. الفحص الجنائي الصارم لسلامة الأقفال ومنع التلاعب:
 pnpm governance:tamper-check

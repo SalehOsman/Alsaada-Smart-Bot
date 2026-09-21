@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TelegramGroupEnforcerService } from '../src/services/telegram-group-enforcer.service.js';
 import { SupervisorLifecycleService } from '../src/services/supervisor-lifecycle.service.js';
 import { prisma } from '../src/db.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 vi.mock('../src/db.js', () => ({
   prisma: {
@@ -36,7 +38,12 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
   let lifecycleService: SupervisorLifecycleService;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.clearAllMocks();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     mockBot = {
       api: {
@@ -53,10 +60,21 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
     lifecycleService = new SupervisorLifecycleService(enforcer);
   });
 
-  describe('1. TelegramGroupEnforcerService Operations', () => {
-    it('ejects a normal member temporarily (ban followed by unban)', async () => {
-      const result = await enforcer.ejectMember(-100123456789n, 12345n, false);
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
+  describe('1. TelegramGroupEnforcerService Operations', () => {
+    it('ejects a normal member temporarily via ban followed by unban', async () => {
+      // Arrange
+      const groupId = -100123456789n;
+      const targetUserId = 12345n;
+      const isPermanent = false;
+
+      // Act
+      const result = await enforcer.ejectMember(groupId, targetUserId, isPermanent);
+
+      // Assert
       expect(result.success).toBe(true);
       expect(result.action).toBe('KICKED');
       expect(mockBot.api.banChatMember).toHaveBeenCalledWith(-100123456789, 12345);
@@ -64,8 +82,15 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
     });
 
     it('ejects a member permanently without unbanning when isPermanent is true', async () => {
-      const result = await enforcer.ejectMember(-100123456789n, 12345n, true);
+      // Arrange
+      const groupId = -100123456789n;
+      const targetUserId = 12345n;
+      const isPermanent = true;
 
+      // Act
+      const result = await enforcer.ejectMember(groupId, targetUserId, isPermanent);
+
+      // Assert
       expect(result.success).toBe(true);
       expect(result.action).toBe('BANNED');
       expect(mockBot.api.banChatMember).toHaveBeenCalledWith(-100123456789, 12345);
@@ -73,18 +98,29 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
     });
 
     it('handles CANNOT_REMOVE_ADMIN gracefully when member is admin or creator', async () => {
+      // Arrange
       mockBot.api.getChatMember.mockResolvedValueOnce({ status: 'administrator' });
+      const groupId = -100123456789n;
+      const adminUserId = 99999n;
 
-      const result = await enforcer.ejectMember(-100123456789n, 99999n, false);
+      // Act
+      const result = await enforcer.ejectMember(groupId, adminUserId, false);
 
+      // Assert
       expect(result.success).toBe(false);
       expect(result.action).toBe('CANNOT_REMOVE_ADMIN');
       expect(mockBot.api.banChatMember).not.toHaveBeenCalled();
     });
 
     it('generates a single-use join request invite link', async () => {
-      const result = await enforcer.createSingleUseJoinRequestInvite(-100123456789n, 'موقع الكباش');
+      // Arrange
+      const groupId = -100123456789n;
+      const siteName = 'موقع الكباش';
 
+      // Act
+      const result = await enforcer.createSingleUseJoinRequestInvite(groupId, siteName);
+
+      // Assert
       expect(result.success).toBe(true);
       expect(result.inviteLink).toBe('https://t.me/+join_test');
       expect(mockBot.api.createChatInviteLink).toHaveBeenCalledWith(
@@ -97,8 +133,14 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
     });
 
     it('auto-heals and updates sites on group migration to supergroup', async () => {
-      await enforcer.handleGroupMigration(-12345n, -10012345n);
+      // Arrange
+      const oldGroupId = -12345n;
+      const newGroupId = -10012345n;
 
+      // Act
+      await enforcer.handleGroupMigration(oldGroupId, newGroupId);
+
+      // Assert
       expect(prisma.site.updateMany).toHaveBeenCalledWith({
         where: { telegramGroupId: -12345n },
         data: { telegramGroupId: -10012345n },
@@ -107,7 +149,8 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
   });
 
   describe('2. SupervisorLifecycleService with Configurable Leave Policies', () => {
-    it('executes startLeave with default strict policies (freezeBotAccessOnLeave=true, ejectTelegramOnLeave=true)', async () => {
+    it('executes startLeave with default strict policies freezing access and ejecting', async () => {
+      // Arrange
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'u-1',
         telegramId: 555444n,
@@ -123,11 +166,13 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
         },
       } as any);
 
+      // Act
       const result = await lifecycleService.startLeave({
         userId: 'u-1',
         actorTelegramId: 777n,
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(result.botAccessFrozen).toBe(true);
       expect(result.telegramEjected).toBe(true);
@@ -145,7 +190,8 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
       );
     });
 
-    it('executes startLeave when management unfreezes policies (freezeBotAccessOnLeave=false, ejectTelegramOnLeave=false)', async () => {
+    it('executes startLeave when management unfreezes policies preserving role and group access', async () => {
+      // Arrange
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'u-2',
         telegramId: 666777n,
@@ -160,17 +206,17 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
         },
       } as any);
 
+      // Act
       const result = await lifecycleService.startLeave({
         userId: 'u-2',
         actorTelegramId: 777n,
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(result.botAccessFrozen).toBe(false);
       expect(result.telegramEjected).toBe(false);
-      // Role was NOT changed to WORKER
       expect(prisma.user.update).not.toHaveBeenCalled();
-      // Logged as SKIPPED_POLICY
       expect(prisma.supervisorLifecycleLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -181,7 +227,8 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
       );
     });
 
-    it('executes returnFromLeave and restores supervisor role and generates invite link', async () => {
+    it('executes returnFromLeave restoring supervisor role and generating invite link', async () => {
+      // Arrange
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'u-1',
         telegramId: 555444n,
@@ -194,11 +241,13 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
         },
       } as any);
 
+      // Act
       const result = await lifecycleService.returnFromLeave({
         userId: 'u-1',
         actorTelegramId: 777n,
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(result.inviteLink).toBe('https://t.me/+join_test');
       expect(prisma.user.update).toHaveBeenCalledWith({
@@ -215,7 +264,8 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
       );
     });
 
-    it('executes transferSite: changes assignedSite, ejects from old group, generates new invite', async () => {
+    it('executes transferSite changing assignedSite, ejecting from old group, and generating new invite', async () => {
+      // Arrange
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'u-1',
         telegramId: 555444n,
@@ -235,12 +285,14 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
         telegramTopicId: 5,
       } as any);
 
+      // Act
       const result = await lifecycleService.transferSite({
         userId: 'u-1',
         targetSiteId: 'site-new',
         actorTelegramId: 777n,
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(result.previousSiteName).toBe('الموقع القديم');
       expect(result.newSiteName).toBe('الموقع الجديد');
@@ -251,7 +303,62 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
       });
     });
 
-    it('executes terminate: deactivates user account and permanently bans from group', async () => {
+    it('returns error when target user is not found during site transfer', async () => {
+      // Arrange
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+      // Act
+      const result = await lifecycleService.transferSite({
+        userId: 'non-existent-user',
+        targetSiteId: 'site-new',
+        actorTelegramId: 777n,
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('USER_NOT_FOUND');
+    });
+
+    it('returns error when target site is not found during site transfer', async () => {
+      // Arrange
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: 'u-1',
+        telegramId: 555444n,
+        role: 'FIELD_ADMIN',
+        assignedSiteId: 'site-old',
+      } as any);
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(null);
+
+      // Act
+      const result = await lifecycleService.transferSite({
+        userId: 'u-1',
+        targetSiteId: 'invalid-site',
+        actorTelegramId: 777n,
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('TARGET_SITE_NOT_FOUND');
+    });
+
+    it('returns error when user is not found during startLeave', async () => {
+      // Arrange
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+      // Act
+      const result = await lifecycleService.startLeave({
+        userId: 'ghost-user',
+        actorTelegramId: 777n,
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('USER_NOT_FOUND');
+      expect(result.botAccessFrozen).toBe(false);
+    });
+
+    it('executes terminate deactivating user account and permanently banning from group', async () => {
+      // Arrange
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'u-1',
         telegramId: 555444n,
@@ -263,12 +370,14 @@ describe('Telegram Group Enforcer & Supervisor Lifecycle Service Specification',
         },
       } as any);
 
+      // Act
       const result = await lifecycleService.terminate({
         userId: 'u-1',
         actorTelegramId: 777n,
         reason: 'استقالة رسمية',
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'u-1' },

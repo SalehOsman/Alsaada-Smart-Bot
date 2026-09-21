@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   workerEditService,
   workerExpiryAlertService,
@@ -8,6 +8,8 @@ import {
 } from '@alsaada/workforce';
 import { prisma } from '../src/db.js';
 import { EGYPTIAN_GOVERNORATES } from '@alsaada/national-id-engine';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 vi.mock('../src/db.js', () => ({
   prisma: {
@@ -37,81 +39,100 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 
 describe('Worker Edit Governance & Expiry Alerts Engine', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.clearAllMocks();
     setWorkforcePrisma(prisma);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('Super Admin Direct Worker Profile Editing', () => {
-    it('should directly update legacyCode for a worker when called by Super Admin', async () => {
+    it('directly updates legacyCode for a worker when called by Super Admin', async () => {
+      // Arrange
+      const workerId = 'worker-123';
+      const targetField = 'legacyCode';
+      const newValue = 'LEGACY-7788';
+
       vi.mocked(prisma.worker.findUnique).mockResolvedValue({
-        id: 'worker-123',
+        id: workerId,
         code: 'OP-DRV-001',
         name: 'أحمد محمود',
         legacyCode: null,
         aliases: [],
       } as any);
-      vi.mocked(prisma.worker.findFirst).mockResolvedValue(null); // no duplicate
+      vi.mocked(prisma.worker.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.worker.update).mockResolvedValue({
-        id: 'worker-123',
+        id: workerId,
         code: 'OP-DRV-001',
         name: 'أحمد محمود',
-        legacyCode: 'LEGACY-7788',
+        legacyCode: newValue,
       } as any);
 
-      const result = await workerEditService.applyDirectSuperAdminEdit(
-        'worker-123',
-        'legacyCode',
-        'LEGACY-7788'
-      );
+      // Act
+      const result = await workerEditService.applyDirectSuperAdminEdit(workerId, targetField, newValue);
 
+      // Assert
       expect(result.success).toBe(true);
-      expect(result.worker.legacyCode).toBe('LEGACY-7788');
+      expect(result.worker.legacyCode).toBe(newValue);
       expect(prisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'worker-123' },
-          data: expect.objectContaining({ legacyCode: 'LEGACY-7788' }),
+          where: { id: workerId },
+          data: expect.objectContaining({ legacyCode: newValue }),
         })
       );
     });
 
-    it('should directly update worker name and nickname', async () => {
+    it('directly updates worker name and nickname', async () => {
+      // Arrange
+      const workerId = 'worker-123';
+      const targetField = 'nickname';
+      const newNickname = 'أبو حميد';
+
       vi.mocked(prisma.worker.findUnique).mockResolvedValue({
-        id: 'worker-123',
+        id: workerId,
         aliases: ['أحمد القديم'],
       } as any);
       vi.mocked(prisma.worker.update).mockResolvedValue({
-        id: 'worker-123',
+        id: workerId,
         name: 'أحمد محمود علي',
-        nickname: 'أبو حميد',
+        nickname: newNickname,
       } as any);
 
-      const result = await workerEditService.applyDirectSuperAdminEdit(
-        'worker-123',
-        'nickname',
-        'أبو حميد'
-      );
+      // Act
+      const result = await workerEditService.applyDirectSuperAdminEdit(workerId, targetField, newNickname);
 
+      // Assert
       expect(result.success).toBe(true);
       expect(prisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'worker-123' },
-          data: expect.objectContaining({ nickname: 'أبو حميد' }),
+          where: { id: workerId },
+          data: expect.objectContaining({ nickname: newNickname }),
         })
       );
     });
   });
 
   describe('Field Admin / Worker Modification Request Protocol', () => {
-    it('should create a pending edit request with EDT-YYMMDD-XXX format', async () => {
-      vi.mocked(prisma.workerEditRequest.count).mockResolvedValue(4); // 5th request today
+    it('creates a pending edit request with EDT-YYMMDD-XXX format', async () => {
+      // Arrange
+      vi.mocked(prisma.workerEditRequest.count).mockResolvedValue(4);
       vi.mocked(prisma.workerEditRequest.create).mockImplementation(({ data }) =>
         Promise.resolve({
           id: 'req-uuid',
           ...data,
-          createdAt: new Date(),
+          createdAt: PINNED_BASE_TIME,
         }) as any
       );
 
+      // Act
       const request = await workerEditService.createEditRequest({
         workerId: 'worker-123',
         workerCode: 'OP-DRV-001',
@@ -126,12 +147,14 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
         reason: 'إضافة الكود الأرشيفي القديم للمطابقة',
       });
 
+      // Assert
       expect(request.status).toBe('PENDING');
       expect(request.requestId).toMatch(/^EDT-\d{6}-005$/);
       expect(request.newValue).toBe('OLD-9900');
     });
 
-    it('should approve edit request and atomically apply change to worker record', async () => {
+    it('approves edit request and atomically applies change to worker record', async () => {
+      // Arrange
       const mockPendingReq = {
         id: 'req-uuid-1',
         requestId: 'EDT-260307-001',
@@ -148,11 +171,13 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
         ...mockPendingReq,
         status: 'APPROVED',
         reviewedByAdminId: 111222333n,
-        reviewedAt: new Date(),
+        reviewedAt: PINNED_BASE_TIME,
       } as any);
 
+      // Act
       const approved = await workerEditService.approveEditRequest('EDT-260307-001', 111222333n);
 
+      // Assert
       expect(approved.status).toBe('APPROVED');
       expect(prisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -162,7 +187,8 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
       );
     });
 
-    it('should reject edit request without modifying worker record', async () => {
+    it('rejects edit request without modifying worker record', async () => {
+      // Arrange
       const mockPendingReq = {
         id: 'req-uuid-2',
         requestId: 'EDT-260307-002',
@@ -177,25 +203,50 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
         ...mockPendingReq,
         status: 'REJECTED',
         reviewedByAdminId: 111222333n,
-        reviewedAt: new Date(),
+        reviewedAt: PINNED_BASE_TIME,
         reviewNotes: 'الرقم غير مسجل باسم العامل',
       } as any);
 
+      // Act
       const rejected = await workerEditService.rejectEditRequest(
         'EDT-260307-002',
         111222333n,
         'الرقم غير مسجل باسم العامل'
       );
 
+      // Assert
       expect(rejected.status).toBe('REJECTED');
       expect(prisma.worker.update).not.toHaveBeenCalled();
+    });
+
+    it('throws error when approving non-existent edit request', async () => {
+      // Arrange
+      vi.mocked(prisma.workerEditRequest.findUnique).mockResolvedValue(null);
+
+      // Act
+      const action = workerEditService.approveEditRequest('EDT-NON-EXISTENT', 111222333n);
+
+      // Assert
+      await expect(action).rejects.toThrow('طلب التعديل غير موجود أو تمت معالجته مسبقاً');
+    });
+
+    it('throws error when rejecting non-existent edit request', async () => {
+      // Arrange
+      vi.mocked(prisma.workerEditRequest.findUnique).mockResolvedValue(null);
+
+      // Act
+      const action = workerEditService.rejectEditRequest('EDT-NON-EXISTENT', 111222333n, 'reason');
+
+      // Assert
+      await expect(action).rejects.toThrow('طلب التعديل غير موجود أو تمت معالجته مسبقاً');
     });
   });
 
   describe('Worker ID Expiry 30-Day Alert Protocol', () => {
-    it('should find active workers whose ID expires within 30 days and dispatch notifications', async () => {
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 20); // 20 days remaining
+    it('finds active workers whose ID expires within 30 days and dispatches notifications', async () => {
+      // Arrange
+      const expiryDate = new Date(PINNED_BASE_TIME);
+      expiryDate.setDate(expiryDate.getDate() + 20);
 
       const expiringWorker = {
         id: 'worker-exp-1',
@@ -216,17 +267,17 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
         sendMessage: vi.fn().mockResolvedValue(true),
       };
 
+      // Act
       const res = await workerExpiryAlertService.checkAndDispatchExpiryAlerts(mockBotApi);
 
+      // Assert
       expect(res.checkedCount).toBe(1);
       expect(res.alertedCount).toBe(1);
-      // Verify Telegram alert sent to worker
       expect(mockBotApi.sendMessage).toHaveBeenCalledWith(
         555666777,
         expect.stringContaining('تنبيه رسمي: اقتراب انتهاء سريان بطاقة الرقم القومي'),
         expect.any(Object)
       );
-      // Verify database updated with alert timestamp
       expect(prisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'worker-exp-1' },
@@ -234,37 +285,61 @@ describe('Worker Edit Governance & Expiry Alerts Engine', () => {
         })
       );
     });
+
+    it('returns zero alerted count when no workers have expiring IDs', async () => {
+      // Arrange
+      vi.mocked(prisma.worker.findMany).mockResolvedValue([]);
+      const mockBotApi = {
+        sendMessage: vi.fn().mockResolvedValue(true),
+      };
+
+      // Act
+      const res = await workerExpiryAlertService.checkAndDispatchExpiryAlerts(mockBotApi);
+
+      // Assert
+      expect(res.checkedCount).toBe(0);
+      expect(res.alertedCount).toBe(0);
+      expect(mockBotApi.sendMessage).not.toHaveBeenCalled();
+    });
   });
 
   describe('Telegram 64-Byte Callback Data Compliance & Short Mapping', () => {
-    it('should bidirectional map all editable fields without loss', () => {
-      for (const [fullKey, shortKey] of Object.entries(FIELD_TO_SHORT_MAP)) {
-        expect(FIELD_KEY_SHORT_MAP[shortKey]).toBe(fullKey);
+    it('bidirectionally maps all editable fields without data loss', () => {
+      // Arrange
+      const entries = Object.entries(FIELD_TO_SHORT_MAP);
+
+      // Act & Assert
+      for (const [fullKey, shortKey] of entries) {
+        // Act
+        const mappedFull = FIELD_KEY_SHORT_MAP[shortKey];
+
+        // Assert
+        expect(mappedFull).toBe(fullKey);
       }
     });
 
-    it('should strictly ensure all worker-edit inline keyboard callbacks are <= 64 UTF-8 bytes', () => {
-      const sampleWorkerUuid = '123e4567-e89b-12d3-a456-426614174000'; // Standard 36-char UUID
+    it('strictly ensures all worker-edit inline keyboard callbacks are under or equal to 64 UTF-8 bytes', () => {
+      // Arrange
+      const sampleWorkerUuid = '123e4567-e89b-12d3-a456-426614174000';
+      const callbacks: string[] = [];
 
-      // 1. Check worker edit menu field buttons
+      // Act
       for (const shortKey of Object.values(FIELD_TO_SHORT_MAP)) {
-        const callback = `we:f:${sampleWorkerUuid}:${shortKey}`;
-        const byteLen = Buffer.byteLength(callback, 'utf8');
-        expect(byteLen).toBeLessThanOrEqual(64);
+        callbacks.push(`we:f:${sampleWorkerUuid}:${shortKey}`);
+      }
+      callbacks.push(`we:add:${sampleWorkerUuid}`);
+      callbacks.push(`we:docs:${sampleWorkerUuid}`);
+      callbacks.push(`we:menu:${sampleWorkerUuid}`);
+      for (const govCode of Object.keys(EGYPTIAN_GOVERNORATES)) {
+        callbacks.push(`we:gov:${sampleWorkerUuid}:${govCode}`);
       }
 
-      // 2. Check doc actions
-      expect(Buffer.byteLength(`we:add:${sampleWorkerUuid}`, 'utf8')).toBeLessThanOrEqual(64);
-      expect(Buffer.byteLength(`we:docs:${sampleWorkerUuid}`, 'utf8')).toBeLessThanOrEqual(64);
-      expect(Buffer.byteLength(`we:menu:${sampleWorkerUuid}`, 'utf8')).toBeLessThanOrEqual(64);
-
-      // 3. Check governorate picker callbacks
-      for (const govCode of Object.keys(EGYPTIAN_GOVERNORATES)) {
-        const callback = `we:gov:${sampleWorkerUuid}:${govCode}`;
-        const byteLen = Buffer.byteLength(callback, 'utf8');
+      // Assert
+      expect(callbacks.length).toBeGreaterThan(0);
+      for (const cb of callbacks) {
+        const byteLen = Buffer.byteLength(cb, 'utf8');
         expect(byteLen).toBeLessThanOrEqual(64);
       }
     });
   });
 });
-

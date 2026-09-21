@@ -76,6 +76,18 @@ export function syncRootVersion(options: SyncRootVersionOptions = {}): SyncRootV
     telemetryUpdated = true;
   }
 
+  // 3b. Update CHANGELOG.md if targetVersion header is missing
+  const changelogPath = join(root, 'CHANGELOG.md');
+  if (existsSync(changelogPath)) {
+    const changelogContent = readFileSync(changelogPath, 'utf8');
+    if (!changelogContent.includes(`## [${targetVersion}]`)) {
+      const today = new Date().toISOString().slice(0, 10);
+      const newEntry = `## [${targetVersion}] - ${today}\n\n### 📋 ترقية مساحة العمل وتزامن الإصدارات الدلالية للمنظومة (${targetVersion})\n- **التحديث التلقائي:** مزامنة رقم الإصدار الدلالي لكافة حزم المونوريبو مع جذر المشروع والتليمتري الحية.\n- **الحوكمة التشفيرية:** إعادة الختم التشفيري لكيانات المنظومة وضمان الأثر الصفري (Zero Blast Radius).\n\n---\n\n`;
+      const updated = changelogContent.replace('---', `---\n\n${newEntry}`);
+      writeFileSync(changelogPath, updated, 'utf8');
+    }
+  }
+
   // 4. Re-lock affected packages and changelogs via unified lock engine
   const lockResult = lockAllEntities(root);
   writeGovernanceLock(root);

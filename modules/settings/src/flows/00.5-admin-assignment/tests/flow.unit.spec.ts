@@ -1,9 +1,26 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AdminAssignmentService } from '../flow.service.js';
 import type { AdminAssignmentRepository } from '../flow.repository.js';
 import type { AdminAssignmentDto } from '../flow.types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   const sampleUser: AdminAssignmentDto = {
     id: 'u-1',
     telegramId: 111222333n,
@@ -17,20 +34,24 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
     status: 'ACTIVE',
   };
 
-  it('should list admin users correctly', async () => {
+  it('lists administrative users and maps projection correctly', async () => {
+    // Arrange
     const mockRepo = {
       listAdminUsers: vi.fn().mockResolvedValue([sampleUser]),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
+
+    // Act
     const users = await service.listAdminUsers();
 
+    // Assert
     expect(users).toHaveLength(1);
-    expect(users[0]!.fullName).toBe('المهندس أحمد ممدوح');
+    expect(users[0]?.fullName).toBe('المهندس أحمد ممدوح');
     expect(mockRepo.listAdminUsers).toHaveBeenCalledTimes(1);
   });
 
-  it('should set global assignment when GLOBAL passed', async () => {
+  it('sets global assignment scope when GLOBAL keyword passed', async () => {
+    // Arrange
     const mockRepo = {
       getUserAssignment: vi.fn().mockResolvedValue(sampleUser),
       countActiveSuperAdmins: vi.fn().mockResolvedValue(2),
@@ -40,16 +61,19 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
         assignedSiteName: null,
       }),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
+
+    // Act
     const res = await service.setAssignment(111222333n, 'GLOBAL');
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.user?.assignedSiteId).toBeNull();
     expect(mockRepo.setAssignment).toHaveBeenCalledWith(111222333n, null);
   });
 
-  it('should set site assignment for specific site ID', async () => {
+  it('assigns specific site identifier to supervisor', async () => {
+    // Arrange
     const mockRepo = {
       getUserAssignment: vi.fn().mockResolvedValue(sampleUser),
       countActiveSuperAdmins: vi.fn().mockResolvedValue(2),
@@ -59,87 +83,99 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
         assignedSiteName: 'موقع العين السخنة',
       }),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
+
+    // Act
     const res = await service.setAssignment(111222333n, 'site-xyz');
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.user?.assignedSiteId).toBe('site-xyz');
     expect(mockRepo.setAssignment).toHaveBeenCalledWith(111222333n, 'site-xyz');
   });
 
-  it('should reject self-modification with security error', async () => {
+  it('rejects self-modification attempts with system security violation', async () => {
+    // Arrange
     const mockRepo = {
       getUserAssignment: vi.fn().mockResolvedValue(sampleUser),
       countActiveSuperAdmins: vi.fn().mockResolvedValue(2),
       setAssignment: vi.fn(),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
-    // Actor is trying to modify their own assignment
+
+    // Act
     const res = await service.setAssignment(111222333n, 'site-xyz', 111222333n);
 
+    // Assert
     expect(res.success).toBe(false);
     expect(res.error).toContain('أمان النظام');
     expect(mockRepo.setAssignment).not.toHaveBeenCalled();
   });
 
-  it('should reject restricting the last standing Super Admin', async () => {
+  it('rejects restricting scope of the sole active Super Admin', async () => {
+    // Arrange
     const superAdminUser = {
       ...sampleUser,
       id: 'u-super',
       telegramId: 999888777n,
       role: 'SUPER_ADMIN',
     };
-
     const mockRepo = {
       getUserAssignment: vi.fn().mockResolvedValue(superAdminUser),
-      // Only 1 active super admin exists!
       countActiveSuperAdmins: vi.fn().mockResolvedValue(1),
       setAssignment: vi.fn(),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
+
+    // Act
     const res = await service.setAssignment(999888777n, 'site-xyz', 111222333n);
 
+    // Assert
     expect(res.success).toBe(false);
     expect(res.error).toContain('المشرف العام الوحيد');
     expect(mockRepo.setAssignment).not.toHaveBeenCalled();
   });
 
-  it('should toggle freezeBotAccessOnLeave policy successfully', async () => {
+  it('toggles freezeBotAccessOnLeave policy flag cleanly', async () => {
+    // Arrange
     const mockRepo = {
       toggleFreezeBotAccessOnLeave: vi.fn().mockResolvedValue({
         ...sampleUser,
         freezeBotAccessOnLeave: false,
       }),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
+
+    // Act
     const res = await service.toggleFreezeBotAccess(111222333n, 999888777n);
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.user?.freezeBotAccessOnLeave).toBe(false);
     expect(mockRepo.toggleFreezeBotAccessOnLeave).toHaveBeenCalledWith(111222333n);
   });
 
-  it('should toggle ejectTelegramOnLeave policy successfully', async () => {
+  it('toggles ejectTelegramOnLeave policy flag cleanly', async () => {
+    // Arrange
     const mockRepo = {
       toggleEjectTelegramOnLeave: vi.fn().mockResolvedValue({
         ...sampleUser,
         ejectTelegramOnLeave: false,
       }),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
+
+    // Act
     const res = await service.toggleEjectTelegram(111222333n, 999888777n);
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.user?.ejectTelegramOnLeave).toBe(false);
     expect(mockRepo.toggleEjectTelegramOnLeave).toHaveBeenCalledWith(111222333n);
   });
 
-  it('should transition leave status cleanly', async () => {
+  it('transitions supervisor leave status with operator attribution', async () => {
+    // Arrange
     const mockRepo = {
       setLeaveStatus: vi.fn().mockResolvedValue({
         ...sampleUser,
@@ -147,13 +183,14 @@ describe('Flow 00.5 Unit Tests — AdminAssignment', () => {
         status: 'INACTIVE',
       }),
     } as unknown as AdminAssignmentRepository;
-
     const service = new AdminAssignmentService(mockRepo);
+
+    // Act
     const res = await service.setLeaveStatus(111222333n, true, 999888777n, 'المدير العام');
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.user?.isOnLeave).toBe(true);
     expect(mockRepo.setLeaveStatus).toHaveBeenCalledWith(111222333n, true, 999888777n, 'المدير العام');
   });
 });
-

@@ -34,19 +34,22 @@ To cryptographically seal an entity:
 > **«نعم اقفل»**
 CLI: `pnpm lock <target>`
 
-### 3.2 Unlock Authorization
-To temporarily unlock an entity for authorized modifications:
-> **«موافق على الفتح»** or **«نعم موافق على التعديل»**
-CLI: `pnpm unlock <target> --phrase="موافق على الفتح" --reason="..."`
+### 3.2 Unlock Authorization (OTP Challenge-Response Protocol - Work Plan 90)
+To unlock an entity for authorized modifications, agents must strictly execute the 3-step OTP protocol:
+1. **Request Challenge:** `pnpm unlock:request <target> --reason="<justification>"`
+2. **Hard Stop & Chat Approval:** The agent stops and asks Saleh in chat. Saleh provides the approval formula with the OTP nonce:
+   > **«موافق على الفتح <UNLOCK-XXXXXX>»** or **«نعم موافق على التعديل <UNLOCK-XXXXXX>»**
+3. **Forensic Confirmation:** `pnpm unlock:confirm <target>`
 
 ### 3.3 Universal Governance Bypass
 To modify master constitutional documents, root configurations, or database migration reversibility:
 > **«موافق على التعديل او الايقاف او الحذف»**
 
 ### 3.4 Strict Prohibition of Agent Self-Authorization (حظر الترخيص الذاتي)
-- **Absolute Ban:** AI agents are strictly forbidden from generating, authoring, or simulating approval formulas inside evidence documents, test files, scratchpads, or commit messages.
-- **Direct Human Origin:** Approval formulas must originate exclusively and verbatim from the human user's direct chat input.
-- **Procedural Fraud:** Any evidence file or tool invocation containing a self-generated approval token without a corresponding human chat message is classified as procedural fraud, causing an immediate task rejection (`[REJECT]`).
+- **Absolute Ban on `--phrase`:** The `--phrase` CLI parameter is permanently abolished. Agents attempting to pass approval phrases via CLI will trigger an immediate fatal exit (Exit 1).
+- **Physical Transcript Provenance:** The unlock engine physically inspects `transcript.jsonl` to ensure that the approval phrase and OTP nonce were authored strictly by `USER_EXPLICIT` (Saleh).
+- **Single-Use Anti-Replay Guard:** Once confirmed, the OTP nonce is immediately consumed and invalidated.
+- **Procedural Fraud:** Any attempt to simulate user approval or self-authorize will trigger an immediate `[REJECT]` verdict, an APM security alert, and postmortem logging.
 
 ---
 
@@ -61,8 +64,7 @@ The pre-commit hook runs `pnpm governance:tamper-check` on every commit:
 
 ## 5. Mandatory Pre-Edit Lock Inspection (الفحص المسبق قبل التعديل)
 1. **Pre-Edit Verification:** Before calling any write or edit tool (`replace_file_content`, `write_to_file`), the agent must verify whether the target file belongs to an active locked entity in `governance.lock.json`.
-2. **Immediate Stop & Prompt:** If the target file is locked, the agent must NOT attempt direct file modification. Instead, the agent must immediately stop, present the locked entity ID, and request the exact approval formula:
-   `pnpm unlock <target> --phrase="موافق على الفتح" --reason="..."`
+2. **Immediate Stop & Prompt:** If the target file is locked, the agent must NOT attempt direct file modification. Instead, the agent must immediately execute `pnpm unlock:request <target> --reason="..."` to generate an OTP challenge, stop execution, and request Saleh's authorization in chat. Under no circumstances may an agent self-authorize.
 
 ---
 
