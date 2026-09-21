@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 const { mockPrisma } = vi.hoisted(() => {
   const prisma = {
@@ -41,13 +43,23 @@ vi.mock('../src/redis.js', () => ({
 }));
 
 describe('Boost Handler — Real-Time Diagnostic & Performance Telemetry', () => {
+  let consoleLogSpy: any;
+
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.clearAllMocks();
   });
 
-  it('should reply with turbo boost performance card on /boost command', async () => {
-    const { handleBoost } = await import('../src/handlers/boost.handler.js');
+  afterEach(() => {
+    consoleLogSpy?.mockRestore();
+    vi.useRealTimers();
+  });
 
+  it('replies with turbo boost performance card on /boost command', async () => {
+    // Arrange
+    const { handleBoost } = await import('../src/handlers/boost.handler.js');
     let replyText = '';
     let replyMarkup: any = null;
 
@@ -63,25 +75,29 @@ describe('Boost Handler — Real-Time Diagnostic & Performance Telemetry', () =>
       }),
     } as any;
 
+    // Act
     await handleBoost(ctx);
 
-    expect(ctx.reply).toHaveBeenCalled();
+    // Assert
+    expect(ctx.reply).toHaveBeenCalledTimes(1);
     expect(replyText).toContain('Turbo Boost Status');
     expect(replyText).toContain('شركة السعادة');
     expect(replyText).toContain('كاش الذاكرة اللحظية (L1 RAM)');
     expect(replyText).toContain('قاعدة البيانات (PostgreSQL)');
     expect(replyText).toContain('خادم الكاش الموزع (Redis)');
     expect(replyText).toContain('زمن شبكة تليجرام الميدانية');
+    expect(replyText).not.toContain('تعذر الاتصال');
 
     // Check keyboard contains refresh and main menu
     const buttonsFlat = replyMarkup?.inline_keyboard?.flat() || [];
     expect(buttonsFlat.some((b: any) => b.callback_data === 'action:boost:refresh')).toBe(true);
     expect(buttonsFlat.some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
+    expect(buttonsFlat.length).toBeGreaterThan(0);
   });
 
-  it('should edit message in-place when triggered via callback action:boost:refresh', async () => {
+  it('edits message in-place when triggered via callback action:boost:refresh', async () => {
+    // Arrange
     const { handleBoost } = await import('../src/handlers/boost.handler.js');
-
     let editText = '';
     const ctx = {
       from: { id: 7594239391 },
@@ -100,14 +116,19 @@ describe('Boost Handler — Real-Time Diagnostic & Performance Telemetry', () =>
       },
     } as any;
 
+    // Act
     await handleBoost(ctx);
 
-    expect(ctx.answerCallbackQuery).toHaveBeenCalled();
-    expect(ctx.editMessageText).toHaveBeenCalled();
+    // Assert
+    expect(ctx.answerCallbackQuery).toHaveBeenCalledTimes(1);
+    expect(ctx.editMessageText).toHaveBeenCalledTimes(1);
     expect(editText).toContain('Turbo Boost Status');
+    expect(editText).toContain('شركة السعادة');
+    expect(editText).not.toContain('تعذر الاتصال');
   });
 
-  it('should handle DB or Redis failure gracefully with fault tolerance', async () => {
+  it('handles DB or Redis failure gracefully with fault tolerance', async () => {
+    // Arrange
     mockPrisma.$queryRawUnsafe.mockRejectedValueOnce(new Error('Connection timed out'));
     const { handleBoost } = await import('../src/handlers/boost.handler.js');
 
@@ -123,9 +144,12 @@ describe('Boost Handler — Real-Time Diagnostic & Performance Telemetry', () =>
       }),
     } as any;
 
+    // Act
     await handleBoost(ctx);
 
-    expect(ctx.reply).toHaveBeenCalled();
+    // Assert
+    expect(ctx.reply).toHaveBeenCalledTimes(1);
     expect(replyText).toContain('تعذر الاتصال');
+    expect(replyText).not.toContain('(PostgreSQL):* `0.00 ms` (متصل 🟢)');
   });
 });

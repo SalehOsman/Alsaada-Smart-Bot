@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   dashboardAuthService,
   AUTHORIZED_DASHBOARD_ROLES,
@@ -9,6 +9,8 @@ import { prisma } from '../src/db.js';
 import { redis } from '../src/redis.js';
 import { config } from '../src/config/env.js';
 import type { MyContext } from '../src/types/context.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 vi.mock('../src/db.js', () => ({
   prisma: {
@@ -40,30 +42,37 @@ vi.mock('../src/redis.js', () => ({
 
 describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group Privacy', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // ==========================================================================
   // Section 1: Access Control & Role Boundary Rejections
   // ==========================================================================
   describe('1. Access Control Rejection for Unauthorized, Banned & Non-Existent Users', () => {
-    it('rejects non-existent (unregistered) user, logs DASHBOARD_ACCESS_DENIED, and replies with rejection message', async () => {
+    it('rejects non-existent (unregistered) user at service level and logs DASHBOARD_ACCESS_DENIED', async () => {
+      // Arrange
       const nonExistentTelegramId = 9999888877n;
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce(null);
 
-      // Test service directly
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: nonExistentTelegramId,
         username: 'unknown_attacker',
       });
 
+      // Assert
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.reason).toBe('USER_NOT_FOUND');
         expect(result.user).toBeNull();
       }
-
-      // Verify AuditLog record
+      expect(result).not.toHaveProperty('token');
       expect(prisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -77,8 +86,11 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
           }),
         })
       );
+    });
 
-      // Test bot handler response
+    it('replies with rejection message and main menu button when unregistered user invokes dashboard command', async () => {
+      // Arrange
+      const nonExistentTelegramId = 9999888877n;
       const mockCtx = {
         from: {
           id: Number(nonExistentTelegramId),
@@ -89,8 +101,12 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
       } as unknown as MyContext;
 
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce(null);
+
+      // Act
       await handleDashboardCommand(mockCtx);
 
+      // Assert
+      expect(mockCtx.reply).toHaveBeenCalledTimes(1);
       expect(mockCtx.reply).toHaveBeenCalledWith(
         expect.stringContaining('عذراً، الوصول غير مصرح به'),
         expect.objectContaining({
@@ -107,13 +123,21 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
           }),
         })
       );
+      expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
     });
 
-    it('rejects unauthorized roles (WORKER, SUPPLIER, GUEST) with UNAUTHORIZED_ROLE and logs denial', async () => {
-      const unauthorizedRoles = ['WORKER', 'SUPPLIER', 'GUEST', 'CONTRACTOR'];
+    it('rejects unauthorized roles (WORKER, SUPPLIER, GUEST, CONTRACTOR) with UNAUTHORIZED_ROLE and logs denial', async () => {
+      // Arrange
+      const unauthorizedRoles = ['WORKER', 'SUPPLIER', 'GUEST', 'CONTRACTOR'] as const;
+      const roleIds: Record<(typeof unauthorizedRoles)[number], bigint> = {
+        WORKER: 1000001n,
+        SUPPLIER: 1000002n,
+        GUEST: 1000003n,
+        CONTRACTOR: 1000004n,
+      };
 
       for (const role of unauthorizedRoles) {
-        const telegramId = BigInt(1000000 + Math.floor(Math.random() * 9000000));
+        const telegramId = roleIds[role];
         vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
           id: `usr-${role.toLowerCase()}-01`,
           telegramId,
@@ -123,17 +147,19 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
           isBanned: false,
         } as any);
 
+        // Act
         const result = await dashboardAuthService.issueDashboardAccess({
           telegramId,
           username: `test_${role.toLowerCase()}`,
         });
 
+        // Assert
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.reason).toBe('UNAUTHORIZED_ROLE');
           expect(result.user?.role).toBe(role);
         }
-
+        expect(result).not.toHaveProperty('token');
         expect(prisma.auditLog.create).toHaveBeenCalledWith(
           expect.objectContaining({
             data: expect.objectContaining({
@@ -150,7 +176,8 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
       }
     });
 
-    it('strictly rejects BANNED user even if they hold SUPER_ADMIN role', async () => {
+    it('strictly rejects BANNED user at service level even if they hold SUPER_ADMIN role', async () => {
+      // Arrange
       const bannedTelegramId = 4455667788n;
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-banned-superadmin',
@@ -161,15 +188,18 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
         isBanned: true, // BANNED
       } as any);
 
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: bannedTelegramId,
       });
 
+      // Assert
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.reason).toBe('ACCOUNT_BANNED');
+        expect(result.user?.isBanned).toBe(true);
       }
-
+      expect(result).not.toHaveProperty('token');
       expect(prisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -182,8 +212,11 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
           }),
         })
       );
+    });
 
-      // Verify handler response displays 'محظور'
+    it('replies with banned account notice when banned user invokes dashboard command', async () => {
+      // Arrange
+      const bannedTelegramId = 4455667788n;
       const mockCtx = {
         from: { id: Number(bannedTelegramId), first_name: 'محظور' },
         chat: { type: 'private' },
@@ -199,14 +232,20 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
         isBanned: true,
       } as any);
 
+      // Act
       await handleDashboardCommand(mockCtx);
+
+      // Assert
+      expect(mockCtx.reply).toHaveBeenCalledTimes(1);
       expect(mockCtx.reply).toHaveBeenCalledWith(
         expect.stringContaining('محظور'),
         expect.any(Object)
       );
+      expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
     });
 
     it('strictly rejects INACTIVE (deactivated) user even if they hold SUPER_ADMIN role', async () => {
+      // Arrange
       const inactiveTelegramId = 3322110099n;
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-inactive-superadmin',
@@ -217,15 +256,18 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
         isBanned: false,
       } as any);
 
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: inactiveTelegramId,
       });
 
+      // Assert
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.reason).toBe('ACCOUNT_INACTIVE');
+        expect(result.user?.isActive).toBe(false);
       }
-
+      expect(result).not.toHaveProperty('token');
       expect(prisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -245,7 +287,8 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
   // Section 2: Group Chat Privacy Guard (Token Leakage Prevention)
   // ==========================================================================
   describe('2. Group Chat Privacy Guard & Token Leakage Prevention', () => {
-    it('group chat invocation: strictly rejects group invocation without generating tokens or sending DMs', async () => {
+    it('strictly rejects group invocation without generating tokens or sending DMs', async () => {
+      // Arrange
       const userTelegramId = 77665544n;
       const groupChatId = -1001234567890;
 
@@ -265,16 +308,14 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
+      // Act
       await handleDashboardCommand(mockCtx);
 
-      // 1. Zero DMs sent
+      // Assert
       expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
-
-      // 2. Zero DB auth links created
       expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
-
-      // 3. Group reply contains rejection notice strictly without token
       expect(mockCtx.reply).toHaveBeenCalledTimes(1);
+
       const groupReplyCall = vi.mocked(mockCtx.reply).mock.calls[0] as [string, any];
       const groupReplyText = groupReplyCall[0] as string;
 
@@ -283,7 +324,8 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
       expect(groupReplyText).not.toContain('token=');
     });
 
-    it('supergroup chat invocation: strictly rejects supergroup invocation without generating tokens', async () => {
+    it('strictly rejects supergroup invocation without generating tokens', async () => {
+      // Arrange
       const userTelegramId = 66554433n;
       const supergroupId = -1009876543210;
 
@@ -302,10 +344,14 @@ describe('Adversarial Stress Test: Bot Command /dashboard Access Control & Group
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
+      // Act
       await handleDashboardCommand(mockCtx);
 
+      // Assert
       expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
       expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
+      expect(mockCtx.reply).toHaveBeenCalledTimes(1);
+
       const groupText = vi.mocked(mockCtx.reply).mock.calls[0]![0] as string;
       expect(groupText).toContain('عذراً، الوصول إلى لوحة التحكم متاح حصرياً عبر المحادثة الخاصة مع البوت');
       expect(groupText).not.toContain('token=');

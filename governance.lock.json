@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T12:02:04.936Z",
+  "generatedAt": "2026-09-21T12:17:39.017Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -37,7 +37,7 @@
     },
     {
       "path": ".agents/rules/02-autonomous-execution-and-checkpoints.md",
-      "sha256": "e6071682c16ea8bfa74f11887df6b513133348e12e9b7dcde4b4a98f1e9f5d39"
+      "sha256": "971b4a3486d87cf13c94abec2a4fdc949f730d19c3f4124cb13a7c2e4ed3a1e3"
     },
     {
       "path": ".agents/rules/03-git-branch-lifecycle-and-immunity.md",
@@ -45,7 +45,7 @@
     },
     {
       "path": ".agents/rules/04-cryptographic-immutability-engine.md",
-      "sha256": "c8c2b1e175f9a56a59b9fe29587779b3f9dc9427d901162f4efb418b9937d555"
+      "sha256": "b18676889443cd5ddea157f7ef2d835a596cafeefdbeb2f32005e9225d95e9db"
     },
     {
       "path": ".agents/rules/05-quality-gates-taxonomy-g1-g23.md",
@@ -173,7 +173,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "a3b99cea43e41e111f28646c4286833c8856c5407eed27f554b30a5d7164307c"
+      "sha256": "ee807fa075a5f58305d8f2fcf8746451628ca1b2243f1f8e8e428fccc6d70e5e"
     },
     {
       "path": "package.json",
@@ -1963,7 +1963,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-21T12:02:04.936Z",
+      "lockedAt": "2026-09-21T12:17:39.017Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2287,7 +2287,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-21T12:02:04.936Z",
+      "lockedAt": "2026-09-21T12:17:39.017Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3450,6 +3450,266 @@
         {
           "path": "apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
           "sha256": "d59b492a7c254b4d64418dbca0ae055d98ce0e984f0a48c16b1b594bd096953f"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/adversarial-dashboard-access.spec.ts": {
+      "id": "test:apps/bot-server/tests/adversarial-dashboard-access.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/adversarial-dashboard-access.spec.ts",
+      "directory": "apps/bot-server/tests/adversarial-dashboard-access.spec.ts",
+      "lockedAt": "2026-09-21T13:03:53.046Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/adversarial-dashboard-access.spec.ts",
+          "sha256": "9f93d4591b129f5c979ebcd1f40c9d29c0def9746ac11963847acc4242fb49be"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/boost-handler.spec.ts": {
+      "id": "test:apps/bot-server/tests/boost-handler.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/boost-handler.spec.ts",
+      "directory": "apps/bot-server/tests/boost-handler.spec.ts",
+      "lockedAt": "2026-09-21T13:07:45.880Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/boost-handler.spec.ts",
+          "sha256": "f2f04e68f76e79f30bc83bacbe620e554710cfcc9ca818374083481a169f250f"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts": {
+      "id": "test:apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts",
+      "directory": "apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts",
+      "lockedAt": "2026-09-21T12:49:20.693Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts",
+          "sha256": "7c4984b99c267cf9ca2c7f81e2a68a5f3f43c5f8ea7f23d8f5b3ae37c7710c50"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/coordinates.spec.ts": {
+      "id": "test:apps/bot-server/tests/coordinates.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/coordinates.spec.ts",
+      "directory": "apps/bot-server/tests/coordinates.spec.ts",
+      "lockedAt": "2026-09-21T13:07:46.381Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/coordinates.spec.ts",
+          "sha256": "cd835a9f997999045cf92f17120117edce03cf3197b1152643c2ef10e01c5227"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/dashboard-command.spec.ts": {
+      "id": "test:apps/bot-server/tests/dashboard-command.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/dashboard-command.spec.ts",
+      "directory": "apps/bot-server/tests/dashboard-command.spec.ts",
+      "lockedAt": "2026-09-21T12:49:21.754Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/dashboard-command.spec.ts",
+          "sha256": "43f7a729826ae1c857179ec863043bebc767296b9b2e30ed9e4ce5bd48797f14"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/env-validation.spec.ts": {
+      "id": "test:apps/bot-server/tests/env-validation.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/env-validation.spec.ts",
+      "directory": "apps/bot-server/tests/env-validation.spec.ts",
+      "lockedAt": "2026-09-21T12:49:22.241Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/env-validation.spec.ts",
+          "sha256": "ac0be5d053e44915cfa8209cda35a7497ee7519407bedebeeeeecbdf68d33a99"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/error-vault-and-telemetry.spec.ts": {
+      "id": "test:apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
+      "directory": "apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
+      "lockedAt": "2026-09-21T12:49:22.842Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
+          "sha256": "f4d6e892196ca63cbdf2a68922f5889fb51956ba44a9b54dd41a4e88550efeef"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/fast-cache.benchmark.spec.ts": {
+      "id": "test:apps/bot-server/tests/fast-cache.benchmark.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/fast-cache.benchmark.spec.ts",
+      "directory": "apps/bot-server/tests/fast-cache.benchmark.spec.ts",
+      "lockedAt": "2026-09-21T13:07:46.965Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/fast-cache.benchmark.spec.ts",
+          "sha256": "288b77ace14427e6e6f8f5053fb9ee0264d4e6faacc7ef57b937806548af4b1a"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/fast-cache.spec.ts": {
+      "id": "test:apps/bot-server/tests/fast-cache.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/fast-cache.spec.ts",
+      "directory": "apps/bot-server/tests/fast-cache.spec.ts",
+      "lockedAt": "2026-09-21T12:49:24.191Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/fast-cache.spec.ts",
+          "sha256": "66881a154808058e7ddb80fdc77b2f289fc615c4be556538ef56fae97bb2a219"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/group-manager.spec.ts": {
+      "id": "test:apps/bot-server/tests/group-manager.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/group-manager.spec.ts",
+      "directory": "apps/bot-server/tests/group-manager.spec.ts",
+      "lockedAt": "2026-09-21T12:49:24.856Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/group-manager.spec.ts",
+          "sha256": "05c07d1a5c7356a6535b7fe653d09fe47ae3c1188a9d68924c14d850568a48a3"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/hr-rbac-masking.spec.ts": {
+      "id": "test:apps/bot-server/tests/hr-rbac-masking.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/hr-rbac-masking.spec.ts",
+      "directory": "apps/bot-server/tests/hr-rbac-masking.spec.ts",
+      "lockedAt": "2026-09-21T12:49:31.198Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/hr-rbac-masking.spec.ts",
+          "sha256": "d07bf840bbaea810292ab39c51a3625d428a453149f52b762340f06f3967e975"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/main-menu.spec.ts": {
+      "id": "test:apps/bot-server/tests/main-menu.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/main-menu.spec.ts",
+      "directory": "apps/bot-server/tests/main-menu.spec.ts",
+      "lockedAt": "2026-09-21T12:49:31.733Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/main-menu.spec.ts",
+          "sha256": "e77a895e652bb1b2373d6b834411b2cf03c0980c1744ac69782883e7d48246da"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/modules-registry-and-autoloader.spec.ts": {
+      "id": "test:apps/bot-server/tests/modules-registry-and-autoloader.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/modules-registry-and-autoloader.spec.ts",
+      "directory": "apps/bot-server/tests/modules-registry-and-autoloader.spec.ts",
+      "lockedAt": "2026-09-21T12:49:32.361Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/modules-registry-and-autoloader.spec.ts",
+          "sha256": "0ab751ac174f7b581b62ecb5ce190b53a5488c1044453c70be20bc7a693b9c51"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/outbox-circuit-breaker.spec.ts": {
+      "id": "test:apps/bot-server/tests/outbox-circuit-breaker.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/outbox-circuit-breaker.spec.ts",
+      "directory": "apps/bot-server/tests/outbox-circuit-breaker.spec.ts",
+      "lockedAt": "2026-09-21T12:49:32.914Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/outbox-circuit-breaker.spec.ts",
+          "sha256": "0240e20379d4530b4afec3b93126e1ffb12bede135c1b31d5a2a1efb2236ed5f"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/permanent-speed-engine.spec.ts": {
+      "id": "test:apps/bot-server/tests/permanent-speed-engine.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/permanent-speed-engine.spec.ts",
+      "directory": "apps/bot-server/tests/permanent-speed-engine.spec.ts",
+      "lockedAt": "2026-09-21T13:07:47.554Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/permanent-speed-engine.spec.ts",
+          "sha256": "93ac1d441ab35e0cd2463a743f86cb75861cc37e08dbf7cec92d1795b469f776"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/reply-bar.keyboard.spec.ts": {
+      "id": "test:apps/bot-server/tests/reply-bar.keyboard.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/reply-bar.keyboard.spec.ts",
+      "directory": "apps/bot-server/tests/reply-bar.keyboard.spec.ts",
+      "lockedAt": "2026-09-21T12:49:34.089Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/reply-bar.keyboard.spec.ts",
+          "sha256": "fca9ea19c81e7a5b365ce6dc0432e12b25478cdbdf1728c917acb9ed09525dc1"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts": {
+      "id": "test:apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
+      "directory": "apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
+      "lockedAt": "2026-09-21T13:07:48.089Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
+          "sha256": "470d9050ac92f82d5beb83ccfee257d2dd932bb5d3eb6487b5bf2d1c5d83d73b"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/security-hardening-r07-r09.spec.ts": {
+      "id": "test:apps/bot-server/tests/security-hardening-r07-r09.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/security-hardening-r07-r09.spec.ts",
+      "directory": "apps/bot-server/tests/security-hardening-r07-r09.spec.ts",
+      "lockedAt": "2026-09-21T13:07:48.617Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/security-hardening-r07-r09.spec.ts",
+          "sha256": "4ae734c637a41d02085c49f641ead47db50885480904eee1b25e072029c18052"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/session-monitor.spec.ts": {
+      "id": "test:apps/bot-server/tests/session-monitor.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/session-monitor.spec.ts",
+      "directory": "apps/bot-server/tests/session-monitor.spec.ts",
+      "lockedAt": "2026-09-21T12:52:20.937Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/session-monitor.spec.ts",
+          "sha256": "b5ca480538deac515f1fa6efcfb0ba36df9fe31acc1e05ac6291dec18171a9a4"
+        }
+      ]
+    },
+    "test:apps/bot-server/tests/site-scope.spec.ts": {
+      "id": "test:apps/bot-server/tests/site-scope.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/bot-server/tests/site-scope.spec.ts",
+      "directory": "apps/bot-server/tests/site-scope.spec.ts",
+      "lockedAt": "2026-09-21T12:49:36.554Z",
+      "files": [
+        {
+          "path": "apps/bot-server/tests/site-scope.spec.ts",
+          "sha256": "b3b3d8680fd502c55059b1408176a908d8e56e45fb43fc7f38ebf67df2a51619"
         }
       ]
     }

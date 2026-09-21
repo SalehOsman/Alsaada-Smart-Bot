@@ -43,6 +43,11 @@ CLI: `pnpm unlock <target> --phrase="موافق على الفتح" --reason="...
 To modify master constitutional documents, root configurations, or database migration reversibility:
 > **«موافق على التعديل او الايقاف او الحذف»**
 
+### 3.4 Strict Prohibition of Agent Self-Authorization (حظر الترخيص الذاتي)
+- **Absolute Ban:** AI agents are strictly forbidden from generating, authoring, or simulating approval formulas inside evidence documents, test files, scratchpads, or commit messages.
+- **Direct Human Origin:** Approval formulas must originate exclusively and verbatim from the human user's direct chat input.
+- **Procedural Fraud:** Any evidence file or tool invocation containing a self-generated approval token without a corresponding human chat message is classified as procedural fraud, causing an immediate task rejection (`[REJECT]`).
+
 ---
 
 ## 4. Pre-Commit Tamper Enforcement (`governance:tamper-check`)
@@ -51,3 +56,10 @@ The pre-commit hook runs `pnpm governance:tamper-check` on every commit:
 1. It compares all protected governance files against `governance.lock.json`.
 2. It verifies that no locked entity has experienced unauthorized tampering or file injection.
 3. If any modification is detected without an active unlock or updated lockfile, the commit is aborted immediately.
+
+---
+
+## 5. Mandatory Pre-Edit Lock Inspection (الفحص المسبق قبل التعديل)
+1. **Pre-Edit Verification:** Before calling any write or edit tool (`replace_file_content`, `write_to_file`), the agent must verify whether the target file belongs to an active locked entity in `governance.lock.json`.
+2. **Immediate Stop & Prompt:** If the target file is locked, the agent must NOT attempt direct file modification. Instead, the agent must immediately stop, present the locked entity ID, and request the exact approval formula:
+   `pnpm unlock <target> --phrase="موافق على الفتح" --reason="..."`
