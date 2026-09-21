@@ -1,9 +1,12 @@
 import crypto from 'node:crypto';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { TelemetryLogger } from '@alsaada/telemetry';
 import {
   dashboardAuthService,
   AUTHORIZED_DASHBOARD_ROLES,
 } from '../src/services/dashboard-auth.service.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 import {
   isValidOpaqueTokenFormat,
   normalizeOrigin,
@@ -74,7 +77,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
 
   describe('1. Cryptographic Opaque Token & SSOT Security Standards', () => {
     it('generates strict 64-hex opaque tokens conforming to security specifications', () => {
+      // Arrange & Act
       const token = crypto.randomBytes(32).toString('hex');
+
+      // Assert
       expect(token).toMatch(/^[0-9a-f]{64}$/i);
       expect(isValidOpaqueTokenFormat(token)).toBe(true);
       expect(isValidOpaqueTokenFormat('invalid-token')).toBe(false);
@@ -82,6 +88,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
     });
 
     it('verifies exact origin normalization and matching', () => {
+      // Arrange, Act & Assert
       expect(normalizeOrigin('http://localhost:3002/')).toBe('http://localhost:3002');
       expect(normalizeOrigin('http://localhost:3002')).toBe('http://localhost:3002');
       expect(isExactOriginMatch('http://localhost:3002', 'http://localhost:3002')).toBe(true);
@@ -90,7 +97,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
   });
 
   describe('2. DashboardAuthService Authorization & Audit Trail', () => {
-    it('should authorize the 3 ratified administrative roles into dashboard with dual links', async () => {
+    it('authorizes the 3 ratified administrative roles into dashboard with dual links', async () => {
+      // Arrange
       for (const role of AUTHORIZED_DASHBOARD_ROLES) {
         vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
           id: `usr-${role.toLowerCase()}`,
@@ -103,6 +111,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
           assignedSite: { name: 'الموقع الرئيسي' },
         } as any);
 
+        // Act
         const result = await dashboardAuthService.issueDualDashboardAccess({
           telegramId: 11223344n,
           username: `user_${role}`,
@@ -110,6 +119,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
           lastName: role,
         });
 
+        // Assert
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.user.role).toBe(role);
@@ -132,7 +142,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       }
     });
 
-    it('should reject unauthorized roles (WORKER, SUPPLIER, GUEST) and log access denial', async () => {
+    it('rejects unauthorized roles (WORKER, SUPPLIER, GUEST) and logs access denial', async () => {
+      // Arrange
       const unauthorizedRoles = ['WORKER', 'SUPPLIER', 'GUEST', 'UNKNOWN'];
 
       for (const role of unauthorizedRoles) {
@@ -145,11 +156,13 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
           isBanned: false,
         } as any);
 
+        // Act
         const result = await dashboardAuthService.issueDashboardAccess({
           telegramId: 99887766n,
           username: `user_${role}`,
         });
 
+        // Assert
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.reason).toBe('UNAUTHORIZED_ROLE');
@@ -167,7 +180,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       }
     });
 
-    it('should reject inactive users with ACCOUNT_INACTIVE', async () => {
+    it('rejects inactive users with ACCOUNT_INACTIVE', async () => {
+      // Arrange
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-inactive',
         telegramId: 55443322n,
@@ -177,17 +191,21 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         isBanned: false,
       } as any);
 
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: 55443322n,
       });
 
+      // Assert
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.reason).toBe('ACCOUNT_INACTIVE');
       }
+      expect(result).not.toHaveProperty('token');
     });
 
-    it('should reject banned users with ACCOUNT_BANNED', async () => {
+    it('rejects banned users with ACCOUNT_BANNED', async () => {
+      // Arrange
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-banned',
         telegramId: 66554433n,
@@ -197,30 +215,38 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         isBanned: true,
       } as any);
 
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: 66554433n,
       });
 
+      // Assert
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.reason).toBe('ACCOUNT_BANNED');
       }
+      expect(result).not.toHaveProperty('token');
     });
 
-    it('should reject unregistered users with USER_NOT_FOUND', async () => {
+    it('rejects unregistered users with USER_NOT_FOUND', async () => {
+      // Arrange
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce(null);
 
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: 11112222n,
       });
 
+      // Assert
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.reason).toBe('USER_NOT_FOUND');
       }
+      expect(result).not.toHaveProperty('token');
     });
 
-    it('should auto-upsert Super Admin if telegramId matches SUPER_ADMIN_TELEGRAM_ID', async () => {
+    it('auto-upserts Super Admin if telegramId matches SUPER_ADMIN_TELEGRAM_ID', async () => {
+      // Arrange
       const superAdminId = 77889900n;
       config.superAdminTelegramId = superAdminId;
 
@@ -235,6 +261,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         assignedSite: null,
       } as any);
 
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: superAdminId,
         username: 'super_owner',
@@ -242,6 +269,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         lastName: 'العام',
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(prisma.user.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -251,7 +279,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       );
     });
 
-    it('should cache magic token in Redis when available', async () => {
+    it('caches magic token in Redis when available', async () => {
+      // Arrange
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-exec',
         telegramId: 88776655n,
@@ -261,10 +290,12 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         isBanned: false,
       } as any);
 
+      // Act
       const result = await dashboardAuthService.issueDashboardAccess({
         telegramId: 88776655n,
       });
 
+      // Assert
       expect(result.success).toBe(true);
       if (result.success) {
         expect(redis.set).toHaveBeenCalledWith(
@@ -278,8 +309,11 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
   });
 
   describe('3. Dynamic Command Scope Registration & Legacy Command Purge', () => {
-    it('should strictly PURGE dashboard, admin_dashboard, and panel commands for ALL roles', () => {
+    it('strictly purges dashboard, admin_dashboard, and panel commands for all roles', () => {
+      // Arrange
       const allRoles = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN', 'WORKER_SUPERVISOR', 'WORKER', 'SUPPLIER', 'GUEST'];
+
+      // Act & Assert
       for (const role of allRoles) {
         const commands = getCommandsForRole(role);
         const hasDashboard = commands.some((cmd) =>
@@ -350,6 +384,9 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
     });
 
     it('returns an interactive safe fallback when Telegram rejects the rich dashboard card', async () => {
+      // Arrange
+      const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
       config.dashboardLocalUrl = 'http://localtest.me:3002';
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
@@ -372,20 +409,29 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply,
       } as unknown as MyContext;
 
-      await expect(handleDashboardCommand(mockCtx)).resolves.toBeUndefined();
+      // Act & Assert
+      try {
+        await expect(handleDashboardCommand(mockCtx)).resolves.toBeUndefined();
 
-      expect(reply).toHaveBeenCalledTimes(2);
-      const [fallbackText, fallbackOptions] = reply.mock.calls[1] as [string, any];
-      expect(fallbackText).toContain('رمز البلاغ المرجعي:');
-      const fallbackButtons = fallbackOptions.reply_markup.inline_keyboard.flat();
-      expect(fallbackButtons).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ callback_data: 'action:main_menu' }),
-        ]),
-      );
+        expect(reply).toHaveBeenCalledTimes(2);
+        const [fallbackText, fallbackOptions] = reply.mock.calls[1] as [string, any];
+        expect(fallbackText).toContain('رمز البلاغ المرجعي:');
+        const fallbackButtons = fallbackOptions.reply_markup.inline_keyboard.flat();
+        expect(fallbackButtons).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ callback_data: 'action:main_menu' }),
+          ]),
+        );
+      } finally {
+        stdoutSpy.mockRestore();
+        stderrSpy.mockRestore();
+      }
     });
 
     it('gracefully recovers with interactive error card when dashboard origins configuration fails', async () => {
+      // Arrange
+      const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
       config.dashboardLocalUrl = 'http://invalid-hostname:3002';
 
@@ -405,17 +451,25 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply,
       } as unknown as MyContext;
 
-      await handleDashboardCommand(mockCtx);
+      // Act
+      try {
+        await handleDashboardCommand(mockCtx);
 
-      expect(reply).toHaveBeenCalledTimes(1);
-      const [replyText, replyOptions] = reply.mock.calls[0] as [string, any];
-      expect(replyText).toContain('تعذر الوصول المؤقت إلى لوحة التحكم');
-      const buttons = replyOptions.reply_markup.inline_keyboard.flat();
-      expect(buttons.find((btn: any) => btn.text === '🔄 إعادة المحاولة')).toBeDefined();
-      expect(buttons.find((btn: any) => btn.text === '🏠 القائمة الرئيسية')).toBeDefined();
+        // Assert
+        expect(reply).toHaveBeenCalledTimes(1);
+        const [replyText, replyOptions] = reply.mock.calls[0] as [string, any];
+        expect(replyText).toContain('تعذر الوصول المؤقت إلى لوحة التحكم');
+        const buttons = replyOptions.reply_markup.inline_keyboard.flat();
+        expect(buttons.find((btn: any) => btn.text === '🔄 إعادة المحاولة')).toBeDefined();
+        expect(buttons.find((btn: any) => btn.text === '🏠 القائمة الرئيسية')).toBeDefined();
+      } finally {
+        stdoutSpy.mockRestore();
+        stderrSpy.mockRestore();
+      }
     });
 
-    it('should include dual link buttons (Tunnel and Local) and session management in keyboard', async () => {
+    it('includes dual link buttons (Tunnel and Local) and session management in keyboard', async () => {
+      // Arrange
       config.dashboardTunnelUrl = 'https://tunnel.alsaada.example';
       config.dashboardLocalUrl = 'http://localtest.me:3002';
 
@@ -441,8 +495,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
+      // Act
       await handleDashboardCommand(mockCtx);
 
+      // Assert
       expect(mockCtx.reply).toHaveBeenCalledTimes(1);
       const [replyText, replyOptions] = vi.mocked(mockCtx.reply).mock.calls[0] as [string, any];
 
@@ -468,7 +524,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(sessListBtn.callback_data).toBe('sess_list');
     });
 
-    it('should handle unexpected errors gracefully in try/catch and reply with error card without freezing', async () => {
+    it('handles unexpected errors gracefully in try/catch and replies with error card without freezing', async () => {
+      // Arrange
+      const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
       vi.mocked(prisma.user.findFirst).mockRejectedValueOnce(new Error('Prisma database failure'));
 
       const mockCtx = {
@@ -477,15 +536,22 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
-      await expect(handleDashboardCommand(mockCtx)).resolves.not.toThrow();
+      // Act & Assert
+      try {
+        await expect(handleDashboardCommand(mockCtx)).resolves.not.toThrow();
 
-      expect(mockCtx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('رمز البلاغ المرجعي:'),
-        expect.objectContaining({ parse_mode: 'HTML' }),
-      );
+        expect(mockCtx.reply).toHaveBeenCalledWith(
+          expect.stringContaining('رمز البلاغ المرجعي:'),
+          expect.objectContaining({ parse_mode: 'HTML' }),
+        );
+      } finally {
+        stdoutSpy.mockRestore();
+        stderrSpy.mockRestore();
+      }
     });
 
-    it('should strictly reject invocation in group/supergroup chats without generating tokens or sending DMs', async () => {
+    it('strictly rejects invocation in group/supergroup chats without generating tokens or sending DMs', async () => {
+      // Arrange
       const mockCtx = {
         from: {
           id: 87654321,
@@ -501,8 +567,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
+      // Act
       await handleDashboardCommand(mockCtx);
 
+      // Assert
       // Never sends DM to user
       expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
 
@@ -516,7 +584,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       );
     });
 
-    it('should strictly reject regular group chats without generating tokens', async () => {
+    it('strictly rejects regular group chats without generating tokens', async () => {
+      // Arrange
       const mockCtx = {
         from: {
           id: 99881122,
@@ -532,8 +601,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
+      // Act
       await handleDashboardCommand(mockCtx);
 
+      // Assert
       expect(mockCtx.api.sendMessage).not.toHaveBeenCalled();
       expect(prisma.dashboardAuthLink.create).not.toHaveBeenCalled();
       expect(mockCtx.reply).toHaveBeenCalledWith(
@@ -542,7 +613,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       );
     });
 
-    it('should reply with polite Arabic rejection card when unauthorized user invokes command', async () => {
+    it('replies with polite Arabic rejection card when unauthorized user invokes command', async () => {
+      // Arrange
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-worker-01',
         telegramId: 33445566n,
@@ -563,8 +635,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
+      // Act
       await handleDashboardCommand(mockCtx);
 
+      // Assert
       expect(mockCtx.reply).toHaveBeenCalledWith(
         expect.stringContaining('عذراً، الوصول غير مصرح به'),
         expect.objectContaining({
@@ -585,7 +659,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
   });
 
   describe('5. Localized Arabic Administrative Titles & HTML Escaping Robustness', () => {
-    it('should map all specified roles to their official Arabic administrative titles', () => {
+    it('maps all specified roles to their official Arabic administrative titles', () => {
+      // Arrange, Act & Assert
       expect(getRoleTitle('SUPER_ADMIN')).toBe('مدير عام المنظومة (سوبر أدمن)');
       expect(getRoleTitle('GENERAL_ADMIN')).toBe('الإدارة العامة للمنظومة');
       expect(getRoleTitle('FIELD_ADMIN')).toBe('مشرف موقع ميداني');
@@ -598,9 +673,14 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(getRoleTitle(undefined)).toBe('غير مسجل بالمنظومة');
     });
 
-    it('should escape HTML characters (&, <, >) to avoid Telegram parsing crashes (#ERR-A62P)', () => {
+    it('escapes HTML characters (&, <, >) to avoid Telegram parsing crashes (#ERR-A62P)', () => {
+      // Arrange
       const dangerousInput = 'شركة النيل <للمقاولات> & التوريدات > قسم 1';
+
+      // Act
       const escaped = escapeHtml(dangerousInput);
+
+      // Assert
       expect(escaped).toBe('شركة النيل &lt;للمقاولات&gt; &amp; التوريدات &gt; قسم 1');
       expect(escaped).not.toContain('<');
       expect(escaped).not.toContain('>');
@@ -610,7 +690,8 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
       expect(escapeHtml(markdownChars)).toBe('user_with_underscores *bold* `code`');
     });
 
-    it('should safely render user with special characters in name and site without malformed HTML', async () => {
+    it('safely renders user with special characters in name and site without malformed HTML', async () => {
+      // Arrange
       vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({
         id: 'usr-sa-special',
         telegramId: 99001122n,
@@ -633,8 +714,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
         reply: vi.fn().mockResolvedValue({}),
       } as unknown as MyContext;
 
+      // Act
       await handleDashboardCommand(mockCtx);
 
+      // Assert
       const replyCall = vi.mocked(mockCtx.reply).mock.calls[0]!;
       const replyText = replyCall[0] as string;
 
@@ -647,6 +730,7 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
 
   describe('6. Session Management Callbacks & In-Place Navigation', () => {
     it('renders session list in-place via editMessageText without sending a new message', async () => {
+      // Arrange
       vi.mocked(prisma.dashboardSession.findMany).mockResolvedValueOnce([
         {
           id: 'sess-active-01',
@@ -654,10 +738,10 @@ describe('Milestone 2: Bot Server Command /dashboard & Cryptographic Magic Token
           actorTelegramId: 12345678n,
           originKind: 'LOCAL',
           deviceSummary: 'Chrome on Windows',
-          expiresAt: new Date(Date.now() + 3600 * 1000),
+          expiresAt: new Date(PINNED_BASE_TIME.getTime() + 3600 * 1000),
           revokedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date(PINNED_BASE_TIME.getTime()),
+          updatedAt: new Date(PINNED_BASE_TIME.getTime()),
         } as any,
       ]);
 

@@ -1,40 +1,92 @@
-﻿import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   parseCoordinates,
   isValidLatLng,
   formatGoogleMapsUrl,
 } from '../src/utils/coordinates.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('GPS Coordinates Parser Utility', () => {
-  it('should parse plain comma-separated coordinates', async () => {
-    const res = await parseCoordinates('25.4412, 30.5512');
-    expect(res).toEqual({ latitude: 25.4412, longitude: 30.5512 });
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
   });
 
-  it('should parse space-separated coordinates', async () => {
-    const res = await parseCoordinates('25.4412 30.5512');
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  it('parses plain comma-separated coordinates into latitude and longitude', async () => {
+    // Arrange
+    const input = '25.4412, 30.5512';
+
+    // Act
+    const res = await parseCoordinates(input);
+
+    // Assert
+    expect(res).not.toBeNull();
     expect(res).toEqual({ latitude: 25.4412, longitude: 30.5512 });
+    expect(res?.latitude).toBe(25.4412);
+    expect(res?.longitude).toBe(30.5512);
   });
 
-  it('should parse negative coordinates', async () => {
-    const res = await parseCoordinates('-12.3456, -77.1234');
+  it('parses space-separated coordinates correctly', async () => {
+    // Arrange
+    const input = '25.4412 30.5512';
+
+    // Act
+    const res = await parseCoordinates(input);
+
+    // Assert
+    expect(res).not.toBeNull();
+    expect(res).toEqual({ latitude: 25.4412, longitude: 30.5512 });
+    expect(res?.latitude).toBeGreaterThan(0);
+    expect(res?.longitude).toBeGreaterThan(0);
+  });
+
+  it('parses negative coordinates representing southern or western hemispheres', async () => {
+    // Arrange
+    const input = '-12.3456, -77.1234';
+
+    // Act
+    const res = await parseCoordinates(input);
+
+    // Assert
+    expect(res).not.toBeNull();
     expect(res).toEqual({ latitude: -12.3456, longitude: -77.1234 });
+    expect(res?.latitude).toBeLessThan(0);
+    expect(res?.longitude).toBeLessThan(0);
   });
 
-  it('should parse coordinates from Google Maps query link', async () => {
+  it('parses coordinates from Google Maps query link parameter', async () => {
+    // Arrange
     const url = 'https://maps.google.com/?q=25.441200,30.551200';
+
+    // Act
     const res = await parseCoordinates(url);
+
+    // Assert
+    expect(res).not.toBeNull();
     expect(res).toEqual({ latitude: 25.4412, longitude: 30.5512 });
+    expect(res?.latitude).toBe(25.4412);
+    expect(res?.longitude).toBe(30.5512);
   });
 
-  it('should parse coordinates from Google Maps @ URL format', async () => {
+  it('parses coordinates from Google Maps @ URL format with zoom level', async () => {
+    // Arrange
     const url = 'https://www.google.com/maps/@25.441234,30.551234,17z';
+
+    // Act
     const res = await parseCoordinates(url);
+
+    // Assert
+    expect(res).not.toBeNull();
     expect(res).toEqual({ latitude: 25.441234, longitude: 30.551234 });
+    expect(res?.latitude).toBeCloseTo(25.441234, 5);
   });
 
-  it('should resolve and parse shortened Google Maps links (maps.app.goo.gl)', async () => {
-    // Mock fetch redirect
+  it('resolves and parses shortened Google Maps links through redirect header', async () => {
+    // Arrange
     const originalFetch = global.fetch;
     global.fetch = vi.fn().mockResolvedValueOnce({
       status: 302,
@@ -47,28 +99,74 @@ describe('GPS Coordinates Parser Utility', () => {
       url: 'https://maps.app.goo.gl/BET1jfCMWP1osqdr8',
     } as any);
 
+    // Act
+    let res: any;
     try {
-      const res = await parseCoordinates('https://maps.app.goo.gl/BET1jfCMWP1osqdr8');
-      expect(res).toEqual({ latitude: 25.336338, longitude: 30.2968969 });
+      res = await parseCoordinates('https://maps.app.goo.gl/BET1jfCMWP1osqdr8');
     } finally {
       global.fetch = originalFetch;
     }
+
+    // Assert
+    expect(res).not.toBeNull();
+    expect(res).toEqual({ latitude: 25.336338, longitude: 30.2968969 });
+    expect(res.latitude).toBeCloseTo(25.336338, 5);
+    expect(res.longitude).toBeCloseTo(30.2968969, 5);
   });
 
-  it('should return null for invalid coordinates or text', async () => {
-    expect(await parseCoordinates('')).toBeNull();
-    expect(await parseCoordinates('نص عشوائي')).toBeNull();
-    expect(await parseCoordinates('999.00, 999.00')).toBeNull(); // Out of range
+  it('returns null for empty string or invalid non-coordinate text', async () => {
+    // Arrange
+    const emptyInput = '';
+    const arbitraryText = 'نص عشوائي غير صالح';
+
+    // Act
+    const emptyResult = await parseCoordinates(emptyInput);
+    const textResult = await parseCoordinates(arbitraryText);
+
+    // Assert
+    expect(emptyResult).toBeNull();
+    expect(textResult).toBeNull();
+    expect(emptyResult).not.toEqual(expect.anything());
   });
 
-  it('should validate lat/lng range correctly', () => {
-    expect(isValidLatLng(90, 180)).toBe(true);
-    expect(isValidLatLng(-90, -180)).toBe(true);
-    expect(isValidLatLng(90.1, 50)).toBe(false);
-    expect(isValidLatLng(50, 180.1)).toBe(false);
+  it('returns null when coordinates exceed physical latitude or longitude bounds', async () => {
+    // Arrange
+    const outOfBoundsInput = '999.00, 999.00';
+
+    // Act
+    const res = await parseCoordinates(outOfBoundsInput);
+
+    // Assert
+    expect(res).toBeNull();
+    expect(isValidLatLng(999.0, 999.0)).toBe(false);
   });
 
-  it('should format Google Maps URL correctly', () => {
-    expect(formatGoogleMapsUrl(25.44, 30.55)).toBe('https://www.google.com/maps?q=25.44,30.55');
+  it('validates physical latitude and longitude bounds accurately', () => {
+    // Arrange
+    const validMax = { lat: 90, lng: 180 };
+    const validMin = { lat: -90, lng: -180 };
+    const invalidLat = { lat: 90.1, lng: 50 };
+    const invalidLng = { lat: 50, lng: 180.1 };
+
+    // Act & Assert
+    expect(isValidLatLng(validMax.lat, validMax.lng)).toBe(true);
+    expect(isValidLatLng(validMin.lat, validMin.lng)).toBe(true);
+    expect(isValidLatLng(invalidLat.lat, invalidLat.lng)).toBe(false);
+    expect(isValidLatLng(invalidLng.lat, invalidLng.lng)).toBe(false);
+    expect(isValidLatLng(NaN, 50)).toBe(false);
+  });
+
+  it('formats Google Maps URL string accurately from latitude and longitude', () => {
+    // Arrange
+    const lat = 25.44;
+    const lng = 30.55;
+
+    // Act
+    const url = formatGoogleMapsUrl(lat, lng);
+
+    // Assert
+    expect(url).toBe('https://www.google.com/maps?q=25.44,30.55');
+    expect(url).toContain('https://www.google.com/maps?q=');
+    expect(url).not.toContain('undefined');
   });
 });

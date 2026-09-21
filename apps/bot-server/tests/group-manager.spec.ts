@@ -1,8 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { registerGroupManagerHandlers } from '../src/handlers/group-manager.handler.js';
 import { prisma } from '../src/db.js';
 import { redis } from '../src/redis.js';
 import { config } from '../src/config/env.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 vi.mock('../src/db.js', () => ({
   prisma: {
@@ -29,6 +31,8 @@ describe('Group Manager & Auto-Capture Handlers', () => {
   let mockBot: any;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.clearAllMocks();
     handlers = {};
     mockBot = {
@@ -47,8 +51,13 @@ describe('Group Manager & Auto-Capture Handlers', () => {
     registerGroupManagerHandlers(mockBot);
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe('Auto-capture via my_chat_member', () => {
     it('prompts Super Admin when added to a group', async () => {
+      // Arrange
       const myChatMemberHandler = handlers['on:my_chat_member'];
       expect(myChatMemberHandler).toBeDefined();
 
@@ -69,8 +78,11 @@ describe('Group Manager & Auto-Capture Handlers', () => {
         },
       };
 
+      // Act
       await myChatMemberHandler!(ctx);
 
+      // Assert
+      expect(ctx.api.sendMessage).toHaveBeenCalledTimes(1);
       expect(ctx.api.sendMessage).toHaveBeenCalledWith(
         777,
         expect.stringContaining('تمت إضافة البوت لمجموعة جديدة'),
@@ -87,7 +99,9 @@ describe('Group Manager & Auto-Capture Handlers', () => {
     });
 
     it('ignores updates when user is not Super Admin', async () => {
+      // Arrange
       const myChatMemberHandler = handlers['on:my_chat_member'];
+      expect(myChatMemberHandler).toBeDefined();
 
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'u-2',
@@ -106,13 +120,22 @@ describe('Group Manager & Auto-Capture Handlers', () => {
         },
       };
 
+      // Act
       await myChatMemberHandler!(ctx);
+
+      // Assert
       expect(ctx.api.sendMessage).not.toHaveBeenCalled();
+      expect(prisma.user.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { telegramId: BigInt(888) },
+        })
+      );
     });
   });
 
   describe('Group command: /setup_hq_group', () => {
     it('binds group as HQ and sends read-only notification without reply_markup', async () => {
+      // Arrange
       const setupHqHandler = handlers['cmd:setup_hq_group'];
       expect(setupHqHandler).toBeDefined();
 
@@ -128,19 +151,24 @@ describe('Group Manager & Auto-Capture Handlers', () => {
         reply: vi.fn().mockResolvedValue(true),
       };
 
+      // Act
       await setupHqHandler!(ctx);
 
+      // Assert
       expect(redis.set).toHaveBeenCalledWith('system:hq_telegram_group_id', '-100123456789');
-      // Rule 9 verification: reply_markup must not be present
+      expect(ctx.reply).toHaveBeenCalledTimes(1);
       expect(ctx.reply).toHaveBeenCalledWith(
         expect.stringContaining('جروب الإدارة العليا والتقارير التنفيذية'),
         { parse_mode: 'Markdown' }
       );
+      const replyCallOpts = ctx.reply.mock.calls[0][1];
+      expect(replyCallOpts).not.toHaveProperty('reply_markup');
     });
   });
 
   describe('Group command: /bind_site', () => {
     it('binds group to site and sends read-only notification without reply_markup', async () => {
+      // Arrange
       const bindSiteHandler = handlers['cmd:bind_site'];
       expect(bindSiteHandler).toBeDefined();
 
@@ -163,18 +191,21 @@ describe('Group Manager & Auto-Capture Handlers', () => {
         reply: vi.fn().mockResolvedValue(true),
       };
 
+      // Act
       await bindSiteHandler!(ctx);
 
+      // Assert
       expect(prisma.site.update).toHaveBeenCalledWith({
         where: { id: 'site-qna' },
         data: { telegramGroupId: BigInt(-10099881122) },
       });
-
-      // Rule 9 verification: reply_markup must not be present
+      expect(ctx.reply).toHaveBeenCalledTimes(1);
       expect(ctx.reply).toHaveBeenCalledWith(
         expect.stringContaining('تم ربط هذه المجموعة رسمياً بموقع: منجم قنا'),
         { parse_mode: 'Markdown' }
       );
+      const replyCallOpts = ctx.reply.mock.calls[0][1];
+      expect(replyCallOpts).not.toHaveProperty('reply_markup');
     });
   });
 });

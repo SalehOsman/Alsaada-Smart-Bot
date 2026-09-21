@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ScreenFlowService } from '../src/services/screen-flow.service.js';
-import { MyContext } from '../src/types/context.js';
+import type { MyContext } from '../src/types/context.js';
 
 vi.mock('../src/redis.js', () => ({
   getUserActiveScreen: vi.fn(),
@@ -21,8 +21,21 @@ vi.mock('../src/redis.js', () => ({
 
 import * as redisModule from '../src/redis.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowService)', () => {
-  it('should DELETE intermediate unfinished flow messages cleanly from Telegram chat', async () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('deletes intermediate unfinished flow messages cleanly from Telegram chat', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);
     const mockCtx = {
@@ -38,16 +51,21 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       messageId: 555,
       flowType: 'worker_wizard',
       isCompleted: false,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
+    // Act
     await service.cleanupUnfinishedFlow(mockCtx);
 
+    // Assert
     expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 555);
+    expect(deleteMessageSpy).toHaveBeenCalledTimes(1);
     expect(redisModule.clearUserActiveScreen).toHaveBeenCalledWith(123456n);
+    expect(mockCtx.api.editMessageReplyMarkup).not.toHaveBeenCalled();
   });
 
-  it('should PRESERVE finished operation receipts, stripping only their interactive reply markup', async () => {
+  it('preserves finished operation receipts, stripping only their interactive reply markup', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn();
     const editMarkupSpy = vi.fn().mockResolvedValue(true);
@@ -63,52 +81,56 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       chatId: 1001,
       messageId: 777,
       flowType: 'worker_created',
-      isCompleted: true, // سند منتهي
-      updatedAt: Date.now(),
+      isCompleted: true, // finished receipt
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
+    // Act
     await service.cleanupUnfinishedFlow(mockCtx);
 
-    // الرسالة تبقى في الشات ولا يتم حذفها
+    // Assert
     expect(deleteMessageSpy).not.toHaveBeenCalled();
-    // تُجرد أزرارها لمنع إعادة النقر
     expect(editMarkupSpy).toHaveBeenCalledWith(1001, 777, { reply_markup: { inline_keyboard: [] } });
     expect(redisModule.clearUserActiveScreen).toHaveBeenCalledWith(123456n);
   });
 
-  it('should prevent in-place editing when action is clicked from a completed operation receipt', async () => {
+  it('prevents in-place editing when action is clicked from a completed operation receipt', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValue({
       chatId: 1001,
       messageId: 888,
       flowType: 'worker_created',
       isCompleted: true,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
     const mockCtx = {
       from: { id: 123456 },
       callbackQuery: {
-        message: { message_id: 888 }, // نقرة من كارت العملية المكتملة
+        message: { message_id: 888 }, // click from completed receipt
       },
     } as unknown as MyContext;
 
+    // Act
     const isCompletedClick = await service.isClickOnCompletedScreen(mockCtx);
-    expect(isCompletedClick).toBe(true);
-
-    // يجب حظر التعديل الموضعي فوراً لتبقى الرسالة في الشات دائماً
     const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+
+    // Assert
+    expect(isCompletedClick).toBe(true);
     expect(inPlace).toBe(false);
+    expect(inPlace).not.toBe(true);
   });
 
-  it('should allow in-place editing when action is clicked from regular intermediate menu', async () => {
+  it('allows in-place editing when action is clicked from regular intermediate menu', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce({
       chatId: 1001,
       messageId: 555,
       flowType: 'hr_hub',
       isCompleted: false,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
     const mockCtx = {
@@ -118,33 +140,40 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       },
     } as unknown as MyContext;
 
+    // Act
     const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+
+    // Assert
     expect(inPlace).toBe(true);
+    expect(inPlace).not.toBe(false);
   });
 
-  it('should detect stale callbacks from old messages and trigger alert with keyboard removal', async () => {
+  it('detects stale callbacks from old messages and triggers alert with keyboard removal', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce({
       chatId: 1001,
       messageId: 999,
       flowType: 'hr_hub',
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
     const mockCtx = {
       from: { id: 123456 },
       callbackQuery: {
-        message: { message_id: 111 }, // رسالة قديمة مختلفة عن 999
+        message: { message_id: 111 }, // old message distinct from 999
       },
       editMessageReplyMarkup: vi.fn().mockResolvedValue(true),
       answerCallbackQuery: vi.fn().mockResolvedValue(true),
     } as unknown as MyContext;
 
+    // Act
     const check = await service.isStaleCallback(mockCtx);
+    await service.handleStaleCallback(mockCtx);
+
+    // Assert
     expect(check.isStale).toBe(true);
     expect(check.reason).toBe('message_mismatch');
-
-    await service.handleStaleCallback(mockCtx);
     expect(mockCtx.editMessageReplyMarkup).toHaveBeenCalledWith({ reply_markup: { inline_keyboard: [] } });
     expect(mockCtx.answerCallbackQuery).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -154,14 +183,15 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     );
   });
 
-  it('should strictly invalidate navigation buttons on older messages without immunity', async () => {
+  it('strictly invalidates navigation buttons on older messages without immunity', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce({
       chatId: 1001,
       messageId: 999,
       flowType: 'hr_hub',
       isCompleted: false,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
     const mockCtx = {
       from: { id: 123456 },
@@ -171,18 +201,23 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       },
     } as unknown as MyContext;
 
+    // Act
     const check = await service.isStaleCallback(mockCtx);
+
+    // Assert
     expect(check.isStale).toBe(true);
+    expect(check.reason).toBe('message_mismatch');
   });
 
-  it('should grant sovereign navigation immunity to action:settings:sites_hub and action:settings_sub:corporate', async () => {
+  it('grants sovereign navigation immunity to action:settings:sites_hub and action:settings_sub:corporate', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValue({
       chatId: 1001,
       messageId: 999,
       flowType: 'site_detail',
       isCompleted: false,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
     const ctxSitesHub = {
@@ -193,9 +228,6 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       },
     } as unknown as MyContext;
 
-    const checkSites = await service.isStaleCallback(ctxSitesHub);
-    expect(checkSites.isStale).toBe(false);
-
     const ctxCorporate = {
       from: { id: 123456 },
       callbackQuery: {
@@ -204,11 +236,18 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       },
     } as unknown as MyContext;
 
+    // Act
+    const checkSites = await service.isStaleCallback(ctxSitesHub);
     const checkCorporate = await service.isStaleCallback(ctxCorporate);
+
+    // Assert
+    expect(checkSites.isStale).toBe(false);
     expect(checkCorporate.isStale).toBe(false);
+    expect(checkSites.isStale).not.toBe(true);
   });
 
-  it('should grant navigation immunity to all matrix patterns and auto-heal active screen', async () => {
+  it('grants navigation immunity to all matrix patterns and auto-heals active screen', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);
 
@@ -217,7 +256,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       messageId: 999,
       flowType: 'unfinished_flow',
       isCompleted: false,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
     const immuneCallbacks = [
@@ -252,6 +291,7 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       'noop',
     ];
 
+    // Act & Assert
     for (const callbackData of immuneCallbacks) {
       vi.mocked(redisModule.setUserActiveScreen).mockClear();
       deleteMessageSpy.mockClear();
@@ -283,7 +323,8 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     }
   });
 
-  it('should delete main menu message and set ctx.fromMainMenu when cleanupMainMenuIfActive is invoked', async () => {
+  it('deletes main menu message and sets ctx.fromMainMenu when cleanupMainMenuIfActive is invoked', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);
     const mockCtx = {
@@ -301,24 +342,28 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       messageId: 333,
       flowType: 'main_menu',
       isCompleted: false,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
+    // Act
     const cleaned = await service.cleanupMainMenuIfActive(mockCtx);
+
+    // Assert
     expect(cleaned).toBe(true);
     expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 333);
     expect(redisModule.clearUserActiveScreen).toHaveBeenCalledWith(123456n);
-    expect((mockCtx as any).fromMainMenu).toBe(true);
+    expect((mockCtx as { fromMainMenu?: boolean }).fromMainMenu).toBe(true);
   });
 
-  it('should allow in-place rendering when clicked and not from a completed screen', async () => {
+  it('allows in-place rendering when clicked and not from a completed screen', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValue({
       chatId: 1001,
       messageId: 333,
       flowType: 'main_menu',
       isCompleted: false,
-      updatedAt: Date.now(),
+      updatedAt: PINNED_BASE_TIME.getTime(),
     });
 
     const mockCtx = {
@@ -328,11 +373,16 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       },
     } as unknown as MyContext;
 
+    // Act
     const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+
+    // Assert
     expect(inPlace).toBe(true);
+    expect(inPlace).not.toBe(false);
   });
 
-  it('should allow in-place rendering when requested even if active screen is cleared', async () => {
+  it('allows in-place rendering when requested even if active screen is cleared', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     vi.mocked(redisModule.getUserActiveScreen).mockResolvedValueOnce(null);
 
@@ -344,11 +394,16 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       fromMainMenu: true,
     } as unknown as MyContext;
 
+    // Act
     const inPlace = await service.shouldRenderInPlace(mockCtx, true);
+
+    // Assert
     expect(inPlace).toBe(true);
+    expect(inPlace).not.toBe(false);
   });
 
-  it('should ensure persistent reply keyboard anchor is sent and recorded in redis', async () => {
+  it('ensures persistent reply keyboard anchor is sent and recorded in redis', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 444 });
     const mockCtx = {
@@ -363,8 +418,10 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
 
     vi.mocked(redisModule.getPersistentKeyboardMsg).mockResolvedValueOnce(null);
 
+    // Act
     await service.ensurePersistentKeyboard(mockCtx);
 
+    // Assert
     expect(sendMessageSpy).toHaveBeenCalledWith(
       1001,
       expect.stringContaining('لوحة أزرار التنقل والتحكم الميداني مفعلة ومتاحة بالأسفل دائماً'),
@@ -374,9 +431,11 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       })
     );
     expect(redisModule.setPersistentKeyboardMsg).toHaveBeenCalledWith(123456n, 1001, 444);
+    expect(mockCtx.api.deleteMessage).not.toHaveBeenCalled();
   });
 
-  it('should preserve existing persistent keyboard anchor without deleting it by default', async () => {
+  it('preserves existing persistent keyboard anchor without deleting it by default', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);
     const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 445 });
@@ -395,13 +454,16 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       messageId: 222,
     });
 
+    // Act
     await service.ensurePersistentKeyboard(mockCtx);
 
+    // Assert
     expect(deleteMessageSpy).not.toHaveBeenCalled();
     expect(sendMessageSpy).not.toHaveBeenCalled();
   });
 
-  it('should clean up old persistent keyboard anchor message when forceRefresh is true', async () => {
+  it('cleans up old persistent keyboard anchor message when forceRefresh is true', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);
     const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 445 });
@@ -420,14 +482,17 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       messageId: 222,
     });
 
+    // Act
     await service.ensurePersistentKeyboard(mockCtx, undefined, true);
 
+    // Assert
     expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 222);
     expect(sendMessageSpy).toHaveBeenCalledWith(1001, expect.any(String), expect.anything());
     expect(redisModule.setPersistentKeyboardMsg).toHaveBeenCalledWith(123456n, 1001, 445);
   });
 
-  it('should gracefully proceed and register new keyboard even if deleting old anchor message rejects', async () => {
+  it('gracefully proceeds and registers new keyboard even if deleting old anchor message rejects', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockRejectedValue(new Error('Message to delete not found'));
     const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 446 });
@@ -446,13 +511,17 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       messageId: 333,
     });
 
+    // Act
     await service.ensurePersistentKeyboard(mockCtx, undefined, true);
 
+    // Assert
     expect(sendMessageSpy).toHaveBeenCalledWith(1001, expect.any(String), expect.anything());
     expect(redisModule.setPersistentKeyboardMsg).toHaveBeenCalledWith(123456n, 1001, 446);
+    expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 333);
   });
 
-  it('should cleanly remove persistent keyboard and clear persistent keyboard state from Redis', async () => {
+  it('cleanly removes persistent keyboard and clears persistent keyboard state from Redis', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const deleteMessageSpy = vi.fn().mockResolvedValue(true);
     const sendMessageSpy = vi.fn().mockResolvedValue({ message_id: 888 });
@@ -470,8 +539,10 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
       messageId: 777,
     });
 
+    // Act
     await service.removePersistentKeyboard(mockCtx);
 
+    // Assert
     expect(deleteMessageSpy).toHaveBeenCalledWith(1001, 777);
     expect(redisModule.clearPersistentKeyboardMsg).toHaveBeenCalledWith(123456n);
     expect(sendMessageSpy).toHaveBeenCalledWith(
@@ -481,22 +552,28 @@ describe('Universal Ephemeral Flow Cleanup & Receipt Preservation (ScreenFlowSer
     );
   });
 
-  it('should ignore and NOT send or remove persistent keyboards in group chats', async () => {
+  it('ignores and does NOT send or remove persistent keyboards in group chats', async () => {
+    // Arrange
     const service = new ScreenFlowService();
     const sendMessageSpy = vi.fn();
+    const deleteMessageSpy = vi.fn();
     const mockCtx = {
       from: { id: 123456 },
       chat: { id: -100999, type: 'group' },
       api: {
-        deleteMessage: vi.fn(),
+        deleteMessage: deleteMessageSpy,
         sendMessage: sendMessageSpy,
       },
     } as unknown as MyContext;
 
+    // Act
     await service.ensurePersistentKeyboard(mockCtx, undefined, true);
-    expect(sendMessageSpy).not.toHaveBeenCalled();
-
     await service.removePersistentKeyboard(mockCtx);
+
+    // Assert
     expect(sendMessageSpy).not.toHaveBeenCalled();
+    expect(deleteMessageSpy).not.toHaveBeenCalled();
+    expect(redisModule.setPersistentKeyboardMsg).not.toHaveBeenCalled();
+    expect(redisModule.clearPersistentKeyboardMsg).not.toHaveBeenCalled();
   });
 });

@@ -43,6 +43,8 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
    - Lock approval: **«نعم اقفل»**
    - Unlock approval: **«موافق على الفتح»** or **«نعم موافق على التعديل»**
    - Universal governance change / bypass: **«موافق على التعديل او الايقاف او الحذف»**
+4. **Strict Prohibition of Self-Authorization:** AI agents are strictly forbidden from generating or authoring approval formulas in evidence files or commit messages. Approval formulas must originate exclusively and verbatim from human chat input. Violations trigger an immediate `[REJECT]` verdict.
+5. **Pre-Edit Lock Inspection:** Before modifying any file, agents must verify that the file is not locked in `governance.lock.json`. Touching a locked file without prior authorized unlock execution (`pnpm unlock`) is a constitutional breach.
 
 ### 7. Code Defect Lifecycle, 5-Pillar RCA & Regression Guarantee
 1. **Hard Stop on Test Failures:** If a test reveals a bug in source code (`src/`), direct modification is prohibited.

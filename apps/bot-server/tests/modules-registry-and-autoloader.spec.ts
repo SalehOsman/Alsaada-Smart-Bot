@@ -1,10 +1,21 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { buildRegisteredModules, ModulePrefixRouter } from '../src/modules.registry.js';
 import { createBot } from '../src/bot.js';
 import type { MyContext } from '../src/types/context.js';
 import type { ModuleRuntimeContext, AppModuleDefinition } from '@alsaada/core-components';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('🤖 Bot Server Modules Registry & Sovereign Auto-Loader Integration', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   const createMockRuntime = (): ModuleRuntimeContext<MyContext> => ({
     prisma: {
       $connect: vi.fn(),
@@ -28,14 +39,19 @@ describe('🤖 Bot Server Modules Registry & Sovereign Auto-Loader Integration',
     } as any,
   });
 
-  it('buildRegisteredModules dynamically loads real workforce and settings modules', async () => {
+  it('builds registered modules dynamically and resolves route prefixes for workforce and settings', async () => {
+    // Arrange
     const runtime = createMockRuntime();
+
+    // Act
     const { router, modules, loader } = await buildRegisteredModules(runtime);
 
+    // Assert
     expect(modules.length).toBeGreaterThanOrEqual(2);
     const names = modules.map((m) => m.name);
     expect(names).toContain('workforce');
     expect(names).toContain('settings');
+    expect(names).not.toContain('unknown_module');
 
     // Verify Prefix Router
     expect(router).toBeInstanceOf(ModulePrefixRouter);
@@ -61,7 +77,8 @@ describe('🤖 Bot Server Modules Registry & Sovereign Auto-Loader Integration',
     expect(navRegex.test('تم استلام بطاقة معرفي شكرا')).toBe(false);
   });
 
-  it('supports custom factory overrides via options', async () => {
+  it('supports custom factory overrides via runtime options', async () => {
+    // Arrange
     const runtime = createMockRuntime();
     const mockModule: AppModuleDefinition<MyContext> = {
       name: 'custom-override',
@@ -73,6 +90,7 @@ describe('🤖 Bot Server Modules Registry & Sovereign Auto-Loader Integration',
       registerRoutes: vi.fn(),
     };
 
+    // Act
     const { modules, loader } = await buildRegisteredModules(runtime, {
       criticalModules: [],
       factories: {
@@ -80,14 +98,27 @@ describe('🤖 Bot Server Modules Registry & Sovereign Auto-Loader Integration',
       },
     });
 
+    // Assert
     expect(modules.some((m) => m.name === 'custom-override')).toBe(true);
     expect(loader.isNavigationMessage('زر مخصص')).toBe(true);
+    expect(loader.isNavigationMessage('زر غير معروف')).toBe(false);
   });
 
-  it('createBot initializes successfully as an async function and wires sovereign loader', async () => {
-    const bot = await createBot();
-    expect(bot).toBeDefined();
-    expect(bot.api).toBeDefined();
-    expect(typeof bot.on).toBe('function');
+  it('initializes createBot successfully as an async function and wires sovereign loader', async () => {
+    // Arrange
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Act
+    try {
+      const bot = await createBot();
+
+      // Assert
+      expect(bot).toBeDefined();
+      expect(bot).not.toBeNull();
+      expect(bot.api).toBeDefined();
+      expect(typeof bot.on).toBe('function');
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 });

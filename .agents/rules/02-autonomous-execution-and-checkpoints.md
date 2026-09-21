@@ -25,6 +25,10 @@ The following operations require explicit, untranslated Arabic user confirmation
 - Modifying locked files, schemas, or master governance: requires verbatim formula **«موافق على التعديل او الايقاف او الحذف»**.
 - Modifying source code after test failure (RCA): requires verbatim formula **«موافق على تعديل الكود المصدري»**.
 
+### 1.3 Strict Prohibition of Self-Authorization & Pre-Touch Encroachment
+- **No Self-Generated Approval:** Agents cannot bypass the restricted zone by injecting approval tokens into generated Markdown files or evidence artifacts.
+- **Pre-Touch Encroachment Prohibition:** Modifying a locked file before obtaining the unlock token and executing `pnpm unlock` is strictly prohibited, even if the agent intends to ask for permission later. Any pre-touch modification violates the Zero Blast Radius policy.
+
 ---
 
 ## 2. Command Execution Whitelist & Destructive Blacklist

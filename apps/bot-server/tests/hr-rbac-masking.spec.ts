@@ -1,6 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHrHub, renderHrSubHub } from '@alsaada/workforce';
 import { MyContext } from '../src/types/context.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 vi.mock('../src/services/screen-flow.service.js', () => ({
   screenFlowService: {
@@ -25,7 +27,18 @@ vi.mock('../src/db.js', () => ({
 }));
 
 describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
-  it('should display Payroll sub-hub and Excel buttons for SUPER_ADMIN', async () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('displays Payroll sub-hub and Excel buttons for SUPER_ADMIN', async () => {
+    // Arrange
     let sentMarkup: any = null;
     const mockCtx = {
       from: { id: 111111 },
@@ -39,12 +52,12 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
       }),
     } as unknown as MyContext;
 
-    // 1. فحص ظهور الأقسام الخمسة بما فيها الرواتب للسوبر أدمن
+    // Act 1: Main HR Hub
     await renderHrHub(mockCtx, false);
 
-    expect(mockCtx.reply).toHaveBeenCalled();
+    // Assert 1: Five domains including payroll visible
+    expect(mockCtx.reply).toHaveBeenCalledTimes(1);
     const hubButtons = sentMarkup.inline_keyboard.flat();
-
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:advances')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:leaves')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:onboarding')).toBe(true);
@@ -52,22 +65,29 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:admin_affairs')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'action:main_menu')).toBe(true);
 
-    // 2. فحص ظهور زر التصنيف الفرعي لاستيراد وتصدير كشف العمال في قسم شؤون العاملين للسوبر أدمن
+    // Act 2: Onboarding Sub-hub
     await renderHrSubHub(mockCtx, 'onboarding', false);
+
+    // Assert 2
+    expect(mockCtx.reply).toHaveBeenCalledTimes(2);
     const subButtons = sentMarkup.inline_keyboard.flat();
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
     expect(subButtons.some((b: any) => b.callback_data === 'menu:hr_sub:worker_excel')).toBe(true);
 
-    // 3. فحص أزرار قسم استيراد وتصدير كشف العمال للسوبر أدمن (تصدير، قالب، ورفع)
+    // Act 3: Worker Excel Sub-hub
     await renderHrSubHub(mockCtx, 'worker_excel', false);
+
+    // Assert 3: Export, Template, and Upload all visible for Super Admin
+    expect(mockCtx.reply).toHaveBeenCalledTimes(3);
     const excelSubButtons = sentMarkup.inline_keyboard.flat();
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker_export:start')).toBe(true);
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(true);
   });
 
-  it('should STRICTLY MASK (hide) Payroll and Excel buttons for FIELD_ADMIN (Zero UI Leakage)', async () => {
+  it('strictly masks Payroll and Excel upload buttons for FIELD_ADMIN without UI leakage', async () => {
+    // Arrange
     let sentMarkup: any = null;
     const mockCtx = {
       from: { id: 222222 },
@@ -81,34 +101,41 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
       }),
     } as unknown as MyContext;
 
-    // 1. فحص حجب قسم الرواتب تماماً للمشرف الميداني
+    // Act 1: Main HR Hub
     await renderHrHub(mockCtx, false);
 
-    expect(mockCtx.reply).toHaveBeenCalled();
+    // Assert 1: Payroll completely masked
+    expect(mockCtx.reply).toHaveBeenCalledTimes(1);
     const hubButtons = sentMarkup.inline_keyboard.flat();
-
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:advances')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:leaves')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:onboarding')).toBe(true);
     expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:admin_affairs')).toBe(true);
-    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(false); // محجوب مسبقاً!
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(false);
 
-    // 2. فحص ظهور زر التصنيف الفرعي للمشرف
+    // Act 2: Onboarding Sub-hub
     await renderHrSubHub(mockCtx, 'onboarding', false);
+
+    // Assert 2
+    expect(mockCtx.reply).toHaveBeenCalledTimes(2);
     const subButtons = sentMarkup.inline_keyboard.flat();
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:add_single')).toBe(true);
     expect(subButtons.some((b: any) => b.callback_data === 'action:worker:directory')).toBe(true);
     expect(subButtons.some((b: any) => b.callback_data === 'menu:hr_sub:worker_excel')).toBe(true);
 
-    // 3. فحص أزرار قسم استيراد وتصدير كشف العمال للمشرف: التصدير متاح، لكن رفع الكشف محجوب!
+    // Act 3: Worker Excel Sub-hub
     await renderHrSubHub(mockCtx, 'worker_excel', false);
+
+    // Assert 3: Export is allowed, but Upload is strictly masked
+    expect(mockCtx.reply).toHaveBeenCalledTimes(3);
     const excelSubButtons = sentMarkup.inline_keyboard.flat();
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker_export:start')).toBe(true);
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:download_excel')).toBe(true);
-    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب!
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false);
   });
 
-  it('should STRICTLY MASK Payroll and Excel upload in Ghost Mode when Super Admin simulates FIELD_ADMIN', async () => {
+  it('strictly masks Payroll and Excel upload in Ghost Mode when Super Admin simulates FIELD_ADMIN', async () => {
+    // Arrange
     let sentMarkup: any = null;
     const mockCtx = {
       from: { id: 7594239391 },
@@ -123,16 +150,21 @@ describe('HR Domain Hub — Strict Pre-Render RBAC Masking & Guards', () => {
       }),
     } as unknown as MyContext;
 
-    // 1. فحص حجب قسم الرواتب تماماً أثناء محاكاة المشرف الميداني
+    // Act 1: Main HR Hub
     await renderHrHub(mockCtx, false);
-    expect(mockCtx.reply).toHaveBeenCalled();
-    const hubButtons = sentMarkup.inline_keyboard.flat();
-    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(false); // محجوب بالمحاكاة!
 
-    // 2. فحص حجب رفع الإكسيل أثناء محاكاة المشرف الميداني
+    // Assert 1: Payroll masked in ghost mode
+    expect(mockCtx.reply).toHaveBeenCalledTimes(1);
+    const hubButtons = sentMarkup.inline_keyboard.flat();
+    expect(hubButtons.some((b: any) => b.callback_data === 'menu:hr_sub:payroll')).toBe(false);
+
+    // Act 2: Worker Excel Sub-hub
     await renderHrSubHub(mockCtx, 'worker_excel', false);
+
+    // Assert 2: Excel upload masked in ghost mode
+    expect(mockCtx.reply).toHaveBeenCalledTimes(2);
     const excelSubButtons = sentMarkup.inline_keyboard.flat();
     expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker_export:start')).toBe(true);
-    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false); // محجوب بالمحاكاة!
+    expect(excelSubButtons.some((b: any) => b.callback_data === 'action:worker:upload_excel')).toBe(false);
   });
 });

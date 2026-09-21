@@ -1,56 +1,105 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getScopedSiteId, buildSiteScopeWhere } from '../src/services/scope.service.js';
-import { MyContext } from '../src/types/context.js';
+import type { MyContext } from '../src/types/context.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 describe('Site-Scoped Authorization Service (RBAC Isolation)', () => {
-  it('should grant global access (null scope) to Super Admin', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('grants global access (null scope) to Super Admin', () => {
+    // Arrange
     const mockCtx = {
       effectiveRole: 'SUPER_ADMIN',
       dbUser: { assignedSiteId: 'site-abc-123' },
     } as unknown as MyContext;
 
-    expect(getScopedSiteId(mockCtx)).toBeNull();
-    expect(buildSiteScopeWhere(mockCtx)).toEqual({});
+    // Act
+    const scopedSiteId = getScopedSiteId(mockCtx);
+    const scopeWhere = buildSiteScopeWhere(mockCtx);
+
+    // Assert
+    expect(scopedSiteId).toBeNull();
+    expect(scopedSiteId).not.toBe('site-abc-123');
+    expect(scopeWhere).toEqual({});
+    expect(scopeWhere).not.toHaveProperty('siteId');
   });
 
-  it('should grant global access (null scope) to General Admin', () => {
+  it('grants global access (null scope) to General Admin', () => {
+    // Arrange
     const mockCtx = {
       effectiveRole: 'GENERAL_ADMIN',
       dbUser: { assignedSiteId: 'site-abc-123' },
     } as unknown as MyContext;
 
-    expect(getScopedSiteId(mockCtx)).toBeNull();
-    expect(buildSiteScopeWhere(mockCtx)).toEqual({});
+    // Act
+    const scopedSiteId = getScopedSiteId(mockCtx);
+    const scopeWhere = buildSiteScopeWhere(mockCtx);
+
+    // Assert
+    expect(scopedSiteId).toBeNull();
+    expect(scopedSiteId).not.toBe('site-abc-123');
+    expect(scopeWhere).toEqual({});
+    expect(scopeWhere).not.toHaveProperty('siteId');
   });
 
-  it('should strictly scope Field Admin to their assigned site', () => {
+  it('strictly scopes Field Admin to their assigned site', () => {
+    // Arrange
     const mockCtx = {
       effectiveRole: 'FIELD_ADMIN',
       dbUser: { assignedSiteId: 'site-kharga-01' },
     } as unknown as MyContext;
 
-    expect(getScopedSiteId(mockCtx)).toBe('site-kharga-01');
-    expect(buildSiteScopeWhere(mockCtx)).toEqual({ siteId: 'site-kharga-01' });
+    // Act
+    const scopedSiteId = getScopedSiteId(mockCtx);
+    const scopeWhere = buildSiteScopeWhere(mockCtx);
+
+    // Assert
+    expect(scopedSiteId).toBe('site-kharga-01');
+    expect(scopedSiteId).not.toBeNull();
+    expect(scopeWhere).toEqual({ siteId: 'site-kharga-01' });
+    expect(scopeWhere).not.toEqual({});
   });
 
-  it('should support custom field name for scoping', () => {
+  it('supports custom field name for scoping', () => {
+    // Arrange
     const mockCtx = {
       effectiveRole: 'FIELD_ADMIN',
       dbUser: { assignedSiteId: 'site-seb-02' },
     } as unknown as MyContext;
 
-    expect(buildSiteScopeWhere(mockCtx, 'targetSiteId')).toEqual({
+    // Act
+    const scopeWhere = buildSiteScopeWhere(mockCtx, 'targetSiteId');
+
+    // Assert
+    expect(scopeWhere).toEqual({
       targetSiteId: 'site-seb-02',
     });
+    expect(scopeWhere).not.toHaveProperty('siteId');
   });
 
-  it('should return empty where clause if non-admin has no assigned site', () => {
+  it('returns empty where clause if non-admin has no assigned site', () => {
+    // Arrange
     const mockCtx = {
       effectiveRole: 'FIELD_ADMIN',
       dbUser: { assignedSiteId: null },
     } as unknown as MyContext;
 
-    expect(getScopedSiteId(mockCtx)).toBeNull();
-    expect(buildSiteScopeWhere(mockCtx)).toEqual({});
+    // Act
+    const scopedSiteId = getScopedSiteId(mockCtx);
+    const scopeWhere = buildSiteScopeWhere(mockCtx);
+
+    // Assert
+    expect(scopedSiteId).toBeNull();
+    expect(scopedSiteId).not.toBe('site-kharga-01');
+    expect(scopeWhere).toEqual({});
+    expect(scopeWhere).not.toHaveProperty('siteId');
   });
 });
