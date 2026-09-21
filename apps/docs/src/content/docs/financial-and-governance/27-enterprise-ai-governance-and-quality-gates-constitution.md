@@ -95,30 +95,54 @@ stateDiagram-v2
 
 ---
 
-## 4. الميثاق الرابع: المنظومة الموحدة لبوابات الجودة الـ 16 (G1 إلى G16)
+## 4. الميثاق الرابع: المنظومة الموحدة لبوابات الجودة الـ 23 السيادية (G1 إلى G23)
 
-لا تنتقل أي وظيفة أو تدفق أو شاشة تحكم إلى حالة `Implemented` أو `UAT_PASS`، ولا يُقبل أي Commit، إلا بعد اجتياز **البوابات الـ 16 التالية بنسبة 100%**:
+لا تنتقل أي وظيفة أو تدفق أو شاشة تحكم إلى حالة `Implemented` أو `UAT_PASS`، ولا يُقبل أي Commit، إلا بعد اجتياز **البوابات الـ 23 السيادية التالية بنسبة 100%** والموزعة على الركائز الخمس الكبرى:
 
+### الركيزة الأولى: الهيكلية ومطابقة السلوك المرجعي (Pillar I: Structure & Parity — G1 إلى G5)
 | البوابة | المسمى والهدف الهندسي الصارم | أداة التحقق الآلية الحاكمة | شروط الاجتياز الإلزامية | كود الفشل عند الخرق |
 | :---: | :--- | :--- | :--- | :---: |
-| **G1** | **العزل الموديولي والهيكلي** | `pnpm arch:verify` | • كافة ملفات التدفق داخل مجلدها المعتمد.<br>• الـ Handler <= 350 سطراً، الـ Service <= 500 سطر.<br>• خلو تام من أي نوع `any`.<br>• خلو الجذر من أي ملفات مؤقتة. | `ARCHITECTURE_FAIL` |
-| **G2** | **سيادة العقود ومطابقة الترحيل** | `pnpm flow-contracts:verify`<br>`pnpm migration:verify` | • وجود `flow.contract.json` مكتمل.<br>• تطابق تام بين مسار التدفق وسجل الترحيل `docs/19`.<br>• حظر ظهور أي تدفق قيد التطوير في القوائم الحية. | `CONTRACT_FAIL` |
-| **G3** | **حظر الازدواجية والدوال الموازية** | `pnpm arch:verify` | • الاستيراد الإلزامي لكافة المكونات من `packages/*`.<br>• **حظر إنشاء دوال محلية تلتف حول النواة**.<br>• إلزامية عرض اسم الشهرة (Nickname) حصراً للعمال. | `DUPLICATION_FAIL` |
-| **G4** | **صلاحيات RBAC والحجب المسبق** | `pnpm rbac-matrix:verify` | • حظر عرض أي زر لمن لا يملك الصلاحية برمجياً قبل الإرسال.<br>• اختبار التدفق بكافة الأدوار السبعة للتأكد من الحجب. | `RBAC_FAIL` |
-| **G5** | **عقود واجهات تليجرام القياسية** | `pnpm telegram-contracts:verify` | • الـ Callback Data <= 64 بايت (مفحوصة بالقِيَم الحقيقية).<br>• الـ URL <= 512 بايت بروتوكول مشفر `https`.<br>• شبكة الأزرار 2x2 وحظر أكثر من زرين للنصوص المركبة. | `TELEGRAM_CONTRACT_FAIL` |
-| **G6** | **تجربة الاستخدام ومكافحة الطرق المسدودة** | `pnpm flow:check` | • هندسة الرسالة الواحدة الموضعية (`editMessageText`).<br>• الحذف الصامت الفوري لكافة مدخلات المستخدم النصية.<br>• زر رجوع إلزامي، ولوحة إتمام رباعية موحدة.<br>• حظر الأزرار القديمة وإزالتها فوراً (`Stale Guard`).<br>• رسائل الأخطاء التفاعلية وتوفير مسار إعادة المحاولة. | `UX_FAIL` |
-| **G7** | **محاربة أنماط البطء (Zero-Latency)** | `pnpm latency:verify` | • الفحص الثابت لشجرة الـ AST لمنع `await deleteMessage`.<br>• حظر `await setMyCommands` أثناء معالجة الطلبات.<br>• الحذف في الخلفية غير المتزامنة لضمان استجابة < 50ms. | `LATENCY_FAIL` |
-| **G8** | **النزاهة المالية وسلاسل HMAC** | `pnpm financial:verify` | • سلامة السلسلة التشفيرية (HMAC-SHA256) للنماذج الستة.<br>• اتزان العهد النقدية وحظر الأرصدة السالبة حظراً باتاً.<br>• ربط السلف بعهدة مفتوحة، وربط القيود العكسية بسند أصلي. | `FINANCIAL_INTEGRITY_FAIL` |
-| **G9** | **حجب الحقول وحصانة السوبر أدمن** | `pnpm field-masking:verify` | • حجب الرواتب والبدلات عن مشرف الموقع `FIELD_ADMIN`.<br>• **الحصانة التامة للسوبر أدمن (Zero Masking):** فك تشفير وعرض الرقم القومي كاملاً (14 رقماً) والرواتب بلا حجب. | `FIELD_MASKING_FAIL` |
-| **G10** | **حماية وعقود لوحة التحكم** | `pnpm dashboard-auth:verify` | • ربط صفحات الداشبورد بـ RBAC Middleware صارم.<br>• خلو مسارات التصدير من تسريب البيانات غير المصرح بها.<br>• مطابقة شاشة الداشبورد لعقد التدفق المقابل في البوت. | `DASHBOARD_AUTH_FAIL` |
-| **G11** | **الرصد وتتبع الأخطاء الجنائية** | `pnpm observability:verify` | • خلو كود المسارات الحرجة من `console.error` واستخدام الـ Vault.<br>• حظر الـ Empty catch blocks نهائياً.<br>• إلزامية وجود `traceId` في كافة استدعاءات الـ API. | `OBSERVABILITY_FAIL` |
-| **G12** | **الاختبارات الواقعية ومكافحة الـ Mocks** | `pnpm test` | • تغطية شاملة (Unit, Integration, UX, RBAC, Data).<br>• **حظر الـ Mocks الوهمية للمنطق المحاسبي**؛ تشغيل العمليات المالية على محرك قاعدة بيانات فعلي.<br>• اجتياز 100% من الاختبارات. | `TEST_FAIL` |
-| **G13** | **التوثيق المتزامن ومكافحة الانحراف** | `pnpm docs:audit`<br>`pnpm docs:parity` | • تحديث وثائق `docs/` وسجل الترحيل `docs/19`.<br>• وجود ملف `flow.docs.md` كامل المواصفات وسيناريوهات الفحص.<br>• صفر فجوة توثيقية (`Zero Documentation Drift`). | `DOCS_FAIL` |
-| **G14** | **ميزانية الأداء واستقرار الذاكرة** | `pnpm perf-budget:verify` | • سرعة استجابة الكاش والتليميتري ضمن حدود الـ SLA.<br>• إثبات تنظيف مسودات الجلسة المنتهية (TTL Cleanup). | `PERF_BUDGET_FAIL` |
-| **G15** | **الحصانة التشفيرية وفحص العبث الارتدادي** | `pnpm governance:tamper-check` | • مطابقة بصمات SHA-256 في `governance.lock.json`.<br>• **فحص الارتداد التبعي:** التحقق من عدم كسر أي موديول مقفل نتيجة تعديل في النواة المشتركة أو الـ Schema. | `GOVERNANCE_TAMPER_FAIL` |
-| **G16** | **الإثبات الجنائي المادي ونظافة المستودع** | `pnpm ai-compliance:verify`<br>`git status --short` | • تقرير إثبات إلزامي داخل `docs/ai-execution-evidence/`.<br>• إرفاق نتائج فحص البوابات الـ 16 بالأرقام والميلي ثانية.<br>• نظافة تامة لشجرة Git وتوثيق Commit بمعيار Conventional. | `GIT_AND_COMPLIANCE_FAIL` |
+| **G1** | **الأمان النوعي الصارم (Type Safety)** | `pnpm typecheck` | خلو تام من أي نوع `any`، وامتثال كامل لـ `exactOptionalPropertyTypes` و `noUncheckedIndexedAccess`. | `TYPE_SAFETY_FAIL` |
+| **G2** | **الهيكل العشاري للشرائح (10-File Slice Architecture)** | `pnpm arch:verify` | احتواء التدفق على الملفات العشرة المعيارية والالتزام بسقف الأسطر (<350 للـ Handler، <500 للـ Service). | `SLICE_ARCHITECTURE_FAIL` |
+| **G3** | **مطابقة سجل الترحيل (Migration Registry Parity)** | `pnpm migration:verify` | مطابقة تامة بين مسار التدفق وسجل الترحيل في `docs/19` بنسبة 100% مع رقم الـ Commit. | `MIGRATION_PARITY_FAIL` |
+| **G4** | **سيادة عقود التدفق (Flow Contracts)** | `pnpm flow-contracts:verify` | وجود ملف `flow.contract.json` سليم يحدد كافة الحالات والأدوار والانتقالات. | `FLOW_CONTRACT_FAIL` |
+| **G5** | **عقود واجهات تليجرام (Telegram Contracts)** | `pnpm telegram-contracts:verify` | الـ Callback Data <= 64 بايت (ميزانية 36)، والـ URL <= 512 بايت، وحظر الحقن الديناميكي غير المفحوص. | `TELEGRAM_CONTRACT_FAIL` |
 
-### أمر التحقق الشامل الموحد:
+### الركيزة الثانية: الأداء، الأمان، والرصد الجنائي (Pillar II: Performance & Security — G6 إلى G10)
+| البوابة | المسمى والهدف الهندسي الصارم | أداة التحقق الآلية الحاكمة | شروط الاجتياز الإلزامية | كود الفشل عند الخرق |
+| :---: | :--- | :--- | :--- | :---: |
+| **G6** | **ميزانية زمن الاستجابة (Latency Budget <300ms)** | `pnpm latency:verify` | حظر `await deleteMessage` و `await setMyCommands` أثناء معالجة الطلبات؛ التنفيذ غير المتزامن. | `LATENCY_BUDGET_FAIL` |
+| **G7** | **مصفوفة الصلاحيات والحصانة (RBAC Matrix & Immunity)** | `pnpm rbac-matrix:verify` | حظر عرض أي زر لمن لا يملك الصلاحية برمجياً قبل الإرسال؛ حظر الأدوار المتقادمة. | `RBAC_MATRIX_FAIL` |
+| **G8** | **حجب البيانات المالية والرواتب (Field Masking)** | `pnpm field-masking:verify` | حجب الرواتب والبدلات عن غير المصرح لهم مع الحصانة التامة للسوبر أدمن (Zero Masking). | `FIELD_MASKING_FAIL` |
+| **G9** | **عقد الرصد ومنع الصمت (Observability & Zero Console)** | `pnpm observability:verify` | حظر `console.log` و `console.error` كلياً في كود الإنتاج، واستخدام `@alsaada/shared/logger`. | `OBSERVABILITY_FAIL` |
+| **G10** | **أصالة ونزاهة الاختبارات (Test Authenticity)** | `pnpm test-authenticity:verify` | حظر التأكيدات الصورية (`expect(true).toBe(true)`)؛ التحقق الإلزامي من النفي والإيجاب معاً. | `TEST_AUTHENTICITY_FAIL` |
+
+### الركيزة الثالثة: المحاسبة، الحوكمة، وسلاسل الهاش (Pillar III: Accounting & Governance — G11 إلى G15)
+| البوابة | المسمى والهدف الهندسي الصارم | أداة التحقق الآلية الحاكمة | شروط الاجتياز الإلزامية | كود الفشل عند الخرق |
+| :---: | :--- | :--- | :--- | :---: |
+| **G11** | **ثوابت المحاسبة المرجعية (Legacy Accounting Invariants)** | `pnpm legacy-parity:verify` | مطابقة رياضية ومحاسبية تامة لقواعد الصرف والاستقطاع مع `F:\HR`. | `ACCOUNTING_INVARIANTS_FAIL` |
+| **G12** | **القيد المزدوج والمقاصة الثلاثية (Financial Ledger)** | `pnpm financial:verify` | اتزان القيود المحاسبية وسلسلة الهاش التراكمي (HMAC-SHA256) والمقاصة الثلاثية المغلقة. | `FINANCIAL_LEDGER_FAIL` |
+| **G13** | **حارس القفل التشفيري (Cryptographic Tamper Guard)** | `pnpm governance:tamper-check` | مطابقة بصمات SHA-256 لكافة الكيانات المحمية والمؤرشفة في `governance.lock.json`. | `TAMPER_GUARD_FAIL` |
+| **G14** | **حارس الاختبارات الذكي قبل الالتزام (Smart Pre-Commit Guard)** | `pnpm test:pre-commit` | الفحص الآلي للملفات المعدلة وتشغيل أجنحة Vitest المرتبطة بها حصراً. | `PRE_COMMIT_GUARD_FAIL` |
+| **G15** | **نظافة وضوابط فروع Git (Git Hygiene & Main Immunity)** | `pnpm git-hygiene:verify` | الحصانة المطلقة لفرع `main` ومنع الالتزام المباشر عليه نهائياً، والالتزام بأسماء الفروع المعيارية. | `GIT_HYGIENE_FAIL` |
+
+### الركيزة الرابعة: التوثيق، الحماية، واستقرار الإصدارات (Pillar IV: Docs & Hardening — G16 إلى G20)
+| البوابة | المسمى والهدف الهندسي الصارم | أداة التحقق الآلية الحاكمة | شروط الاجتياز الإلزامية | كود الفشل عند الخرق |
+| :---: | :--- | :--- | :--- | :---: |
+| **G16** | **منع تسريب الأسرار (Secret Leakage Prevention)** | `pnpm secrets:verify` | خلو كافة الملفات من مفاتيح API، كلمات المرور، التوكنات، أو الأرقام القومية الحقيقية. | `SECRET_LEAKAGE_FAIL` |
+| **G17** | **الفحص الأمني الساكن (SAST Security Scan)** | `pnpm sast:verify` | اجتياز فحص Semgrep والأمان دون أي ثغرات أمنية حرجة أو متوسطة. | `SAST_SECURITY_FAIL` |
+| **G18** | **مزامنة الإصدارات والشارات (Release Sync)** | `pnpm release:verify` | تطابق إصدارات الحزم وتحديث مسارات التغيير عبر Changesets. | `RELEASE_SYNC_FAIL` |
+| **G19** | **تزامن التوثيق وبوابة التوثيق (Docs Sync & Parity)** | `pnpm docs:verify`<br>`pnpm docs:parity` | التطابق التام بين عقود الأكواد وبوابة التوثيق في `docs/` وسجل `docs/19`. | `DOCS_PARITY_FAIL` |
+| **G20** | **انعكاسية هجرات قاعدة البيانات (DB Migration Reversibility)** | `tools/governance/` | توفير واختبار سيناريوهات التراجع العكسي (Down Migrations) لكافة تعديلات Prisma. | `MIGRATION_REVERSIBILITY_FAIL` |
+
+### الركيزة الخامسة: الدقة المؤسسية والاستقرار الميداني (Pillar V: Enterprise Rigor — G21 إلى G23)
+| البوابة | المسمى والهدف الهندسي الصارم | أداة التحقق الآلية الحاكمة | شروط الاجتياز الإلزامية | كود الفشل عند الخرق |
+| :---: | :--- | :--- | :--- | :---: |
+| **G21** | **الأمان التزامني ومفاتيح عدم التكرار (Idempotency & Concurrency)** | `pnpm boundary-deserialization:verify` | فرض مفاتيح `idempotencyKey` لجميع المعاملات والتحقق عبر Zod schemas عند الحدود. | `CONCURRENCY_SAFETY_FAIL` |
+| **G22** | **إرجونوميا شاشات الموبايل (Mobile Viewport Ergonomics)** | `pnpm telegram-contracts:verify` | الالتزام بميزانية الأزرار (36/16/7/3) وتضمين رسم بياني `stateDiagram-v2` لكل تدفق. | `VIEWPORT_ERGONOMICS_FAIL` |
+| **G23** | **حصانة الطفرات والوقت المثبت (Mutation & Pinned Clock)** | `vitest run` | تثبيت `PINNED_BASE_TIME` في الاختبارات ونجاح فحص الطفرات البرمجية ومقاومة الـ Flakiness. | `MUTATION_COVERAGE_FAIL` |
+
+### أمر التحقق الشامل الموحد لبوابات الحوكمة:
 ```bash
 pnpm governance:verify
 ```

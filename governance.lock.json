@@ -2866,11 +2866,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
       "directory": "apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
-      "lockedAt": "2026-09-21T05:21:41.236Z",
+      "lockedAt": "2026-09-21T10:14:30.433Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
-          "sha256": "5cdf7d20c3efb2a7078e610c6c580a4ace0d73211cfebf074f12e7c64e1b1a79"
+          "sha256": "eb583cb1f32d5d1787353ba9446711e064957c2fb7c4eb3447b161def4ce0a4d"
         }
       ]
     },
@@ -2879,11 +2879,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
       "directory": "apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
-      "lockedAt": "2026-09-21T05:21:51.028Z",
+      "lockedAt": "2026-09-21T10:14:30.922Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
-          "sha256": "f070dd2b378ea7b3a5c9d08da1fe518bb83ee5ec4b223903ca071b09179f7647"
+          "sha256": "af9d0ed67830b5f1f043c80007ae21e4e851e4cb0c4efd2e7f74885a390ba7c3"
         }
       ]
     },
@@ -3086,6 +3086,136 @@
         {
           "path": "packages/shared/tsconfig.json",
           "sha256": "0adc8771a1796baa6401cd2a3c3aa7d905f381a0a107332bcff1d8133a1050e4"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/auth-claim.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/auth-claim.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/auth-claim.spec.ts",
+      "directory": "apps/admin-dashboard/tests/auth-claim.spec.ts",
+      "lockedAt": "2026-09-21T10:14:15.554Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/auth-claim.spec.ts",
+          "sha256": "096edfa9fc01b131ebc8f012efc233bb9bc01958ba613deaecf9da664a1fa499"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/auth-session.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/auth-session.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/auth-session.spec.ts",
+      "directory": "apps/admin-dashboard/tests/auth-session.spec.ts",
+      "lockedAt": "2026-09-21T10:14:31.451Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/auth-session.spec.ts",
+          "sha256": "0d62baa97f87441854ec0a73d7e91d655e8b8a2415489abfe0c46a9c985de966"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts",
+      "directory": "apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts",
+      "lockedAt": "2026-09-21T10:14:31.971Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts",
+          "sha256": "a504032a84d8eee389f92522cba0872f2ea0a5aa8773169758ea586cadd7d018"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts",
+      "directory": "apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts",
+      "lockedAt": "2026-09-21T10:14:32.578Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts",
+          "sha256": "75929b8434223f6d73a4b161f6357e71e79dc171e9d41aee63fb862ea1a41359"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts",
+      "directory": "apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts",
+      "lockedAt": "2026-09-21T10:14:33.108Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts",
+          "sha256": "685071b88d67f1c41b3092ed9ee34e715961629a1dcc511544cbc9731d3dd1b3"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/dashboard-intelligence.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/dashboard-intelligence.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-intelligence.spec.ts",
+      "directory": "apps/admin-dashboard/tests/dashboard-intelligence.spec.ts",
+      "lockedAt": "2026-09-21T10:14:33.646Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/dashboard-intelligence.spec.ts",
+          "sha256": "18a9d5f29459a43ee33414c1597be37e5a7b12caaac016115273efa9fbad93b5"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/dashboard-preferences.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/dashboard-preferences.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-preferences.spec.ts",
+      "directory": "apps/admin-dashboard/tests/dashboard-preferences.spec.ts",
+      "lockedAt": "2026-09-21T10:14:34.161Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/dashboard-preferences.spec.ts",
+          "sha256": "449624f6adbfc4a20aac36677cbc713ce6830d454ae6e80b330ed7965c240d43"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/data-fetchers.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/data-fetchers.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/data-fetchers.spec.ts",
+      "directory": "apps/admin-dashboard/tests/data-fetchers.spec.ts",
+      "lockedAt": "2026-09-21T10:14:34.728Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/data-fetchers.spec.ts",
+          "sha256": "73f0ae6e0bfa39f5020980a9c49e1e49744bea14d99211b779bd6bdd5b221462"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/error-boundaries.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/error-boundaries.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/error-boundaries.spec.ts",
+      "directory": "apps/admin-dashboard/tests/error-boundaries.spec.ts",
+      "lockedAt": "2026-09-21T10:14:35.322Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/error-boundaries.spec.ts",
+          "sha256": "8546bbbf9eeac4a8d0ebb5bd16158e5ced250e26a6694b4c7005914cb6926e3b"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts",
+      "directory": "apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts",
+      "lockedAt": "2026-09-21T10:14:35.916Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts",
+          "sha256": "7493300ae66bbf3a407c09c793a6d5b009facd2a58e7ef519b971e9ba6974f24"
         }
       ]
     }

@@ -84,6 +84,26 @@
 > [!NOTE]
 > **إغلاق المرحلة الأولى (Tier 1):** تم الانتهاء بنجاح من كافة ملفات Tier 1 الحرجة (4 من أصل 4 ملفات: #210، #221، #60، #197) ومطابقتها التامة لدستور الاختبارات وقفلها تشفيرياً في `governance.lock.json`.
 
-### ⬜ المرحلة 2: Tier 2 — High (146 ملف) — قيد الانتظار
+### 🟡 المرحلة 2: Tier 2 — High (146 ملف) — قيد التنفيذ (الدفعة الأولى مكتملة 12/12)
+
+#### 2.1 ✅ الدفعة الأولى (Batch 1: 12 ملفاً في `apps/admin-dashboard`) — 🟢 مكتملة ومقفلة تشفيرياً 21/09/2026
+تم بحمد الله ترقية واعتماد وإغلاق الـ 12 ملفاً الأولى من Tier 2 في لوحة التحكم الإدارية وفق دستور الاختبارات ([`.agents/rules/06-testing-and-mutation-constitution.md`](file:///f:/Alsaada-Smart-Bot/.agents/rules/06-testing-and-mutation-constitution.md)) بنجاح 100% وبدون أي مساس بكود الإنتاج (Rule 9):
+
+1. **`apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts` (#1):** 🟢 20/20 نجاح (39ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts`).
+2. **`apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts` (#3):** 🟢 4/4 نجاح (557ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts`).
+3. **`apps/admin-dashboard/tests/auth-claim.spec.ts` (#4):** 🟢 18/18 نجاح (1.43s) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/auth-claim.spec.ts`).
+4. **`apps/admin-dashboard/tests/auth-session.spec.ts` (#5):** 🟢 9/9 نجاح (54ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/auth-session.spec.ts`).
+5. **`apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts` (#6):** 🟢 15/15 نجاح (24ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts`).
+6. **`apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts` (#7):** 🟢 8/8 نجاح (570ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts`).
+7. **`apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts` (#8):** 🟢 9/9 نجاح (783ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts`).
+8. **`apps/admin-dashboard/tests/dashboard-intelligence.spec.ts` (#9):** 🟢 7/7 نجاح (29ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-intelligence.spec.ts`).
+9. **`apps/admin-dashboard/tests/dashboard-preferences.spec.ts` (#10):** 🟢 19/19 نجاح (56ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-preferences.spec.ts`).
+10. **`apps/admin-dashboard/tests/data-fetchers.spec.ts` (#11):** 🟢 36/36 نجاح (104ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/data-fetchers.spec.ts`).
+11. **`apps/admin-dashboard/tests/error-boundaries.spec.ts` (#13):** 🟢 10/10 نجاح (28ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/error-boundaries.spec.ts`).
+12. **`apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts` (#15):** 🟢 6/6 نجاح (19ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts`).
+
+- **إجمالي اختبارات الدفعة الأولى المعتمدة:** 161 اختباراً ناجحاً بنسبة 100%.
+- **الفحص الجنائي والمطابقة:** `pnpm audit:saleh` = PASS ✅ | `pnpm typecheck` = PASS (0 errors) | `test-authenticity` = PASS (237 files).
+
 ### ⬜ المرحلة 3: Tier 3 — Medium (22 ملف) — قيد الانتظار
 ### ⬜ المرحلة 4: Tier 4 — Low (12 ملف) — قيد الانتظار

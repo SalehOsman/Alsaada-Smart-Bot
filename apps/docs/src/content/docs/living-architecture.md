@@ -30,6 +30,7 @@ flowchart TD
     NATIONAL_ID_ENGINE["@alsaada/national-id-engine\n(packages/national-id-engine)"]
     RBAC["@alsaada/rbac\n(packages/rbac)"]
     REGIONAL_ENGINE["@alsaada/regional-engine\n(packages/regional-engine)"]
+    SHARED["@alsaada/shared\n(packages/shared)"]
     TELEMETRY["@alsaada/telemetry\n(packages/telemetry)"]
   end
 
@@ -82,13 +83,13 @@ flowchart TD
 
   class ADMIN_DASHBOARD,BOT_SERVER,DOCS appNode;
   class SETTINGS,WORKFORCE modNode;
-  class AI_VISION_ENGINE,CORE_COMPONENTS,NATIONAL_ID_ENGINE,RBAC,REGIONAL_ENGINE,TELEMETRY coreNode;
+  class AI_VISION_ENGINE,CORE_COMPONENTS,NATIONAL_ID_ENGINE,RBAC,REGIONAL_ENGINE,SHARED,TELEMETRY coreNode;
   class DATABASE,LEDGER,SHEETS dataNode;
 ```
 
 ---
 
-## 📦 جرد حزم وموديولات المنظومة (12 حزم وموديولات معتمدة)
+## 📦 جرد حزم وموديولات المنظومة (13 حزم وموديولات معتمدة)
 
 | اسم الحزمة / الموديول | المسار البرمجي | الدور المعماري الرئيسي |
 | :--- | :--- | :--- |
@@ -103,5 +104,6 @@ flowchart TD
 | **`@alsaada/national-id-engine`** | `packages/national-id-engine` | packages/national-id-engine |
 | **`@alsaada/rbac`** | `packages/rbac` | packages/rbac |
 | **`@alsaada/regional-engine`** | `packages/regional-engine` | packages/regional-engine |
+| **`@alsaada/shared`** | `packages/shared` | packages/shared |
 | **`@alsaada/telemetry`** | `packages/telemetry` | packages/telemetry |
 
