@@ -27,7 +27,7 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
 
 ---
 
-## 2. Pre-Flight 7-Point Checklist
+## 2. Pre-Flight 9-Point Checklist
 
 Before declaring any coding or refactoring task complete, every agent must verify:
 
@@ -40,6 +40,8 @@ Before declaring any coding or refactoring task complete, every agent must verif
 | 5 | **Targeted Vitest Suite** | `pnpm test:pre-commit` (or targeted test run) |
 | 6 | **Cryptographic Tamper Check** | `pnpm governance:tamper-check` |
 | 7 | **Zero Blast Radius Audit** | `git diff --stat` (only intended files modified) |
+| 8 | **Git Hygiene & Version Parity** | `pnpm git-hygiene:verify` |
+| 9 | **Docs Parity & Constitutional Links** | `pnpm docs:parity` |
 
 ---
 
@@ -48,3 +50,13 @@ Before declaring any coding or refactoring task complete, every agent must verif
 If Prettier or ESLint detects stylistic divergences, trailing spaces, or unorganized imports:
 - Run `pnpm preflight:fix` immediately to self-heal formatting automatically.
 - Never prompt the user for trivial formatting corrections.
+
+---
+
+## 4. Binding Phase-by-Phase Protocol (بروتوكول المراحل الملزم)
+
+1. **Sequential Phase Discipline:** Agents must execute complex, multi-stage implementation plans in strictly ordered phases (P0, P1, P2...).
+2. **No Early Declarations:** Agents are strictly prohibited from declaring a task complete, skipping intermediate checkpoints, or assuming success without running physical verification commands for each phase.
+3. **Phase Completion Deliverables:** Each phase must produce its verifiable artifacts (reports written, scripts compiled, tests executed, locks sealed) before advancing to the subsequent phase.
+4. **Mandatory Final Simulation:** Every execution must culminate in a clean run of `pnpm ci:simulate` (running all quality gates and Vitest suites) before presenting final results.
+

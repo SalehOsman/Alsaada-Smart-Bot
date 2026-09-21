@@ -1,18 +1,19 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:shared)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T07:46:01.580Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T13:58:12.888Z)
 - **معرف الكيان:** `package:shared`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/shared
 - **المسار الأساسي:** `packages/shared`
-- **عدد الملفات المقفلة:** 13 ملفاً
+- **عدد الملفات المقفلة:** 14 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/shared/package.json` | `42307d41e384599fb7502ab2b2757e127c007e7d6850e414aed2a79f548325e8` |
+| `packages/shared/CHANGELOG.md` | `af0a29e44f4df4b01336ff93622a950735bc6e464a68eae64724dcb6c1bd875d` |
+| `packages/shared/package.json` | `0425fe35a8ec08a0710574bf151a91208f7ed05261dcc5fb604673d0d73ad866` |
 | `packages/shared/src/domain/arabic-text.ts` | `5985482ba28d190ef93fed7d7fd684dac4cb0cca2e94619f8b93420fe6548f3d` |
 | `packages/shared/src/domain/currency.ts` | `790c1c146657aab715b794c3c744936cb1663a007b029997d33ec2d5650b0ffe` |
 | `packages/shared/src/domain/egyptian-national-id.ts` | `dcc9c0dbe58f41e01b3e52d4c01e49423dd0afdf629a36f9ad853a7ddedb47b8` |

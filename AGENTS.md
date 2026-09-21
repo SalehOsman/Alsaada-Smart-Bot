@@ -18,6 +18,7 @@ For detailed domain guidelines, consult the specialized modular rulebooks:
 - **Git Branch Lifecycle:** [`.agents/rules/03-git-branch-lifecycle-and-immunity.md`](.agents/rules/03-git-branch-lifecycle-and-immunity.md)
 - **Cryptographic Immutability:** [`.agents/rules/04-cryptographic-immutability-engine.md`](.agents/rules/04-cryptographic-immutability-engine.md)
 - **Quality Gates Matrix (G1–G23):** [`.agents/rules/05-quality-gates-taxonomy-g1-g23.md`](.agents/rules/05-quality-gates-taxonomy-g1-g23.md) & [`docs/27`](docs/27-enterprise-ai-governance-and-quality-gates-constitution.md)
+- **Mandatory Module Architecture & Gates:** [`docs/21-mandatory-module-architecture-and-gates.md`](docs/21-mandatory-module-architecture-and-gates.md)
 - **Testing & Mutation:** [`.agents/rules/06-testing-and-mutation-constitution.md`](.agents/rules/06-testing-and-mutation-constitution.md)
 - **Telegram Mobile UX:** [`.agents/rules/07-telegram-ux-mobile-ergonomics.md`](.agents/rules/07-telegram-ux-mobile-ergonomics.md)
 - **Code Defect & RCA:** [`.agents/rules/08-code-defect-and-regression-postmortem.md`](.agents/rules/08-code-defect-and-regression-postmortem.md)

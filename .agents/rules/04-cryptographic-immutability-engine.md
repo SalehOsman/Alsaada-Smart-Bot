@@ -63,3 +63,13 @@ The pre-commit hook runs `pnpm governance:tamper-check` on every commit:
 1. **Pre-Edit Verification:** Before calling any write or edit tool (`replace_file_content`, `write_to_file`), the agent must verify whether the target file belongs to an active locked entity in `governance.lock.json`.
 2. **Immediate Stop & Prompt:** If the target file is locked, the agent must NOT attempt direct file modification. Instead, the agent must immediately stop, present the locked entity ID, and request the exact approval formula:
    `pnpm unlock <target> --phrase="موافق على الفتح" --reason="..."`
+
+---
+
+## 6. Automated Versioning & Changeset Atomic Lock Invariant
+
+1. **Atomic Multi-Package Bump Cascade:** Whenever automated release tools (such as `@changesets/cli` via `pnpm version-packages`) bump workspace packages or generate `CHANGELOG.md` files:
+   - **Root & Telemetry Sync:** The version bump MUST atomically update root `package.json` `"version"` and `packages/telemetry/src/version.ts` `PLATFORM_VERSION` via `tools/release/sync-root-version.ts`.
+   - **Atomic Lock Re-Sealing:** All touched packages and their newly generated changelogs must be immediately re-sealed in `governance.lock.json` (`pnpm lock --all` and `pnpm governance:lock "موافق على التعديل او الايقاف او الحذف"`).
+2. **Zero Tamper Guarantee:** Modifying package versions or adding changelogs outside this atomic synchronizer violates Gate 13 (Tamper Guard) and Gate 17 (Git Hygiene & Version Parity) and is rejected immediately at pre-commit.
+

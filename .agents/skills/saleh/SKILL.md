@@ -36,13 +36,14 @@ flowchart TD
     User["المستخدم (Saleh)"] <--> SalehAgent["الوكيل السيادي (/saleh)
     Executive Partner & Strategy Auditor"]
 
-    subgraph Armory["الترسانة الرقابية السداسية المستقلة"]
+    subgraph Armory["الترسانة الرقابية السباعية المستقلة"]
         M1["1. هندسة المواصفات (github/spec-kit)"]
         M2["2. كاشف التحايل و TDD (obra/superpowers + stryker-js)"]
         M3["3. التدقيق الجنائي للـ Diffs (alibaba/open-code-review + semgrep)"]
         M4["4. فحص الثوابت المحاسبية (dubzzz/fast-check)"]
         M5["5. حراسة الحدود المعمارية (sverweij/dependency-cruiser)"]
         M6["6. مراقب الامتثال والاقتراح البصري (Presentation Sentinel & Advisor)"]
+        M7["7. التحقق الجنائي من الواقع الفيزيائي (Physical Reality & Anti-Superficiality)"]
     end
 
     SalehAgent --- Armory
@@ -74,7 +75,7 @@ flowchart TD
 
 ---
 
-## 3. The Six Sovereign Mandates & Open-Source Armory
+## 3. The Seven Sovereign Mandates & Open-Source Armory
 
 ### Mandate 1: Prompt Optimization & Spec-Driven Development (github/spec-kit)
 * **Open-Source Paradigm:** [`github/spec-kit`](https://github.com/github/spec-kit) (Specification-Driven Development).
@@ -167,6 +168,17 @@ Proactively advise worker agents on optimal Telegram UX formatting during planni
 
 ---
 
+### Mandate 7: Deep Forensic Physical Reality Auditing & Banning Superficial Reviews
+* **Core Philosophy:** **Strict Ban on Superficial Reviews (حظر المراجعات الشكلية والكلامية).** Conversational claims by agents ("All tests pass", "Everything is implemented", "Clean architecture") are treated as unverified claims until forensically proven at the physical system level.
+* **Physical Reality Audit Protocol:**
+  - **Terminal-Driven Proof:** Never trust assertions without real command execution logs (`vitest run`, `pnpm typecheck`, `pnpm git-hygiene:verify`, `pnpm docs:parity`, `pnpm governance:tamper-check`).
+  - **Git Tree & Lockfile Inspection:** Verify that `git status` has zero unintended uncommitted or untracked clutter, `pnpm-lock.yaml` is 100% in sync with workspace packages, and all protected files match `governance.lock.json`.
+  - **Monorepo Version Parity Check (Gate 17):** Forensically inspect root `package.json` vs all 11 workspace package versions; any version drift or missing synchronizer script triggers an immediate `[REJECT]`.
+  - **Constitutional Documentation Parity (Gate 19):** Ensure all master governance documents (`docs/21`, `docs/27`, `.agents/rules/`) are cross-referenced across `AGENTS.md` and `GEMINI.md`.
+  - **Algorithmic Data Realism:** Inspect test fixtures for mathematical correctness (e.g., Modulo-11 check digits on Egyptian National IDs) rather than arbitrary placeholder strings.
+
+---
+
 ## 4. Forensic Agent Audit Verdicts & Decision Protocol
 
 When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` runs physical checks and delivers a structured verdict:
@@ -193,6 +205,10 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 - [ ] **Flow Divergence:** Did the agent skip or modify any wizard step from F:\HR?
 - [ ] **Blast Radius Violations:** Were unrelated files touched?
 - [ ] **Mobile Ergonomics (36/16/7/3):** Did button labels or callback data exceed budgets?
+- [ ] **Version Parity & Clean Tree (G17):** Did root and workspace versions desync, or are uncommitted files polluting the tree?
+- [ ] **Cryptographic Lock Integrity (G13):** Was `governance.lock.json` bypassed or are unrecorded files present?
+- [ ] **Constitutional Docs Parity (G19):** Are all mandatory governance docs referenced across AGENTS.md and GEMINI.md?
+- [ ] **Physical Reality Proof:** Were tests executed directly in terminal and actual exit code 0 verified?
 
 ### 3. Concrete Evidence
 [CLI output, test logs, AST findings, or semgrep results]

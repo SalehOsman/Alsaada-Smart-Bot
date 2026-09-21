@@ -1,18 +1,19 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:national-id-engine)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T07:46:01.562Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T13:58:12.722Z)
 - **معرف الكيان:** `package:national-id-engine`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/national-id-engine
 - **المسار الأساسي:** `packages/national-id-engine`
-- **عدد الملفات المقفلة:** 6 ملفاً
+- **عدد الملفات المقفلة:** 7 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/national-id-engine/package.json` | `ca1eff9fc470e894f68c7158a85937bf0f4d2f92655d95d6a44230673ed3b631` |
+| `packages/national-id-engine/CHANGELOG.md` | `5e9e1e9456e042f90a4039e241beff25df4b6e8744a9f2924ea17c2ed37f9667` |
+| `packages/national-id-engine/package.json` | `fc6099a305e7e2c4cd0f1b9cc7464d0456878a0197dcf3a7887c73abf8a17d03` |
 | `packages/national-id-engine/src/constants.ts` | `8ea9fce9df9da348f160bcc746275eec782b823a560b40c9fdf7cd8f246e859f` |
 | `packages/national-id-engine/src/index.ts` | `4fc137226a22dc920e1ecb7cca79029fcbc6e76a93f8826e9edbca4b2381e81d` |
 | `packages/national-id-engine/src/parser.ts` | `7509f2bbc7387246336730569ea41e6ab937287407550c2fc0e281209a555be7` |

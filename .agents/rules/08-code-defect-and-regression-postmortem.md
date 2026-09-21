@@ -43,3 +43,16 @@ To apply a source code modification following an RCA report, the agent must rece
 1. **Mandatory Regression Suite:** Every code fix must be accompanied by a dedicated, permanent regression test suite placed under `<module>/tests/regression/` or `<package>/tests/`.
 2. **Cryptographic Locking:** The new regression test must be locked under `test:<path>` in `governance.lock.json`.
 3. **Post-Incident Documentation:** A post-incident summary must be logged in `docs/code-incidents/<date>-incident-<slug>.md` using `pnpm make:incident`.
+
+---
+
+## 5. Universal Incident Scope & Zero-Omission Standard
+
+1. **Broad Incident Scope:** The 5-Pillar RCA requirement applies universally to ALL system breakdowns, not merely runtime crashes in business logic:
+   - **CI & Build Pipeline Breakdowns:** Frozen-lockfile desynchronization, missing lifecycle scripts, and workflow failures.
+   - **Monorepo Version Parity Desyncs:** Release mismatch between root and workspace packages, and un-synchronized release cascades.
+   - **Data Validation & Algorithmic Regressions:** Mathematical failures in check-digit algorithms (e.g. Modulo-11), legacy test fixtures divergence, or state machine corruptions.
+   - **Constitutional Governance Drift:** Gate failures in documentation cross-references, unauthorized lockfile modifications, and uncommitted tree clutter.
+2. **Zero-Omission Standard:** No defect or systemic regression may be resolved without an authenticated postmortem in `docs/code-incidents/` conforming strictly to `TEMPLATE.md`.
+3. **Preventive Structural Guarantee:** Each report must culminate in permanent preventative mechanisms: automated static verifiers, regression tests, and cryptographic sealing.
+

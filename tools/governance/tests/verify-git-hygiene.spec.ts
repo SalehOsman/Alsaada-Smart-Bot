@@ -4,7 +4,7 @@ import {
   WORKSPACE_PACKAGE_DIRS,
   PROHIBITED_ROOT_CLUTTER_PATTERNS,
 } from '../verify-git-hygiene.js';
-import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -204,4 +204,31 @@ describe('🏛️ G17: verify-git-hygiene governance gate', () => {
     expect(result.ok).toBe(true);
     expect(result.warnings).toHaveLength(0);
   });
+
+  it('verifies monorepo root and workspace version parity and sync script wiring', () => {
+    // Regression test for INC-20260921-CHANGESET-PARITY
+    const rootPkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as {
+      version: string;
+      scripts: Record<string, string>;
+    };
+
+    // Assert root version format and presence
+    expect(rootPkg.version).toBeDefined();
+    expect(rootPkg.version).toMatch(/^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/);
+
+    // Assert version-packages script wires sync-root-version
+    expect(rootPkg.scripts['version-packages']).toBe(
+      'changeset version && tsx tools/release/sync-root-version.ts'
+    );
+    expect(rootPkg.scripts['release:tag']).toBe('changeset publish');
+
+    // Assert version parity across all 11 workspace packages
+    for (const pkgRelDir of WORKSPACE_PACKAGE_DIRS) {
+      const pkgJsonPath = join(process.cwd(), pkgRelDir, 'package.json');
+      expect(existsSync(pkgJsonPath), `Missing ${pkgRelDir}/package.json`).toBe(true);
+      const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf8')) as { version: string };
+      expect(pkgJson.version).toBe(rootPkg.version);
+    }
+  });
 });
+

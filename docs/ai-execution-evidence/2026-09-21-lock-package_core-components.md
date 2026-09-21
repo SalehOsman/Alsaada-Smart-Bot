@@ -1,18 +1,19 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:core-components)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T07:46:01.547Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T13:58:12.344Z)
 - **معرف الكيان:** `package:core-components`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/core-components
 - **المسار الأساسي:** `packages/core-components`
-- **عدد الملفات المقفلة:** 66 ملفاً
+- **عدد الملفات المقفلة:** 67 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/core-components/package.json` | `9944fba369c8856154ddb973e542fce6903a09a78dd68259c76b7840729b4222` |
+| `packages/core-components/CHANGELOG.md` | `a6801e3677913b76a38a63cb77d6fbef7597aba640badb9e74a9b15525a48a49` |
+| `packages/core-components/package.json` | `047b52e6d3439e902ae687b0600900bbbe947ca5aca399a246d647e8842e15b2` |
 | `packages/core-components/src/amount-picker/keyboard.ts` | `66d4fbd3bb18ca571b349726a79f04ac36b9d3e5f151bf452edceb05faaa3bf0` |
 | `packages/core-components/src/amount-picker/validator.ts` | `d0a8b4819bc140cb390f0c1028b13af76e6a25f0689bffa976767097cdc6cf3c` |
 | `packages/core-components/src/approval-workflow/types.ts` | `9caeefbcabbce16738ad05e5ff3858edd3677dd164b6e48ef8f3c8b91d34dbca` |

@@ -1,6 +1,6 @@
 {
     "name": "alsaada-smart-bot",
-    "version": "2.0.0-alpha.85",
+    "version": "2.0.0-alpha.86",
     "private": true,
     "type": "module",
     "packageManager": "pnpm@12.4.2",
@@ -72,7 +72,7 @@
         "security:semgrep": "pnpm sast:verify",
         "release:bump": "tsx tools/release/release-engine.ts bump",
         "release:verify": "tsx tools/governance/verify-release-sync.ts",
-        "version-packages": "changeset version",
+        "version-packages": "changeset version && tsx tools/release/sync-root-version.ts",
         "release:tag": "changeset publish",
         "upgrade:wizard": "tsx tools/upgrade/wizard.ts",
         "upgrade:impact": "tsx tools/upgrade/impact-scanner.ts",

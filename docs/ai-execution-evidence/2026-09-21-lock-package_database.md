@@ -1,18 +1,19 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T07:46:01.558Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T13:58:12.692Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
 - **المسار الأساسي:** `packages/database`
-- **عدد الملفات المقفلة:** 33 ملفاً
+- **عدد الملفات المقفلة:** 34 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/database/package.json` | `14c8a8cfdfac4165ef011b1cc91481cc56b7870fffe50dcd9baba754becd7dd8` |
+| `packages/database/CHANGELOG.md` | `9306c7957c1fa2e1ee9fa80ab06abe82e9a43b195e707736e801e6f094a92148` |
+| `packages/database/package.json` | `92a6b16d3c413de3f745554560c696122d392727e43593a9c2dd8d954900e766` |
 | `packages/database/prisma.config.ts` | `7f96b4560ae8a2037d80524b18c42d4259803ec9659eb6cbaca6714230118609` |
 | `packages/database/prisma/migrations/20260911000000_init_enterprise_hash_ledger/migration.sql` | `30ca6a54b21f14cc6233e8e667b69c437522f77453ebe2cd9e4b45e9c7cecaee` |
 | `packages/database/prisma/migrations/20260912090000_add_trace_incidents_and_magic_claim/migration.sql` | `dc6fcabbc939db2b4f9e3a55a359e975da821101425cf50fbc749b990a232118` |

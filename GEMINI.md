@@ -29,7 +29,7 @@
    > **«ادمج الفرع»**
 
 ### 5. Canonical Quality Gates Matrix (G1–G23)
-All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27-enterprise-ai-governance-and-quality-gates-constitution.md):
+All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27-enterprise-ai-governance-and-quality-gates-constitution.md) and [`docs/21`](docs/21-mandatory-module-architecture-and-gates.md):
 - **G1–G5 (Structure & Parity):** G1 Type Safety, G2 10-File Slice Architecture, G3 Migration Registry Parity, G4 Flow Contracts (`flow.contract.json`), G5 Telegram Contracts (<=512 URL, <=64 Callback).
 - **G6–G10 (Performance & Security):** G6 Sub-300ms Latency Budget, G7 RBAC Matrix & Role Immunity, G8 Compensation Field Masking, G9 Observability (Zero silent failure / console.error), G10 Test Authenticity.
 - **G11–G15 (Accounting & Governance):** G11 Legacy Accounting Invariants, G12 Financial Ledger Double-Entry, G13 Cryptographic Tamper Guard, G14 Smart Pre-Commit Test Guard, G15 Git Hygiene.

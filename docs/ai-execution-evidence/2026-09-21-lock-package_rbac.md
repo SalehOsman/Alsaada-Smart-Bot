@@ -1,18 +1,19 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:rbac)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T07:46:01.567Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T13:58:12.803Z)
 - **معرف الكيان:** `package:rbac`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/rbac
 - **المسار الأساسي:** `packages/rbac`
-- **عدد الملفات المقفلة:** 11 ملفاً
+- **عدد الملفات المقفلة:** 12 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/rbac/package.json` | `45ea87d7daffbae8463fa1535283fa328aafdffa44ccf999174d127d2e30c616` |
+| `packages/rbac/CHANGELOG.md` | `6b9d0cb93b0d15b38d41456f99efda8cd119e58e1af5de0f0d9e9212a1bf6dec` |
+| `packages/rbac/package.json` | `61c8f7fd6692deeaf9b288aa60407b54ea59883d4b70973f5ca291945b8e6aba` |
 | `packages/rbac/src/catalog.ts` | `02f31418eaeda47d94dccade90936c7e67ebe88a185ed897f41ba75a07d9213e` |
 | `packages/rbac/src/dashboard-auth.ts` | `30087bffd59ac89d72f84bc819de864fe34ff6d990b0f823f153e52ba77d5558` |
 | `packages/rbac/src/evaluator.ts` | `6234ed4ade81399fab81c38b831bec574d9ef99ced528cf9d28281399bb6e73a` |
