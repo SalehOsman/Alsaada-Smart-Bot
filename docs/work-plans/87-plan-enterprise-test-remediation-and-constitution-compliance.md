@@ -84,6 +84,48 @@
 > [!NOTE]
 > **إغلاق المرحلة الأولى (Tier 1):** تم الانتهاء بنجاح من كافة ملفات Tier 1 الحرجة (4 من أصل 4 ملفات: #210، #221، #60، #197) ومطابقتها التامة لدستور الاختبارات وقفلها تشفيرياً في `governance.lock.json`.
 
-### ⬜ المرحلة 2: Tier 2 — High (146 ملف) — قيد الانتظار
+### 🟡 المرحلة 2: Tier 2 — High (146 ملف) — قيد التنفيذ (الدفعة الأولى مكتملة 12/12)
+
+#### 2.1 ✅ الدفعة الأولى (Batch 1: 12 ملفاً في `apps/admin-dashboard`) — 🟢 مكتملة ومقفلة تشفيرياً 21/09/2026
+تم بحمد الله ترقية واعتماد وإغلاق الـ 12 ملفاً الأولى من Tier 2 في لوحة التحكم الإدارية وفق دستور الاختبارات ([`.agents/rules/06-testing-and-mutation-constitution.md`](file:///f:/Alsaada-Smart-Bot/.agents/rules/06-testing-and-mutation-constitution.md)) بنجاح 100% وبدون أي مساس بكود الإنتاج (Rule 9):
+
+1. **`apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts` (#1):** 🟢 20/20 نجاح (39ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts`).
+2. **`apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts` (#3):** 🟢 4/4 نجاح (557ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts`).
+3. **`apps/admin-dashboard/tests/auth-claim.spec.ts` (#4):** 🟢 18/18 نجاح (1.43s) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/auth-claim.spec.ts`).
+4. **`apps/admin-dashboard/tests/auth-session.spec.ts` (#5):** 🟢 9/9 نجاح (54ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/auth-session.spec.ts`).
+5. **`apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts` (#6):** 🟢 15/15 نجاح (24ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts`).
+6. **`apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts` (#7):** 🟢 8/8 نجاح (570ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts`).
+7. **`apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts` (#8):** 🟢 9/9 نجاح (783ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts`).
+8. **`apps/admin-dashboard/tests/dashboard-intelligence.spec.ts` (#9):** 🟢 7/7 نجاح (29ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-intelligence.spec.ts`).
+9. **`apps/admin-dashboard/tests/dashboard-preferences.spec.ts` (#10):** 🟢 19/19 نجاح (56ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/dashboard-preferences.spec.ts`).
+10. **`apps/admin-dashboard/tests/data-fetchers.spec.ts` (#11):** 🟢 36/36 نجاح (104ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/data-fetchers.spec.ts`).
+11. **`apps/admin-dashboard/tests/error-boundaries.spec.ts` (#13):** 🟢 10/10 نجاح (28ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/error-boundaries.spec.ts`).
+12. **`apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts` (#15):** 🟢 6/6 نجاح (19ms) — مقفل تشفيرياً بـ SHA-256 (`test:apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts`).
+
+- **إجمالي اختبارات الدفعة الأولى المعتمدة:** 161 اختباراً ناجحاً بنسبة 100%.
+- **الفحص الجنائي والمطابقة:** `pnpm audit:saleh` = PASS ✅ | `pnpm typecheck` = PASS (0 errors) | `test-authenticity` = PASS (237 files).
+
+#### 2.2 🟢 الدفعة الثانية (Batch 2: إنهاء كافة ملفات لوحة التحكم - 15 ملفاً في `apps/admin-dashboard`) — 🟢 مكتملة 21/09/2026
+تم بحمد الله ترقية ومطابقة الـ 15 ملفاً المتبقية بالكامل في لوحة التحكم الإدارية وفق دستور جودة الاختبارات الثماني ([`.agents/rules/06-testing-and-mutation-constitution.md`](file:///f:/Alsaada-Smart-Bot/.agents/rules/06-testing-and-mutation-constitution.md)) لتكتمل لوحة التحكم الإدارية بنسبة 100% (30 ملفاً من أصل 30):
+
+1. **`apps/admin-dashboard/tests/middleware-session-guard.spec.ts` (#16):** 🟢 7/7 نجاح (46ms) — تثبيت `PINNED_BASE_TIME`، استعادة المؤقتات، وهيكلة Triple-A صريحة وتوكيدات سلبية.
+2. **`apps/admin-dashboard/tests/middleware-trace.spec.ts` (#17):** 🟢 10/10 نجاح (36ms) — تثبيت `PINNED_BASE_TIME`، حقن traceId، وتوكيدات سلبية مانعة للمسارات غير المصرحة.
+3. **`apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts` (#18):** 🟢 7/7 نجاح (14ms) — هيكلة Triple-A صريحة، توكيدات سلبية مانعة لاعتماد النفس ومطابقة قيود الخزينة.
+4. **`apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts` (#19):** 🟢 6/6 نجاح (17ms) — ضبط Triple-A بالكامل، اختبار التفويضات المؤقتة وتوكيدات سلبية ضد انتهاك الصلاحيات.
+5. **`apps/admin-dashboard/tests/parity/workforce-parity.spec.ts` (#20):** 🟢 9/9 نجاح (20ms) — استبدال المحلل اليدوي بمحرك `parseEgyptianNationalId` الرسمي، وهيكلة Triple-A وتوكيدات سلبية.
+6. **`apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts` (#21):** 🟢 9/9 نجاح (13ms) — ضبط كتل Triple-A الصريحة، وتوكيدات سلبية مانعة لوصول الأدوار غير المخولة لمجموعات الإشعارات.
+7. **`apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts` (#22):** 🟢 16/16 نجاح (98ms) — تثبيت `PINNED_BASE_TIME`، والمؤقتات الوهمية واستعادتها، وفصل Triple-A وتوكيدات XSS سلبية.
+8. **`apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts` (#23):** 🟢 24/24 نجاح (72ms) — استئصال `Date.now()` واستبداله بـ `PINNED_BASE_TIME`، كتم ضوضاء spawn stderr، وضبط Triple-A.
+9. **`apps/admin-dashboard/tests/rbac.spec.ts` (#24):** 🟢 5/5 نجاح (4ms) — فصل مراحل Triple-A صراحة، وتعزيز التوكيدات بمانعات سلبية صارمة للأدوار العادية.
+10. **`apps/admin-dashboard/tests/role-overview.spec.ts` (#25):** 🟢 5/5 نجاح (58ms) — فحص عميق للمخرجات عبر `renderToString`، حجب الرواتب عن FIELD_ADMIN، وضبط Triple-A وتوكيدات سلبية.
+11. **`apps/admin-dashboard/tests/screen-responsiveness.spec.ts` (#26):** 🟢 24/24 نجاح (13ms) — فصل مراحل Triple-A لـ 24 اختباراً، توكيدات سلبية مانعة للأخطاء التصميمية، وتثبيت ZeroStateCard.
+12. **`apps/admin-dashboard/tests/secure-export.spec.ts` (#27):** 🟢 5/5 نجاح (81ms) — هيكلة Triple-A، استخدام المؤقتات الحقيقية لتدفق ExcelJS، توكيدات سلبية مانعة لحقن المعادلات وتسريب الرواتب.
+13. **`apps/admin-dashboard/tests/sidebar-nav.spec.ts` (#28):** 🟢 17/17 نجاح (19ms) — هيكلة Triple-A لـ 17 اختباراً، توكيدات سلبية مانعة للتداخل، وتأكيد خلو عناوين الأقسام من الإيموجي بنسبة 100%.
+14. **`apps/admin-dashboard/tests/workforce-evaluations.spec.ts` (#29):** 🟢 9/9 نجاح (17ms) — تثبيت `PINNED_BASE_TIME`، كتم تسريب خطأ قاعدة البيانات عن الكونسول، وضبط Triple-A وتوكيدات سلبية.
+15. **`apps/admin-dashboard/tests/workforce-onboarding.spec.ts` (#30):** 🟢 12/12 نجاح (12ms) — تثبيت `PINNED_BASE_TIME`، واختبار استخراج الرقم القومي بمحرك النواة، وهيكلة Triple-A وتوكيدات سلبية.
+
+- **إجمالي اختبارات لوحة التحكم بالكامل (30 ملفاً):** 342 اختباراً ناجحاً بنسبة 100% (30 passed / 342 tests).
+- **الفحص الجنائي والمطابقة:** `pnpm audit:saleh` = PASS ✅ | `pnpm typecheck` = PASS (0 errors).
+
 ### ⬜ المرحلة 3: Tier 3 — Medium (22 ملف) — قيد الانتظار
 ### ⬜ المرحلة 4: Tier 4 — Low (12 ملف) — قيد الانتظار

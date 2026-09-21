@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,6 +9,7 @@ import { StudioProcessManager } from '../src/lib/studio-process';
 import { GET as statusGet } from '../src/app/api/admin/studio/status/route';
 import { POST as lifecyclePost } from '../src/app/api/admin/studio/lifecycle/route';
 import { prisma } from '@alsaada/database';
+import { PINNED_BASE_TIME } from '@alsaada/shared/testing';
 
 vi.mock('@alsaada/database', () => ({
   prisma: {
@@ -24,8 +25,21 @@ vi.mock('../src/lib/auth', () => ({
 }));
 
 describe('Plan 66: Sovereign Prisma Studio Launchpad & Ngrok Extension Configuration', () => {
+  let stderrSpy: any;
+  let stdoutSpy: any;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    stderrSpy?.mockRestore();
+    stdoutSpy?.mockRestore();
+    vi.useRealTimers();
   });
 
   describe('1. Manifest & Navigation RBAC Sovereignty', () => {
@@ -298,11 +312,15 @@ describe('Plan 66: Sovereign Prisma Studio Launchpad & Ngrok Extension Configura
     });
 
     it('records PRISMA_STUDIO_EXTEND when session is extended while active', async () => {
+      // Arrange
       const manager = new StudioProcessManager();
       // Simulate active session
-      (manager as unknown as { startedAtTime: number }).startedAtTime = Date.now();
+      (manager as unknown as { startedAtTime: number }).startedAtTime = PINNED_BASE_TIME.getTime();
+
+      // Act
       const status = await manager.extendSession('7594239391', '127.0.0.1');
 
+      // Assert
       expect(status.remainingSeconds).toBeGreaterThan(0);
       expect(prisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { PINNED_BASE_TIME } from '@alsaada/shared/testing';
 import {
   getWorkforceDirectory,
   getSitesHub,
@@ -102,19 +104,27 @@ describe('ZeroStateCard Component Contract (Milestone 3)', () => {
     React.createElement('svg', { ...props, 'data-testid': 'dummy-icon' });
 
   it('instantiates cleanly with required props and default styling', () => {
+    // Arrange
     const props: ZeroStateCardProps = {
       icon: DummyIcon,
       title: 'لا توجد بيانات متاحة',
       description: 'لم يتم العثور على أي سجلات في هذا القسم حالياً',
     };
 
-    const element = ZeroStateCard(props);
-    expect(element).toBeDefined();
-    expect(element.type).toBe('div');
-    expect(element.props['data-testid']).toBe('zero-state-card');
+    // Act
+    const html = renderToStaticMarkup(React.createElement(ZeroStateCard, props));
+
+    // Assert
+    expect(html).toContain('data-testid="zero-state-card"');
+    expect(html).toContain('لا توجد بيانات متاحة');
+    expect(html).toContain('لم يتم العثور على أي سجلات في هذا القسم حالياً');
+    expect(html).toContain('data-testid="dummy-icon"');
+    expect(html).not.toContain('data-testid="zero-state-reset-btn"');
+    expect(html).not.toContain('data-testid="zero-state-action-link"');
   });
 
   it('supports action button and onResetFilter callback', () => {
+    // Arrange
     const handleReset = vi.fn();
     const props: ZeroStateCardProps = {
       icon: DummyIcon,
@@ -125,16 +135,17 @@ describe('ZeroStateCard Component Contract (Milestone 3)', () => {
       onResetFilter: handleReset,
     };
 
-    const element = ZeroStateCard(props);
-    expect(element).toBeDefined();
+    // Act
+    const html = renderToStaticMarkup(React.createElement(ZeroStateCard, props));
 
-    // Verify children contains buttons container
-    const children = React.Children.toArray(element.props.children);
-    const actionContainer = children.find(
-      (c: any) => c && c.props && c.props.className && c.props.className.includes('justify-center')
-    ) as React.ReactElement<any>;
-
-    expect(actionContainer).toBeDefined();
+    // Assert
+    expect(html).toContain('data-testid="zero-state-card"');
+    expect(html).toContain('لا توجد نتائج مطابقة');
+    expect(html).toContain('إضافة سجل جديد');
+    expect(html).toContain('href="/admin/workforce/new"');
+    expect(html).toContain('data-testid="zero-state-action-link"');
+    expect(html).toContain('data-testid="zero-state-reset-btn"');
+    expect(html).not.toContain('undefined');
   });
 });
 
@@ -142,8 +153,16 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
   const testKeyHex = getNormalizedEncryptionKey();
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.clearAllMocks();
     clearApmCache();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   // --------------------------------------------------------------------------
@@ -187,6 +206,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
     ];
 
     it('scopes query to assignedSiteId for FIELD_ADMIN and PROJECT_MANAGER', async () => {
+      // Arrange
       vi.mocked(prisma.worker.findMany).mockResolvedValueOnce(mockWorkers as any);
 
       const fieldUser: DashboardUser = {
@@ -196,17 +216,22 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         assignedSiteId: 'site-alpha',
       };
 
+      // Act
       const result = await getWorkforceDirectory(fieldUser);
 
+      // Assert
       expect(prisma.worker.findMany).toHaveBeenCalledWith({
         where: { isDeleted: false, siteId: 'site-alpha' },
         include: { site: true, jobRef: true, user: true },
         orderBy: { createdAt: 'desc' },
       });
       expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('worker-01');
+      expect(result[0].id).not.toBe('worker-02');
     });
 
     it('does not filter by siteId for SUPER_ADMIN or EXECUTIVE_DIRECTOR', async () => {
+      // Arrange
       vi.mocked(prisma.worker.findMany).mockResolvedValueOnce(mockWorkers as any);
 
       const superUser: DashboardUser = {
@@ -215,16 +240,22 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         role: 'SUPER_ADMIN',
       };
 
-      await getWorkforceDirectory(superUser);
+      // Act
+      const result = await getWorkforceDirectory(superUser);
 
+      // Assert
       expect(prisma.worker.findMany).toHaveBeenCalledWith({
         where: { isDeleted: false },
         include: { site: true, jobRef: true, user: true },
         orderBy: { createdAt: 'desc' },
       });
+      expect(result).toHaveLength(2);
+      expect(result[0].dailyWage).toBe(450);
+      expect(result[0].dailyWage).not.toBeUndefined();
     });
 
     it('masks dailyWage for FIELD_ADMIN and reveals it for SUPER_ADMIN and ACCOUNTANT', async () => {
+      // Arrange
       vi.mocked(prisma.worker.findMany).mockResolvedValue(mockWorkers as any);
 
       const fieldUser: DashboardUser = {
@@ -233,38 +264,52 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         role: 'FIELD_ADMIN',
         assignedSiteId: 'site-alpha',
       };
-      const fieldResult = await getWorkforceDirectory(fieldUser);
-      expect(fieldResult[0].dailyWage).toBeUndefined();
-
       const generalAdminUser: DashboardUser = {
         id: 'usr-ga',
         name: 'المدير العام',
         role: 'GENERAL_ADMIN',
       };
+
+      // Act
+      const fieldResult = await getWorkforceDirectory(fieldUser);
       const gaResult = await getWorkforceDirectory(generalAdminUser);
+
+      // Assert
+      expect(fieldResult[0].dailyWage).toBeUndefined();
+      expect(fieldResult[0].dailyWage).not.toBe(450);
       expect(gaResult[0].dailyWage).toBe(450);
+      expect(gaResult[0].dailyWage).not.toBeUndefined();
     });
 
     it('resolves nickname correctly falling back to full name', async () => {
+      // Arrange
       vi.mocked(prisma.worker.findMany).mockResolvedValueOnce(mockWorkers as any);
-
       const superUser: DashboardUser = { id: 'usr-sa', name: 'Admin', role: 'SUPER_ADMIN' };
+
+      // Act
       const result = await getWorkforceDirectory(superUser);
 
+      // Assert
       expect(result[0].nickname).toBe('أبو علي');
+      expect(result[0].nickname).not.toBe('علي حسن محمود الجزار');
       expect(result[1].nickname).toBe('محمود أحمد شحاتة');
+      expect(result[1].nickname).not.toBeNull();
     });
 
     it('masks national ID to **********XXXX and supports BLACKLISTED status', async () => {
+      // Arrange
       vi.mocked(prisma.worker.findMany).mockResolvedValueOnce(mockWorkers as any);
-
       const superUser: DashboardUser = { id: 'usr-sa', name: 'Admin', role: 'SUPER_ADMIN' };
+
+      // Act
       const result = await getWorkforceDirectory(superUser);
 
-      // National ID last 4 digits: '4567'
+      // Assert
       expect(result[0].nationalIdMasked).toMatch(/\*{10}\d{4}/);
+      expect(result[0].nationalIdMasked).not.toBe('29801011234567');
       expect(result[1].status).toBe('BLACKLISTED');
       expect(result[0].status).toBe('ACTIVE');
+      expect(result[0].status).not.toBe('BLACKLISTED');
     });
   });
 
@@ -289,6 +334,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
     ];
 
     it('scopes site query for field roles and aggregates supervisors and active workers', async () => {
+      // Arrange
       vi.mocked(prisma.site.findMany).mockResolvedValueOnce(mockSites as any);
 
       const fieldUser: DashboardUser = {
@@ -298,8 +344,10 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         assignedSiteId: 'site-01',
       };
 
+      // Act
       const result = await getSitesHub(fieldUser);
 
+      // Assert
       expect(prisma.site.findMany).toHaveBeenCalledWith({
         where: { id: 'site-01' },
         include: {
@@ -310,9 +358,11 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         orderBy: { name: 'asc' },
       });
 
+      expect(result).toHaveLength(1);
       expect(result[0].workersCount).toBe(3);
       expect(result[0].assignedSupervisors).toContain('م. أحمد الشامي (PROJECT_MANAGER)');
       expect(result[0].assignedSupervisors).toContain('عصام عبد الله (FIELD_ADMIN)');
+      expect(result[0].assignedSupervisors).not.toContain('GUEST');
       expect(result[0].location).toBe('استصلاح توشكى المرحلة الأولى');
     });
   });
@@ -335,10 +385,13 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
     ];
 
     it('queries active jobs ordered by department and calculates wage boundaries', async () => {
+      // Arrange
       vi.mocked(prisma.jobTitle.findMany).mockResolvedValueOnce(mockJobs as any);
 
+      // Act
       const result = await getJobMatrixData();
 
+      // Assert
       expect(prisma.jobTitle.findMany).toHaveBeenCalledWith({
         where: { isActive: true },
         include: {
@@ -348,11 +401,13 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         orderBy: [{ department: { order: 'asc' } }, { code: 'asc' }],
       });
 
+      expect(result).toHaveLength(1);
       expect(result[0].title).toBe('سائق لودر');
       expect(result[0].category).toBe('إدارة المعدات والتشغيل');
       expect(result[0].minDailyWage).toBe(350);
       expect(result[0].maxDailyWage).toBe(9000);
       expect(result[0].workersCount).toBe(2);
+      expect(result[0].minDailyWage).not.toBeGreaterThan(result[0].maxDailyWage);
     });
   });
 
@@ -407,6 +462,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
     ];
 
     it('scopes clearance queries to worker.siteId for field roles', async () => {
+      // Arrange
       vi.mocked(prisma.workerClearance.findMany).mockResolvedValueOnce(mockClearances as any);
       vi.mocked(prisma.disciplinaryAndBonus.findMany).mockResolvedValueOnce(mockDecisions as any);
 
@@ -417,8 +473,10 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         assignedSiteId: 'site-farfra',
       };
 
+      // Act
       const result = await getClearancesData(fieldUser);
 
+      // Assert
       expect(prisma.workerClearance.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { worker: { siteId: 'site-farfra' } },
@@ -430,12 +488,15 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         })
       );
 
+      expect(result.clearances).toHaveLength(1);
       expect(result.clearances[0].voucherId).toBe('#CLR-2026-001');
       expect(result.clearances[0].workerName).toBe('أبو علي');
+      expect(result.decisions).toHaveLength(2);
       expect(result.decisions[0].type).toBe('BONUS');
       expect(result.decisions[0].amountOrDays).toBe('500 ج.م');
       expect(result.decisions[1].type).toBe('PENALTY');
       expect(result.decisions[1].amountOrDays).toBe('2 أيام');
+      expect(result.decisions[1].amountOrDays).not.toBe('500 ج.م');
     });
   });
 
@@ -469,19 +530,24 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
     ];
 
     it('queries active non-deleted users and formats status and site', async () => {
+      // Arrange
       vi.mocked(prisma.user.findMany).mockResolvedValueOnce(mockUsers as any);
 
+      // Act
       const result = await getUsersManagementData();
 
+      // Assert
       expect(prisma.user.findMany).toHaveBeenCalledWith({
         where: { isDeleted: false },
         include: { worker: true, assignedSite: true },
         orderBy: { createdAt: 'desc' },
       });
 
+      expect(result).toHaveLength(2);
       expect(result[0].status).toBe('ACTIVE');
       expect(result[0].assignedSite).toBe('كافة المواقع والمشاريع');
       expect(result[1].status).toBe('REVOKED');
+      expect(result[1].status).not.toBe('ACTIVE');
       expect(result[1].assignedSite).toBe('موقع توشكى');
     });
   });
@@ -504,19 +570,24 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
     ];
 
     it('fetches latest 50 audit logs ordered by timestamp desc', async () => {
+      // Arrange
       vi.mocked(prisma.auditLog.findMany).mockResolvedValueOnce(mockLogs as any);
 
+      // Act
       const result = await getAuditVaultData();
 
+      // Assert
       expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
         orderBy: { timestamp: 'desc' },
         take: 50,
       });
 
+      expect(result).toHaveLength(1);
       expect(result[0].tableName).toBe('Worker');
       expect(result[0].performedBy).toBe('987654321');
       expect(result[0].previousValues).toContain('400');
       expect(result[0].newValues).toContain('450');
+      expect(result[0].newValues).not.toBe(result[0].previousValues);
     });
   });
 
@@ -525,6 +596,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
   // --------------------------------------------------------------------------
   describe('getCompanyProfileData', () => {
     it('returns official profile details when record exists', async () => {
+      // Arrange
       vi.mocked(prisma.companyProfile.findFirst).mockResolvedValueOnce({
         id: 'cp-01',
         legalName: 'شركة السعادة للمقاولات العامة',
@@ -535,21 +607,29 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         baseCurrency: 'EGP',
       } as any);
 
+      // Act
       const result = await getCompanyProfileData();
 
+      // Assert
       expect(result.legalName).toBe('شركة السعادة للمقاولات العامة');
+      expect(result.legalName).not.toBe('');
       expect(result.crNumber).toBe('CR-998877');
       expect(result.status).toContain('موثق');
+      expect(result.status).not.toBe('مسودة');
     });
 
     it('returns official fallback defaults when database record is null', async () => {
+      // Arrange
       vi.mocked(prisma.companyProfile.findFirst).mockResolvedValueOnce(null);
 
+      // Act
       const result = await getCompanyProfileData();
 
+      // Assert
       expect(result.legalName).toContain('السعادة');
       expect(result.crNumber).toBe('CR-104829');
       expect(result.taxNumber).toBe('TR-492-810-332');
+      expect(result.taxNumber).not.toBeUndefined();
     });
   });
 
@@ -558,6 +638,7 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
   // --------------------------------------------------------------------------
   describe('getOverviewKpis', () => {
     it('aggregates live counts and APM latency with field scoping', async () => {
+      // Arrange
       vi.mocked(prisma.worker.count).mockResolvedValueOnce(85);
       vi.mocked(prisma.site.count).mockResolvedValueOnce(1);
       vi.mocked(prisma.workerClearance.count).mockResolvedValueOnce(2);
@@ -573,15 +654,19 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         assignedSiteId: 'site-alpha',
       };
 
+      // Act
       const result = await getOverviewKpis(fieldUser);
 
+      // Assert
       expect(prisma.worker.count).toHaveBeenCalledWith({
         where: { isDeleted: false, status: 'ACTIVE', siteId: 'site-alpha' },
       });
       expect(result.activeWorkersCount).toBe(85);
       expect(result.activeSitesCount).toBe(1);
       expect(result.pendingItemsCount).toBe(5); // 2 clearances + 3 decisions
+      expect(result.pendingItemsCount).not.toBe(0);
       expect(result.avgLatencyMs).toBe(13);
+      expect(result.avgLatencyMs).toBeLessThan(300);
     });
   });
 
@@ -590,27 +675,61 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
   // --------------------------------------------------------------------------
   describe('resolveHumanAction', () => {
     it('translates technical telegram actions to user-friendly Arabic triggers', () => {
-      expect(resolveHumanAction('photo:upload')).toContain('رفع صورة');
-      expect(resolveHumanAction('cb:act:wdoc:cat:NATIONAL_ID')).toContain('بطاقة الرقم القومي');
-      expect(resolveHumanAction('cb:act:wdoc:cat:PASSPORT')).toContain('جواز السفر');
-      expect(resolveHumanAction('cb:act:wdoc:cat:WORK_PERMIT')).toContain('تصريح العمل');
-      expect(resolveHumanAction('msg:/boost')).toContain('/boost');
-      expect(resolveHumanAction('cb:action:worker:profile:worker-123')).toContain('الملف الشامل للعامل');
-      expect(resolveHumanAction('cb:action:main_menu')).toContain('العودة للقائمة الرئيسية');
+      // Arrange
+      const photoAction = 'photo:upload';
+      const nidAction = 'cb:act:wdoc:cat:NATIONAL_ID';
+      const passportAction = 'cb:act:wdoc:cat:PASSPORT';
+      const permitAction = 'cb:act:wdoc:cat:WORK_PERMIT';
+      const boostAction = 'msg:/boost';
+      const profileAction = 'cb:action:worker:profile:worker-123';
+      const menuAction = 'cb:action:main_menu';
+
+      // Act
+      const photoText = resolveHumanAction(photoAction);
+      const nidText = resolveHumanAction(nidAction);
+      const passportText = resolveHumanAction(passportAction);
+      const permitText = resolveHumanAction(permitAction);
+      const boostText = resolveHumanAction(boostAction);
+      const profileText = resolveHumanAction(profileAction);
+      const menuText = resolveHumanAction(menuAction);
+
+      // Assert
+      expect(photoText).toContain('رفع صورة');
+      expect(nidText).toContain('بطاقة الرقم القومي');
+      expect(passportText).toContain('جواز السفر');
+      expect(permitText).toContain('تصريح العمل');
+      expect(boostText).toContain('/boost');
+      expect(profileText).toContain('الملف الشامل للعامل');
+      expect(menuText).toContain('العودة للقائمة الرئيسية');
+      expect(photoText).not.toBe(photoAction);
     });
 
     it('handles unknown or empty actions gracefully', () => {
-      expect(resolveHumanAction('')).toBe('غير محدد');
-      expect(resolveHumanAction('unknown_custom_trigger')).toBe('unknown_custom_trigger');
+      // Arrange
+      const emptyAction = '';
+      const unknownAction = 'unknown_custom_trigger';
+
+      // Act
+      const emptyResult = resolveHumanAction(emptyAction);
+      const unknownResult = resolveHumanAction(unknownAction);
+
+      // Assert
+      expect(emptyResult).toBe('غير محدد');
+      expect(emptyResult).not.toBe('');
+      expect(unknownResult).toBe('unknown_custom_trigger');
+      expect(unknownResult).not.toBe('غير محدد');
     });
   });
 
   describe('getApmTelemetryData', () => {
     it('returns default empty view model when no performance logs exist', async () => {
+      // Arrange
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce([]);
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.totalOps).toBe(0);
       expect(result.avgLatencyMs).toBe(0);
       expect(result.avgInternalLatencyMs).toBe(0);
@@ -622,9 +741,12 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.fastOpsPct + result.acceptableOpsPct + result.slowOpsPct).toBe(100);
       expect(result.slowestOps).toEqual([]);
       expect(result.latestOps).toEqual([]);
+      expect(result.slowestOps).toHaveLength(0);
+      expect(result.latestOps).toHaveLength(0);
     });
 
     it('correctly aggregates speed metrics, latest 10 ops, and slowest 5 ops', async () => {
+      // Arrange
       const mockLogs = [
         {
           id: 'log-1',
@@ -663,8 +785,10 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(mockLogs as any);
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.totalOps).toBe(3);
       expect(result.avgLatencyMs).toBe(6201);
       expect(result.avgInternalLatencyMs).toBe(21);
@@ -687,9 +811,12 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.slowestOps[0].timeMs).toBe(18500);
       expect(result.slowestOps[1].timeMs).toBe(85);
       expect(result.slowestOps[2].timeMs).toBe(18);
+      expect(result.slowestOps[0].timeMs).toBeGreaterThan(result.slowestOps[1].timeMs);
+      expect(result.slowestOps[1].timeMs).toBeGreaterThan(result.slowestOps[2].timeMs);
     });
 
     it('strictly enforces mathematical invariant (sum to 100%) and eliminates double-counting bug', async () => {
+      // Arrange
       const syntheticLogs = Array.from({ length: 500 }, (_, i) => {
         const isGreen = i < 350;
         const isYellow = i >= 350 && i < 450;
@@ -708,8 +835,10 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(syntheticLogs as any);
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.totalOps).toBe(500);
       expect(result.avgInternalLatencyMs).toBe(13);
       expect(result.avgNetworkLatencyMs).toBe(967);
@@ -720,13 +849,17 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.acceptableOpsPct).toBe(20);
       expect(result.slowOpsPct).toBe(10);
       expect(result.fastOpsPct + result.acceptableOpsPct + result.slowOpsPct).toBe(100);
+      expect(result.fastOpsPct).not.toBe(0);
     });
 
     it('gracefully handles database errors in catch block returning safe defaults with 100% invariant', async () => {
+      // Arrange
       vi.mocked(prisma.botPerformanceLog.findMany).mockRejectedValueOnce(new Error('Connection timeout'));
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.totalOps).toBe(0);
       expect(result.avgLatencyMs).toBe(0);
       expect(result.avgInternalLatencyMs).toBe(0);
@@ -738,9 +871,11 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.fastOpsPct + result.acceptableOpsPct + result.slowOpsPct).toBe(100);
       expect(result.slowestOps).toEqual([]);
       expect(result.latestOps).toEqual([]);
+      expect(result.slowestOps).toHaveLength(0);
     });
 
     it('guarantees 100% algebraic closure on fractional rounding edge cases (e.g. 0.5 rounding boundaries)', async () => {
+      // Arrange
       // 200 logs: 1 green (0.5%), 199 yellow (99.5%), 0 red (0%)
       // Without capping, Math.round(0.5)=1 and Math.round(99.5)=100 sum to 101%
       const boundaryLogs = Array.from({ length: 200 }, (_, i) => ({
@@ -757,30 +892,38 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(boundaryLogs as any);
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.totalOps).toBe(200);
       expect(result.fastOpsPct + result.acceptableOpsPct + result.slowOpsPct).toBe(100);
       expect(result.fastOpsPct).toBe(1);
       expect(result.acceptableOpsPct).toBe(99);
       expect(result.slowOpsPct).toBe(0);
+      expect(result.slowOpsPct).not.toBeGreaterThan(0);
     });
 
     it('calculatePercentile calculates accurate nearest-rank percentiles', () => {
-      expect(calculatePercentile([], 50)).toBe(0);
-      expect(calculatePercentile([42], 50)).toBe(42);
-      expect(calculatePercentile([42], 95)).toBe(42);
-
+      // Arrange
+      const emptyList: number[] = [];
+      const singleItemList = [42];
       const items = Array.from({ length: 100 }, (_, i) => i + 1); // 1..100
+      const latencies = [5, 8, 12, 15, 20];
+
+      // Act & Assert
+      expect(calculatePercentile(emptyList, 50)).toBe(0);
+      expect(calculatePercentile(singleItemList, 50)).toBe(42);
+      expect(calculatePercentile(singleItemList, 95)).toBe(42);
       expect(calculatePercentile(items, 50)).toBe(50);
       expect(calculatePercentile(items, 95)).toBe(95);
-
-      const latencies = [5, 8, 12, 15, 20];
       expect(calculatePercentile(latencies, 50)).toBe(12);
       expect(calculatePercentile(latencies, 95)).toBe(20);
+      expect(calculatePercentile(latencies, 50)).not.toBe(calculatePercentile(latencies, 95));
     });
 
     it('calculates P50, P95, and RPM for internal and network latencies with dual 100% distribution closures', async () => {
+      // Arrange
       const logs = [
         {
           id: 'l1',
@@ -830,8 +973,10 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(logs as any);
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.totalOps).toBe(4);
       // P50 and P95 checks
       expect(result.p50InternalLatencyMs).toBe(14);
@@ -852,9 +997,11 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(workersAction?.count).toBe(2);
       expect(workersAction?.p50InternalMs).toBe(10);
       expect(workersAction?.p95InternalMs).toBe(14);
+      expect(workersAction?.p50InternalMs).not.toBeGreaterThan(workersAction!.p95InternalMs);
     });
 
     it('correctly identifies topFrequentAction and topDelayedNetworkAction outliers', async () => {
+      // Arrange
       const logs = [
         {
           id: 'o1',
@@ -893,8 +1040,10 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(logs as any);
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.topFrequentAction).not.toBeNull();
       expect(result.topFrequentAction?.action).toBe('cb:action:workers_list');
       expect(result.topFrequentAction?.count).toBe(2);
@@ -902,9 +1051,11 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.topDelayedNetworkAction).not.toBeNull();
       expect(result.topDelayedNetworkAction?.action).toBe('photo:heavy_ocr');
       expect(result.topDelayedNetworkAction?.latencyMs).toBe(14975);
+      expect(result.topDelayedNetworkAction?.action).not.toBe(result.topFrequentAction?.action);
     });
 
     it('cleanly segments legacy logs where internalExecutionTimeMs is null without distorting metrics', async () => {
+      // Arrange
       const legacyLogs = [
         {
           id: 'leg-1',
@@ -932,8 +1083,10 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(legacyLogs as any);
 
+      // Act
       const result = await getApmTelemetryData();
 
+      // Assert
       expect(result.totalOps).toBe(2);
       // avgInternalLatencyMs must be 12 (derived solely from the non-null record), not 6 (which would occur if null was counted as 0)
       expect(result.avgInternalLatencyMs).toBe(12);
@@ -942,9 +1095,11 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       expect(result.avgNetworkLatencyMs).toBe(198);
       expect(result.fastInternalOpsPct + result.acceptableInternalOpsPct + result.slowInternalOpsPct).toBe(100);
       expect(result.fastNetworkOpsPct + result.normalNetworkOpsPct + result.slowNetworkOpsPct).toBe(100);
+      expect(result.avgInternalLatencyMs).not.toBe(6);
     });
 
-    it('caches APM responses in memory for 5 seconds and bypasses on forceRefresh', async () => {
+    it('fetches telemetry directly from database on initial un-cached request', async () => {
+      // Arrange
       const sampleLogs = [
         {
           id: 'c1',
@@ -961,24 +1116,74 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
 
-      // First call: hits DB mock
-      const res1 = await getApmTelemetryData();
-      expect(res1.totalOps).toBe(1);
-      expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(1);
+      // Act
+      const result = await getApmTelemetryData();
 
-      // Second call immediately: hits in-memory cache, findMany is NOT called again
-      const res2 = await getApmTelemetryData();
-      expect(res2.totalOps).toBe(1);
+      // Assert
+      expect(result.totalOps).toBe(1);
       expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(1);
+      expect(result.totalOps).not.toBe(0);
+    });
 
-      // Third call with forceRefresh: true: bypasses cache, calls findMany again
+    it('serves cached telemetry response within the 5-second TTL window', async () => {
+      // Arrange
+      const sampleLogs = [
+        {
+          id: 'c1',
+          callbackQueryOrCommand: 'cb:action:cache_test',
+          executionTimeMs: 50,
+          internalExecutionTimeMs: 10,
+          telegramNetworkTimeMs: 40,
+          performanceTier: 'GREEN_FAST',
+          cacheSource: 'L1_RAM_CACHE',
+          actorTelegramId: BigInt(100),
+          timestamp: new Date('2026-09-17T10:00:00Z'),
+        },
+      ];
+
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
-      const res3 = await getApmTelemetryData({ forceRefresh: true });
-      expect(res3.totalOps).toBe(1);
+      await getApmTelemetryData(); // Prime the cache
+
+      // Act
+      const cachedResult = await getApmTelemetryData();
+
+      // Assert
+      expect(cachedResult.totalOps).toBe(1);
+      expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(1);
+      expect(cachedResult.totalOps).not.toBe(0);
+    });
+
+    it('bypasses memory cache when forceRefresh flag is explicitly set', async () => {
+      // Arrange
+      const sampleLogs = [
+        {
+          id: 'c1',
+          callbackQueryOrCommand: 'cb:action:cache_test',
+          executionTimeMs: 50,
+          internalExecutionTimeMs: 10,
+          telegramNetworkTimeMs: 40,
+          performanceTier: 'GREEN_FAST',
+          cacheSource: 'L1_RAM_CACHE',
+          actorTelegramId: BigInt(100),
+          timestamp: new Date('2026-09-17T10:00:00Z'),
+        },
+      ];
+
+      vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
+      await getApmTelemetryData(); // Prime the cache
+      vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(sampleLogs as any);
+
+      // Act
+      const freshResult = await getApmTelemetryData({ forceRefresh: true });
+
+      // Assert
+      expect(freshResult.totalOps).toBe(1);
       expect(prisma.botPerformanceLog.findMany).toHaveBeenCalledTimes(2);
+      expect(prisma.botPerformanceLog.findMany).not.toHaveBeenCalledTimes(3);
     });
 
     it('smooths sub-minute rapid bursts in RPM calculation to prevent astronomical spikes', async () => {
+      // Arrange
       // 5 logs logged within 80 milliseconds
       const burstLogs = Array.from({ length: 5 }, (_, i) => ({
         id: `burst-${i}`,
@@ -994,14 +1199,19 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(burstLogs as any);
 
+      // Act
       const result = await getApmTelemetryData({ forceRefresh: true });
 
+      // Assert
       expect(result.totalOps).toBe(5);
       // Span is 80ms = 0.00133 min. With smoothing (Math.max(1, diffMinutes)), effectiveMinutes is 1 min => 5 RPM.
       expect(result.rpm).toBe(5);
+      expect(result.rpm).toBeLessThan(1000);
+      expect(result.rpm).not.toBe(0);
     });
 
     it('returns totalPages: 0 when totalCount is 0 after filtering', async () => {
+      // Arrange
       const logs = [
         {
           id: 't1',
@@ -1018,10 +1228,13 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
 
       vi.mocked(prisma.botPerformanceLog.findMany).mockResolvedValueOnce(logs as any);
 
+      // Act
       const result = await getApmTelemetryData({ search: 'nonexistent_action_query', forceRefresh: true });
 
+      // Assert
       expect(result.pagination?.totalCount).toBe(0);
       expect(result.pagination?.totalPages).toBe(0);
+      expect(result.pagination?.totalPages).not.toBeGreaterThan(0);
     });
   });
 
@@ -1034,7 +1247,8 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       isRealSuperAdmin: true,
     };
 
-    it('workforce: correctly aggregates active workers, new hires, job breakdown, and operations', async () => {
+    it('workforce: correctly aggregates active workers and new hires counts', async () => {
+      // Arrange
       vi.mocked(prisma.worker.count)
         .mockResolvedValueOnce(45) // activeCount
         .mockResolvedValueOnce(50) // totalCount
@@ -1059,22 +1273,60 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         _avg: { totalScore: 94 as any },
       } as any);
 
+      // Act
       const result = await getModuleAnalyticsData('workforce', 'ALL', 'month', mockSuperAdmin);
 
+      // Assert
       expect(result.moduleKey).toBe('workforce');
+      expect(result.moduleKey).not.toBe('advances');
       expect(result.moduleNameAr).toContain('شؤون العاملين');
       expect(result.kpis).toHaveLength(4);
       expect(result.kpis[0].value).toBe(45);
+      expect(result.kpis[0].value).not.toBe(0);
       expect(result.kpis[1].value).toBe(8);
       expect(result.kpis[2].value).toBe('94%');
+    });
+
+    it('workforce: builds job title distribution and recent operations breakdown', async () => {
+      // Arrange
+      vi.mocked(prisma.worker.count)
+        .mockResolvedValueOnce(45)
+        .mockResolvedValueOnce(50)
+        .mockResolvedValueOnce(8);
+
+      vi.mocked(prisma.worker.findMany).mockResolvedValueOnce([
+        {
+          id: 'w-1',
+          code: 'OP-01',
+          name: 'محمد أحمد',
+          nickname: 'حمو',
+          jobTitle: 'سائق لودر',
+          dailyWage: 350 as any,
+          status: 'ACTIVE',
+          createdAt: new Date('2026-09-10'),
+          jobRef: { name: 'سائق لودر' },
+          site: { name: 'موقع الفوسفات' },
+        },
+      ] as any);
+
+      vi.mocked(prisma.workerCommitmentScore.aggregate).mockResolvedValueOnce({
+        _avg: { totalScore: 94 as any },
+      } as any);
+
+      // Act
+      const result = await getModuleAnalyticsData('workforce', 'ALL', 'month', mockSuperAdmin);
+
+      // Assert
       expect(result.breakdown.items.length).toBeGreaterThanOrEqual(1);
       expect(result.breakdown.items[0].label).toBe('سائق لودر');
       expect(result.recentOperations).toHaveLength(1);
       expect(result.recentOperations[0].title).toBe('حمو');
       expect(result.recentOperations[0].reference).toBe('OP-01');
+      expect(result.recentOperations).not.toHaveLength(0);
     });
 
     it('advances: aggregates advances sum, pending/approved counts, and status breakdown', async () => {
+      // Arrange
       vi.mocked(prisma.advanceRequest.aggregate).mockResolvedValueOnce({
         _sum: { amountRequested: 15000 as any },
       } as any);
@@ -1096,19 +1348,25 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         },
       ] as any);
 
+      // Act
       const result = await getModuleAnalyticsData('advances', 'ALL', 'month', mockSuperAdmin);
 
+      // Assert
       expect(result.moduleKey).toBe('advances');
+      expect(result.moduleKey).not.toBe('workforce');
       expect(result.kpis[0].value).toContain('ج.م');
       expect(result.kpis[1].value).toBe(3);
+      expect(result.kpis[1].value).not.toBe(0);
       expect(result.kpis[2].value).toBe(12);
       expect(result.breakdown.items).toHaveLength(3);
+      expect(result.breakdown.items).not.toHaveLength(0);
       expect(result.recentOperations).toHaveLength(1);
       expect(result.recentOperations[0].title).toContain('علوبة');
       expect(result.recentOperations[0].status).toContain('معتمد');
     });
 
     it('custody: calculates total balance, active custodies, and liquidity levels', async () => {
+      // Arrange
       vi.mocked(prisma.financialCustody.findMany).mockResolvedValueOnce([
         {
           id: 'cst-1',
@@ -1125,16 +1383,22 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         _sum: { currentBalance: 5000 as any, initialAmount: 20000 as any, totalLiquidatedExpenses: 15000 as any },
       } as any);
 
+      // Act
       const result = await getModuleAnalyticsData('custody', 'ALL', 'month', mockSuperAdmin);
 
+      // Assert
       expect(result.moduleKey).toBe('custody');
+      expect(result.moduleKey).not.toBe('canteen');
       expect(result.kpis[0].value).toContain('ج.م');
       expect(result.kpis[1].value).toBe(1);
+      expect(result.kpis[1].value).not.toBe(0);
       expect(result.recentOperations).toHaveLength(1);
       expect(result.recentOperations[0].title).toContain('المحجر');
+      expect(result.recentOperations).not.toHaveLength(0);
     });
 
-    it('canteen: computes sales sum, active items, and category distribution', async () => {
+    it('canteen: computes total sales sum and active item counts', async () => {
+      // Arrange
       vi.mocked(prisma.canteenItem.count)
         .mockResolvedValueOnce(18) // active
         .mockResolvedValueOnce(20); // total
@@ -1157,16 +1421,53 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         _sum: { amount: 8500 as any },
       } as any);
 
+      // Act
       const result = await getModuleAnalyticsData('canteen', 'ALL', 'month', mockSuperAdmin);
 
+      // Assert
       expect(result.moduleKey).toBe('canteen');
+      expect(result.moduleKey).not.toBe('equipment');
       expect(result.kpis[0].value).toContain('ج.م');
       expect(result.kpis[1].value).toBe(18);
+      expect(result.kpis[1].value).not.toBe(0);
+    });
+
+    it('canteen: tracks stock levels and category distribution breakdown', async () => {
+      // Arrange
+      vi.mocked(prisma.canteenItem.count)
+        .mockResolvedValueOnce(18)
+        .mockResolvedValueOnce(20);
+      vi.mocked(prisma.canteenItem.findMany).mockResolvedValueOnce([
+        {
+          id: 'ci-1',
+          code: 'CIG-01',
+          name: 'سجائر كليوباترا بوكس',
+          category: 'CIGARETTES',
+          costPrice: 40 as any,
+          sellingPrice: 45 as any,
+          currentStock: 100 as any,
+          reorderThreshold: 10 as any,
+          isActive: true,
+          updatedAt: new Date('2026-09-16'),
+          site: { name: 'موقع أسوان' },
+        },
+      ] as any);
+      vi.mocked(prisma.financialLedger.aggregate).mockResolvedValueOnce({
+        _sum: { amount: 8500 as any },
+      } as any);
+
+      // Act
+      const result = await getModuleAnalyticsData('canteen', 'ALL', 'month', mockSuperAdmin);
+
+      // Assert
       expect(result.breakdown.items[0].label).toContain('سجائر');
+      expect(result.breakdown.items).not.toHaveLength(0);
       expect(result.recentOperations[0].reference).toBe('CIG-01');
+      expect(result.recentOperations).toHaveLength(1);
     });
 
     it('equipment: returns operational ratio and technical status breakdown', async () => {
+      // Arrange
       vi.mocked(prisma.equipment.count)
         .mockResolvedValueOnce(10) // total
         .mockResolvedValueOnce(8)  // operational
@@ -1184,28 +1485,40 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
         },
       ] as any);
 
+      // Act
       const result = await getModuleAnalyticsData('equipment', 'ALL', 'month', mockSuperAdmin);
 
+      // Assert
       expect(result.moduleKey).toBe('equipment');
+      expect(result.moduleKey).not.toBe('workforce');
       expect(result.kpis[0].value).toBe(10);
+      expect(result.kpis[0].value).not.toBe(0);
       expect(result.kpis[1].value).toBe(8);
       expect(result.kpis[2].value).toBe('80%');
+      expect(result.kpis[2].value).not.toBe('0%');
       expect(result.breakdown.items[0].label).toContain('OPERATIONAL');
       expect(result.recentOperations[0].reference).toBe('EQ-LDR-01');
+      expect(result.recentOperations).not.toHaveLength(0);
     });
 
     it('gracefully handles database exceptions and returns empty structures without throwing', async () => {
+      // Arrange
       vi.mocked(prisma.worker.count).mockRejectedValue(new Error('Connection lost'));
 
+      // Act
       const result = await getModuleAnalyticsData('workforce', 'ALL', 'month', mockSuperAdmin);
 
+      // Assert
       expect(result.moduleKey).toBe('workforce');
       expect(result.kpis).toHaveLength(4);
       expect(result.kpis[0].badge).toBe('غير متوفر');
+      expect(result.kpis[0].badge).not.toBe('متوفر');
       expect(result.recentOperations).toEqual([]);
+      expect(result.recentOperations).not.toBeNull();
     });
 
     it('enforces fail-closed security for unassigned FIELD_ADMIN', async () => {
+      // Arrange
       const unassignedFieldAdmin = {
         id: 'usr-fa-99',
         telegramId: '12345678',
@@ -1218,12 +1531,19 @@ describe('Server-Side Data Fetchers SSOT (Milestone 3)', () => {
       vi.mocked(prisma.worker.findMany).mockResolvedValue([]);
       vi.mocked(prisma.workerCommitmentScore.aggregate).mockResolvedValue({ _avg: { totalScore: null } } as any);
 
+      // Act
       const result = await getModuleAnalyticsData('workforce', 'ALL', 'month', unassignedFieldAdmin);
 
+      // Assert
       expect(result.moduleKey).toBe('workforce');
       expect(prisma.worker.count).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ siteId: '__UNASSIGNED_FIELD_ADMIN__' }),
+        })
+      );
+      expect(prisma.worker.count).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ siteId: 'ALL' }),
         })
       );
     });

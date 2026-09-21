@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import crypto from 'node:crypto';
+import { PINNED_BASE_TIME } from '../../shared/src/testing/pinned-clock.js';
 import {
   computeRecordHash,
   GENESIS_HASH,
@@ -1025,27 +1026,20 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       const client = createMockImmutabilityClient();
       const extended = hashLedgerExtension(client);
 
-      // Act & Assert
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { recordHash: 'malicious-hash' },
-        })
-      ).rejects.toThrow(ImmutableLedgerError);
+      // Act
+      const singleUpdatePromise = extended.financialLedger.update({
+        where: { id: 'FL-1' },
+        data: { recordHash: 'malicious-hash' },
+      });
+      const bulkUpdatePromise = extended.financialLedger.updateMany({
+        where: { isReversal: false },
+        data: { recordHash: 'malicious-hash' },
+      });
 
-      await expect(
-        extended.financialLedger.updateMany({
-          where: { isReversal: false },
-          data: { recordHash: 'malicious-hash' },
-        })
-      ).rejects.toThrow(ImmutableLedgerError);
-
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { recordHash: 'malicious-hash' },
-        })
-      ).rejects.not.toThrow(RangeError);
+      // Assert
+      await expect(singleUpdatePromise).rejects.toThrow(ImmutableLedgerError);
+      await expect(bulkUpdatePromise).rejects.toThrow(ImmutableLedgerError);
+      await expect(singleUpdatePromise).rejects.not.toThrow(RangeError);
     });
 
     it('3.2: rejects updates targeting previousHash to prevent cryptographic chain reparenting', async () => {
@@ -1053,27 +1047,20 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       const client = createMockImmutabilityClient();
       const extended = hashLedgerExtension(client);
 
-      // Act & Assert
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { previousHash: 'forged-parent-hash' },
-        })
-      ).rejects.toThrow(ImmutableLedgerError);
+      // Act
+      const singleUpdatePromise = extended.financialLedger.update({
+        where: { id: 'FL-1' },
+        data: { previousHash: 'forged-parent-hash' },
+      });
+      const bulkUpdatePromise = extended.financialLedger.updateMany({
+        where: {},
+        data: { previousHash: 'forged-parent-hash' },
+      });
 
-      await expect(
-        extended.financialLedger.updateMany({
-          where: {},
-          data: { previousHash: 'forged-parent-hash' },
-        })
-      ).rejects.toThrow(ImmutableLedgerError);
-
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { previousHash: 'forged-parent-hash' },
-        })
-      ).rejects.not.toThrow(TypeError);
+      // Assert
+      await expect(singleUpdatePromise).rejects.toThrow(ImmutableLedgerError);
+      await expect(bulkUpdatePromise).rejects.toThrow(ImmutableLedgerError);
+      await expect(singleUpdatePromise).rejects.not.toThrow(TypeError);
     });
 
     it('3.3: rejects financial amount modifications across financial models with ImmutableLedgerError', async () => {
@@ -1081,27 +1068,20 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       const client = createMockImmutabilityClient();
       const extended = hashLedgerExtension(client);
 
-      // Act & Assert
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { amount: 999999 },
-        })
-      ).rejects.toThrow(ImmutableLedgerError);
+      // Act
+      const ledgerUpdatePromise = extended.financialLedger.update({
+        where: { id: 'FL-1' },
+        data: { amount: 999999 },
+      });
+      const supplierUpdatePromise = extended.supplierPayment.update({
+        where: { id: 'SP-1' },
+        data: { amount: 0 },
+      });
 
-      await expect(
-        extended.supplierPayment.update({
-          where: { id: 'SP-1' },
-          data: { amount: 0 },
-        })
-      ).rejects.toThrow(ImmutableLedgerError);
-
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { amount: 999999 },
-        })
-      ).rejects.not.toThrow(TypeError);
+      // Assert
+      await expect(ledgerUpdatePromise).rejects.toThrow(ImmutableLedgerError);
+      await expect(supplierUpdatePromise).rejects.toThrow(ImmutableLedgerError);
+      await expect(ledgerUpdatePromise).rejects.not.toThrow(TypeError);
     });
 
     it('3.4: rejects hashTimestamp alterations to preserve chronological ledger immutability', async () => {
@@ -1109,20 +1089,17 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       const client = createMockImmutabilityClient();
       const extended = hashLedgerExtension(client);
 
-      // Act & Assert
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { hashTimestamp: new Date('2020-01-01T00:00:00.000Z') },
-        })
-      ).rejects.toThrow(ImmutableLedgerError);
+      // Act
+      const updatePromise = extended.financialLedger.update({
+        where: { id: 'FL-1' },
+        data: { hashTimestamp: new Date('2020-01-01T00:00:00.000Z') },
+      });
+      const err = await updatePromise.catch((e: unknown) => e);
 
-      await expect(
-        extended.financialLedger.update({
-          where: { id: 'FL-1' },
-          data: { hashTimestamp: new Date('2020-01-01T00:00:00.000Z') },
-        })
-      ).rejects.not.toThrow(TypeError);
+      // Assert
+      expect(err).toBeInstanceOf(ImmutableLedgerError);
+      expect((err as Error).message).toContain('hashTimestamp');
+      expect(err).not.toBeInstanceOf(TypeError);
     });
 
     it('3.5: rejects direct hard deletion across financial models enforcing append-only ledger protocol', async () => {
@@ -1130,28 +1107,18 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
       const client = createMockImmutabilityClient();
       const extended = hashLedgerExtension(client);
 
-      // Act & Assert
-      // FinancialLedger
-      await expect(
-        extended.financialLedger.delete({ where: { id: 'FL-1' } })
-      ).rejects.toThrow(LedgerHardDeleteForbiddenError);
+      // Act
+      const deleteSinglePromise = extended.financialLedger.delete({ where: { id: 'FL-1' } });
+      const deleteManyPromise = extended.financialLedger.deleteMany({ where: { isReversal: true } });
+      const deleteSupplierPromise = extended.supplierPayment.delete({ where: { id: 'SP-1' } });
+      const deleteSupplierManyPromise = extended.supplierPayment.deleteMany({});
 
-      await expect(
-        extended.financialLedger.deleteMany({ where: { isReversal: true } })
-      ).rejects.toThrow(LedgerHardDeleteForbiddenError);
-
-      // SupplierPayment
-      await expect(
-        extended.supplierPayment.delete({ where: { id: 'SP-1' } })
-      ).rejects.toThrow(LedgerHardDeleteForbiddenError);
-
-      await expect(
-        extended.supplierPayment.deleteMany({})
-      ).rejects.toThrow(LedgerHardDeleteForbiddenError);
-
-      await expect(
-        extended.financialLedger.delete({ where: { id: 'FL-1' } })
-      ).rejects.not.toThrow(TypeError);
+      // Assert
+      await expect(deleteSinglePromise).rejects.toThrow(LedgerHardDeleteForbiddenError);
+      await expect(deleteManyPromise).rejects.toThrow(LedgerHardDeleteForbiddenError);
+      await expect(deleteSupplierPromise).rejects.toThrow(LedgerHardDeleteForbiddenError);
+      await expect(deleteSupplierManyPromise).rejects.toThrow(LedgerHardDeleteForbiddenError);
+      await expect(deleteSinglePromise).rejects.not.toThrow(TypeError);
     });
 
     it('3.6: allows updates to non-financial audit whitelist fields while rejecting unwhitelisted attributes', async () => {
@@ -1219,7 +1186,7 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
   // =========================================================================
   describe.runIf(isLive)('4. Physical Reality Integration — Real PostgreSQL Database Concurrency & Chain Audit', () => {
     let livePrisma: any;
-    const testRunId = `PHYSICAL-${Date.now()}`;
+    const testRunId = `PHYSICAL-${PINNED_BASE_TIME.getTime()}`;
 
     beforeAll(async () => {
       await setupTestDatabase();
@@ -1281,10 +1248,11 @@ describe('Adversarial Challenge M2.1: Cryptographic Hash-Chain & Concurrency Str
     });
 
     it('4.2: verifies full cryptographic chain integrity across physical PostgreSQL table records via verifyLedgerChainDb', async () => {
-      // Arrange & Act
-      const report = await verifyLedgerChainDb(livePrisma, {
-        model: 'FinancialLedger',
-      });
+      // Arrange
+      const model = 'FinancialLedger';
+
+      // Act
+      const report = await verifyLedgerChainDb(livePrisma, { model });
 
       // Assert
       expect(report.isValid).toBe(true);

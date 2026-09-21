@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { middleware } from '../src/middleware';
 import { generateOpaqueSessionToken } from '../src/lib/session';
 import { POST as logoutPost, GET as logoutGet } from '../src/app/api/auth/logout/route';
 import { getCurrentUser } from '../src/lib/auth';
 import { prisma } from '@alsaada/database';
+import { PINNED_BASE_TIME } from '@alsaada/shared/testing';
 import { cookies } from 'next/headers';
 
 vi.mock('@alsaada/database', () => ({
@@ -41,7 +42,7 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
     role: 'SUPER_ADMIN',
     name: 'صالح عثمان',
     isRealSuperAdmin: true,
-    createdAt: Date.now(),
+    createdAt: PINNED_BASE_TIME.getTime(),
   };
 
   const fieldAdminPayload: TestSessionPayload = {
@@ -52,11 +53,17 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
     assignedSiteId: 'site-alamein',
     assignedSiteName: 'مشروع العلمين',
     isRealSuperAdmin: false,
-    createdAt: Date.now(),
+    createdAt: PINNED_BASE_TIME.getTime(),
   };
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // ==========================================================================
@@ -76,24 +83,34 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
 
     for (const route of protectedRoutes) {
       it(`strictly redirects unauthenticated access to ${route} with HTTP 302 to bot deep-link`, async () => {
+        // Arrange
         const req = new NextRequest(`http://localhost:3000${route}`);
+
+        // Act
         const res = await middleware(req);
 
+        // Assert
         expect(res.status).toBe(302);
         const location = res.headers.get('location');
         expect(location).toBeDefined();
         expect(location).toContain('start=dashboard_access');
         expect(location).not.toContain('/login');
+        expect(location).not.toContain('/admin');
       });
     }
 
     it('allows non-admin routes to pass through unhindered (NextResponse.next)', async () => {
+      // Arrange
       const publicRoutes = ['/api/health'];
 
       for (const route of publicRoutes) {
         const req = new NextRequest(`http://localhost:3000${route}`);
+
+        // Act
         const res = await middleware(req);
-        // Middleware returns NextResponse.next() which does not set a redirect location
+
+        // Assert
+        expect(res.status).not.toBe(302);
         expect(res.headers.get('location')).toBeNull();
       }
     });
@@ -104,90 +121,130 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
   // ==========================================================================
   describe('2. Cookie Spoofing & Role Bypass Defenses', () => {
     it('rejects plain cookie spoofing alsaada_admin_role=super_admin with 302 redirect', async () => {
+      // Arrange
       const req = new NextRequest('http://localhost:3000/admin', {
         headers: {
           cookie: 'alsaada_admin_role=super_admin',
         },
       });
+
+      // Act
       const res = await middleware(req);
+
+      // Assert
       expect(res.status).toBe(302);
       expect(res.headers.get('location')).toContain('start=dashboard_access');
+      expect(res.headers.get('location')).not.toContain('/admin');
     });
 
     it('rejects multiple variants of spoofed role cookies without cryptographic session', async () => {
+      // Arrange
       const spoofVariants = [
         'alsaada_admin_role=superadmin',
         'alsaada_admin_role=SUPER_ADMIN',
-        'alsaada_admin_role=generaladmin',
-        'alsaada_admin_role=admin',
-        'alsaada_admin_role=executive',
-        'alsaada_admin_role=fieldadmin; role=superadmin',
+        'alsaada_admin_role=GENERAL_ADMIN',
+        'alsaada_admin_role=FIELD_ADMIN',
+        'alsaada_admin_role=ADMIN',
+        'alsaada_admin_role=root',
+        'alsaada_admin_role=1',
+        'alsaada_admin_role=true',
+        'alsaada_admin_role={"role":"SUPER_ADMIN"}',
       ];
 
       for (const cookieHeader of spoofVariants) {
         const req = new NextRequest('http://localhost:3000/admin/settings/company', {
           headers: { cookie: cookieHeader },
         });
+
+        // Act
         const res = await middleware(req);
+
+        // Assert
         expect(res.status).toBe(302);
         expect(res.headers.get('location')).toContain('start=dashboard_access');
+        expect(res.headers.get('location')).not.toContain('/admin');
       }
     });
 
     it('rejects fake alsaada_session containing random ASCII or binary bytes', async () => {
-      const randomGarbageTokens = [
-        'abcdef1234567890',
-        'random.bytes.without.valid.format',
-        'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
-        '{"userId":"usr-super","role":"SUPER_ADMIN"}',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.fakeSignature',
-        '..',
-        'part1.',
-        '.part2',
-        'invalid_base64_!@#$.sig_!@#$',
+      // Arrange
+      const garbageTokens = [
+        'fake_token_12345',
+        'admin',
+        'true',
+        'null',
+        'undefined',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-IDcSemACt8x4iTMCda8Yhe3iZaWbvV5XKSTbuAn0M',
+        '00000000-0000-0000-0000-000000000000',
+        '<script>alert(1)</script>',
+        "' OR '1'='1",
       ];
 
-      for (const garbage of randomGarbageTokens) {
-        const req = new NextRequest('http://localhost:3000/admin/workforce/directory', {
+      for (const garbage of garbageTokens) {
+        const req = new NextRequest('http://localhost:3000/admin', {
           headers: { cookie: `alsaada_session=${garbage}` },
         });
+
+        // Act
         const res = await middleware(req);
+
+        // Assert
         expect(res.status).toBe(302);
         expect(res.headers.get('location')).toContain('start=dashboard_access');
+        expect(res.headers.get('location')).not.toContain('/admin');
       }
     });
 
     it('rejects legacy HMAC tokens containing dot separator at Edge boundary', async () => {
-      const forgedToken = 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiU1VQRVJfQURNSU4ifQ.invalid_sig';
+      // Arrange
+      const legacyHmacToken = 'payload_content.signature_hex_part';
       const req = new NextRequest('http://localhost:3000/admin', {
-        headers: { cookie: `alsaada_session=${forgedToken}` },
+        headers: { cookie: `alsaada_session=${legacyHmacToken}` },
       });
+
+      // Act
       const res = await middleware(req);
+
+      // Assert
       expect(res.status).toBe(302);
       expect(res.headers.get('location')).toContain('start=dashboard_access');
+      expect(res.headers.get('location')).not.toContain('/admin');
     });
 
     it('rejects malformed non-hex tokens at Edge boundary', async () => {
-      const rogueToken = 'non-hex-token-with-special-chars!@#$%^&*()';
+      // Arrange
+      const nonHexToken = 'z'.repeat(64);
       const req = new NextRequest('http://localhost:3000/admin', {
-        headers: { cookie: `alsaada_session=${rogueToken}` },
+        headers: { cookie: `alsaada_session=${nonHexToken}` },
       });
+
+      // Act
       const res = await middleware(req);
+
+      // Assert
       expect(res.status).toBe(302);
       expect(res.headers.get('location')).toContain('start=dashboard_access');
+      expect(res.headers.get('location')).not.toContain('/admin');
     });
 
     it('rejects invalid-length tokens at Edge boundary', async () => {
+      // Arrange
       const shortToken = 'a'.repeat(32);
       const req = new NextRequest('http://localhost:3000/admin', {
         headers: { cookie: `alsaada_session=${shortToken}` },
       });
+
+      // Act
       const res = await middleware(req);
+
+      // Assert
       expect(res.status).toBe(302);
       expect(res.headers.get('location')).toContain('start=dashboard_access');
+      expect(res.headers.get('location')).not.toContain('/admin');
     });
 
     it('getCurrentUser strictly returns null when unauthenticated even if alsaada_admin_role is present', async () => {
+      // Arrange
       vi.mocked(cookies).mockResolvedValueOnce({
         get: (name: string) => {
           if (name === 'alsaada_admin_role') return { value: 'superadmin', name };
@@ -195,14 +252,18 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
         },
       } as any);
 
+      // Act
       const user = await getCurrentUser({ nullable: true });
+
+      // Assert
       expect(user).toBeNull();
+      expect(prisma.dashboardSession.findUnique).not.toHaveBeenCalled();
     });
 
     it('getCurrentUser prevents non-superadmin from privilege escalation via alsaada_admin_role cookie', async () => {
+      // Arrange
       const validFieldAdminToken = 'f1e1d1a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d';
 
-      // Authenticated as FIELD_ADMIN, but attempts to spoof alsaada_admin_role=superadmin
       vi.mocked(cookies).mockResolvedValueOnce({
         get: (name: string) => {
           if (name === 'alsaada_session') return { value: validFieldAdminToken, name };
@@ -217,8 +278,8 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
         userId: fieldAdminPayload.userId,
         actorTelegramId: BigInt(fieldAdminPayload.telegramId),
         revokedAt: null,
-        expiresAt: new Date(Date.now() + 8 * 3600 * 1000),
-        maxExpiresAt: new Date(Date.now() + 16 * 3600 * 1000),
+        expiresAt: new Date(PINNED_BASE_TIME.getTime() + 8 * 3600 * 1000),
+        maxExpiresAt: new Date(PINNED_BASE_TIME.getTime() + 16 * 3600 * 1000),
         user: {
           id: fieldAdminPayload.userId,
           telegramId: BigInt(fieldAdminPayload.telegramId),
@@ -233,14 +294,16 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
         },
       } as any);
 
+      // Act
       const user = await getCurrentUser({ nullable: true });
+
+      // Assert
       expect(user).not.toBeNull();
-      // Role must remain FIELD_ADMIN, NOT escalated to SUPER_ADMIN!
       expect(user?.role).toBe('FIELD_ADMIN');
+      expect(user?.role).not.toBe('SUPER_ADMIN');
       expect(user?.isRealSuperAdmin).toBe(false);
       expect(user?.id).toBe(fieldAdminPayload.userId);
     });
-
   });
 
   // ==========================================================================
@@ -248,15 +311,18 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
   // ==========================================================================
   describe('3. Logout Endpoint & Session Termination Stress Tests', () => {
     it('POST /api/auth/logout clears alsaada_session and alsaada_admin_role cookies', async () => {
+      // Arrange
       const req = new NextRequest('http://localhost:3002/api/auth/logout', { method: 'POST' });
-      const res = await logoutPost(req);
-      expect(res.status).toBe(200);
 
+      // Act
+      const res = await logoutPost(req);
+
+      // Assert
+      expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.message).toBe('Logged out successfully');
 
-      // Check cookie invalidation in response
       const sessionCookie = res.cookies.get('alsaada_session');
       expect(sessionCookie).toBeDefined();
       expect(sessionCookie?.value).toBe('');
@@ -269,13 +335,17 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
     });
 
     it('GET /api/auth/logout clears cookies and redirects to bot deep-link', async () => {
+      // Arrange
       const req = new NextRequest('http://localhost:3000/api/auth/logout');
+
+      // Act
       const res = await logoutGet(req);
 
+      // Assert
       expect(res.status).toBe(302);
       expect(res.headers.get('location')).toContain('start=dashboard_access');
+      expect(res.headers.get('location')).not.toContain('/admin');
 
-      // Check cookie clearing headers
       const sessionCookie = res.cookies.get('alsaada_session');
       expect(sessionCookie?.value).toBe('');
       expect(sessionCookie?.maxAge).toBe(0);
@@ -286,30 +356,43 @@ describe('Adversarial Stress Test: Route Protection, Role Spoofing Defenses & Se
     });
 
     it('full lifecycle: authenticated session is allowed, logout clears session, subsequent access is blocked', async () => {
-      // Step 1: User has valid session token -> allowed through
+      // Arrange & Step 1: User has valid session token -> allowed through
       const validToken = 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90';
       const authenticatedReq = new NextRequest('http://localhost:3000/admin', {
         headers: { cookie: `alsaada_session=${validToken}` },
       });
+
+      // Act 1
       const authRes = await middleware(authenticatedReq);
-      expect(authRes.headers.get('location')).toBeNull(); // Allowed
+
+      // Assert 1
+      expect(authRes.headers.get('location')).toBeNull();
 
       // Step 2: User invokes logout endpoint
       const logoutReq = new NextRequest('http://localhost:3000/api/auth/logout', {
         method: 'POST',
         headers: { cookie: `alsaada_session=${validToken}` },
       });
+
+      // Act 2
       const logoutRes = await logoutPost(logoutReq);
+
+      // Assert 2
       expect(logoutRes.status).toBe(200);
       const clearedCookieValue = logoutRes.cookies.get('alsaada_session')?.value || '';
 
-      // Step 3: Subsequent request with cleared or missing cookie
+      // Step 3: Subsequent request with cleared cookie
       const postLogoutReq = new NextRequest('http://localhost:3000/admin', {
         headers: { cookie: `alsaada_session=${clearedCookieValue}` },
       });
+
+      // Act 3
       const blockedRes = await middleware(postLogoutReq);
+
+      // Assert 3
       expect(blockedRes.status).toBe(302);
       expect(blockedRes.headers.get('location')).toContain('start=dashboard_access');
+      expect(blockedRes.headers.get('location')).not.toContain('/admin');
     });
   });
 });
