@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T07:33:47.965Z",
+  "generatedAt": "2026-09-21T07:39:10.596Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -24,11 +24,11 @@
   "files": [
     {
       "path": ".githooks/pre-commit",
-      "sha256": "25899131300ea0e5e4d8a134bcc01893b7b605d86a499a13b5f90970276228df"
+      "sha256": "b815b5eecaca5f93f4cd02e10ce9aa7b6fb6f45753664e0a72985cff252bce89"
     },
     {
       "path": ".githooks/pre-commit.cmd",
-      "sha256": "e4feaafcc04b023492e3b7cb0c389557550002b389e22040d8ec6b37f34f700c"
+      "sha256": "2f0a348d8bd26432b5109bf128aa5e8c59db6dc601d57baad32e534516dffb01"
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -56,7 +56,7 @@
     },
     {
       "path": "docs/15-universal-module-and-flow-standard.md",
-      "sha256": "e86a6882d77628baf946459d6f4d1e27ca0bef1cfe45086feab478549d840501"
+      "sha256": "e3cea0d8e3408bda31696fcf0b7e4281f0fcb34578a973e31b82c84929d810e6"
     },
     {
       "path": "docs/21-mandatory-module-architecture-and-gates.md",
@@ -2198,7 +2198,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-21T07:33:47.965Z",
+      "lockedAt": "2026-09-21T07:39:10.596Z",
       "files": [
         {
           "path": "packages/telemetry/package.json",
@@ -2562,7 +2562,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-21T07:33:47.965Z",
+      "lockedAt": "2026-09-21T07:39:10.596Z",
       "files": [
         {
           "path": ".dockerignore",

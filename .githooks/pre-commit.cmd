@@ -38,87 +38,87 @@ echo [PRE-COMMIT] Running strict TypeScript, contracts, and architecture checks.
 
 call pnpm typecheck
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Typecheck failed. Fix TypeScript errors before committing.
+  echo [PRE-COMMIT ERROR] Typecheck failed (G1). Run 'pnpm typecheck' to inspect errors.
   exit /b 1
 )
 
 call pnpm arch:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Architecture verification failed. Check handler line counts and required files.
+  echo [PRE-COMMIT ERROR] Architecture verification failed (G2). Run 'pnpm arch:verify' to inspect handler line counts and required files.
   exit /b 1
 )
 
 call pnpm migration:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Migration registry verification failed. Check docs/19 parity.
+  echo [PRE-COMMIT ERROR] Migration registry verification failed (G3). Run 'pnpm migration:verify' to inspect docs/19 parity.
   exit /b 1
 )
 
 call pnpm flow-contracts:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Flow contracts verification failed.
+  echo [PRE-COMMIT ERROR] Flow contracts verification failed (G4). Run 'pnpm flow-contracts:verify' to inspect contract errors.
   exit /b 1
 )
 
 call pnpm telegram-contracts:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Telegram contracts violated. Check URL/Callback byte limits.
+  echo [PRE-COMMIT ERROR] Telegram contracts violated (G5). Run 'pnpm telegram-contracts:verify' to inspect URL/Callback byte limits.
   exit /b 1
 )
 
 call pnpm latency:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Latency anti-patterns detected. Blocking deleteMessage or awaited setMyCommands found.
+  echo [PRE-COMMIT ERROR] Latency anti-patterns detected (G6). Run 'pnpm latency:verify' to inspect blocking deleteMessage or awaited setMyCommands.
   exit /b 1
 )
 
 call pnpm rbac-matrix:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] RBAC matrix verification failed. Deprecated roles or illegal permissions found.
+  echo [PRE-COMMIT ERROR] RBAC matrix verification failed (G7). Run 'pnpm rbac-matrix:verify' to inspect deprecated roles or illegal permissions.
   exit /b 1
 )
 
 call pnpm field-masking:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Field masking verification failed. Unmasked salary/compensation fields detected.
+  echo [PRE-COMMIT ERROR] Field masking verification failed (G8). Run 'pnpm field-masking:verify' to inspect unmasked salary/compensation fields.
   exit /b 1
 )
 
 call pnpm observability:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Observability verification failed. console.error or empty catch blocks found.
+  echo [PRE-COMMIT ERROR] Observability verification failed (G9). Run 'pnpm observability:verify' to inspect console.error or empty catch blocks.
   exit /b 1
 )
 
 call pnpm test-authenticity:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Test authenticity check failed. Sham assertions found.
+  echo [PRE-COMMIT ERROR] Test authenticity check failed (G10). Run 'pnpm test-authenticity:verify' to inspect sham assertions.
   exit /b 1
 )
 
 call pnpm legacy-parity:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Legacy parity verification failed. Accounting invariants violated.
+  echo [PRE-COMMIT ERROR] Legacy parity verification failed (G11). Run 'pnpm legacy-parity:verify' to inspect accounting invariants.
   exit /b 1
 )
 
 call pnpm financial:verify
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Financial integrity verification failed.
+  echo [PRE-COMMIT ERROR] Financial integrity verification failed (G12). Run 'pnpm financial:verify' to inspect financial ledger errors.
   exit /b 1
 )
 
 call pnpm governance:tamper-check
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Governance tamper check failed. Locked components modified without explicit unlock.
+  echo [PRE-COMMIT ERROR] Governance tamper check failed (G13). Run 'pnpm governance:tamper-check' to inspect modified locked components.
   exit /b 1
 )
 
 call pnpm test:pre-commit
 if %errorlevel% neq 0 (
-  echo [PRE-COMMIT ERROR] Smart test guard failed. Related tests failed on modified code.
+  echo [PRE-COMMIT ERROR] Smart test guard failed (G14). Run 'pnpm test:pre-commit' to inspect failing tests on modified code.
   exit /b 1
 )
 
-echo [PRE-COMMIT] All 11 verifiers and smart test guard passed successfully.
+echo [PRE-COMMIT] All 14 verifiers and smart test guard passed successfully.
 exit /b 0
