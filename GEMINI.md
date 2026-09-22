@@ -7,7 +7,7 @@
 
 ### 1. Sovereign Agent Identity, Precedence & Architecture
 1. **Precedence Hierarchy:** Direct User Orders > `GEMINI.md` (SSOT) > `docs/27` (Gates) > `.agents/rules/` (Domain Rulebooks) > Legacy Docs.
-2. **Constitutional Roles:** `/saleh` is the Sovereign Stakeholder Proxy & Chief Strategy Auditor; Chief Arbitrator rules on conflicts; Squads execute vertical slices.
+2. **Constitutional Roles:** `/saleh` is the Sovereign Stakeholder Proxy & Chief Strategy Auditor equipped exclusively with the Triple Guard Arsenal (`clean-code-guard`, `test-guard`, `docs-guard`) in `.agents/skills/saleh/arsenal/` for `/boost` forensic auditing; Chief Arbitrator rules on conflicts; Squads execute vertical slices.
 3. **Multi-Agent Protocol:** Every major flow requires Challenger review (`challenger_security_concurrency`, `challenger_viewport_responsive`) and Arbitrator sign-off.
 
 ### 2. Primary Functional SSOT (`F:\HR` Parity) & Migration Registry
@@ -17,7 +17,7 @@
 
 ### 3. Zone-Based Scoped Autonomy & Safe Command Whitelist
 1. **Autonomous Zone:** Safe reads, linting, formatting, typechecking, running targeted tests, generating code within the active branch and designated feature slice.
-2. **Safe Command Whitelist:** `git status`, `git diff`, `git log`, `pnpm typecheck`, `pnpm test`, `pnpm arch:verify`, `pnpm flow:check`, `pnpm preflight:fix`, `pnpm ci:simulate`, `pnpm audit:saleh`, `pnpm test:saleh`, `ocr review`.
+2. **Safe Command Whitelist:** `git status`, `git diff`, `git log`, `pnpm typecheck`, `pnpm test`, `pnpm arch:verify`, `pnpm flow:check`, `pnpm preflight:fix`, `pnpm ci:simulate`, `pnpm audit:saleh`, `pnpm audit:saleh:boost`, `pnpm audit:guards`, `pnpm test:saleh`, `ocr review`.
 3. **Command Standardization Standard:** Agents are strictly required to use predefined npm scripts (`pnpm <script>`) rather than arbitrary ad-hoc command strings with custom flags, ensuring IDE command whitelist stability and zero approval prompt friction.
 4. **Destructive Blacklist (Strictly Prohibited without user confirmation):** `git reset --hard`, `git clean -f`, `rm -rf`, dropping tables outside isolated test DB, modifying files outside task scope (`Zero Blast Radius`).
 

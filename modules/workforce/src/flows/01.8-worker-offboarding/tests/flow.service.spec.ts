@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   WorkerOffboardingService,
   calculateFinancialClearance,
@@ -9,7 +9,23 @@ import {
 import type { WorkerOffboardingRepository } from '../flow.repository.js';
 import type { ClearanceProfile, FinalizeClearanceData } from '../flow.types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   function createSampleProfile(overrides: Partial<ClearanceProfile> = {}): ClearanceProfile {
     return {
       worker: {
@@ -27,15 +43,15 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
         siteId: 'site-cairo',
         siteName: 'مشروع العاصمة الإدارية',
         departmentName: 'الإدارة الهندسية',
-        hireDate: new Date('2023-01-15'),
+        hireDate: new Date('2023-01-15T00:00:00.000Z'),
         shiftSystem: '24_WORK_6_REST',
       },
       activeLeave: {
         id: 'lv-99',
         leaveNumber: '#LV-2026-0099',
         leaveType: 'ANNUAL',
-        departureDate: new Date('2026-09-01'),
-        expectedReturnDate: new Date('2026-09-15'),
+        departureDate: new Date('2026-09-01T00:00:00.000Z'),
+        expectedReturnDate: new Date('2026-09-15T00:00:00.000Z'),
         actualReturnDate: null,
         status: 'ACTIVE_ON_LEAVE',
         daysBeforeLeave: 12,
@@ -83,7 +99,7 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
           amount: 250,
           daysEquivalent: null,
           reason: 'مخالفة تعليمات السلامة',
-          createdAt: new Date(),
+          createdAt: new Date('2026-09-10T00:00:00.000Z'),
           workerName: 'محمود عبد الرحمن',
           workerCode: 'OP-0101',
         },
@@ -96,7 +112,7 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
           amount: 300,
           daysEquivalent: null,
           reason: 'مكافأة تميز بالوردية',
-          createdAt: new Date(),
+          createdAt: new Date('2026-09-08T00:00:00.000Z'),
         },
         {
           id: 'disc-app-2',
@@ -105,7 +121,7 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
           amount: null,
           daysEquivalent: 1,
           reason: 'تأخير غير مبرر',
-          createdAt: new Date(),
+          createdAt: new Date('2026-09-09T00:00:00.000Z'),
         },
       ],
       stats: {
@@ -121,14 +137,20 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
   }
 
   describe('1. Exact Accounting Formulas & Arithmetic Precision', () => {
-    it('should resolve daily rate from dailyWage when positive', () => {
+    it('resolves daily rate from dailyWage when positive', () => {
+      // Arrange
       const profile = createSampleProfile();
+
+      // Act
       const breakdown = calculateFinancialClearance(profile, { workedDays: 10 });
+
+      // Assert
       expect(breakdown.dailyRate).toBe(200);
       expect(breakdown.earnedSalary).toBe(2000);
     });
 
-    it('should resolve daily rate from grossSalary / 30 when dailyWage is 0', () => {
+    it('resolves daily rate from grossSalary divided by 30 when dailyWage is 0', () => {
+      // Arrange
       const profile = createSampleProfile({
         worker: {
           ...createSampleProfile().worker,
@@ -137,12 +159,17 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
           fixedAllowances: 0,
         },
       });
+
+      // Act
       const breakdown = calculateFinancialClearance(profile, { workedDays: 15 });
-      expect(breakdown.dailyRate).toBe(200); // 6000 / 30
+
+      // Assert
+      expect(breakdown.dailyRate).toBe(200);
       expect(breakdown.earnedSalary).toBe(3000);
     });
 
-    it('should fallback to 300 when both dailyWage and grossSalary are 0', () => {
+    it('falls back to 300 when both dailyWage and grossSalary are 0', () => {
+      // Arrange
       const profile = createSampleProfile({
         worker: {
           ...createSampleProfile().worker,
@@ -151,36 +178,41 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
           fixedAllowances: 0,
         },
       });
+
+      // Act
       const breakdown = calculateFinancialClearance(profile, { workedDays: 10 });
+
+      // Assert
       expect(breakdown.dailyRate).toBe(300);
       expect(breakdown.earnedSalary).toBe(3000);
     });
 
-    it('should allow explicit dailyRate override from input', () => {
+    it('allows explicit dailyRate override from input', () => {
+      // Arrange
       const profile = createSampleProfile();
+
+      // Act
       const breakdown = calculateFinancialClearance(profile, {
         workedDays: 10,
         dailyRate: 250,
       });
+
+      // Assert
       expect(breakdown.dailyRate).toBe(250);
       expect(breakdown.earnedSalary).toBe(2500);
     });
 
-    it('should accurately calculate Positive Net Balance scenario', () => {
-      // workedDays = 20, dailyRate = 200 -> earnedSalary = 4000
-      // approvedBonuses: cash bonus = 300
-      // totalCredits = 4000 + 300 = 4300
-      // totalAdvances: 1000
-      // totalPenalties: 1 penalty day * 200 = 200
-      // assetDamageDeduction: 100
-      // totalDebits = 1000 + 200 + 100 = 1300
-      // netSettlementAmount = 4300 - 1300 = +3000
+    it('accurately calculates Positive Net Balance scenario', () => {
+      // Arrange
       const profile = createSampleProfile();
+
+      // Act
       const breakdown = calculateFinancialClearance(profile, {
         workedDays: 20,
         assetDamageDeduction: 100,
       });
 
+      // Assert
       expect(breakdown.earnedSalary).toBe(4000);
       expect(breakdown.approvedBonuses).toBe(300);
       expect(breakdown.totalCredits).toBe(4300);
@@ -190,25 +222,24 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(breakdown.totalDebits).toBe(1300);
       expect(breakdown.netSettlementAmount).toBe(3000);
       expect(breakdown.isNegativeBalance).toBe(false);
-      expect(breakdown.hasPendingDecisions).toBe(true); // 1 pending decision exists
+      expect(breakdown.hasPendingDecisions).toBe(true);
     });
 
-    it('should accurately calculate Zero Net Balance scenario', () => {
-      // workedDays = 5, dailyRate = 200 -> earnedSalary = 1000
-      // no bonuses -> totalCredits = 1000
-      // advances = 1000, penalties = 0, assetDamage = 0 -> totalDebits = 1000
-      // netSettlementAmount = 1000 - 1000 = 0
+    it('accurately calculates Zero Net Balance scenario', () => {
+      // Arrange
       const profile = createSampleProfile({
         approvedDisciplinaryRecords: [],
         pendingDisciplinaryRecords: [],
         stats: undefined,
       });
 
+      // Act
       const breakdown = calculateFinancialClearance(profile, {
         workedDays: 5,
         assetDamageDeduction: 0,
       });
 
+      // Assert
       expect(breakdown.earnedSalary).toBe(1000);
       expect(breakdown.totalCredits).toBe(1000);
       expect(breakdown.totalDebits).toBe(1000);
@@ -217,10 +248,8 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(breakdown.hasPendingDecisions).toBe(false);
     });
 
-    it('should accurately calculate Negative Net Balance scenario', () => {
-      // workedDays = 4, dailyRate = 200 -> earnedSalary = 800
-      // advances = 2000, penalties = 200, assetDamage = 300 -> totalDebits = 2500
-      // netSettlementAmount = 800 - 2500 = -1700
+    it('accurately calculates Negative Net Balance scenario', () => {
+      // Arrange
       const profile = createSampleProfile({
         advances: {
           totalOutstandingAdvances: 2000,
@@ -230,14 +259,13 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
         },
       });
 
+      // Act
       const breakdown = calculateFinancialClearance(profile, {
         workedDays: 4,
         assetDamageDeduction: 300,
       });
 
-      // credits = 800 + 300 (bonus) = 1100
-      // debits = 2000 + 200 (penalty day) + 300 (damage) = 2500
-      // net = 1100 - 2500 = -1400
+      // Assert
       expect(breakdown.earnedSalary).toBe(800);
       expect(breakdown.totalCredits).toBe(1100);
       expect(breakdown.totalDebits).toBe(2500);
@@ -245,23 +273,32 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(breakdown.isNegativeBalance).toBe(true);
     });
 
-    it('should merge selected pending decisions into approved calculation when requested', () => {
+    it('merges selected pending decisions into approved calculation when requested', () => {
+      // Arrange
       const profile = createSampleProfile();
-      // pending has 1 penalty with amount = 250
+
+      // Act
       const breakdown = calculateFinancialClearance(profile, {
         workedDays: 10,
         selectedDisciplinaryDecisions: ['disc-pending-1'],
       });
 
-      // penalties now include 200 (1 penalty day) + 250 (selected penalty) = 450
+      // Assert
       expect(breakdown.totalPenalties).toBe(450);
-      expect(breakdown.hasPendingDecisions).toBe(false); // all pending decisions were selected/settled
+      expect(breakdown.hasPendingDecisions).toBe(false);
     });
   });
 
   describe('2. Negative Balance Radar & Blacklist Handling', () => {
-    it('should evaluate BLACKLISTED action for negative balance and record debt', () => {
-      const evaluation = evaluateNegativeBalanceAction(-1850, 'BLACKLISTED');
+    it('evaluates BLACKLISTED action for negative balance and records debt', () => {
+      // Arrange
+      const netSettlement = -1850;
+      const action = 'BLACKLISTED';
+
+      // Act
+      const evaluation = evaluateNegativeBalanceAction(netSettlement, action);
+
+      // Assert
       expect(evaluation.isNegative).toBe(true);
       expect(evaluation.action).toBe('BLACKLISTED');
       expect(evaluation.workerStatus).toBe('BLACKLISTED');
@@ -271,8 +308,15 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(evaluation.auditMessage).toContain('القائمة السوداء');
     });
 
-    it('should evaluate WRITTEN_OFF action for negative balance and mark debt written-off', () => {
-      const evaluation = evaluateNegativeBalanceAction(-1200, 'WRITTEN_OFF');
+    it('evaluates WRITTEN_OFF action for negative balance and marks debt written-off', () => {
+      // Arrange
+      const netSettlement = -1200;
+      const action = 'WRITTEN_OFF';
+
+      // Act
+      const evaluation = evaluateNegativeBalanceAction(netSettlement, action);
+
+      // Assert
       expect(evaluation.isNegative).toBe(true);
       expect(evaluation.action).toBe('WRITTEN_OFF');
       expect(evaluation.workerStatus).toBe('TERMINATED');
@@ -282,8 +326,15 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(evaluation.auditMessage).toContain('إسقاط المديونية');
     });
 
-    it('should handle positive or zero balance gracefully', () => {
-      const evaluation = evaluateNegativeBalanceAction(500, 'WRITTEN_OFF');
+    it('handles positive or zero balance gracefully in negative balance evaluator', () => {
+      // Arrange
+      const netSettlement = 500;
+      const action = 'WRITTEN_OFF';
+
+      // Act
+      const evaluation = evaluateNegativeBalanceAction(netSettlement, action);
+
+      // Assert
       expect(evaluation.isNegative).toBe(false);
       expect(evaluation.workerStatus).toBe('TERMINATED');
       expect(evaluation.debtAmount).toBe(0);
@@ -292,22 +343,33 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
   });
 
   describe('3. Mandatory Pending Decisions Policy', () => {
-    it('should block IMMEDIATE payout option when worker has pending decisions and force WITH_PAYROLL', () => {
-      const profile = createSampleProfile(); // has 1 pending decision
+    it('blocks IMMEDIATE payout option when worker has pending decisions and forces WITH_PAYROLL', () => {
+      // Arrange
+      const profile = createSampleProfile();
+
+      // Act
       const result = validatePayoutOption(profile, 'IMMEDIATE');
+
+      // Assert
       expect(result.allowed).toBe(false);
       expect(result.forcedOption).toBe('WITH_PAYROLL');
       expect(result.reason).toContain('قرارات إدارية معلقة');
     });
 
-    it('should accept WITH_PAYROLL payout option when worker has pending decisions', () => {
+    it('accepts WITH_PAYROLL payout option when worker has pending decisions', () => {
+      // Arrange
       const profile = createSampleProfile();
+
+      // Act
       const result = validatePayoutOption(profile, 'WITH_PAYROLL');
+
+      // Assert
       expect(result.allowed).toBe(true);
       expect(result.forcedOption).toBe('WITH_PAYROLL');
     });
 
-    it('should allow IMMEDIATE payout option when worker has NO pending decisions', () => {
+    it('allows IMMEDIATE payout option when worker has no pending decisions', () => {
+      // Arrange
       const profile = createSampleProfile({
         pendingDisciplinaryRecords: [],
         stats: {
@@ -319,18 +381,25 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
           totalPendingPenaltyDays: 0,
         },
       });
+
+      // Act
       const result = validatePayoutOption(profile, 'IMMEDIATE');
+
+      // Assert
       expect(result.allowed).toBe(true);
       expect(result.forcedOption).toBe('IMMEDIATE');
     });
   });
 
   describe('4. Zero Financial Leaks for Field Admin (Role Sanitization)', () => {
-    it('should strip all salary, advances, and financial numbers for FIELD_ADMIN', () => {
+    it('strips all salary, advances, and financial numbers for FIELD_ADMIN', () => {
+      // Arrange
       const profile = createSampleProfile();
+
+      // Act
       const sanitized = sanitizeProfileForRole(profile, 'FIELD_ADMIN');
 
-      // Financial figures stripped
+      // Assert
       expect(sanitized.worker.dailyWage).toBe(0);
       expect(sanitized.worker.basicSalary).toBe(0);
       expect(sanitized.worker.fixedAllowances).toBe(0);
@@ -338,19 +407,16 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(sanitized.advances.unsettledInstallments).toEqual([]);
       expect(sanitized.stats).toBeUndefined();
 
-      // Disciplinary amounts stripped to null
       expect(sanitized.pendingDisciplinaryRecords[0]?.amount).toBeNull();
       expect(sanitized.pendingDisciplinaryRecords[0]?.daysEquivalent).toBeNull();
       expect(sanitized.approvedDisciplinaryRecords?.[0]?.amount).toBeNull();
       expect(sanitized.approvedDisciplinaryRecords?.[1]?.daysEquivalent).toBeNull();
 
-      // PPE cost and deductions stripped
       expect(sanitized.ppeAssets[0]?.costPrice).toBe(0);
       expect(sanitized.ppeAssets[0]?.deductionAmount).toBe(0);
       expect(sanitized.ppeAssets[1]?.costPrice).toBe(0);
       expect(sanitized.ppeAssets[1]?.deductionAmount).toBe(0);
 
-      // Operational fields strictly preserved
       expect(sanitized.worker.name).toBe('محمود عبد الرحمن');
       expect(sanitized.worker.nickname).toBe('حودة');
       expect(sanitized.worker.code).toBe('OP-0101');
@@ -363,10 +429,14 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(sanitized.pendingDisciplinaryRecords[0]?.reason).toBe('مخالفة تعليمات السلامة');
     });
 
-    it('should preserve full financial figures for SUPER_ADMIN', () => {
+    it('preserves full financial figures for SUPER_ADMIN', () => {
+      // Arrange
       const profile = createSampleProfile();
+
+      // Act
       const sanitized = sanitizeProfileForRole(profile, 'SUPER_ADMIN');
 
+      // Assert
       expect(sanitized.worker.dailyWage).toBe(200);
       expect(sanitized.worker.basicSalary).toBe(6000);
       expect(sanitized.advances.totalOutstandingAdvances).toBe(1000);
@@ -374,10 +444,14 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       expect(sanitized.pendingDisciplinaryRecords[0]?.amount).toBe(250);
     });
 
-    it('should preserve full financial figures for ACCOUNTANT', () => {
+    it('preserves full financial figures for ACCOUNTANT', () => {
+      // Arrange
       const profile = createSampleProfile();
+
+      // Act
       const sanitized = sanitizeProfileForRole(profile, 'ACCOUNTANT');
 
+      // Assert
       expect(sanitized.worker.dailyWage).toBe(200);
       expect(sanitized.advances.totalOutstandingAdvances).toBe(1000);
     });
@@ -400,7 +474,7 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
             workedDays: 15,
             reason: 'RESIGNATION',
             requestedByTelegramId: 9999n,
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-01T00:00:00.000Z'),
             status: 'PENDING',
           },
         ]),
@@ -412,7 +486,7 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
             amount: 250,
             daysEquivalent: null,
             reason: 'تأخير',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-01T00:00:00.000Z'),
           },
         ]),
         settleDisciplinaryDecision: vi.fn().mockResolvedValue(undefined),
@@ -438,62 +512,82 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
       );
     });
 
-    it('should return sanitized profile for FIELD_ADMIN via getWorkerClearanceProfile', async () => {
-      const profile = await service.getWorkerClearanceProfile('w-101', 'FIELD_ADMIN');
+    it('returns sanitized profile for FIELD_ADMIN via getWorkerClearanceProfile', async () => {
+      // Arrange
+      const workerId = 'w-101';
+      const role = 'FIELD_ADMIN';
+
+      // Act
+      const profile = await service.getWorkerClearanceProfile(workerId, role);
+
+      // Assert
       expect(profile.worker.dailyWage).toBe(0);
       expect(profile.advances.totalOutstandingAdvances).toBe(0);
       expect(profile.worker.name).toBe('محمود عبد الرحمن');
     });
 
-    it('should delegate getPendingClearanceReports and getPendingDisciplinaryDecisions', async () => {
+    it('delegates getPendingClearanceReports and getPendingDisciplinaryDecisions', async () => {
+      // Arrange & Act
+      // Arrange
+      const workerId = 'w-101';
+
+      // Act
       const reports = await service.getPendingClearanceReports();
+      const decisions = await service.getPendingDisciplinaryDecisions(workerId);
+
+      // Assert
       expect(reports.length).toBe(1);
       expect(reports[0]?.ticketNumber).toBe('#TCK-CLR-001');
-
-      const decisions = await service.getPendingDisciplinaryDecisions('w-101');
       expect(decisions.length).toBe(1);
       expect(decisions[0]?.recordNumber).toBe('#DISC-001');
     });
 
-    it('should delegate settleDisciplinaryDecision to repository', async () => {
-      await service.settleDisciplinaryDecision('disc-1', 'APPROVE', '8888', 300);
+    it('delegates settleDisciplinaryDecision to repository', async () => {
+      // Arrange
+      const decisionId = 'disc-1';
+      const action = 'APPROVE';
+      const actorId = '8888';
+      const adjustedAmount = 300;
+
+      // Act
+      await service.settleDisciplinaryDecision(decisionId, action, actorId, adjustedAmount);
+
+      // Assert
       expect(mockRepo.settleDisciplinaryDecision).toHaveBeenCalledWith(
-        'disc-1',
-        'APPROVE',
-        '8888',
-        300,
+        decisionId,
+        action,
+        actorId,
+        adjustedAmount,
         undefined
       );
     });
 
-    it('should enforce role checks on submitFieldClearanceReport', async () => {
-      await expect(
-        service.submitFieldClearanceReport(
-          {
-            workerId: 'w-101',
-            workerCode: 'OP-0101',
-            workedDays: 15,
-            reason: 'RESIGNATION',
-            submitterTelegramId: 5555n,
-          },
-          'WORKER'
-        )
-      ).rejects.toThrow('غير مصرح للمستخدم برفع تقرير إخلاء طرف ميداني.');
+    it('enforces role checks on submitFieldClearanceReport', async () => {
+      // Arrange
+      const reportData = {
+        workerId: 'w-101',
+        workerCode: 'OP-0101',
+        workedDays: 15,
+        reason: 'RESIGNATION' as const,
+        submitterTelegramId: 5555n,
+      };
 
-      const ticketNum = await service.submitFieldClearanceReport(
-        {
-          workerId: 'w-101',
-          workerCode: 'OP-0101',
-          workedDays: 15,
-          reason: 'RESIGNATION',
-          submitterTelegramId: 5555n,
-        },
-        'FIELD_ADMIN'
-      );
+      // Act & Assert
+      // Act
+      const unauthorizedPromise = service.submitFieldClearanceReport(reportData, 'WORKER');
+
+      // Assert
+      await expect(unauthorizedPromise).rejects.toThrow('غير مصرح للمستخدم برفع تقرير إخلاء طرف ميداني.');
+
+      // Act
+      const ticketNum = await service.submitFieldClearanceReport(reportData, 'FIELD_ADMIN');
+
+      // Assert
       expect(ticketNum).toBe('#TCK-CLR-NEW');
     });
 
-    it('should enforce SUPER_ADMIN authority on finalizeWorkerClearance', async () => {
+    it('enforces SUPER_ADMIN authority on finalizeWorkerClearance', async () => {
+      // Arrange
       const finalizeData: FinalizeClearanceData = {
         workerId: 'w-101',
         earnedSalary: 4000,
@@ -503,12 +597,15 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
         actorTelegramId: 9999n,
       };
 
-      await expect(
-        service.finalizeWorkerClearance(finalizeData, 'FIELD_ADMIN')
-      ).rejects.toThrow('الاختصاص السيادي الحصري للمدير العام (SUPER_ADMIN)');
+      // Act
+      const unauthorizedPromise = service.finalizeWorkerClearance(finalizeData, 'FIELD_ADMIN');
+
+      // Assert
+      await expect(unauthorizedPromise).rejects.toThrow('الاختصاص السيادي الحصري للمدير العام (SUPER_ADMIN)');
     });
 
-    it('should enforce pending decisions policy when finalizing clearance', async () => {
+    it('enforces pending decisions policy when finalizing clearance', async () => {
+      // Arrange
       const finalizeData: FinalizeClearanceData = {
         workerId: 'w-101',
         earnedSalary: 4000,
@@ -516,16 +613,18 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
         netSettlementAmount: 3000,
         reason: 'RESIGNATION',
         actorTelegramId: 9999n,
-        payoutOption: 'IMMEDIATE', // worker has pending decision!
+        payoutOption: 'IMMEDIATE',
       };
 
-      await expect(
-        service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN')
-      ).rejects.toThrow('لا يمكن صرف المخالصة فورياً لوجود قرارات إدارية معلقة');
+      // Act
+      const immediatePromise = service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN');
+
+      // Assert
+      await expect(immediatePromise).rejects.toThrow('لا يمكن صرف المخالصة فورياً لوجود قرارات إدارية معلقة');
     });
 
-    it('should enforce negativeBalanceAction when net settlement is negative', async () => {
-      // Mock profile without pending decisions
+    it('enforces negativeBalanceAction when net settlement is negative', async () => {
+      // Arrange
       (mockRepo.getWorkerClearanceProfile as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
         createSampleProfile({
           pendingDisciplinaryRecords: [],
@@ -541,15 +640,17 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
         reason: 'DISCIPLINARY',
         actorTelegramId: 9999n,
         payoutOption: 'WITH_PAYROLL',
-        // negativeBalanceAction missing!
       };
 
-      await expect(
-        service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN')
-      ).rejects.toThrow('يجب تحديد الإجراء الإداري للمديونية السالبة');
+      // Act
+      const missingActionPromise = service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN');
+
+      // Assert
+      await expect(missingActionPromise).rejects.toThrow('يجب تحديد الإجراء الإداري للمديونية السالبة');
     });
 
-    it('should successfully finalize clearance and trigger onWorkerDemoted callback', async () => {
+    it('successfully finalizes clearance and triggers onWorkerDemoted callback', async () => {
+      // Arrange
       const finalizeData: FinalizeClearanceData = {
         workerId: 'w-101',
         earnedSalary: 4000,
@@ -560,7 +661,10 @@ describe('01.8 Worker Offboarding — Service & Accounting Engine Unit Tests', (
         payoutOption: 'WITH_PAYROLL',
       };
 
+      // Act
       const result = await service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN');
+
+      // Assert
       expect(result.success).toBe(true);
       expect(result.clearanceNumber).toBe('#CLR-2026-0001');
       expect(onWorkerDemoted).toHaveBeenCalledWith(11223344n);

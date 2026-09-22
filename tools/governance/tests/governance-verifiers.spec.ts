@@ -1,7 +1,9 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 import { verifyAiCompliance } from '../verify-ai-compliance.js';
 import { verifyArchitecture } from '../verify-architecture.js';
@@ -101,8 +103,11 @@ function unlockFeature(options: { type: string; targetKey: string; phrase: strin
   };
 }
 
+let fixtureSequence = 0;
 function fixtureRoot(name: string): string {
-  const root = join(tmpdir(), `alsaada-governance-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  fixtureSequence += 1;
+  const root = join(tmpdir(), `alsaada-gov-${process.pid}-${name}-${fixtureSequence}`);
+  rmSync(root, { recursive: true, force: true });
   mkdirSync(join(root, 'docs'), { recursive: true });
   mkdirSync(join(root, 'modules'), { recursive: true });
   return root;
@@ -199,27 +204,49 @@ function createCompleteFlow(root: string): string {
 }
 
 describe('governance verifiers', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
   test('architecture verifier accepts a complete modular flow', () => {
+    // Arrange
     const root = fixtureRoot('arch-pass');
     createCompleteFlow(root);
 
+    // Act
     const result = verifyArchitecture(root);
 
+    // Assert
     expect(result.ok).toBe(true);
   });
 
   test('architecture verifier rejects missing required flow files', () => {
+    // Arrange
     const root = fixtureRoot('arch-missing-file');
     const flowDir = createCompleteFlow(root);
     writeFileSync(join(flowDir, 'flow.service.ts'), 'placeholder\n', 'utf8');
 
+    // Act
     const result = verifyArchitecture(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('placeholder'))).toBe(true);
   });
 
   test('flow contracts verifier rejects contracts without RBAC and SLA', () => {
+    // Arrange
     const root = fixtureRoot('contract-fail');
     const flowDir = join(root, 'modules', 'advances', 'src', 'flows', '02.1-direct-advance');
     mkdirSync(flowDir, { recursive: true });
@@ -241,14 +268,17 @@ describe('governance verifiers', () => {
       manualUatRequired: true,
     });
 
+    // Act
     const result = verifyFlowContracts(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('allowedRoles'))).toBe(true);
     expect(result.failures.some((failure) => failure.includes('performanceSlaMs'))).toBe(true);
   });
 
   test('migration verifier rejects completed flows outside modules', () => {
+    // Arrange
     const root = fixtureRoot('migration-fail');
     mkdirSync(join(root, 'docs'), { recursive: true });
     writeFileSync(
@@ -257,61 +287,78 @@ describe('governance verifiers', () => {
       'utf8',
     );
 
+    // Act
     const result = verifyMigrationRegistry(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('path must use modules'))).toBe(true);
   });
 
   test('ai compliance verifier rejects PASS evidence without all gate evidence', () => {
+    // Arrange
     const root = fixtureRoot('ai-fail');
     mkdirSync(join(root, 'docs', 'ai-execution-evidence'), { recursive: true });
     writeFileSync(join(root, 'docs', 'ai-execution-evidence', 'task.md'), 'PASS\nG1\npnpm build\n', 'utf8');
 
+    // Act
     const result = verifyAiCompliance(root, { requireEvidence: true, requireCleanGit: false });
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('G10'))).toBe(true);
   });
 
   test('docs audit verifier accepts the mandatory governance document set and scripts', () => {
+    // Arrange
     const root = fixtureRoot('docs-audit-pass');
     writeMandatoryDocs(root);
 
+    // Act
     const result = verifyDocsAudit(root);
 
+    // Assert
     expect(result.ok).toBe(true);
   });
 
   test('docs audit verifier rejects missing mandatory governance documents', () => {
+    // Arrange
     const root = fixtureRoot('docs-audit-fail');
     writeFileSync(join(root, 'AGENTS.md'), 'agent rules\n', 'utf8');
     writeFileSync(join(root, 'GEMINI.md'), 'gemini rules\n', 'utf8');
     writeJson(join(root, 'package.json'), { scripts: {} });
 
+    // Act
     const result = verifyDocsAudit(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('21-mandatory-module-architecture-and-gates.md'))).toBe(true);
   });
 
   test('docs parity verifier requires every AI governance file to reference the module gates standard', () => {
+    // Arrange
     const root = fixtureRoot('docs-parity-fail');
     writeMandatoryDocs(root);
     writeFileSync(join(root, 'AGENTS.md'), 'agent rules\n', 'utf8');
 
+    // Act
     const result = verifyDocsParity(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance lock builder records protected governance files with hashes', () => {
+    // Arrange
     const root = fixtureRoot('lock-build');
     writeMandatoryDocs(root);
 
+    // Act
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
 
+    // Assert
     expect(lock.approvalPhrase).toBe(APPROVAL_PHRASE);
     expect(lock.files.some((file) => file.path === 'AGENTS.md')).toBe(true);
     expect(lock.files.some((file) => file.path === 'GEMINI.md')).toBe(true);
@@ -320,19 +367,23 @@ describe('governance verifiers', () => {
   });
 
   test('governance tamper verifier rejects protected file changes when hash mismatches lock', () => {
+    // Arrange
     const root = fixtureRoot('tamper-fail');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
     writeJson(join(root, 'governance.lock.json'), lock);
     writeFileSync(join(root, 'AGENTS.md'), 'changed without approval\n', 'utf8');
 
+    // Act
     const result = verifyGovernanceTamper(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((failure) => failure.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier strictly rejects protected file changes even with approval evidence (evidence bypass permanently excised)', () => {
+    // Arrange
     const root = fixtureRoot('tamper-approval');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -344,14 +395,17 @@ describe('governance verifiers', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
 
     // Master Work Plan 63: Evidence bypass is permanently excised. governance.lock.json is exclusive SSOT.
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier rejects evidence without Target-Paths and rejects file changes', () => {
+    // Arrange
     const root = fixtureRoot('tamper-no-target');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -359,13 +413,16 @@ describe('governance verifiers', () => {
     writeFileSync(join(root, 'AGENTS.md'), 'changed without target paths\n', 'utf8');
     writeFileSync(join(root, 'docs', 'ai-execution-evidence', 'approval.md'), `${APPROVAL_PHRASE}\n`, 'utf8');
 
+    // Act
     const result = verifyGovernanceTamper(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier rejects wildcard Target-Paths: *', () => {
+    // Arrange
     const root = fixtureRoot('tamper-wildcard-star');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -377,12 +434,15 @@ describe('governance verifiers', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
 
+    // Assert
     expect(result.ok).toBe(false);
   });
 
   test('governance tamper verifier rejects auto-generated scaffold closure evidence for governance file changes', () => {
+    // Arrange
     const root = fixtureRoot('tamper-scaffold-bypass');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -395,13 +455,16 @@ describe('governance verifiers', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier rejects evidence that targets a different file', () => {
+    // Arrange
     const root = fixtureRoot('tamper-mismatched-target');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -414,13 +477,16 @@ describe('governance verifiers', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
 
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier strictly rejects evidence bypass with markdown bold formatting (- **Target-Paths:** ...)', () => {
+    // Arrange
     const root = fixtureRoot('tamper-bold-target');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -432,12 +498,15 @@ describe('governance verifiers', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier strictly rejects evidence bypass with markdown links in Target-Paths', () => {
+    // Arrange
     const root = fixtureRoot('tamper-link-target');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -449,12 +518,15 @@ describe('governance verifiers', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier strictly rejects evidence bypass with Arabic labels', () => {
+    // Arrange
     const root = fixtureRoot('tamper-arabic-label');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -466,12 +538,15 @@ describe('governance verifiers', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('governance tamper verifier strictly rejects evidence bypass with YAML frontmatter Target-Paths', () => {
+    // Arrange
     const root = fixtureRoot('tamper-yaml-frontmatter');
     writeMandatoryDocs(root);
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
@@ -489,12 +564,15 @@ ${APPROVAL_PHRASE}
       'utf8'
     );
 
+    // Act
     const result = verifyGovernanceTamper(root);
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('AGENTS.md'))).toBe(true);
   });
 
   test('extractTargetPathsFromEvidence correctly parses and normalizes diverse target path formats', () => {
+    // Arrange
     const content = `---
 target-paths:
   - "AGENTS.md"
@@ -502,10 +580,12 @@ target-paths:
   - [package.json](package.json)
 ---
 # Title
+    // Act
 - **Target-Paths:** [tools/governance/](file:///tools/governance), \`tools/scaffold/\`
 - **المسارات المرخصة:** .githooks/
 `;
     const targets = extractTargetPathsFromEvidence(content);
+    // Assert
     expect(targets).toContain('AGENTS.md');
     expect(targets).toContain('GEMINI.md');
     expect(targets).toContain('package.json');
@@ -515,6 +595,9 @@ target-paths:
   });
 
   test('pathMatchesTarget properly matches paths and rejects wildcards and empty targets', () => {
+    // Arrange
+    // Act
+    // Assert
     expect(pathMatchesTarget('tools/governance/verify-governance-tamper.ts', 'tools/governance')).toBe(true);
     expect(pathMatchesTarget('tools/governance/verify-governance-tamper.ts', 'tools/governance/')).toBe(true);
     expect(pathMatchesTarget('tools/governance/verify-governance-tamper.ts', 'tools/governance/*')).toBe(true);
@@ -532,6 +615,9 @@ target-paths:
   });
 
   test('isScaffoldAutoEvidence accurately detects auto-generated evidence from all scaffold tools', () => {
+    // Arrange
+    // Act
+    // Assert
     expect(isScaffoldAutoEvidence('2026-09-16-flow-01.1-closure.md', '# Header')).toBe(true);
     expect(isScaffoldAutoEvidence('2026-09-16-dashboard-workforce-closure.md', '# Header')).toBe(true);
     expect(isScaffoldAutoEvidence('2026-09-16-module-advances-closure.md', '# Header')).toBe(true);
@@ -548,12 +634,15 @@ target-paths:
   });
 
   test('hasExactApprovalEvidence returns false because evidence bypass is permanently excised', () => {
+    // Arrange
     const root = fixtureRoot('tamper-has-exact-helper');
     writeMandatoryDocs(root);
+    // Act
     const lock = buildGovernanceLock(root, '2026-09-08T00:00:00.000Z');
     writeJson(join(root, 'governance.lock.json'), lock);
 
     // Markdown approval bypass is permanently excised per Master Work Plan 63
+    // Assert
     expect(hasExactApprovalEvidence(root)).toBe(false);
     expect(hasExactApprovalEvidence(root, [])).toBe(false);
 
@@ -571,9 +660,12 @@ target-paths:
   });
 
   test('flow scaffolder creates a 100% compliant flow passing verifyArchitecture', () => {
+    // Arrange
     const root = fixtureRoot('scaffold-test');
     writeMandatoryDocs(root);
+    // Act
     const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
+    // Assert
     expect(existsSync(flowPath)).toBe(true);
 
     const archResult = verifyArchitecture(root);
@@ -582,9 +674,12 @@ target-paths:
   });
 
   test('flow scaffolder supports cash-outflow template and passes verifyArchitecture and verifyFlowFast', () => {
+    // Arrange
     const root = fixtureRoot('scaffold-template-test');
     writeMandatoryDocs(root);
+    // Act
     const flowPath = scaffoldFlow('canteen', '04.1', 'worker-canteen', 'مسحوبات مقصف', 'in-kind-clearing', root);
+    // Assert
     expect(existsSync(flowPath)).toBe(true);
 
     const archResult = verifyArchitecture(root);
@@ -595,6 +690,7 @@ target-paths:
   });
 
   test('flow scaffolder automatically registers in flows.manifest.ts when present', () => {
+    // Arrange
     const root = fixtureRoot('scaffold-manifest-test');
     writeMandatoryDocs(root);
     const manifestDir = join(root, 'modules', 'advances', 'src');
@@ -616,7 +712,9 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
       'utf8'
     );
 
+    // Act
     const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
+    // Assert
     expect(existsSync(flowPath)).toBe(true);
 
     const updatedManifest = readFileSync(mockManifestPath, 'utf8');
@@ -626,6 +724,7 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
   });
 
   test('finishFlow updates migration registry and generates evidence file', () => {
+    // Arrange
     const root = fixtureRoot('finish-flow-test');
     writeMandatoryDocs(root);
     // Write registry with a pending row
@@ -637,7 +736,9 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
     scaffoldFlow('canteen', '04.1', 'worker-canteen', 'مسحوبات مقصف', 'in-kind-clearing', root);
 
     // Run finishFlow
+    // Act
     const finishRes = finishFlow('04.1', { commitRef: 'P07-Test-Commit', root, skipTests: true });
+    // Assert
     expect(finishRes.ok).toBe(true);
     expect(finishRes.evidenceFile).toBeDefined();
     expect(existsSync(join(root, finishRes.evidenceFile!))).toBe(true);
@@ -705,6 +806,7 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
   });
 
   test('dashboard feature scaffolding and finishDashboard cryptographic sealing', () => {
+    // Arrange
     const root = fixtureRoot('dashboard-lock-test');
     writeMandatoryDocs(root);
     mkdirSync(join(root, 'apps', 'admin-dashboard', 'src', 'app', 'admin'), { recursive: true });
@@ -735,12 +837,14 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
     );
 
     // 1. Scaffold dashboard feature
+    // Act
     const createdDir = scaffoldDashboard({
       moduleName: 'workforce',
       featureSlug: 'worker-history',
       titleArabic: 'سجل حركات العامل',
       root,
     });
+    // Assert
     expect(existsSync(createdDir)).toBe(true);
 
     // Verify dashboard.manifest.ts was updated cleanly inside the workforce section's features array
@@ -785,18 +889,24 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
   });
 
   test('seals flow 01.1 cryptographic hash accurately in repo governance.lock.json', () => {
+    // Arrange
     const root = fixtureRoot('flow-seal-01.1');
     writeMandatoryDocs(root);
+    // Act
     const flowPath = scaffoldFlow('workforce', '01.1', 'worker-registration', 'تسجيل عامل جديد', root);
     const flowDir = dirname(flowPath);
     const updated = lockFlowEntry(root, '01.1', flowDir);
+    // Assert
     expect(updated.lockedFlows?.['01.1']?.files.length).toBeGreaterThan(0);
   });
 
   test('architecture verifier rejects local shadow FlowPlugin interface in flows.manifest.ts', () => {
+    // Arrange
     const root = fixtureRoot('shadow-flow-plugin');
     writeMandatoryDocs(root);
+    // Act
     const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
+    // Assert
     expect(existsSync(flowPath)).toBe(true);
 
     const manifestPath = join(root, 'modules', 'advances', 'src', 'flows.manifest.ts');
@@ -812,6 +922,7 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
   });
 
   test('architecture verifier rejects local shadow DashboardFeature interface in dashboard.manifest.ts', () => {
+    // Arrange
     const root = fixtureRoot('shadow-dash-feature');
     writeMandatoryDocs(root);
     const dashManifestPath = join(root, 'apps', 'admin-dashboard', 'src', 'dashboard.manifest.ts');
@@ -822,12 +933,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
       'utf8'
     );
 
+    // Act
     const archResult = verifyArchitecture(root);
+    // Assert
     expect(archResult.ok).toBe(false);
     expect(archResult.failures.some((f) => f.includes('local shadow DashboardFeature interface'))).toBe(true);
   });
 
   test('architecture verifier rejects local shadow contracts in flow.plugin.ts', () => {
+    // Arrange
     const root = fixtureRoot('shadow-flow-plugin-file');
     writeMandatoryDocs(root);
     const flowPath = scaffoldFlow('advances', '02.1', 'cash-advance', 'تسجيل وصرف سلفة نقدية', root);
@@ -838,12 +952,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
       'utf8'
     );
 
+    // Act
     const archResult = verifyArchitecture(root);
+    // Assert
     expect(archResult.ok).toBe(false);
     expect(archResult.failures.some((f) => f.includes('local shadow flow contract interface'))).toBe(true);
   });
 
   test('architecture verifier rejects local shadow DashboardSubSection in dashboard.manifest.ts', () => {
+    // Arrange
     const root = fixtureRoot('shadow-dash-subsection');
     writeMandatoryDocs(root);
     const dashManifestPath = join(root, 'apps', 'admin-dashboard', 'src', 'dashboard.manifest.ts');
@@ -854,12 +971,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
       'utf8'
     );
 
+    // Act
     const archResult = verifyArchitecture(root);
+    // Assert
     expect(archResult.ok).toBe(false);
     expect(archResult.failures.some((f) => f.includes('local shadow DashboardSubSection interface'))).toBe(true);
   });
 
   test('architecture verifier rejects direct prisma calls in bot-server handlers', () => {
+    // Arrange
     const root = fixtureRoot('direct-prisma-handler');
     writeMandatoryDocs(root);
     const handlersDir = join(root, 'apps', 'bot-server', 'src', 'handlers');
@@ -870,12 +990,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
       'utf8'
     );
 
+    // Act
     const archResult = verifyArchitecture(root);
+    // Assert
     expect(archResult.ok).toBe(false);
     expect(archResult.failures.some((f) => f.includes('direct database calls via prisma.*'))).toBe(true);
   });
 
   test('governance lock builder protects tools/scaffold and .githooks directories', () => {
+    // Arrange
     const root = fixtureRoot('meta-tooling-lock');
     writeMandatoryDocs(root);
     mkdirSync(join(root, 'tools', 'scaffold'), { recursive: true });
@@ -883,7 +1006,9 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
     writeFileSync(join(root, 'tools', 'scaffold', 'scaffold-flow.ts'), 'export const scaffold = true;\n', 'utf8');
     writeFileSync(join(root, '.githooks', 'pre-commit'), '#!/bin/sh\nexit 0\n', 'utf8');
 
+    // Act
     const lock = buildGovernanceLock(root, '2026-09-16T00:00:00.000Z');
+    // Assert
     expect(lock.protectedPaths.directories).toContain('tools/scaffold');
     expect(lock.protectedPaths.directories).toContain('.githooks');
     expect(lock.files.some((f) => f.path === 'tools/scaffold/scaffold-flow.ts')).toBe(true);
@@ -891,6 +1016,7 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
   });
 
   test('architecture verifier rejects local shadow AppModuleDefinition in module.register.ts', () => {
+    // Arrange
     const root = fixtureRoot('shadow-app-module-def');
     writeMandatoryDocs(root);
     const modDir = join(root, 'modules', 'canteen');
@@ -902,12 +1028,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
       'utf8'
     );
 
+    // Act
     const archResult = verifyArchitecture(root);
+    // Assert
     expect(archResult.ok).toBe(false);
     expect(archResult.failures.some((f) => f.includes('local shadow AppModuleDefinition interface'))).toBe(true);
   });
 
   test('architecture verifier rejects module missing AppModuleDefinition import from @alsaada/core-components', () => {
+    // Arrange
     const root = fixtureRoot('missing-app-module-import');
     writeMandatoryDocs(root);
     const modDir = join(root, 'modules', 'canteen');
@@ -919,12 +1048,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
       'utf8'
     );
 
+    // Act
     const archResult = verifyArchitecture(root);
+    // Assert
     expect(archResult.ok).toBe(false);
     expect(archResult.failures.some((f) => f.includes('must import and implement AppModuleDefinition'))).toBe(true);
   });
 
   test('scaffoldModule, finishModule, and unlockFeature full module lifecycle suite', () => {
+    // Arrange
     const root = fixtureRoot('module-lifecycle');
     writeMandatoryDocs(root);
 
@@ -943,11 +1075,13 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
     );
 
     // 1. Scaffold module
+    // Act
     const scaffoldRes = scaffoldModule({
       name: 'canteen',
       titleArabic: 'إدارة الكانتين',
       root,
     });
+    // Assert
     expect(scaffoldRes.ok).toBe(true);
     expect(existsSync(scaffoldRes.moduleDir)).toBe(true);
 
@@ -1022,6 +1156,7 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
 
   describe('verifyTelegramContracts AST Guard', () => {
     test('passes on valid single and multi-line telegram buttons', () => {
+      // Arrange
       const root = fixtureRoot('tg-valid');
       const moduleDir = join(root, 'modules', 'sample', 'src');
       mkdirSync(moduleDir, { recursive: true });
@@ -1043,12 +1178,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
         'utf8'
       );
 
+      // Act
       const res = verifyTelegramContracts(root);
+      // Assert
       expect(res.ok).toBe(true);
       expect(res.checked).toBeGreaterThanOrEqual(3);
     });
 
     test('catches multi-line callback data exceeding 64 bytes', () => {
+      // Arrange
       const root = fixtureRoot('tg-multiline-overflow');
       const moduleDir = join(root, 'modules', 'sample', 'src');
       mkdirSync(moduleDir, { recursive: true });
@@ -1069,12 +1207,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
         'utf8'
       );
 
+      // Act
       const res = verifyTelegramContracts(root);
+      // Assert
       expect(res.ok).toBe(false);
       expect(res.failures.some((f) => f.includes('CALLBACK_OVERFLOW'))).toBe(true);
     });
 
     test('strictly prohibits free-form name or text injection in callback_data', () => {
+      // Arrange
       const root = fixtureRoot('tg-name-injection');
       const moduleDir = join(root, 'modules', 'sample', 'src');
       mkdirSync(moduleDir, { recursive: true });
@@ -1092,12 +1233,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
         'utf8'
       );
 
+      // Act
       const res = verifyTelegramContracts(root);
+      // Assert
       expect(res.ok).toBe(false);
       expect(res.failures.some((f) => f.includes('DYNAMIC_STRING_INJECTION'))).toBe(true);
     });
 
     test('rejects tel: protocol in InlineKeyboardButton.url', () => {
+      // Arrange
       const root = fixtureRoot('tg-tel-url');
       const moduleDir = join(root, 'modules', 'sample', 'src');
       mkdirSync(moduleDir, { recursive: true });
@@ -1114,12 +1258,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
         'utf8'
       );
 
+      // Act
       const res = verifyTelegramContracts(root);
+      // Assert
       expect(res.ok).toBe(false);
       expect(res.failures.some((f) => f.includes('INVALID_URL_PROTOCOL'))).toBe(true);
     });
 
     test('strictly prohibits free-form name or text injection via string concatenation (+)', () => {
+      // Arrange
       const root = fixtureRoot('tg-name-concat');
       const moduleDir = join(root, 'modules', 'sample', 'src');
       mkdirSync(moduleDir, { recursive: true });
@@ -1137,12 +1284,15 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
         'utf8'
       );
 
+      // Act
       const res = verifyTelegramContracts(root);
+      // Assert
       expect(res.ok).toBe(false);
       expect(res.failures.some((f) => f.includes('DYNAMIC_STRING_INJECTION'))).toBe(true);
     });
 
     test('strictly prohibits multi-line button text labels', () => {
+      // Arrange
       const root = fixtureRoot('tg-multiline-text');
       const moduleDir = join(root, 'modules', 'sample', 'src');
       mkdirSync(moduleDir, { recursive: true });
@@ -1159,7 +1309,9 @@ export const ADVANCES_FLOW_METADATA: FlowContractMetadata[] = [
         'utf8'
       );
 
+      // Act
       const res = verifyTelegramContracts(root);
+      // Assert
       expect(res.ok).toBe(false);
       expect(res.failures.some((f) => f.includes('MULTILINE_BUTTON_TEXT'))).toBe(true);
     });

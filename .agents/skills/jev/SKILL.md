@@ -52,18 +52,21 @@ flowchart TD
 
     JevAgent --> HybridEngine
 
-    subgraph Audits["محاور الفحص الجنائي الخمسة"]
+    subgraph Audits["محاور الفحص الجنائي الثمانية"]
         A1["🛡️ الأمني والمحاسبي (G7, G8, G12, G13, G21)"]
         A2["🏗️ التقني والمعماري (G1, G2, G4)"]
         A3["📱 تجربة التيليجرام (G5, G8, G22)"]
         A4["🧪 الاختبارات ومكافحة التحايل (G10, G23)"]
         A5["📚 التوثيق وتطابق F:\HR (G3, G19)"]
+        A6["⏰ الثوابت الزمنية وحدود دورات الرواتب (G11, G23)"]
+        A7["♻️ حارس إعادة الاستخدام الدلالي (G1, G2)"]
+        A8["📡 رادار انحراف الوثائق والكود (G3, G4, G19)"]
     end
 
     HybridEngine --> Audits
     Audits --> Report["تقرير التدقيق الجنائي الموحد
     (Jev Forensic Audit Verdict)
-    مشفوع بـ Composite Governance Index (CGI) وحكم قطعي"]
+    مشفوع بـ Composite Governance Index (CGI) وتوجيه السرب المستقل"]
 ```
 
 ### 2.1 Absolute Zero Direct Modifications
@@ -76,9 +79,9 @@ flowchart TD
 
 ---
 
-## 3. The 10 TypeSafe Capabilities & Cookbooks Armory
+## 3. The 16 TypeSafe Capabilities & Cookbooks Armory
 
-Derived from `docs/references/typesafe.md`, `/jev` leverages ten distinct architectural patterns and cookbooks:
+Derived from `docs/references/typesafe.md`, `/jev` leverages sixteen distinct architectural patterns and cookbooks:
 
 ### 1. Anti-Cheating & Test Authenticity Guard (Gate G10 & G23)
 - **Reference:** `primitives/noul` & `primitives/score`.
@@ -129,11 +132,49 @@ Derived from `docs/references/typesafe.md`, `/jev` leverages ten distinct archit
 
 ### 10. Composite Quality Scoring & Calibrated Confidence Gating (G1–G23)
 - **Reference:** `patterns/composite-scoring` (p. 13013) & `patterns/confidence-routing` (p. 13071).
-- **Function:** Computes the **Composite Governance Index (CGI)**:
-  $$\text{CGI} = 0.25 \times S_{\text{arch}} + 0.30 \times S_{\text{sec\_fin}} + 0.20 \times S_{\text{test}} + 0.15 \times S_{\text{ux}} + 0.10 \times S_{\text{docs}}$$
+- **Function:** Computes the **Composite Governance Index (CGI)** across the 8 canonical dimensions:
+  $$\text{CGI} = 0.20 \times S_{\text{sec}} + 0.15 \times S_{\text{arch}} + 0.10 \times S_{\text{ux}} + 0.15 \times S_{\text{test}} + 0.15 \times S_{\text{parity}} + 0.10 \times S_{\text{temp}} + 0.05 \times S_{\text{reuse}} + 0.10 \times S_{\text{drift}}$$
   - $\text{CGI} \ge 0.90$ with zero gate vetoes: **`[CERTIFIED PASS]`**
   - $0.70 \le \text{CGI} < 0.90$ or Confidence $< 0.80$: **`[CONDITIONAL / ESCALATE TO SALEH]`**
   - $\text{CGI} < 0.70$ or any critical invariant breach: **`[HARD REJECT]`**
+
+### 11. Autoresearch Feature Discovery (`legacyFeatureDiscovery`)
+- **Reference:** `cookbooks/autoresearch_feature_discovery`.
+- **Function:** Uncovers hidden business rules, validations, multi-tier deductions, and penalties in legacy `F:\HR` code:
+  - Scans legacy scripts for unmapped deduction caps, overtime multipliers, and attendance penalties.
+  - Ensures no subtle legacy accounting invariant is lost during migration to modern TypeScript services.
+
+### 12. Speculative Fan-Out Batching (`speculativeFanOut`)
+- **Reference:** `patterns/fan-out` & `cookbooks/parallel_questions`.
+- **Function:** Dispatches all atomic, independent governance questions in parallel for sub-200ms evaluation:
+  - Eliminates serial evaluation bottlenecks across the 23 Quality Gates.
+  - Combines individual calibrated signals into the composite score in code without intermediate roundtrips.
+
+### 13. Temporal Invariants & Date Extraction Guard (`temporalInvariantGuard`)
+- **Reference:** `cookbooks/date_extraction_cookbook`.
+- **Function:** Audits Egyptian workforce payroll cycles and date boundaries:
+  - Enforces standard 26th-to-25th monthly payroll cycle bounds.
+  - Mandates `PINNED_BASE_TIME` deterministic clock pinning, flagging any unanchored `Date.now()` or timezone drift.
+
+### 14. Domain Reranker & Semantic Deduplication Sentinel (`semanticReuseSentinel`)
+- **Reference:** `cookbooks/rerank_typesafe` & `cookbooks/semantic_find`.
+- **Function:** Enforces Constitutional Rule 10.2 against duplicate domain utilities:
+  - Semantically reranks candidates across `@alsaada/shared/domain` and `packages/shared/`.
+  - Flags duplicate currency, date, or formatting utilities before they pollute the shared kernel.
+
+### 15. Skill Suggestion & Autonomous Squad Router (`squadAutonomousRouter`)
+- **Reference:** `cookbooks/skill_suggestion` & `cookbooks/hierarchical_classification`.
+- **Function:** Hierarchically classifies defects and generates ready-to-run, copy-pasteable corrective directives:
+  - Routes financial/security defects to `@squad-finance-security` (`[Squad:Finance] [Security:Sentinel]`).
+  - Routes architectural/type defects to `@squad-architecture-devops` (`[Squad:Arch] [Arch:Monorepo]`).
+  - Routes mobile button/UX ergonomics to `@squad-implementation-ux` (`[Squad:UX] [UX:Ergonomics]`).
+  - Routes test cheating/parity/drift to `@squad-qa-migration` (`[Squad:QA] [QA:Parity]`).
+
+### 16. Doc-Code Drift Radar & Bi-directional Citation Radar (`docCodeDriftRadar`)
+- **Reference:** `cookbooks/citation_check` & `cookbooks/classifying_rag_passages`.
+- **Function:** Verifies bidirectional citation parity across the documentation ecosystem:
+  - Compares source code implementation with `flow.contract.json` state machines.
+  - Cross-references `walkthrough.md` Mermaid diagrams and `docs/19` master migration registry statuses.
 
 ---
 
@@ -161,13 +202,16 @@ When invoked via `/jev`, the agent outputs a structured report:
 ### 1. Executive Scorecard
 | Dimension | Gate(s) | Score / Verdict | Calibrated Confidence |
 | :--- | :---: | :---: | :---: |
-| 🛡️ Security & Privacy | G7, G8, G16, G21 | [PASS / FAIL] | 0.98 |
-| 🏗️ Architecture & Types | G1, G2, G4 | [PASS / FAIL] | 0.95 |
-| 📱 Telegram Mobile UX | G5, G22 | [PASS / WARN] | 0.92 |
+| 🛡️ Security & Masking | G7, G8, G16, G21 | [PASS / FAIL] | 0.98 |
+| 🏗️ Architecture & 10-File | G1, G2, G4 | [PASS / FAIL] | 0.95 |
+| 📱 Telegram Mobile UX | G5, G8, G22 | [PASS / WARN] | 0.92 |
 | 🧪 Test Authenticity | G10, G23 | [PASS / SHAM] | 0.89 |
-| 📚 Legacy Parity (F:\HR) | G3, G19 | [PASS / DIVERGENT] | 0.96 |
+| 📚 Legacy Parity & Discovery | G3, G19 | [PASS / DIVERGENT] | 0.96 |
+| ⏰ Temporal Invariants | G11, G23 | [PASS / FAIL] | 0.94 |
+| ♻️ Semantic Domain Reuse | G1, G2 | [PASS / WARN] | 0.95 |
+| 📡 Doc-Code Drift Radar | G3, G4, G19 | [PASS / FAIL] | 0.92 |
 
-**Composite Governance Index (CGI):** 94.5% / 100%
+**Composite Governance Index (CGI):** 96.5% / 100%
 
 ### 2. Physical Reality Findings (AST, Linters, Vitest)
 - Typecheck: Exit Code 0 (0 errors)
@@ -175,12 +219,22 @@ When invoked via `/jev`, the agent outputs a structured report:
 - Mobile Ergonomics: Max callback = XX bytes, Max label = YY chars
 
 ### 3. TypeSafe System One Micro-Judgments
-- `does_test_assert_domain_state`: Yes (Probability: 0.96)
-- `has_unmasked_compensation`: No (Probability: 0.02)
-- `has_silent_flow_divergence`: No (Probability: 0.01)
+- `does_test_assert_domain_state`: Yes (Confidence: 0.92, Engine: heuristic)
+- `has_unmasked_compensation`: No (Confidence: 0.95, Engine: heuristic)
+- `step_parity_with_legacy`: Yes (Confidence: 0.94, Engine: heuristic)
+- `can_speculatively_fan_out`: Yes (Confidence: 0.98, Engine: heuristic)
+- `violates_temporal_invariants`: No (Confidence: 0.94, Engine: heuristic)
+- `responsible_squad`: all_clear (Confidence: 0.94, Engine: heuristic)
 
 ### 4. Forensic Verdict & Directive
 👉 **VERDICT: [CERTIFIED PASS | CONDITIONAL PASS | REJECT]**
-- **Actionable Corrective Prompt (if applicable):**
-  [Exact copy-paste instructions for the worker squad]
+
+### 5. Autonomous Squad Routing & Corrective Directive (if not Certified Pass)
+- **Responsible Squad:** @squad-finance-security | @squad-implementation-ux | @squad-architecture-devops | @squad-qa-migration
+- **Copy-Pasteable Squad Directive:**
+  ```markdown
+  @squad-finance-security [Squad:Finance] [Security:Sentinel]
+  Target: `modules/custody/src/flows/01-custody-request`
+  Corrective Action: Wrap daily wage in formatSpoiler.
+  ```
 ```

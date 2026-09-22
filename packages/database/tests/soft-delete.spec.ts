@@ -1,20 +1,29 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createSoftDeleteExtension, getSoftDeleteModels } from '../src/index.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
+
 describe('createSoftDeleteExtension', () => {
-  it('correctly registers soft-delete models (Worker, FinancialLedger, User)', () => {
-    const models = getSoftDeleteModels();
-    expect(models.has('Worker')).toBe(true);
-    expect(models.has('FinancialLedger')).toBe(true);
-    expect(models.has('User')).toBe(true);
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   function createMockPrismaClient() {
     const workerStore = [
       { id: 'w1', name: 'Active Worker 1', isDeleted: false },
-      { id: 'w2', name: 'Deleted Worker 2', isDeleted: true, deletedAt: new Date() },
+      { id: 'w2', name: 'Deleted Worker 2', isDeleted: true, deletedAt: PINNED_BASE_TIME },
       { id: 'w3', name: 'Active Worker 3', isDeleted: false },
     ];
 
@@ -120,54 +129,85 @@ describe('createSoftDeleteExtension', () => {
     return { client, workerStore, mockDelegate };
   }
 
+  it('correctly registers soft-delete models (Worker, FinancialLedger, User)', () => {
+    // Arrange
+    const expectedModels = ['Worker', 'FinancialLedger', 'User'];
+
+    // Act
+    const models = getSoftDeleteModels();
+
+    // Assert
+    for (const m of expectedModels) {
+      expect(models.has(m)).toBe(true);
+    }
+    expect(models.has('NonExistentModel')).toBe(false);
+  });
+
   it('automatically injects { isDeleted: false } into findMany queries', async () => {
+    // Arrange
     const { client } = createMockPrismaClient();
     const extended = client.$extends(createSoftDeleteExtension());
 
+    // Act
     const workers = await extended.worker.findMany();
+
+    // Assert
     expect(workers).toHaveLength(2);
     expect(workers.map((w: any) => w.id)).toEqual(['w1', 'w3']);
+    expect(workers.some((w: any) => w.id === 'w2')).toBe(false);
   });
 
   it('respects explicit caller override for { isDeleted: true } (recycle bin queries)', async () => {
+    // Arrange
     const { client } = createMockPrismaClient();
     const extended = client.$extends(createSoftDeleteExtension());
 
+    // Act
     const deletedWorkers = await extended.worker.findMany({ where: { isDeleted: true } });
+
+    // Assert
     expect(deletedWorkers).toHaveLength(1);
     expect(deletedWorkers[0].id).toBe('w2');
+    expect(deletedWorkers[0].id).not.toBe('w1');
   });
 
   it('returns null on findUnique when record is soft-deleted', async () => {
+    // Arrange
     const { client } = createMockPrismaClient();
     const extended = client.$extends(createSoftDeleteExtension());
 
+    // Act
     const active = await extended.worker.findUnique({ where: { id: 'w1' } });
-    expect(active).not.toBeNull();
-    expect(active.id).toBe('w1');
-
     const deleted = await extended.worker.findUnique({ where: { id: 'w2' } });
+
+    // Assert
+    expect(active).not.toBeNull();
+    expect(active?.id).toBe('w1');
     expect(deleted).toBeNull();
   });
 
   it('throws P2025 error on findUniqueOrThrow when record is soft-deleted', async () => {
+    // Arrange
     const { client } = createMockPrismaClient();
     const extended = client.$extends(createSoftDeleteExtension());
 
-    await expect(
-      extended.worker.findUniqueOrThrow({ where: { id: 'w2' } })
-    ).rejects.toThrow();
+    // Act
+    const action = () => extended.worker.findUniqueOrThrow({ where: { id: 'w2' } });
+
+    // Assert
+    await expect(action()).rejects.toThrow();
   });
 
   it('converts delete call into soft-delete update with isDeleted: true and deletedAt', async () => {
+    // Arrange
     const { client, workerStore, mockDelegate } = createMockPrismaClient();
     const extended = client.$extends(createSoftDeleteExtension());
 
+    // Act
     await extended.worker.delete({ where: { id: 'w1' } });
 
-    // Ensure hard delete was NOT called
+    // Assert
     expect(mockDelegate.delete).not.toHaveBeenCalled();
-    // Ensure update was called with isDeleted: true
     expect(mockDelegate.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'w1' },
@@ -178,40 +218,49 @@ describe('createSoftDeleteExtension', () => {
   });
 
   it('automatically injects { isDeleted: false } into update queries unless explicitly deleting', async () => {
+    // Arrange
     const { client, mockDelegate } = createMockPrismaClient();
     const extended = client.$extends(createSoftDeleteExtension());
 
+    // Act
     await extended.worker.update({
       where: { id: 'w1' },
       data: { name: 'Updated Worker 1' },
     });
 
+    // Assert
     expect(mockDelegate.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ isDeleted: false }),
         data: { name: 'Updated Worker 1' },
       })
     );
+    expect(mockDelegate.delete).not.toHaveBeenCalled();
   });
 
   it('automatically injects { isDeleted: false } into updateMany queries', async () => {
+    // Arrange
     const { client, mockDelegate } = createMockPrismaClient();
     const extended = client.$extends(createSoftDeleteExtension());
 
+    // Act
     await extended.worker.updateMany({
       where: {},
       data: { name: 'Bulk Updated' },
     });
 
+    // Assert
     expect(mockDelegate.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ isDeleted: false }),
         data: { name: 'Bulk Updated' },
       })
     );
+    expect(mockDelegate.deleteMany).not.toHaveBeenCalled();
   });
 
   it('schema drift guard: guarantees every model in schema.prisma with isDeleted is registered in SOFT_DELETE_MODELS', () => {
+    // Arrange
     const schemaPath = resolve(__dirname, '../prisma/schema.prisma');
     const schemaContent = readFileSync(schemaPath, 'utf-8');
 
@@ -219,6 +268,7 @@ describe('createSoftDeleteExtension', () => {
     const schemaModelsWithSoftDelete: string[] = [];
     let match: RegExpExecArray | null;
 
+    // Act
     while ((match = modelRegex.exec(schemaContent)) !== null) {
       const modelName = match[1];
       const modelBody = match[2];
@@ -229,13 +279,14 @@ describe('createSoftDeleteExtension', () => {
 
     const registeredModels = getSoftDeleteModels();
 
+    // Assert
     for (const model of schemaModelsWithSoftDelete) {
       expect(
         registeredModels.has(model),
         `Schema model "${model}" contains isDeleted but is NOT registered in soft-delete-metadata.ts!`
       ).toBe(true);
     }
-
     expect(schemaModelsWithSoftDelete.sort()).toEqual(['FinancialLedger', 'User', 'Worker']);
+    expect(registeredModels.has('RandomNonExistentEntity')).toBe(false);
   });
 });

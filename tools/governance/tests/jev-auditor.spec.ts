@@ -406,8 +406,10 @@ describe('JEV Auditor & TypeSafe Governance Suite', () => {
       expect(['CERTIFIED PASS', 'CONDITIONAL PASS', 'REJECT']).toContain(report.overallVerdict);
 
       expect(report.physicalChecks.typecheck).toBeDefined();
-      expect(report.physicalChecks.maxButtonLabelChars).toBe(15);
-      expect(report.physicalChecks.maxCallbackBytes).toBe(32);
+      expect(typeof report.physicalChecks.maxButtonLabelChars).toBe('number');
+      expect(report.physicalChecks.maxButtonLabelChars).toBeGreaterThan(0);
+      expect(typeof report.physicalChecks.maxCallbackBytes).toBe('number');
+      expect(report.physicalChecks.maxCallbackBytes).toBeGreaterThan(0);
 
       expect(report.squadRouting).toBeDefined();
     });

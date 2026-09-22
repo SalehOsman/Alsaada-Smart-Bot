@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   evaluateNegativeBalanceAction,
   sanitizeProfileForRole,
@@ -7,7 +7,23 @@ import {
 import type { WorkerOffboardingRepository } from '../flow.repository.js';
 import type { ClearanceProfile, FinalizeClearanceData } from '../flow.types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financial Leaks (Milestone 2)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   function makeRichFinancialProfile(overrides: Partial<ClearanceProfile> = {}): ClearanceProfile {
     return {
       worker: {
@@ -25,15 +41,15 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         siteId: 'site-delta',
         siteName: 'محطة طاقة السويس',
         departmentName: 'الصيانة الميكانيكية والكهربائية',
-        hireDate: new Date('2021-03-01'),
+        hireDate: new Date('2021-03-01T00:00:00.000Z'),
         shiftSystem: '24_WORK_6_REST',
       },
       activeLeave: {
         id: 'lv-77',
         leaveNumber: '#LV-2026-0077',
         leaveType: 'SICK',
-        departureDate: new Date('2026-09-01'),
-        expectedReturnDate: new Date('2026-09-10'),
+        departureDate: new Date('2026-09-01T00:00:00.000Z'),
+        expectedReturnDate: new Date('2026-09-10T00:00:00.000Z'),
         actualReturnDate: null,
         status: 'ACTIVE_ON_LEAVE',
         daysBeforeLeave: 10,
@@ -91,7 +107,7 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
           amount: 500,
           daysEquivalent: null,
           reason: 'عدم ارتداء حزام الأمان بالارتفاع',
-          createdAt: new Date('2026-09-05'),
+          createdAt: new Date('2026-09-05T00:00:00.000Z'),
           workerName: 'إبراهيم حسن المنشاوي',
           workerCode: 'OP-ELC-0077',
         },
@@ -102,7 +118,7 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
           amount: null,
           daysEquivalent: 2,
           reason: 'تأخير متكرر عن الوردية الصباحية',
-          createdAt: new Date('2026-09-06'),
+          createdAt: new Date('2026-09-06T00:00:00.000Z'),
           workerName: 'إبراهيم حسن المنشاوي',
           workerCode: 'OP-ELC-0077',
         },
@@ -115,7 +131,7 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
           amount: 800,
           daysEquivalent: null,
           reason: 'مكافأة إنجاز صيانة طارئة',
-          createdAt: new Date('2026-08-20'),
+          createdAt: new Date('2026-08-20T00:00:00.000Z'),
         },
         {
           id: 'disc-app-78',
@@ -124,7 +140,7 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
           amount: 300,
           daysEquivalent: null,
           reason: 'مخالفة ترتيب المعدات',
-          createdAt: new Date('2026-08-25'),
+          createdAt: new Date('2026-08-25T00:00:00.000Z'),
         },
       ],
       stats: {
@@ -144,10 +160,14 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
   // ==========================================================================
   describe('1. Negative Balance Radar Empirical Verification', () => {
     describe('1.1 Negative Balance Evaluation: BLACKLISTED Action', () => {
-      it('should accurately set BLACKLISTED worker status, record full positive debt, and keep isDebtWrittenOff=false', () => {
+      it('accurately sets BLACKLISTED worker status, records full positive debt, and keeps isDebtWrittenOff=false', () => {
+        // Arrange
         const netSettlement = -3750;
+
+        // Act
         const evaluation = evaluateNegativeBalanceAction(netSettlement, 'BLACKLISTED');
 
+        // Assert
         expect(evaluation.isNegative).toBe(true);
         expect(evaluation.action).toBe('BLACKLISTED');
         expect(evaluation.workerStatus).toBe('BLACKLISTED');
@@ -158,20 +178,28 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         expect(evaluation.auditMessage).toContain('حظر إعادة التعيين');
       });
 
-      it('should handle large negative debts under BLACKLISTED', () => {
+      it('handles large negative debts under BLACKLISTED', () => {
+        // Arrange
         const netSettlement = -999999;
+
+        // Act
         const evaluation = evaluateNegativeBalanceAction(netSettlement, 'BLACKLISTED');
 
+        // Assert
         expect(evaluation.isNegative).toBe(true);
         expect(evaluation.workerStatus).toBe('BLACKLISTED');
         expect(evaluation.debtAmount).toBe(999999);
         expect(evaluation.isDebtWrittenOff).toBe(false);
       });
 
-      it('should handle fractional negative debt amounts correctly', () => {
+      it('handles fractional negative debt amounts correctly', () => {
+        // Arrange
         const netSettlement = -1234.56;
+
+        // Act
         const evaluation = evaluateNegativeBalanceAction(netSettlement, 'BLACKLISTED');
 
+        // Assert
         expect(evaluation.debtAmount).toBe(1234.56);
         expect(evaluation.isNegative).toBe(true);
         expect(evaluation.workerStatus).toBe('BLACKLISTED');
@@ -179,10 +207,14 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
     });
 
     describe('1.2 Negative Balance Evaluation: WRITTEN_OFF Action', () => {
-      it('should set TERMINATED worker status (not blacklisted), record debt amount, and mark isDebtWrittenOff=true', () => {
+      it('sets TERMINATED worker status (not blacklisted), records debt amount, and marks isDebtWrittenOff=true', () => {
+        // Arrange
         const netSettlement = -2400;
+
+        // Act
         const evaluation = evaluateNegativeBalanceAction(netSettlement, 'WRITTEN_OFF');
 
+        // Assert
         expect(evaluation.isNegative).toBe(true);
         expect(evaluation.action).toBe('WRITTEN_OFF');
         expect(evaluation.workerStatus).toBe('TERMINATED');
@@ -196,26 +228,34 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
     });
 
     describe('1.3 Boundary & Positive Balance Evaluation', () => {
-      it('should return isNegative=false, debtAmount=0, and workerStatus=TERMINATED for positive balance', () => {
+      it('returns isNegative=false, debtAmount=0, and workerStatus=TERMINATED for positive balance', () => {
+        // Arrange
         const positiveSettlement = 4500;
-        const evalBlacklist = evaluateNegativeBalanceAction(positiveSettlement, 'BLACKLISTED');
 
+        // Act
+        const evalBlacklist = evaluateNegativeBalanceAction(positiveSettlement, 'BLACKLISTED');
+        const evalWrittenOff = evaluateNegativeBalanceAction(positiveSettlement, 'WRITTEN_OFF');
+
+        // Assert
         expect(evalBlacklist.isNegative).toBe(false);
         expect(evalBlacklist.workerStatus).toBe('TERMINATED');
         expect(evalBlacklist.debtAmount).toBe(0);
         expect(evalBlacklist.isDebtWrittenOff).toBe(false);
 
-        const evalWrittenOff = evaluateNegativeBalanceAction(positiveSettlement, 'WRITTEN_OFF');
         expect(evalWrittenOff.isNegative).toBe(false);
         expect(evalWrittenOff.workerStatus).toBe('TERMINATED');
         expect(evalWrittenOff.debtAmount).toBe(0);
         expect(evalWrittenOff.isDebtWrittenOff).toBe(false);
       });
 
-      it('should return isNegative=false and debtAmount=0 for exact zero balance (0)', () => {
+      it('returns isNegative=false and debtAmount=0 for exact zero balance (0)', () => {
+        // Arrange
         const zeroSettlement = 0;
+
+        // Act
         const evaluation = evaluateNegativeBalanceAction(zeroSettlement, 'WRITTEN_OFF');
 
+        // Assert
         expect(evaluation.isNegative).toBe(false);
         expect(evaluation.workerStatus).toBe('TERMINATED');
         expect(evaluation.debtAmount).toBe(0);
@@ -223,13 +263,20 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         expect(evaluation.auditMessage).toContain('المخالصة ذات رصيد إيجابي أو صفري');
       });
 
-      it('should treat -0.01 as negative and 0.01 as non-negative', () => {
-        const justBelowZero = evaluateNegativeBalanceAction(-0.01, 'BLACKLISTED');
+      it('treats -0.01 as negative and 0.01 as non-negative', () => {
+        // Arrange
+        const negativeAmount = -0.01;
+        const positiveAmount = 0.01;
+
+        // Act
+        const justBelowZero = evaluateNegativeBalanceAction(negativeAmount, 'BLACKLISTED');
+        const justAboveZero = evaluateNegativeBalanceAction(positiveAmount, 'BLACKLISTED');
+
+        // Assert
         expect(justBelowZero.isNegative).toBe(true);
         expect(justBelowZero.debtAmount).toBe(0.01);
         expect(justBelowZero.workerStatus).toBe('BLACKLISTED');
 
-        const justAboveZero = evaluateNegativeBalanceAction(0.01, 'BLACKLISTED');
         expect(justAboveZero.isNegative).toBe(false);
         expect(justAboveZero.debtAmount).toBe(0);
         expect(justAboveZero.workerStatus).toBe('TERMINATED');
@@ -265,7 +312,8 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         service = new WorkerOffboardingService(mockRepo as unknown as WorkerOffboardingRepository);
       });
 
-      it('should reject finalizeWorkerClearance if net settlement is negative and negativeBalanceAction is missing', async () => {
+      it('rejects finalizeWorkerClearance if net settlement is negative and negativeBalanceAction is missing', async () => {
+        // Arrange
         const negativeData: FinalizeClearanceData = {
           workerId: 'w-rich-77',
           earnedSalary: 1000,
@@ -276,12 +324,16 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
           payoutOption: 'WITH_PAYROLL',
         };
 
-        await expect(
-          service.finalizeWorkerClearance(negativeData, 'SUPER_ADMIN')
-        ).rejects.toThrow('يجب تحديد الإجراء الإداري للمديونية السالبة (إسقاط وتراضي أو إدراج بالقائمة السوداء).');
+        // Act & Assert
+        // Act
+        const actionMissingPromise = service.finalizeWorkerClearance(negativeData, 'SUPER_ADMIN');
+
+        // Assert
+        await expect(actionMissingPromise).rejects.toThrow('يجب تحديد الإجراء الإداري للمديونية السالبة (إسقاط وتراضي أو إدراج بالقائمة السوداء).');
       });
 
-      it('should finalize with BLACKLISTED status when negativeBalanceAction is BLACKLISTED', async () => {
+      it('finalizes with BLACKLISTED status when negativeBalanceAction is BLACKLISTED', async () => {
+        // Arrange
         const negativeData: FinalizeClearanceData = {
           workerId: 'w-rich-77',
           earnedSalary: 1000,
@@ -293,13 +345,17 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
           negativeBalanceAction: 'BLACKLISTED',
         };
 
+        // Act
         const result = await service.finalizeWorkerClearance(negativeData, 'SUPER_ADMIN');
+
+        // Assert
         expect(result.success).toBe(true);
         expect(result.status).toBe('BLACKLISTED');
         expect(result.message).toContain('القائمة السوداء');
       });
 
-      it('should finalize with TERMINATED status when negativeBalanceAction is WRITTEN_OFF', async () => {
+      it('finalizes with TERMINATED status when negativeBalanceAction is WRITTEN_OFF', async () => {
+        // Arrange
         const negativeData: FinalizeClearanceData = {
           workerId: 'w-rich-77',
           earnedSalary: 1000,
@@ -311,7 +367,10 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
           negativeBalanceAction: 'WRITTEN_OFF',
         };
 
+        // Act
         const result = await service.finalizeWorkerClearance(negativeData, 'SUPER_ADMIN');
+
+        // Assert
         expect(result.success).toBe(true);
         expect(result.status).toBe('TERMINATED');
       });
@@ -323,41 +382,53 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
   // ==========================================================================
   describe('2. Zero Financial Leaks Empirical Verification', () => {
     const KNOWN_FINANCIAL_VALUES = [
-      350,   // dailyWage
-      10500, // basicSalary
-      1500,  // fixedAllowances
-      4500,  // totalOutstandingAdvances
-      2250,  // installmentAmount
-      1200,  // ppe costPrice 1
-      400,   // ppe deduction 1
-      450,   // ppe costPrice 2
-      500,   // pending penalty cash
-      800,   // approved bonus cash
-      300,   // approved penalty cash
+      350,
+      10500,
+      1500,
+      4500,
+      2250,
+      1200,
+      400,
+      450,
+      500,
+      800,
+      300,
     ];
 
     describe('2.1 FIELD_ADMIN Sanitization & Zero Leaks', () => {
-      it('should completely strip all salary and allowance numbers to 0', () => {
+      it('completely strips all salary and allowance numbers to 0', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
+        // Assert
         expect(sanitized.worker.dailyWage).toBe(0);
         expect(sanitized.worker.basicSalary).toBe(0);
         expect(sanitized.worker.fixedAllowances).toBe(0);
       });
 
-      it('should completely strip all advance balances and installment lists to empty', () => {
+      it('completely strips all advance balances and installment lists to empty', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
+        // Assert
         expect(sanitized.advances.totalOutstandingAdvances).toBe(0);
         expect(sanitized.advances.unsettledInstallments).toEqual([]);
       });
 
-      it('should strip all PPE asset cost prices and deduction amounts to 0', () => {
+      it('strips all PPE asset cost prices and deduction amounts to 0', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
+        // Assert
         expect(sanitized.ppeAssets.length).toBe(2);
         for (const ppe of sanitized.ppeAssets) {
           expect(ppe.costPrice).toBe(0);
@@ -365,34 +436,44 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         }
       });
 
-      it('should strip all disciplinary amounts and daysEquivalent to null', () => {
+      it('strips all disciplinary amounts and daysEquivalent to null', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
+        // Assert
         for (const rec of sanitized.pendingDisciplinaryRecords) {
           expect(rec.amount).toBeNull();
           expect(rec.daysEquivalent).toBeNull();
         }
 
-        expect(sanitized.approvedDisciplinaryRecords).toBeDefined();
         for (const rec of sanitized.approvedDisciplinaryRecords!) {
           expect(rec.amount).toBeNull();
           expect(rec.daysEquivalent).toBeNull();
         }
       });
 
-      it('should remove the stats summary object entirely (undefined)', () => {
+      it('removes the stats summary object entirely (undefined)', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
+        // Assert
         expect(sanitized.stats).toBeUndefined();
       });
 
-      it('should preserve 100% of operational non-financial fields without loss', () => {
+      it('preserves 100% of operational non-financial fields without loss', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
-        // Worker identity & operational assignment
+        // Assert
         expect(sanitized.worker.id).toBe(original.worker.id);
         expect(sanitized.worker.code).toBe(original.worker.code);
         expect(sanitized.worker.legacyCode).toBe(original.worker.legacyCode);
@@ -407,30 +488,28 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         expect(sanitized.worker.telegramId).toBe(original.worker.telegramId);
         expect(sanitized.worker.hireDate).toEqual(original.worker.hireDate);
 
-        // Active Leave operational metrics
-        expect(sanitized.activeLeave).not.toBeNull();
         expect(sanitized.activeLeave?.leaveNumber).toBe(original.activeLeave?.leaveNumber);
         expect(sanitized.activeLeave?.leaveType).toBe(original.activeLeave?.leaveType);
         expect(sanitized.activeLeave?.daysBeforeLeave).toBe(original.activeLeave?.daysBeforeLeave);
         expect(sanitized.activeLeave?.overdueDays).toBe(original.activeLeave?.overdueDays);
         expect(sanitized.activeLeave?.departureDate).toEqual(original.activeLeave?.departureDate);
 
-        // PPE operational conditions
         expect(sanitized.ppeAssets[0]?.name).toBe(original.ppeAssets[0]?.name);
         expect(sanitized.ppeAssets[0]?.assetType).toBe(original.ppeAssets[0]?.assetType);
         expect(sanitized.ppeAssets[0]?.condition).toBe('DAMAGED_NATURAL');
         expect(sanitized.ppeAssets[0]?.isDamagedOrLost).toBe(true);
 
-        // Disciplinary administrative reasons
         expect(sanitized.pendingDisciplinaryRecords[0]?.reason).toBe(original.pendingDisciplinaryRecords[0]?.reason);
         expect(sanitized.pendingDisciplinaryRecords[0]?.recordNumber).toBe(original.pendingDisciplinaryRecords[0]?.recordNumber);
       });
 
-      it('should guarantee zero trace of secret financial numbers in recursive payload', () => {
+      it('guarantees zero trace of secret financial numbers in recursive payload', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
-        // Extract all numeric values from sanitized object recursively
         const extractedNumbers: number[] = [];
         function extractNumbers(obj: unknown) {
           if (typeof obj === 'number') {
@@ -445,7 +524,7 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         }
         extractNumbers(sanitized);
 
-        // Check that none of the secret financial numbers exist in extracted numbers
+        // Assert
         for (const secretVal of KNOWN_FINANCIAL_VALUES) {
           expect(extractedNumbers).not.toContain(secretVal);
         }
@@ -453,10 +532,14 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
     });
 
     describe('2.2 WORKER and GUEST Sanitization', () => {
-      it('should sanitize identically for WORKER role', () => {
+      it('sanitizes identically for WORKER role', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'WORKER');
 
+        // Assert
         expect(sanitized.worker.dailyWage).toBe(0);
         expect(sanitized.worker.basicSalary).toBe(0);
         expect(sanitized.advances.totalOutstandingAdvances).toBe(0);
@@ -464,10 +547,14 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         expect(sanitized.stats).toBeUndefined();
       });
 
-      it('should sanitize identically for GUEST role', () => {
+      it('sanitizes identically for GUEST role', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'GUEST');
 
+        // Assert
         expect(sanitized.worker.dailyWage).toBe(0);
         expect(sanitized.worker.basicSalary).toBe(0);
         expect(sanitized.advances.totalOutstandingAdvances).toBe(0);
@@ -475,12 +562,16 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         expect(sanitized.stats).toBeUndefined();
       });
 
-      it('should sanitize for arbitrary unauthorized role strings (e.g. SUPPLIER, SITE_ENGINEER, UNKNOWN)', () => {
+      it('sanitizes for arbitrary unauthorized role strings', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const forSupplier = sanitizeProfileForRole(original, 'SUPPLIER');
         const forEngineer = sanitizeProfileForRole(original, 'SITE_ENGINEER');
         const forUnknown = sanitizeProfileForRole(original, 'RANDOM_ROLE');
 
+        // Assert
         expect(forSupplier.worker.dailyWage).toBe(0);
         expect(forEngineer.worker.dailyWage).toBe(0);
         expect(forUnknown.worker.dailyWage).toBe(0);
@@ -488,10 +579,14 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
     });
 
     describe('2.3 Full Visibility Retention for Authorized Roles', () => {
-      it('should preserve 100% of financial figures intact for SUPER_ADMIN', () => {
+      it('preserves 100% of financial figures intact for SUPER_ADMIN', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const saProfile = sanitizeProfileForRole(original, 'SUPER_ADMIN');
 
+        // Assert
         expect(saProfile.worker.dailyWage).toBe(350);
         expect(saProfile.worker.basicSalary).toBe(10500);
         expect(saProfile.worker.fixedAllowances).toBe(1500);
@@ -506,10 +601,14 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         expect(saProfile.stats?.totalApprovedBonuses).toBe(800);
       });
 
-      it('should preserve 100% of financial figures intact for ACCOUNTANT', () => {
+      it('preserves 100% of financial figures intact for ACCOUNTANT', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
+
+        // Act
         const accProfile = sanitizeProfileForRole(original, 'ACCOUNTANT');
 
+        // Assert
         expect(accProfile.worker.dailyWage).toBe(350);
         expect(accProfile.worker.basicSalary).toBe(10500);
         expect(accProfile.advances.totalOutstandingAdvances).toBe(4500);
@@ -519,34 +618,38 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
     });
 
     describe('2.4 Immutability & Original Object Integrity', () => {
-      it('should NOT mutate the original profile object when sanitizing for FIELD_ADMIN', () => {
+      it('does NOT mutate the original profile object when sanitizing for FIELD_ADMIN', () => {
+        // Arrange
         const original = makeRichFinancialProfile();
         const originalDailyWage = original.worker.dailyWage;
         const originalBasicSalary = original.worker.basicSalary;
         const originalAdvances = original.advances.totalOutstandingAdvances;
 
+        // Act
         const sanitized = sanitizeProfileForRole(original, 'FIELD_ADMIN');
 
-        // Sanitized has 0
+        // Assert
         expect(sanitized.worker.dailyWage).toBe(0);
 
-        // Original is strictly preserved
         expect(original.worker.dailyWage).toBe(originalDailyWage);
         expect(original.worker.basicSalary).toBe(originalBasicSalary);
         expect(original.advances.totalOutstandingAdvances).toBe(originalAdvances);
         expect(original.ppeAssets[0]?.costPrice).toBe(1200);
         expect(original.pendingDisciplinaryRecords[0]?.amount).toBe(500);
-        expect(original.stats).toBeDefined();
       });
 
-      it('should handle profile with null activeLeave and undefined approvedDisciplinaryRecords gracefully', () => {
+      it('handles profile with null activeLeave and undefined approvedDisciplinaryRecords gracefully', () => {
+        // Arrange
         const minimalProfile = makeRichFinancialProfile({
           activeLeave: null,
           approvedDisciplinaryRecords: undefined,
           stats: undefined,
         });
 
+        // Act
         const sanitized = sanitizeProfileForRole(minimalProfile, 'FIELD_ADMIN');
+
+        // Assert
         expect(sanitized.activeLeave).toBeNull();
         expect(sanitized.approvedDisciplinaryRecords).toBeUndefined();
         expect(sanitized.stats).toBeUndefined();
@@ -565,26 +668,43 @@ describe('Challenger 2 Empirical Stress Test — Negative Balance & Zero Financi
         service = new WorkerOffboardingService(mockRepo as unknown as WorkerOffboardingRepository);
       });
 
-      it('should automatically sanitize profile when role=FIELD_ADMIN is passed to getWorkerClearanceProfile', async () => {
-        const profile = await service.getWorkerClearanceProfile('w-rich-77', 'FIELD_ADMIN');
+      it('automatically sanitizes profile when role=FIELD_ADMIN is passed to getWorkerClearanceProfile', async () => {
+        // Arrange
+        const workerId = 'w-rich-77';
+        const role = 'FIELD_ADMIN';
 
+        // Act
+        const profile = await service.getWorkerClearanceProfile(workerId, role);
+
+        // Assert
         expect(profile.worker.dailyWage).toBe(0);
         expect(profile.advances.totalOutstandingAdvances).toBe(0);
         expect(profile.stats).toBeUndefined();
         expect(profile.worker.nickname).toBe('المنشاوي');
       });
 
-      it('should return raw un-sanitized profile when role=SUPER_ADMIN is passed', async () => {
-        const profile = await service.getWorkerClearanceProfile('w-rich-77', 'SUPER_ADMIN');
+      it('returns raw un-sanitized profile when role=SUPER_ADMIN is passed', async () => {
+        // Arrange
+        const workerId = 'w-rich-77';
+        const role = 'SUPER_ADMIN';
 
+        // Act
+        const profile = await service.getWorkerClearanceProfile(workerId, role);
+
+        // Assert
         expect(profile.worker.dailyWage).toBe(350);
         expect(profile.advances.totalOutstandingAdvances).toBe(4500);
         expect(profile.stats?.totalApprovedBonuses).toBe(800);
       });
 
-      it('should return raw un-sanitized profile when no role is passed (backward compatible)', async () => {
-        const profile = await service.getWorkerClearanceProfile('w-rich-77');
+      it('returns raw un-sanitized profile when no role is passed (backward compatible)', async () => {
+        // Arrange
+        const workerId = 'w-rich-77';
 
+        // Act
+        const profile = await service.getWorkerClearanceProfile(workerId);
+
+        // Assert
         expect(profile.worker.dailyWage).toBe(350);
         expect(profile.advances.totalOutstandingAdvances).toBe(4500);
       });

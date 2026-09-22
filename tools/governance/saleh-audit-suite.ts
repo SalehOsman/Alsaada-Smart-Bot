@@ -57,6 +57,7 @@ export interface SalehAuditReport {
     fieldMasking?: VerificationResult | undefined;
     security?: VerificationResult | undefined;
     unlockAudit?: VerificationResult | undefined;
+    guards?: VerificationResult | undefined;
   };
   presentationFindings: PresentationFinding[];
   summary: {
@@ -488,6 +489,69 @@ export function verifyUnlockAuditProvenance(root = process.cwd()): VerificationR
 }
 
 // ============================================================================
+// 1.6. Triple Guard Arsenal & Anti-Public-Leakage Sentinel (/boost)
+// ============================================================================
+
+export function verifyTripleGuardArsenal(root = process.cwd()): VerificationResult {
+  const result = createResult();
+  const arsenalDir = join(root, '.agents', 'skills', 'saleh', 'arsenal');
+
+  result.checked += 1;
+  if (!existsSync(arsenalDir)) {
+    fail(result, `Triple Guard Arsenal directory missing: ${toRepoPath(arsenalDir, root)}`);
+    return result;
+  }
+
+  const requiredGuards = ['clean-code-guard', 'test-guard', 'docs-guard'];
+  for (const guard of requiredGuards) {
+    result.checked += 1;
+    const guardPath = join(arsenalDir, guard);
+    if (!existsSync(guardPath)) {
+      fail(result, `Guard suite missing in arsenal: ${toRepoPath(guardPath, root)}`);
+      continue;
+    }
+
+    const rulesPath = join(guardPath, 'rules.md');
+    result.checked += 1;
+    if (!existsSync(rulesPath)) {
+      fail(result, `Guard rules missing: ${toRepoPath(rulesPath, root)}`);
+    }
+
+    const refPath = join(guardPath, 'references');
+    result.checked += 1;
+    if (!existsSync(refPath)) {
+      fail(result, `Guard references directory missing: ${toRepoPath(refPath, root)}`);
+    }
+  }
+
+  // Anti-Leakage Guard: Ensure NO SKILL.md exists inside arsenal to prevent public agent discovery
+  const allArsenalFiles = listFilesRecursive(arsenalDir);
+  for (const file of allArsenalFiles) {
+    result.checked += 1;
+    const base = file.replace(/\\/g, '/').split('/').pop() ?? '';
+    if (base.toLowerCase() === 'skill.md') {
+      fail(
+        result,
+        `Public skill leakage detected! ${toRepoPath(file, root)} must be named rules.md to prevent Antigravity from exposing it to non-Saleh agents.`
+      );
+    }
+  }
+
+  // Documentation parity check for core registries
+  const doc19 = join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md');
+  const doc26 = join(root, 'docs', '26-locked-flows-and-features-registry.md');
+  result.checked += 2;
+  if (!existsSync(doc19)) {
+    fail(result, `Core migration registry docs/19 missing`);
+  }
+  if (!existsSync(doc26)) {
+    fail(result, `Locked flows registry docs/26 missing`);
+  }
+
+  return result;
+}
+
+// ============================================================================
 // 2. Comprehensive Forensic Audit Runner
 // ============================================================================
 
@@ -501,6 +565,7 @@ export interface AuditSuiteOptions {
   fieldMasking?: boolean | undefined;
   security?: boolean | undefined;
   unlockAudit?: boolean | undefined;
+  guards?: boolean | undefined;
   strict?: boolean | undefined;
   json?: boolean | undefined;
 }
@@ -517,7 +582,8 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
       !options.tests &&
       !options.fieldMasking &&
       !options.security &&
-      !options.unlockAudit);
+      !options.unlockAudit &&
+      !options.guards);
 
   let presentationRes: VerificationResult | undefined;
   let presentationFindings: PresentationFinding[] = [];
@@ -564,6 +630,11 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     unlockAuditRes = verifyUnlockAuditProvenance(root);
   }
 
+  let guardsRes: VerificationResult | undefined;
+  if (runAll || options.guards) {
+    guardsRes = verifyTripleGuardArsenal(root);
+  }
+
   // Aggregate errors & warnings
   const allResults: VerificationResult[] = [
     ...(presentationRes ? [presentationRes] : []),
@@ -573,6 +644,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     ...(fieldMaskRes ? [fieldMaskRes] : []),
     ...(securityRes ? [securityRes] : []),
     ...(unlockAuditRes ? [unlockAuditRes] : []),
+    ...(guardsRes ? [guardsRes] : []),
   ];
 
   const totalErrors = allResults.reduce((acc, r) => acc + r.failures.length, 0);
@@ -595,6 +667,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
   if (fieldMaskRes) checkResults.fieldMasking = fieldMaskRes;
   if (securityRes) checkResults.security = securityRes;
   if (unlockAuditRes) checkResults.unlockAudit = unlockAuditRes;
+  if (guardsRes) checkResults.guards = guardsRes;
 
   return {
     verdict,
@@ -641,9 +714,11 @@ export function formatSalehVerdictReport(report: SalehAuditReport): string {
   const hasMaskingViolations = (report.checkResults.fieldMasking?.failures.length ?? 0) > 0;
   const hasTelegramContractFailures = (report.checkResults.telegramContracts?.failures.length ?? 0) > 0;
   const hasUnlockFraud = (report.checkResults.unlockAudit?.failures.length ?? 0) > 0;
+  const hasGuardFailures = (report.checkResults.guards?.failures.length ?? 0) > 0;
 
   lines.push(`- [${hasShamAssertions ? 'x' : ' '}] **Sham Assertions & Test Cheating:** ${hasShamAssertions ? 'DETECTED' : 'Clean (No fake assertions)'}`);
   lines.push(`- [${hasUnlockFraud ? 'x' : ' '}] **AI Self-Authorization & OTP Nonce Guard (WP 90):** ${hasUnlockFraud ? 'FRAUD/VIOLATIONS DETECTED' : 'Clean (Human OTP Provenance Verified)'}`);
+  lines.push(`- [${hasGuardFailures ? 'x' : ' '}] **Triple Guard Arsenal (/boost):** ${hasGuardFailures ? 'FAILURES' : 'Clean (Arsenal verified & leak-proof)'}`);
   lines.push(`- [${hasRawMessageBypass ? 'x' : ' '}] **Presentation Bypass (Raw Replies):** ${hasRawMessageBypass ? 'DETECTED' : 'Clean (Unified Library used)'}`);
   lines.push(`- [${hasKeyboardOverflow ? 'x' : ' '}] **Mobile Ergonomics (36/16/7/3):** ${hasKeyboardOverflow ? 'WARNINGS/OVERFLOWS' : 'Clean (Within budget)'}`);
   lines.push(`- [${hasArchViolations ? 'x' : ' '}] **Architecture & 10-File Slice (G2):** ${hasArchViolations ? 'VIOLATIONS' : 'Clean (100% compliant)'}`);
@@ -724,6 +799,7 @@ Options:
   --field-masking   Run Field Masking & Privacy audit
   --security        Run Semgrep SAST security scan
   --unlock-audit    Run Unlock Audit & Anti-Self-Authorization scan (WP 90)
+  --guards          Run Triple Guard Arsenal & Anti-Public-Leakage audit (/boost)
   --strict          Treat warnings as failures (returns Exit 1 on warnings)
   --json            Output results as JSON
   --help, -h        Show this help message
@@ -740,6 +816,7 @@ Options:
     fieldMasking: args.includes('--field-masking'),
     security: args.includes('--security'),
     unlockAudit: args.includes('--unlock-audit') || args.includes('--unlock'),
+    guards: args.includes('--guards') || args.includes('--boost'),
     strict: args.includes('--strict'),
     json: args.includes('--json'),
   };

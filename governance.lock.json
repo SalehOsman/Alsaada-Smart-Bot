@@ -3555,7 +3555,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-22T15:24:39.219Z",
+      "lockedAt": "2026-09-22T17:19:09.057Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3567,15 +3567,15 @@
         },
         {
           "path": "docker/Dockerfile",
-          "sha256": "17c0fcc9a6400e5e5db0d1369e031b4b9ebd3d018b419ab418592db5d1329df9"
+          "sha256": "1b462f6fc3419dba85d06322ed03b6a38b17d5fcfa9afc64291594ca106cfa8b"
         },
         {
           "path": "docker/Dockerfile.dashboard",
-          "sha256": "6e7a420fabc07c1b756f0334b0972bb69a2412444c4331ba03dc6bcde331f6bd"
+          "sha256": "fd8198a13a12ac016e36daba9f225c844b28d3bc09e587bfb70d0d6bbacf6719"
         },
         {
           "path": "docker/Dockerfile.docs",
-          "sha256": "bc7378fe615b16d779b050c6273cdbe7e7bca1a1d54b86765147707e284a66f2"
+          "sha256": "89064cb6dd682c11a03cf2f9137ef1ffa1df06e7c6b40b97290927f3df1d725e"
         },
         {
           "path": "docker/nginx-docs.conf",

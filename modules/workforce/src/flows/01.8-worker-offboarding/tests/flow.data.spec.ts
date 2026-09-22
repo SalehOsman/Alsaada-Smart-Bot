@@ -1,9 +1,26 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerOffboardingRepository } from '../flow.repository.js';
 import type { PrismaClient } from '@alsaada/database';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('01.8 Worker Offboarding — Data Integrity Tests', () => {
-  it('should atomically update worker status, demote user, and emit outbox event', async () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('atomically updates worker status, demotes user, and emits outbox event', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findUnique: vi.fn().mockResolvedValue({
@@ -29,6 +46,7 @@ describe('01.8 Worker Offboarding — Data Integrity Tests', () => {
 
     const repo = new WorkerOffboardingRepository(mockPrisma);
 
+    // Act
     const res = await repo.terminateWorker({
       workerId: 'w-10',
       workerCode: 'OP-010',
@@ -37,6 +55,7 @@ describe('01.8 Worker Offboarding — Data Integrity Tests', () => {
       actorTelegramId: 500n,
     });
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.demotedTelegramId).toBe(99887766n);
 
@@ -75,7 +94,8 @@ describe('01.8 Worker Offboarding — Data Integrity Tests', () => {
     );
   });
 
-  it('should find linked user telegramId even when worker.telegramId is null', async () => {
+  it('finds linked user telegramId even when worker.telegramId is null', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findUnique: vi.fn().mockResolvedValue({
@@ -98,6 +118,7 @@ describe('01.8 Worker Offboarding — Data Integrity Tests', () => {
 
     const repo = new WorkerOffboardingRepository(mockPrisma);
 
+    // Act
     const res = await repo.terminateWorker({
       workerId: 'w-20',
       workerCode: 'OP-020',
@@ -105,11 +126,36 @@ describe('01.8 Worker Offboarding — Data Integrity Tests', () => {
       actorTelegramId: 500n,
     });
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.demotedTelegramId).toBe(11223344n);
     expect(mockPrisma.user.findFirst).toHaveBeenCalledWith({
       where: { workerId: 'w-20' },
       select: { telegramId: true },
     });
+  });
+
+  it('rejects termination when worker does not exist', async () => {
+    // Arrange
+    const mockPrisma = {
+      worker: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+      $transaction: vi.fn().mockImplementation(async (fns: unknown[]) => Promise.all(fns)),
+    } as unknown as PrismaClient;
+
+    const repo = new WorkerOffboardingRepository(mockPrisma);
+
+    // Act & Assert
+    // Act
+    const failPromise = repo.terminateWorker({
+      workerId: 'w-non-existent',
+      workerCode: 'OP-NONE',
+      reason: 'RESIGNATION',
+      actorTelegramId: 500n,
+    });
+
+    // Assert
+    await expect(failPromise).rejects.toThrow('لم يتم العثور على سجل العامل');
   });
 });

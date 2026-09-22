@@ -1,109 +1,144 @@
-import { describe, expect, it } from 'vitest';
-import { scanSpecContentForAuthenticity } from '../verify-test-authenticity.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  scanSpecContentForAuthenticity,
+  verifyTestAuthenticity,
+} from '../verify-test-authenticity.js';
+import {
+  SHAM_INEQUALITY_FIXTURE,
+  AUTHENTIC_BOUNDARY_FIXTURE,
+  TAUTOLOGY_FIXTURE,
+  CONSTANT_LITERAL_FIXTURE,
+  BOOLEAN_LITERAL_FIXTURE,
+  AUTHENTIC_EXECUTION_FIXTURE,
+  SYNTHETIC_MUTEX_FIXTURE,
+} from './fixtures/test-authenticity-fixtures.js';
 
-describe('verify-test-authenticity AST Scanner', () => {
-  it('1. rejects toBeGreaterThanOrEqual(0) on call counts and calculations', () => {
-    const code = `
-      describe('sham test', () => {
-        it('passes vacuously', () => {
-          const calls: any[] = [];
-          expect(calls.length).toBeGreaterThanOrEqual(0);
-        });
-      });
-    `;
-    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
-    expect(violations.length).toBe(1);
-    expect(violations[0]).toContain('[Sham Assertion]');
-    expect(violations[0]).toContain('toBeGreaterThanOrEqual(0)');
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+describe('Gate 22: Code Authenticity Verification AST Scanner', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
   });
 
-  it('2. allows authentic boundary checks like toBeGreaterThanOrEqual(1) or toBeGreaterThanOrEqual(10)', () => {
-    const code = `
-      describe('authentic test', () => {
-        it('checks real minimum threshold', () => {
-          const count = 5;
-          expect(count).toBeGreaterThanOrEqual(1);
-          expect(count).toBeGreaterThanOrEqual(5);
-        });
-      });
-    `;
-    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
-    expect(violations.length).toBe(0);
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
-  it('3. rejects tautological self-comparisons like expect(x).toBe(x)', () => {
-    const code = `
-      describe('tautology test', () => {
-        it('compares x to x', () => {
-          const x = 42;
-          expect(x).toBe(x);
-          expect(x).toEqual(x);
-        });
-      });
-    `;
-    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
-    expect(violations.length).toBe(2);
-    expect(violations[0]).toContain('[Tautological Assertion]');
-    expect(violations[1]).toContain('[Tautological Assertion]');
+  it('detects vacuous lower bound checks on non-negative counts', () => {
+    // Arrange
+    const specPath = 'test.spec.ts';
+    const code = SHAM_INEQUALITY_FIXTURE;
+
+    // Act
+    const violations = scanSpecContentForAuthenticity(specPath, code);
+
+    // Assert
+    expect(violations).toHaveLength(1);
+    expect(violations[0]).toContain("uses 'toBeGreaterThanOrEqual(0)'");
+    expect(violations[0]).not.toContain('declares synthetic concurrency control class');
   });
 
-  it('4. rejects constant dummy assertions like sampleAmount = 250.75 > 0', () => {
-    const code = `
-      describe('dummy test', () => {
-        it('asserts declared constant > 0', () => {
-          const sampleAmount = 250.75;
-          expect(sampleAmount).toBeGreaterThan(0);
-        });
-      });
-    `;
-    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
-    expect(violations.length).toBe(1);
-    expect(violations[0]).toContain('[Sham Dummy Assertion]');
-    expect(violations[0]).toContain('sampleAmount = 250.75');
+  it('allows authentic boundary checks with valid thresholds', () => {
+    // Arrange
+    const specPath = 'test.spec.ts';
+    const code = AUTHENTIC_BOUNDARY_FIXTURE;
+
+    // Act
+    const violations = scanSpecContentForAuthenticity(specPath, code);
+
+    // Assert
+    expect(violations).toHaveLength(0);
+    expect(violations).not.toContain("uses 'toBeGreaterThanOrEqual(0)'");
   });
 
-  it('5. rejects boolean literal tautologies like expect(true).toBeTruthy()', () => {
-    const code = `
-      describe('boolean tautology', () => {
-        it('asserts true is truthy', () => {
-          expect(true).toBeTruthy();
-          expect(false).toBeFalsy();
-        });
-      });
-    `;
-    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
-    expect(violations.length).toBe(2);
-    expect(violations[0]).toContain('[Sham Tautological Assertion]');
-    expect(violations[1]).toContain('[Sham Tautological Assertion]');
+  it('detects self identity variable comparisons', () => {
+    // Arrange
+    const specPath = 'test.spec.ts';
+    const code = TAUTOLOGY_FIXTURE;
+
+    // Act
+    const violations = scanSpecContentForAuthenticity(specPath, code);
+
+    // Assert
+    expect(violations).toHaveLength(2);
+    expect(violations[0]).toContain("compares 'x' to itself");
+    expect(violations[1]).toContain("compares 'x' to itself");
+    expect(violations[0]).not.toContain("uses 'toBeGreaterThanOrEqual(0)'");
   });
 
-  it('6. passes on authentic tests with valid assertions', () => {
-    const code = `
-      describe('real tests', () => {
-        it('checks real outcomes', async () => {
-          const res = { status: 'SUCCESS', code: 200 };
-          expect(res.status).toBe('SUCCESS');
-          expect(res.code).toBe(200);
-          expect(res.status).toBeDefined();
-        });
-      });
-    `;
-    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
-    expect(violations.length).toBe(0);
+  it('detects constant literal threshold comparisons', () => {
+    // Arrange
+    const specPath = 'test.spec.ts';
+    const code = CONSTANT_LITERAL_FIXTURE;
+
+    // Act
+    const violations = scanSpecContentForAuthenticity(specPath, code);
+
+    // Assert
+    expect(violations).toHaveLength(1);
+    expect(violations[0]).toContain("asserts constant 'sampleAmount = 250.75'");
+    expect(violations[0]).not.toContain("uses 'toBeGreaterThanOrEqual(0)'");
   });
 
-  it('7. rejects synthetic Mutex or Semaphore test concurrency classes', () => {
-    const code = `
-      describe('synthetic concurrency test', () => {
-        class TestMutex {
-          lock() {}
-        }
-        it('uses fake mutex', () => {});
-      });
-    `;
-    const violations = scanSpecContentForAuthenticity('test.spec.ts', code);
-    expect(violations.length).toBe(1);
-    expect(violations[0]).toContain('[Synthetic Test Concurrency Gate]');
-    expect(violations[0]).toContain('TestMutex');
+  it('detects boolean primitive literal comparisons', () => {
+    // Arrange
+    const specPath = 'test.spec.ts';
+    const code = BOOLEAN_LITERAL_FIXTURE;
+
+    // Act
+    const violations = scanSpecContentForAuthenticity(specPath, code);
+
+    // Assert
+    expect(violations).toHaveLength(2);
+    expect(violations[0]).toContain("asserts constant boolean 'true'");
+    expect(violations[1]).toContain("asserts constant boolean 'false'");
+    expect(violations[0]).not.toContain("uses 'toBeGreaterThanOrEqual(0)'");
+  });
+
+  it('allows authentic code execution with concrete assertions', () => {
+    // Arrange
+    const specPath = 'test.spec.ts';
+    const code = AUTHENTIC_EXECUTION_FIXTURE;
+
+    // Act
+    const violations = scanSpecContentForAuthenticity(specPath, code);
+
+    // Assert
+    expect(violations).toHaveLength(0);
+    expect(violations).not.toContain("uses 'toBeGreaterThanOrEqual(0)'");
+  });
+
+  it('detects synthetic concurrency primitive classes', () => {
+    // Arrange
+    const specPath = 'test.spec.ts';
+    const code = SYNTHETIC_MUTEX_FIXTURE;
+
+    // Act
+    const violations = scanSpecContentForAuthenticity(specPath, code);
+
+    // Assert
+    expect(violations).toHaveLength(1);
+    expect(violations[0]).toContain("declares synthetic concurrency control class 'TestMutex'");
+    expect(violations[0]).not.toContain("uses 'toBeGreaterThanOrEqual(0)'");
+  });
+
+  it('passes on whole repository', () => {
+    // Arrange
+    const cwd = process.cwd();
+
+    // Act
+    const res = verifyTestAuthenticity(cwd);
+
+    // Assert
+    expect(res.ok).toBe(true);
+    expect(res.failures).toHaveLength(0);
+    expect(res.checked).toBeGreaterThan(50);
   });
 });

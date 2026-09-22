@@ -1,4 +1,5 @@
 import { isCliEntrypoint } from '../governance/common.js';
+import { syncMigrationRegistry } from '../governance/sync-migration-registry.js';
 import { lockAllEntities, lockEntity, resolveLockTarget } from '../governance/unified-lock-engine.js';
 
 export function runLockCli(argv = process.argv.slice(2), root = process.cwd()): void {
@@ -12,6 +13,14 @@ export function runLockCli(argv = process.argv.slice(2), root = process.cwd()): 
     console.log('🔒 Executing Sovereign Batch Sealing for ALL entities...');
     const result = lockAllEntities(root, lockOptions);
     console.log(`✅ Batch sealing complete: ${result.successful}/${result.total} entities locked.`);
+    try {
+      const syncRes = syncMigrationRegistry(root);
+      if (syncRes.synced > 0) {
+        console.log(`🗺️ Master Migration Registry synchronized: ${syncRes.synced} flow(s) updated.`);
+      }
+    } catch (syncErr) {
+      // Non-blocking sync warning
+    }
     if (result.failed.length > 0) {
       console.error(`❌ Failures (${result.failed.length}):`);
       for (const f of result.failed) {
@@ -50,6 +59,17 @@ export function runLockCli(argv = process.argv.slice(2), root = process.cwd()): 
   console.log(`   Directory: ${entity.directory}`);
   console.log(`   Files hashed: ${entity.files.length} files`);
   console.log(`   Evidence written to: docs/ai-execution-evidence/`);
+
+  if (entity.type === 'flow' || target.startsWith('flow:')) {
+    try {
+      const syncRes = syncMigrationRegistry(root);
+      if (syncRes.synced > 0) {
+        console.log(`   🗺️ Master Migration Registry synchronized: ${syncRes.synced} flow(s) updated.`);
+      }
+    } catch {
+      // Non-blocking sync warning
+    }
+  }
 }
 
 if (isCliEntrypoint(import.meta.url)) {

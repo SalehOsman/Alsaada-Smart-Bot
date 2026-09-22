@@ -146,12 +146,168 @@ export const JEV_AUDIT_CATALOG = {
       },
     } satisfies ChoiceQuestion,
   },
+
+  // 6. Autoresearch Feature Discovery (Gate G3 / G11) - cookbooks/autoresearch_feature_discovery
+  legacyFeatureDiscovery: {
+    hasUndiscoveredLegacyRules: {
+      type: 'noul',
+      instructions: {
+        question: 'Does the legacy F:\\HR implementation contain business rules, deductions, or validations that were missed or undocumented in the modern flow?',
+        focus: 'Inspect legacy scripts for subtle business logic (e.g. deductions, penalties, allowance caps, overtime rules).',
+      },
+      criteria: {
+        true: 'Undiscovered legacy business rules, deductions, or boundary conditions exist in F:\\HR that are missing from the modern flow.',
+        false: 'All legacy business rules, calculations, and deductions are fully discovered and accounted for.',
+      },
+    } satisfies NoulQuestion,
+
+    discoveryDepthScore: {
+      type: 'score',
+      instructions: 'Rate the depth and coverage of business rule discovery against the legacy F:\\HR baseline.',
+      criteria: [
+        'Level 0: No legacy rules discovered; naive rewrite assuming only happy path.',
+        'Level 1: Basic validation discovered, but missing subtle deductions or penalty calculations.',
+        'Level 2: Core financial and operational calculations discovered and mapped to domain models.',
+        'Level 3: Full forensic discovery including all boundary conditions, multi-tier deductions, and corner cases.',
+      ],
+    } satisfies ScoreQuestion,
+  },
+
+  // 7. Speculative Fan-Out Batching - patterns/fan-out & cookbooks/parallel_questions
+  speculativeFanOut: {
+    canSpeculativelyFanOut: {
+      type: 'noul',
+      instructions: {
+        question: 'Can these governance questions and audit dimensions be evaluated speculatively in parallel without serial state dependency?',
+        focus: 'Ensure questions are atomic, self-contained, and do not depend on intermediate results.',
+      },
+      criteria: {
+        true: 'All atomic questions can be dispatched concurrently in a single speculative fan-out batch.',
+        false: 'Questions have serial data dependencies requiring sequential waterfall evaluation.',
+      },
+    } satisfies NoulQuestion,
+
+    batchTopology: {
+      type: 'choice',
+      instructions: 'Classify the speculative fan-out execution topology for this audit workload.',
+      criteria: {
+        parallel_fan_out: 'All atomic questions dispatched simultaneously in parallel under 200ms latency budget.',
+        staged_fan_out: 'Questions batched into 2 parallel stages with early termination gates.',
+        serial_fallback: 'Serial fallback execution required due to sequential data dependencies.',
+      },
+    } satisfies ChoiceQuestion,
+  },
+
+  // 8. Temporal Invariants & Date Extraction Guard (Gate G11 / G23) - cookbooks/date_extraction_cookbook
+  temporalInvariantGuard: {
+    violatesTemporalInvariants: {
+      type: 'noul',
+      instructions: {
+        question: 'Does the code or test violate temporal invariants such as the 26th-25th payroll monthly cycle or unpinned system time (Date.now())?',
+        focus: 'Look for unpinned clocks (Date.now(), new Date()), timezone drift, or invalid month-cycle boundaries.',
+      },
+      criteria: {
+        true: 'Temporal invariant breach detected: unpinned clock, invalid payroll cycle boundary, or non-deterministic timestamp.',
+        false: 'Temporal invariants preserved: uses PINNED_BASE_TIME, respects 26th-25th payroll cycle, and pinned date boundaries.',
+      },
+    } satisfies NoulQuestion,
+
+    payrollCycleClassification: {
+      type: 'choice',
+      instructions: 'Classify the payroll cycle and date boundary handling in this business logic or test.',
+      criteria: {
+        canonical_cycle: 'Strictly adheres to standard workforce payroll cycle (26th of previous month to 25th of current month).',
+        custom_calendar_cycle: 'Explicitly declared and authorized alternative calendar cycle (e.g. 1st to end-of-month).',
+        unanchored_drift: 'Unanchored date calculations using relative or unpinned system timestamps.',
+      },
+    } satisfies ChoiceQuestion,
+  },
+
+  // 9. Semantic Reuse Sentinel & Domain Reranker (Constitutional Rule 10.2) - cookbooks/rerank_typesafe & cookbooks/semantic_find
+  semanticReuseSentinel: {
+    hasDuplicateDomainHelper: {
+      type: 'noul',
+      instructions: {
+        question: 'Does this change introduce redundant or duplicate helper functions instead of reusing existing canonical domain utilities in @alsaada/shared/domain or packages/shared/?',
+        focus: 'Scan for locally re-implemented currency, date, formatting, or validation functions.',
+      },
+      criteria: {
+        true: 'Duplicate domain helper detected: reinventing existing date, currency, or formatting utilities.',
+        false: 'Strict reuse-first compliance: reuses canonical shared domain utilities.',
+      },
+    } satisfies NoulQuestion,
+
+    reuseRecommendation: {
+      type: 'choice',
+      instructions: 'Classify the reuse status and rerank recommendation for helper utilities in this slice.',
+      criteria: {
+        canonical_reuse: 'Directly reuses existing domain helpers from @alsaada/shared or packages/.',
+        novel_candidate: 'Genuine novel domain utility eligible for promotion to shared domain package.',
+        redundant_duplicate: 'Redundant utility that shadows existing helpers and should be excised.',
+      },
+    } satisfies ChoiceQuestion,
+  },
+
+  // 10. Skill Suggestion & Autonomous Squad Router - cookbooks/skill_suggestion & cookbooks/hierarchical_classification
+  squadAutonomousRouter: {
+    responsibleSquad: {
+      type: 'choice',
+      instructions: 'Hierarchically classify which engineering squad has primary responsibility for resolving findings in this audit.',
+      criteria: {
+        squad_finance_security: 'Squad Finance & Security: Financial integrity, ledgers, RBAC, double-entry accounting, secret masking, payroll cycles.',
+        squad_implementation_ux: 'Squad Implementation & UX: Bot wizard flows, 10-file slices, Telegram UX, keyboards, messages.',
+        squad_architecture_devops: 'Squad Architecture & DevOps: Monorepo boundaries, Docker, database migrations, CI/CD, outbox worker, layer purity.',
+        squad_qa_migration: 'Squad QA & Migration: F:\\HR legacy parity, test authenticity, G1-G23 gate verification, docs/19 registry, doc-code drift.',
+        all_clear: 'All governance gates passed; no squad intervention required.',
+      },
+    } satisfies ChoiceQuestion,
+
+    defectSeverityScore: {
+      type: 'score',
+      instructions: 'Rate the severity and blast radius of the classified defect to guide remediation priority.',
+      criteria: [
+        'Level 0: Clean pass - no defects or governance breaches.',
+        'Level 1: Minor cosmetic or ergonomic warning - non-blocking.',
+        'Level 2: Quality gate warning or architectural drift - requires resolution before merge.',
+        'Level 3: Critical constitutional breach, security flaw, or financial invariant violation - immediate stop-the-line.',
+      ],
+    } satisfies ScoreQuestion,
+  },
+
+  // 11. Doc-Code Drift Radar & Bi-directional Citation Radar (Gate G3 / G4 / G19) - cookbooks/citation_check & cookbooks/classifying_rag_passages
+  docCodeDriftRadar: {
+    hasDocCodeDrift: {
+      type: 'noul',
+      instructions: {
+        question: 'Is there drift or discrepancy between the implementation code, flow contract (flow.contract.json), walkthrough documentation, and docs/19 registry?',
+        focus: 'Verify state transitions, button callbacks, wizard steps, and documentation citations match physical code.',
+      },
+      criteria: {
+        true: 'Doc-code drift detected: contract states, walkthrough diagrams, or migration registry diverge from code.',
+        false: 'Bidirectional parity confirmed: code, contracts, walkthroughs, and migration registry match 100%.',
+      },
+    } satisfies NoulQuestion,
+
+    documentationParityScore: {
+      type: 'score',
+      instructions: 'Rate the completeness and fidelity of documentation across flow contracts, walkthrough diagrams, and migration registry.',
+      criteria: [
+        'Level 0: Missing documentation - no flow.contract.json or walkthrough.md exists.',
+        'Level 1: Incomplete or stale documentation with broken state diagrams or missing callbacks.',
+        'Level 2: Good documentation parity with accurate states, minor phrasing drift.',
+        'Level 3: Perfect bidirectional citation parity across code, flow.contract.json, walkthrough.md, and docs/19.',
+      ],
+    } satisfies ScoreQuestion,
+  },
 } as const;
 
 export const JEV_GOVERNANCE_WEIGHTS = {
-  securityAndPrivacy: 0.30,
-  architectureAndTypes: 0.25,
-  testAuthenticity: 0.20,
-  telegramErgonomics: 0.15,
-  legacyParity: 0.10,
+  securityAndPrivacy: 0.20,
+  architectureAndTypes: 0.15,
+  testAuthenticity: 0.15,
+  telegramErgonomics: 0.10,
+  legacyParity: 0.15,
+  temporalInvariants: 0.10,
+  semanticReuse: 0.05,
+  docCodeParity: 0.10,
 } as const;

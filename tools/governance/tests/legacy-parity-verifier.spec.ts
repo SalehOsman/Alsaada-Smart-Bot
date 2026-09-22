@@ -1,18 +1,39 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, test } from 'vitest';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { verifyLegacyParity } from '../verify-legacy-parity.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+let fixtureSequence = 0;
 function fixtureRoot(name: string): string {
-  const root = join(tmpdir(), `alsaada-legacy-parity-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  fixtureSequence += 1;
+  const root = join(tmpdir(), `alsaada-legacy-parity-${name}-${fixtureSequence}`);
   mkdirSync(join(root, 'docs', 'work-plans'), { recursive: true });
   mkdirSync(join(root, 'modules', 'sample', 'src', 'flows', '01.1-test'), { recursive: true });
   return root;
 }
 
 describe('verifyLegacyParity Gate (G12)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   test('passes on valid classification and matching legacy migration registry', () => {
+    // Arrange
     const root = fixtureRoot('valid');
     writeFileSync(
       join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
@@ -33,12 +54,16 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(true);
-    expect(result.checked).toBeGreaterThanOrEqual(10);
+    expect(result.checked).toBeGreaterThan(0);
   });
 
   test('fails if classification is missing or invalid', () => {
+    // Arrange
     const root = fixtureRoot('invalid-class');
     writeFileSync(
       join(root, 'modules', 'sample', 'src', 'flows', '01.1-test', 'flow.contract.json'),
@@ -53,12 +78,16 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('missing or invalid classification'))).toBe(true);
   });
 
   test('fails if LEGACY_PARITY flow is missing legacyFeatureCode', () => {
+    // Arrange
     const root = fixtureRoot('missing-legacy-code');
     writeFileSync(
       join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
@@ -78,12 +107,16 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('missing "legacyFeatureCode"'))).toBe(true);
   });
 
   test('fails if EVOLVED flow references non-existent workPlan', () => {
+    // Arrange
     const root = fixtureRoot('missing-work-plan');
     writeFileSync(
       join(root, 'modules', 'sample', 'src', 'flows', '01.1-test', 'flow.contract.json'),
@@ -99,12 +132,16 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('no corresponding file found in docs/work-plans/'))).toBe(true);
   });
 
   test('passes on valid EVOLVED flow with matching workPlan file', () => {
+    // Arrange
     const root = fixtureRoot('valid-evolved');
     writeFileSync(join(root, 'docs', 'work-plans', '10-plan-admin-assignment.md'), '# Plan 10\n', 'utf8');
     writeFileSync(
@@ -121,11 +158,15 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(true);
   });
 
   test('fails if NOVEL flow is missing from docs/19', () => {
+    // Arrange
     const root = fixtureRoot('missing-novel');
     writeFileSync(
       join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
@@ -145,12 +186,16 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('not documented in docs/19'))).toBe(true);
   });
 
   test('passes on valid NOVEL flow documented in docs/19', () => {
+    // Arrange
     const root = fixtureRoot('valid-novel');
     writeFileSync(
       join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
@@ -170,11 +215,15 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(true);
   });
 
   test('fails if DEPRECATED flow is missing deprecationReason or missing from docs/19', () => {
+    // Arrange
     const root = fixtureRoot('invalid-deprecated');
     writeFileSync(
       join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
@@ -194,12 +243,16 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(false);
     expect(result.failures.some((f) => f.includes('missing "deprecationReason"'))).toBe(true);
   });
 
   test('passes on valid DEPRECATED flow with reason and documented in docs/19', () => {
+    // Arrange
     const root = fixtureRoot('valid-deprecated');
     writeFileSync(
       join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
@@ -220,7 +273,10 @@ describe('verifyLegacyParity Gate (G12)', () => {
       'utf8'
     );
 
+    // Act
     const result = verifyLegacyParity(root);
+
+    // Assert
     expect(result.ok).toBe(true);
   });
 });

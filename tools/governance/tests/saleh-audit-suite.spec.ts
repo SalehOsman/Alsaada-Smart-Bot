@@ -3,6 +3,7 @@ import {
   auditPresentationCompliance,
   formatSalehVerdictReport,
   runSalehAuditSuite,
+  verifyTripleGuardArsenal,
   verifyUnlockAuditProvenance,
   type SalehAuditReport,
 } from '../saleh-audit-suite.js';
@@ -183,4 +184,41 @@ Compliant justification reason`
       rmSync(tempDir, { recursive: true, force: true });
     });
   });
+
+  describe('verifyTripleGuardArsenal', () => {
+    it('verifies that the triple guard arsenal is intact and leak-free in real repo', () => {
+      const res = verifyTripleGuardArsenal();
+      expect(res.ok).toBe(true);
+      expect(res.failures).toHaveLength(0);
+      expect(res.checked).toBeGreaterThan(5);
+    });
+
+    it('fails when a SKILL.md is leaked inside arsenal directory', () => {
+      const tempDir = join(tmpdir(), `saleh-arsenal-leak-${Date.now()}`);
+      const arsenalDir = join(tempDir, '.agents', 'skills', 'saleh', 'arsenal');
+      const cleanGuard = join(arsenalDir, 'clean-code-guard');
+      const testGuard = join(arsenalDir, 'test-guard');
+      const docsGuard = join(arsenalDir, 'docs-guard');
+      mkdirSync(join(cleanGuard, 'references'), { recursive: true });
+      mkdirSync(join(testGuard, 'references'), { recursive: true });
+      mkdirSync(join(docsGuard, 'references'), { recursive: true });
+      mkdirSync(join(tempDir, 'docs'), { recursive: true });
+
+      writeFileSync(join(cleanGuard, 'rules.md'), '# Clean code');
+      writeFileSync(join(testGuard, 'rules.md'), '# Test guard');
+      writeFileSync(join(docsGuard, 'rules.md'), '# Docs guard');
+      writeFileSync(join(tempDir, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'), '# Docs 19');
+      writeFileSync(join(tempDir, 'docs', '26-locked-flows-and-features-registry.md'), '# Docs 26');
+
+      // Add a leaked SKILL.md
+      writeFileSync(join(cleanGuard, 'SKILL.md'), '--- name: leaked ---');
+
+      const res = verifyTripleGuardArsenal(tempDir);
+      expect(res.ok).toBe(false);
+      expect(res.failures.some((f) => f.includes('Public skill leakage detected'))).toBe(true);
+
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+  });
 });
+

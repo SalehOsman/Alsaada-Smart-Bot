@@ -25,4 +25,7 @@ For detailed domain guidelines, consult the specialized modular rulebooks:
 - **Enterprise Reliability:** [`.agents/rules/09-enterprise-reliability-and-telemetry.md`](.agents/rules/09-enterprise-reliability-and-telemetry.md)
 - **AI Discipline & Pre-Flight:** [`.agents/rules/10-ai-agent-discipline-and-preflight.md`](.agents/rules/10-ai-agent-discipline-and-preflight.md)
 
+## Sovereign Stakeholder Proxy & Audit Arsenal
+- **Sovereign Auditor (`/saleh`):** Defined in [`.agents/skills/saleh/SKILL.md`](.agents/skills/saleh/SKILL.md). Equipped exclusively with the private **Triple Guard Arsenal** (`clean-code-guard`, `test-guard`, `docs-guard`) in [`.agents/skills/saleh/arsenal/`](.agents/skills/saleh/arsenal/) for deep forensic auditing (`/boost`, `pnpm audit:saleh:boost`).
+
 Legacy Arabic governance documents are preserved with full cryptographic provenance in [`docs/archive/governance-v1-ar/`](docs/archive/governance-v1-ar/).

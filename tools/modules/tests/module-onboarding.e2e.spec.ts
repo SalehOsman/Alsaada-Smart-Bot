@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { scanMonorepoCatalog } from '../catalog.js';
@@ -27,7 +27,7 @@ describe('Work Plan 89 — End-to-End Module Onboarding & Acceptance Verificatio
   const fixtureDir = path.resolve(__dirname, 'fixtures/acceptance-module');
   const tempModuleDir = path.resolve(process.cwd(), 'modules/sample-domain');
 
-  beforeEach(() => {
+  beforeAll(() => {
     // Copy fixture to modules/sample-domain for realistic monorepo scanner testing
     if (fs.existsSync(tempModuleDir)) {
       fs.rmSync(tempModuleDir, { recursive: true, force: true });
@@ -35,7 +35,7 @@ describe('Work Plan 89 — End-to-End Module Onboarding & Acceptance Verificatio
     fs.cpSync(fixtureDir, tempModuleDir, { recursive: true });
   });
 
-  afterEach(() => {
+  afterAll(() => {
     // Clean up temporary module so we never leave clutter in the working directory
     if (fs.existsSync(tempModuleDir)) {
       fs.rmSync(tempModuleDir, { recursive: true, force: true });

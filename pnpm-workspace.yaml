@@ -2,6 +2,8 @@ blockExoticSubdeps: true
 minimumReleaseAge: 10080
 trustPolicy: no-downgrade
 trustLockfile: true
+trustPolicyExclude:
+  - "chokidar@4.0.3"
 packages:
   - 'packages/*'
   - 'modules/*'

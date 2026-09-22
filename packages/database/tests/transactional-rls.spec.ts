@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 /**
  * 🔒 RLS (Row-Level Security) & SET LOCAL Connection Pool Bleed Prevention
@@ -8,6 +8,8 @@ import { describe, it, expect, vi } from 'vitest';
  * 2. Fail-closed default: if app.current_site_id is null/empty and role != GENERAL_ADMIN, 0 rows are returned
  * 3. Zero session bleed: SET LOCAL variables terminate strictly with transaction boundary
  */
+
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
 
 interface SessionContext {
   siteId?: string | null;
@@ -74,67 +76,105 @@ describe('Transactional RLS & Connection Pool Isolation (Plan 86 R5)', () => {
     { siteId: 'site-beta', name: 'عامل موقع بيتا' },
   ];
 
-  it('should enforce fail-closed default when no session context is provided', () => {
-    const isAllowed = pool.evaluateWorkerRlsPolicy(undefined, sampleWorkers[0]!);
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('enforces fail-closed default when no session context is provided', () => {
+    // Arrange
+    const uninitializedContext = undefined;
+
+    // Act
+    const isAllowed = pool.evaluateWorkerRlsPolicy(uninitializedContext, sampleWorkers[0]!);
+
+    // Assert
     expect(isAllowed).toBe(false);
   });
 
-  it('should enforce fail-closed default when siteId is empty string or null', () => {
-    const isAllowedNull = pool.evaluateWorkerRlsPolicy({ siteId: null, role: 'FIELD_ADMIN' }, sampleWorkers[0]!);
-    const isAllowedEmpty = pool.evaluateWorkerRlsPolicy({ siteId: '', role: 'FIELD_ADMIN' }, sampleWorkers[0]!);
+  it('enforces fail-closed default when siteId is empty string or null', () => {
+    // Arrange
+    const contextWithNullSite = { siteId: null, role: 'FIELD_ADMIN' };
+    const contextWithEmptySite = { siteId: '', role: 'FIELD_ADMIN' };
 
+    // Act
+    const isAllowedNull = pool.evaluateWorkerRlsPolicy(contextWithNullSite, sampleWorkers[0]!);
+    const isAllowedEmpty = pool.evaluateWorkerRlsPolicy(contextWithEmptySite, sampleWorkers[0]!);
+
+    // Assert
     expect(isAllowedNull).toBe(false);
     expect(isAllowedEmpty).toBe(false);
   });
 
-  it('should allow FIELD_ADMIN to access ONLY their assigned site workers', async () => {
+  it('allows FIELD_ADMIN to access ONLY their assigned site workers', async () => {
+    // Arrange
     const connId = 'conn-pool-1';
+    let visibleWorkers: typeof sampleWorkers = [];
 
+    // Act
     await pool.executeInTransaction(
       connId,
       { siteId: 'site-alpha', userId: 'usr-1', role: 'FIELD_ADMIN' },
       async (session) => {
-        const visibleWorkers = sampleWorkers.filter((w) => pool.evaluateWorkerRlsPolicy(session, w));
-
-        expect(visibleWorkers).toHaveLength(1);
-        expect(visibleWorkers[0]!.siteId).toBe('site-alpha');
-        expect(visibleWorkers[0]!.name).toBe('عامل موقع ألفا');
+        visibleWorkers = sampleWorkers.filter((w) => pool.evaluateWorkerRlsPolicy(session, w));
       }
     );
+
+    // Assert
+    expect(visibleWorkers).toHaveLength(1);
+    expect(visibleWorkers[0]!.siteId).toBe('site-alpha');
+    expect(visibleWorkers[0]!.name).toBe('عامل موقع ألفا');
+    expect(visibleWorkers.some((w) => w.siteId === 'site-beta')).toBe(false);
   });
 
-  it('should allow GENERAL_ADMIN to access all sites', async () => {
+  it('allows GENERAL_ADMIN to access all sites', async () => {
+    // Arrange
     const connId = 'conn-pool-2';
+    let visibleWorkers: typeof sampleWorkers = [];
 
+    // Act
     await pool.executeInTransaction(
       connId,
       { siteId: null, userId: 'usr-gen', role: 'GENERAL_ADMIN' },
       async (session) => {
-        const visibleWorkers = sampleWorkers.filter((w) => pool.evaluateWorkerRlsPolicy(session, w));
-
-        expect(visibleWorkers).toHaveLength(2);
+        visibleWorkers = sampleWorkers.filter((w) => pool.evaluateWorkerRlsPolicy(session, w));
       }
     );
+
+    // Assert
+    expect(visibleWorkers).toHaveLength(2);
+    expect(visibleWorkers.length).toBeGreaterThan(0);
   });
 
-  it('should prevent connection pool bleed: session terminates immediately with transaction boundary', async () => {
+  it('prevents connection pool bleed with immediate session termination at transaction boundary', async () => {
+    // Arrange
     const connId = 'conn-pool-reused-3';
+    let sessionSiteInTx = '';
 
-    // Transaction 1: FIELD_ADMIN on site-alpha
+    // Act
     await pool.executeInTransaction(
       connId,
       { siteId: 'site-alpha', userId: 'usr-alpha', role: 'FIELD_ADMIN' },
       async (session) => {
-        expect(session.siteId).toBe('site-alpha');
+        sessionSiteInTx = session.siteId ?? '';
       }
     );
 
-    // After transaction 1 commits, connection is returned to pool
-    // Assert connection in pool has NO leaked session context
-    expect(pool.getConnectionContext(connId)).toBeUndefined();
-
-    // Subsequent query on reused connection with uninitialized context drops into fail-closed default
     const contextAfterTx = pool.getConnectionContext(connId);
-    expect(pool.evaluateWorkerRlsPolicy(contextAfterTx, sampleWorkers[0]!)).toBe(false);
+    const isAllowedAfterTx = pool.evaluateWorkerRlsPolicy(contextAfterTx, sampleWorkers[0]!);
+
+    // Assert
+    expect(sessionSiteInTx).toBe('site-alpha');
+    expect(contextAfterTx).toBeUndefined();
+    expect(isAllowedAfterTx).toBe(false);
   });
 });

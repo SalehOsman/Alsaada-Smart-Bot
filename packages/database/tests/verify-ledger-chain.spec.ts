@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   verifyLedgerChainDb,
   assertLedgerChainIntegrity,
@@ -7,7 +7,23 @@ import {
   GENESIS_HASH,
 } from '../src/index.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
+
 describe('verifyLedgerChain (Database Audit)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   function buildDeterministicChain(count: number, tamperIndex?: number, tamperType?: 'amount' | 'link') {
     const records: Array<Record<string, any>> = [];
     let currentPrev = GENESIS_HASH;
@@ -75,20 +91,29 @@ describe('verifyLedgerChain (Database Audit)', () => {
   }
 
   it('successfully verifies a valid cryptographic chain', async () => {
+    // Arrange
     const records = buildDeterministicChain(5);
     const mockPrisma = createMockAuditPrisma(records);
 
+    // Act
     const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+    // Assert
     expect(report.isValid).toBe(true);
     expect(report.totalVerified).toBe(5);
     expect(report.brokenRecordId).toBeUndefined();
+    expect(report.error).toBeUndefined();
   });
 
   it('detects direct database tampering of the amount field', async () => {
+    // Arrange
     const records = buildDeterministicChain(4, 2, 'amount');
     const mockPrisma = createMockAuditPrisma(records);
 
+    // Act
     const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+    // Assert
     expect(report.isValid).toBe(false);
     expect(report.brokenRecordId).toBe('TXN-3');
     expect(report.tamperedField).toBe('recordHash');
@@ -96,10 +121,14 @@ describe('verifyLedgerChain (Database Audit)', () => {
   });
 
   it('detects broken chain link when previousHash is tampered with or row is deleted', async () => {
+    // Arrange
     const records = buildDeterministicChain(4, 1, 'link');
     const mockPrisma = createMockAuditPrisma(records);
 
+    // Act
     const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+    // Assert
     expect(report.isValid).toBe(false);
     expect(report.brokenRecordId).toBe('TXN-2');
     expect(report.tamperedField).toBe('previousHash');
@@ -107,30 +136,38 @@ describe('verifyLedgerChain (Database Audit)', () => {
   });
 
   it('assertLedgerChainIntegrity throws CorruptedLedgerChainError on broken chain', async () => {
+    // Arrange
     const records = buildDeterministicChain(3, 1, 'amount');
     const mockPrisma = createMockAuditPrisma(records);
 
-    await expect(
-      assertLedgerChainIntegrity(mockPrisma, { model: 'FinancialLedger' })
-    ).rejects.toThrow(CorruptedLedgerChainError);
+    // Act
+    const verifyAction = () => assertLedgerChainIntegrity(mockPrisma, { model: 'FinancialLedger' });
+
+    // Assert
+    await expect(verifyAction()).rejects.toThrow(CorruptedLedgerChainError);
   });
 
   it('paginates across batches with cursor pagination', async () => {
+    // Arrange
     const records = buildDeterministicChain(10);
     const mockPrisma = createMockAuditPrisma(records);
 
+    // Act
     const report = await verifyLedgerChainDb(mockPrisma, {
       model: 'FinancialLedger',
       batchSize: 3,
     });
 
+    // Assert
     expect(report.isValid).toBe(true);
     expect(report.totalVerified).toBe(10);
+    expect(report.brokenRecordId).toBeUndefined();
     // 10 items with batch size 3 requires 4 queries (3 + 3 + 3 + 1)
     expect(mockPrisma.financialLedger.findMany).toHaveBeenCalledTimes(4);
   });
 
   it('supports custom genesisHash for sub-ledger chains', async () => {
+    // Arrange
     const customGenesis = 'CUSTOM_GENESIS_CHAIN_2026';
     const timestamp = new Date('2026-09-12T10:00:00.000Z');
     const hash = computeRecordHash({
@@ -156,13 +193,17 @@ describe('verifyLedgerChain (Database Audit)', () => {
     ];
 
     const mockPrisma = createMockAuditPrisma(records);
+
+    // Act
     const report = await verifyLedgerChainDb(mockPrisma, {
       model: 'FinancialLedger',
       genesisHash: customGenesis,
     });
 
+    // Assert
     expect(report.isValid).toBe(true);
     expect(report.totalVerified).toBe(1);
     expect(report.genesisHash).toBe(customGenesis);
+    expect(report.brokenRecordId).toBeUndefined();
   });
 });

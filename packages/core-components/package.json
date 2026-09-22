@@ -13,6 +13,7 @@
     "@alsaada/database": "workspace:*",
     "@alsaada/national-id-engine": "workspace:*",
     "@alsaada/regional-engine": "workspace:*",
+    "@alsaada/shared": "workspace:*",
     "grammy": "^1.35.0"
   },
   "devDependencies": {

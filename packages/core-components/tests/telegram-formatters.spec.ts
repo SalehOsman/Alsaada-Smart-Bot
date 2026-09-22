@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   formatBreadcrumbs,
   formatSpoiler,
@@ -15,171 +15,320 @@ import {
   withChatAction,
 } from '../src/formatting/telegram-formatters.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Telegram UX Formatters & Components', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   describe('formatBreadcrumbs', () => {
-    it('formats multi-segment breadcrumbs with ❯ separator', () => {
-      const result = formatBreadcrumbs(['⚙️ الإعدادات', '🏢 الكيان المؤسسي', '🏗️ مصفوفة المشاريع']);
+    it('1. formats multi-segment breadcrumbs with ❯ separator', () => {
+      // Arrange
+      const segments = ['⚙️ الإعدادات', '🏢 الكيان المؤسسي', '🏗️ مصفوفة المشاريع'];
+
+      // Act
+      const result = formatBreadcrumbs(segments);
+
+      // Assert
       expect(result).toBe('📍 *المسار:* ⚙️ الإعدادات ❯ 🏢 الكيان المؤسسي ❯ 🏗️ مصفوفة المشاريع\n\n');
+      expect(result).toContain('❯');
     });
 
-    it('filters out empty or whitespace-only segments', () => {
-      const result = formatBreadcrumbs(['⚙️ الإعدادات', '   ', '', '👤 ملفي الشخصي']);
+    it('2. filters out empty or whitespace-only segments', () => {
+      // Arrange
+      const segments = ['⚙️ الإعدادات', '   ', '', '👤 ملفي الشخصي'];
+
+      // Act
+      const result = formatBreadcrumbs(segments);
+
+      // Assert
       expect(result).toBe('📍 *المسار:* ⚙️ الإعدادات ❯ 👤 ملفي الشخصي\n\n');
+      expect(result).not.toContain('❯  ❯');
     });
 
-    it('returns empty string when given empty array', () => {
-      expect(formatBreadcrumbs([])).toBe('');
+    it('3. returns empty string when given empty array', () => {
+      // Arrange
+      const emptySegments: string[] = [];
+
+      // Act
+      const result = formatBreadcrumbs(emptySegments);
+
+      // Assert
+      expect(result).toBe('');
+      expect(result.length).toBe(0);
     });
   });
 
   describe('formatSpoiler', () => {
-    it('wraps text inside <tg-spoiler> tags by default', () => {
-      expect(formatSpoiler('5000 ج.م')).toBe('<tg-spoiler>5000 ج.م</tg-spoiler>');
+    it('4. wraps text inside <tg-spoiler> tags by default', () => {
+      // Arrange
+      const text = '5000 ج.م';
+
+      // Act
+      const result = formatSpoiler(text);
+
+      // Assert
+      expect(result).toBe('<tg-spoiler>5000 ج.م</tg-spoiler>');
+      expect(result).toContain('5000');
     });
 
-    it('wraps text inside || tags when mode is markdown', () => {
-      expect(formatSpoiler('5000 ج.م', 'markdown')).toBe('||5000 ج.م||');
+    it('5. wraps text inside || tags when mode is markdown', () => {
+      // Arrange
+      const text = '5000 ج.م';
+
+      // Act
+      const result = formatSpoiler(text, 'markdown');
+
+      // Assert
+      expect(result).toBe('||5000 ج.م||');
+      expect(result).not.toContain('<tg-spoiler>');
     });
 
-    it('returns empty string for null, empty or whitespace-only inputs', () => {
-      expect(formatSpoiler('')).toBe('');
-      expect(formatSpoiler('   ')).toBe('');
+    it('6. returns empty string for null, empty or whitespace-only inputs', () => {
+      // Arrange
+      const emptyText = '';
+      const spaceText = '   ';
+
+      // Act
+      const resEmpty = formatSpoiler(emptyText);
+      const resSpace = formatSpoiler(spaceText);
+
+      // Assert
+      expect(resEmpty).toBe('');
+      expect(resSpace).toBe('');
+      expect(resEmpty).toHaveLength(0);
     });
   });
 
   describe('formatExpandableQuote', () => {
-    it('wraps multi-line text inside <blockquote expandable> tags by default', () => {
+    it('7. wraps multi-line text inside <blockquote expandable> tags by default', () => {
+      // Arrange
       const notes = 'ملاحظة طبية:\nيعاني من حساسية صدرية ويمنع من العمل في مناطق الأتربة';
-      expect(formatExpandableQuote(notes)).toBe(
+
+      // Act
+      const result = formatExpandableQuote(notes);
+
+      // Assert
+      expect(result).toBe(
         '<blockquote expandable>ملاحظة طبية:\nيعاني من حساسية صدرية ويمنع من العمل في مناطق الأتربة</blockquote>'
       );
+      expect(result).toContain('expandable');
     });
 
-    it('wraps text inside **> tags when mode is markdown', () => {
+    it('8. wraps text inside **> tags when mode is markdown', () => {
+      // Arrange
       const notes = 'سطر أول\nسطر ثان';
-      expect(formatExpandableQuote(notes, 'markdown')).toBe('**>سطر أول\n>سطر ثان**');
+
+      // Act
+      const result = formatExpandableQuote(notes, 'markdown');
+
+      // Assert
+      expect(result).toBe('**>سطر أول\n>سطر ثان**');
+      expect(result).not.toContain('<blockquote');
     });
 
-    it('returns empty string for empty input', () => {
-      expect(formatExpandableQuote('')).toBe('');
+    it('9. returns empty string for empty input', () => {
+      // Arrange
+      const emptyNotes = '';
+
+      // Act
+      const result = formatExpandableQuote(emptyNotes);
+
+      // Assert
+      expect(result).toBe('');
+      expect(result).toHaveLength(0);
     });
   });
 
   describe('formatMonospace & formatClickToCopy', () => {
-    it('wraps text in markdown backticks by default for 1-tap copying without raw tags', () => {
-      expect(formatMonospace('29901011234567')).toBe('`29901011234567`');
-      expect(formatMonospace('29901011234567', 'html')).toBe('<code>29901011234567</code>');
+    it('10. wraps text in markdown backticks by default for 1-tap copying without raw tags', () => {
+      // Arrange
+      const rawText = '29901011234567';
+
+      // Act
+      const mdResult = formatMonospace(rawText);
+      const htmlResult = formatMonospace(rawText, 'html');
+
+      // Assert
+      expect(mdResult).toBe('`29901011234567`');
+      expect(htmlResult).toBe('<code>29901011234567</code>');
+      expect(mdResult).not.toContain('<code>');
     });
 
-    it('formatClickToCopy supports strings, numbers and BigInts with markdown default', () => {
-      expect(formatClickToCopy('OP-DRV-0042')).toBe('`OP-DRV-0042`');
-      expect(formatClickToCopy(12345)).toBe('`12345`');
-      expect(formatClickToCopy(7594239391n)).toBe('`7594239391`');
-      expect(formatClickToCopy(7594239391n, 'html')).toBe('<code>7594239391</code>');
+    it('11. formatClickToCopy supports strings, numbers and BigInts with markdown default', () => {
+      // Arrange
+      const strVal = 'OP-DRV-0042';
+      const numVal = 12345;
+      const bigIntVal = 7594239391n;
+
+      // Act
+      const resStr = formatClickToCopy(strVal);
+      const resNum = formatClickToCopy(numVal);
+      const resBigInt = formatClickToCopy(bigIntVal);
+      const resHtml = formatClickToCopy(bigIntVal, 'html');
+
+      // Assert
+      expect(resStr).toBe('`OP-DRV-0042`');
+      expect(resNum).toBe('`12345`');
+      expect(resBigInt).toBe('`7594239391`');
+      expect(resHtml).toBe('<code>7594239391</code>');
+      expect(resStr).not.toBe(resNum);
     });
 
-    it('returns empty string for empty or nullish inputs', () => {
-      expect(formatClickToCopy('')).toBe('');
-      expect(formatClickToCopy(undefined as any)).toBe('');
-      expect(formatClickToCopy(null as any)).toBe('');
+    it('12. returns empty string for empty or nullish inputs', () => {
+      // Arrange
+      const emptyVal = '';
+      const undefVal = undefined as any;
+      const nullVal = null as any;
+
+      // Act
+      const resEmpty = formatClickToCopy(emptyVal);
+      const resUndef = formatClickToCopy(undefVal);
+      const resNull = formatClickToCopy(nullVal);
+
+      // Assert
+      expect(resEmpty).toBe('');
+      expect(resUndef).toBe('');
+      expect(resNull).toBe('');
     });
   });
 
   describe('buildCopyTextButton', () => {
-    it('constructs a valid Telegram Bot API 7.10+ copy_text inline button', () => {
-      const button = buildCopyTextButton('📋 نسخ إنستاباي', 'emp@instapay');
+    it('13. constructs a valid Telegram Bot API 7.10+ copy_text inline button', () => {
+      // Arrange
+      const label = '📋 نسخ إنستاباي';
+      const textToCopy = 'emp@instapay';
+
+      // Act
+      const button = buildCopyTextButton(label, textToCopy);
+
+      // Assert
       expect(button).toEqual({
         text: '📋 نسخ إنستاباي',
         copy_text: {
           text: 'emp@instapay',
         },
       });
+      expect(button.text).toContain('نسخ');
     });
   });
 
   describe('buildInputFieldPlaceholder', () => {
-    it('constructs input_field_placeholder object', () => {
-      const res = buildInputFieldPlaceholder('اكتب المبلغ بالأرقام...');
+    it('14. constructs input_field_placeholder object', () => {
+      // Arrange
+      const placeholderText = 'اكتب المبلغ بالأرقام...';
+
+      // Act
+      const res = buildInputFieldPlaceholder(placeholderText);
+
+      // Assert
       expect(res).toEqual({
         input_field_placeholder: 'اكتب المبلغ بالأرقام...',
       });
+      expect(res.input_field_placeholder).toContain('المبلغ');
     });
   });
 
   describe('Link Preview Options', () => {
-    it('provides DISABLED_LINK_PREVIEWS constant', () => {
-      expect(DISABLED_LINK_PREVIEWS).toEqual({ is_disabled: true });
+    it('15. provides DISABLED_LINK_PREVIEWS constant', () => {
+      // Arrange
+      const expectedDisabled = true;
+
+      // Act
+      const constant = DISABLED_LINK_PREVIEWS;
+
+      // Assert
+      expect(constant).toEqual({ is_disabled: expectedDisabled });
+      expect(constant.is_disabled).toBe(true);
     });
 
-    it('builds link preview options dynamically', () => {
-      expect(buildLinkPreviewOptions(true)).toEqual({ is_disabled: true });
-      expect(buildLinkPreviewOptions(false)).toEqual({ is_disabled: false });
+    it('16. builds link preview options dynamically', () => {
+      // Arrange
+      const optTrue = true;
+      const optFalse = false;
+
+      // Act
+      const resDisabled = buildLinkPreviewOptions(optTrue);
+      const resEnabled = buildLinkPreviewOptions(optFalse);
+
+      // Assert
+      expect(resDisabled).toEqual({ is_disabled: true });
+      expect(resEnabled).toEqual({ is_disabled: false });
+      expect(resDisabled.is_disabled).not.toBe(resEnabled.is_disabled);
     });
   });
 
   describe('Modal Alerts', () => {
-    it('builds modal alert options', () => {
-      expect(buildModalAlertOptions('تنبيه هام')).toEqual({
-        text: 'تنبيه هام',
-        show_alert: true,
-      });
-    });
-
-    it('invokes answerCallbackQuery with show_alert: true', async () => {
+    it('17. builds modal alert options and invokes answerCallbackQuery', async () => {
+      // Arrange
+      const alertText = 'تنبيه هام';
       const ctx = {
         answerCallbackQuery: vi.fn().mockResolvedValue(true),
       };
+
+      // Act
+      const options = buildModalAlertOptions(alertText);
       await showModalAlert(ctx, 'رسالة تنبيه');
+
+      // Assert
+      expect(options).toEqual({
+        text: 'تنبيه هام',
+        show_alert: true,
+      });
       expect(ctx.answerCallbackQuery).toHaveBeenCalledWith({
         text: 'رسالة تنبيه',
         show_alert: true,
       });
     });
 
-    it('gracefully swallows expired callback query errors in showModalAlert', async () => {
+    it('18. gracefully swallows expired callback query errors in showModalAlert', async () => {
+      // Arrange
       const ctx = {
         answerCallbackQuery: vi.fn().mockRejectedValue(new Error('QUERY_ID_INVALID')),
       };
-      await expect(showModalAlert(ctx, 'فشل')).resolves.not.toThrow();
+
+      // Act
+      const action = () => showModalAlert(ctx, 'فشل');
+
+      // Assert
+      await expect(action()).resolves.not.toThrow();
+      expect(ctx.answerCallbackQuery).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('Chat Actions & withChatAction', () => {
-    it('sendChatActionSafe calls replyWithChatAction and ignores errors', async () => {
-      const ctx = {
+    it('19. executes task with chat action, cleans up timer, and ignores fallback errors', async () => {
+      // Arrange
+      const ctxSafe = {
         replyWithChatAction: vi.fn().mockRejectedValue(new Error('Network error')),
       };
-      await expect(sendChatActionSafe(ctx, 'typing')).resolves.not.toThrow();
-      expect(ctx.replyWithChatAction).toHaveBeenCalledWith('typing');
-    });
-
-    it('withChatAction executes task and returns result', async () => {
-      const ctx = {
+      const ctxSuccess = {
         replyWithChatAction: vi.fn().mockResolvedValue(true),
       };
-      const result = await withChatAction(ctx, 'upload_document', async () => {
-        return 'excel_done';
-      });
-      expect(result).toBe('excel_done');
-      expect(ctx.replyWithChatAction).toHaveBeenCalledWith('upload_document');
-    });
+      const ctxEmpty = {};
 
-    it('withChatAction cleans up timer and propagates error when task throws', async () => {
-      const ctx = {
-        replyWithChatAction: vi.fn().mockResolvedValue(true),
-      };
-      await expect(
-        withChatAction(ctx, 'typing', async () => {
-          throw new Error('Task failed');
-        })
-      ).rejects.toThrow('Task failed');
-      expect(ctx.replyWithChatAction).toHaveBeenCalledWith('typing');
-    });
+      // Act
+      const safeAction = () => sendChatActionSafe(ctxSafe, 'typing');
+      const resultSuccess = await withChatAction(ctxSuccess, 'upload_document', async () => 'excel_done');
+      const resultEmpty = await withChatAction(ctxEmpty as any, 'typing', async () => 'ok');
 
-    it('withChatAction works when ctx has no replyWithChatAction', async () => {
-      const ctx = {};
-      const res = await withChatAction(ctx as any, 'typing', async () => 'ok');
-      expect(res).toBe('ok');
+      // Assert
+      await expect(safeAction()).resolves.not.toThrow();
+      expect(ctxSafe.replyWithChatAction).toHaveBeenCalledWith('typing');
+      expect(resultSuccess).toBe('excel_done');
+      expect(ctxSuccess.replyWithChatAction).toHaveBeenCalledWith('upload_document');
+      expect(resultEmpty).toBe('ok');
     });
   });
 });
