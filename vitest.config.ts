@@ -7,6 +7,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './apps/admin-dashboard/src'),
       '@alsaada/shared/testing': path.resolve(__dirname, './packages/shared/src/testing/index.ts'),
       '@alsaada/shared': path.resolve(__dirname, './packages/shared/src/index.ts'),
+      '@alsaada/core-components': path.resolve(__dirname, './packages/core-components/src/index.ts'),
     },
   },
   test: {

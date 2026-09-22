@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   BotFeatureRegistryService,
   FeatureGateGuard,
@@ -8,7 +8,23 @@ import {
   type BotMenuNodeDTO,
 } from '../src/index.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Bot Feature Registry & Feature Gate Guard (Plan-71)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   const sampleNodes: BotMenuNodeDTO[] = [
     {
       id: 'm1',
@@ -103,92 +119,142 @@ describe('Bot Feature Registry & Feature Gate Guard (Plan-71)', () => {
   ];
 
   describe('BotFeatureRegistryService.buildMenuTree', () => {
-    it('should build hierarchical tree preserving sort order', () => {
-      const tree = BotFeatureRegistryService.buildMenuTree(sampleNodes);
+    it('1. builds hierarchical tree preserving sort order', () => {
+      // Arrange
+      const nodes = [...sampleNodes];
 
+      // Act
+      const tree = BotFeatureRegistryService.buildMenuTree(nodes);
+
+      // Assert
       expect(tree.length).toBe(2); // m1 and f_sov
       const mod = tree.find((n) => n.id === 'm1');
-      expect(mod).toBeDefined();
+      expect(mod?.code).toBe('mod:hr');
       expect(mod?.children?.length).toBe(1); // s1
       expect(mod?.children?.[0]?.children?.length).toBe(3); // f1, f2, f3
       expect(mod?.children?.[0]?.children?.[0]?.code).toBe('flow:01.1');
     });
 
-    it('should format button titles properly with lock indicators', () => {
+    it('2. formats button titles properly with lock indicators', () => {
+      // Arrange
       const activeNode = sampleNodes.find((n) => n.id === 'f1')!;
-      expect(BotFeatureRegistryService.formatButtonTitle(activeNode)).toBe('⚡ تسجيل عامل جديد');
-
       const lockedNode = sampleNodes.find((n) => n.id === 'f3')!;
-      expect(BotFeatureRegistryService.formatButtonTitle(lockedNode)).toBe('🔒 🦺 مهمات الوقاية');
-
       const sovereignNode = sampleNodes.find((n) => n.id === 'f_sov')!;
-      expect(BotFeatureRegistryService.formatButtonTitle(sovereignNode)).toBe('🖥️ فتح لوحة التحكم');
+
+      // Act
+      const activeTitle = BotFeatureRegistryService.formatButtonTitle(activeNode);
+      const lockedTitle = BotFeatureRegistryService.formatButtonTitle(lockedNode);
+      const sovereignTitle = BotFeatureRegistryService.formatButtonTitle(sovereignNode);
+
+      // Assert
+      expect(activeTitle).toBe('⚡ تسجيل عامل جديد');
+      expect(lockedTitle).toBe('🔒 🦺 مهمات الوقاية');
+      expect(sovereignTitle).toBe('🖥️ فتح لوحة التحكم');
     });
 
-    it('should filter nodes according to visibility and role', () => {
-      const fieldWorkerVisible = BotFeatureRegistryService.filterNodesForUser(sampleNodes, 'FIELD_ADMIN');
+    it('3. filters nodes according to visibility and role', () => {
+      // Arrange
+      const nodes = [...sampleNodes];
+
+      // Act
+      const fieldWorkerVisible = BotFeatureRegistryService.filterNodesForUser(nodes, 'FIELD_ADMIN');
+      const superAdminVisible = BotFeatureRegistryService.filterNodesForUser(nodes, 'SUPER_ADMIN');
+
+      // Assert
       // f1 is restricted to SUPER_ADMIN / GENERAL_ADMIN, so should not appear
       expect(fieldWorkerVisible.find((n) => n.id === 'f1')).toBeUndefined();
 
-      const superAdminVisible = BotFeatureRegistryService.filterNodesForUser(sampleNodes, 'SUPER_ADMIN');
       // f2 is HIDE, so should not appear in bot menu
       expect(superAdminVisible.find((n) => n.id === 'f2')).toBeUndefined();
       // f3 is LOCK_WITH_ALERT, so should appear
-      expect(superAdminVisible.find((n) => n.id === 'f3')).toBeDefined();
+      expect(superAdminVisible.find((n) => n.id === 'f3')?.code).toBe('flow:01.3');
     });
 
-    it('should resolve callback data across domains, sections, and flow actions', () => {
-      // 1. Direct callback match
-      expect(BotFeatureRegistryService.findNodeByCallback('flow:01.1:start', sampleNodes)?.id).toBe('f1');
+    it('4. resolves callback data across domains, sections, and flow actions', () => {
+      // Arrange
+      const nodes = [...sampleNodes];
 
-      // 2. Domain module callback mapping: menu:domain:hr -> mod:hr
-      expect(BotFeatureRegistryService.findNodeByCallback('menu:domain:hr', sampleNodes)?.id).toBe('m1');
+      // Act & Assert
+      // Act 1: Direct callback match
+      const directMatch = BotFeatureRegistryService.findNodeByCallback('flow:01.1:start', nodes);
+      // Act 2: Domain module callback mapping
+      const domainMatch = BotFeatureRegistryService.findNodeByCallback('menu:domain:hr', nodes);
+      // Act 3: Section callback mapping
+      const sectionMatch = BotFeatureRegistryService.findNodeByCallback('node:sec:workforce', nodes);
+      // Act 4: Flow sub-action prefix matching
+      const prefixMatch = BotFeatureRegistryService.findNodeByCallback('flow:01.1:step_2', nodes);
+      // Act 5: Non-matching callback returns null
+      const nonMatch = BotFeatureRegistryService.findNodeByCallback('unknown:callback', nodes);
 
-      // 3. Section callback mapping: node:sec:workforce -> sec:workforce
-      expect(BotFeatureRegistryService.findNodeByCallback('node:sec:workforce', sampleNodes)?.id).toBe('s1');
-
-      // 4. Flow sub-action prefix matching: flow:01.1:step_2 -> flow:01.1
-      expect(BotFeatureRegistryService.findNodeByCallback('flow:01.1:step_2', sampleNodes)?.id).toBe('f1');
-
-      // 5. Non-matching callback returns null
-      expect(BotFeatureRegistryService.findNodeByCallback('unknown:callback', sampleNodes)).toBeNull();
+      // Assert
+      expect(directMatch?.id).toBe('f1');
+      expect(domainMatch?.id).toBe('m1');
+      expect(sectionMatch?.id).toBe('s1');
+      expect(prefixMatch?.id).toBe('f1');
+      expect(nonMatch).toBeNull();
     });
   });
 
   describe('FeatureGateGuard', () => {
-    it('should allow access to active features for authorized role', () => {
+    it('5. allows access to active features for authorized role', () => {
+      // Arrange
       const f1 = sampleNodes.find((n) => n.id === 'f1')!;
+
+      // Act
       const check = FeatureGateGuard.checkFeatureAccess(f1, 'GENERAL_ADMIN');
+
+      // Assert
       expect(check.allowed).toBe(true);
       expect(check.status).toBe(BotNodeStatus.ACTIVE);
     });
 
-    it('should block access if role is unauthorized', () => {
+    it('6. blocks access if role is unauthorized', () => {
+      // Arrange
       const f1 = sampleNodes.find((n) => n.id === 'f1')!;
+
+      // Act
       const check = FeatureGateGuard.checkFeatureAccess(f1, 'VISITOR');
+
+      // Assert
       expect(check.allowed).toBe(false);
       expect(check.reason).toBe('ROLE_UNAUTHORIZED');
     });
 
-    it('should block disabled features and return maintenance message', () => {
+    it('7. blocks disabled features and returns maintenance message', () => {
+      // Arrange
       const f3 = sampleNodes.find((n) => n.id === 'f3')!;
+
+      // Act
       const check = FeatureGateGuard.checkFeatureAccess(f3, 'GENERAL_ADMIN');
+
+      // Assert
       expect(check.allowed).toBe(false);
       expect(check.status).toBe(BotNodeStatus.MAINTENANCE);
       expect(check.maintenanceMessage).toBe('صيانة طارئة');
       expect(check.behavior).toBe(DisabledBehavior.LOCK_WITH_ALERT);
     });
 
-    it('SOVEREIGN IMMUNITY: should always allow protected nodes even if disabled', () => {
+    it('8. SOVEREIGN IMMUNITY: always allows protected nodes even if disabled', () => {
+      // Arrange
       const sov = sampleNodes.find((n) => n.id === 'f_sov')!;
+
+      // Act
       const check = FeatureGateGuard.checkFeatureAccess(sov, 'VISITOR');
+
+      // Assert
       expect(check.allowed).toBe(true);
       expect(check.isProtected).toBe(true);
     });
 
-    it('assertFeatureActive should throw error for disabled features', () => {
+    it('9. throws error for disabled features via assertFeatureActive', () => {
+      // Arrange
       const f3 = sampleNodes.find((n) => n.id === 'f3')!;
-      expect(() => FeatureGateGuard.assertFeatureActive(f3, 'GENERAL_ADMIN')).toThrow('صيانة طارئة');
+
+      // Act
+      const throwFn = () => FeatureGateGuard.assertFeatureActive(f3, 'GENERAL_ADMIN');
+
+      // Assert
+      expect(throwFn).toThrow('صيانة طارئة');
     });
   });
 });

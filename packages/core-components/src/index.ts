@@ -41,9 +41,7 @@ export * from './governorate-picker/index.js';
 export * from './location-picker/index.js';
 
 // Sovereign Architecture Contracts
-export * from './contracts/flow.contract.js';
-export * from './contracts/dashboard.contract.js';
-export * from './contracts/module.contract.js';
+export * from './contracts/index.js';
 
 // Universal Wizard Session Engine
 export * from './wizard-session/wizard-session.engine.js';

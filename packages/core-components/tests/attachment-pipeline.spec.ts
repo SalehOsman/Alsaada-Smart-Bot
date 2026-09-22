@@ -1,11 +1,27 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { UniversalAttachmentPipeline } from '../src/attachment-pipeline/pipeline.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Universal Attachment Pipeline — Tests', () => {
-  const testRoot = join(tmpdir(), `alsaada_attach_test_${Date.now()}`);
+  const testRoot = join(tmpdir(), `alsaada_attach_test_pinned`);
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   afterAll(() => {
     try {
@@ -15,8 +31,11 @@ describe('Universal Attachment Pipeline — Tests', () => {
     }
   });
 
-  it('should save attachment hierarchically with proper sha256 hash', () => {
+  it('1. saves attachment hierarchically with proper sha256 hash', () => {
+    // Arrange
     const buffer = Buffer.from('PDF_SAMPLE_CONTENT_FOR_TESTING');
+
+    // Act
     const res = UniversalAttachmentPipeline.saveAttachment(
       {
         domain: 'CUSTODY_RECEIPT',
@@ -28,6 +47,7 @@ describe('Universal Attachment Pipeline — Tests', () => {
       testRoot
     );
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.fileSizeBytes).toBe(buffer.length);
     expect(res.sha256Hash.length).toBe(64);
@@ -35,8 +55,11 @@ describe('Universal Attachment Pipeline — Tests', () => {
     expect(res.relativePath).toContain('attachments/custody-receipt/CUST-001');
   });
 
-  it('should reject files exceeding maximum size limit', () => {
+  it('2. rejects files exceeding maximum size limit', () => {
+    // Arrange
     const largeBuffer = Buffer.alloc(1024 * 1024 * 3); // 3 MB
+
+    // Act
     const res = UniversalAttachmentPipeline.saveAttachment(
       {
         domain: 'FUEL_SLIP',
@@ -48,6 +71,7 @@ describe('Universal Attachment Pipeline — Tests', () => {
       testRoot
     );
 
+    // Assert
     expect(res.success).toBe(false);
     expect(res.error).toBe('FILE_SIZE_EXCEEDED');
     expect(res.errorArabic).toContain('يتجاوز الحد الأقصى');

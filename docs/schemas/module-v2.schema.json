@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alsaada.app/schemas/module-v2.schema.json",
+  "title": "Al-Saada Module V2 Specification",
+  "description": "JSON Schema for Al-Saada Sovereign Enterprise Autodiscovered Modules (Work Plan 89)",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "titleArabic",
+    "descriptionArabic",
+    "status",
+    "requiredCapabilities",
+    "flows",
+    "callbackPrefixes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "2.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$",
+      "description": "Nominal branded module identifier (e.g. 'sample-domain', 'workforce')"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+      "description": "Semantic versioning string (e.g. '1.0.0')"
+    },
+    "titleArabic": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Arabic display title of the module"
+    },
+    "descriptionArabic": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Detailed Arabic description of the module domain"
+    },
+    "category": {
+      "type": "string",
+      "default": "operations"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "disabled"]
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+:[a-z0-9-]+$"
+      }
+    },
+    "providedCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+:[a-z0-9-]+$"
+      }
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "$ref": "flow-v2.schema.json"
+      }
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "titleArabic", "href", "requiredRole"],
+        "properties": {
+          "id": { "type": "string" },
+          "titleArabic": { "type": "string" },
+          "href": { "type": "string" },
+          "requiredRole": { "type": "string" }
+        }
+      }
+    },
+    "databaseFragments": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "callbackPrefixes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "navigationPatterns": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

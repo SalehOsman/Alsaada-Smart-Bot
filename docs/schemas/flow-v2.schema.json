@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alsaada.app/schemas/flow-v2.schema.json",
+  "title": "Al-Saada Flow V2 Specification",
+  "description": "JSON Schema for Al-Saada Sovereign Vertical Slice Flows (Work Plan 89)",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "module",
+    "slug",
+    "titleArabic",
+    "descriptionArabic",
+    "status",
+    "allowedRoles",
+    "telegramBudget",
+    "idempotencyRequired"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "2.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^\\d{2}\\.\\d+(\\.[A-Z0-9]+)?$",
+      "description": "Nominal branded flow code (e.g. '01.1', '01.2.D', '89.1')"
+    },
+    "module": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$",
+      "description": "Owning module ID"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "URL/Path friendly slug"
+    },
+    "titleArabic": {
+      "type": "string",
+      "minLength": 2
+    },
+    "descriptionArabic": {
+      "type": "string",
+      "minLength": 5
+    },
+    "category": {
+      "type": "string",
+      "default": "operations"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "disabled"]
+    },
+    "allowedRoles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "menuButton": {
+      "type": "object",
+      "required": ["labelArabic", "callbackData", "subSection", "order"],
+      "properties": {
+        "labelArabic": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "callbackData": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "subSection": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer"
+        },
+        "requiresSuperAdmin": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "telegramBudget": {
+      "type": "object",
+      "required": [
+        "maxUrlBytes",
+        "maxCallbackBytes",
+        "maxButtonChars",
+        "maxKeyboardRows",
+        "maxButtonsPerRow"
+      ],
+      "properties": {
+        "maxUrlBytes": { "type": "integer", "const": 512 },
+        "maxCallbackBytes": { "type": "integer", "const": 64 },
+        "maxButtonChars": { "type": "integer", "const": 16 },
+        "maxKeyboardRows": { "type": "integer", "const": 7 },
+        "maxButtonsPerRow": { "type": "integer", "const": 3 }
+      }
+    },
+    "idempotencyRequired": {
+      "type": "boolean",
+      "default": true
+    },
+    "typesafeQuestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "question"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["choice", "noul", "score"] },
+          "question": { "type": "string" },
+          "contextPrompt": { "type": "string" },
+          "confidenceThreshold": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "entrypointFiles": {
+      "type": "object",
+      "properties": {
+        "contract": { "type": "string" },
+        "handler": { "type": "string" },
+        "service": { "type": "string" },
+        "keyboard": { "type": "string" },
+        "types": { "type": "string" },
+        "validators": { "type": "string" },
+        "messages": { "type": "string" },
+        "telemetry": { "type": "string" },
+        "docs": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false
+}
