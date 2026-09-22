@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T07:20:48.353Z",
+  "generatedAt": "2026-09-22T15:24:39.219Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -84,8 +84,80 @@
       "sha256": "3dd08f1ab21519eb35149f09c0b870bb68c2b570f3f6c4bcd774bae833825db2"
     },
     {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/ai-failure-modes.md",
+      "sha256": "dbcf40639df0f6ace948d80a33d355e131accbc2d4a0c6cdbb810f951d76da1b"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/comments-and-formatting.md",
+      "sha256": "27de70078f516d988b9633499561003e1ddd0edfd5cda86fa530f2eaa22f300c"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/dry-kiss-yagni.md",
+      "sha256": "1da19c7212788bee9c3f337ced4762d9766a53db68100921f313119da02e0ad7"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/naming-and-functions.md",
+      "sha256": "e3f2ae5845c090b8da058cb325a324beed90edc60d0e34bebd9335b458247b63"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/review-checklist.md",
+      "sha256": "2da07484c1fe4d405461b8ae90aeabdbac48a7ea831254d8d9d6e298e4cfa4a1"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/solid.md",
+      "sha256": "5fc515ad65ef2913f1166a200bd4ab68fa79e432979d38ab25d18b85c6de4dbb"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/sources.md",
+      "sha256": "6b4748a8752e5afb6f68cb616d95b0e0cd99cec06b061a4d5ace27a8dbf024f0"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/rules.md",
+      "sha256": "adeda502b48720f5dbaba0e2297e67d2d76c45d064f9a1422e69196432dec938"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/code-samples.md",
+      "sha256": "6eaeec8a455aabaa34a7c973e619aa12a84581f2505923ac02db078bde4152fa"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/docstrings.md",
+      "sha256": "035bc3ceaa83b60941984076a590de9b037c573e3946381ee58d5f18d0022f49"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/review-checklist.md",
+      "sha256": "ab7d2be0870b657ee730bd4e5dafeb261ad1ad1478918f9461f979b9b3504429"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/sources.md",
+      "sha256": "f1dbdd6b0df695691b1e79e8b933b1d0be7b56fcd86ec7ae1b94694d5ebd07fd"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/verification.md",
+      "sha256": "eb21e6d3855a47f5e5bba4a4492e98b29353c8fbac5026c10eeccaa7e197adbd"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/rules.md",
+      "sha256": "6ca9a10c9681353d568af0c54a73efc0bdae049dc05f9683d17311498680ec38"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/references/bot-and-flow-testing.md",
+      "sha256": "55071534120454c75c3046e127621de6e39717967466b7d6ddb2163b9be4f3e5"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/references/review-checklist.md",
+      "sha256": "97f07dc92fb5bb4345c20c06323100b68d7556f540839f5af5bbb2a508f506d3"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/references/vitest.md",
+      "sha256": "b6e9d152c9608638f90aa92c3f910feabadf10ae58e19aeaf939535a38051885"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/rules.md",
+      "sha256": "2d427dac101697868fc96ead22c609d8d2fd2ea40417d7a1af553629348c13ba"
+    },
+    {
       "path": ".agents/skills/saleh/SKILL.md",
-      "sha256": "7f66ea9739699c47cc7c62245a2a885cd4e8aa91a17ae61e214527859fbfeb5a"
+      "sha256": "6aa727eafd44333b0fd407644a12bc10b74f4a60be5de99b8819a8abffb535a4"
     },
     {
       "path": ".agents/skills/squad-architecture-devops/SKILL.md",
@@ -141,7 +213,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "4e4913c89436c8d99949eb752b8cd570b1c81d69f177ddf56e3477ddd281952b"
+      "sha256": "c6d9a8dacebba2809d8d5ee9772d662a17d50e421327f39a0c6e7672d1a10497"
     },
     {
       "path": "CLAUDE.md",
@@ -177,15 +249,15 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "0bc13529109a2ccb3f9bf0056b5e65b748f9091b6659d442aede2699c36f0c53"
+      "sha256": "9f60d8d0b86078759a5266652a06b5513aa19cc6f551d74336bf21f0395f3dc2"
     },
     {
       "path": "package.json",
-      "sha256": "55631876c1133b765f088077df8d95d796bdf0577571f0583df49adedf63853a"
+      "sha256": "3bd5fceec0accba0b093b644e37cddf3d1edee1e476156000e0ad4159ac2d8bf"
     },
     {
       "path": "pnpm-workspace.yaml",
-      "sha256": "91c7f69b61d3935eb84eff2b959c06efe4e99dd2d4e21d40bea102d108c2eb73"
+      "sha256": "884c82e0e71e8fbdec5f16481732f62b0f89240c4ecd4161564d1c3e107736d6"
     },
     {
       "path": "tools/governance/agent-dispatcher.ts",
@@ -205,7 +277,7 @@
     },
     {
       "path": "tools/governance/jev-auditor.ts",
-      "sha256": "d52d174db492b92812e275cb51860411dd01101ba6068c51bf6df3c08a548406"
+      "sha256": "f428da4a941852ca5f1eba5a73ed9e8ec7f40c90d1f72ab5c449229260719ba1"
     },
     {
       "path": "tools/governance/pre-commit-test-guard.ts",
@@ -217,7 +289,11 @@
     },
     {
       "path": "tools/governance/saleh-audit-suite.ts",
-      "sha256": "7cd2e018d3700e55e77f3351548d11a11d7ac278c4a8c8e27c19663d0d69b5dc"
+      "sha256": "4dc61937872d959067fa9486d53bdf8fe9bb0bc18fcf6f28552c7c441734282b"
+    },
+    {
+      "path": "tools/governance/sync-migration-registry.ts",
+      "sha256": "71ec96595aa0f38dc21ccc04b87aff736ddc175cac814054c5ec5e205d2d02f4"
     },
     {
       "path": "tools/governance/test-constitutional-sentinel.ts",
@@ -228,32 +304,48 @@
       "sha256": "3b9c18e6a58711386f2917cb6833dee882a6da103ae06e0e6ef4ff26a319f9e9"
     },
     {
+      "path": "tools/governance/tests/codex-transcript-provenance.spec.ts",
+      "sha256": "09c2598328b76d7767d8d8747dd53f75415a44edbc767be5c6fe0e9a53286aa9"
+    },
+    {
+      "path": "tools/governance/tests/core-immutability.spec.ts",
+      "sha256": "4b2a48a4bb384d9d98db979fe3bd6dea521ec14eed4442bf4d112af6be6f1e5a"
+    },
+    {
       "path": "tools/governance/tests/docker-governance-lock.spec.ts",
       "sha256": "92a2c2630361d5a2cfc27c78504d9b3d8c48fe6d888bdf1af037b05031d64f9d"
     },
     {
+      "path": "tools/governance/tests/fixtures/test-authenticity-fixtures.ts",
+      "sha256": "46129d13f55366cf0d6dedc837717626d68faf83cf55e226ec6c702558a2aaf4"
+    },
+    {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
-      "sha256": "d5dc23c50b19abbd944aa34d67bf2049796c98a5dbd592faf95f9d0b983f06f9"
+      "sha256": "29006f2fe8c0bf70ddc02f46a0902b96400ce0525b09b64697c863829fd9f3a6"
     },
     {
       "path": "tools/governance/tests/jev-auditor.spec.ts",
-      "sha256": "e37cbae9f68aa313d3f6fddf19600ab33f8fe5620c2eb687ef4ae6ee5292fa6e"
+      "sha256": "88a966dde1ada41bbdb21999a97c154fe15be2479232017406b1692d3fb94b55"
     },
     {
       "path": "tools/governance/tests/legacy-parity-verifier.spec.ts",
-      "sha256": "7b94c493cfd2384cf660bf8b678b34ff47ade97eab2eba206e622a513b5b8dc2"
+      "sha256": "a2c1166984ea14778d82eb7c68b45f113e061f1b2f2af7f6e0a37ca80c5c9f43"
+    },
+    {
+      "path": "tools/governance/tests/module-boundaries.spec.ts",
+      "sha256": "80d407be54d3cee131b6afc3b49685c5c173596631aac1dadd160947da98037e"
     },
     {
       "path": "tools/governance/tests/pre-commit-test-guard.spec.ts",
-      "sha256": "084509f51860962cc0c2126f398be9d74a66b1ce929dbc6ce4bbe0f4d181b93f"
+      "sha256": "db767b96adad6afa0d10236189ffad939be7745db469578301e5a60fad4be4a6"
     },
     {
       "path": "tools/governance/tests/rag-engine.spec.ts",
-      "sha256": "4b0ac353964ac5d9c01afa10265fe50384643a60de0ac341c01ba7997ec05b75"
+      "sha256": "252c986b22a93a9ef86a83523fa2f72c5bb5cd923bd504f6516abeb065d963be"
     },
     {
       "path": "tools/governance/tests/saleh-audit-suite.spec.ts",
-      "sha256": "bb6385ad240e652569d6a392a4fab99aa4e3b5a948323bf5484924247d377d55"
+      "sha256": "91671645d851de754d121ca618ef615f30ec6781e6ce35eb3cf21b4a66ea0607"
     },
     {
       "path": "tools/governance/tests/test-constitutional-sentinel.spec.ts",
@@ -261,7 +353,7 @@
     },
     {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "sha256": "ec41b8c9e9ba609a3beb11ce3430fa4bea28d764935167ac24d45f9f04b2fada"
+      "sha256": "9cdcae3939ca695dad1aa57879df34ea489e6b84c6e0cb92089b1e675e73d8f8"
     },
     {
       "path": "tools/governance/tests/unlock-challenge-engine.spec.ts",
@@ -269,39 +361,43 @@
     },
     {
       "path": "tools/governance/tests/verify-boundary-deserialization.spec.ts",
-      "sha256": "a70b926eb969e1ba866c0865eab6c554824400969016226bd9f7be4e98294433"
+      "sha256": "d923d0e1db0aa46837c4490cdbf7415690062ea6816078be2e84c87b774df28c"
     },
     {
       "path": "tools/governance/tests/verify-code-security.spec.ts",
-      "sha256": "5f74b0c937bccf8b3063dd70f0444a39553ad02b19eb649fb0e93c218e85a60d"
+      "sha256": "0263ca433b3d7403582c74ccbe471d667f56d25302db5e47bebb12a5dd143551"
     },
     {
       "path": "tools/governance/tests/verify-financial-integrity.spec.ts",
-      "sha256": "b6659fd5f5f97b72e199daf17d549cdea2a633698339cd45e6cdb31a606dffb2"
+      "sha256": "b64526c9bf415a85aeae64b2b6d5a8afc6f339951854a25c09ef52b03ef8456b"
     },
     {
       "path": "tools/governance/tests/verify-git-hygiene.spec.ts",
-      "sha256": "355867aca6206044693f9e55ea5b8aaf93f585733511f3e85b5c75bf05b8b0b3"
+      "sha256": "fe7808bf9104de26edcf5be208ef396a448ff28d41962b57cf14b89259fe9294"
     },
     {
       "path": "tools/governance/tests/verify-latency-anti-patterns.spec.ts",
-      "sha256": "8c667c9bb21b4c1996e85f84f678429ac9fe9745298c19b631b001bffbbd6b6d"
+      "sha256": "769f17b639dacba0c908b6fdaad2d5238055ae636e4326fb3f73296cd9198a23"
     },
     {
       "path": "tools/governance/tests/verify-performance-budget.spec.ts",
-      "sha256": "c7df0bd55d31f16c5fa054321981aef5fec5adde78ea20f9b0dc8ac15d7e0e02"
+      "sha256": "01204c8c2303c9ca5a2d647de5fbb953528a95fc309c404d97042a7c6af0c9d8"
     },
     {
       "path": "tools/governance/tests/verify-rbac-invariants.spec.ts",
-      "sha256": "38b1c498892345b2a7c28e299b8c54444ef9204f5f34984b5c04bc418baffa03"
+      "sha256": "e1f070c014754f034ce64ef663e648a841bf241cab0c907ce9191f5a9457c36c"
     },
     {
       "path": "tools/governance/tests/verify-secret-leakage.spec.ts",
-      "sha256": "6c5606ec845d2d38ed89b13b64f486664a7cada047942cdda7f3f74e37c6f195"
+      "sha256": "ec61549a8ea8a7275a5dd19ec1ee1c8ac41edb5dad5b303ee25740d7825f945f"
     },
     {
       "path": "tools/governance/tests/verify-test-authenticity.spec.ts",
-      "sha256": "6886492b426f39cd05ef9e7af020f90f01d18db8fd4182cb19d233c5e49a3410"
+      "sha256": "70013e30970f456006e031d2fb8eb4090b95aed1be2b3c0e348f7803f0943db9"
+    },
+    {
+      "path": "tools/governance/typesafe-guardrails.ts",
+      "sha256": "be9d4c0882fa043de920e8ebacbcda4988771b7db645712e1d44ae2779acab1d"
     },
     {
       "path": "tools/governance/typesafe/audit-catalog.ts",
@@ -334,6 +430,10 @@
     {
       "path": "tools/governance/verify-code-security.ts",
       "sha256": "49f6cae4838e948441aca31aa70ffa530a9fc811bea6896f2380a59475f99f1c"
+    },
+    {
+      "path": "tools/governance/verify-core-immutability.ts",
+      "sha256": "75ac4fa5b73df5d8f5eb9cb771b0e12d9e994fb4608d50270602610edcfd297e"
     },
     {
       "path": "tools/governance/verify-dashboard-auth-contract.ts",
@@ -388,6 +488,10 @@
       "sha256": "97e59e9e224181936da6bc82b07885c563877d02302d39786e51488a8abfd21c"
     },
     {
+      "path": "tools/governance/verify-module-boundaries.ts",
+      "sha256": "66fca077ebee86df0fb791dbc7b2630aa7c02db7a4a9c97c20e3c29989e7f53b"
+    },
+    {
       "path": "tools/governance/verify-observability-contract.ts",
       "sha256": "92d8a19e3f8d73151c70c74f082bc74d795689f3796edf4af5d8c9c790d729df"
     },
@@ -425,11 +529,11 @@
     },
     {
       "path": "tools/governance/verify-transcript-provenance.ts",
-      "sha256": "ef565be3d7a263b7aee9b84cc316a0825daa7405f602f622e1f2c9c0be845fff"
+      "sha256": "d6d310237815d9ac5db1124bbe7ccfd884c2eb1ededc18ec0ba325e602db5222"
     },
     {
       "path": "tools/scaffold/lock.ts",
-      "sha256": "e2a8621b4dfb3b62f0aca1b02fe33f448d4fe848abb0fd8d6633dd08d7d838ea"
+      "sha256": "2d3c8fde404071dab4ab1fb2452f8e75738d3bf76b3e3f4ab58aa39a59ef60c4"
     },
     {
       "path": "tools/scaffold/scaffold-dashboard.ts",
@@ -1117,55 +1221,6 @@
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/new/page.tsx",
           "sha256": "2daf8282f908cc5055a3ee382a756de3ef97d23882f54d4bc25e5ddae1fdaf01"
-        }
-      ]
-    },
-    "flow:00.1": {
-      "id": "flow:00.1",
-      "type": "flow",
-      "title": "تدفق البوت: 00.1-corporate-profile (00.1)",
-      "directory": "modules/settings/src/flows/00.1-corporate-profile",
-      "lockedAt": "2026-09-21T18:20:58.831Z",
-      "files": [
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.contract.json",
-          "sha256": "9c2222011496e0bd7eba0c00b8cb116d1299018d00668fc079751d7d86647066"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.docs.md",
-          "sha256": "7b428f995869abf9b33fc40e96f933e74d9d2778b0659e37396bdd3a62e21887"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.handler.ts",
-          "sha256": "5197db3e85891cb46a8b6338c90c817fd6a96ea249302870fa142d566c1f81a8"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.keyboard.ts",
-          "sha256": "5f4f3e9b44b5e19ec8164c954a8ec9aefee728fcd9608bde915d3c93bbc0de99"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.messages.ts",
-          "sha256": "1fb40618e5ef0eec34628cce64282cd561b128f1fd9fe57f6a32742b6ea43ede"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.repository.ts",
-          "sha256": "c1b7dd424364c04a84d0afeaaacda8c02094c83acbfaf74e23d534f2a550942f"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.service.ts",
-          "sha256": "2a787c7dc90ad1fd5dc525dc809619f7381b1c87d892a87fbe55547704bc3ea6"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.telemetry.ts",
-          "sha256": "5795f30b18d33c6c5cffb82485e67ad90530ebe46d9b9636bfb693d1b01cc905"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.types.ts",
-          "sha256": "dd8e38f89b441465dd4d763290132954da8f1caab4fa4795c18394ce7ebe38d4"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.validators.ts",
-          "sha256": "0aa4fed0f6588a60253870ed80362f1b8632e6f5dcebbba3efde4c6d0867c4e5"
         }
       ]
     },
@@ -2023,7 +2078,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-22T07:20:48.353Z",
+      "lockedAt": "2026-09-22T15:24:39.219Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -2343,43 +2398,6 @@
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/flow.validators.ts",
           "sha256": "ee61498f5a18ec912c587bb840f84cb78c883910dbdd50e7f40e7e1f54050b29"
-        }
-      ]
-    },
-    "infra:docker": {
-      "id": "infra:docker",
-      "type": "infra",
-      "title": "البنية التحتية والدوكر وقواعد البيانات",
-      "directory": "docker",
-      "lockedAt": "2026-09-22T07:20:48.353Z",
-      "files": [
-        {
-          "path": ".dockerignore",
-          "sha256": "865f3560cd73f005a383c3215541b20dc4e796866ac0d0a0fcecbed1ffffb270"
-        },
-        {
-          "path": "docker-compose.yml",
-          "sha256": "88633948450480ced0616039901a250d9c1ddc5d2aad96c7efe495118a833718"
-        },
-        {
-          "path": "docker/Dockerfile",
-          "sha256": "e1e12eee6a0d9c46bfb640d80918af4de8e6b3da09fa2806b198e2fea2d902fb"
-        },
-        {
-          "path": "docker/Dockerfile.dashboard",
-          "sha256": "e21232dec720a4696d5e175e5f53de7342ac4c23387d4595501e00353b052331"
-        },
-        {
-          "path": "docker/Dockerfile.docs",
-          "sha256": "bc7378fe615b16d779b050c6273cdbe7e7bca1a1d54b86765147707e284a66f2"
-        },
-        {
-          "path": "docker/nginx-docs.conf",
-          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
-        },
-        {
-          "path": "docker/postgres/init-scripts/01-init-security.sql",
-          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
         }
       ]
     },
@@ -3529,6 +3547,43 @@
         {
           "path": "apps/bot-server/tests/site-scope.spec.ts",
           "sha256": "b3b3d8680fd502c55059b1408176a908d8e56e45fb43fc7f38ebf67df2a51619"
+        }
+      ]
+    },
+    "infra:docker": {
+      "id": "infra:docker",
+      "type": "infra",
+      "title": "البنية التحتية والدوكر وقواعد البيانات",
+      "directory": "docker",
+      "lockedAt": "2026-09-22T15:24:39.219Z",
+      "files": [
+        {
+          "path": ".dockerignore",
+          "sha256": "d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a"
+        },
+        {
+          "path": "docker-compose.yml",
+          "sha256": "000386b68bb88660646931d961732d320237d4f277b4fcc94f3d95cecdc3e9be"
+        },
+        {
+          "path": "docker/Dockerfile",
+          "sha256": "17c0fcc9a6400e5e5db0d1369e031b4b9ebd3d018b419ab418592db5d1329df9"
+        },
+        {
+          "path": "docker/Dockerfile.dashboard",
+          "sha256": "6e7a420fabc07c1b756f0334b0972bb69a2412444c4331ba03dc6bcde331f6bd"
+        },
+        {
+          "path": "docker/Dockerfile.docs",
+          "sha256": "bc7378fe615b16d779b050c6273cdbe7e7bca1a1d54b86765147707e284a66f2"
+        },
+        {
+          "path": "docker/nginx-docs.conf",
+          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
+        },
+        {
+          "path": "docker/postgres/init-scripts/01-init-security.sql",
+          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
         }
       ]
     }
