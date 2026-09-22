@@ -1,0 +1,28 @@
+{
+  "flowCode": "89.1",
+  "flowName": "تدفق العينة الأول - إنشاء وتفويض",
+  "module": "sample-domain",
+  "classification": "NOVEL",
+  "status": "Implemented",
+  "allowedRoles": ["SUPER_ADMIN", "ADMIN"],
+  "blockedRoles": ["WORKER", "SUPPLIER", "GUEST"],
+  "entryPoints": ["action:sample:start", "/sample_start"],
+  "navigationPath": ["القائمة الرئيسية", "نطاق العينة", "إنشاء وتفويض"],
+  "buttons": ["action:sample:start", "action:sample:confirm", "action:sample:cancel"],
+  "inputs": ["text:title", "number:amount"],
+  "outputs": ["card:sample_created"],
+  "dataImpact": {
+    "database": ["SampleDomainRecord"],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": ["topic:sample_created"]
+  },
+  "linkedFlows": ["89.2"],
+  "performanceSlaMs": {
+    "buttonP95": 150,
+    "stepP95": 200,
+    "commitP95": 250
+  },
+  "requiredTests": ["unit", "integration", "ux", "rbac", "data"],
+  "manualUatRequired": false
+}

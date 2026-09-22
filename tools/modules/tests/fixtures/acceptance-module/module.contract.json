@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "2.0.0",
+  "id": "sample-domain",
+  "version": "1.0.0",
+  "coreApiRange": "^2.0.0",
+  "titleArabic": "نطاق العينة التجريبي للقبول",
+  "descriptionArabic": "وحدة تجريبية لاختبار دورة حياة الاعتماد والاكتشاف التلقائي بدون تعديل النواة",
+  "category": "operations",
+  "status": "active",
+  "entry": "src/index.ts",
+  "callbackPrefixes": ["action:sample:", "wizard:sample:"],
+  "requiredCapabilities": ["storage:attachment"],
+  "providedCapabilities": [],
+  "dependencies": [],
+  "permissions": ["sample:access", "sample:manage"],
+  "database": {
+    "schemaFile": "database/schema.prisma",
+    "relationsFile": "database/relations.contract.json"
+  }
+}

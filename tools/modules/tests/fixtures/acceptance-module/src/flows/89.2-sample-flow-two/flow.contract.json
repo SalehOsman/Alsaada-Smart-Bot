@@ -1,0 +1,28 @@
+{
+  "flowCode": "89.2",
+  "flowName": "تدفق العينة الثاني - استعلام وسجل",
+  "module": "sample-domain",
+  "classification": "NOVEL",
+  "status": "Implemented",
+  "allowedRoles": ["SUPER_ADMIN", "ADMIN"],
+  "blockedRoles": ["WORKER", "SUPPLIER", "GUEST"],
+  "entryPoints": ["action:sample:query", "/sample_query"],
+  "navigationPath": ["القائمة الرئيسية", "نطاق العينة", "استعلام وسجل"],
+  "buttons": ["action:sample:query", "action:sample:refresh", "action:sample:back"],
+  "inputs": ["text:filter_status"],
+  "outputs": ["card:sample_list"],
+  "dataImpact": {
+    "database": ["SampleDomainRecord"],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": ["89.1"],
+  "performanceSlaMs": {
+    "buttonP95": 120,
+    "stepP95": 180,
+    "commitP95": 200
+  },
+  "requiredTests": ["unit", "integration", "ux", "rbac", "data"],
+  "manualUatRequired": false
+}
