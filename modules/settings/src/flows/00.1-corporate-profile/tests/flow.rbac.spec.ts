@@ -65,7 +65,7 @@ describe('Flow 00.1 RBAC Tests — الملف التعريفي وبيانات ا
     const ctxSuper = {
       isRealSuperAdmin: true,
       effectiveRole: 'SUPER_ADMIN',
-      reply: replyMock,
+      replyWithRichMessage: replyMock,
       from: { id: 7594239391 },
     } as unknown as SettingsModuleContext;
 

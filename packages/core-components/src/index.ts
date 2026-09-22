@@ -55,3 +55,5 @@ export * from './bot-catalog/index.js';
 // Sovereign Module Bus & Zero-Touch Auto-Loader
 export * from './module-bus/index.js';
 
+
+export * from './rich-message/index.js';

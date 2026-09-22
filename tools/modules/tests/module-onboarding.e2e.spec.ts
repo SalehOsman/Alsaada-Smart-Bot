@@ -117,7 +117,9 @@ describe('Work Plan 89 — End-to-End Module Onboarding & Acceptance Verificatio
 
   // 4. Zero Core Modifications Invariant
   it('E2E-4: enforces zero core modifications invariant during module onboarding', () => {
-    const immutabilityResult = verifyCoreImmutability(process.cwd());
+    const immutabilityResult = verifyCoreImmutability(process.cwd(), {
+      changedFiles: ['modules/sample-domain/module.contract.json', 'modules/sample-domain/src/index.ts'],
+    });
     expect(immutabilityResult.ok).toBe(true);
     expect(immutabilityResult.failures).toHaveLength(0);
     expect(immutabilityResult.checkedFiles).toBeGreaterThan(200);

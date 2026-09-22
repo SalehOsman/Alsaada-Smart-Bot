@@ -53,6 +53,10 @@ export function createSettingsAppModule(
       }
       return false;
     },
+    onPhotoInput: async (ctx: SettingsModuleContext, fileId: string) => {
+      if (handlers?.handlePhotoInput) return handlers.handlePhotoInput(ctx, fileId);
+      return false;
+    },
     getPersistentReplyButtons: (role: string) => {
       if (role === 'SUPER_ADMIN') {
         return ['إعدادات النظام', 'ملفي الشخصي'];

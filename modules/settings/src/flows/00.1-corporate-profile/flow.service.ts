@@ -29,6 +29,10 @@ export class CorporateProfileService {
     return { success: true, profile: updated };
   }
 
+  async updateImage(field: 'logoPath' | 'headerImagePath' | 'footerImagePath', path: string, fileId: string): Promise<CompanyProfileDto> {
+    return this.repository.updateImage(field, path, fileId);
+  }
+
   async setPendingEdit(telegramId: bigint, fieldKey: CompanyFieldKey, promptMessageId: number): Promise<void> {
     const state: PendingCompanyEditState = {
       fieldKey,

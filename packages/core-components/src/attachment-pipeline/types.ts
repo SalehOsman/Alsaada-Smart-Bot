@@ -4,7 +4,10 @@ export type AttachmentDomain =
   | 'CANTEEN_INVOICE'
   | 'MEDICAL_LEAVE'
   | 'FUEL_SLIP'
-  | 'EQUIPMENT_LICENSE';
+  | 'EQUIPMENT_LICENSE'
+  | 'COMPANY_LOGO'
+  | 'COMPANY_DOCUMENT_HEADER'
+  | 'COMPANY_DOCUMENT_FOOTER';
 
 export interface AttachmentSaveInput {
   domain: AttachmentDomain;
