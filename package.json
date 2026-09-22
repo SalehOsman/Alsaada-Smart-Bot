@@ -60,7 +60,7 @@
         "test:modules:catalog": "vitest run tools/modules/tests/catalog.spec.ts tools/modules/tests/catalog-determinism.spec.ts tools/modules/tests/catalog-boundaries.spec.ts",
         "test:modules:bot": "vitest run apps/bot-server/tests/catalog-bot-integration.spec.ts apps/bot-server/tests/catalog-session-routing.spec.ts",
         "test:modules:dashboard": "vitest run apps/admin-dashboard/tests/module-pages.spec.ts apps/admin-dashboard/tests/module-api-auth.spec.ts apps/admin-dashboard/tests/module-client-boundaries.spec.ts",
-        "test:modules:data": "vitest run tools/modules/tests/database-composition.spec.ts",
+        "test:modules:data": "vitest run tools/modules/tests/database-composition.spec.ts tools/modules/tests/migration-upgrade.spec.ts tools/modules/tests/migration-concurrency.spec.ts",
         "test:modules:scaffold": "vitest run tools/scaffold/tests/module-v2-scaffold.spec.ts tools/scaffold/tests/flow-v2-scaffold.spec.ts tools/scaffold/tests/scaffold-write-scope.spec.ts",
         "test:modules:release": "vitest run tools/modules/tests/release-artifact.spec.ts",
         "test:modules:parity": "vitest run tools/modules/tests/existing-modules-parity.spec.ts",
