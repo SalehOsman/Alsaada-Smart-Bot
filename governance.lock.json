@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T06:56:06.941Z",
+  "generatedAt": "2026-09-22T07:20:48.353Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -205,7 +205,7 @@
     },
     {
       "path": "tools/governance/jev-auditor.ts",
-      "sha256": "53109d0b82cab71f33dc1310fc31a6e9f39286e9d6de2e26f63007b73af8e547"
+      "sha256": "d52d174db492b92812e275cb51860411dd01101ba6068c51bf6df3c08a548406"
     },
     {
       "path": "tools/governance/pre-commit-test-guard.ts",
@@ -436,6 +436,10 @@
       "sha256": "1602a9db5d4f91ffec0b4ccc89a11fd5f0b81d6811a828df6b5b083f070314c0"
     },
     {
+      "path": "tools/scaffold/scaffold-flow-v2.ts",
+      "sha256": "c6bdbaef4e0ecc1530251e747561283bbadbc70a523af2bfece6f59c66d64dc6"
+    },
+    {
       "path": "tools/scaffold/scaffold-flow.ts",
       "sha256": "c63ccb0bd394ef795db136243a10e0a94ba94b3b09d83b672c504b73b4a54c13"
     },
@@ -444,12 +448,32 @@
       "sha256": "74e0a887ca1fc49808897a1a780f0a7b6b455b37acd02577df055a5b1ec16466"
     },
     {
+      "path": "tools/scaffold/scaffold-module-migration.ts",
+      "sha256": "0d5cbc6b4af28435536fc2a210ef1ec4756b9835b1d4f6d1b412570fc8b3c98e"
+    },
+    {
+      "path": "tools/scaffold/scaffold-module-v2.ts",
+      "sha256": "71b0be95c01672e8a37f6d88678ea791f2073384b1a3058f43c8fd675660f0a8"
+    },
+    {
       "path": "tools/scaffold/scaffold-module.ts",
       "sha256": "22e14b20c8c459aa410ca4fb8b8494db3c76a6a0b06269f6fb4c21ef166e3579"
     },
     {
       "path": "tools/scaffold/scaffold-test.ts",
       "sha256": "647168a9f3f57d9cfbed6d1749aa9948f4e22c93c4639d101c073559d0581c68"
+    },
+    {
+      "path": "tools/scaffold/tests/flow-v2-scaffold.spec.ts",
+      "sha256": "28d773504ec9f338c33c239066005c46889154db0fe11503d1c5847b55940bd8"
+    },
+    {
+      "path": "tools/scaffold/tests/module-v2-scaffold.spec.ts",
+      "sha256": "a1649eee48a188434cfc8056f0c05bbdb66225a6829cb9fefc41f705c7928141"
+    },
+    {
+      "path": "tools/scaffold/tests/scaffold-write-scope.spec.ts",
+      "sha256": "d19592f33220a80d0529e6521ac775e657bfa33e02a3abadb1be3d388e1c47c0"
     },
     {
       "path": "tools/scaffold/unlock.ts",
@@ -1999,7 +2023,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-22T06:56:06.941Z",
+      "lockedAt": "2026-09-22T07:20:48.353Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -2327,7 +2351,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-22T06:56:06.941Z",
+      "lockedAt": "2026-09-22T07:20:48.353Z",
       "files": [
         {
           "path": ".dockerignore",

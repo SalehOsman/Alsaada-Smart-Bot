@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -17,7 +17,23 @@ import {
 } from '../src/module-bus/sovereign-auto-loader.js';
 import type { ModuleRuntimeContext, AppModuleDefinition } from '../src/contracts/module.contract.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   const createMockRuntime = (overrides?: Partial<ModuleRuntimeContext>): ModuleRuntimeContext => ({
     prisma: { $connect: vi.fn() } as any,
     redis: { ping: vi.fn().mockResolvedValue('PONG'), status: 'ready' } as any,
@@ -31,30 +47,47 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
   // 1. Hybrid Resolution & Path Normalization (Windows URLs)
   // =========================================================================
   describe('1. Hybrid Resolution & Windows URL Normalization', () => {
-    it('converts Windows drive paths to valid file URLs', () => {
+    it('1. converts Windows drive paths to valid file URLs', () => {
+      // Arrange
       const winPath = 'F:\\Alsaada-Smart-Bot\\modules\\workforce\\src\\index.ts';
+
+      // Act
       const fileUrl = toValidImportUrl(winPath);
 
+      // Assert
       expect(fileUrl).toMatch(/^file:\/\/\//);
       expect(fileUrl.toLowerCase()).toContain('workforce');
       expect(fileUrl).not.toContain('\\');
     });
 
-    it('preserves existing file:// URLs unchanged', () => {
+    it('2. preserves existing file:// URLs unchanged', () => {
+      // Arrange
       const url = 'file:///F:/Alsaada-Smart-Bot/modules/settings/src/index.ts';
-      expect(toValidImportUrl(url)).toBe(url);
+
+      // Act
+      const result = toValidImportUrl(url);
+
+      // Assert
+      expect(result).toBe(url);
+      expect(result).not.toContain('\\');
     });
 
-    it('resolves live dev entrypoint (src/index.ts) correctly', () => {
+    it('3. resolves live dev entrypoint (src/index.ts) correctly', () => {
+      // Arrange
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-test-'));
       const srcDir = path.join(tmpDir, 'src');
       fs.mkdirSync(srcDir, { recursive: true });
       const entryPath = path.join(srcDir, 'index.ts');
       fs.writeFileSync(entryPath, 'export const name = "test";');
 
+      // Act
       const resolved = resolveModuleEntrypoint(tmpDir);
-      expect(resolved).toBe(entryPath);
 
+      // Assert
+      expect(resolved).toBe(entryPath);
+      expect(resolved).not.toBeNull();
+
+      // Cleanup
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
   });
@@ -63,26 +96,42 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
   // 2. Runtime Contract Service Handshake
   // =========================================================================
   describe('2. Runtime Contract Service Handshake', () => {
-    it('verifies standard services correctly', () => {
+    it('4. verifies standard services correctly', () => {
+      // Arrange
       const runtime = createMockRuntime();
 
-      expect(verifyServiceReadiness('prisma', runtime).ready).toBe(true);
-      expect(verifyServiceReadiness('database', runtime).ready).toBe(true);
-      expect(verifyServiceReadiness('redis', runtime).ready).toBe(true);
-      expect(verifyServiceReadiness('api', runtime).ready).toBe(true);
-      expect(verifyServiceReadiness('screenFlow', runtime).ready).toBe(true);
-      expect(verifyServiceReadiness('telemetry', runtime).ready).toBe(true);
+      // Act
+      const prismaCheck = verifyServiceReadiness('prisma', runtime);
+      const dbCheck = verifyServiceReadiness('database', runtime);
+      const redisCheck = verifyServiceReadiness('redis', runtime);
+      const apiCheck = verifyServiceReadiness('api', runtime);
+      const screenCheck = verifyServiceReadiness('screenFlow', runtime);
+      const telemetryCheck = verifyServiceReadiness('telemetry', runtime);
+
+      // Assert
+      expect(prismaCheck.ready).toBe(true);
+      expect(dbCheck.ready).toBe(true);
+      expect(redisCheck.ready).toBe(true);
+      expect(apiCheck.ready).toBe(true);
+      expect(screenCheck.ready).toBe(true);
+      expect(telemetryCheck.ready).toBe(true);
     });
 
-    it('detects missing services with precise diagnostic reason', () => {
+    it('5. detects missing services with precise diagnostic reason', () => {
+      // Arrange
       const runtime = createMockRuntime({ redis: null });
 
+      // Act
       const check = verifyServiceReadiness('redis', runtime);
+
+      // Assert
       expect(check.ready).toBe(false);
       expect(check.reason).toContain('Redis client instance is missing');
+      expect(check.ready).not.toBe(true);
     });
 
-    it('throws SovereignHandshakeError when a critical module misses a required service', async () => {
+    it('6. throws SovereignHandshakeError when a critical module misses a required service', async () => {
+      // Arrange
       const tmpModulesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-crit-'));
       const modDir = path.join(tmpModulesDir, 'settings');
       fs.mkdirSync(path.join(modDir, 'src'), { recursive: true });
@@ -104,7 +153,11 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       // Runtime is missing screenFlow
       const brokenRuntime = createMockRuntime({ screenFlow: null });
 
-      await expect(loader.loadModules(brokenRuntime)).rejects.toThrow(SovereignHandshakeError);
+      // Act
+      const action = () => loader.loadModules(brokenRuntime);
+
+      // Assert
+      await expect(action()).rejects.toThrow(SovereignHandshakeError);
 
       try {
         await loader.loadModules(brokenRuntime);
@@ -113,6 +166,7 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
         expect(err.message).toContain('screenFlow');
       }
 
+      // Cleanup
       fs.rmSync(tmpModulesDir, { recursive: true, force: true });
     });
   });
@@ -121,7 +175,8 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
   // 3. Fault-Tolerant Circuit Breaker
   // =========================================================================
   describe('3. Fault-Tolerant Circuit Breaker', () => {
-    it('isolates failure in a non-critical module without halting the server', async () => {
+    it('7. isolates failure in a non-critical module without halting the server', async () => {
+      // Arrange
       const tmpModulesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-cb-'));
 
       // 1. Healthy non-critical module A
@@ -162,8 +217,11 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       });
 
       const runtime = createMockRuntime();
+
+      // Act
       const result = await loader.loadModules(runtime);
 
+      // Assert
       // Canteen should be loaded, catering should be skipped/failed
       expect(result.activeModules.map((m) => m.name)).toContain('canteen');
       expect(result.activeModules.map((m) => m.name)).not.toContain('catering');
@@ -172,10 +230,12 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       expect(cateringDiag).toBeDefined();
       expect(cateringDiag?.missingServices).toContain('nonExistentHeavyService');
 
+      // Cleanup
       fs.rmSync(tmpModulesDir, { recursive: true, force: true });
     });
 
-    it('throws CriticalModuleLoadError when a critical module has invalid JSON contract', async () => {
+    it('8. throws CriticalModuleLoadError when a critical module has invalid JSON contract', async () => {
+      // Arrange
       const tmpModulesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-badjson-'));
       const modDir = path.join(tmpModulesDir, 'workforce');
       fs.mkdirSync(modDir, { recursive: true });
@@ -187,12 +247,19 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       });
 
       const runtime = createMockRuntime();
-      await expect(loader.loadModules(runtime)).rejects.toThrow(CriticalModuleLoadError);
 
+      // Act
+      const action = () => loader.loadModules(runtime);
+
+      // Assert
+      await expect(action()).rejects.toThrow(CriticalModuleLoadError);
+
+      // Cleanup
       fs.rmSync(tmpModulesDir, { recursive: true, force: true });
     });
 
-    it('isolates invalid JSON contract in a non-critical module with warning', async () => {
+    it('9. isolates invalid JSON contract in a non-critical module with warning', async () => {
+      // Arrange
       const tmpModulesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-badjson-noncrit-'));
       const modDir = path.join(tmpModulesDir, 'equipment');
       fs.mkdirSync(modDir, { recursive: true });
@@ -204,10 +271,15 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       });
 
       const runtime = createMockRuntime();
+
+      // Act
       const result = await loader.loadModules(runtime);
 
+      // Assert
       expect(result.failedModules.some((d) => d.name === 'equipment')).toBe(true);
+      expect(result.activeModules.some((d) => d.name === 'equipment')).toBe(false);
 
+      // Cleanup
       fs.rmSync(tmpModulesDir, { recursive: true, force: true });
     });
   });
@@ -216,7 +288,8 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
   // 4. Dynamic Navigation Aggregation & ReDoS Protection
   // =========================================================================
   describe('4. Dynamic Navigation Aggregation & ReDoS Protection', () => {
-    it('aggregates navigation patterns from contracts, modules, and reply buttons', async () => {
+    it('10. aggregates navigation patterns from contracts, modules, and reply buttons', async () => {
+      // Arrange
       const tmpModulesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-nav-'));
       try {
         const modDir = path.join(tmpModulesDir, 'testMod');
@@ -253,8 +326,11 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
         });
 
         const runtime = createMockRuntime();
+
+        // Act
         const result = await loader.loadModules(runtime);
 
+        // Assert
         expect(result.navigationPatterns).toContain('القائمة الرئيسية');
         expect(result.navigationPatterns).toContain('🖥️ فتح لوحة التحكم');
         expect(result.navigationPatterns).toContain('زر من عقد الموديول');
@@ -273,40 +349,55 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       }
     });
 
-    it('returns empty guard /(?!)/ when patterns array is empty', () => {
-      const regex = buildSafeNavigationRegex([]);
+    it('11. returns empty guard /(?!)/ when patterns array is empty', () => {
+      // Arrange
+      const patterns: string[] = [];
+
+      // Act
+      const regex = buildSafeNavigationRegex(patterns);
+
+      // Assert
       expect(regex.source).toBe('(?!)');
       expect(regex.test('أي نص')).toBe(false);
       expect(regex.test('')).toBe(false);
     });
 
-    it('detects and strips ReDoS dangerous patterns', () => {
-      expect(hasReDoSRisk('((a+)+)+')).toBe(true);
-      expect(hasReDoSRisk('([a-zA-Z]+)*')).toBe(true);
-      expect(hasReDoSRisk('([a-z]+)+')).toBe(true);
-      expect(hasReDoSRisk('((a+)|b)+')).toBe(true);
-      expect(hasReDoSRisk('a++')).toBe(true);
-      expect(hasReDoSRisk('🚜 تسجيل منسوب')).toBe(false);
-      expect(hasReDoSRisk('ملفي (الشخصي|وإعداداتي)')).toBe(false);
-      expect(hasReDoSRisk('+ إضافة عامل')).toBe(false);
-      expect(hasReDoSRisk('طلب سلفة (+500)')).toBe(false);
+    it('12. detects and strips ReDoS dangerous patterns', () => {
+      // Arrange
+      const redosPatterns = ['((a+)+)+', '([a-zA-Z]+)*', '([a-z]+)+', '((a+)|b)+', 'a++'];
+      const safePatterns = ['🚜 تسجيل منسوب', 'ملفي (الشخصي|وإعداداتي)', '+ إضافة عامل', 'طلب سلفة (+500)'];
 
+      // Act
+      const redosCheck = redosPatterns.every((p) => hasReDoSRisk(p));
+      const safeCheck = safePatterns.every((p) => !hasReDoSRisk(p));
       const regex = buildSafeNavigationRegex(['((a+)+)+', 'زر آمن']);
+
+      // Assert
+      expect(redosCheck).toBe(true);
+      expect(safeCheck).toBe(true);
       expect(regex.test('زر آمن')).toBe(true);
       expect(regex.test('aaaaa')).toBe(false);
     });
 
-    it('preserves literal button texts with regex special characters (+, *, ?, brackets) via safe escaping', () => {
-      expect(escapeRegExp('+ إضافة عامل')).toBe('\\+ إضافة عامل');
-      expect(escapeRegExp('[جديد]')).toBe('\\[جديد\\]');
-
-      const regex = buildSafeNavigationRegex([
+    it('13. preserves literal button texts with regex special characters (+, *, ?, brackets) via safe escaping', () => {
+      // Arrange
+      const rawText1 = '+ إضافة عامل';
+      const rawText2 = '[جديد]';
+      const list = [
         '+ إضافة عامل',
         'طلب سلفة (+500)',
         '[إداري] تسجيل',
         '★ تقرير *مميز*',
-      ]);
+      ];
 
+      // Act
+      const escaped1 = escapeRegExp(rawText1);
+      const escaped2 = escapeRegExp(rawText2);
+      const regex = buildSafeNavigationRegex(list);
+
+      // Assert
+      expect(escaped1).toBe('\\+ إضافة عامل');
+      expect(escaped2).toBe('\\[جديد\\]');
       expect(regex.test('+ إضافة عامل')).toBe(true);
       expect(regex.test('طلب سلفة (+500)')).toBe(true);
       expect(regex.test('[إداري] تسجيل')).toBe(true);
@@ -314,39 +405,75 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       expect(regex.test('إضافة عامل')).toBe(false);
     });
 
-    it('anchors navigation regex so words inside longer sentences do not falsely trigger navigation', () => {
+    it('14. anchors navigation regex so words inside longer sentences do not falsely trigger navigation', () => {
+      // Arrange
       const regex = buildSafeNavigationRegex(['القائمة الرئيسية', 'إعدادات النظام']);
+      const exact1 = 'القائمة الرئيسية';
+      const padded = '  القائمة الرئيسية  ';
+      const exact2 = 'إعدادات النظام';
+      const sentence1 = 'السلام عليكم، القائمة الرئيسية مش شغالة';
+      const sentence2 = 'سبب السلفة: تعديل إعدادات النظام';
+      const sentence3 = 'القائمة الرئيسية شكرا';
 
-      // Exact button taps should match
-      expect(regex.test('القائمة الرئيسية')).toBe(true);
-      expect(regex.test('  القائمة الرئيسية  ')).toBe(true);
-      expect(regex.test('إعدادات النظام')).toBe(true);
+      // Act
+      const matchExact1 = regex.test(exact1);
+      const matchPadded = regex.test(padded);
+      const matchExact2 = regex.test(exact2);
+      const matchSentence1 = regex.test(sentence1);
+      const matchSentence2 = regex.test(sentence2);
+      const matchSentence3 = regex.test(sentence3);
 
-      // Sentences containing the words must NOT match (prevents wiping user flows)
-      expect(regex.test('السلام عليكم، القائمة الرئيسية مش شغالة')).toBe(false);
-      expect(regex.test('سبب السلفة: تعديل إعدادات النظام')).toBe(false);
-      expect(regex.test('القائمة الرئيسية شكرا')).toBe(false);
+      // Assert
+      expect(matchExact1).toBe(true);
+      expect(matchPadded).toBe(true);
+      expect(matchExact2).toBe(true);
+      expect(matchSentence1).toBe(false);
+      expect(matchSentence2).toBe(false);
+      expect(matchSentence3).toBe(false);
     });
 
-    it('converts kebab-case and snake-case module names to PascalCase', () => {
-      expect(toPascalCase('workforce')).toBe('Workforce');
-      expect(toPascalCase('cash-outflow')).toBe('CashOutflow');
-      expect(toPascalCase('field_custody')).toBe('FieldCustody');
-      expect(toPascalCase('user-rbac-management')).toBe('UserRbacManagement');
+    it('15. converts kebab-case and snake-case module names to PascalCase', () => {
+      // Arrange
+      const name1 = 'workforce';
+      const name2 = 'cash-outflow';
+      const name3 = 'field_custody';
+      const name4 = 'user-rbac-management';
+
+      // Act
+      const p1 = toPascalCase(name1);
+      const p2 = toPascalCase(name2);
+      const p3 = toPascalCase(name3);
+      const p4 = toPascalCase(name4);
+
+      // Assert
+      expect(p1).toBe('Workforce');
+      expect(p2).toBe('CashOutflow');
+      expect(p3).toBe('FieldCustody');
+      expect(p4).toBe('UserRbacManagement');
+      expect(p1).not.toBe(name1);
     });
 
-    it('rejects empty or whitespace-only strings in isNavigationMessage', () => {
+    it('16. rejects empty or whitespace-only strings in isNavigationMessage', () => {
+      // Arrange
       const loader = new SovereignAutoLoader({
         baseNavigationPatterns: ['القائمة الرئيسية'],
       });
 
-      expect(loader.isNavigationMessage('')).toBe(false);
-      expect(loader.isNavigationMessage('   ')).toBe(false);
-      expect(loader.isNavigationMessage(null as any)).toBe(false);
-      expect(loader.isNavigationMessage(undefined as any)).toBe(false);
+      // Act
+      const emptyRes = loader.isNavigationMessage('');
+      const spaceRes = loader.isNavigationMessage('   ');
+      const nullRes = loader.isNavigationMessage(null as any);
+      const undefinedRes = loader.isNavigationMessage(undefined as any);
+
+      // Assert
+      expect(emptyRes).toBe(false);
+      expect(spaceRes).toBe(false);
+      expect(nullRes).toBe(false);
+      expect(undefinedRes).toBe(false);
     });
 
-    it('always resets lastIndex to 0 to prevent stateful cross-call leakage', () => {
+    it('17. always resets lastIndex to 0 to prevent stateful cross-call leakage', () => {
+      // Arrange
       const regex = buildSafeNavigationRegex(['زر أول', 'زر ثاني']);
       regex.lastIndex = 5;
 
@@ -354,7 +481,10 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
         baseNavigationPatterns: ['زر أول', 'زر ثاني'],
       });
 
+      // Act
       const r1 = loader.getNavigationRegex();
+
+      // Assert
       expect(r1.lastIndex).toBe(0);
       expect(loader.isNavigationMessage('زر أول')).toBe(true);
       expect(loader.isNavigationMessage('زر أول')).toBe(true);
@@ -366,8 +496,11 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
   // 5. Full Real Live Modules Discovery
   // =========================================================================
   describe('5. Real Live Modules Integration (workforce & settings)', () => {
-    it('discovers and loads workforce and settings modules from project filesystem', async () => {
-      const projectModulesDir = resolveModulesDirectory();
+    it(
+      '18. discovers and loads workforce and settings modules from project filesystem',
+      async () => {
+        // Arrange
+        const projectModulesDir = resolveModulesDirectory();
       expect(fs.existsSync(projectModulesDir)).toBe(true);
 
       const loader = new SovereignAutoLoader({
@@ -381,8 +514,11 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       });
 
       const runtime = createMockRuntime();
+
+      // Act
       const result = await loader.loadModules(runtime);
 
+      // Assert
       expect(result.activeModules.length).toBeGreaterThanOrEqual(2);
       const modNames = result.activeModules.map((m) => m.name);
       expect(modNames).toContain('workforce');
@@ -396,6 +532,6 @@ describe('🧩 Sovereign Auto-Loader & Enterprise Microkernel Module Bus', () =>
       expect(loader.isNavigationMessage('إعدادات النظام')).toBe(true);
       expect(loader.isNavigationMessage('🏠 القائمة الرئيسية')).toBe(true);
       expect(loader.isNavigationMessage('نص عشوائي غير مطابق')).toBe(false);
-    }, 90000);
+    }, 60000);
   });
 });
