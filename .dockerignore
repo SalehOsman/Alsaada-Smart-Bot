@@ -1,51 +1,119 @@
-# Git & CI
+# ==============================================================================
+# Al-Saada Smart Bot Enterprise — Golden Standard .dockerignore
+# ==============================================================================
+# Precision container build context optimization for pnpm monorepo.
+# Eliminates cache pollution, secret leaks, redundant I/O, and build latency.
+# ==============================================================================
+
+# 1. Version Control & CI/CD Pipelines
 .git
 .github
 .githooks
+.gitattributes
+**/.git
 
-# Dependencies & package managers
+# 2. Package Managers, Stores & Local Dependency Trees
 node_modules
 **/node_modules
 .pnpm-store
 **/.pnpm-store
+.npm
+.yarn
 
-# Environment variables & secrets
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
-
-# Build outputs
+# 3. Build Outputs, Transpilation & Compiler Caches
 dist
 **/dist
-.next
-**/.next
 build
 **/build
 out
 **/out
+.next
+**/.next
+.next-dev
+**/.next-dev
 .astro
 **/.astro
+apps/docs/.astro
+apps/docs/dist
+.turbo
+**/.turbo
+*.tsbuildinfo
+**/*.tsbuildinfo
+packages/database/src/generated/
 
-# Logs
+# 4. Environment Variables, Secrets & Credentials (G16 Strict Guard)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+credentials/
+service_account*.json
+
+# 5. Testing Frameworks, Mutation & Coverage Artifacts
+tests/
+**/tests/
+**/*.spec.ts
+**/*.spec.tsx
+**/*.test.ts
+**/*.test.tsx
+.vitest
+**/.vitest
+coverage
+**/coverage
+.nyc_output
+vitest-list-output.txt
+*-output.txt
+
+# 6. AI Agent Workspace, Governance & Operational Caches
+.agents/
+.governance-cache/
+.scratch/
+scratch/
+.cache/
+**/.cache
+.changeset/
+
+# 7. Documentation Heavy Media, Archives & Incident Reports
+# Note: Root docs/ is retained for Dockerfile.docs; only historical/evidence pruned
+docs/ai-execution-evidence/
+docs/archive/
+docs/code-incidents/
+docs/periodic-audits/
+gap-*.txt
+gap-*.ps1
+
+# 8. Runtime Attachments, Media Uploads & Database Dumps
+attachments/
+docker/postgres/data/
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+data/*.db
+data/*.sqlite
+
+# 9. Application Runtime Logs & Debug Dumps (G9 Observability)
+logs/
 *.log
+**/*.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Documentation & AI Evidence
-docs/ai-execution-evidence/
-
-# Tests & coverage
-tests/
-**/*.spec.ts
-**/*.test.ts
-.vitest
-coverage
-
-# Temporary files & OS files
+# 10. Operating System Artifacts, IDE Configurations & Temp Files
 .DS_Store
 Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 *.tmp
+tmp/
+temp/

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ==============================================================================
 # Al-Saada Smart Bot Enterprise — Documentation & Architecture Portal
 # Multi-Stage Production Dockerfile (Astro Starlight + Nginx Alpine)
@@ -25,6 +26,7 @@ COPY packages/rbac/package.json packages/rbac/
 COPY packages/regional-engine/package.json packages/regional-engine/
 COPY packages/national-id-engine/package.json packages/national-id-engine/
 COPY packages/core-components/package.json packages/core-components/
+COPY packages/shared/package.json packages/shared/
 COPY packages/telemetry/package.json packages/telemetry/
 COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
 COPY modules/workforce/package.json modules/workforce/
@@ -35,7 +37,9 @@ COPY apps/docs/package.json apps/docs/
 
 # Install dependencies needed for docs build
 ENV GIT_DIR=/tmp/alsaada-build.git
-RUN git init --bare "$GIT_DIR" \
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    git init --bare "$GIT_DIR" \
+    && pnpm config set package-import-method copy \
     && pnpm config set fetch-retries 5 \
     && pnpm config set fetch-retry-maxtimeout 120000 \
     && pnpm config set network-concurrency 4 \
