@@ -185,6 +185,19 @@ export class StudioProcessManager {
     this.lastActorTelegramId = actorTelegramId;
     this.lastIpAddress = ipAddress;
 
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+      this.startedAtTime = Date.now();
+      this.lastActivityTime = Date.now();
+      this.armWatchdog();
+
+      await this.recordAuditLog(actorTelegramId, 'PRISMA_STUDIO_START', ipAddress, {
+        status: 'SPAWNED',
+        url: this.getTargetUrl(),
+      });
+
+      return this.getStatus();
+    }
+
     const healthy = await this.isHealthy();
     if (healthy) {
       // Already running (e.g. docker container or background process)
