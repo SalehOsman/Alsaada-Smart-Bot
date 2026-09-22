@@ -134,6 +134,7 @@ export function scanMonorepoCatalog(root = process.cwd()): MonorepoCatalog {
     if (existsSync(v2ContractPath)) {
       try {
         const parsed = JSON.parse(readFileSync(v2ContractPath, 'utf8'));
+        isV1Compatible = parsed.schemaVersion !== '2.0.0';
         if (parsed.titleArabic) {
           titleArabic = parsed.titleArabic;
         } else if (parsed.displayName) {
