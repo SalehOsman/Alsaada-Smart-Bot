@@ -237,12 +237,12 @@ describe('@alsaada/national-id-engine', () => {
     expect(isInvalidMatch).toBe(false);
   });
 
-  it('allows non-blocking warning when strictCheckDigit is explicitly set to false', () => {
+  it('defaults to non-blocking warning when check digit differs to support legacy civil status exceptions', () => {
     // Arrange
     const idWithDiffCheckDigit = '29505151201531';
 
     // Act
-    const result = parseEgyptianNationalId(idWithDiffCheckDigit, { strictCheckDigit: false });
+    const result = parseEgyptianNationalId(idWithDiffCheckDigit);
 
     // Assert
     expect(result.isValid).toBe(true);
@@ -250,12 +250,12 @@ describe('@alsaada/national-id-engine', () => {
     expect(result.warning).toContain('تحذير إرشادي');
   });
 
-  it('strictly rejects invalid check digit by default', () => {
+  it('strictly rejects invalid check digit when strictCheckDigit option is set', () => {
     // Arrange
     const idWithDiffCheckDigit = '29505151201531';
 
     // Act
-    const result = parseEgyptianNationalId(idWithDiffCheckDigit);
+    const result = parseEgyptianNationalId(idWithDiffCheckDigit, { strictCheckDigit: true });
 
     // Assert
     expect(result.isValid).toBe(false);

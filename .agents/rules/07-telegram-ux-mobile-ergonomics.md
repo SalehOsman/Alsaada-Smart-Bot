@@ -20,6 +20,17 @@ To guarantee aesthetic consistency, mobile ergonomic integrity, and strict adher
 
 ---
 
+## 1.1 الإلزام المطلق بمحرر النصوص الغني (@alsaada/core-components/rich-message)
+
+1. **حظر الرسائل العادية (Zero Raw Text Policy):** يُحظر قطعيًا على أي وكيل ذكاء اصطناعي أو مطور استخدام نصوص مجردة، أو استدعاء `ctx.reply("string")` أو `ctx.editMessageText("string")` مباشرة في أي تدفق (`flow.handler.ts`).
+2. **العقد الموحد (InputRichMessage):** كافة رسائل البوت يجب أن تصاغ حصراً عبر قوالب الكتل الرسمية (`buildRichPage`, `buildRichTable`, `buildRichConfirmation`) المستوردة من `@alsaada/core-components/rich-message`.
+3. **الفحص الجنائي القبلي (assertRichMessage):** كل رسالة يجب أن تمر عبر `assertRichMessage(msg)` للتحقق الصارم من:
+   - تحديد نمط واحد فقط: إما `blocks` أو `markdown` أو `html`.
+   - عدم تجاوز الحدود الخمسة: 32,768 حرفاً، 500 كتلة، 16 مستوى تداخل، 50 مرفق وسائط، 20 عموداً للجدول.
+4. **عقوبة المخالفة:** يُسقط التدفق فوراً في Gate G5 و Gate G22 ويُصدر ضده حكم `[REJECT]` قطعي من `/saleh`.
+
+---
+
 ## 2. The 10 Rich Message Demo Primitives & Official Telegram Specs
 
 All bot interactions must implement the 10 canonical Telegram Bot API Rich Message primitives:

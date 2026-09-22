@@ -42,11 +42,12 @@ jobs:
           CI: 'true'
 
       - name: Create Release Pull Request or Tag Release
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           version: pnpm version-packages
           publish: pnpm release:tag
           title: 'chore(release): version packages and automated release'
           commit: 'chore(release): version packages [skip ci]'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

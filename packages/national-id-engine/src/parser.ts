@@ -124,7 +124,7 @@ export function parseEgyptianNationalId(
 
   // 8. 14th Check Digit Validation (Modulo-11)
   const isCheckDigitValid = validateNationalIdCheckDigit(cleanId);
-  const strictCheck = options?.strictCheckDigit ?? true;
+  const strictCheck = options?.strictCheckDigit ?? false;
   if (strictCheck && !isCheckDigitValid) {
     return {
       isValid: false,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T15:24:39.219Z",
+  "generatedAt": "2026-09-22T19:17:02.954Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -57,7 +57,7 @@
     },
     {
       "path": ".agents/rules/07-telegram-ux-mobile-ergonomics.md",
-      "sha256": "1a2c5c2e7fc575676d3a619ddea74a63d2cba0295c03e7996482a5d584d86d2b"
+      "sha256": "8339b1d0459667c1c172cb5f9a5d1f3ea40fa28e5c3cd20c87cc6c0db7c1ca49"
     },
     {
       "path": ".agents/rules/08-code-defect-and-regression-postmortem.md",
@@ -205,7 +205,7 @@
     },
     {
       "path": ".github/workflows/release.yml",
-      "sha256": "67323acc73aa2d057c4f0af67adfdfdecdd1834257ca63b1f77858f4b6c81ca9"
+      "sha256": "926d8832dc0b0b65fece44f82eeb0404b5f8acab259cfaa67d7add8286a5ff94"
     },
     {
       "path": ".gitignore",
@@ -249,7 +249,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "9f60d8d0b86078759a5266652a06b5513aa19cc6f551d74336bf21f0395f3dc2"
+      "sha256": "18d468c45d0352ad59d0f2367b4f1787a81bffdc6990e9864f3a1bf2feb95552"
     },
     {
       "path": "package.json",
@@ -2078,7 +2078,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-22T15:24:39.219Z",
+      "lockedAt": "2026-09-22T19:17:02.954Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -2439,43 +2439,6 @@
         {
           "path": "packages/regional-engine/tsconfig.json",
           "sha256": "e4ed044d99005d1d36c726849468ff721d4fd6ed12967cc420470a4d9f690004"
-        }
-      ]
-    },
-    "package:national-id-engine": {
-      "id": "package:national-id-engine",
-      "type": "package",
-      "title": "حزمة النواة: @alsaada/national-id-engine",
-      "directory": "packages/national-id-engine",
-      "lockedAt": "2026-09-21T18:20:59.190Z",
-      "files": [
-        {
-          "path": "packages/national-id-engine/CHANGELOG.md",
-          "sha256": "5e9e1e9456e042f90a4039e241beff25df4b6e8744a9f2924ea17c2ed37f9667"
-        },
-        {
-          "path": "packages/national-id-engine/package.json",
-          "sha256": "fc6099a305e7e2c4cd0f1b9cc7464d0456878a0197dcf3a7887c73abf8a17d03"
-        },
-        {
-          "path": "packages/national-id-engine/src/constants.ts",
-          "sha256": "8ea9fce9df9da348f160bcc746275eec782b823a560b40c9fdf7cd8f246e859f"
-        },
-        {
-          "path": "packages/national-id-engine/src/index.ts",
-          "sha256": "4fc137226a22dc920e1ecb7cca79029fcbc6e76a93f8826e9edbca4b2381e81d"
-        },
-        {
-          "path": "packages/national-id-engine/src/parser.ts",
-          "sha256": "7509f2bbc7387246336730569ea41e6ab937287407550c2fc0e281209a555be7"
-        },
-        {
-          "path": "packages/national-id-engine/src/types.ts",
-          "sha256": "02abb0a815c3b6b054e3b1a14f0b689a6c3b5ece5152a339eddc288fd0bafd01"
-        },
-        {
-          "path": "packages/national-id-engine/tsconfig.json",
-          "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
         }
       ]
     },
@@ -3555,7 +3518,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-22T17:19:09.057Z",
+      "lockedAt": "2026-09-22T19:17:02.954Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3584,6 +3547,43 @@
         {
           "path": "docker/postgres/init-scripts/01-init-security.sql",
           "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
+        }
+      ]
+    },
+    "package:national-id-engine": {
+      "id": "package:national-id-engine",
+      "type": "package",
+      "title": "حزمة النواة: @alsaada/national-id-engine",
+      "directory": "packages/national-id-engine",
+      "lockedAt": "2026-09-22T19:16:56.648Z",
+      "files": [
+        {
+          "path": "packages/national-id-engine/CHANGELOG.md",
+          "sha256": "5e9e1e9456e042f90a4039e241beff25df4b6e8744a9f2924ea17c2ed37f9667"
+        },
+        {
+          "path": "packages/national-id-engine/package.json",
+          "sha256": "fc6099a305e7e2c4cd0f1b9cc7464d0456878a0197dcf3a7887c73abf8a17d03"
+        },
+        {
+          "path": "packages/national-id-engine/src/constants.ts",
+          "sha256": "8ea9fce9df9da348f160bcc746275eec782b823a560b40c9fdf7cd8f246e859f"
+        },
+        {
+          "path": "packages/national-id-engine/src/index.ts",
+          "sha256": "4fc137226a22dc920e1ecb7cca79029fcbc6e76a93f8826e9edbca4b2381e81d"
+        },
+        {
+          "path": "packages/national-id-engine/src/parser.ts",
+          "sha256": "f2e794c0d8522c87c0003f1c72d75faf37224df4209521d3699fe939047d4877"
+        },
+        {
+          "path": "packages/national-id-engine/src/types.ts",
+          "sha256": "02abb0a815c3b6b054e3b1a14f0b689a6c3b5ece5152a339eddc288fd0bafd01"
+        },
+        {
+          "path": "packages/national-id-engine/tsconfig.json",
+          "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
         }
       ]
     }
