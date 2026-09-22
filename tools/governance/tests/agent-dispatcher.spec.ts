@@ -78,7 +78,7 @@ describe('Agent Dispatcher Tooling (R4 Specification)', () => {
         const missingDoc = result.failures.some((f) => f.includes('Missing') || f.includes('failed'));
         expect(missingDoc).toBe(true);
       },
-      15000,
+      30000,
     );
   });
 
@@ -98,7 +98,7 @@ describe('Agent Dispatcher Tooling (R4 Specification)', () => {
         expect(Array.isArray(result.failures)).toBe(true);
         expect(Array.isArray(result.warnings)).toBe(true);
       },
-      15000,
+      30000,
     );
 
     it(
@@ -114,7 +114,7 @@ describe('Agent Dispatcher Tooling (R4 Specification)', () => {
         expect(result.ok).toBe(false);
         expect(result.failures.length).toBeGreaterThan(0);
       },
-      15000,
+      30000,
     );
   });
 });

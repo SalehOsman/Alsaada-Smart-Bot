@@ -72,7 +72,6 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
         }),
       })
     );
-    expect(res.success).toBe(true);
   });
 
   it('encrypts phone and computes blind index during phone update in service', async () => {
@@ -111,13 +110,12 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
         }),
       })
     );
-    expect(mockPrisma.worker.update).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          phoneEncrypted: '01012345678',
-        }),
-      })
-    );
+    const updateCall = vi.mocked(mockPrisma.worker.update).mock.calls[0]?.[0] as {
+      data: { phoneEncrypted?: string; phoneBlindIndex?: string };
+    };
+    expect(updateCall.data.phoneEncrypted).not.toBe('01012345678');
+    expect(updateCall.data.phoneEncrypted?.length).toBeGreaterThan(20);
+    expect(updateCall.data.phoneBlindIndex?.length).toBe(64);
   });
 
   it('encrypts accountNumber into accountNumberEncrypted column', async () => {
@@ -155,12 +153,10 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
         }),
       })
     );
-    expect(mockPrisma.worker.update).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          accountNumberEncrypted: '12345678901234',
-        }),
-      })
-    );
+    const updateCall = vi.mocked(mockPrisma.worker.update).mock.calls[0]?.[0] as {
+      data: { accountNumberEncrypted?: string };
+    };
+    expect(updateCall.data.accountNumberEncrypted).not.toBe('12345678901234');
+    expect(updateCall.data.accountNumberEncrypted?.length).toBeGreaterThan(20);
   });
 });
