@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-22T19:17:02.954Z",
+  "generatedAt": "2026-09-22T19:36:43.895Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -205,7 +205,7 @@
     },
     {
       "path": ".github/workflows/release.yml",
-      "sha256": "926d8832dc0b0b65fece44f82eeb0404b5f8acab259cfaa67d7add8286a5ff94"
+      "sha256": "2037fc446c26e71b1eead5d2b3345e43152f62cd1519aee4798be478fb9b7a16"
     },
     {
       "path": ".gitignore",
@@ -2078,7 +2078,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-22T19:17:02.954Z",
+      "lockedAt": "2026-09-22T19:36:43.895Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -3518,7 +3518,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-22T19:17:02.954Z",
+      "lockedAt": "2026-09-22T19:36:43.895Z",
       "files": [
         {
           "path": ".dockerignore",
