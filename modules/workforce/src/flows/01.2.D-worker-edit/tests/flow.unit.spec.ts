@@ -1,80 +1,138 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   FIELD_KEY_SHORT_MAP,
   FIELD_TO_SHORT_MAP,
   FIELD_LABELS,
   validateFieldValue,
+  getReturnTab,
 } from '../flow.validators.js';
+import { WorkerEditKeyboards } from '../flow.keyboard.js';
+import { WorkerEditMessages } from '../flow.messages.js';
 import type { EditableWorkerField } from '../flow.types.js';
 
 describe('Flow 01.2.D Unit Tests — Worker Edit Governance & Short Mappings', () => {
-  it('should bidirectionally map all editable fields without loss', () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('bidirectionally maps all editable fields without loss', () => {
+    // Arrange
     const fields = Object.keys(FIELD_LABELS) as EditableWorkerField[];
 
     for (const f of fields) {
+      // Act
       const short = FIELD_TO_SHORT_MAP[f];
+      const recovered = FIELD_KEY_SHORT_MAP[short];
+
+      // Assert
       expect(short).toBeDefined();
       expect(short.length).toBeLessThanOrEqual(7);
-
-      const recovered = FIELD_KEY_SHORT_MAP[short];
       expect(recovered).toBe(f);
     }
   });
 
-  it('should validate phone values and normalize digits', () => {
-    const valid = validateFieldValue('phone', '01012345678');
+  it('validates phone values and normalizes digits while rejecting invalid prefixes', () => {
+    // Arrange
+    const validRawPhone = '01012345678';
+    const invalidRawPhone = '01912345678';
+
+    // Act
+    const valid = validateFieldValue('phone', validRawPhone);
+    const invalid = validateFieldValue('phone', invalidRawPhone);
+
+    // Assert
     expect(valid.isValid).toBe(true);
     expect(valid.cleanValue).toBe('01012345678');
-
-    const invalid = validateFieldValue('phone', '01912345678');
     expect(invalid.isValid).toBe(false);
   });
 
-  it('should validate flexible dates for expiry dates', () => {
-    const valid = validateFieldValue('idCardExpiryDate', '26-05-2028');
-    expect(valid.isValid).toBe(true);
+  it('validates flexible dates for expiry dates and rejects malformed values', () => {
+    // Arrange
+    const validDateStr = '26-05-2028';
+    const invalidDateStr = 'bad-date';
 
-    const invalid = validateFieldValue('idCardExpiryDate', 'bad-date');
+    // Act
+    const valid = validateFieldValue('idCardExpiryDate', validDateStr);
+    const invalid = validateFieldValue('idCardExpiryDate', invalidDateStr);
+
+    // Assert
+    expect(valid.isValid).toBe(true);
     expect(invalid.isValid).toBe(false);
   });
 
-  it('should validate name field and require at least two names', () => {
-    const valid = validateFieldValue('name', 'سالم حسن علي');
-    expect(valid.isValid).toBe(true);
+  it('validates name field requiring at least two words and rejects single names', () => {
+    // Arrange
+    const validNameStr = 'سالم حسن علي';
+    const singleNameStr = 'سالم';
 
-    const single = validateFieldValue('name', 'سالم');
+    // Act
+    const valid = validateFieldValue('name', validNameStr);
+    const single = validateFieldValue('name', singleNameStr);
+
+    // Assert
+    expect(valid.isValid).toBe(true);
     expect(single.isValid).toBe(false);
   });
 
-  it('should validate insurance number requiring 7-10 digits', () => {
-    const valid = validateFieldValue('insuranceNumber', '12345678');
+  it('validates insurance number requiring 7-10 digits and rejects short values', () => {
+    // Arrange
+    const validInsNum = '12345678';
+    const invalidShortInsNum = '123';
+
+    // Act
+    const valid = validateFieldValue('insuranceNumber', validInsNum);
+    const invalidShort = validateFieldValue('insuranceNumber', invalidShortInsNum);
+
+    // Assert
     expect(valid.isValid).toBe(true);
     expect(valid.cleanValue).toBe('12345678');
-
-    const invalidShort = validateFieldValue('insuranceNumber', '123');
     expect(invalidShort.isValid).toBe(false);
   });
 
-  it('should validate monetary fields (dailyWage, basicSalary)', () => {
-    const valid = validateFieldValue('dailyWage', '350');
+  it('validates monetary fields dailyWage and basicSalary while rejecting negative numbers', () => {
+    // Arrange
+    const validWageStr = '350';
+    const negativeWageStr = '-50';
+
+    // Act
+    const valid = validateFieldValue('dailyWage', validWageStr);
+    const invalid = validateFieldValue('dailyWage', negativeWageStr);
+
+    // Assert
     expect(valid.isValid).toBe(true);
     expect(valid.cleanValue).toBe('350');
-
-    const invalid = validateFieldValue('dailyWage', '-50');
     expect(invalid.isValid).toBe(false);
   });
 
-  it('should validate nationalId requiring 14 digits', () => {
-    const valid = validateFieldValue('nationalId', '29801011234567');
+  it('validates nationalId requiring 14 digits and rejects improper lengths', () => {
+    // Arrange
+    const validNatId = '29801011234567';
+    const shortNatId = '12345';
+
+    // Act
+    const valid = validateFieldValue('nationalId', validNatId);
+    const invalid = validateFieldValue('nationalId', shortNatId);
+
+    // Assert
     expect(valid.isValid).toBe(true);
     expect(valid.cleanValue).toBe('29801011234567');
-
-    const invalid = validateFieldValue('nationalId', '12345');
     expect(invalid.isValid).toBe(false);
   });
 
-  it('should render all 4 tab cards completely with worker data', async () => {
-    const { WorkerEditMessages } = await import('../flow.messages.js');
+  it('renders all 4 tab cards completely with worker data', () => {
+    // Arrange
     const mockWorker = {
       id: 'wrk-1',
       code: 'OP-001',
@@ -117,69 +175,75 @@ describe('Flow 01.2.D Unit Tests — Worker Edit Governance & Short Mappings', (
       medicalNotes: 'حساسية من البنسلين',
     };
 
+    // Act
     const tab1 = WorkerEditMessages.tab1PersonalCard(mockWorker, true);
+    const tab2 = WorkerEditMessages.tab2JobCard(mockWorker, true);
+    const tab3 = WorkerEditMessages.tab3FinanceCard(mockWorker, true);
+    const tab4 = WorkerEditMessages.tab4DocsCard(mockWorker, true);
+
+    // Assert
     expect(tab1).toContain('سالم حسن عبد الرحيم');
     expect(tab1).toContain('أبو سالم');
     expect(tab1).toContain('26-05-2028');
 
-    const tab2 = WorkerEditMessages.tab2JobCard(mockWorker, true);
     expect(tab2).toContain('عامل تشغيل موقع');
     expect(tab2).toContain('محطة معالجة الصالحية');
     expect(tab2).toContain('عنبر ب - الدور الثاني');
 
-    const tab3 = WorkerEditMessages.tab3FinanceCard(mockWorker, true);
     expect(tab3).toContain('علبة واحدة يومياً');
     expect(tab3).toContain('كليوباترا بوكس');
     expect(tab3).toContain('87654321');
     expect(tab3).toContain('مؤمن عليه');
 
-    const tab4 = WorkerEditMessages.tab4DocsCard(mockWorker, true);
     expect(tab4).toContain('43');
     expect(tab4).toContain('XL');
     expect(tab4).toContain('حساسية من البنسلين');
   });
 
-  it('should generate tab keyboards and 2-step cigarette keyboards within telegram size limits', async () => {
-    const { WorkerEditKeyboards } = await import('../flow.keyboard.js');
-    const kb = WorkerEditKeyboards.workerProfileTabsKeyboard('wrk-1', 'FINANCE', true);
-    expect(kb.inline_keyboard.length).toBeGreaterThanOrEqual(4);
-
-    const polKb = WorkerEditKeyboards.cigarettePolicyKeyboard('wrk-1');
-    expect(polKb.inline_keyboard.length).toBe(6);
-
+  it('generates tab keyboards and 2-step cigarette keyboards within telegram size limits', () => {
+    // Arrange
     const items = [
       { id: 'c-1', name: 'كليوباترا بوكس', sellingPrice: 55 },
       { id: 'c-2', name: 'إل إم أزرق', sellingPrice: 85 },
     ];
+
+    // Act
+    const kb = WorkerEditKeyboards.workerProfileTabsKeyboard('wrk-1', 'FINANCE', true);
+    const polKb = WorkerEditKeyboards.cigarettePolicyKeyboard('wrk-1');
     const brdKb = WorkerEditKeyboards.cigaretteBrandKeyboard('wrk-1', items);
+
+    // Assert
+    expect(kb.inline_keyboard.length).toBeGreaterThanOrEqual(4);
+    expect(polKb.inline_keyboard.length).toBe(6);
     expect(brdKb.inline_keyboard.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('should validate and support Telegram ID field in worker edit', async () => {
-    const { validateFieldValue, FIELD_KEY_SHORT_MAP, getReturnTab } = await import('../flow.validators.js');
-    const { WorkerEditKeyboards } = await import('../flow.keyboard.js');
-    const { WorkerEditMessages } = await import('../flow.messages.js');
+  it('validates and supports Telegram ID field in worker edit while rejecting non-numeric values', () => {
+    // Arrange
+    const rawValidTgId = ' 123456789 ';
+    const rawInvalidTgId = 'abc123';
 
-    expect(FIELD_KEY_SHORT_MAP.tgid).toBe('telegramId');
-    expect(getReturnTab('tgid')).toBe('DOCS');
-
-    const validRes = validateFieldValue('telegramId', ' 123456789 ');
-    expect(validRes.isValid).toBe(true);
-    expect(validRes.cleanValue).toBe('123456789');
-
-    const invalidRes = validateFieldValue('telegramId', 'abc123');
-    expect(invalidRes.isValid).toBe(false);
-
+    // Act
+    const shortMapped = FIELD_KEY_SHORT_MAP.tgid;
+    const returnTab = getReturnTab('tgid');
+    const validRes = validateFieldValue('telegramId', rawValidTgId);
+    const invalidRes = validateFieldValue('telegramId', rawInvalidTgId);
     const kb = WorkerEditKeyboards.workerProfileTabsKeyboard('wrk-1', 'DOCS', true);
     const hasTgButton = kb.inline_keyboard.some(row => row.some(b => b.text.includes('معرف تليجرام')));
-    expect(hasTgButton).toBe(true);
-
     const card = WorkerEditMessages.tab4DocsCard({
       id: 'wrk-1',
       code: 'EMP-01',
       name: 'أحمد محمود',
       telegramId: 987654321n,
     }, true);
+
+    // Assert
+    expect(shortMapped).toBe('telegramId');
+    expect(returnTab).toBe('DOCS');
+    expect(validRes.isValid).toBe(true);
+    expect(validRes.cleanValue).toBe('123456789');
+    expect(invalidRes.isValid).toBe(false);
+    expect(hasTgButton).toBe(true);
     expect(card).toContain('987654321');
   });
 });

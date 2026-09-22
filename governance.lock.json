@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T12:17:39.017Z",
+  "generatedAt": "2026-09-22T15:24:39.219Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -37,7 +37,7 @@
     },
     {
       "path": ".agents/rules/02-autonomous-execution-and-checkpoints.md",
-      "sha256": "971b4a3486d87cf13c94abec2a4fdc949f730d19c3f4124cb13a7c2e4ed3a1e3"
+      "sha256": "12b72c61f8acec3fc1f355146be82a808aed00973124291621de90967daf23d2"
     },
     {
       "path": ".agents/rules/03-git-branch-lifecycle-and-immunity.md",
@@ -45,7 +45,7 @@
     },
     {
       "path": ".agents/rules/04-cryptographic-immutability-engine.md",
-      "sha256": "b18676889443cd5ddea157f7ef2d835a596cafeefdbeb2f32005e9225d95e9db"
+      "sha256": "ed0d90eab7f39743bbf1a6d008722d7434c5acab71610ade378e838a3c4fd951"
     },
     {
       "path": ".agents/rules/05-quality-gates-taxonomy-g1-g23.md",
@@ -61,7 +61,7 @@
     },
     {
       "path": ".agents/rules/08-code-defect-and-regression-postmortem.md",
-      "sha256": "89d5d8831516826afa73ddaf1dd4e68e63b6a276c098495f901d9c9c9689d87f"
+      "sha256": "704e6be59d7d8c9a2eb94c23f3d8dd6f951e052a139c66ca82d2d9482c546187"
     },
     {
       "path": ".agents/rules/09-enterprise-reliability-and-telemetry.md",
@@ -69,19 +69,95 @@
     },
     {
       "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "sha256": "3ca62660db036377e21d87cbe76da4a2aabea91226279ca84ec6c977ca9c787f"
+      "sha256": "bfb393172890b5c4adf4a8bb858af59410b3ba7de2a90c2b0f7a6f8cddf775c7"
     },
     {
       "path": ".agents/skills/chief-arbitrator/SKILL.md",
       "sha256": "1cfc894d3c55736c1b48ef5c924df2db19204607d744c13b2d3b23608f5b5771"
     },
     {
+      "path": ".agents/skills/jev/SKILL.md",
+      "sha256": "4b62d26dcb642fa816f46157c0b1ac4ee53fcd25d203b96d02c04ea28d496023"
+    },
+    {
       "path": ".agents/skills/open-code-review/SKILL.md",
       "sha256": "3dd08f1ab21519eb35149f09c0b870bb68c2b570f3f6c4bcd774bae833825db2"
     },
     {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/ai-failure-modes.md",
+      "sha256": "dbcf40639df0f6ace948d80a33d355e131accbc2d4a0c6cdbb810f951d76da1b"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/comments-and-formatting.md",
+      "sha256": "27de70078f516d988b9633499561003e1ddd0edfd5cda86fa530f2eaa22f300c"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/dry-kiss-yagni.md",
+      "sha256": "1da19c7212788bee9c3f337ced4762d9766a53db68100921f313119da02e0ad7"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/naming-and-functions.md",
+      "sha256": "e3f2ae5845c090b8da058cb325a324beed90edc60d0e34bebd9335b458247b63"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/review-checklist.md",
+      "sha256": "2da07484c1fe4d405461b8ae90aeabdbac48a7ea831254d8d9d6e298e4cfa4a1"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/solid.md",
+      "sha256": "5fc515ad65ef2913f1166a200bd4ab68fa79e432979d38ab25d18b85c6de4dbb"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/references/sources.md",
+      "sha256": "6b4748a8752e5afb6f68cb616d95b0e0cd99cec06b061a4d5ace27a8dbf024f0"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/clean-code-guard/rules.md",
+      "sha256": "adeda502b48720f5dbaba0e2297e67d2d76c45d064f9a1422e69196432dec938"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/code-samples.md",
+      "sha256": "6eaeec8a455aabaa34a7c973e619aa12a84581f2505923ac02db078bde4152fa"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/docstrings.md",
+      "sha256": "035bc3ceaa83b60941984076a590de9b037c573e3946381ee58d5f18d0022f49"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/review-checklist.md",
+      "sha256": "ab7d2be0870b657ee730bd4e5dafeb261ad1ad1478918f9461f979b9b3504429"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/sources.md",
+      "sha256": "f1dbdd6b0df695691b1e79e8b933b1d0be7b56fcd86ec7ae1b94694d5ebd07fd"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/references/verification.md",
+      "sha256": "eb21e6d3855a47f5e5bba4a4492e98b29353c8fbac5026c10eeccaa7e197adbd"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/docs-guard/rules.md",
+      "sha256": "6ca9a10c9681353d568af0c54a73efc0bdae049dc05f9683d17311498680ec38"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/references/bot-and-flow-testing.md",
+      "sha256": "55071534120454c75c3046e127621de6e39717967466b7d6ddb2163b9be4f3e5"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/references/review-checklist.md",
+      "sha256": "97f07dc92fb5bb4345c20c06323100b68d7556f540839f5af5bbb2a508f506d3"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/references/vitest.md",
+      "sha256": "b6e9d152c9608638f90aa92c3f910feabadf10ae58e19aeaf939535a38051885"
+    },
+    {
+      "path": ".agents/skills/saleh/arsenal/test-guard/rules.md",
+      "sha256": "2d427dac101697868fc96ead22c609d8d2fd2ea40417d7a1af553629348c13ba"
+    },
+    {
       "path": ".agents/skills/saleh/SKILL.md",
-      "sha256": "50279056e73808cd0cdf7c76974ad50059279cde36cd2f0b696c38338fe8b9bf"
+      "sha256": "6aa727eafd44333b0fd407644a12bc10b74f4a60be5de99b8819a8abffb535a4"
     },
     {
       "path": ".agents/skills/squad-architecture-devops/SKILL.md",
@@ -133,11 +209,11 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "5364a413cf6781156dbaa857b226ba8f5c87080193144a0a70212587d5296e4e"
+      "sha256": "3a7d19502d3be9ea275885ad034e546f2fc1f1df16bdc5aa992c7a7c9698b387"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "4c61d9c9556d8cc9757ce04c59487986a47093e89ba33aa138f7f748883c1ae0"
+      "sha256": "c6d9a8dacebba2809d8d5ee9772d662a17d50e421327f39a0c6e7672d1a10497"
     },
     {
       "path": "CLAUDE.md",
@@ -173,15 +249,15 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "ee807fa075a5f58305d8f2fcf8746451628ca1b2243f1f8e8e428fccc6d70e5e"
+      "sha256": "9f60d8d0b86078759a5266652a06b5513aa19cc6f551d74336bf21f0395f3dc2"
     },
     {
       "path": "package.json",
-      "sha256": "b28173c52342b7661a5d3a857c177b95484c51d4e2e04fe504a0e6469fe96924"
+      "sha256": "3bd5fceec0accba0b093b644e37cddf3d1edee1e476156000e0ad4159ac2d8bf"
     },
     {
       "path": "pnpm-workspace.yaml",
-      "sha256": "91c7f69b61d3935eb84eff2b959c06efe4e99dd2d4e21d40bea102d108c2eb73"
+      "sha256": "884c82e0e71e8fbdec5f16481732f62b0f89240c4ecd4161564d1c3e107736d6"
     },
     {
       "path": "tools/governance/agent-dispatcher.ts",
@@ -200,6 +276,10 @@
       "sha256": "7b45224acb3a217ae7d304e87f1246a50109140510908ed2aaa5dea6458e2127"
     },
     {
+      "path": "tools/governance/jev-auditor.ts",
+      "sha256": "f428da4a941852ca5f1eba5a73ed9e8ec7f40c90d1f72ab5c449229260719ba1"
+    },
+    {
       "path": "tools/governance/pre-commit-test-guard.ts",
       "sha256": "3a8cc03b1d67988f7136f2964d22210fdb7fa5dab68175e16917bd061527847d"
     },
@@ -209,75 +289,119 @@
     },
     {
       "path": "tools/governance/saleh-audit-suite.ts",
-      "sha256": "8e0337e7eda9ed309905170f5f19976c593b11683be368fc2dcd889bcb6e6a53"
+      "sha256": "4dc61937872d959067fa9486d53bdf8fe9bb0bc18fcf6f28552c7c441734282b"
+    },
+    {
+      "path": "tools/governance/sync-migration-registry.ts",
+      "sha256": "71ec96595aa0f38dc21ccc04b87aff736ddc175cac814054c5ec5e205d2d02f4"
+    },
+    {
+      "path": "tools/governance/test-constitutional-sentinel.ts",
+      "sha256": "b7bd3ec25b6ea60b82b1a3306af5da3d188ceae07a26be6e72aaa97447486cd2"
     },
     {
       "path": "tools/governance/tests/agent-dispatcher.spec.ts",
-      "sha256": "6f5eb4422f386e29b360f3c7fea3f4feea29754d0a730fdd3796a84e52256854"
+      "sha256": "3b9c18e6a58711386f2917cb6833dee882a6da103ae06e0e6ef4ff26a319f9e9"
+    },
+    {
+      "path": "tools/governance/tests/codex-transcript-provenance.spec.ts",
+      "sha256": "09c2598328b76d7767d8d8747dd53f75415a44edbc767be5c6fe0e9a53286aa9"
+    },
+    {
+      "path": "tools/governance/tests/core-immutability.spec.ts",
+      "sha256": "4b2a48a4bb384d9d98db979fe3bd6dea521ec14eed4442bf4d112af6be6f1e5a"
     },
     {
       "path": "tools/governance/tests/docker-governance-lock.spec.ts",
       "sha256": "92a2c2630361d5a2cfc27c78504d9b3d8c48fe6d888bdf1af037b05031d64f9d"
     },
     {
+      "path": "tools/governance/tests/fixtures/test-authenticity-fixtures.ts",
+      "sha256": "46129d13f55366cf0d6dedc837717626d68faf83cf55e226ec6c702558a2aaf4"
+    },
+    {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
-      "sha256": "d5dc23c50b19abbd944aa34d67bf2049796c98a5dbd592faf95f9d0b983f06f9"
+      "sha256": "29006f2fe8c0bf70ddc02f46a0902b96400ce0525b09b64697c863829fd9f3a6"
+    },
+    {
+      "path": "tools/governance/tests/jev-auditor.spec.ts",
+      "sha256": "88a966dde1ada41bbdb21999a97c154fe15be2479232017406b1692d3fb94b55"
     },
     {
       "path": "tools/governance/tests/legacy-parity-verifier.spec.ts",
-      "sha256": "7b94c493cfd2384cf660bf8b678b34ff47ade97eab2eba206e622a513b5b8dc2"
+      "sha256": "a2c1166984ea14778d82eb7c68b45f113e061f1b2f2af7f6e0a37ca80c5c9f43"
+    },
+    {
+      "path": "tools/governance/tests/module-boundaries.spec.ts",
+      "sha256": "80d407be54d3cee131b6afc3b49685c5c173596631aac1dadd160947da98037e"
     },
     {
       "path": "tools/governance/tests/pre-commit-test-guard.spec.ts",
-      "sha256": "084509f51860962cc0c2126f398be9d74a66b1ce929dbc6ce4bbe0f4d181b93f"
+      "sha256": "db767b96adad6afa0d10236189ffad939be7745db469578301e5a60fad4be4a6"
     },
     {
       "path": "tools/governance/tests/rag-engine.spec.ts",
-      "sha256": "4b0ac353964ac5d9c01afa10265fe50384643a60de0ac341c01ba7997ec05b75"
+      "sha256": "252c986b22a93a9ef86a83523fa2f72c5bb5cd923bd504f6516abeb065d963be"
     },
     {
       "path": "tools/governance/tests/saleh-audit-suite.spec.ts",
-      "sha256": "8d4a465a3b1a87921856b36c7d13bbacce6a1521901c30bd40454ca67ac46786"
+      "sha256": "91671645d851de754d121ca618ef615f30ec6781e6ce35eb3cf21b4a66ea0607"
+    },
+    {
+      "path": "tools/governance/tests/test-constitutional-sentinel.spec.ts",
+      "sha256": "1f91f55c23ce11b45ab5fe45863701346867e170421dbd43ced6de8daaab1002"
     },
     {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "sha256": "ec41b8c9e9ba609a3beb11ce3430fa4bea28d764935167ac24d45f9f04b2fada"
+      "sha256": "9cdcae3939ca695dad1aa57879df34ea489e6b84c6e0cb92089b1e675e73d8f8"
+    },
+    {
+      "path": "tools/governance/tests/unlock-challenge-engine.spec.ts",
+      "sha256": "97da88dca8c9b8422f82725281179433c54e26663b91a212f2e6ffe1cd9518ae"
     },
     {
       "path": "tools/governance/tests/verify-boundary-deserialization.spec.ts",
-      "sha256": "a70b926eb969e1ba866c0865eab6c554824400969016226bd9f7be4e98294433"
+      "sha256": "d923d0e1db0aa46837c4490cdbf7415690062ea6816078be2e84c87b774df28c"
     },
     {
       "path": "tools/governance/tests/verify-code-security.spec.ts",
-      "sha256": "5f74b0c937bccf8b3063dd70f0444a39553ad02b19eb649fb0e93c218e85a60d"
+      "sha256": "0263ca433b3d7403582c74ccbe471d667f56d25302db5e47bebb12a5dd143551"
     },
     {
       "path": "tools/governance/tests/verify-financial-integrity.spec.ts",
-      "sha256": "b6659fd5f5f97b72e199daf17d549cdea2a633698339cd45e6cdb31a606dffb2"
+      "sha256": "b64526c9bf415a85aeae64b2b6d5a8afc6f339951854a25c09ef52b03ef8456b"
     },
     {
       "path": "tools/governance/tests/verify-git-hygiene.spec.ts",
-      "sha256": "f7ef61e5204fd177cdb03bb683a2cad94bc6d6a54f248604c2a5081728726605"
+      "sha256": "fe7808bf9104de26edcf5be208ef396a448ff28d41962b57cf14b89259fe9294"
     },
     {
       "path": "tools/governance/tests/verify-latency-anti-patterns.spec.ts",
-      "sha256": "8c667c9bb21b4c1996e85f84f678429ac9fe9745298c19b631b001bffbbd6b6d"
+      "sha256": "769f17b639dacba0c908b6fdaad2d5238055ae636e4326fb3f73296cd9198a23"
     },
     {
       "path": "tools/governance/tests/verify-performance-budget.spec.ts",
-      "sha256": "c7df0bd55d31f16c5fa054321981aef5fec5adde78ea20f9b0dc8ac15d7e0e02"
+      "sha256": "01204c8c2303c9ca5a2d647de5fbb953528a95fc309c404d97042a7c6af0c9d8"
     },
     {
       "path": "tools/governance/tests/verify-rbac-invariants.spec.ts",
-      "sha256": "38b1c498892345b2a7c28e299b8c54444ef9204f5f34984b5c04bc418baffa03"
+      "sha256": "e1f070c014754f034ce64ef663e648a841bf241cab0c907ce9191f5a9457c36c"
     },
     {
       "path": "tools/governance/tests/verify-secret-leakage.spec.ts",
-      "sha256": "6c5606ec845d2d38ed89b13b64f486664a7cada047942cdda7f3f74e37c6f195"
+      "sha256": "ec61549a8ea8a7275a5dd19ec1ee1c8ac41edb5dad5b303ee25740d7825f945f"
     },
     {
       "path": "tools/governance/tests/verify-test-authenticity.spec.ts",
-      "sha256": "6886492b426f39cd05ef9e7af020f90f01d18db8fd4182cb19d233c5e49a3410"
+      "sha256": "70013e30970f456006e031d2fb8eb4090b95aed1be2b3c0e348f7803f0943db9"
+    },
+    {
+      "path": "tools/governance/typesafe-guardrails.ts",
+      "sha256": "be9d4c0882fa043de920e8ebacbcda4988771b7db645712e1d44ae2779acab1d"
+    },
+    {
+      "path": "tools/governance/typesafe/audit-catalog.ts",
+      "sha256": "90c975488f37290a1457a9b98b2f8f488f59e09375c0a56417eba334a4ef63e1"
     },
     {
       "path": "tools/governance/unified-lock-engine.ts",
@@ -285,11 +409,15 @@
     },
     {
       "path": "tools/governance/unified-unlock-engine.ts",
-      "sha256": "e452049ff38c9e0b1542502b37f7dae6a81eec15dda5b771f6d5bd4736141bb6"
+      "sha256": "12ba6599b1b7b2d4fdf5b537e33d9704f6397084b3565b565c59845c8547ecaa"
+    },
+    {
+      "path": "tools/governance/unlock-challenge-engine.ts",
+      "sha256": "b507e27796b264fe98b4e98c0827e0820734cb931e233e29c38aac416469f9ac"
     },
     {
       "path": "tools/governance/verify-ai-compliance.ts",
-      "sha256": "aad92156b1eecbdb0b06a1c358c938b1db866ab5c632922138f4df877b4fde03"
+      "sha256": "fa27a5b1e9c6e985ecfeb067463ee6f9204729a9dd3a40a79e9667693d43fc13"
     },
     {
       "path": "tools/governance/verify-architecture.ts",
@@ -302,6 +430,10 @@
     {
       "path": "tools/governance/verify-code-security.ts",
       "sha256": "49f6cae4838e948441aca31aa70ffa530a9fc811bea6896f2380a59475f99f1c"
+    },
+    {
+      "path": "tools/governance/verify-core-immutability.ts",
+      "sha256": "75ac4fa5b73df5d8f5eb9cb771b0e12d9e994fb4608d50270602610edcfd297e"
     },
     {
       "path": "tools/governance/verify-dashboard-auth-contract.ts",
@@ -341,7 +473,7 @@
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
-      "sha256": "0bc869959f1ba0c9aaae320231a484bf25ce46c3eaff2b56ac8f6db6de4cd3cf"
+      "sha256": "21d13ab2489d19fed185de85aa9b2f62804e899d13962f4a1693f725b8a8343f"
     },
     {
       "path": "tools/governance/verify-latency-anti-patterns.ts",
@@ -354,6 +486,10 @@
     {
       "path": "tools/governance/verify-migration-registry.ts",
       "sha256": "97e59e9e224181936da6bc82b07885c563877d02302d39786e51488a8abfd21c"
+    },
+    {
+      "path": "tools/governance/verify-module-boundaries.ts",
+      "sha256": "66fca077ebee86df0fb791dbc7b2630aa7c02db7a4a9c97c20e3c29989e7f53b"
     },
     {
       "path": "tools/governance/verify-observability-contract.ts",
@@ -392,12 +528,20 @@
       "sha256": "2b89456e01cdf48b01ef2d9850b3619bcfbc5d292199f4e78df7f17fe37b017a"
     },
     {
+      "path": "tools/governance/verify-transcript-provenance.ts",
+      "sha256": "d6d310237815d9ac5db1124bbe7ccfd884c2eb1ededc18ec0ba325e602db5222"
+    },
+    {
       "path": "tools/scaffold/lock.ts",
-      "sha256": "e2a8621b4dfb3b62f0aca1b02fe33f448d4fe848abb0fd8d6633dd08d7d838ea"
+      "sha256": "2d3c8fde404071dab4ab1fb2452f8e75738d3bf76b3e3f4ab58aa39a59ef60c4"
     },
     {
       "path": "tools/scaffold/scaffold-dashboard.ts",
       "sha256": "1602a9db5d4f91ffec0b4ccc89a11fd5f0b81d6811a828df6b5b083f070314c0"
+    },
+    {
+      "path": "tools/scaffold/scaffold-flow-v2.ts",
+      "sha256": "c6bdbaef4e0ecc1530251e747561283bbadbc70a523af2bfece6f59c66d64dc6"
     },
     {
       "path": "tools/scaffold/scaffold-flow.ts",
@@ -408,6 +552,14 @@
       "sha256": "74e0a887ca1fc49808897a1a780f0a7b6b455b37acd02577df055a5b1ec16466"
     },
     {
+      "path": "tools/scaffold/scaffold-module-migration.ts",
+      "sha256": "0d5cbc6b4af28435536fc2a210ef1ec4756b9835b1d4f6d1b412570fc8b3c98e"
+    },
+    {
+      "path": "tools/scaffold/scaffold-module-v2.ts",
+      "sha256": "71b0be95c01672e8a37f6d88678ea791f2073384b1a3058f43c8fd675660f0a8"
+    },
+    {
       "path": "tools/scaffold/scaffold-module.ts",
       "sha256": "22e14b20c8c459aa410ca4fb8b8494db3c76a6a0b06269f6fb4c21ef166e3579"
     },
@@ -416,15 +568,27 @@
       "sha256": "647168a9f3f57d9cfbed6d1749aa9948f4e22c93c4639d101c073559d0581c68"
     },
     {
+      "path": "tools/scaffold/tests/flow-v2-scaffold.spec.ts",
+      "sha256": "28d773504ec9f338c33c239066005c46889154db0fe11503d1c5847b55940bd8"
+    },
+    {
+      "path": "tools/scaffold/tests/module-v2-scaffold.spec.ts",
+      "sha256": "a1649eee48a188434cfc8056f0c05bbdb66225a6829cb9fefc41f705c7928141"
+    },
+    {
+      "path": "tools/scaffold/tests/scaffold-write-scope.spec.ts",
+      "sha256": "d19592f33220a80d0529e6521ac775e657bfa33e02a3abadb1be3d388e1c47c0"
+    },
+    {
       "path": "tools/scaffold/unlock.ts",
-      "sha256": "c684a023c1296421966f19235a951a6b6a5a231924cd84538d25fb0bbef06ed7"
+      "sha256": "8e8fdb574d48f57f6a040387a5244af36cfcc947f4390f9c9957b93060f45020"
     }
   ],
   "lockedFlows": {
     "01.1": {
       "flowKey": "01.1",
       "directory": "modules/workforce/src/flows/01.1-worker-registration",
-      "lockedAt": "2026-09-19T06:02:37.926Z",
+      "lockedAt": "2026-09-21T18:20:51.555Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
@@ -432,7 +596,7 @@
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.docs.md",
-          "sha256": "857cfd2f77c80916228ead1f2089ea304f68031854ee2c74e8a0620ceba1a1da"
+          "sha256": "f56265e839db5b7ed326780586a02632bdcbcb3070e3c9044ad6912d48e06c44"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.handler.ts",
@@ -440,7 +604,7 @@
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.keyboard.ts",
-          "sha256": "8afa7b4e94a67d250c9687a72184fe19418f7ce36fb3557b7b1ec4324f00440c"
+          "sha256": "b12eac2e4a970249a032dbc5fc82ae832a0cc9d1efeaae331ad19079573993ce"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.messages.ts",
@@ -448,50 +612,50 @@
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
-          "sha256": "9d2da9ac76f2a06a8cff2d2a96db01c12616ec445a4f119692bb4c6fbbd8185e"
+          "sha256": "ab52327af7d61a56fcbe409cbbbdf8f6c0def513b3f3c0674e873f7de78e6ec7"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
-          "sha256": "40bf39d79f0ede88951375dc6b41b3364f57f63c15a86a443458632f03407b11"
+          "sha256": "c09d17c43c6378eee82a7c69f9f4dbe96d01d05f5bd85b3ead74e82e04d34863"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.telemetry.ts",
-          "sha256": "4d1c626a8c3ae349815aa584e254f54c5c833c515592916039efd7835136ba27"
+          "sha256": "7147a7851d288f63743a1c92816c4410d27a4edbf6fd290baf39d15e7437aeda"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.types.ts",
-          "sha256": "d379c1c466547440553d3ad136c1663e1cd8705873d1cedd8ce15112c694cb1f"
+          "sha256": "7a7704fa34c361549f424471eeff6c1c2a81a96fb79052099527e2f10f5682b2"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.validators.ts",
-          "sha256": "384d56bfb8eb45e504d1eee14f1a4cda5e88a3f09205775d4d4104a75912bc46"
+          "sha256": "e21a25ee4dd6025e6ec7aa3c26e6924a990508b7d90e5c0653acec7919aad5b7"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
-          "sha256": "328016ca8a3ad0b78802119f118ba7d662bc1f2bc8b68ee8b27c75f1304cae2a"
+          "sha256": "d1c3c7095ec88d95c4164df5fd3ee47d9af37808fde701f3a6041ad2a89247ac"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
-          "sha256": "d2ca264d8da37d8badb0951daa14e92c224e3df6e48136c2317f91c4cfc2a07d"
+          "sha256": "74a50b92a2e5cf43ba4da08f321760763abc5aef17d832785942853946bf637f"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.rbac.spec.ts",
-          "sha256": "dcb149c02668345f826039591068609ddd0f4a3f3e16d615010635e1afafaf68"
+          "sha256": "02dfedf3ba995044216050b047f016de3f52de4faab4d57e4239cdfcc7183361"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.unit.spec.ts",
-          "sha256": "e2b165ab40c81994d64f8b2321845a460cb77e29537416fb88a7eaa36c64b8dc"
+          "sha256": "e890b3dfdc6e509cab6bf2bcdd23e517ddc384bd6e710747ca39101d7f7858e4"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
-          "sha256": "44fe4085c659d317b428181ad1e43bf44d94b8235257b4230203657a50790fa4"
+          "sha256": "36faf36f7cb2de3bb06c41717c39d789cb79d452e2f359923902302abae266cb"
         }
       ]
     },
     "00.6": {
       "flowKey": "00.6",
       "directory": "modules/settings/src/flows/00.6-ghost-mode",
-      "lockedAt": "2026-09-17T20:55:43.352Z",
+      "lockedAt": "2026-09-21T18:20:51.596Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.contract.json",
@@ -499,59 +663,59 @@
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.docs.md",
-          "sha256": "9fdd7803b40b1b0ba0fa6ca22efdddc323aaeecf26b46a5dd00034c0f870024f"
+          "sha256": "c74fe3f493f8aa59845044fe4361a96e9ae90613c76e9bd4a26288069b28dd94"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.handler.ts",
-          "sha256": "981502abd19e51b15a3277715121b200b15fdaaae552953c20434c0ca399f39e"
+          "sha256": "667abd021f3d43b7cf4ca14679910fdb7f844f142268d6a4acd1b7e400d4192f"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.keyboard.ts",
-          "sha256": "6f1396de7ad43cf1964c901982e65e40288d864435db511ccef7c9f22318a9da"
+          "sha256": "357622bbba80c78e54e1dbf6eb0ed2d711e35df26f617d1037cb4ea266075c41"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.messages.ts",
-          "sha256": "d4dc681197ecd3c34920a45e573a9cf07cf0c51e3b6dd7272fa66d2c073fefb4"
+          "sha256": "5ac7bfb88eca294d506733e351750f126cbe3a977eef554eca475e0c6b640b5f"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.repository.ts",
-          "sha256": "a788983960c0d15a9a7965dc433f22dd487539d21e72e2cec4fd02f123d30617"
+          "sha256": "011e4643c65b9b5967176f12588d8b57113f15bb2f88bed3c6027d0db3eaa7f2"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.service.ts",
-          "sha256": "787eb5ae5f1f1c167893b7a615fc01cb0c89d0a589e7b0b05760e28eeba5586e"
+          "sha256": "153a1c5abef7627f2a27707d0686ed4fc4e679d122d08b727f82dbb97e722e0f"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.telemetry.ts",
-          "sha256": "099bd7ac303142ef65099cd29ad9c8f4660d0d6bb5dc76f3d6aeb0c82018fb8a"
+          "sha256": "276256df7075c7e1f9be3b43f60c535db856f1599e37c5d23ab1bb71bc338e14"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.types.ts",
-          "sha256": "d1eafec1ead58b85d99d31dc85ede4e546138ec3b29ea1c6732ab5bb012dc183"
+          "sha256": "9fafc76bd906116ecd877c8f30958ba8cde4f81abe588293495d15bc28f39e77"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.validators.ts",
-          "sha256": "04f095061d6194e696db36c259bb56438a6114e0896858d54ba8a308c04f2315"
+          "sha256": "8af1e6dffd5020633308bbbdb418b4c6fd6539cdb03d4482fb8f10acb9e12ed8"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.data.spec.ts",
-          "sha256": "4dd17e59cfc6b0a0bf23d81c9539c308eb1c14b26d0c308af52930a115b4fcf7"
+          "sha256": "19918c11866d26281c86f6eb15a7b1fccc939c9153d88bc39d954906af9e086d"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.integration.spec.ts",
-          "sha256": "5b297bffadaaa05a8cc6cc92e50da56f57c01f691873020097f4fa41d8d85bc3"
+          "sha256": "851f7e010367c076a38fdf5a0dcc3c1afacf78bd77bd3216eca57e62f8c25a14"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.rbac.spec.ts",
-          "sha256": "6b264820dc4bcb7f1845f91c9d933f377e663b0bda667daff95bbf82a981d0b6"
+          "sha256": "b607cd7e0367835677b537ed4cf2524708d467c4e87ca71ac920bda8f63a103b"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.unit.spec.ts",
-          "sha256": "33915bc6490b86118c8bcad6dcb0bc1f48b92f709ec5d58bc2c0c85cb91475dc"
+          "sha256": "0edfdc30739e3c1fb3e1f3fc2b579ea73afeb2f654efa1bda30a8fd595c1f1f2"
         },
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.ux.spec.ts",
-          "sha256": "c3341a4327ffeef105299e566c568a6fe55f86c64a25ee325cb9c6e865d74804"
+          "sha256": "93df19202fb92905ed46ccc099f9cf629b1e2968004bdd99098b69a6914e1e99"
         }
       ]
     },
@@ -718,7 +882,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: analytics",
       "directory": "apps/admin-dashboard/src/app/admin/analytics",
-      "lockedAt": "2026-09-21T07:46:01.174Z",
+      "lockedAt": "2026-09-21T18:20:58.651Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/analytics/analytics-filter-bar.tsx",
@@ -735,7 +899,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: finance",
       "directory": "apps/admin-dashboard/src/app/admin/finance",
-      "lockedAt": "2026-09-21T07:46:01.183Z",
+      "lockedAt": "2026-09-21T18:20:58.663Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/finance/page.tsx",
@@ -748,7 +912,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: finance/treasury",
       "directory": "apps/admin-dashboard/src/app/admin/finance/treasury",
-      "lockedAt": "2026-09-21T07:46:01.187Z",
+      "lockedAt": "2026-09-21T18:20:58.667Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/finance/treasury/page.tsx",
@@ -765,7 +929,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: logistics",
       "directory": "apps/admin-dashboard/src/app/admin/logistics",
-      "lockedAt": "2026-09-21T07:46:01.190Z",
+      "lockedAt": "2026-09-21T18:20:58.672Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/logistics/page.tsx",
@@ -778,7 +942,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: logistics/canteen",
       "directory": "apps/admin-dashboard/src/app/admin/logistics/canteen",
-      "lockedAt": "2026-09-21T07:46:01.193Z",
+      "lockedAt": "2026-09-21T18:20:58.678Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/logistics/canteen/page.tsx",
@@ -791,7 +955,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: operations",
       "directory": "apps/admin-dashboard/src/app/admin/operations",
-      "lockedAt": "2026-09-21T07:46:01.198Z",
+      "lockedAt": "2026-09-21T18:20:58.683Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/operations/page.tsx",
@@ -804,7 +968,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: operations/equipment",
       "directory": "apps/admin-dashboard/src/app/admin/operations/equipment",
-      "lockedAt": "2026-09-21T07:46:01.202Z",
+      "lockedAt": "2026-09-21T18:20:58.687Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/operations/equipment/page.tsx",
@@ -817,7 +981,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: نظرة عامة (Overview)",
       "directory": "apps/admin-dashboard/src/app/admin/page.tsx",
-      "lockedAt": "2026-09-21T07:46:01.205Z",
+      "lockedAt": "2026-09-21T18:20:58.690Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/page.tsx",
@@ -830,7 +994,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/assignments",
       "directory": "apps/admin-dashboard/src/app/admin/settings/assignments",
-      "lockedAt": "2026-09-21T07:46:01.213Z",
+      "lockedAt": "2026-09-21T18:20:58.702Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/assignments/page.tsx",
@@ -843,7 +1007,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/audit-vault",
       "directory": "apps/admin-dashboard/src/app/admin/settings/audit-vault",
-      "lockedAt": "2026-09-21T07:46:01.217Z",
+      "lockedAt": "2026-09-21T18:20:58.707Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/audit-vault/page.tsx",
@@ -856,7 +1020,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/company",
       "directory": "apps/admin-dashboard/src/app/admin/settings/company",
-      "lockedAt": "2026-09-21T07:46:01.224Z",
+      "lockedAt": "2026-09-21T18:20:58.719Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/company/page.tsx",
@@ -869,7 +1033,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/ghost-mode",
       "directory": "apps/admin-dashboard/src/app/admin/settings/ghost-mode",
-      "lockedAt": "2026-09-21T07:46:01.227Z",
+      "lockedAt": "2026-09-21T18:20:58.723Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/ghost-mode/page.tsx",
@@ -882,7 +1046,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/jobs",
       "directory": "apps/admin-dashboard/src/app/admin/settings/jobs",
-      "lockedAt": "2026-09-21T07:46:01.230Z",
+      "lockedAt": "2026-09-21T18:20:58.728Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/jobs/jobs-client.tsx",
@@ -899,7 +1063,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/preferences",
       "directory": "apps/admin-dashboard/src/app/admin/settings/preferences",
-      "lockedAt": "2026-09-21T07:46:01.241Z",
+      "lockedAt": "2026-09-21T18:20:58.750Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/preferences/page.tsx",
@@ -912,7 +1076,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/prisma-studio",
       "directory": "apps/admin-dashboard/src/app/admin/settings/prisma-studio",
-      "lockedAt": "2026-09-21T07:46:01.244Z",
+      "lockedAt": "2026-09-21T18:20:58.755Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/prisma-studio/page.tsx",
@@ -929,7 +1093,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/sites",
       "directory": "apps/admin-dashboard/src/app/admin/settings/sites",
-      "lockedAt": "2026-09-21T07:46:01.247Z",
+      "lockedAt": "2026-09-21T18:20:58.761Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/sites/page.tsx",
@@ -942,7 +1106,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/studio",
       "directory": "apps/admin-dashboard/src/app/admin/settings/studio",
-      "lockedAt": "2026-09-21T07:46:01.250Z",
+      "lockedAt": "2026-09-21T18:20:58.766Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/studio/page.tsx",
@@ -959,7 +1123,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/[id]/edit",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/[id]/edit",
-      "lockedAt": "2026-09-21T07:46:01.271Z",
+      "lockedAt": "2026-09-21T18:20:58.795Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/[id]/edit/edit-worker-client.tsx",
@@ -976,7 +1140,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/clearances",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/clearances",
-      "lockedAt": "2026-09-21T07:46:01.276Z",
+      "lockedAt": "2026-09-21T18:20:58.800Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/clearances/clearances-client.tsx",
@@ -993,7 +1157,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/directory",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/directory",
-      "lockedAt": "2026-09-21T07:46:01.279Z",
+      "lockedAt": "2026-09-21T18:20:58.807Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/directory/directory-client.tsx",
@@ -1010,7 +1174,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/evaluations",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/evaluations",
-      "lockedAt": "2026-09-21T07:46:01.283Z",
+      "lockedAt": "2026-09-21T18:20:58.814Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/evaluations/evaluation-details-modal.tsx",
@@ -1035,7 +1199,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/export",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/export",
-      "lockedAt": "2026-09-21T07:46:01.286Z",
+      "lockedAt": "2026-09-21T18:20:58.818Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/export/page.tsx",
@@ -1048,7 +1212,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/new",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/new",
-      "lockedAt": "2026-09-21T07:46:01.290Z",
+      "lockedAt": "2026-09-21T18:20:58.824Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/new/new-worker-client.tsx",
@@ -1060,61 +1224,12 @@
         }
       ]
     },
-    "flow:00.1": {
-      "id": "flow:00.1",
-      "type": "flow",
-      "title": "تدفق البوت: 00.1-corporate-profile (00.1)",
-      "directory": "modules/settings/src/flows/00.1-corporate-profile",
-      "lockedAt": "2026-09-21T07:46:01.297Z",
-      "files": [
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.contract.json",
-          "sha256": "9c2222011496e0bd7eba0c00b8cb116d1299018d00668fc079751d7d86647066"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.docs.md",
-          "sha256": "7b428f995869abf9b33fc40e96f933e74d9d2778b0659e37396bdd3a62e21887"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.handler.ts",
-          "sha256": "5197db3e85891cb46a8b6338c90c817fd6a96ea249302870fa142d566c1f81a8"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.keyboard.ts",
-          "sha256": "5f4f3e9b44b5e19ec8164c954a8ec9aefee728fcd9608bde915d3c93bbc0de99"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.messages.ts",
-          "sha256": "1fb40618e5ef0eec34628cce64282cd561b128f1fd9fe57f6a32742b6ea43ede"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.repository.ts",
-          "sha256": "c1b7dd424364c04a84d0afeaaacda8c02094c83acbfaf74e23d534f2a550942f"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.service.ts",
-          "sha256": "2a787c7dc90ad1fd5dc525dc809619f7381b1c87d892a87fbe55547704bc3ea6"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.telemetry.ts",
-          "sha256": "5795f30b18d33c6c5cffb82485e67ad90530ebe46d9b9636bfb693d1b01cc905"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.types.ts",
-          "sha256": "dd8e38f89b441465dd4d763290132954da8f1caab4fa4795c18394ce7ebe38d4"
-        },
-        {
-          "path": "modules/settings/src/flows/00.1-corporate-profile/flow.validators.ts",
-          "sha256": "0aa4fed0f6588a60253870ed80362f1b8632e6f5dcebbba3efde4c6d0867c4e5"
-        }
-      ]
-    },
     "flow:00.10": {
       "id": "flow:00.10",
       "type": "flow",
       "title": "تدفق البوت: 00.10-notification-policies (00.10)",
       "directory": "modules/settings/src/flows/00.10-notification-policies",
-      "lockedAt": "2026-09-21T07:46:01.307Z",
+      "lockedAt": "2026-09-21T18:20:58.845Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.10-notification-policies/flow.contract.json",
@@ -1163,7 +1278,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.11-telegram-groups (00.11)",
       "directory": "modules/settings/src/flows/00.11-telegram-groups",
-      "lockedAt": "2026-09-21T07:46:01.316Z",
+      "lockedAt": "2026-09-21T18:20:58.861Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.11-telegram-groups/flow.contract.json",
@@ -1212,7 +1327,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.2-sites-hub (00.2)",
       "directory": "modules/settings/src/flows/00.2-sites-hub",
-      "lockedAt": "2026-09-21T07:46:01.338Z",
+      "lockedAt": "2026-09-21T18:20:58.891Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.2-sites-hub/flow.contract.json",
@@ -1261,7 +1376,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.3-job-matrix (00.3)",
       "directory": "modules/settings/src/flows/00.3-job-matrix",
-      "lockedAt": "2026-09-21T07:46:01.348Z",
+      "lockedAt": "2026-09-21T18:20:58.912Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.3-job-matrix/flow.contract.json",
@@ -1310,7 +1425,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.4-admin-profile (00.4)",
       "directory": "modules/settings/src/flows/00.4-admin-profile",
-      "lockedAt": "2026-09-21T07:46:01.359Z",
+      "lockedAt": "2026-09-21T18:20:58.928Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.4-admin-profile/flow.contract.json",
@@ -1359,7 +1474,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.6-ghost-mode (00.6)",
       "directory": "modules/settings/src/flows/00.6-ghost-mode",
-      "lockedAt": "2026-09-21T07:46:01.379Z",
+      "lockedAt": "2026-09-21T18:20:58.955Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.contract.json",
@@ -1408,7 +1523,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.7-audit-incident-vault (00.7)",
       "directory": "modules/settings/src/flows/00.7-audit-incident-vault",
-      "lockedAt": "2026-09-21T07:46:01.392Z",
+      "lockedAt": "2026-09-21T18:20:58.970Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.7-audit-incident-vault/flow.contract.json",
@@ -1457,7 +1572,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.8-apm-telemetry (00.8)",
       "directory": "modules/settings/src/flows/00.8-apm-telemetry",
-      "lockedAt": "2026-09-21T07:46:01.402Z",
+      "lockedAt": "2026-09-21T18:20:58.986Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.8-apm-telemetry/flow.contract.json",
@@ -1506,7 +1621,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.9-emergency-cache (00.9)",
       "directory": "modules/settings/src/flows/00.9-emergency-cache",
-      "lockedAt": "2026-09-21T07:46:01.413Z",
+      "lockedAt": "2026-09-21T18:20:59.003Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.9-emergency-cache/flow.contract.json",
@@ -1555,7 +1670,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.1-worker-registration (01.1)",
       "directory": "modules/workforce/src/flows/01.1-worker-registration",
-      "lockedAt": "2026-09-21T07:46:01.426Z",
+      "lockedAt": "2026-09-21T18:20:59.019Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
@@ -1604,7 +1719,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.2.D-worker-edit (01.2.D)",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit",
-      "lockedAt": "2026-09-21T07:46:01.438Z",
+      "lockedAt": "2026-09-21T18:22:31.324Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.cigarette-handler.ts",
@@ -1677,7 +1792,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.4-worker-export (01.4)",
       "directory": "modules/workforce/src/flows/01.4-worker-export",
-      "lockedAt": "2026-09-21T07:46:01.451Z",
+      "lockedAt": "2026-09-21T18:20:59.056Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.4-worker-export/flow.contract.json",
@@ -1730,7 +1845,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.5-worker-directory (01.5)",
       "directory": "modules/workforce/src/flows/01.5-worker-directory",
-      "lockedAt": "2026-09-21T07:46:01.463Z",
+      "lockedAt": "2026-09-21T18:29:29.135Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/flow.contract.json",
@@ -1783,7 +1898,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.6-worker-self-edit (01.6)",
       "directory": "modules/workforce/src/flows/01.6-worker-self-edit",
-      "lockedAt": "2026-09-21T07:46:01.475Z",
+      "lockedAt": "2026-09-21T18:34:44.262Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.6-worker-self-edit/flow.contract.json",
@@ -1832,7 +1947,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.7-guest-join-and-linking (01.7)",
       "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking",
-      "lockedAt": "2026-09-21T07:46:01.486Z",
+      "lockedAt": "2026-09-21T18:36:47.173Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
@@ -1881,7 +1996,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.9-worker-commitment-index (01.9)",
       "directory": "modules/workforce/src/flows/01.9-worker-commitment-index",
-      "lockedAt": "2026-09-21T07:46:01.514Z",
+      "lockedAt": "2026-09-21T18:20:59.134Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
@@ -1938,7 +2053,7 @@
       "type": "infra",
       "title": "المحرك المؤسسي للسرعة الفائقة واستجابة البوت APM",
       "directory": "apps/bot-server/src/services",
-      "lockedAt": "2026-09-21T07:46:01.527Z",
+      "lockedAt": "2026-09-21T18:20:59.149Z",
       "files": [
         {
           "path": "apps/bot-server/src/services/fast-cache.service.ts",
@@ -1963,11 +2078,15 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-21T12:17:39.017Z",
+      "lockedAt": "2026-09-22T15:24:39.219Z",
       "files": [
         {
+          "path": "packages/telemetry/CHANGELOG.md",
+          "sha256": "5fb1f8d832024aac7309f7e146bee99347d3bf5600a2ad05a1f58a6350201d8d"
+        },
+        {
           "path": "packages/telemetry/package.json",
-          "sha256": "f174ae62a7a8460bbdeb1d05595c6b55809ae9d24f8f0be2aaa7c09eff6f704e"
+          "sha256": "087645d5eb73fb068bd105759bf5e0c71170f6acf727e3a19ee8c824e0559456"
         },
         {
           "path": "packages/telemetry/src/adapters/grammy.ts",
@@ -2011,7 +2130,7 @@
         },
         {
           "path": "packages/telemetry/src/version.ts",
-          "sha256": "5f635efc9290dc4111674646006cefe1d167a636ed02d4608ab6081eafce36ea"
+          "sha256": "79051b8a5a6d5f84d4261ef64b18111d82a3c25c3c4fe18b9c18adc5b757db0c"
         },
         {
           "path": "packages/telemetry/tsconfig.json",
@@ -2024,7 +2143,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.12-user-rbac-management (00.12)",
       "directory": "modules/settings/src/flows/00.12-user-rbac-management",
-      "lockedAt": "2026-09-21T07:46:01.328Z",
+      "lockedAt": "2026-09-21T18:20:58.877Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.12-user-rbac-management/flow.contract.json",
@@ -2073,7 +2192,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce",
       "directory": "apps/admin-dashboard/src/app/admin/workforce",
-      "lockedAt": "2026-09-21T07:46:01.267Z",
+      "lockedAt": "2026-09-21T18:20:58.789Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/loading.tsx",
@@ -2090,7 +2209,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings",
       "directory": "apps/admin-dashboard/src/app/admin/settings",
-      "lockedAt": "2026-09-21T07:46:01.210Z",
+      "lockedAt": "2026-09-21T18:20:58.698Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/loading.tsx",
@@ -2107,7 +2226,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: approvals",
       "directory": "apps/admin-dashboard/src/app/admin/approvals",
-      "lockedAt": "2026-09-21T07:46:01.180Z",
+      "lockedAt": "2026-09-21T18:20:58.657Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/approvals/approvals-client.tsx",
@@ -2128,7 +2247,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/telemetry",
       "directory": "apps/admin-dashboard/src/app/admin/settings/telemetry",
-      "lockedAt": "2026-09-21T07:46:01.260Z",
+      "lockedAt": "2026-09-21T18:20:58.777Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/telemetry/loading.tsx",
@@ -2149,7 +2268,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/notifications",
       "directory": "apps/admin-dashboard/src/app/admin/settings/notifications",
-      "lockedAt": "2026-09-21T07:46:01.237Z",
+      "lockedAt": "2026-09-21T18:20:58.738Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/notifications/page.tsx",
@@ -2162,7 +2281,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/bot-features",
       "directory": "apps/admin-dashboard/src/app/admin/settings/bot-features",
-      "lockedAt": "2026-09-21T07:46:01.221Z",
+      "lockedAt": "2026-09-21T18:20:58.714Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/bot-features/components/bot-node-card.tsx",
@@ -2187,7 +2306,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/matrix",
       "directory": "apps/admin-dashboard/src/app/admin/settings/matrix",
-      "lockedAt": "2026-09-21T07:46:01.233Z",
+      "lockedAt": "2026-09-21T18:20:58.733Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/matrix/matrix-client.tsx",
@@ -2204,7 +2323,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/telegram-groups",
       "directory": "apps/admin-dashboard/src/app/admin/settings/telegram-groups",
-      "lockedAt": "2026-09-21T07:46:01.255Z",
+      "lockedAt": "2026-09-21T18:20:58.771Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/telegram-groups/groups-client.tsx",
@@ -2221,7 +2340,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/users",
       "directory": "apps/admin-dashboard/src/app/admin/settings/users",
-      "lockedAt": "2026-09-21T07:46:01.263Z",
+      "lockedAt": "2026-09-21T18:20:58.782Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/users/page.tsx",
@@ -2238,7 +2357,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.5-admin-assignment (00.5)",
       "directory": "modules/settings/src/flows/00.5-admin-assignment",
-      "lockedAt": "2026-09-21T07:46:01.369Z",
+      "lockedAt": "2026-09-21T18:20:58.940Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/flow.contract.json",
@@ -2282,53 +2401,20 @@
         }
       ]
     },
-    "infra:docker": {
-      "id": "infra:docker",
-      "type": "infra",
-      "title": "البنية التحتية والدوكر وقواعد البيانات",
-      "directory": "docker",
-      "lockedAt": "2026-09-21T12:17:39.017Z",
-      "files": [
-        {
-          "path": ".dockerignore",
-          "sha256": "865f3560cd73f005a383c3215541b20dc4e796866ac0d0a0fcecbed1ffffb270"
-        },
-        {
-          "path": "docker-compose.yml",
-          "sha256": "88633948450480ced0616039901a250d9c1ddc5d2aad96c7efe495118a833718"
-        },
-        {
-          "path": "docker/Dockerfile",
-          "sha256": "e1e12eee6a0d9c46bfb640d80918af4de8e6b3da09fa2806b198e2fea2d902fb"
-        },
-        {
-          "path": "docker/Dockerfile.dashboard",
-          "sha256": "e21232dec720a4696d5e175e5f53de7342ac4c23387d4595501e00353b052331"
-        },
-        {
-          "path": "docker/Dockerfile.docs",
-          "sha256": "bc7378fe615b16d779b050c6273cdbe7e7bca1a1d54b86765147707e284a66f2"
-        },
-        {
-          "path": "docker/nginx-docs.conf",
-          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
-        },
-        {
-          "path": "docker/postgres/init-scripts/01-init-security.sql",
-          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
-        }
-      ]
-    },
     "package:regional-engine": {
       "id": "package:regional-engine",
       "type": "package",
       "title": "حزمة النواة: @alsaada/regional-engine",
       "directory": "packages/regional-engine",
-      "lockedAt": "2026-09-21T07:46:01.574Z",
+      "lockedAt": "2026-09-21T18:20:59.202Z",
       "files": [
         {
+          "path": "packages/regional-engine/CHANGELOG.md",
+          "sha256": "936756cb5603057f0547ea69f4dc7ef799e570df39190742ea75c2a97dc543fc"
+        },
+        {
           "path": "packages/regional-engine/package.json",
-          "sha256": "6e6a2cd0d79033daeb545d83631d8c9ee30301d4eb58dd13c76dd812e77e4ada"
+          "sha256": "c94472ab0e10169d94464d20cec6b49e8674872ffe13d3333898970ade30f272"
         },
         {
           "path": "packages/regional-engine/src/currency.ts",
@@ -2361,11 +2447,15 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/national-id-engine",
       "directory": "packages/national-id-engine",
-      "lockedAt": "2026-09-21T07:46:01.562Z",
+      "lockedAt": "2026-09-21T18:20:59.190Z",
       "files": [
         {
+          "path": "packages/national-id-engine/CHANGELOG.md",
+          "sha256": "5e9e1e9456e042f90a4039e241beff25df4b6e8744a9f2924ea17c2ed37f9667"
+        },
+        {
           "path": "packages/national-id-engine/package.json",
-          "sha256": "ca1eff9fc470e894f68c7158a85937bf0f4d2f92655d95d6a44230673ed3b631"
+          "sha256": "fc6099a305e7e2c4cd0f1b9cc7464d0456878a0197dcf3a7887c73abf8a17d03"
         },
         {
           "path": "packages/national-id-engine/src/constants.ts",
@@ -2394,7 +2484,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.8-worker-offboarding (01.8)",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding",
-      "lockedAt": "2026-09-21T07:46:01.500Z",
+      "lockedAt": "2026-09-21T18:20:59.119Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/flow.actions.ts",
@@ -2455,11 +2545,15 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/ai-vision-engine",
       "directory": "packages/ai-vision-engine",
-      "lockedAt": "2026-09-21T07:46:01.532Z",
+      "lockedAt": "2026-09-21T18:20:59.156Z",
       "files": [
         {
+          "path": "packages/ai-vision-engine/CHANGELOG.md",
+          "sha256": "43ef4506d9bc1b6ae2c81bb9062aa0e4a87c584e2ca06fff7f65052ee96215f2"
+        },
+        {
           "path": "packages/ai-vision-engine/package.json",
-          "sha256": "83d493b50d9c8ea6a72579214e588b9b7796501fa576d28af03f537d03c5c903"
+          "sha256": "610b2bfd6a43042601e74e8dfc1b00007df382d49d9f0c98b07c86086085c9b1"
         },
         {
           "path": "packages/ai-vision-engine/src/engine.ts",
@@ -2488,11 +2582,15 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/rbac",
       "directory": "packages/rbac",
-      "lockedAt": "2026-09-21T07:46:01.567Z",
+      "lockedAt": "2026-09-21T18:20:59.197Z",
       "files": [
         {
+          "path": "packages/rbac/CHANGELOG.md",
+          "sha256": "6b9d0cb93b0d15b38d41456f99efda8cd119e58e1af5de0f0d9e9212a1bf6dec"
+        },
+        {
           "path": "packages/rbac/package.json",
-          "sha256": "45ea87d7daffbae8463fa1535283fa328aafdffa44ccf999174d127d2e30c616"
+          "sha256": "61c8f7fd6692deeaf9b288aa60407b54ea59883d4b70973f5ca291945b8e6aba"
         },
         {
           "path": "packages/rbac/src/catalog.ts",
@@ -2532,279 +2630,6 @@
         },
         {
           "path": "packages/rbac/tsconfig.json",
-          "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
-        }
-      ]
-    },
-    "package:core-components": {
-      "id": "package:core-components",
-      "type": "package",
-      "title": "حزمة النواة: @alsaada/core-components",
-      "directory": "packages/core-components",
-      "lockedAt": "2026-09-21T07:46:01.547Z",
-      "files": [
-        {
-          "path": "packages/core-components/package.json",
-          "sha256": "9944fba369c8856154ddb973e542fce6903a09a78dd68259c76b7840729b4222"
-        },
-        {
-          "path": "packages/core-components/src/amount-picker/keyboard.ts",
-          "sha256": "66d4fbd3bb18ca571b349726a79f04ac36b9d3e5f151bf452edceb05faaa3bf0"
-        },
-        {
-          "path": "packages/core-components/src/amount-picker/validator.ts",
-          "sha256": "d0a8b4819bc140cb390f0c1028b13af76e6a25f0689bffa976767097cdc6cf3c"
-        },
-        {
-          "path": "packages/core-components/src/approval-workflow/types.ts",
-          "sha256": "9caeefbcabbce16738ad05e5ff3858edd3677dd164b6e48ef8f3c8b91d34dbca"
-        },
-        {
-          "path": "packages/core-components/src/approval-workflow/workflow.ts",
-          "sha256": "20d329791bbdfb04305971d3fb63cc037c1a4697f8f868ec3782dd026a9192ae"
-        },
-        {
-          "path": "packages/core-components/src/attachment-pipeline/pipeline.ts",
-          "sha256": "e6429010bd3194c78986eddf5880c66a405c9a0267a31e6c2becb0a89a497307"
-        },
-        {
-          "path": "packages/core-components/src/attachment-pipeline/types.ts",
-          "sha256": "da2006beaa67e8ddaa5d61459702b00dc01db661897779d34250ebbbce7fd4e1"
-        },
-        {
-          "path": "packages/core-components/src/bot-catalog/bot-feature-registry.service.ts",
-          "sha256": "bf5628acb3dfd646240a20025f052f4b645f4fc16d4b7632c1d677816d6f7ac0"
-        },
-        {
-          "path": "packages/core-components/src/bot-catalog/feature-gate-guard.ts",
-          "sha256": "2462f60bf38acb50f9ed150a8f3ec61b70ac8f32e5fb347503c7ee239ebb44cd"
-        },
-        {
-          "path": "packages/core-components/src/bot-catalog/index.ts",
-          "sha256": "9864d7a4b180333016d324177c1c7c4f0e0d2358c5ef06953c71632acf0b8995"
-        },
-        {
-          "path": "packages/core-components/src/bot-catalog/types.ts",
-          "sha256": "dfdc0819ef07081a64c33aa66fe5519104747e3c70f6b647dab1b0480e4eb134"
-        },
-        {
-          "path": "packages/core-components/src/clearing-engine/clearing.ts",
-          "sha256": "46835565b5324b17d567ccfd3f018a7ef0b8044be8f08cdbe0f050e61d0fe518"
-        },
-        {
-          "path": "packages/core-components/src/clearing-engine/types.ts",
-          "sha256": "b3517ebab9456fa3de03b55288737807210cd6365d3d00a369fbda09b6b79cd8"
-        },
-        {
-          "path": "packages/core-components/src/completion-card/keyboard.ts",
-          "sha256": "6919ea587d6134e0f521b6830880bd7c6cf1829a671ce1f949181672b26618fa"
-        },
-        {
-          "path": "packages/core-components/src/completion-card/whatsapp.ts",
-          "sha256": "aca3b94bd0f69dec88a972837d925e9aaa83bc3fd0c6fe17763ab7a44f06e03a"
-        },
-        {
-          "path": "packages/core-components/src/confirmation-card/formatter.ts",
-          "sha256": "706b48e0e5fe8d9a33ed9637fba94d4fedf0639c3341ca8e803114b15f62f85a"
-        },
-        {
-          "path": "packages/core-components/src/confirmation-card/keyboard.ts",
-          "sha256": "3414a1a1e66e84255ff0c91b95be3e291d0b8118669676673faa628261b60c40"
-        },
-        {
-          "path": "packages/core-components/src/contracts/dashboard.contract.ts",
-          "sha256": "8e02e7f2044679e50f3a110fa51182d100fb66d985d8d196c0b69654d9ce4bfa"
-        },
-        {
-          "path": "packages/core-components/src/contracts/flow.contract.ts",
-          "sha256": "10453f59a1c4bd4361c177faec4038809d352dd48b947b010ae56ec0d21a9798"
-        },
-        {
-          "path": "packages/core-components/src/contracts/index.ts",
-          "sha256": "19e54b3f7a4e9f58ee6de0436402e80c2412ca18bd3a51385ae25c38600acfea"
-        },
-        {
-          "path": "packages/core-components/src/contracts/module.contract.ts",
-          "sha256": "744be841855ccc3b810652382a1fc482f701623a68fc8d25d18d91e9764409af"
-        },
-        {
-          "path": "packages/core-components/src/custody-gate/gate.ts",
-          "sha256": "4e717c75921f9982e8df43979ee05e27e6c8f6872e2ec8ba477ea1250301e000"
-        },
-        {
-          "path": "packages/core-components/src/custody-gate/types.ts",
-          "sha256": "224004c552b354e00a4aefb447fd51b9c854018259d93b8234655c99568b2d10"
-        },
-        {
-          "path": "packages/core-components/src/date-picker/keyboard.ts",
-          "sha256": "8b96299ee4a5208d58802016a2c8572e4fe9241ab035877015074cc2b08fbfbc"
-        },
-        {
-          "path": "packages/core-components/src/date-picker/parser.ts",
-          "sha256": "fe20a6cf3ddbae3453c63a822820f8666a12face43695a474745c9e6fb52f890"
-        },
-        {
-          "path": "packages/core-components/src/formatting/telegram-formatters.ts",
-          "sha256": "c7ba028db00c3459b40b289e5c854d3051b7bb1067bc90f71ba97564aa3d059d"
-        },
-        {
-          "path": "packages/core-components/src/governorate-picker/helper.ts",
-          "sha256": "3f2eb120ce79be056fddf160a5973606e2cb6279bb4ee5a721da6095595af7e5"
-        },
-        {
-          "path": "packages/core-components/src/governorate-picker/index.ts",
-          "sha256": "79b9092ec8d32c728ef28b1a4f8051340d034b3653134eabb0866e614a53eab1"
-        },
-        {
-          "path": "packages/core-components/src/governorate-picker/keyboard.ts",
-          "sha256": "a26cddfbae84bcca655dbc6d5a830a22947d71c0fec52d7ade4e433129fcdfb6"
-        },
-        {
-          "path": "packages/core-components/src/governorate-picker/types.ts",
-          "sha256": "a85ef4acfdd5b307b810e69dad1a03ddc5c2012a107e6e900ee7d9f3c3c47c19"
-        },
-        {
-          "path": "packages/core-components/src/in-place-flow/index.ts",
-          "sha256": "f9a269b5609cb55296849ae39fb10c76c151e03f4702c37b53c5146f99a73a00"
-        },
-        {
-          "path": "packages/core-components/src/in-place-flow/manager.ts",
-          "sha256": "fbaf5149c7e4463e70ed4f07439ad0709be0a2c5495a72c32f3ae8a712657762"
-        },
-        {
-          "path": "packages/core-components/src/in-place-flow/types.ts",
-          "sha256": "228e3476f9dd31718813bcba1a4468464c8baed62d4297e476356924083296d2"
-        },
-        {
-          "path": "packages/core-components/src/index.ts",
-          "sha256": "f567061ae63ef99550bd1d262bfe6560c27a4ca8df457b14013f19cd2edbb6c9"
-        },
-        {
-          "path": "packages/core-components/src/installment-engine/engine.ts",
-          "sha256": "e6e47f49ca97d436142c69f759efbcb4c2b6ba32abbb45bc4faa7b50d6dfb0e4"
-        },
-        {
-          "path": "packages/core-components/src/installment-engine/types.ts",
-          "sha256": "6f1557375fa74edb37ff165979f80d11a813dde9a90ce94e0146c9ab4b77010e"
-        },
-        {
-          "path": "packages/core-components/src/location-picker/card.ts",
-          "sha256": "1a61a1a47e801d71225a33b13ae76140464c07fe7bb3e93b8344904af89c37e4"
-        },
-        {
-          "path": "packages/core-components/src/location-picker/index.ts",
-          "sha256": "00b2617c9f76c3589e1ccdd12f7e60e925e79581ede2d2965241ca8a02931fd2"
-        },
-        {
-          "path": "packages/core-components/src/location-picker/keyboard.ts",
-          "sha256": "5414652c2d02270ec0b600fcef326cbcefd95c628b668677c79ddcd16a0f1f99"
-        },
-        {
-          "path": "packages/core-components/src/location-picker/parser.ts",
-          "sha256": "354b0e0fa72ca9ee648fee732e6a015f54225f4019fe994063a9ae9418c34b18"
-        },
-        {
-          "path": "packages/core-components/src/location-picker/types.ts",
-          "sha256": "b48505b29e375d9fca529e75154a4721b849632549f303e8e55b82ac7a5636ab"
-        },
-        {
-          "path": "packages/core-components/src/module-bus/index.ts",
-          "sha256": "799c117acf7a974be002077e9b18ac8279335bd8ffb8b7ed0ea9f16ef4221b10"
-        },
-        {
-          "path": "packages/core-components/src/module-bus/sovereign-auto-loader.ts",
-          "sha256": "e87cded727ce50c4755788dad20135bc0df25e372a4c03de4ffcf031588ee004"
-        },
-        {
-          "path": "packages/core-components/src/multi-channel/notification-dispatcher.ts",
-          "sha256": "3db3caed0bbf2bc3020038452e15ba677e838e556ff4ca27bc45500eb8db699d"
-        },
-        {
-          "path": "packages/core-components/src/multi-channel/notification-helper.ts",
-          "sha256": "388e92022c6a87865c8d9d9431733d11b97bd377a286f46421e3a028ce272cc3"
-        },
-        {
-          "path": "packages/core-components/src/multi-channel/notification-policy.ts",
-          "sha256": "ed954a0746a672f8e0d4b8e26aab2796b0bd5fca94bea33fcd97b79885cbcaeb"
-        },
-        {
-          "path": "packages/core-components/src/multi-channel/topic-router.ts",
-          "sha256": "5cbe68b6acca7072ac2d44466724ce805ed2df6ddced19aae57f7695ea481256"
-        },
-        {
-          "path": "packages/core-components/src/outbox-queue/types.ts",
-          "sha256": "70d09e71263a4347a3029c6ebadc425533aceb93f9f9fac0d46cad68efe1da67"
-        },
-        {
-          "path": "packages/core-components/src/outbox-queue/worker.ts",
-          "sha256": "3c9f26c8a5425fa180f469849d094320c1ac4b6350bd458059ca971a86620633"
-        },
-        {
-          "path": "packages/core-components/src/purchase-picker/suggestions.ts",
-          "sha256": "4572cd4b624617bce3d91c1defb165ad9b23d0ccf52a08d54acedf6673f2e667"
-        },
-        {
-          "path": "packages/core-components/src/quantity-picker/keyboard.ts",
-          "sha256": "bd790a70a6869fb2f63352446dd1a264ca6bd41c21672deaa5b364e18e9cdba8"
-        },
-        {
-          "path": "packages/core-components/src/quantity-picker/validator.ts",
-          "sha256": "65aa33db3170a8ae3dcd4b141f2974bbb66f614600b4c6a0f150205b657a4df2"
-        },
-        {
-          "path": "packages/core-components/src/shift-accrual/engine.ts",
-          "sha256": "3a8a25ea77a244b4d155f9b029b055d715084eeeaaa549dc2412f3e14c3d89ea"
-        },
-        {
-          "path": "packages/core-components/src/shift-accrual/types.ts",
-          "sha256": "f72011e57000adeb31515872b0e29f334ba4c5bfc2506a3d0e71c72e69c046e8"
-        },
-        {
-          "path": "packages/core-components/src/source-picker/keyboard.ts",
-          "sha256": "b98e81e7d62aaab0ca3739e36233f47f73c272cb81f041a1ddab3716db0ffddb"
-        },
-        {
-          "path": "packages/core-components/src/source-picker/types.ts",
-          "sha256": "d7c158ac89e8f4e0e6a5a82f5e84ce8102e11631ebca9411e45450b10ffce4fa"
-        },
-        {
-          "path": "packages/core-components/src/source-picker/validator.ts",
-          "sha256": "7ba4f4456e84dce2a49d54a3b059db5523cb7f2e89e27deeeda82035f7564fb1"
-        },
-        {
-          "path": "packages/core-components/src/types.ts",
-          "sha256": "c7f0a8a9331d6d51c69244bf51c51db0c7727c50cc9055f9dc56811e3f8d3fe5"
-        },
-        {
-          "path": "packages/core-components/src/wizard-session/wizard-session.engine.ts",
-          "sha256": "3ad9d90047495e6db067113d050cddf537f018922e456c8e11bfed33d22099a8"
-        },
-        {
-          "path": "packages/core-components/src/worker-commitment/engine.ts",
-          "sha256": "e8ec1a9f0d0d8626cea52c11d1698cdac50444dfa54de94234c52463e5e47b6f"
-        },
-        {
-          "path": "packages/core-components/src/worker-commitment/formatter.ts",
-          "sha256": "d4a13fb6ded8dd9e8f26ec22f3fe3d2b83ef797f699d0a74d645b06f77681a87"
-        },
-        {
-          "path": "packages/core-components/src/worker-commitment/index.ts",
-          "sha256": "bd9e9f6d1878fa07e04dc21f09482a94689afb65490fd728d6c68f46b13175ef"
-        },
-        {
-          "path": "packages/core-components/src/worker-commitment/types.ts",
-          "sha256": "7ebd88fa5398cfc3dcaac6738f479cc8ed1bbefbe9decacaebf5592ecc0298f1"
-        },
-        {
-          "path": "packages/core-components/src/worker-picker/filter.ts",
-          "sha256": "4032e07a66da002927234f81cf6e8234c3bc51bc77b067cb027a92c91689ce9f"
-        },
-        {
-          "path": "packages/core-components/src/worker-picker/keyboard.ts",
-          "sha256": "d9ac48159a8b7e0c9488915df0c0c3bb0009d755ac3c5a5b531c6bffe28e3b62"
-        },
-        {
-          "path": "packages/core-components/tsconfig.json",
           "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
         }
       ]
@@ -2892,11 +2717,15 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/database",
       "directory": "packages/database",
-      "lockedAt": "2026-09-21T07:46:01.558Z",
+      "lockedAt": "2026-09-21T18:20:59.185Z",
       "files": [
         {
+          "path": "packages/database/CHANGELOG.md",
+          "sha256": "9306c7957c1fa2e1ee9fa80ab06abe82e9a43b195e707736e801e6f094a92148"
+        },
+        {
           "path": "packages/database/package.json",
-          "sha256": "14c8a8cfdfac4165ef011b1cc91481cc56b7870fffe50dcd9baba754becd7dd8"
+          "sha256": "92a6b16d3c413de3f745554560c696122d392727e43593a9c2dd8d954900e766"
         },
         {
           "path": "packages/database/prisma.config.ts",
@@ -3023,6 +2852,10 @@
           "sha256": "79acc16318323a71a9dd963ac4dac3f854acb7d64edcc7a51fc6f73f31ba8dce"
         },
         {
+          "path": "packages/database/src/scripts/studio-bridge.mjs",
+          "sha256": "be69d461ed600413a0c7f4c117cf99b31509c03eea9efc3551af902bd05444ea"
+        },
+        {
           "path": "packages/database/tsconfig.json",
           "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
         }
@@ -3033,11 +2866,15 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/shared",
       "directory": "packages/shared",
-      "lockedAt": "2026-09-21T07:46:01.580Z",
+      "lockedAt": "2026-09-21T18:20:59.227Z",
       "files": [
         {
+          "path": "packages/shared/CHANGELOG.md",
+          "sha256": "af0a29e44f4df4b01336ff93622a950735bc6e464a68eae64724dcb6c1bd875d"
+        },
+        {
           "path": "packages/shared/package.json",
-          "sha256": "42307d41e384599fb7502ab2b2757e127c007e7d6850e414aed2a79f548325e8"
+          "sha256": "0425fe35a8ec08a0710574bf151a91208f7ed05261dcc5fb604673d0d73ad866"
         },
         {
           "path": "packages/shared/src/domain/arabic-text.ts",
@@ -3710,6 +3547,43 @@
         {
           "path": "apps/bot-server/tests/site-scope.spec.ts",
           "sha256": "b3b3d8680fd502c55059b1408176a908d8e56e45fb43fc7f38ebf67df2a51619"
+        }
+      ]
+    },
+    "infra:docker": {
+      "id": "infra:docker",
+      "type": "infra",
+      "title": "البنية التحتية والدوكر وقواعد البيانات",
+      "directory": "docker",
+      "lockedAt": "2026-09-22T17:19:09.057Z",
+      "files": [
+        {
+          "path": ".dockerignore",
+          "sha256": "d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a"
+        },
+        {
+          "path": "docker-compose.yml",
+          "sha256": "000386b68bb88660646931d961732d320237d4f277b4fcc94f3d95cecdc3e9be"
+        },
+        {
+          "path": "docker/Dockerfile",
+          "sha256": "1b462f6fc3419dba85d06322ed03b6a38b17d5fcfa9afc64291594ca106cfa8b"
+        },
+        {
+          "path": "docker/Dockerfile.dashboard",
+          "sha256": "fd8198a13a12ac016e36daba9f225c844b28d3bc09e587bfb70d0d6bbacf6719"
+        },
+        {
+          "path": "docker/Dockerfile.docs",
+          "sha256": "89064cb6dd682c11a03cf2f9137ef1ffa1df06e7c6b40b97290927f3df1d725e"
+        },
+        {
+          "path": "docker/nginx-docs.conf",
+          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
+        },
+        {
+          "path": "docker/postgres/init-scripts/01-init-security.sql",
+          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
         }
       ]
     }

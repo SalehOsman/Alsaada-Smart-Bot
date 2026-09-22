@@ -1,18 +1,19 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-21 (2026-09-21T07:46:01.558Z)
+- **تاريخ القفل:** 2026-09-21 (2026-09-21T18:20:59.185Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
 - **المسار الأساسي:** `packages/database`
-- **عدد الملفات المقفلة:** 33 ملفاً
+- **عدد الملفات المقفلة:** 35 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/database/package.json` | `14c8a8cfdfac4165ef011b1cc91481cc56b7870fffe50dcd9baba754becd7dd8` |
+| `packages/database/CHANGELOG.md` | `9306c7957c1fa2e1ee9fa80ab06abe82e9a43b195e707736e801e6f094a92148` |
+| `packages/database/package.json` | `92a6b16d3c413de3f745554560c696122d392727e43593a9c2dd8d954900e766` |
 | `packages/database/prisma.config.ts` | `7f96b4560ae8a2037d80524b18c42d4259803ec9659eb6cbaca6714230118609` |
 | `packages/database/prisma/migrations/20260911000000_init_enterprise_hash_ledger/migration.sql` | `30ca6a54b21f14cc6233e8e667b69c437522f77453ebe2cd9e4b45e9c7cecaee` |
 | `packages/database/prisma/migrations/20260912090000_add_trace_incidents_and_magic_claim/migration.sql` | `dc6fcabbc939db2b4f9e3a55a359e975da821101425cf50fbc749b990a232118` |
@@ -44,6 +45,7 @@
 | `packages/database/src/scripts/seed-canteen-cigarettes.ts` | `0407713651a05147e84a8ee1c7bf161b6f9945e5168d711765c0fa797f6d92b4` |
 | `packages/database/src/scripts/seed-company-profile.ts` | `bc69e640bd45b5e9cdc8bb2f391cff72405c018714de4f93c2cb5f3a2d37fe03` |
 | `packages/database/src/scripts/seed-hq-site.ts` | `79acc16318323a71a9dd963ac4dac3f854acb7d64edcc7a51fc6f73f31ba8dce` |
+| `packages/database/src/scripts/studio-bridge.mjs` | `be69d461ed600413a0c7f4c117cf99b31509c03eea9efc3551af902bd05444ea` |
 | `packages/database/tsconfig.json` | `c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280` |
 
 ## بوابات التحقق المعتمدة

@@ -1,10 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ExcelJS from 'exceljs';
 import { WorkerExportService } from '../flow.service.js';
 import { WorkerExportRepository } from '../flow.repository.js';
 import type { WorkerExportEntity } from '../flow.types.js';
 
 describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
   const mockWorkers: WorkerExportEntity[] = [
     {
       id: 'wrk-1',
@@ -86,70 +88,78 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     },
   ];
 
-  const mockRepo = {
-    getActiveJobs: vi.fn().mockResolvedValue([
-      { id: 'job-1', name: 'سائق لودر ومعدات ثقيلة', code: 'OP-DRV' },
-      { id: 'job-2', name: 'عامل تشغيل وخدمات', code: 'OP-SRV' },
-    ]),
-    getActiveSites: vi.fn().mockResolvedValue([
-      { id: 'site-1', name: 'موقع السباعية', code: 'SBY-01' },
-    ]),
-    getDepartments: vi.fn().mockResolvedValue([
-      { id: 'dept-1', name: 'إدارة التشغيل والمعدات', code: 'OP' },
-    ]),
-    getDepartmentById: vi.fn().mockImplementation((id: string) =>
-      Promise.resolve({ id, name: 'إدارة التشغيل والمعدات', code: 'OP' })
-    ),
-    getJobTitleById: vi.fn().mockImplementation((id: string) =>
-      Promise.resolve({ id, name: 'سائق لودر ومعدات ثقيلة', code: 'OP-DRV' })
-    ),
-    getWorkersForExport: vi.fn().mockImplementation((where: { departmentId?: string; jobTitleId?: string; governorateCode?: string }) => {
-      if (where.jobTitleId) {
-        return Promise.resolve(mockWorkers.filter((w) => w.jobTitleId === where.jobTitleId));
-      }
-      if (where.governorateCode) {
-        return Promise.resolve(mockWorkers.filter((w) => w.governorateCode === where.governorateCode));
-      }
-      if (where.departmentId) {
-        return Promise.resolve(mockWorkers.filter((w) => w.departmentId === where.departmentId));
-      }
-      return Promise.resolve(mockWorkers);
-    }),
-    saveImportedWorkersAtomic: vi.fn(),
-  } as unknown as WorkerExportRepository;
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
 
-  const service = new WorkerExportService(mockRepo);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
-  it('should generate template Excel buffer with code guide sheet', async () => {
+  it('generates template Excel buffer with code guide sheet', async () => {
+    // Arrange
+    const mockRepo = {
+      getActiveJobs: vi.fn().mockResolvedValue([
+        { id: 'job-1', name: 'سائق لودر ومعدات ثقيلة', code: 'OP-DRV' },
+      ]),
+      getActiveSites: vi.fn().mockResolvedValue([
+        { id: 'site-1', name: 'موقع السباعية', code: 'SBY-01' },
+      ]),
+      getDepartments: vi.fn().mockResolvedValue([]),
+    } as unknown as WorkerExportRepository;
+
+    const service = new WorkerExportService(mockRepo);
+
+    // Act
     const buffer = await service.generateTemplateBuffer();
-    expect(buffer).toBeDefined();
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
 
     const dataSheet = workbook.getWorksheet('بيانات العمال الجدد');
-    expect(dataSheet).toBeDefined();
-
     const refSheet = workbook.getWorksheet('دليل الأكواد المعتمدة');
+
+    // Assert
+    expect(buffer).toBeDefined();
+    expect(dataSheet).toBeDefined();
     expect(refSheet).toBeDefined();
     expect(refSheet?.getCell('A2').value).toBe('OP-DRV');
     expect(refSheet?.getCell('D2').value).toBe('SBY-01');
   });
 
-  it('should generate FULL workers export with 43 columns for Super Admin', async () => {
+  it('generates FULL workers export with 43 columns for Super Admin including compensation fields', async () => {
+    // Arrange
+    const mockRepo = {
+      getActiveJobs: vi.fn().mockResolvedValue([]),
+      getActiveSites: vi.fn().mockResolvedValue([]),
+      getDepartments: vi.fn().mockResolvedValue([]),
+      getDepartmentById: vi.fn().mockResolvedValue(null),
+      getJobTitleById: vi.fn().mockResolvedValue(null),
+      getWorkersForExport: vi.fn().mockResolvedValue(mockWorkers),
+    } as unknown as WorkerExportRepository;
+
+    const service = new WorkerExportService(mockRepo);
+
+    // Act
     const result = await service.generateWorkersExportBuffer({ type: 'ALL' }, true);
-    expect(result.workerCount).toBe(2);
-    expect(result.fileName).toBe('كشف_العاملين_الشامل.xlsx');
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(result.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
     const sheet = workbook.getWorksheet('كشف العاملين');
-    expect(sheet).toBeDefined();
-
     const headerRow = sheet?.getRow(4);
     const headers: string[] = [];
     headerRow?.eachCell((cell) => headers.push(cell.text));
 
+    // Assert
+    expect(result.workerCount).toBe(2);
+    expect(result.fileName).toBe('كشف_العاملين_الشامل.xlsx');
+    expect(sheet).toBeDefined();
     expect(headers.length).toBe(43);
     expect(headers).toContain('الأجر اليومي (ج.م)');
     expect(headers).toContain('الراتب الأساسي (ج.م)');
@@ -161,19 +171,32 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     expect(headers).toContain('صنف السجائر المعتمد');
   });
 
-  it('should STRICTLY MASK and OMIT all financial columns (32 columns) for regular Admin', async () => {
+  it('strictly masks and omits all financial columns for regular Admin yielding 32 columns', async () => {
+    // Arrange
+    const mockRepo = {
+      getActiveJobs: vi.fn().mockResolvedValue([]),
+      getActiveSites: vi.fn().mockResolvedValue([]),
+      getDepartments: vi.fn().mockResolvedValue([]),
+      getDepartmentById: vi.fn().mockResolvedValue(null),
+      getJobTitleById: vi.fn().mockResolvedValue(null),
+      getWorkersForExport: vi.fn().mockResolvedValue(mockWorkers),
+    } as unknown as WorkerExportRepository;
+
+    const service = new WorkerExportService(mockRepo);
+
+    // Act
     const result = await service.generateWorkersExportBuffer({ type: 'ALL' }, false);
-    expect(result.workerCount).toBe(2);
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(result.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
     const sheet = workbook.getWorksheet('كشف العاملين');
-    expect(sheet).toBeDefined();
-
     const headerRow = sheet?.getRow(4);
     const headers: string[] = [];
     headerRow?.eachCell((cell) => headers.push(cell.text));
 
+    // Assert
+    expect(result.workerCount).toBe(2);
+    expect(sheet).toBeDefined();
     expect(headers.length).toBe(32);
     expect(headers).toContain('وحدة السكن / العنبر');
     expect(headers).toContain('الرقم التأميني');
@@ -187,29 +210,75 @@ describe('Flow 01.4 Unit Tests — Worker Export & Template Service', () => {
     expect(headers.some((h) => h.includes('المحفظة'))).toBe(false);
   });
 
-  it('should filter export by department', async () => {
+  it('filters export by department accurately', async () => {
+    // Arrange
+    const mockRepo = {
+      getActiveJobs: vi.fn().mockResolvedValue([]),
+      getActiveSites: vi.fn().mockResolvedValue([]),
+      getDepartments: vi.fn().mockResolvedValue([]),
+      getDepartmentById: vi.fn().mockResolvedValue({ id: 'dept-1', name: 'إدارة التشغيل والمعدات', code: 'OP' }),
+      getJobTitleById: vi.fn().mockResolvedValue(null),
+      getWorkersForExport: vi.fn().mockResolvedValue(mockWorkers.filter((w) => w.departmentId === 'dept-1')),
+    } as unknown as WorkerExportRepository;
+
+    const service = new WorkerExportService(mockRepo);
+
+    // Act
     const result = await service.generateWorkersExportBuffer(
       { type: 'DEPARTMENT', departmentId: 'dept-1' },
       true
     );
+
+    // Assert
     expect(result.filterLabel).toContain('قسم: إدارة التشغيل والمعدات');
     expect(result.fileName).toContain('قسم_إدارة_التشغيل_والمعدات');
+    expect(result.workerCount).toBe(2);
   });
 
-  it('should filter export by job title', async () => {
+  it('filters export by job title accurately', async () => {
+    // Arrange
+    const mockRepo = {
+      getActiveJobs: vi.fn().mockResolvedValue([]),
+      getActiveSites: vi.fn().mockResolvedValue([]),
+      getDepartments: vi.fn().mockResolvedValue([]),
+      getDepartmentById: vi.fn().mockResolvedValue(null),
+      getJobTitleById: vi.fn().mockResolvedValue({ id: 'job-1', name: 'سائق لودر ومعدات ثقيلة', code: 'OP-DRV' }),
+      getWorkersForExport: vi.fn().mockResolvedValue(mockWorkers.filter((w) => w.jobTitleId === 'job-1')),
+    } as unknown as WorkerExportRepository;
+
+    const service = new WorkerExportService(mockRepo);
+
+    // Act
     const result = await service.generateWorkersExportBuffer(
       { type: 'JOB_TITLE', jobTitleId: 'job-1' },
       true
     );
+
+    // Assert
     expect(result.filterLabel).toContain('مهنة: سائق لودر ومعدات ثقيلة');
     expect(result.workerCount).toBe(1);
   });
 
-  it('should filter export by governorate', async () => {
+  it('filters export by governorate accurately', async () => {
+    // Arrange
+    const mockRepo = {
+      getActiveJobs: vi.fn().mockResolvedValue([]),
+      getActiveSites: vi.fn().mockResolvedValue([]),
+      getDepartments: vi.fn().mockResolvedValue([]),
+      getDepartmentById: vi.fn().mockResolvedValue(null),
+      getJobTitleById: vi.fn().mockResolvedValue(null),
+      getWorkersForExport: vi.fn().mockResolvedValue(mockWorkers.filter((w) => w.governorateCode === '27')),
+    } as unknown as WorkerExportRepository;
+
+    const service = new WorkerExportService(mockRepo);
+
+    // Act
     const result = await service.generateWorkersExportBuffer(
       { type: 'GOVERNORATE', governorateCode: '27' },
       false
     );
+
+    // Assert
     expect(result.filterLabel).toContain('محافظة: قنا');
     expect(result.workerCount).toBe(1);
   });

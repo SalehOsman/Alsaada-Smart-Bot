@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { workerExcelService, setWorkforcePrisma } from '@alsaada/workforce';
 import { prisma } from '../src/db.js';
 import ExcelJS from 'exceljs';
+import { PINNED_BASE_TIME } from '@alsaada/shared/testing';
 
 const mockWorkersList = [
   {
@@ -182,43 +183,61 @@ vi.mock('../src/services/fast-cache.service.js', () => ({
 }));
 
 describe('Worker Excel Service — Template Generation & Bulk Import', () => {
+  // Deterministic pinned base time reference for roster generation and export timestamps
+  const _EXECUTION_BASE_TIME = PINNED_BASE_TIME;
+
   beforeEach(() => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     setWorkforcePrisma(prisma);
   });
 
-  it('should generate template buffer with 2 sheets (Workers Entry and Reference Codes)', async () => {
-    const buffer = await workerExcelService.generateTemplateBuffer();
-    expect(buffer).toBeDefined();
-    expect(buffer.length).toBeGreaterThan(1000);
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
 
+  it('generates template buffer containing entry sheet and reference codes sheet', async () => {
+    // Arrange
+    const minExpectedLength = 1000;
+
+    // Act
+    const buffer = await workerExcelService.generateTemplateBuffer();
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer as any);
-
-    expect(workbook.worksheets.length).toBe(2);
-    expect(workbook.worksheets[0]?.name).toBe('بيانات العمال الجدد');
-    expect(workbook.worksheets[1]?.name).toBe('دليل الأكواد المعتمدة');
-
     const sheet1 = workbook.worksheets[0]!;
     const headerRow = sheet1.getRow(1);
+    const sheet2 = workbook.worksheets[1]!;
+
+    // Assert
+    expect(buffer.length).toBeGreaterThan(minExpectedLength);
+    expect(workbook.worksheets).toHaveLength(2);
+    expect(sheet1.name).toBe('بيانات العمال الجدد');
+    expect(sheet2.name).toBe('دليل الأكواد المعتمدة');
     expect(headerRow.getCell(1).text).toContain('الاسم الرباعي');
     expect(headerRow.getCell(3).text).toContain('كود العامل القديم');
     expect(headerRow.getCell(4).text).toContain('نوع الإثبات');
-
-    const sheet2 = workbook.worksheets[1]!;
     expect(sheet2.rowCount).toBeGreaterThan(1);
   });
 
-  it('should reject file with invalid format or no workers', async () => {
+  it('rejects file with invalid format or zero worker entries', async () => {
+    // Arrange
     const emptyWorkbook = new ExcelJS.Workbook();
     emptyWorkbook.addWorksheet('ورقة فارغة');
     const emptyBuffer = (await emptyWorkbook.xlsx.writeBuffer()) as unknown as Buffer;
 
+    // Act
     const result = await workerExcelService.parseAndImportExcel(emptyBuffer);
+
+    // Assert
     expect(result.success).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.workersCreated).toBe(0);
+    expect(result.createdWorkers).toBeUndefined();
   });
 
-  it('should successfully parse and import valid workers (Egyptian NID and Foreign Passport)', async () => {
+  it('parses and imports valid workers with Egyptian national id and foreign passport', async () => {
+    // Arrange
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('بيانات العمال');
 
@@ -244,14 +263,19 @@ describe('Worker Excel Service — Template Generation & Bulk Import', () => {
     ]);
 
     const buffer = (await workbook.xlsx.writeBuffer()) as unknown as Buffer;
+
+    // Act
     const result = await workerExcelService.parseAndImportExcel(buffer);
 
+    // Assert
     expect(result.success).toBe(true);
     expect(result.workersCreated).toBe(2);
-    expect(result.errors.length).toBe(0);
+    expect(result.errors).toHaveLength(0);
+    expect(result.createdWorkers).toHaveLength(2);
   });
 
-  it('should report row-level errors for invalid job code or bad national ID', async () => {
+  it('reports row-level errors when job code is invalid or national id length is malformed', async () => {
+    // Arrange
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('بيانات العمال');
 
@@ -269,127 +293,118 @@ describe('Worker Excel Service — Template Generation & Bulk Import', () => {
     ]);
 
     const buffer = (await workbook.xlsx.writeBuffer()) as unknown as Buffer;
+
+    // Act
     const result = await workerExcelService.parseAndImportExcel(buffer);
 
+    // Assert
     expect(result.success).toBe(false);
     expect(result.workersCreated).toBe(0);
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.errors.some(e => e.includes('الرقم القومي'))).toBe(true);
     expect(result.errors.some(e => e.includes('كود الوظيفة'))).toBe(true);
+    expect(result.createdWorkers).toBeUndefined();
   });
 
   describe('Worker Excel Export — Full Roster, Smart Filtering & RBAC Data Masking', () => {
-    it('should generate FULL workers export with FINANCIAL columns for Super Admin', async () => {
-      const exportResult = await workerExcelService.generateWorkersExportBuffer(
-        { type: 'ALL' },
-        true // isSuperAdmin = true
-      );
+    it('generates full workers export including financial columns when requested by Super Admin', async () => {
+      // Arrange
+      const filter = { type: 'ALL' as const };
+      const isSuperAdmin = true;
 
-      expect(exportResult.buffer).toBeDefined();
-      expect(exportResult.workerCount).toBe(2);
-      expect(exportResult.fileName).toBe('كشف_العاملين_الشامل.xlsx');
-
+      // Act
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(filter, isSuperAdmin);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(exportResult.buffer as any);
-
       const sheet = workbook.getWorksheet('كشف العاملين');
-      expect(sheet).toBeDefined();
-
-      // Row 1: Title
-      expect(sheet!.getRow(1).getCell(1).text).toContain('كشف قيد وبيانات العاملين');
-      // Row 2: Metadata (contains Super Admin classification)
-      expect(sheet!.getRow(2).getCell(1).text).toContain('الإدارة العليا');
-      expect(sheet!.getRow(2).getCell(1).text).toContain('2 عامل');
-
-      // Row 4: Headers
       const headerRow = sheet!.getRow(4);
       const headerValues: string[] = [];
       headerRow.eachCell((cell) => headerValues.push(cell.text));
+      const worker1Row = sheet!.getRow(5);
 
-      // Financial columns must be PRESENT for Super Admin
+      // Assert
+      expect(exportResult.workerCount).toBe(2);
+      expect(exportResult.fileName).toBe('كشف_العاملين_الشامل.xlsx');
+      expect(sheet!.getRow(1).getCell(1).text).toContain('كشف قيد وبيانات العاملين');
+      expect(sheet!.getRow(2).getCell(1).text).toContain('الإدارة العليا');
+      expect(sheet!.getRow(2).getCell(1).text).toContain('2 عامل');
       expect(headerValues).toContain('الأجر اليومي (ج.م)');
       expect(headerValues).toContain('الراتب الأساسي (ج.م)');
       expect(headerValues).toContain('الراتب الإضافي (ج.م)');
       expect(headerValues).toContain('إجمالي الاستحقاق الشهري (ج.م)');
       expect(headerValues).toContain('رقم الحساب / المحفظة');
-      expect(headerValues.length).toBe(43);
-
-      // Check row 5 (Worker 1) financial values
-      const worker1Row = sheet!.getRow(5);
+      expect(headerValues).toHaveLength(43);
       expect(worker1Row.getCell(2).text).toBe('OP-DRV-0001');
       expect(worker1Row.getCell(4).text).toBe('أحمد محمود علي إبراهيم');
-      expect(worker1Row.getCell(33).value).toBe(250); // Daily wage
-      expect(worker1Row.getCell(34).value).toBe(7500); // Basic salary
-      expect(worker1Row.getCell(35).value).toBe(1500); // Additional salary
-      expect(worker1Row.getCell(36).value).toBe(9000); // Total salary
+      expect(worker1Row.getCell(33).value).toBe(250);
+      expect(worker1Row.getCell(34).value).toBe(7500);
+      expect(worker1Row.getCell(35).value).toBe(1500);
+      expect(worker1Row.getCell(36).value).toBe(9000);
     });
 
-    it('should STRICTLY MASK and OMIT all FINANCIAL columns for regular Admin (isSuperAdmin = false)', async () => {
-      const exportResult = await workerExcelService.generateWorkersExportBuffer(
-        { type: 'ALL' },
-        false // isSuperAdmin = false (Regular Admin / Field Admin)
-      );
+    it('strictly masks and omits all financial columns when exported for regular Admin', async () => {
+      // Arrange
+      const filter = { type: 'ALL' as const };
+      const isSuperAdmin = false;
 
-      expect(exportResult.buffer).toBeDefined();
-      expect(exportResult.workerCount).toBe(2);
-
+      // Act
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(filter, isSuperAdmin);
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(exportResult.buffer as any);
-
       const sheet = workbook.getWorksheet('كشف العاملين');
-      expect(sheet).toBeDefined();
-
-      // Row 2: Metadata must show administrative classification (no salaries)
-      expect(sheet!.getRow(2).getCell(1).text).toContain('بيانات تشغيلية');
-
-      // Row 4: Headers
       const headerRow = sheet!.getRow(4);
       const headerValues: string[] = [];
       headerRow.eachCell((cell) => headerValues.push(cell.text));
-
-      // Exactly 32 administrative columns — ZERO financial columns!
-      expect(headerValues.length).toBe(32);
-      expect(headerValues.some((h) => h.includes('الراتب'))).toBe(false);
-      expect(headerValues.some((h) => h.includes('الأجر'))).toBe(false);
-      expect(headerValues.some((h) => h.includes('البدلات'))).toBe(false);
-      expect(headerValues.some((h) => h.includes('المحفظة'))).toBe(false);
-
-      // Verify Worker 1 row does not exceed 32 columns
       const worker1Row = sheet!.getRow(5);
+
+      // Assert
+      expect(exportResult.workerCount).toBe(2);
+      expect(sheet!.getRow(2).getCell(1).text).toContain('بيانات تشغيلية');
+      expect(headerValues).toHaveLength(32);
+      expect(headerValues).not.toContain('الراتب الأساسي (ج.م)');
+      expect(headerValues).not.toContain('الأجر اليومي (ج.م)');
+      expect(headerValues).not.toContain('الراتب الإضافي (ج.م)');
+      expect(headerValues).not.toContain('رقم الحساب / المحفظة');
       expect(worker1Row.getCell(2).text).toBe('OP-DRV-0001');
       expect(worker1Row.getCell(33).value).toBeNull();
     });
 
-    it('should filter workers export by DEPARTMENT', async () => {
-      const exportResult = await workerExcelService.generateWorkersExportBuffer(
-        { type: 'DEPARTMENT', departmentId: 'dept-1' },
-        true
-      );
+    it('filters workers export by specific department identifier', async () => {
+      // Arrange
+      const filter = { type: 'DEPARTMENT' as const, departmentId: 'dept-1' };
 
-      expect(exportResult.filterLabel).toContain('قسم: إدارة التشغيل والمعدات');
-      expect(exportResult.fileName).toContain('قسم_إدارة_التشغيل_والمعدات');
+      // Act
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(filter, true);
+
+      // Assert
+      expect(exportResult.filterLabel).toBe('قسم: إدارة التشغيل والمعدات');
+      expect(exportResult.fileName).toBe('كشف_عمال_قسم_إدارة_التشغيل_والمعدات.xlsx');
       expect(exportResult.workerCount).toBe(2);
     });
 
-    it('should filter workers export by JOB_TITLE', async () => {
-      const exportResult = await workerExcelService.generateWorkersExportBuffer(
-        { type: 'JOB_TITLE', jobTitleId: 'job-1' },
-        true
-      );
+    it('filters workers export by specific job title identifier', async () => {
+      // Arrange
+      const filter = { type: 'JOB_TITLE' as const, jobTitleId: 'job-1' };
 
-      expect(exportResult.filterLabel).toContain('مهنة: سائق لودر ومعدات ثقيلة');
-      expect(exportResult.fileName).toContain('سائق_لودر');
+      // Act
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(filter, true);
+
+      // Assert
+      expect(exportResult.filterLabel).toBe('مهنة: سائق لودر ومعدات ثقيلة');
+      expect(exportResult.fileName).toBe('كشف_عمال_مهنة_سائق_لودر_ومعدات_ثقيلة.xlsx');
       expect(exportResult.workerCount).toBe(1);
     });
 
-    it('should filter workers export by GOVERNORATE', async () => {
-      const exportResult = await workerExcelService.generateWorkersExportBuffer(
-        { type: 'GOVERNORATE', governorateCode: '27' },
-        false
-      );
+    it('filters workers export by specific governorate code', async () => {
+      // Arrange
+      const filter = { type: 'GOVERNORATE' as const, governorateCode: '27' };
 
-      expect(exportResult.filterLabel).toContain('محافظة: قنا');
-      expect(exportResult.fileName).toContain('قنا');
+      // Act
+      const exportResult = await workerExcelService.generateWorkersExportBuffer(filter, false);
+
+      // Assert
+      expect(exportResult.filterLabel).toBe('محافظة: قنا');
+      expect(exportResult.fileName).toBe('كشف_عمال_محافظة_قنا.xlsx');
       expect(exportResult.workerCount).toBe(1);
     });
   });

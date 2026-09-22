@@ -3,9 +3,14 @@ import {
   auditPresentationCompliance,
   formatSalehVerdictReport,
   runSalehAuditSuite,
+  verifyTripleGuardArsenal,
+  verifyUnlockAuditProvenance,
   type SalehAuditReport,
 } from '../saleh-audit-suite.js';
 import { createResult, fail, warn } from '../common.js';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 describe('tools/governance/saleh-audit-suite', () => {
   it('should scan flows and return presentation findings and flow count', () => {
@@ -119,4 +124,101 @@ describe('tools/governance/saleh-audit-suite', () => {
     expect(report.checkResults.telegramContracts?.ok).toBe(true);
     expect(report.checkResults.architecture).toBeUndefined();
   });
+
+  describe('verifyUnlockAuditProvenance (WP 90)', () => {
+    it('passes on repository evidence baseline', () => {
+      const res = verifyUnlockAuditProvenance(process.cwd());
+      expect(res.ok).toBe(true);
+      expect(res.failures).toHaveLength(0);
+    });
+
+    it('detects AI self-authorization in unlock evidence lacking OTP nonce or human provenance', () => {
+      const tempDir = join(tmpdir(), `saleh-unlock-test-${Date.now()}`);
+      const evidenceDir = join(tempDir, 'docs', 'ai-execution-evidence');
+      mkdirSync(evidenceDir, { recursive: true });
+
+      // Create an illicit unlock file dated today without OTP nonce or human provenance
+      const illicitFile = join(evidenceDir, '2026-09-21-unlock-package_test.md');
+      writeFileSync(
+        illicitFile,
+        `# ترخيص فك قفل الحوكمة: (package:test)
+- **التاريخ:** 2026-09-21
+- **معرف الكيان المفكوك:** package:test
+- **عبارة الاعتماد:** موافق على الفتح
+## المبرر
+Testing self authorization bypass`
+      );
+
+      const res = verifyUnlockAuditProvenance(tempDir);
+      expect(res.ok).toBe(false);
+      expect(res.failures.length).toBeGreaterThan(0);
+      expect(res.failures[0]).toContain('lacks verified human OTP challenge provenance');
+
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    it('passes for compliant unlock evidence containing OTP nonce and USER_EXPLICIT provenance', () => {
+      const tempDir = join(tmpdir(), `saleh-unlock-valid-${Date.now()}`);
+      const evidenceDir = join(tempDir, 'docs', 'ai-execution-evidence');
+      mkdirSync(evidenceDir, { recursive: true });
+
+      const validFile = join(evidenceDir, '2026-09-21-unlock-package_valid.md');
+      writeFileSync(
+        validFile,
+        `# ترخيص فك قفل الحوكمة: (package:valid)
+- **التاريخ:** 2026-09-21
+- **معرف الكيان المفكوك:** package:valid
+- **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
+- **رمز التحدي لمرة واحدة (OTP Nonce):** \`UNLOCK-A4F1E2\`
+- **مصدر الاعتماد والتحقق الجنائي:** \`USER_EXPLICIT\`
+- **التوقيع الزمني لمدخل المستخدم:** \`2026-09-21T12:00:00.000Z\`
+- **مبدأ العزل:** 🔒 **Zero Blast Radius**
+## المبرر
+Compliant justification reason`
+      );
+
+      const res = verifyUnlockAuditProvenance(tempDir);
+      expect(res.ok).toBe(true);
+      expect(res.failures).toHaveLength(0);
+
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+  });
+
+  describe('verifyTripleGuardArsenal', () => {
+    it('verifies that the triple guard arsenal is intact and leak-free in real repo', () => {
+      const res = verifyTripleGuardArsenal();
+      expect(res.ok).toBe(true);
+      expect(res.failures).toHaveLength(0);
+      expect(res.checked).toBeGreaterThan(5);
+    });
+
+    it('fails when a SKILL.md is leaked inside arsenal directory', () => {
+      const tempDir = join(tmpdir(), `saleh-arsenal-leak-${Date.now()}`);
+      const arsenalDir = join(tempDir, '.agents', 'skills', 'saleh', 'arsenal');
+      const cleanGuard = join(arsenalDir, 'clean-code-guard');
+      const testGuard = join(arsenalDir, 'test-guard');
+      const docsGuard = join(arsenalDir, 'docs-guard');
+      mkdirSync(join(cleanGuard, 'references'), { recursive: true });
+      mkdirSync(join(testGuard, 'references'), { recursive: true });
+      mkdirSync(join(docsGuard, 'references'), { recursive: true });
+      mkdirSync(join(tempDir, 'docs'), { recursive: true });
+
+      writeFileSync(join(cleanGuard, 'rules.md'), '# Clean code');
+      writeFileSync(join(testGuard, 'rules.md'), '# Test guard');
+      writeFileSync(join(docsGuard, 'rules.md'), '# Docs guard');
+      writeFileSync(join(tempDir, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'), '# Docs 19');
+      writeFileSync(join(tempDir, 'docs', '26-locked-flows-and-features-registry.md'), '# Docs 26');
+
+      // Add a leaked SKILL.md
+      writeFileSync(join(cleanGuard, 'SKILL.md'), '--- name: leaked ---');
+
+      const res = verifyTripleGuardArsenal(tempDir);
+      expect(res.ok).toBe(false);
+      expect(res.failures.some((f) => f.includes('Public skill leakage detected'))).toBe(true);
+
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+  });
 });
+

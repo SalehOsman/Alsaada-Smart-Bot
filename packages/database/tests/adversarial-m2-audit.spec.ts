@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   verifyLedgerChainDb,
   verifyLedgerChain,
@@ -7,11 +7,27 @@ import {
   computeRecordHash,
   GENESIS_HASH,
   createSoftDeleteExtension,
-  getSoftDeleteModels,
+  computeTransactionHash,
   type ChainedRecord,
 } from '../src/index.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
+
 describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   // =========================================================================
   // SUITE 1: LEDGER AUDIT VERIFICATION & TAMPERING DETECTION
   // =========================================================================
@@ -70,24 +86,31 @@ describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification',
       };
     }
 
-    it('Scenario 1.1: Valid ledger chain verifies with 100% integrity', async () => {
+    it('01: verifies valid ledger chain with complete cryptographic integrity', async () => {
+      // Arrange
       const records = generateDeterministicLedger(5);
       const mockPrisma = createMockPrismaForLedger(records);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
       expect(report.isValid).toBe(true);
       expect(report.totalVerified).toBe(5);
       expect(report.brokenRecordId).toBeUndefined();
       expect(report.tamperedField).toBeUndefined();
     });
 
-    it('Scenario 1.2: Catches modified amount tampering in intermediate record', async () => {
+    it('02: catches modified amount tampering in intermediate record', async () => {
+      // Arrange
       const records = generateDeterministicLedger(5);
-      // Malicious direct database mutation: amount changed from 3000 to 99999
       records[2]!.amount = 99999;
       const mockPrisma = createMockPrismaForLedger(records);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
       expect(report.isValid).toBe(false);
       expect(report.brokenRecordId).toBe('REC-3');
       expect(report.brokenRecordIndex).toBe(2);
@@ -95,99 +118,119 @@ describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification',
       expect(report.error).toContain('Tampered record detected at REC-3');
     });
 
-    it('Scenario 1.3: Catches modified hashTimestamp tampering', async () => {
+    it('03: catches modified hashTimestamp tampering', async () => {
+      // Arrange
       const records = generateDeterministicLedger(4);
-      // Malicious direct database mutation: altering timestamp by 1 hour
       records[1]!.hashTimestamp = new Date('2026-09-11T13:01:00.000Z');
       const mockPrisma = createMockPrismaForLedger(records);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
       expect(report.isValid).toBe(false);
       expect(report.brokenRecordId).toBe('REC-2');
       expect(report.tamperedField).toBe('recordHash');
       expect(report.error).toContain('Tampered record detected at REC-2');
     });
 
-    it('Scenario 1.4: Catches modified createdAt when hashTimestamp is omitted', async () => {
+    it('04: catches modified createdAt when hashTimestamp is omitted', async () => {
+      // Arrange
       const records = generateDeterministicLedger(4);
-      // Remove hashTimestamp, tamper with createdAt
       delete records[2]!.hashTimestamp;
       records[2]!.createdAt = new Date('2025-01-01T00:00:00.000Z');
       const mockPrisma = createMockPrismaForLedger(records);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
       expect(report.isValid).toBe(false);
       expect(report.brokenRecordId).toBe('REC-3');
       expect(report.tamperedField).toBe('recordHash');
     });
 
-    it('Scenario 1.5: Catches altered previousHash on intermediate record', async () => {
+    it('05: catches altered previousHash on intermediate record', async () => {
+      // Arrange
       const records = generateDeterministicLedger(5);
-      // Malicious alteration of previousHash pointer
       records[3]!.previousHash = '0000000000000000000000000000000000000000000000000000000000000000';
       const mockPrisma = createMockPrismaForLedger(records);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
       expect(report.isValid).toBe(false);
       expect(report.brokenRecordId).toBe('REC-4');
       expect(report.tamperedField).toBe('previousHash');
       expect(report.error).toContain('Broken chain link at record REC-4');
     });
 
-    it('Scenario 1.6: Catches altered genesis previousHash on initial record', async () => {
+    it('06: catches altered genesis previousHash on initial record', async () => {
+      // Arrange
       const records = generateDeterministicLedger(3);
-      // Genesis record must point to GENESIS_HASH; alter it to fraudulent hash
       records[0]!.previousHash = 'FRAUDULENT_GENESIS_ROOT';
       const mockPrisma = createMockPrismaForLedger(records);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
       expect(report.isValid).toBe(false);
       expect(report.brokenRecordId).toBe('REC-1');
       expect(report.tamperedField).toBe('previousHash');
       expect(report.error).toContain('Broken chain link at record REC-1');
     });
 
-    it('Scenario 1.7: Catches deleted record in chain (breaks predecessor hash link)', async () => {
+    it('07: catches deleted record in chain breaking predecessor hash link', async () => {
+      // Arrange
       const records = generateDeterministicLedger(5);
-      // Attacker deletes record at index 2 (REC-3) from database
       const splicedRecords = records.filter((r) => r.id !== 'REC-3');
       const mockPrisma = createMockPrismaForLedger(splicedRecords);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
-      // REC-4 expects previousHash of REC-3, but preceding record in query is REC-2
+
+      // Assert
       expect(report.isValid).toBe(false);
       expect(report.brokenRecordId).toBe('REC-4');
       expect(report.tamperedField).toBe('previousHash');
       expect(report.error).toContain('Broken chain link at record REC-4');
-      expect(report.expectedValue).toBe(records[1]!.recordHash); // REC-2 hash
-      expect(report.actualValue).toBe(records[2]!.recordHash);   // REC-3 hash
+      expect(report.expectedValue).toBe(records[1]!.recordHash);
+      expect(report.actualValue).toBe(records[2]!.recordHash);
     });
 
-    it('Scenario 1.8: Catches deleted initial record (REC-1 deleted, REC-2 is orphan)', async () => {
+    it('08: catches deleted initial record leaving second record orphaned', async () => {
+      // Arrange
       const records = generateDeterministicLedger(3);
-      // Attacker deletes REC-1; now REC-2 is the first record returned
       const splicedRecords = records.slice(1);
       const mockPrisma = createMockPrismaForLedger(splicedRecords);
 
+      // Act
       const report = await verifyLedgerChainDb(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
       expect(report.isValid).toBe(false);
       expect(report.brokenRecordId).toBe('REC-2');
       expect(report.tamperedField).toBe('previousHash');
       expect(report.expectedValue).toBe(GENESIS_HASH);
     });
 
-    it('Scenario 1.9: assertLedgerChainIntegrity throws CorruptedLedgerChainError on any tampering', async () => {
+    it('09: throws CorruptedLedgerChainError on any detected tampering', async () => {
+      // Arrange
       const records = generateDeterministicLedger(3);
       records[1]!.amount = 42;
       const mockPrisma = createMockPrismaForLedger(records);
 
-      await expect(
-        assertLedgerChainIntegrity(mockPrisma, { model: 'FinancialLedger' })
-      ).rejects.toThrow(CorruptedLedgerChainError);
+      // Act
+      const integrityAssertion = assertLedgerChainIntegrity(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
+      await expect(integrityAssertion).rejects.toThrow(CorruptedLedgerChainError);
     });
 
-    it('Scenario 1.10: Universal verifyLedgerChain polymorphic dispatch', async () => {
-      // 1. Array in-memory dispatch
+    it('10: dispatches polymorphic ledger verification across array and database models', async () => {
+      // Arrange
       const inMemoryRecords: ChainedRecord[] = [
         {
           id: 'T1',
@@ -202,18 +245,18 @@ describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification',
           recordHash: '',
         },
       ];
-      // Compute valid hash using computeTransactionHash
-      const { computeTransactionHash } = await import('../src/index.js');
       inMemoryRecords[0]!.recordHash = computeTransactionHash(inMemoryRecords[0]!);
 
-      const memResult = verifyLedgerChain(inMemoryRecords);
-      expect(memResult.isValid).toBe(true);
-      expect(memResult.totalVerified).toBe(1);
-
-      // 2. Database client dispatch
       const dbRecords = generateDeterministicLedger(2);
       const mockPrisma = createMockPrismaForLedger(dbRecords);
+
+      // Act
+      const memResult = verifyLedgerChain(inMemoryRecords);
       const dbResult = await verifyLedgerChain(mockPrisma, { model: 'FinancialLedger' });
+
+      // Assert
+      expect(memResult.isValid).toBe(true);
+      expect(memResult.totalVerified).toBe(1);
       expect(dbResult.isValid).toBe(true);
       expect(dbResult.totalVerified).toBe(2);
     });
@@ -226,9 +269,9 @@ describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification',
     function createMockSoftDeleteStore() {
       const store = [
         { id: 'u1', name: 'User One', role: 'ADMIN', isDeleted: false, deletedAt: null },
-        { id: 'u2', name: 'User Two', role: 'OPERATOR', isDeleted: true, deletedAt: new Date('2026-09-01') },
+        { id: 'u2', name: 'User Two', role: 'OPERATOR', isDeleted: true, deletedAt: new Date('2026-09-01T00:00:00.000Z') },
         { id: 'u3', name: 'User Three', role: 'OPERATOR', isDeleted: false, deletedAt: null },
-        { id: 'u4', name: 'User Four', role: 'OPERATOR', isDeleted: true, deletedAt: new Date('2026-09-02') },
+        { id: 'u4', name: 'User Four', role: 'OPERATOR', isDeleted: true, deletedAt: new Date('2026-09-02T00:00:00.000Z') },
       ];
 
       const rawDelegate = {
@@ -330,106 +373,131 @@ describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification',
       return { baseClient, store, rawDelegate };
     }
 
-    it('Scenario 2.1: findFirst automatically filters out soft-deleted records', async () => {
+    it('11: automatically filters out soft-deleted records in findFirst', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
-      // Query without explicit isDeleted
+      // Act
       const firstOperator = await extended.user.findFirst({ where: { role: 'OPERATOR' } });
-      // u2 is soft-deleted, so findFirst must skip u2 and return u3
+
+      // Assert
       expect(firstOperator).not.toBeNull();
       expect(firstOperator.id).toBe('u3');
     });
 
-    it('Scenario 2.2: findFirst respects explicit { isDeleted: true } override', async () => {
+    it('12: respects explicit isDeleted true override in findFirst', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
-      // Query explicitly asking for soft-deleted
+      // Act
       const deletedUser = await extended.user.findFirst({ where: { isDeleted: true } });
+
+      // Assert
       expect(deletedUser).not.toBeNull();
       expect(deletedUser.id).toBe('u2');
       expect(deletedUser.isDeleted).toBe(true);
     });
 
-    it('Scenario 2.3: findMany automatically filters out soft-deleted records', async () => {
+    it('13: automatically filters out soft-deleted records in findMany', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
+      // Act
       const activeUsers = await extended.user.findMany();
+
+      // Assert
       expect(activeUsers).toHaveLength(2);
       expect(activeUsers.map((u: any) => u.id)).toEqual(['u1', 'u3']);
     });
 
-    it('Scenario 2.4: findMany respects explicit { isDeleted: true } override (recycle bin)', async () => {
+    it('14: respects explicit isDeleted true override in findMany for recycle bin inspection', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
+      // Act
       const deletedUsers = await extended.user.findMany({ where: { isDeleted: true } });
+
+      // Assert
       expect(deletedUsers).toHaveLength(2);
       expect(deletedUsers.map((u: any) => u.id)).toEqual(['u2', 'u4']);
     });
 
-    it('Scenario 2.5: count automatically filters out soft-deleted records', async () => {
+    it('15: automatically filters out soft-deleted records in count', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
+      // Act
       const activeCount = await extended.user.count();
-      expect(activeCount).toBe(2);
-
       const operatorCount = await extended.user.count({ where: { role: 'OPERATOR' } });
-      expect(operatorCount).toBe(1); // only u3
+
+      // Assert
+      expect(activeCount).toBe(2);
+      expect(operatorCount).toBe(1);
     });
 
-    it('Scenario 2.6: count respects explicit { isDeleted: true } override', async () => {
+    it('16: respects explicit isDeleted true override in count', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
+      // Act
       const deletedCount = await extended.user.count({ where: { isDeleted: true } });
-      expect(deletedCount).toBe(2); // u2 and u4
+
+      // Assert
+      expect(deletedCount).toBe(2);
     });
 
-    it('Scenario 2.7: findUnique returns active record, returns null for soft-deleted record', async () => {
+    it('17: returns active record and null for soft-deleted record in findUnique', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
+      // Act
       const active = await extended.user.findUnique({ where: { id: 'u1' } });
+      const deleted = await extended.user.findUnique({ where: { id: 'u2' } });
+
+      // Assert
       expect(active).not.toBeNull();
       expect(active.id).toBe('u1');
-
-      const deleted = await extended.user.findUnique({ where: { id: 'u2' } });
       expect(deleted).toBeNull();
     });
 
-    it('Scenario 2.8: findUnique cleans up injected isDeleted from select unless caller requested it', async () => {
+    it('18: cleans up injected isDeleted from select unless caller requested it', async () => {
+      // Arrange
       const { baseClient } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
-      // 1. Caller did NOT ask for isDeleted
+      // Act
       const activeWithoutIsDeleted = await extended.user.findUnique({
         where: { id: 'u1' },
         select: { id: true, name: true },
       });
-      expect(activeWithoutIsDeleted).toEqual({ id: 'u1', name: 'User One' });
-      expect('isDeleted' in activeWithoutIsDeleted).toBe(false);
-
-      // 2. Caller DID explicitly ask for isDeleted in select
       const activeWithIsDeleted = await extended.user.findUnique({
         where: { id: 'u1' },
         select: { id: true, name: true, isDeleted: true },
       });
+
+      // Assert
+      expect(activeWithoutIsDeleted).toEqual({ id: 'u1', name: 'User One' });
+      expect('isDeleted' in activeWithoutIsDeleted).toBe(false);
       expect(activeWithIsDeleted).toEqual({ id: 'u1', name: 'User One', isDeleted: false });
     });
 
-    it('Scenario 2.9: delete converts to soft-delete update with isDeleted: true and deletedAt', async () => {
+    it('19: converts delete operation to soft-delete update with isDeleted true and deletedAt', async () => {
+      // Arrange
       const { baseClient, store, rawDelegate } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
+      // Act
       await extended.user.delete({ where: { id: 'u1' } });
 
-      // Raw delete must NOT be called
+      // Assert
       expect(rawDelegate.delete).not.toHaveBeenCalled();
-      // Raw update must be called with soft-delete payload
       expect(rawDelegate.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'u1' },
@@ -442,12 +510,15 @@ describe('Adversarial Challenge M2 — Ledger Audit & Soft Delete Verification',
       expect(store.find((u) => u.id === 'u1')?.isDeleted).toBe(true);
     });
 
-    it('Scenario 2.10: deleteMany converts to soft-delete updateMany', async () => {
-      const { baseClient, store, rawDelegate } = createMockSoftDeleteStore();
+    it('20: converts deleteMany operation to soft-delete updateMany', async () => {
+      // Arrange
+      const { baseClient, rawDelegate } = createMockSoftDeleteStore();
       const extended = baseClient.$extends(createSoftDeleteExtension());
 
+      // Act
       await extended.user.deleteMany({ where: { role: 'OPERATOR' } });
 
+      // Assert
       expect(rawDelegate.deleteMany).not.toHaveBeenCalled();
       expect(rawDelegate.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({

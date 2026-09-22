@@ -1,0 +1,13 @@
+{
+  "name": "@alsaada/sample-domain",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@alsaada/core-components": "workspace:*",
+    "@alsaada/database": "workspace:*",
+    "@alsaada/shared": "workspace:*"
+  }
+}

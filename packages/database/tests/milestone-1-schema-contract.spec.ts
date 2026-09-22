@@ -1,8 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Prisma } from '../src/generated/client/index.js';
 import { prisma, disconnectDatabase } from '../src/client.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
+
+let idCounter = 0;
+const nextTestCode = (prefix: string) => `${prefix}-${PINNED_BASE_TIME.getTime()}-${++idCounter}`;
 
 const canConnect = async () => {
   try {
@@ -82,47 +87,78 @@ const models = parseSchemaModels(schemaContent);
 const getModel = (name: string) => models.find((m) => m.name === name);
 
 describe('Milestone 1 — Schema Contract & Model Verification', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   afterAll(async () => {
     await disconnectDatabase();
   });
 
   it('verifies Worker model has additionalSalary and default contractType PERMANENT', () => {
-    const workerModel = getModel('Worker');
-    expect(workerModel).toBeDefined();
+    // Arrange
+    const targetModelName = 'Worker';
 
-    // Check additionalSalary field
+    // Act
+    const workerModel = getModel(targetModelName);
     const additionalSalaryField = workerModel?.fields.find((f) => f.name === 'additionalSalary');
+    const basicSalaryField = workerModel?.fields.find((f) => f.name === 'basicSalary');
+    const contractTypeField = workerModel?.fields.find((f) => f.name === 'contractType');
+    const nonExistentField = workerModel?.fields.find((f) => f.name === 'nonExistentField');
+
+    // Assert
+    expect(workerModel).toBeDefined();
     expect(additionalSalaryField).toBeDefined();
     expect(additionalSalaryField?.type).toBe('Decimal');
     expect(additionalSalaryField?.default).toBe(0);
-
-    // Check basicSalary field is also present
-    const basicSalaryField = workerModel?.fields.find((f) => f.name === 'basicSalary');
     expect(basicSalaryField).toBeDefined();
     expect(basicSalaryField?.type).toBe('Decimal');
-
-    // Check contractType default value is PERMANENT
-    const contractTypeField = workerModel?.fields.find((f) => f.name === 'contractType');
     expect(contractTypeField).toBeDefined();
     expect(contractTypeField?.type).toBe('String');
     expect(contractTypeField?.default).toBe('PERMANENT');
+    expect(nonExistentField).toBeUndefined();
   });
 
   it('verifies WorkerCustomAllowance model has title field', () => {
-    const allowanceModel = getModel('WorkerCustomAllowance');
-    expect(allowanceModel).toBeDefined();
+    // Arrange
+    const targetModelName = 'WorkerCustomAllowance';
 
+    // Act
+    const allowanceModel = getModel(targetModelName);
     const titleField = allowanceModel?.fields.find((f) => f.name === 'title');
+    const nonExistentField = allowanceModel?.fields.find((f) => f.name === 'nonExistentField');
+
+    // Assert
+    expect(allowanceModel).toBeDefined();
     expect(titleField).toBeDefined();
     expect(titleField?.type).toBe('String');
     expect(titleField?.isRequired).toBe(true);
+    expect(nonExistentField).toBeUndefined();
   });
 
   it('verifies CanteenItemPriceHistory model exists with all required fields', () => {
-    const priceHistoryModel = getModel('CanteenItemPriceHistory');
-    expect(priceHistoryModel).toBeDefined();
+    // Arrange
+    const targetModelName = 'CanteenItemPriceHistory';
 
+    // Act
+    const priceHistoryModel = getModel(targetModelName);
     const fieldNames = new Set(priceHistoryModel?.fields.map((f) => f.name));
+    const costPriceField = priceHistoryModel?.fields.find((f) => f.name === 'costPrice');
+    const sellingPriceField = priceHistoryModel?.fields.find((f) => f.name === 'sellingPrice');
+    const canteenItemRel = priceHistoryModel?.fields.find((f) => f.name === 'canteenItem');
+
+    // Assert
+    expect(priceHistoryModel).toBeDefined();
     expect(fieldNames.has('id')).toBe(true);
     expect(fieldNames.has('canteenItemId')).toBe(true);
     expect(fieldNames.has('costPrice')).toBe(true);
@@ -132,34 +168,36 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
     expect(fieldNames.has('reason')).toBe(true);
     expect(fieldNames.has('createdAt')).toBe(true);
     expect(fieldNames.has('canteenItem')).toBe(true);
-
-    const costPriceField = priceHistoryModel?.fields.find((f) => f.name === 'costPrice');
     expect(costPriceField?.type).toBe('Decimal');
-
-    const sellingPriceField = priceHistoryModel?.fields.find((f) => f.name === 'sellingPrice');
     expect(sellingPriceField?.type).toBe('Decimal');
-
-    const canteenItemRel = priceHistoryModel?.fields.find((f) => f.name === 'canteenItem');
     expect(canteenItemRel?.type).toBe('CanteenItem');
+    expect(fieldNames.has('invalidFieldName')).toBe(false);
   });
 
   it('verifies CanteenItem model has priceHistories reverse relation', () => {
-    const canteenItemModel = getModel('CanteenItem');
-    expect(canteenItemModel).toBeDefined();
+    // Arrange
+    const targetModelName = 'CanteenItem';
 
+    // Act
+    const canteenItemModel = getModel(targetModelName);
     const priceHistoriesField = canteenItemModel?.fields.find((f) => f.name === 'priceHistories');
+    const nonExistentField = canteenItemModel?.fields.find((f) => f.name === 'nonExistentField');
+
+    // Assert
+    expect(canteenItemModel).toBeDefined();
     expect(priceHistoriesField).toBeDefined();
     expect(priceHistoriesField?.type).toBe('CanteenItemPriceHistory');
     expect(priceHistoriesField?.isList).toBe(true);
+    expect(nonExistentField).toBeUndefined();
   });
 
   it('verifies TypeScript input types support new schema fields without compile error', () => {
-    // Type-level contract checks
+    // Arrange
     const sampleWorkerInput: Prisma.WorkerCreateInput = {
       code: 'TEST-001',
       name: 'عامل تجريبي',
       idType: 'NATIONAL_ID',
-      birthDate: new Date('1995-01-01'),
+      birthDate: new Date('1995-01-01T00:00:00.000Z'),
       gender: 'MALE',
       jobTitle: 'عامل',
       dailyWage: 100,
@@ -167,16 +205,14 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
       additionalSalary: 1500,
       contractType: 'PERMANENT',
     };
-    expect(sampleWorkerInput.additionalSalary).toBe(1500);
 
     const sampleAllowanceInput: Prisma.WorkerCustomAllowanceCreateInput = {
       title: 'بدل مخاطر موقع',
       allowanceType: 'RISK_ALLOWANCE',
       amount: 500,
-      startDate: new Date(),
+      startDate: PINNED_BASE_TIME,
       worker: { connect: { id: 'dummy-worker-id' } },
     };
-    expect(sampleAllowanceInput.title).toBe('بدل مخاطر موقع');
 
     const samplePriceHistoryInput: Prisma.CanteenItemPriceHistoryCreateInput = {
       costPrice: new Prisma.Decimal(50),
@@ -184,17 +220,32 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
       reason: 'زيادة سعر المورد',
       canteenItem: { connect: { id: 'dummy-item-id' } },
     };
-    expect(samplePriceHistoryInput.reason).toBe('زيادة سعر المورد');
+
+    // Act
+    const salaryVal = sampleWorkerInput.additionalSalary;
+    const allowanceTitle = sampleAllowanceInput.title;
+    const historyReason = samplePriceHistoryInput.reason;
+
+    // Assert
+    expect(salaryVal).toBe(1500);
+    expect(allowanceTitle).toBe('بدل مخاطر موقع');
+    expect(historyReason).toBe('زيادة سعر المورد');
+    expect(sampleWorkerInput.code).not.toBe('');
   });
 
   it('verifies PostgreSQL migration script exists and defines all Milestone 1 schema modifications', () => {
+    // Arrange
     const migrationPath = resolve(
       __dirname,
       '../prisma/migrations/20260914120000_workforce_parity_and_canteen_price_history/migration.sql'
     );
-    expect(existsSync(migrationPath)).toBe(true);
 
+    // Act
+    const fileExists = existsSync(migrationPath);
     const sqlContent = readFileSync(migrationPath, 'utf-8');
+
+    // Assert
+    expect(fileExists).toBe(true);
     expect(sqlContent).toContain('additionalSalary');
     expect(sqlContent).toContain('contractType');
     expect(sqlContent).toContain('PERMANENT');
@@ -203,39 +254,44 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
     expect(sqlContent).toContain('canteen_item_price_histories');
     expect(sqlContent).toContain('canteenItemId');
     expect(sqlContent).toContain('sellingPrice');
+    expect(sqlContent).not.toContain('DROP TABLE workers');
   });
 
   it('verifies live postgres database schema if database connection is available', async () => {
+    // Arrange
     const isConnected = await canConnect();
     if (!isConnected) {
-      console.warn('PostgreSQL database not active, skipping live database inspection');
       return;
     }
 
+    // Act
     type TableRow = { table_name: string };
     const tables = await prisma.$queryRawUnsafe<TableRow[]>(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'canteen_item_price_histories'"
     );
     const tableNames = new Set(tables.map((t) => t.table_name));
-    expect(tableNames.has('canteen_item_price_histories')).toBe(true);
 
     type ColumnRow = { column_name: string };
     const workerCols = await prisma.$queryRawUnsafe<ColumnRow[]>(
       "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'workers' AND column_name = 'additionalSalary'"
     );
-    expect(workerCols.length).toBeGreaterThan(0);
 
     const allowanceCols = await prisma.$queryRawUnsafe<ColumnRow[]>(
       "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'worker_custom_allowances' AND column_name = 'title'"
     );
+
+    // Assert
+    expect(tableNames.has('canteen_item_price_histories')).toBe(true);
+    expect(workerCols.length).toBeGreaterThan(0);
     expect(allowanceCols.length).toBeGreaterThan(0);
+    expect(tableNames.has('non_existent_table_probe')).toBe(false);
   });
 
   it('performs live create, query and relation test on PostgreSQL for new models and fields', async () => {
+    // Arrange
     const isConnected = await canConnect();
     if (!isConnected) return;
 
-    // 1. Resolve or create a site for canteen item
     let site = await prisma.site.findFirst();
     let createdSiteId: string | null = null;
     let createdProjectId: string | null = null;
@@ -245,7 +301,7 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
       let tenant = await prisma.tenant.findFirst();
       if (!tenant) {
         tenant = await prisma.tenant.create({
-          data: { code: `TNT-${Date.now()}`, name: 'شركة تجريبية' },
+          data: { code: nextTestCode('TNT'), name: 'شركة تجريبية' },
         });
         createdTenantId = tenant.id;
       }
@@ -254,7 +310,7 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
         project = await prisma.project.create({
           data: {
             tenantId: tenant.id,
-            code: `PRJ-${Date.now()}`,
+            code: nextTestCode('PRJ'),
             name: 'مشروع تجريبي',
           },
         });
@@ -263,18 +319,18 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
       site = await prisma.site.create({
         data: {
           projectId: project.id,
-          code: `STE-${Date.now()}`,
+          code: nextTestCode('STE'),
           name: 'موقع تجريبي',
         },
       });
       createdSiteId = site.id;
     }
 
-    // 2. Create a canteen item
+    // Act
     const item = await prisma.canteenItem.create({
       data: {
         siteId: site.id,
-        code: `CIG-TEST-${Date.now()}`,
+        code: nextTestCode('CIG'),
         name: 'سجائر كليوباترا بوكس تجريبية',
         category: 'CIGARETTES',
         costPrice: 50,
@@ -282,44 +338,36 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
       },
     });
 
-    // 3. Create price history record linked to canteen item
     const history = await prisma.canteenItemPriceHistory.create({
       data: {
         canteenItemId: item.id,
         costPrice: 50,
         sellingPrice: 55,
         reason: 'السعر الافتتاحي المعتمد',
-        effectiveDate: new Date(),
+        effectiveDate: PINNED_BASE_TIME,
       },
       include: {
         canteenItem: true,
       },
     });
 
-    expect(history.id).toBeDefined();
-    expect(Number(history.costPrice)).toBe(50);
-    expect(Number(history.sellingPrice)).toBe(55);
-    expect(history.canteenItem.id).toBe(item.id);
-
-    // 4. Create worker with additionalSalary and custom allowance with title
     const worker = await prisma.worker.create({
       data: {
-        code: `WRK-TEST-${Date.now()}`,
+        code: nextTestCode('WRK'),
         name: 'عامل تجريبي لاختبار الراتب والبدل',
         idType: 'NATIONAL_ID',
-        birthDate: new Date('1995-05-15'),
+        birthDate: new Date('1995-05-15T00:00:00.000Z'),
         gender: 'MALE',
         jobTitle: 'عامل عادي',
         dailyWage: 150,
         basicSalary: 4500,
         additionalSalary: 1500,
-        // contractType defaults to PERMANENT
         customAllowances: {
           create: {
             title: 'بدل مشقة ميداني خاص',
             allowanceType: 'HARDSHIP_ALLOWANCE',
             amount: 750,
-            startDate: new Date(),
+            startDate: PINNED_BASE_TIME,
           },
         },
       },
@@ -328,14 +376,20 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
       },
     });
 
+    // Assert
+    expect(history.id).toBeDefined();
+    expect(Number(history.costPrice)).toBe(50);
+    expect(Number(history.sellingPrice)).toBe(55);
+    expect(history.canteenItem.id).toBe(item.id);
     expect(worker.id).toBeDefined();
-    expect(worker.contractType).toBe('PERMANENT'); // Verified default
+    expect(worker.contractType).toBe('PERMANENT');
     expect(Number(worker.additionalSalary)).toBe(1500);
     expect(worker.customAllowances).toHaveLength(1);
     expect(worker.customAllowances[0]?.title).toBe('بدل مشقة ميداني خاص');
     expect(Number(worker.customAllowances[0]?.amount)).toBe(750);
+    expect(worker.deletedAt).toBeNull();
 
-    // Cleanup test records
+    // Cleanup
     await prisma.canteenItemPriceHistory.deleteMany({ where: { canteenItemId: item.id } });
     await prisma.canteenItem.delete({ where: { id: item.id } });
     if (createdSiteId) await prisma.site.delete({ where: { id: createdSiteId } });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generateWorkerInviteToken } from '@alsaada/workforce';
 import { config } from '../src/config/env.js';
 import { prisma } from '../src/db.js';
@@ -10,6 +10,8 @@ import {
   handleRejectWorkerLink,
   handleAdminUnlinkWorker,
 } from '../src/handlers/start.handler.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
 
 vi.mock('../src/db.js', () => ({
   prisma: {
@@ -57,6 +59,19 @@ vi.mock('../src/middlewares/auth.middleware.js', () => ({
   invalidateUserCache: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../src/redis.js', () => ({
+  redis: {
+    status: 'ready',
+    set: vi.fn().mockResolvedValue('OK'),
+    get: vi.fn().mockResolvedValue(null),
+    del: vi.fn().mockResolvedValue(1),
+    on: vi.fn(),
+  },
+  safeRedisGet: vi.fn().mockResolvedValue(null),
+  safeRedisSet: vi.fn().mockResolvedValue(true),
+  safeRedisDel: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock('../src/services/command-scope.service.js', () => ({
   syncUserCommandsScope: vi.fn().mockResolvedValue(undefined),
 }));
@@ -77,17 +92,29 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
   let inviteToken: string;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.clearAllMocks();
     config.databaseEncryptionKey = secretKey;
     config.superAdminTelegramId = 999999n;
     inviteToken = generateWorkerInviteToken(workerCode, secretKey);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true as any);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true as any);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('1. Admin Shield on /start inv_...', () => {
     const adminRoles = ['SUPER_ADMIN', 'GENERAL_ADMIN', 'FIELD_ADMIN'];
 
     adminRoles.forEach((role) => {
-      it(`should show Admin Preview Mode card and suppress claim button for role: ${role}`, async () => {
+      it(`shows Admin Preview Mode card and suppresses claim button for role: ${role}`, async () => {
+        // Arrange
         const mockWorker = {
           id: 'worker-uuid-1',
           code: workerCode,
@@ -96,7 +123,7 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
           telegramId: null,
           status: 'ACTIVE',
           site: { name: 'موقع العلمين' },
-          hireDate: new Date('2026-01-01'),
+          hireDate: new Date('2026-01-01T00:00:00.000Z'),
         };
 
         vi.mocked(prisma.worker.findFirst).mockResolvedValueOnce(mockWorker as any);
@@ -110,18 +137,18 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
           api: { sendMessage: vi.fn() },
         } as unknown as MyContext;
 
+        // Act
         await handleStart(ctx);
 
+        // Assert
         expect(replyMock).toHaveBeenCalledTimes(1);
         const [cardText, options] = replyMock.mock.calls[0] as [string, any];
 
-        // Must display Admin Preview Shield
         expect(cardText).toContain('🛡️ *[وضع معاينة الإدارة]*');
         expect(cardText).toContain('لا يمكن ربط هذا العامل بحسابك الإداري');
         expect(cardText).toContain(mockWorker.name);
         expect(cardText).toContain(mockWorker.code);
 
-        // Must NOT contain any claim or join request button
         const buttons = options.reply_markup.inline_keyboard.flat();
         const hasClaimButton = buttons.some((b: any) =>
           b.callback_data.includes('claim_worker') || b.callback_data.includes('submit_join_request')
@@ -132,7 +159,8 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
   });
 
   describe('2. Pre-filled Join Request for Guests/Workers', () => {
-    it('should show pre-filled join card with submit button for GUEST', async () => {
+    it('shows pre-filled join card with submit button for GUEST', async () => {
+      // Arrange
       const mockWorker = {
         id: 'worker-uuid-1',
         code: workerCode,
@@ -141,7 +169,7 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         telegramId: null,
         status: 'ACTIVE',
         site: { name: 'موقع العاصمة' },
-        hireDate: new Date('2026-02-01'),
+        hireDate: new Date('2026-02-01T00:00:00.000Z'),
       };
 
       vi.mocked(prisma.worker.findFirst).mockResolvedValueOnce(mockWorker as any);
@@ -156,8 +184,10 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         api: { sendMessage: vi.fn() },
       } as unknown as MyContext;
 
+      // Act
       await handleStart(ctx);
 
+      // Assert
       expect(replyMock).toHaveBeenCalledTimes(1);
       const [cardText, options] = replyMock.mock.calls[0] as [string, any];
 
@@ -174,7 +204,8 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
       expect(submitButton.text).toContain('إرسال طلب ربط وتفعيل حسابي');
     });
 
-    it('should inform user if they already have a pending ticket for this worker', async () => {
+    it('informs user when they already have a pending ticket for this worker', async () => {
+      // Arrange
       const mockWorker = {
         id: 'worker-uuid-1',
         code: workerCode,
@@ -183,7 +214,7 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         telegramId: null,
         status: 'ACTIVE',
         site: { name: 'موقع العاصمة' },
-        hireDate: new Date('2026-02-01'),
+        hireDate: new Date('2026-02-01T00:00:00.000Z'),
       };
 
       vi.mocked(prisma.worker.findFirst).mockResolvedValueOnce(mockWorker as any);
@@ -202,8 +233,10 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         api: { sendMessage: vi.fn() },
       } as unknown as MyContext;
 
+      // Act
       await handleStart(ctx);
 
+      // Assert
       expect(replyMock).toHaveBeenCalledTimes(1);
       const [cardText] = replyMock.mock.calls[0] as [string];
       expect(cardText).toContain('طلبك قيد المراجعة الإدارية');
@@ -212,7 +245,8 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
   });
 
   describe('3. Ticket Submission & Admin Notification', () => {
-    it('should create ApprovalTicket and send interactive approval card to Super Admins', async () => {
+    it('creates ApprovalTicket and sends interactive approval card to Super Admins', async () => {
+      // Arrange
       const mockWorker = {
         id: 'worker-uuid-1',
         code: workerCode,
@@ -251,9 +285,10 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         api: { sendMessage: sendMsgMock },
       } as unknown as MyContext;
 
+      // Act
       await handleSubmitJoinRequest(ctx);
 
-      // Verify ticket created
+      // Assert
       expect(prisma.approvalTicket.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -265,11 +300,9 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         })
       );
 
-      // Verify receipt card rendered to applicant
       expect(editMock).toHaveBeenCalledTimes(1);
       expect((editMock.mock.calls[0] as any)[0]).toContain('#TCK-JOIN-9999');
 
-      // Verify notification sent to Super Admin with interactive buttons
       expect(sendMsgMock).toHaveBeenCalledWith(
         999999,
         expect.stringContaining('#TCK-JOIN-9999'),
@@ -288,7 +321,8 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
   });
 
   describe('4. Instant Activation upon Admin Approval', () => {
-    it('should link worker, promote user to WORKER, and notify worker when approved', async () => {
+    it('links worker, promotes user to WORKER, and notifies worker when approved', async () => {
+      // Arrange
       const applicantTelegramId = 555666n;
       const mockTicket = {
         id: 'ticket-to-approve',
@@ -330,9 +364,10 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         api: { sendMessage: sendMsgMock },
       } as unknown as MyContext;
 
+      // Act
       await handleApproveWorkerLink(ctx);
 
-      // Verify DB updates
+      // Assert
       expect(prisma.approvalTicket.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'ticket-to-approve' },
@@ -357,11 +392,9 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         })
       );
 
-      // Verify admin card updated
       expect(editMock).toHaveBeenCalledTimes(1);
       expect((editMock.mock.calls[0] as any)[0]).toContain('تم اعتماد وتفعيل ربط حساب العامل بنجاح');
 
-      // Verify push notification sent to worker
       expect(sendMsgMock).toHaveBeenCalledWith(
         Number(applicantTelegramId),
         expect.stringContaining('تم اعتماد وتفعيل حسابك رسمياً من قبل الإدارة'),
@@ -369,7 +402,8 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
       );
     });
 
-    it('should reject approval attempt if performer is not an admin', async () => {
+    it('rejects approval attempt if performer is not an admin', async () => {
+      // Arrange
       const replyMock = vi.fn().mockResolvedValue(true);
       const ctx = {
         callbackQuery: { data: 'action:approve_worker_link:ticket-id' },
@@ -379,14 +413,18 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         reply: replyMock,
       } as unknown as MyContext;
 
+      // Act
       await handleApproveWorkerLink(ctx);
+
+      // Assert
       expect(replyMock).toHaveBeenCalledWith(expect.stringContaining('غير مصرح لك'), expect.anything());
       expect(prisma.approvalTicket.update).not.toHaveBeenCalled();
     });
   });
 
   describe('5. Rejection Handling', () => {
-    it('should set ticket to REJECTED and notify worker politely', async () => {
+    it('sets ticket to REJECTED and notifies worker politely', async () => {
+      // Arrange
       const applicantTelegramId = 666777n;
       const mockTicket = {
         id: 'ticket-to-reject',
@@ -414,8 +452,10 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         api: { sendMessage: sendMsgMock },
       } as unknown as MyContext;
 
+      // Act
       await handleRejectWorkerLink(ctx);
 
+      // Assert
       expect(prisma.approvalTicket.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'ticket-to-reject' },
@@ -428,11 +468,13 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         expect.stringContaining('تم رفض طلب ربط حسابك'),
         expect.anything()
       );
+      expect(prisma.worker.update).not.toHaveBeenCalled();
     });
   });
 
   describe('6. Admin Unlink Worker Account', () => {
-    it('should cleanly unlink worker Telegram ID and demote user to GUEST', async () => {
+    it('cleanly unlinks worker Telegram ID and demotes user to GUEST', async () => {
+      // Arrange
       const previousTelegramId = 444555n;
       const mockWorker = {
         id: 'worker-uuid-4',
@@ -461,8 +503,10 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         api: { sendMessage: sendMsgMock },
       } as unknown as MyContext;
 
+      // Act
       await handleAdminUnlinkWorker(ctx);
 
+      // Assert
       expect(prisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'worker-uuid-4' },
@@ -470,7 +514,6 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         })
       );
 
-      // Verify user demoted / decoupled
       expect(prisma.user.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { telegramId: previousTelegramId, role: 'WORKER' },
@@ -478,17 +521,20 @@ describe('Worker Invitation Approval Workflow & Admin Shield Suite', () => {
         })
       );
 
-      // Verify admin notified
       expect(editMock).toHaveBeenCalledWith(
         expect.stringContaining('تم إلغاء ربط حساب التليجرام بنجاح'),
         expect.anything()
       );
 
-      // Verify unlinked user notified
       expect(sendMsgMock).toHaveBeenCalledWith(
         Number(previousTelegramId),
         expect.stringContaining('تم إلغاء ربط حساب التليجرام الخاص بك بالسجل الوظيفي من قبل الإدارة'),
         expect.anything()
+      );
+      expect(prisma.worker.update).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { telegramId: previousTelegramId },
+        })
       );
     });
   });

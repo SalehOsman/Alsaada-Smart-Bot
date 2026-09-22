@@ -1,0 +1,12 @@
+// Database schema fragment for acceptance fixture: sample-domain
+
+model SampleDomainRecord {
+  id        String   @id @default(uuid())
+  title     String
+  status    String   @default("PENDING")
+  amount    Decimal  @default(0.0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sample_domain_records")
+}

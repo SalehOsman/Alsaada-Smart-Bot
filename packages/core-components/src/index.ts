@@ -41,9 +41,7 @@ export * from './governorate-picker/index.js';
 export * from './location-picker/index.js';
 
 // Sovereign Architecture Contracts
-export * from './contracts/flow.contract.js';
-export * from './contracts/dashboard.contract.js';
-export * from './contracts/module.contract.js';
+export * from './contracts/index.js';
 
 // Universal Wizard Session Engine
 export * from './wizard-session/wizard-session.engine.js';
@@ -57,3 +55,5 @@ export * from './bot-catalog/index.js';
 // Sovereign Module Bus & Zero-Touch Auto-Loader
 export * from './module-bus/index.js';
 
+
+export * from './rich-message/index.js';

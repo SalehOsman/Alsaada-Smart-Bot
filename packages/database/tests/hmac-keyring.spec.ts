@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   computeHmacSignature,
   verifyHmacSignature,
@@ -6,7 +6,23 @@ import {
   DEFAULT_KEYRING,
 } from '../src/ledger/hash-chain.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
+
 describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   const samplePayload = {
     ledgerSeq: 101n,
     prevHash: 'a'.repeat(64),
@@ -15,15 +31,12 @@ describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
     amount: 1500.5,
   };
 
-  it('should compute valid HMAC-SHA256 signature using active key', () => {
-    const signature = computeHmacSignature(
-      samplePayload,
-      DEFAULT_KEYRING.keys[DEFAULT_KEYRING.activeKid]!.key
-    );
+  it('computes valid HMAC-SHA256 signature using active key', () => {
+    // Arrange
+    const activeKey = DEFAULT_KEYRING.keys[DEFAULT_KEYRING.activeKid]!.key;
 
-    expect(signature).toBeDefined();
-    expect(signature).toHaveLength(64); // Hex SHA-256 is 64 characters
-
+    // Act
+    const signature = computeHmacSignature(samplePayload, activeKey);
     const isValid = verifyHmacSignature(
       {
         ...samplePayload,
@@ -33,11 +46,14 @@ describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
       DEFAULT_KEYRING
     );
 
+    // Assert
+    expect(signature).toBeDefined();
+    expect(signature).toHaveLength(64);
     expect(isValid).toBe(true);
   });
 
-  it('should verify signatures across 90-day key rotation cycle (active & retired)', () => {
-    // Initial Keyring with Q1 active key
+  it('verifies signatures across 90-day key rotation cycle for active and retired keys', () => {
+    // Arrange
     const keyring: HmacKeyring = {
       activeKid: 'v1-2026-q1',
       keys: {
@@ -49,11 +65,8 @@ describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
         },
       },
     };
-
-    // Sign record with Q1 key
     const sigQ1 = computeHmacSignature(samplePayload, keyring.keys['v1-2026-q1']!.key);
 
-    // Rotate keyring to Q2: retire Q1, introduce Q2 active key
     keyring.keys['v1-2026-q1']!.status = 'retired';
     keyring.keys['v1-2026-q1']!.retiredAt = '2026-04-01T00:00:00.000Z';
     keyring.activeKid = 'v2-2026-q2';
@@ -64,7 +77,14 @@ describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
       createdAt: '2026-04-01T00:00:00.000Z',
     };
 
-    // 1. Verify old Q1 record using retired key entry
+    const payloadQ2 = {
+      ...samplePayload,
+      ledgerSeq: 102n,
+      currentHash: 'c'.repeat(64),
+    };
+    const sigQ2 = computeHmacSignature(payloadQ2, keyring.keys['v2-2026-q2']!.key);
+
+    // Act
     const isQ1Valid = verifyHmacSignature(
       {
         ...samplePayload,
@@ -73,16 +93,6 @@ describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
       },
       keyring
     );
-    expect(isQ1Valid).toBe(true);
-
-    // 2. Sign new record with Q2 active key
-    const payloadQ2 = {
-      ...samplePayload,
-      ledgerSeq: 102n,
-      currentHash: 'c'.repeat(64),
-    };
-    const sigQ2 = computeHmacSignature(payloadQ2, keyring.keys['v2-2026-q2']!.key);
-
     const isQ2Valid = verifyHmacSignature(
       {
         ...payloadQ2,
@@ -91,29 +101,32 @@ describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
       },
       keyring
     );
+
+    // Assert
+    expect(isQ1Valid).toBe(true);
     expect(isQ2Valid).toBe(true);
   });
 
-  it('should reject verification if kid does not exist in keyring', () => {
+  it('rejects verification if kid does not exist in keyring', () => {
+    // Arrange
     const signature = computeHmacSignature(samplePayload, 'some-foreign-key');
+    const payloadWithUnknownKid = {
+      ...samplePayload,
+      signature,
+      kid: 'v99-unknown-kid',
+    };
 
-    const isValid = verifyHmacSignature(
-      {
-        ...samplePayload,
-        signature,
-        kid: 'v99-unknown-kid',
-      },
-      DEFAULT_KEYRING
-    );
+    // Act
+    const isValid = verifyHmacSignature(payloadWithUnknownKid, DEFAULT_KEYRING);
 
+    // Assert
     expect(isValid).toBe(false);
   });
 
-  it('should reject verification if payload was tampered', () => {
+  it('rejects verification if payload was tampered', () => {
+    // Arrange
     const activeKey = DEFAULT_KEYRING.keys[DEFAULT_KEYRING.activeKid]!.key;
     const signature = computeHmacSignature(samplePayload, activeKey);
-
-    // Tamper amount
     const tamperedPayload = {
       ...samplePayload,
       amount: 999999.99,
@@ -121,24 +134,28 @@ describe('HMAC Keyring & Cryptographic Rotation Verification', () => {
       kid: DEFAULT_KEYRING.activeKid,
     };
 
+    // Act
     const isValid = verifyHmacSignature(tamperedPayload, DEFAULT_KEYRING);
+
+    // Assert
     expect(isValid).toBe(false);
   });
 
-  it('should reject verification if signature string is corrupted', () => {
+  it('rejects verification if signature string is corrupted', () => {
+    // Arrange
     const activeKey = DEFAULT_KEYRING.keys[DEFAULT_KEYRING.activeKid]!.key;
     const signature = computeHmacSignature(samplePayload, activeKey);
     const corruptedSig = signature.substring(0, 60) + 'ffff';
+    const corruptedPayload = {
+      ...samplePayload,
+      signature: corruptedSig,
+      kid: DEFAULT_KEYRING.activeKid,
+    };
 
-    const isValid = verifyHmacSignature(
-      {
-        ...samplePayload,
-        signature: corruptedSig,
-        kid: DEFAULT_KEYRING.activeKid,
-      },
-      DEFAULT_KEYRING
-    );
+    // Act
+    const isValid = verifyHmacSignature(corruptedPayload, DEFAULT_KEYRING);
 
+    // Assert
     expect(isValid).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   parseRegionalDate,
   validateDate,
@@ -6,56 +6,115 @@ import {
   buildDatePickerKeyboard,
 } from '../src/index.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('UniversalDatePicker', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   describe('Date parsing', () => {
-    it('parses ISO format YYYY-MM-DD', () => {
-      const dt = parseRegionalDate('2026-09-07');
+    it('1. parses ISO format YYYY-MM-DD', () => {
+      // Arrange
+      const isoString = '2026-09-07';
+
+      // Act
+      const dt = parseRegionalDate(isoString);
+
+      // Assert
       expect(dt).not.toBeNull();
       expect(dt!.getUTCFullYear()).toBe(2026);
       expect(dt!.getUTCMonth()).toBe(8); // September (0-indexed)
       expect(dt!.getUTCDate()).toBe(7);
     });
 
-    it('parses regional format DD-MM-YYYY with Eastern Arabic digits', () => {
-      const dt = parseRegionalDate('٠٧-٠٩-٢٠٢٦');
+    it('2. parses regional format DD-MM-YYYY with Eastern Arabic digits', () => {
+      // Arrange
+      const easternString = '٠٧-٠٩-٢٠٢٦';
+
+      // Act
+      const dt = parseRegionalDate(easternString);
+
+      // Assert
       expect(dt).not.toBeNull();
       expect(dt!.getUTCFullYear()).toBe(2026);
       expect(dt!.getUTCDate()).toBe(7);
     });
 
-    it('returns null for invalid strings', () => {
-      expect(parseRegionalDate('invalid')).toBeNull();
-      expect(parseRegionalDate('')).toBeNull();
+    it('3. returns null for invalid strings', () => {
+      // Arrange
+      const invalid = 'invalid';
+      const empty = '';
+
+      // Act
+      const resInvalid = parseRegionalDate(invalid);
+      const resEmpty = parseRegionalDate(empty);
+
+      // Assert
+      expect(resInvalid).toBeNull();
+      expect(resEmpty).toBeNull();
     });
   });
 
   describe('Date validation', () => {
-    it('blocks future dates when allowFuture is false', () => {
-      const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    it('4. blocks future dates when allowFuture is false', () => {
+      // Arrange
+      const baseMs = PINNED_BASE_TIME.getTime();
+      const future = new Date(baseMs + 7 * 24 * 60 * 60 * 1000);
+
+      // Act
       const res = validateDate(future, { allowFuture: false });
+
+      // Assert
       expect(res.isValid).toBe(false);
       expect(res.error).toContain('المستقبل');
     });
 
-    it('allows past dates', () => {
+    it('5. allows past dates', () => {
+      // Arrange
       const past = new Date('2026-01-01');
+
+      // Act
       const res = validateDate(past, { allowFuture: false });
+
+      // Assert
       expect(res.isValid).toBe(true);
     });
   });
 
   describe('Date range calculation', () => {
-    it('calculates inclusive days correctly', () => {
+    it('6. calculates inclusive days correctly', () => {
+      // Arrange
       const start = new Date('2026-09-01');
       const end = new Date('2026-09-05');
+
+      // Act
       const range = calculateDateRange(start, end);
+
+      // Assert
       expect(range.daysCount).toBe(5);
     });
   });
 
   describe('Keyboard builder', () => {
-    it('builds date preset keyboard with Today and Yesterday', () => {
-      const kb = buildDatePickerKeyboard({ backCallbackData: 'action:back' });
+    it('7. builds date preset keyboard with Today and Yesterday', () => {
+      // Arrange
+      const options = { backCallbackData: 'action:back' };
+
+      // Act
+      const kb = buildDatePickerKeyboard(options);
+
+      // Assert
       expect(kb.inline_keyboard.length).toBe(2);
       expect(kb.inline_keyboard[0]![0]!.text).toContain('اليوم');
       expect(kb.inline_keyboard[0]![1]!.text).toContain('أمس');

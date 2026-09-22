@@ -2,14 +2,23 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AiVisionEngine } from '../src/engine.js';
 import type { RawVisionApiResponse } from '../src/types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Enterprise AiVisionEngine Unit Tests', () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
     global.fetch = originalFetch;
   });
 
@@ -39,13 +48,18 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
     });
   }
 
-  it('should return error when no Gemini API keys are configured or in env', async () => {
+  it('1. returns error when no Gemini API keys are configured or in env', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: [] });
     const oldEnv = process.env.GEMINI_API_KEY;
     delete process.env.GEMINI_API_KEY;
 
+    // Act & Assert
     try {
+      // Act
       const result = await engine.scanDocument(Buffer.from('test-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+      // Assert
       expect(result.isValid).toBe(false);
       expect(result.userErrorMessage).toContain('GEMINI_API_KEY');
     } finally {
@@ -53,7 +67,8 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
     }
   });
 
-  it('should reject blurry or obscured photos with a user-friendly error', async () => {
+  it('2. rejects blurry or obscured photos with a user-friendly error', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     mockGeminiResponse({
       detectedDocType: 'EGYPTIAN_NATIONAL_ID_FRONT',
@@ -61,13 +76,17 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       isBlurryOrUnreadable: false,
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('fake-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+    // Assert
     expect(result.isValid).toBe(false);
     expect(result.isQualityAcceptable).toBe(false);
     expect(result.userErrorMessage).toContain('مغطاة بأصابع اليد');
   });
 
-  it('should reject documents when detected doc type does not match expected doc type', async () => {
+  it('3. rejects documents when detected doc type does not match expected doc type', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     mockGeminiResponse({
       detectedDocType: 'OTHER',
@@ -75,12 +94,16 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       isBlurryOrUnreadable: false,
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('fake-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+    // Assert
     expect(result.isValid).toBe(false);
     expect(result.userErrorMessage).toContain('لا تطابق المستند المطلوب');
   });
 
-  it('should correctly parse a valid Egyptian National ID front', async () => {
+  it('4. correctly parses a valid Egyptian National ID front', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     // Valid national ID: 29001012701234 (Born 1990-01-01, Luxor (27), Male)
     mockGeminiResponse({
@@ -93,7 +116,10 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       confidenceScore: 0.98,
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('fake-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.detectedDocType).toBe('EGYPTIAN_NATIONAL_ID_FRONT');
     expect(result.nationalIdNumber).toBe('29001012701234');
@@ -104,7 +130,8 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
     expect(result.age).toBeGreaterThanOrEqual(30);
   });
 
-  it('should reject Egyptian National ID front if national ID checksum or length is invalid', async () => {
+  it('5. rejects Egyptian National ID front if national ID checksum or length is invalid', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     mockGeminiResponse({
       detectedDocType: 'EGYPTIAN_NATIONAL_ID_FRONT',
@@ -114,12 +141,16 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       fullName: 'أحمد محمود',
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('fake-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+    // Assert
     expect(result.isValid).toBe(false);
     expect(result.userErrorMessage).toContain('14 رقماً');
   });
 
-  it('should correctly parse Egyptian National ID back and extract expiry date', async () => {
+  it('6. correctly parses Egyptian National ID back and extracts expiry date', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     mockGeminiResponse({
       detectedDocType: 'EGYPTIAN_NATIONAL_ID_BACK',
@@ -129,14 +160,18 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       address: 'محافظة قنا - مركز قوص',
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('fake-image'), 'image/jpeg', 'NATIONAL_ID_BACK');
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.detectedDocType).toBe('EGYPTIAN_NATIONAL_ID_BACK');
     expect(result.expiryDateStr).toBe('26-05-2028');
     expect(result.address).toBe('محافظة قنا - مركز قوص');
   });
 
-  it('should correctly parse passport document', async () => {
+  it('7. correctly parses passport document', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     mockGeminiResponse({
       detectedDocType: 'PASSPORT',
@@ -147,7 +182,10 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       expiryDate: '2030-10-15',
     });
 
+    // Act
     const result = await engine.scanIdentityDocument(Buffer.from('fake-image'), 'image/jpeg', 'PASSPORT');
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.detectedDocType).toBe('PASSPORT');
     expect(result.passportNumber).toBe('A12345678');
@@ -155,7 +193,8 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
     expect(result.expiryDateStr).toBe('15-10-2030');
   });
 
-  it('should correctly parse invoices with items and total', async () => {
+  it('8. correctly parses invoices with items and total', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     mockGeminiResponse({
       detectedDocType: 'INVOICE',
@@ -170,14 +209,18 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       ],
     });
 
+    // Act
     const result = await engine.scanInvoice(Buffer.from('fake-image'));
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.invoiceData?.vendorName).toBe('شركة النيل لقطع الغيار');
     expect(result.invoiceData?.grandTotal).toBe(15400);
     expect(result.invoiceData?.items).toHaveLength(1);
   });
 
-  it('should fallback to next model when primary model fails with HTTP error', async () => {
+  it('9. fallbacks to next model when primary model fails with HTTP error', async () => {
+    // Arrange
     const engine = new AiVisionEngine({
       apiKeys: ['test-key-12345'],
       primaryModel: 'primary-model',
@@ -217,13 +260,17 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
       });
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('test'), 'image/jpeg', 'PASSPORT');
+
+    // Assert
     expect(calls).toBe(2);
     expect(result.isValid).toBe(true);
     expect(result.passportNumber).toBe('B998877');
   });
 
-  it('should successfully parse Gemini responses wrapped in markdown code fences', async () => {
+  it('10. successfully parses Gemini responses wrapped in markdown code fences', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -244,13 +291,17 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
         }),
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('test-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.nationalIdNumber).toBe('29001012701234');
     expect(result.fullName).toBe('علي حسن');
   });
 
-  it('should properly normalize Eastern Arabic numerals in national ID without erasing them', async () => {
+  it('11. properly normalizes Eastern Arabic numerals in national ID without erasing them', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     // Eastern Arabic numerals for 29001012701234
     global.fetch = vi.fn().mockResolvedValue({
@@ -278,14 +329,18 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
         }),
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('test-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.nationalIdNumber).toBe('29001012701234');
     expect(result.governorateCode).toBe('27');
     expect(result.gender).toBe('MALE');
   });
 
-  it('should not falsely reject photos when isCoveredOrObscured is string "false"', async () => {
+  it('12. avoids falsely rejecting photos when isCoveredOrObscured is string "false"', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -312,13 +367,17 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
         }),
     });
 
+    // Act
     const result = await engine.scanDocument(Buffer.from('test-image'), 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.isQualityAcceptable).toBe(true);
     expect(result.nationalIdNumber).toBe('29001012701234');
   });
 
-  it('should extract birthDate, age, and gender from passport documents', async () => {
+  it('13. extracts birthDate, age, and gender from passport documents', async () => {
+    // Arrange
     const engine = new AiVisionEngine({ apiKeys: ['test-key-12345'] });
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -349,7 +408,10 @@ describe('Enterprise AiVisionEngine Unit Tests', () => {
         }),
     });
 
+    // Act
     const result = await engine.scanIdentityDocument(Buffer.from('test-image'), 'image/jpeg', 'PASSPORT');
+
+    // Assert
     expect(result.isValid).toBe(true);
     expect(result.passportNumber).toBe('P12345678');
     expect(result.fullName).toBe('Alexander Smith');

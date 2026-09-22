@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ==============================================================================
 # Al-Saada Smart Bot Enterprise — Production Multi-Stage Dockerfile
 # ==============================================================================
@@ -7,12 +8,6 @@
 # -------------------------------------------------------------
 FROM node:24-alpine AS builder
 
-ARG APP_VERSION=2.0.0-alpha.1
-ARG GIT_COMMIT_SHA=unknown
-ARG BUILD_TIME=unknown
-ENV APP_VERSION=$APP_VERSION
-ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
-ENV BUILD_TIME=$BUILD_TIME
 ENV DATABASE_URL="postgresql://build_placeholder:dummy@127.0.0.1:5432/build_db?schema=public"
 
 WORKDIR /app
@@ -28,6 +23,7 @@ COPY packages/rbac/package.json packages/rbac/
 COPY packages/regional-engine/package.json packages/regional-engine/
 COPY packages/national-id-engine/package.json packages/national-id-engine/
 COPY packages/core-components/package.json packages/core-components/
+COPY packages/shared/package.json packages/shared/
 COPY packages/telemetry/package.json packages/telemetry/
 COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
 COPY modules/workforce/package.json modules/workforce/
@@ -38,7 +34,9 @@ COPY apps/bot-server/package.json apps/bot-server/
 
 # Install all dependencies (including devDependencies for build)
 ENV GIT_DIR=/tmp/alsaada-build.git
-RUN git init --bare "$GIT_DIR" \
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    git init --bare "$GIT_DIR" \
+    && pnpm config set package-import-method copy \
     && pnpm config set fetch-retries 5 \
     && pnpm config set fetch-retry-maxtimeout 120000 \
     && pnpm config set network-concurrency 4 \
@@ -57,6 +55,8 @@ COPY packages/national-id-engine/src/ packages/national-id-engine/src/
 COPY packages/national-id-engine/tsconfig.json packages/national-id-engine/
 COPY packages/core-components/src/ packages/core-components/src/
 COPY packages/core-components/tsconfig.json packages/core-components/
+COPY packages/shared/src/ packages/shared/src/
+COPY packages/shared/tsconfig.json packages/shared/
 COPY packages/telemetry/src/ packages/telemetry/src/
 COPY packages/telemetry/tsconfig.json packages/telemetry/
 COPY packages/ai-vision-engine/src/ packages/ai-vision-engine/src/
@@ -77,22 +77,18 @@ COPY tsconfig.json ./
 # Generate Prisma Client
 RUN pnpm --filter @alsaada/database db:generate
 
-# Compile TypeScript across all packages, modules and the bot server
-RUN pnpm --filter @alsaada/rbac build
-RUN pnpm --filter @alsaada/regional-engine build
-RUN pnpm --filter @alsaada/national-id-engine build
-RUN pnpm --filter @alsaada/database build
-RUN pnpm --filter @alsaada/core-components build
-RUN pnpm --filter @alsaada/telemetry build
-RUN pnpm --filter @alsaada/ai-vision-engine build
-RUN pnpm --filter @alsaada/workforce build
-RUN pnpm --filter @alsaada/settings build
-RUN pnpm --filter @alsaada/bot-server build
+# Compile TypeScript across all packages, modules and the bot server (parallel topological build)
+RUN pnpm --filter @alsaada/bot-server... build
 
 # -------------------------------------------------------------
 # Stage 2: Production Runner
 # -------------------------------------------------------------
 FROM node:24-alpine AS runner
+
+WORKDIR /app
+
+RUN npm install -g pnpm@12.4.2
+RUN apk add --no-cache openssl dumb-init tzdata
 
 ARG APP_VERSION=2.0.0-alpha.1
 ARG GIT_COMMIT_SHA=unknown
@@ -100,11 +96,6 @@ ARG BUILD_TIME=unknown
 ENV APP_VERSION=$APP_VERSION
 ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
 ENV BUILD_TIME=$BUILD_TIME
-
-WORKDIR /app
-
-RUN npm install -g pnpm@12.4.2
-RUN apk add --no-cache openssl dumb-init tzdata
 
 ENV NODE_ENV=production
 ENV PORT=3000

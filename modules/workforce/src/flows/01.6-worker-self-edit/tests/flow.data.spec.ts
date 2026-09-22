@@ -1,10 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerSelfEditRepository } from '../flow.repository.js';
 import { WorkerSelfEditService } from '../flow.service.js';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
-  it('should create audit log and outbox event atomically during field update', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('creates audit log and outbox event atomically during field update', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         update: vi.fn().mockResolvedValue({ id: 'w-1' }),
@@ -20,6 +37,7 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
 
     const repo = new WorkerSelfEditRepository(mockPrisma);
 
+    // Act
     const res = await repo.updateWorkerField({
       workerId: 'w-1',
       workerCode: 'OP-01',
@@ -30,6 +48,7 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
       actorTelegramId: 554433n,
     });
 
+    // Assert
     expect(res.success).toBe(true);
     expect(mockPrisma.worker.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -55,7 +74,8 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
     );
   });
 
-  it('should encrypt phone and compute blind index during phone update in service', async () => {
+  it('encrypts phone and computes blind index during phone update in service', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findUnique: vi.fn().mockResolvedValue({ id: 'w-1', code: 'OP-01' }),
@@ -69,6 +89,7 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
     const repo = new WorkerSelfEditRepository(mockPrisma);
     const service = new WorkerSelfEditService(repo, 'test-encryption-key-32-chars!!');
 
+    // Act
     const res = await service.executeSelfEdit({
       workerId: 'w-1',
       workerCode: 'OP-01',
@@ -78,6 +99,7 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
       actorTelegramId: 554433n,
     });
 
+    // Assert
     expect(res.success).toBe(true);
     expect(mockPrisma.worker.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -88,9 +110,16 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
         }),
       })
     );
+    const updateCall = vi.mocked(mockPrisma.worker.update).mock.calls[0]?.[0] as {
+      data: { phoneEncrypted?: string; phoneBlindIndex?: string };
+    };
+    expect(updateCall.data.phoneEncrypted).not.toBe('01012345678');
+    expect(updateCall.data.phoneEncrypted?.length).toBeGreaterThan(20);
+    expect(updateCall.data.phoneBlindIndex?.length).toBe(64);
   });
 
-  it('should encrypt accountNumber into accountNumberEncrypted column', async () => {
+  it('encrypts accountNumber into accountNumberEncrypted column', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findUnique: vi.fn().mockResolvedValue({ id: 'w-1', code: 'OP-01' }),
@@ -104,6 +133,7 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
     const repo = new WorkerSelfEditRepository(mockPrisma);
     const service = new WorkerSelfEditService(repo, 'test-encryption-key-32-chars!!');
 
+    // Act
     const res = await service.executeSelfEdit({
       workerId: 'w-1',
       workerCode: 'OP-01',
@@ -113,6 +143,7 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
       actorTelegramId: 554433n,
     });
 
+    // Assert
     expect(res.success).toBe(true);
     expect(mockPrisma.worker.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -122,5 +153,10 @@ describe('01.6 Worker Self-Edit — Data Integrity Tests', () => {
         }),
       })
     );
+    const updateCall = vi.mocked(mockPrisma.worker.update).mock.calls[0]?.[0] as {
+      data: { accountNumberEncrypted?: string };
+    };
+    expect(updateCall.data.accountNumberEncrypted).not.toBe('12345678901234');
+    expect(updateCall.data.accountNumberEncrypted?.length).toBeGreaterThan(20);
   });
 });

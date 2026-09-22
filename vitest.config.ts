@@ -6,7 +6,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './apps/admin-dashboard/src'),
       '@alsaada/shared/testing': path.resolve(__dirname, './packages/shared/src/testing/index.ts'),
+      '@alsaada/shared/logger': path.resolve(__dirname, './packages/shared/src/logger/index.ts'),
+      '@alsaada/shared/domain': path.resolve(__dirname, './packages/shared/src/domain/index.ts'),
       '@alsaada/shared': path.resolve(__dirname, './packages/shared/src/index.ts'),
+      '@alsaada/core-components': path.resolve(__dirname, './packages/core-components/src/index.ts'),
     },
   },
   test: {

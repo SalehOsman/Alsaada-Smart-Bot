@@ -1,10 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerDirectoryService } from '../flow.service.js';
 import { WorkerDirectoryRepository } from '../flow.repository.js';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
-  it('should mask sensitive wage information from non-super-admin viewers', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('masks sensitive wage information from non-super-admin viewers', async () => {
+    // Arrange
     const mockWorker = {
       id: 'wrk-1',
       code: 'OP-001',
@@ -27,16 +44,17 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const repo = new WorkerDirectoryRepository(mockPrisma);
     const service = new WorkerDirectoryService(repo);
 
-    // FIELD_ADMIN should have wage completely omitted (Strict Pre-Render RBAC Masking)
+    // Act
     const fieldAdminProfile = await service.getWorkerProfile360('wrk-1', 'FIELD_ADMIN');
-    expect(fieldAdminProfile?.dailyWageMasked).toBeUndefined();
-
-    // SUPER_ADMIN should see full wage
     const superAdminProfile = await service.getWorkerProfile360('wrk-1', 'SUPER_ADMIN');
+
+    // Assert
+    expect(fieldAdminProfile?.dailyWageMasked).toBeUndefined();
     expect(superAdminProfile?.dailyWageMasked).toContain('450');
   });
 
-  it('should display unmasked National ID to admins/super admins and masked to others', async () => {
+  it('displays unmasked National ID to admins/super admins and masked to others', async () => {
+    // Arrange
     const rawSecret = 'test-secret-key-32-chars-long-abc!!';
     const { encryptField } = await import('@alsaada/database');
     const { createHash } = await import('node:crypto');
@@ -66,28 +84,34 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const repo = new WorkerDirectoryRepository(mockPrisma);
     const service = new WorkerDirectoryService(repo, encryptionKey);
 
-    // SUPER_ADMIN sees full ID
+    // Act
     const superAdminProfile = await service.getWorkerProfile360('wrk-1', 'SUPER_ADMIN');
-    expect(superAdminProfile?.idNumberMasked).toBe('28009010100332');
-
-    // FIELD_ADMIN sees full ID
     const fieldAdminProfile = await service.getWorkerProfile360('wrk-1', 'FIELD_ADMIN');
-    expect(fieldAdminProfile?.idNumberMasked).toBe('28009010100332');
-
-    // GUEST sees masked ID
     const guestProfile = await service.getWorkerProfile360('wrk-1', 'GUEST');
+
+    // Assert
+    expect(superAdminProfile?.idNumberMasked).toBe('28009010100332');
+    expect(fieldAdminProfile?.idNumberMasked).toBe('28009010100332');
     expect(guestProfile?.idNumberMasked).toBe('**********0332');
+    expect(guestProfile?.idNumberMasked).not.toContain('28009010100332');
   });
 
-  it('should omit separate call button since phone is clickable in the profile card directly', async () => {
+  it('omits separate call button since phone is clickable in the profile card directly', async () => {
+    // Arrange
     const { WorkerDirectoryKeyboards } = await import('../flow.keyboard.js');
+
+    // Act
     const kb = WorkerDirectoryKeyboards.profile360ActionsKeyboard('wrk-1', 'https://wa.me/2010', true);
     const flat = kb.inline_keyboard.flat();
     const callBtn = flat.find((b) => 'callback_data' in b && b.callback_data === 'action:worker:call:wrk-1');
+
+    // Assert
     expect(callBtn).toBeUndefined();
+    expect(flat.some((b) => 'callback_data' in b && b.callback_data === 'action:worker:call:wrk-1')).toBe(false);
   });
 
-  it('should detect missing documents/data and generate WhatsApp prompt URL', async () => {
+  it('detects missing documents/data and generates WhatsApp prompt URL', async () => {
+    // Arrange
     const rawSecret = 'test-secret-key-32-chars-long-abc!!';
     const { createHash } = await import('node:crypto');
     const encryptionKey = createHash('sha256').update(rawSecret).digest('hex');
@@ -125,7 +149,10 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const repo = new WorkerDirectoryRepository(mockPrisma);
     const service = new WorkerDirectoryService(repo, encryptionKey);
 
+    // Act
     const profile = await service.getWorkerProfile360('wrk-inc', 'SUPER_ADMIN');
+
+    // Assert
     expect(profile).not.toBeNull();
     expect(profile?.isProfileComplete).toBe(false);
     expect(profile?.completionPercentage).toBeLessThan(100);
@@ -140,8 +167,7 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     expect(profile?.missingDataWhatsAppUrl).toBeDefined();
     expect(decodeURIComponent(profile?.missingDataWhatsAppUrl || '')).toContain('هيما');
 
-    // Test keyboard contains missing data WhatsApp button
-    // When URL exceeds Telegram 512-byte limit, it safely falls back to interactive callback action:worker:mwa:...
+    // Act 2: Keyboard generation
     const { WorkerDirectoryKeyboards } = await import('../flow.keyboard.js');
     const kb = WorkerDirectoryKeyboards.profile360ActionsKeyboard(
       'wrk-inc',
@@ -151,11 +177,12 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     );
     const flat = kb.inline_keyboard.flat();
     const missingBtn = flat.find((b) => b.text.includes('طلب استكمال النواقص عبر واتساب'));
+
+    // Assert 2
     expect(missingBtn).toBeDefined();
-    // Since missingDataWhatsAppUrl is ~2000 bytes, it must fall back to safe callback to prevent Telegram BUTTON_DATA_INVALID
     expect(missingBtn && 'callback_data' in missingBtn ? missingBtn.callback_data : undefined).toBe('action:worker:mwa:wrk-inc');
 
-    // Verify that when URL is within Telegram 512-byte limit, it renders as a direct URL button
+    // Act 3: Short URL direct button
     const safeShortUrl = 'https://wa.me/201012345678';
     const kbShort = WorkerDirectoryKeyboards.profile360ActionsKeyboard(
       'wrk-inc',
@@ -165,10 +192,14 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     );
     const flatShort = kbShort.inline_keyboard.flat();
     const missingBtnShort = flatShort.find((b) => b.text.includes('طلب استكمال النواقص عبر واتساب'));
+
+    // Assert 3
     expect(missingBtnShort && 'url' in missingBtnShort ? missingBtnShort.url : undefined).toBe(safeShortUrl);
+    expect(missingBtnShort && 'callback_data' in missingBtnShort ? missingBtnShort.callback_data : undefined).toBeUndefined();
   });
 
-  it('should evaluate 100% complete profile without missing data button', async () => {
+  it('evaluates 100% complete profile without missing data button', async () => {
+    // Arrange
     const rawSecret = 'test-secret-key-32-chars-long-abc!!';
     const { encryptField } = await import('@alsaada/database');
     const { createHash } = await import('node:crypto');
@@ -188,7 +219,7 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
       phoneEncrypted: encryptedPhone,
       emergencyPhoneEncrypted: encryptedEmergencyPhone,
       jobTitle: 'عامل عادي',
-      gender: 'FEMALE', // does not require military
+      gender: 'FEMALE',
       address: 'القاهرة - المعادي',
       insuranceNumber: '12345678',
       insuranceStatus: 'مؤمن عليه',
@@ -208,10 +239,14 @@ describe('Flow 01.5 Data Tests — Financial Masking & PII Protection', () => {
     const repo = new WorkerDirectoryRepository(mockPrisma);
     const service = new WorkerDirectoryService(repo, encryptionKey);
 
+    // Act
     const profile = await service.getWorkerProfile360('wrk-complete', 'SUPER_ADMIN');
+
+    // Assert
     expect(profile?.isProfileComplete).toBe(true);
     expect(profile?.completionPercentage).toBe(100);
     expect(profile?.missingItems.length).toBe(0);
     expect(profile?.missingDataWhatsAppUrl).toBeUndefined();
+    expect(profile?.missingItems).not.toContain('رقم هاتف العامل');
   });
 });

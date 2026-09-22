@@ -7,7 +7,7 @@
 
 ### 1. Sovereign Agent Identity, Precedence & Architecture
 1. **Precedence Hierarchy:** Direct User Orders > `GEMINI.md` (SSOT) > `docs/27` (Gates) > `.agents/rules/` (Domain Rulebooks) > Legacy Docs.
-2. **Constitutional Roles:** `/saleh` is the Sovereign Stakeholder Proxy & Chief Strategy Auditor; Chief Arbitrator rules on conflicts; Squads execute vertical slices.
+2. **Constitutional Roles:** `/saleh` is the Sovereign Stakeholder Proxy & Chief Strategy Auditor equipped exclusively with the Triple Guard Arsenal (`clean-code-guard`, `test-guard`, `docs-guard`) in `.agents/skills/saleh/arsenal/` for `/boost` forensic auditing; Chief Arbitrator rules on conflicts; Squads execute vertical slices.
 3. **Multi-Agent Protocol:** Every major flow requires Challenger review (`challenger_security_concurrency`, `challenger_viewport_responsive`) and Arbitrator sign-off.
 
 ### 2. Primary Functional SSOT (`F:\HR` Parity) & Migration Registry
@@ -17,7 +17,7 @@
 
 ### 3. Zone-Based Scoped Autonomy & Safe Command Whitelist
 1. **Autonomous Zone:** Safe reads, linting, formatting, typechecking, running targeted tests, generating code within the active branch and designated feature slice.
-2. **Safe Command Whitelist:** `git status`, `git diff`, `git log`, `pnpm typecheck`, `pnpm test`, `pnpm arch:verify`, `pnpm flow:check`, `pnpm preflight:fix`, `pnpm ci:simulate`, `pnpm audit:saleh`, `pnpm test:saleh`, `ocr review`.
+2. **Safe Command Whitelist:** `git status`, `git diff`, `git log`, `pnpm typecheck`, `pnpm test`, `pnpm arch:verify`, `pnpm flow:check`, `pnpm preflight:fix`, `pnpm ci:simulate`, `pnpm audit:saleh`, `pnpm audit:saleh:boost`, `pnpm audit:guards`, `pnpm test:saleh`, `ocr review`.
 3. **Command Standardization Standard:** Agents are strictly required to use predefined npm scripts (`pnpm <script>`) rather than arbitrary ad-hoc command strings with custom flags, ensuring IDE command whitelist stability and zero approval prompt friction.
 4. **Destructive Blacklist (Strictly Prohibited without user confirmation):** `git reset --hard`, `git clean -f`, `rm -rf`, dropping tables outside isolated test DB, modifying files outside task scope (`Zero Blast Radius`).
 
@@ -29,7 +29,7 @@
    > **«ادمج الفرع»**
 
 ### 5. Canonical Quality Gates Matrix (G1–G23)
-All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27-enterprise-ai-governance-and-quality-gates-constitution.md):
+All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27-enterprise-ai-governance-and-quality-gates-constitution.md) and [`docs/21`](docs/21-mandatory-module-architecture-and-gates.md):
 - **G1–G5 (Structure & Parity):** G1 Type Safety, G2 10-File Slice Architecture, G3 Migration Registry Parity, G4 Flow Contracts (`flow.contract.json`), G5 Telegram Contracts (<=512 URL, <=64 Callback).
 - **G6–G10 (Performance & Security):** G6 Sub-300ms Latency Budget, G7 RBAC Matrix & Role Immunity, G8 Compensation Field Masking, G9 Observability (Zero silent failure / console.error), G10 Test Authenticity.
 - **G11–G15 (Accounting & Governance):** G11 Legacy Accounting Invariants, G12 Financial Ledger Double-Entry, G13 Cryptographic Tamper Guard, G14 Smart Pre-Commit Test Guard, G15 Git Hygiene.
@@ -39,12 +39,14 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 ### 6. Cryptographic Immutability Engine (`governance.lock.json`)
 1. **Unified Lock Engine:** Monorepo entities are locked via `pnpm lock <target>` (`tools/governance/unified-lock-engine.ts`) with SHA-256 hashes in `governance.lock.json`.
 2. **Absolute Zero Blast Radius:** Unlocking one entity never touches other locked entities.
-3. **Mandatory Verbatim Approval Formulas (Strictly Untranslated):**
-   - Lock approval: **«نعم اقفل»**
-   - Unlock approval: **«موافق على الفتح»** or **«نعم موافق على التعديل»**
-   - Universal governance change / bypass: **«موافق على التعديل او الايقاف او الحذف»**
-4. **Strict Prohibition of Self-Authorization:** AI agents are strictly forbidden from generating or authoring approval formulas in evidence files or commit messages. Approval formulas must originate exclusively and verbatim from human chat input. Violations trigger an immediate `[REJECT]` verdict.
-5. **Pre-Edit Lock Inspection:** Before modifying any file, agents must verify that the file is not locked in `governance.lock.json`. Touching a locked file without prior authorized unlock execution (`pnpm unlock`) is a constitutional breach.
+3. **Mandatory Dynamic OTP Challenge-Response Protocol (Work Plan 90):**
+   - The `--phrase` CLI flag is **permanently abolished**. AI agents cannot pass approval phrases via CLI arguments.
+   - **Step 1 (Request):** Run `pnpm unlock:request <target> --reason="<justification>"`. A unique, cryptographically signed OTP nonce (`UNLOCK-XXXXXX`) is generated with a strict 300s (5-minute) TTL.
+   - **Step 2 (Hard Stop & Human Chat Authorization):** The agent MUST STOP immediately and request Saleh to send the approval in chat:
+     > **«موافق على الفتح <UNLOCK-XXXXXX>»** or **«نعم موافق على التعديل <UNLOCK-XXXXXX>»**
+   - **Step 3 (Forensic Confirmation):** Run `pnpm unlock:confirm <target>`. The engine forensically verifies physical provenance from `transcript.jsonl` ensuring the phrase and OTP nonce were issued strictly by `USER_EXPLICIT` (Saleh) and burns the OTP nonce (single-use anti-replay guard).
+4. **Strict Prohibition of Self-Authorization & Fraud Enforcement:** AI agents are strictly forbidden from generating, authoring, or simulating approval formulas or nonces. Any self-authorization attempt triggers an immediate `[REJECT]` verdict, exits code 1, and logs a forensic incident.
+5. **Pre-Edit Lock Inspection:** Before modifying any file, agents must verify that the file is not locked in `governance.lock.json`. Touching a locked file without prior authorized unlock execution (`pnpm unlock:confirm`) is a constitutional breach.
 
 ### 7. Code Defect Lifecycle, 5-Pillar RCA & Regression Guarantee
 1. **Hard Stop on Test Failures:** If a test reveals a bug in source code (`src/`), direct modification is prohibited.

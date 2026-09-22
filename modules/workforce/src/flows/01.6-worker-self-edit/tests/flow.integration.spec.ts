@@ -1,10 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerSelfEditService } from '../flow.service.js';
 import { WorkerSelfEditRepository } from '../flow.repository.js';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('01.6 Worker Self-Edit — Integration Tests', () => {
-  it('should successfully process worker self-edit and persist via repository', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('processes worker self-edit and persists via repository successfully', async () => {
+    // Arrange
     const mockPrisma = {
       worker: {
         findUnique: vi.fn().mockResolvedValue({
@@ -27,6 +44,7 @@ describe('01.6 Worker Self-Edit — Integration Tests', () => {
     const repo = new WorkerSelfEditRepository(mockPrisma);
     const service = new WorkerSelfEditService(repo);
 
+    // Act
     const res = await service.executeSelfEdit({
       workerId: 'w-100',
       workerCode: 'OP-DRV-001',
@@ -37,10 +55,12 @@ describe('01.6 Worker Self-Edit — Integration Tests', () => {
       actorTelegramId: 998877n,
     });
 
+    // Assert
     expect(res.success).toBe(true);
     expect(res.updatedField).toBe('address');
     expect(res.newValue).toBe('أسوان - كوم أمبو');
     expect(mockPrisma.worker.update).toHaveBeenCalled();
     expect(mockPrisma.auditLog.create).toHaveBeenCalled();
+    expect(res.updatedField).not.toBe('dailyWage');
   });
 });

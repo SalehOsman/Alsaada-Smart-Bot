@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "2.0.0",
+  "generatedAt": "2026-09-21T22:31:00.000Z",
+  "architectureSSOT": "GEMINI.md",
+  "workPlan": 89,
+  "domains": {
+    "core": {
+      "packages": [
+        "@alsaada/core-components",
+        "@alsaada/database",
+        "@alsaada/rbac",
+        "@alsaada/regional-engine",
+        "@alsaada/telemetry",
+        "@alsaada/shared",
+        "@alsaada/national-id-engine",
+        "@alsaada/ai-vision-engine"
+      ],
+      "models": [
+        "User",
+        "Role",
+        "Session",
+        "AuditLog",
+        "OutboxEvent",
+        "LedgerAccount",
+        "LedgerJournal",
+        "LedgerEntry",
+        "SystemMetric",
+        "ErrorVaultRecord"
+      ],
+      "immutable": true
+    },
+    "settings": {
+      "directory": "modules/settings",
+      "models": [
+        "Tenant",
+        "CompanyProfile",
+        "Project",
+        "Site",
+        "JobTitle",
+        "TelegramGroup",
+        "NotificationPolicy",
+        "AuditIncidentRecord",
+        "GhostModeAudit"
+      ],
+      "flowRange": "00.1 - 00.12",
+      "status": "SEALED_PRODUCTION"
+    },
+    "workforce": {
+      "directory": "modules/workforce",
+      "models": [
+        "Worker",
+        "WorkerProfile",
+        "WorkerDocument",
+        "WorkerEvaluation",
+        "WorkerClearance",
+        "WorkerOffboardingRecord",
+        "WorkerCommitmentIndex"
+      ],
+      "flowRange": "01.1 - 01.9",
+      "status": "SEALED_PRODUCTION"
+    },
+    "sample-domain": {
+      "directory": "modules/sample-domain",
+      "models": [
+        "SampleFixtureItem",
+        "SampleFixtureTransaction"
+      ],
+      "flowRange": "89.1 - 89.2",
+      "status": "TEST_FIXTURE_WP89",
+      "purpose": "Verify isolated module autodiscovery, router dispatching, and zero core modification invariants"
+    },
+    "planned_migration_modules": {
+      "leaves": {
+        "directory": "modules/leaves",
+        "models": ["LeaveRequest", "LeaveBalance", "LeavePenalty", "SickLeaveRecord"],
+        "flowRange": "03.1 - 03.15"
+      },
+      "advances": {
+        "directory": "modules/advances",
+        "models": ["WorkerAdvance", "CigaretteAdvance", "AdvanceLimitRecord", "CanteenExpense"],
+        "flowRange": "02.1 - 02.14"
+      },
+      "custody": {
+        "directory": "modules/custody",
+        "models": ["CustodyAccount", "CustodyExpenseClaim", "CustodySettlement"],
+        "flowRange": "04.1 - 04.7"
+      },
+      "suppliers": {
+        "directory": "modules/suppliers",
+        "models": ["Supplier", "SupplierInvoice", "SupplierPayment"],
+        "flowRange": "05.1 - 05.8"
+      },
+      "ppe": {
+        "directory": "modules/ppe",
+        "models": ["PPEItem", "PPEAssignment", "PPEReplacementRequest"],
+        "flowRange": "06.1 - 06.9"
+      },
+      "camp": {
+        "directory": "modules/camp",
+        "models": ["CampSite", "HousingRoom", "BedAllocation"],
+        "flowRange": "07.1 - 07.9"
+      },
+      "catering": {
+        "directory": "modules/catering",
+        "models": ["MealAttendance", "CateringVendor", "CateringInvoice"],
+        "flowRange": "08.1 - 08.10"
+      },
+      "equipment": {
+        "directory": "modules/equipment",
+        "models": ["Equipment", "EquipmentMaintenanceLog", "FuelTankLog", "SparePartItem"],
+        "flowRange": "09.1 - 09.12"
+      },
+      "operations": {
+        "directory": "modules/operations",
+        "models": ["PhosphateExtract", "OperationalLog", "DepartmentDutyRoster"],
+        "flowRange": "10.1 - 10.15"
+      }
+    }
+  }
+}

@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerEditDraftStore, type MinimalRedisDraftClient } from '../flow.draft-store.js';
 import type { PendingWorkerEditState } from '../flow.types.js';
 
-describe('⚡ Flow 01.2.D — WorkerEditDraftStore Composite Redis Drafts', () => {
+describe('Flow 01.2.D — WorkerEditDraftStore Composite Redis Drafts', () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
   const redisStore = new Map<string, string>();
   let mockRedis: MinimalRedisDraftClient;
   let draftStore: WorkerEditDraftStore;
@@ -19,6 +20,13 @@ describe('⚡ Flow 01.2.D — WorkerEditDraftStore Composite Redis Drafts', () =
   };
 
   beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+
     redisStore.clear();
     mockRedis = {
       get: vi.fn().mockImplementation(async (k: string) => redisStore.get(k) || null),
@@ -34,15 +42,22 @@ describe('⚡ Flow 01.2.D — WorkerEditDraftStore Composite Redis Drafts', () =
     draftStore = new WorkerEditDraftStore(mockRedis);
   });
 
-  it('should store draft with composite key and active pointer in Redis with 1800s TTL', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('stores draft with composite key and active pointer in Redis with 1800s TTL', async () => {
+    // Arrange
     const adminId = '112233';
+
+    // Act
     draftStore.set(adminId, sampleState);
 
-    // Synchronous memory check
+    // Assert
     expect(draftStore.has(adminId)).toBe(true);
     expect(draftStore.get(adminId)).toEqual(sampleState);
 
-    // Redis calls check
     expect(mockRedis.set).toHaveBeenCalledWith(
       'draft:worker_edit:112233:w-123',
       JSON.stringify(sampleState),
@@ -57,29 +72,39 @@ describe('⚡ Flow 01.2.D — WorkerEditDraftStore Composite Redis Drafts', () =
     );
   });
 
-  it('should retrieve draft from Redis if memory cache is cold', async () => {
+  it('retrieves draft from Redis if memory cache is cold', async () => {
+    // Arrange
     const adminId = '998877';
     redisStore.set('draft:worker_edit:active:998877', 'w-123');
     redisStore.set('draft:worker_edit:998877:w-123', JSON.stringify(sampleState));
 
-    // Fresh store without memory state
     const freshStore = new WorkerEditDraftStore(mockRedis);
-    expect(freshStore.get(adminId)).toBeUndefined();
 
+    // Act
+    const initialMem = freshStore.get(adminId);
     const retrieved = await freshStore.getAsync(adminId);
+    const cachedMem = freshStore.get(adminId);
+
+    // Assert
+    expect(initialMem).toBeUndefined();
     expect(retrieved).toEqual(sampleState);
-    // Should now be mirrored in memory
-    expect(freshStore.get(adminId)).toEqual(sampleState);
+    expect(cachedMem).toEqual(sampleState);
   });
 
-  it('should delete draft from memory and clean composite key and pointer from Redis', async () => {
+  it('deletes draft from memory and cleans composite key and pointer from Redis', async () => {
+    // Arrange
     const adminId = '445566';
     draftStore.set(adminId, sampleState);
-    expect(draftStore.has(adminId)).toBe(true);
 
+    // Act
+    const wasPresent = draftStore.has(adminId);
     const deleted = draftStore.delete(adminId);
+    const isPresentAfter = draftStore.has(adminId);
+
+    // Assert
+    expect(wasPresent).toBe(true);
     expect(deleted).toBe(true);
-    expect(draftStore.has(adminId)).toBe(false);
+    expect(isPresentAfter).toBe(false);
 
     expect(mockRedis.del).toHaveBeenCalledWith(
       'draft:worker_edit:active:445566',
@@ -87,7 +112,8 @@ describe('⚡ Flow 01.2.D — WorkerEditDraftStore Composite Redis Drafts', () =
     );
   });
 
-  it('should gracefully handle Redis errors and remain functional via memory fallback', async () => {
+  it('gracefully handles Redis errors and remains functional via memory fallback', async () => {
+    // Arrange
     const failingRedis: MinimalRedisDraftClient = {
       get: vi.fn().mockRejectedValue(new Error('Redis connection timed out')),
       set: vi.fn().mockRejectedValue(new Error('Redis write failed')),
@@ -97,13 +123,30 @@ describe('⚡ Flow 01.2.D — WorkerEditDraftStore Composite Redis Drafts', () =
     const resilientStore = new WorkerEditDraftStore(failingRedis);
     const adminId = '778899';
 
-    // Set should not throw
-    expect(() => resilientStore.set(adminId, sampleState)).not.toThrow();
-    expect(resilientStore.has(adminId)).toBe(true);
-    expect(resilientStore.get(adminId)).toEqual(sampleState);
+    // Act
+    resilientStore.set(adminId, sampleState);
+    const hasBefore = resilientStore.has(adminId);
+    const storedState = resilientStore.get(adminId);
 
-    // Delete should not throw
-    expect(() => resilientStore.delete(adminId)).not.toThrow();
-    expect(resilientStore.has(adminId)).toBe(false);
+    const deleted = resilientStore.delete(adminId);
+    const hasAfter = resilientStore.has(adminId);
+
+    // Assert
+    expect(hasBefore).toBe(true);
+    expect(storedState).toEqual(sampleState);
+    expect(deleted).toBe(true);
+    expect(hasAfter).toBe(false);
+  });
+
+  it('returns null when querying cold storage for nonexistent draft key', async () => {
+    // Arrange
+    const nonExistentId = '999999';
+
+    // Act
+    const result = await draftStore.getAsync(nonExistentId);
+
+    // Assert
+    expect(result).toBeUndefined();
+    expect(draftStore.has(nonExistentId)).toBe(false);
   });
 });

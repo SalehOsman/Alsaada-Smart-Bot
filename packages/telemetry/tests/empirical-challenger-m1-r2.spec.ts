@@ -13,7 +13,7 @@
  *    - Boundary and edge cases
  */
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   isSensitiveKey,
   maskEgyptianNationalId,
@@ -21,7 +21,25 @@ import {
   scrubString,
 } from '../src/redaction.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Challenger M1-R2 Empirical Verification', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   // ==========================================================================
   // 1. Sensitive Key Detection ('pass' and 'passphrase')
   // ==========================================================================
@@ -62,11 +80,19 @@ describe('Challenger M1-R2 Empirical Verification', () => {
     it.each(SENSITIVE_PASS_KEYS)(
       'isSensitiveKey returns true for sensitive key: %s',
       (key) => {
-        expect(isSensitiveKey(key)).toBe(true);
+        // Arrange
+        const target = key;
+
+        // Act
+        const result = isSensitiveKey(target);
+
+        // Assert
+        expect(result).toBe(true);
       }
     );
 
     it('redacts sensitive pass/passphrase keys in objects to [REDACTED]', () => {
+      // Arrange
       const payload = {
         user_pass: 'Secret123!',
         userPass: 'Secret456!',
@@ -84,8 +110,10 @@ describe('Challenger M1-R2 Empirical Verification', () => {
         },
       };
 
+      // Act
       const result = redact(payload) as typeof payload;
 
+      // Assert
       expect(result.user_pass).toBe('[REDACTED]');
       expect(result.userPass).toBe('[REDACTED]');
       expect(result.db_pass).toBe('[REDACTED]');
@@ -130,11 +158,19 @@ describe('Challenger M1-R2 Empirical Verification', () => {
     it.each(SAFE_PASS_WORDS)(
       'isSensitiveKey returns false for non-sensitive word containing pass: %s',
       (key) => {
-        expect(isSensitiveKey(key)).toBe(false);
+        // Arrange
+        const target = key;
+
+        // Act
+        const result = isSensitiveKey(target);
+
+        // Assert
+        expect(result).toBe(false);
       }
     );
 
     it('preserves non-sensitive pass-containing keys and values without redaction', () => {
+      // Arrange
       const payload = {
         compass: { heading: 180 },
         compassHeading: 270,
@@ -149,8 +185,10 @@ describe('Challenger M1-R2 Empirical Verification', () => {
         trespassWarning: 'Restricted construction zone',
       };
 
+      // Act
       const result = redact(payload) as typeof payload;
 
+      // Assert
       expect(result.compass).toEqual({ heading: 180 });
       expect(result.compassHeading).toBe(270);
       expect(result.passport).toBe('A12345678');
@@ -225,41 +263,48 @@ describe('Challenger M1-R2 Empirical Verification', () => {
     it.each(SEGMENTED_FORMAT_CASES)(
       'scrubs isolated string: $format ($raw -> $expected)',
       ({ raw, expected }) => {
-        expect(scrubString(raw)).toBe(expected);
+        // Arrange
+        const input = raw;
+
+        // Act
+        const result = scrubString(input);
+
+        // Assert
+        expect(result).toBe(expected);
       }
     );
 
     it('scrubs formatted National IDs embedded in free-form messages', () => {
+      // Arrange
       const msg1 = 'تم تسجيل العامل بالرقم القومي 2-980515-1201234 في موقع العاصمة';
-      expect(scrubString(msg1)).toBe(
-        'تم تسجيل العامل بالرقم القومي 298*******1234 في موقع العاصمة'
-      );
-
       const msg2 = 'Worker national id 2 980515 1201234 passed safety inspection.';
-      expect(scrubString(msg2)).toBe(
-        'Worker national id 298*******1234 passed safety inspection.'
-      );
-
       const msg3 = 'Clearance slip for NID 298-0515120-1234 issued by accountant.';
-      expect(scrubString(msg3)).toBe(
-        'Clearance slip for NID 298*******1234 issued by accountant.'
-      );
-
       const msg4 = 'Failed verification for NID 2980515-1201234 during onboarding.';
-      expect(scrubString(msg4)).toBe(
-        'Failed verification for NID 298*******1234 during onboarding.'
-      );
+
+      // Act
+      const res1 = scrubString(msg1);
+      const res2 = scrubString(msg2);
+      const res3 = scrubString(msg3);
+      const res4 = scrubString(msg4);
+
+      // Assert
+      expect(res1).toBe('تم تسجيل العامل بالرقم القومي 298*******1234 في موقع العاصمة');
+      expect(res2).toBe('Worker national id 298*******1234 passed safety inspection.');
+      expect(res3).toBe('Clearance slip for NID 298*******1234 issued by accountant.');
+      expect(res4).toBe('Failed verification for NID 298*******1234 during onboarding.');
     });
 
     it('scrubs formatted National IDs inside Error message and stack traces', () => {
+      // Arrange
       const err = new Error(
         'Database conflict: Duplicate record for worker NID 2-980515-1201234'
       );
-      // Simulate stack trace containing the segmented NID
       err.stack = `Error: Database conflict: Duplicate record for worker NID 2-980515-1201234\n    at registerWorker (f:\\Alsaada-Smart-Bot\\modules\\workforce\\service.ts:42:15)\n    at processNid_2_980515_1201234 (f:\\Alsaada-Smart-Bot\\modules\\workforce\\handler.ts:110:20)`;
 
+      // Act
       const redactedErr = redact(err) as Record<string, unknown>;
 
+      // Assert
       expect(redactedErr.message).toBe(
         'Database conflict: Duplicate record for worker NID 298*******1234'
       );
@@ -271,6 +316,7 @@ describe('Challenger M1-R2 Empirical Verification', () => {
     });
 
     it('scrubs formatted National IDs inside complex nested objects and arrays', () => {
+      // Arrange
       const auditPayload = {
         transactionId: 'TX-10029',
         event: 'WORKER_CLEARANCE_FINALIZED',
@@ -295,8 +341,10 @@ describe('Challenger M1-R2 Empirical Verification', () => {
         supervisorNotes: 'Batch approved with NID 3-010101-1201234 supervisor sign-off.',
       };
 
+      // Act
       const result = redact(auditPayload) as typeof auditPayload;
 
+      // Assert
       expect(result.workers[0]?.nationalIdNote).toBe(
         'Card copy: 298*******1234 verified'
       );
@@ -315,33 +363,55 @@ describe('Challenger M1-R2 Empirical Verification', () => {
     });
 
     it('respects useExactNidLength: false producing 8 asterisks (298********1234)', () => {
-      expect(scrubString('NID: 2-980515-1201234', false)).toBe(
-        'NID: 298********1234'
-      );
-      expect(scrubString('NID: 2 980515 1201234', false)).toBe(
-        'NID: 298********1234'
-      );
-      expect(scrubString('NID: 298-0515120-1234', false)).toBe(
-        'NID: 298********1234'
-      );
-      expect(scrubString('NID: 2980515-1201234', false)).toBe(
-        'NID: 298********1234'
-      );
+      // Arrange
+      const t1 = 'NID: 2-980515-1201234';
+      const t2 = 'NID: 2 980515 1201234';
+      const t3 = 'NID: 298-0515120-1234';
+      const t4 = 'NID: 2980515-1201234';
+
+      // Act
+      const res1 = scrubString(t1, false);
+      const res2 = scrubString(t2, false);
+      const res3 = scrubString(t3, false);
+      const res4 = scrubString(t4, false);
+
+      // Assert
+      expect(res1).toBe('NID: 298********1234');
+      expect(res2).toBe('NID: 298********1234');
+      expect(res3).toBe('NID: 298********1234');
+      expect(res4).toBe('NID: 298********1234');
     });
 
     it('direct function maskEgyptianNationalId handles delimiters and invalid lengths properly', () => {
-      expect(maskEgyptianNationalId('2-980515-1201234')).toBe('298*******1234');
-      expect(maskEgyptianNationalId('2 980515 1201234')).toBe('298*******1234');
-      expect(maskEgyptianNationalId('298-0515120-1234')).toBe('298*******1234');
-      expect(maskEgyptianNationalId('2980515-1201234')).toBe('298*******1234');
-      expect(maskEgyptianNationalId('2-980515-1201234', false)).toBe(
-        '298********1234'
-      );
+      // Arrange
+      const delimited1 = '2-980515-1201234';
+      const delimited2 = '2 980515 1201234';
+      const delimited3 = '298-0515120-1234';
+      const delimited4 = '2980515-1201234';
+      const delimited5 = '2-980515-1201234';
+      const short1 = '1234567';
+      const short2 = '9999';
+      const short3 = '123';
 
-      // Incomplete / invalid length fallbacks
-      expect(maskEgyptianNationalId('1234567')).toBe('**********4567');
-      expect(maskEgyptianNationalId('9999')).toBe('**********9999');
-      expect(maskEgyptianNationalId('123')).toBe('**********');
+      // Act
+      const res1 = maskEgyptianNationalId(delimited1);
+      const res2 = maskEgyptianNationalId(delimited2);
+      const res3 = maskEgyptianNationalId(delimited3);
+      const res4 = maskEgyptianNationalId(delimited4);
+      const res5 = maskEgyptianNationalId(delimited5, false);
+      const resShort1 = maskEgyptianNationalId(short1);
+      const resShort2 = maskEgyptianNationalId(short2);
+      const resShort3 = maskEgyptianNationalId(short3);
+
+      // Assert
+      expect(res1).toBe('298*******1234');
+      expect(res2).toBe('298*******1234');
+      expect(res3).toBe('298*******1234');
+      expect(res4).toBe('298*******1234');
+      expect(res5).toBe('298********1234');
+      expect(resShort1).toBe('**********4567');
+      expect(resShort2).toBe('**********9999');
+      expect(resShort3).toBe('**********');
     });
   });
 });

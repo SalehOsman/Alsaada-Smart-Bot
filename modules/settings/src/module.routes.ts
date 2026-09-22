@@ -81,6 +81,7 @@ export interface SettingsModuleHandlers {
   telegramGroupsHandler: TelegramGroupsHandler;
   userRbacHandler: UserRbacHandler;
   handleTextInput: (ctx: SettingsModuleContext) => Promise<boolean>;
+  handlePhotoInput: (ctx: SettingsModuleContext, fileId: string) => Promise<boolean>;
   handleLocationInput: (ctx: SettingsModuleContext) => Promise<boolean>;
 }
 
@@ -164,6 +165,12 @@ export function registerSettingsRoutes(
   // --- Flow 00.1 Corporate Profile ---
   bot.command(['company', 'org'], (ctx) => corporateHandler.renderCard(ctx, false));
   bot.callbackQuery('action:settings:company_profile', (ctx) => corporateHandler.renderCard(ctx, true));
+  bot.callbackQuery('action:company_logo_preview', (ctx) => corporateHandler.handleLogoPreview(ctx));
+  bot.callbackQuery('action:company_logo_edit', (ctx) => corporateHandler.handleConfirmEdit(ctx, 'logoPath'));
+  bot.callbackQuery(/^action:confirm_edit_comp:(.+)$/, async (ctx) => {
+    const fieldKey = ctx.match?.[1] as CompanyFieldKey;
+    if (fieldKey) await corporateHandler.handleConfirmEdit(ctx, fieldKey);
+  });
   bot.callbackQuery(/^action:edit_comp:(.+)$/, async (ctx) => {
     const fieldKey = ctx.match?.[1] as CompanyFieldKey;
     if (fieldKey) await corporateHandler.handleStartEdit(ctx, fieldKey);
@@ -462,6 +469,9 @@ export function registerSettingsRoutes(
     return false;
   };
 
+  const handlePhotoInput = async (ctx: SettingsModuleContext, fileId: string): Promise<boolean> =>
+    corporateHandler.handlePhotoInput(ctx, fileId);
+
   // Document input routing for Job Matrix Excel import
   bot.on('message:document', async (ctx, next) => {
     if (ctx.from && jobMatrixHandler.isWaitingForUpload(String(ctx.from.id))) {
@@ -502,6 +512,7 @@ export function registerSettingsRoutes(
     telegramGroupsHandler,
     userRbacHandler,
     handleTextInput,
+    handlePhotoInput,
     handleLocationInput,
   };
 }

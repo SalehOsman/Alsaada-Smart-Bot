@@ -1,6 +1,14 @@
-import { createHash, randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma, disconnectDatabase } from '../src/client.js';
+
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
+
+let uuidCounter = 0;
+function deterministicUuid(): string {
+  uuidCounter++;
+  return `00000000-0000-4000-8000-${String(uuidCounter).padStart(12, '0')}`;
+}
 
 const canConnect = async () => {
   try {
@@ -19,25 +27,32 @@ type ColumnDefinitionRow = {
 };
 
 describe('Audit Traceability, Hash Ledger & Dashboard Auth Claim Contract', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   afterAll(async () => {
     await disconnectDatabase();
   });
 
   it('contains every trace and financial hash column required by the Prisma schema', async () => {
+    // Arrange
     const isConnected = await canConnect();
     if (!isConnected) {
-      console.warn('Postgres not connected, skipping live DB query test');
       return;
     }
 
-    const columns = await prisma.$queryRawUnsafe<ColumnRow[]>(
-      "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('audit_logs','system_error_logs','financial_ledgers','custody_expense_items','custody_settlements','hospitality_expenses','supplier_payments','worker_expense_claims')",
-    );
-
-    const actual = new Set(
-      columns.map(({ table_name, column_name }) => [table_name, column_name].join('.')),
-    );
-    const expected = [
+    const expectedColumns = [
       'audit_logs.traceId',
       'system_error_logs.traceId',
       'system_error_logs.service',
@@ -61,35 +76,53 @@ describe('Audit Traceability, Hash Ledger & Dashboard Auth Claim Contract', () =
       'worker_expense_claims.hash_timestamp',
     ];
 
-    expect(expected.filter((column) => !actual.has(column))).toEqual([]);
+    // Act
+    const columns = await prisma.$queryRawUnsafe<ColumnRow[]>(
+      "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('audit_logs','system_error_logs','financial_ledgers','custody_expense_items','custody_settlements','hospitality_expenses','supplier_payments','worker_expense_claims')",
+    );
+    const actual = new Set(
+      columns.map(({ table_name, column_name }) => [table_name, column_name].join('.')),
+    );
+
+    // Assert
+    for (const col of expectedColumns) {
+      expect(actual.has(col)).toBe(true);
+    }
+    expect(actual.has('financial_ledgers.non_existent_column_sentinel')).toBe(false);
   });
 
   it('matches Prisma nullability and defaults for financial ledger hash columns', async () => {
+    // Arrange
     const isConnected = await canConnect();
     if (!isConnected) return;
 
+    // Act
     const columns = await prisma.$queryRawUnsafe<ColumnDefinitionRow[]>(
       "SELECT column_name, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'financial_ledgers' AND column_name IN ('record_hash', 'previous_hash', 'hash_timestamp')",
     );
     const actual = new Map(columns.map((column) => [column.column_name, column]));
 
-    expect(actual.get('record_hash')).toMatchObject({ is_nullable: 'NO' });
+    // Assert
+    expect(actual.get('record_hash')?.is_nullable).toBe('NO');
     expect(actual.get('record_hash')?.column_default).toBe("''::text");
-    expect(actual.get('previous_hash')).toMatchObject({ is_nullable: 'YES' });
-    expect(actual.get('hash_timestamp')).toMatchObject({ is_nullable: 'NO' });
+    expect(actual.get('previous_hash')?.is_nullable).toBe('YES');
+    expect(actual.get('hash_timestamp')?.is_nullable).toBe('NO');
     expect(actual.get('hash_timestamp')?.column_default).toBe('CURRENT_TIMESTAMP');
+    expect(actual.has('non_existent_column')).toBe(false);
   });
 
   it('persists a traceable incident and enforces one durable claim per auth-link JTI', async () => {
+    // Arrange
     const isConnected = await canConnect();
     if (!isConnected) return;
 
-    const jti = ['auth-claim', randomUUID()].join('-');
+    const jti = ['auth-claim', deterministicUuid()].join('-');
     const jtiHash = createHash('sha256').update(jti).digest('hex');
-    const traceId = randomUUID();
-    const errorReference = `ERR-DASHBOARD-AUTH-${randomUUID()}`;
+    const traceId = deterministicUuid();
+    const errorReference = `ERR-DASHBOARD-AUTH-${deterministicUuid()}`;
 
-    await prisma.systemErrorLog.create({
+    // Act
+    const errorLog = await prisma.systemErrorLog.create({
       data: {
         traceId,
         service: 'admin-dashboard',
@@ -99,31 +132,40 @@ describe('Audit Traceability, Hash Ledger & Dashboard Auth Claim Contract', () =
       },
     });
 
-    const groupId = randomUUID();
-    await prisma.dashboardAuthLink.create({
+    const groupId = deterministicUuid();
+    const link = await prisma.dashboardAuthLink.create({
       data: {
         groupId,
         originKind: 'LOCAL',
         jtiHash,
         actorTelegramId: 1n,
         targetOrigin: 'http://localhost:3002',
-        expiresAt: new Date(Date.now() + 60_000),
+        expiresAt: new Date(PINNED_BASE_TIME.getTime() + 60_000),
       },
     });
-    await expect(
-      prisma.dashboardAuthLink.create({
-        data: {
-          groupId,
-          originKind: 'LOCAL',
-          jtiHash,
-          actorTelegramId: 1n,
-          targetOrigin: 'http://localhost:3002',
-          expiresAt: new Date(Date.now() + 60_000),
-        },
-      }),
-    ).rejects.toMatchObject({ code: 'P2002' });
 
-    // Clean up created test records
+    const duplicateClaimPromise = prisma.dashboardAuthLink.create({
+      data: {
+        groupId,
+        originKind: 'LOCAL',
+        jtiHash,
+        actorTelegramId: 1n,
+        targetOrigin: 'http://localhost:3002',
+        expiresAt: new Date(PINNED_BASE_TIME.getTime() + 60_000),
+      },
+    });
+
+    // Assert
+    expect(errorLog.traceId).toBe(traceId);
+    expect(errorLog.service).toBe('admin-dashboard');
+    expect(errorLog.errorMessage).toBe('sanitized test incident');
+    expect(link.groupId).toBe(groupId);
+    expect(link.jtiHash).toBe(jtiHash);
+    expect(link.originKind).toBe('LOCAL');
+    expect(link.claimedAt).toBeNull();
+    await expect(duplicateClaimPromise).rejects.toMatchObject({ code: 'P2002' });
+
+    // Cleanup
     await prisma.dashboardAuthLink.deleteMany({ where: { jtiHash } });
     await prisma.systemErrorLog.deleteMany({ where: { traceId } });
   });

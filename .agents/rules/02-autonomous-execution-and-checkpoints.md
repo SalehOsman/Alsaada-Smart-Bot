@@ -17,17 +17,17 @@ Agents are fully authorized to execute autonomously within the active task branc
 - Formatting code (`prettier`, `pnpm preflight:fix`) and running linters.
 - Consulting RAG indices, searching project documentation, and reading topology maps.
 
-### 1.2 Restricted Zone (Explicit Formula Required)
+### 1.2 Restricted Zone (Explicit Human Confirmation Required)
 The following operations require explicit, untranslated Arabic user confirmation:
 - Merging branches to `main`: requires verbatim formula **«ادمج الفرع»**.
 - Locking components cryptographically: requires verbatim formula **«نعم اقفل»**.
-- Unlocking locked components: requires verbatim formula **«موافق على الفتح»** or **«نعم موافق على التعديل»**.
+- Unlocking locked components: requires dynamic OTP Challenge-Response protocol via `pnpm unlock:request` and chat approval **«موافق على الفتح <UNLOCK-XXXXXX>»** followed by `pnpm unlock:confirm`.
 - Modifying locked files, schemas, or master governance: requires verbatim formula **«موافق على التعديل او الايقاف او الحذف»**.
 - Modifying source code after test failure (RCA): requires verbatim formula **«موافق على تعديل الكود المصدري»**.
 
 ### 1.3 Strict Prohibition of Self-Authorization & Pre-Touch Encroachment
-- **No Self-Generated Approval:** Agents cannot bypass the restricted zone by injecting approval tokens into generated Markdown files or evidence artifacts.
-- **Pre-Touch Encroachment Prohibition:** Modifying a locked file before obtaining the unlock token and executing `pnpm unlock` is strictly prohibited, even if the agent intends to ask for permission later. Any pre-touch modification violates the Zero Blast Radius policy.
+- **No Self-Generated Approval:** Agents cannot bypass the restricted zone by passing CLI flags (`--phrase`), simulating OTP codes, or injecting approval tokens into generated Markdown files.
+- **Pre-Touch Encroachment Prohibition:** Modifying a locked file before obtaining the verified unlock via `pnpm unlock:confirm` is strictly prohibited. Any pre-touch modification violates the Zero Blast Radius policy.
 
 ---
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   calculateFinancialClearance,
   validatePayoutOption,
@@ -8,7 +8,23 @@ import {
 import type { WorkerOffboardingRepository } from '../flow.repository.js';
 import type { ClearanceProfile, FinalizeClearanceData } from '../flow.types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Milestone 2)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   function makeBaseProfile(overrides: Partial<ClearanceProfile> = {}): ClearanceProfile {
     return {
       worker: {
@@ -25,7 +41,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
         telegramId: 987654321n,
         siteId: 'site-alpha',
         siteName: 'محطة الصرف المركزية',
-        hireDate: new Date('2022-05-10'),
+        hireDate: new Date('2022-05-10T00:00:00.000Z'),
         shiftSystem: '24_WORK_6_REST',
       },
       activeLeave: null,
@@ -52,10 +68,14 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
   // 1. Extreme Calculations: Zero Days Worked & Zero Wage
   // ==========================================================================
   describe('1. Extreme Calculations: Zero Days & Zero Wage', () => {
-    it('should correctly evaluate zero worked days with positive wage', () => {
+    it('correctly evaluates zero worked days with positive wage', () => {
+      // Arrange
       const profile = makeBaseProfile();
+
+      // Act
       const result = calculateFinancialClearance(profile, { workedDays: 0 });
 
+      // Assert
       expect(result.workedDays).toBe(0);
       expect(result.dailyRate).toBe(250);
       expect(result.earnedSalary).toBe(0);
@@ -65,16 +85,21 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
       expect(result.isNegativeBalance).toBe(false);
     });
 
-    it('should clamp negative worked days to 0 and calculate zero earned salary', () => {
+    it('clamps negative worked days to 0 and calculates zero earned salary', () => {
+      // Arrange
       const profile = makeBaseProfile();
+
+      // Act
       const result = calculateFinancialClearance(profile, { workedDays: -10 });
 
+      // Assert
       expect(result.workedDays).toBe(0);
       expect(result.earnedSalary).toBe(0);
       expect(result.netSettlementAmount).toBe(0);
     });
 
-    it('should fallback to 300 daily rate when worker dailyWage and grossSalary are 0', () => {
+    it('falls back to 300 daily rate when worker dailyWage and grossSalary are 0', () => {
+      // Arrange
       const profile = makeBaseProfile({
         worker: {
           ...makeBaseProfile().worker,
@@ -83,15 +108,19 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
           fixedAllowances: 0,
         },
       });
+
+      // Act
       const result = calculateFinancialClearance(profile, { workedDays: 0 });
 
+      // Assert
       expect(result.dailyRate).toBe(300);
       expect(result.workedDays).toBe(0);
       expect(result.earnedSalary).toBe(0);
       expect(result.netSettlementAmount).toBe(0);
     });
 
-    it('should calculate zero earned salary when both workedDays=0 and wage=0 with advances=0', () => {
+    it('calculates zero earned salary when both workedDays=0 and wage=0 with advances=0', () => {
+      // Arrange
       const profile = makeBaseProfile({
         worker: {
           ...makeBaseProfile().worker,
@@ -100,8 +129,11 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
           fixedAllowances: 0,
         },
       });
+
+      // Act
       const result = calculateFinancialClearance(profile, { workedDays: 0, dailyRate: 0 });
 
+      // Assert
       expect(result.dailyRate).toBe(300);
       expect(result.earnedSalary).toBe(0);
       expect(result.netSettlementAmount).toBe(0);
@@ -113,8 +145,8 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
   // 2. Large Salaries & High Advances Exceeding Salary (Negative Balance)
   // ==========================================================================
   describe('2. Large Salaries & High Advances (Negative Balance)', () => {
-    it('should handle large gross salary and compute exact daily rate', () => {
-      // gross = 300,000 + 60,000 = 360,000 -> dailyRate = 360,000 / 30 = 12,000
+    it('handles large gross salary and computes exact daily rate', () => {
+      // Arrange
       const profile = makeBaseProfile({
         worker: {
           ...makeBaseProfile().worker,
@@ -123,15 +155,17 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
           fixedAllowances: 60_000,
         },
       });
+
+      // Act
       const result = calculateFinancialClearance(profile, { workedDays: 15 });
 
+      // Assert
       expect(result.dailyRate).toBe(12000);
-      expect(result.earnedSalary).toBe(180000); // 15 * 12000
+      expect(result.earnedSalary).toBe(180000);
     });
 
-    it('should compute deep negative balance when advances far exceed salary', () => {
-      // dailyRate = 250, workedDays = 10 -> earnedSalary = 2500
-      // total advances = 750,000
+    it('computes deep negative balance when advances far exceed salary', () => {
+      // Arrange
       const profile = makeBaseProfile({
         advances: {
           totalOutstandingAdvances: 750_000,
@@ -145,11 +179,14 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
           ],
         },
       });
+
+      // Act
       const result = calculateFinancialClearance(profile, {
         workedDays: 10,
         assetDamageDeduction: 50_000,
       });
 
+      // Assert
       expect(result.earnedSalary).toBe(2500);
       expect(result.totalCredits).toBe(2500);
       expect(result.totalAdvances).toBe(750000);
@@ -183,8 +220,8 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
   // 3. Mixed Bonuses & Penalties (Cash + Days Equivalent)
   // ==========================================================================
   describe('3. Mixed Bonuses & Penalties (Cash + Days Equivalent)', () => {
-    it('should accurately aggregate cash and day-equivalent bonuses and penalties', () => {
-      // dailyRate = 350
+    it('accurately aggregates cash and day-equivalent bonuses and penalties', () => {
+      // Arrange
       const profile = makeBaseProfile({
         worker: {
           ...makeBaseProfile().worker,
@@ -198,7 +235,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             amount: 1200,
             daysEquivalent: null,
             reason: 'مكافأة تميز',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-01T00:00:00.000Z'),
           },
           {
             id: 'b-days',
@@ -207,7 +244,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             amount: null,
             daysEquivalent: 3,
             reason: 'حافز 3 أيام',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-02T00:00:00.000Z'),
           },
           {
             id: 'p-cash',
@@ -216,7 +253,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             amount: 400,
             daysEquivalent: null,
             reason: 'غرامة مخالفة',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-03T00:00:00.000Z'),
           },
           {
             id: 'p-days',
@@ -225,7 +262,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             amount: null,
             daysEquivalent: 2,
             reason: 'خصم يومين غياب',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-04T00:00:00.000Z'),
           },
         ],
         advances: {
@@ -234,6 +271,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
         },
       });
 
+      // Act
       const result = calculateFinancialClearance(profile, {
         workedDays: 20,
         customBonusAmount: 300,
@@ -241,27 +279,20 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
         assetDamageDeduction: 500,
       });
 
-      // EarnedSalary = 20 * 350 = 7000
+      // Assert
       expect(result.earnedSalary).toBe(7000);
-
-      // Bonuses = 1200 (cash) + Math.round(3 * 350 = 1050) + 300 (custom) = 2550
       expect(result.approvedBonuses).toBe(2550);
-      expect(result.totalCredits).toBe(7000 + 2550); // 9550
-
-      // Penalties = 400 (cash) + Math.round(2 * 350 = 700) + 150 (custom) = 1250
+      expect(result.totalCredits).toBe(9550);
       expect(result.totalPenalties).toBe(1250);
-
-      // Debits = 2500 (advances) + 1250 (penalties) + 500 (assetDamage) = 4250
       expect(result.totalAdvances).toBe(2500);
       expect(result.assetDamageDeduction).toBe(500);
       expect(result.totalDebits).toBe(4250);
-
-      // Net = 9550 - 4250 = +5300
       expect(result.netSettlementAmount).toBe(5300);
       expect(result.isNegativeBalance).toBe(false);
     });
 
-    it('should aggregate legacy stats when approved records array is empty', () => {
+    it('aggregates legacy stats when approved records array is empty', () => {
+      // Arrange
       const profile = makeBaseProfile({
         worker: {
           ...makeBaseProfile().worker,
@@ -271,18 +302,21 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
         stats: {
           totalApprovedBonuses: 800,
           totalApprovedPenalties: 300,
-          totalApprovedPenaltyDays: 2, // 2 * 200 = 400
+          totalApprovedPenaltyDays: 2,
           totalPendingBonuses: 0,
           totalPendingPenalties: 0,
           totalPendingPenaltyDays: 0,
         },
       });
 
+      // Act
       const result = calculateFinancialClearance(profile, { workedDays: 10 });
+
+      // Assert
       expect(result.earnedSalary).toBe(2000);
       expect(result.approvedBonuses).toBe(800);
       expect(result.totalCredits).toBe(2800);
-      expect(result.totalPenalties).toBe(300 + 400); // 700
+      expect(result.totalPenalties).toBe(700);
       expect(result.totalDebits).toBe(700);
       expect(result.netSettlementAmount).toBe(2100);
     });
@@ -292,16 +326,19 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
   // 4. Exact Penny Rounding (Math.round parity with legacy)
   // ==========================================================================
   describe('4. Exact Penny Rounding Parity with Legacy', () => {
-    it('should round dailyRate identically to legacy Math.round(gross / 30)', () => {
+    it('rounds dailyRate identically to legacy Math.round(gross / 30)', () => {
+      // Arrange
       const testCases = [
-        { basic: 7000, allowances: 0, expectedDailyRate: Math.round(7000 / 30) }, // 233.333 -> 233
-        { basic: 7005, allowances: 0, expectedDailyRate: Math.round(7005 / 30) }, // 233.5 -> 234
-        { basic: 7004, allowances: 0, expectedDailyRate: Math.round(7004 / 30) }, // 233.466 -> 233
-        { basic: 7019, allowances: 0, expectedDailyRate: Math.round(7019 / 30) }, // 233.966 -> 234
-        { basic: 11111, allowances: 222, expectedDailyRate: Math.round((11111 + 222) / 30) }, // 11333 / 30 = 377.766 -> 378
+        { basic: 7000, allowances: 0, expectedDailyRate: Math.round(7000 / 30) },
+        { basic: 7005, allowances: 0, expectedDailyRate: Math.round(7005 / 30) },
+        { basic: 7004, allowances: 0, expectedDailyRate: Math.round(7004 / 30) },
+        { basic: 7019, allowances: 0, expectedDailyRate: Math.round(7019 / 30) },
+        { basic: 11111, allowances: 222, expectedDailyRate: Math.round((11111 + 222) / 30) },
       ];
 
+      // Act & Assert
       for (const tc of testCases) {
+        // Arrange
         const profile = makeBaseProfile({
           worker: {
             ...makeBaseProfile().worker,
@@ -310,13 +347,17 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             fixedAllowances: tc.allowances,
           },
         });
+
+        // Act
         const result = calculateFinancialClearance(profile, { workedDays: 1 });
+
+        // Assert
         expect(result.dailyRate).toBe(tc.expectedDailyRate);
       }
     });
 
-    it('should round earnedSalary identically to legacy Math.round(workedDays * dailyRate)', () => {
-      // If dailyRate = 233, workedDays = 12.5 -> 12.5 * 233 = 2912.5 -> 2913
+    it('rounds earnedSalary identically to legacy Math.round(workedDays * dailyRate)', () => {
+      // Arrange
       const profile = makeBaseProfile({
         worker: {
           ...makeBaseProfile().worker,
@@ -325,19 +366,24 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
       });
 
       const fractionalWorkedDays = [
-        { days: 0.5, expected: Math.round(0.5 * 233) }, // 116.5 -> 117
-        { days: 12.5, expected: Math.round(12.5 * 233) }, // 2912.5 -> 2913
-        { days: 17.25, expected: Math.round(17.25 * 233) }, // 4019.25 -> 4019
-        { days: 17.75, expected: Math.round(17.75 * 233) }, // 4135.75 -> 4136
+        { days: 0.5, expected: Math.round(0.5 * 233) },
+        { days: 12.5, expected: Math.round(12.5 * 233) },
+        { days: 17.25, expected: Math.round(17.25 * 233) },
+        { days: 17.75, expected: Math.round(17.75 * 233) },
       ];
 
+      // Act & Assert
       for (const f of fractionalWorkedDays) {
+        // Act
         const result = calculateFinancialClearance(profile, { workedDays: f.days });
+
+        // Assert
         expect(result.earnedSalary).toBe(f.expected);
       }
     });
 
-    it('should round penalty and bonus days equivalents identically to legacy', () => {
+    it('rounds penalty and bonus days equivalents identically to legacy', () => {
+      // Arrange
       const dailyRate = 175;
       const profile = makeBaseProfile({
         worker: {
@@ -350,25 +396,28 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             recordNumber: '#BF-1',
             type: 'BONUS_DAYS',
             amount: null,
-            daysEquivalent: 1.5, // 1.5 * 175 = 262.5 -> 263
+            daysEquivalent: 1.5,
             reason: 'يوم ونصف مكافأة',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-05T00:00:00.000Z'),
           },
           {
             id: 'p-frac',
             recordNumber: '#PF-1',
             type: 'PENALTY_DAYS',
             amount: null,
-            daysEquivalent: 0.5, // 0.5 * 175 = 87.5 -> 88
+            daysEquivalent: 0.5,
             reason: 'نصف يوم جزاء',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-06T00:00:00.000Z'),
           },
         ],
       });
 
+      // Act
       const result = calculateFinancialClearance(profile, { workedDays: 10 });
-      expect(result.approvedBonuses).toBe(Math.round(1.5 * dailyRate)); // 263
-      expect(result.totalPenalties).toBe(Math.round(0.5 * dailyRate)); // 88
+
+      // Assert
+      expect(result.approvedBonuses).toBe(Math.round(1.5 * dailyRate));
+      expect(result.totalPenalties).toBe(Math.round(0.5 * dailyRate));
     });
   });
 
@@ -376,7 +425,8 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
   // 5. Payout Option Gating: Mandatory Pending Decisions Policy
   // ==========================================================================
   describe('5. Payout Option Gating: Pending Decisions Policy', () => {
-    it('should allow IMMEDIATE option when worker has 0 pending decisions', () => {
+    it('allows IMMEDIATE option when worker has 0 pending decisions', () => {
+      // Arrange
       const profile = makeBaseProfile({
         pendingDisciplinaryRecords: [],
         stats: {
@@ -389,17 +439,21 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
         },
       });
 
+      // Act
       const immediateCheck = validatePayoutOption(profile, 'IMMEDIATE');
+      const payrollCheck = validatePayoutOption(profile, 'WITH_PAYROLL');
+
+      // Assert
       expect(immediateCheck.allowed).toBe(true);
       expect(immediateCheck.forcedOption).toBe('IMMEDIATE');
       expect(immediateCheck.reason).toBeUndefined();
 
-      const payrollCheck = validatePayoutOption(profile, 'WITH_PAYROLL');
       expect(payrollCheck.allowed).toBe(true);
       expect(payrollCheck.forcedOption).toBe('WITH_PAYROLL');
     });
 
-    it('should block IMMEDIATE option and force WITH_PAYROLL when worker has 1 pending cash penalty', () => {
+    it('blocks IMMEDIATE option and forces WITH_PAYROLL when worker has 1 pending cash penalty', () => {
+      // Arrange
       const profile = makeBaseProfile({
         pendingDisciplinaryRecords: [
           {
@@ -409,23 +463,26 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             amount: 300,
             daysEquivalent: null,
             reason: 'تأخير غير مبرر',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-07T00:00:00.000Z'),
           },
         ],
       });
 
+      // Act
       const immediateCheck = validatePayoutOption(profile, 'IMMEDIATE');
+      const payrollCheck = validatePayoutOption(profile, 'WITH_PAYROLL');
+
+      // Assert
       expect(immediateCheck.allowed).toBe(false);
       expect(immediateCheck.forcedOption).toBe('WITH_PAYROLL');
       expect(immediateCheck.reason).toContain('قرارات إدارية معلقة');
 
-      // WITH_PAYROLL must still be allowed
-      const payrollCheck = validatePayoutOption(profile, 'WITH_PAYROLL');
       expect(payrollCheck.allowed).toBe(true);
       expect(payrollCheck.forcedOption).toBe('WITH_PAYROLL');
     });
 
-    it('should block IMMEDIATE option and force WITH_PAYROLL when worker has 1 pending bonus', () => {
+    it('blocks IMMEDIATE option and forces WITH_PAYROLL when worker has 1 pending bonus', () => {
+      // Arrange
       const profile = makeBaseProfile({
         pendingDisciplinaryRecords: [
           {
@@ -435,18 +492,21 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
             amount: 500,
             daysEquivalent: null,
             reason: 'مكافأة عمل إضافي معلقة',
-            createdAt: new Date(),
+            createdAt: new Date('2026-09-08T00:00:00.000Z'),
           },
         ],
       });
 
+      // Act
       const immediateCheck = validatePayoutOption(profile, 'IMMEDIATE');
+
+      // Assert
       expect(immediateCheck.allowed).toBe(false);
       expect(immediateCheck.forcedOption).toBe('WITH_PAYROLL');
     });
 
-    it('should block IMMEDIATE option when pending decisions are indicated via legacy flags or stats', () => {
-      // Test via stats
+    it('blocks IMMEDIATE option when pending decisions are indicated via legacy flags or stats', () => {
+      // Arrange
       const profileWithStats = makeBaseProfile({
         pendingDisciplinaryRecords: [],
         stats: {
@@ -458,24 +518,30 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
           totalPendingPenaltyDays: 0,
         },
       });
-      expect(validatePayoutOption(profileWithStats, 'IMMEDIATE').allowed).toBe(false);
 
-      // Test via legacy pendingDisciplinaryCount
       const profileWithLegacyCount = {
         ...makeBaseProfile({ pendingDisciplinaryRecords: [] }),
         pendingDisciplinaryCount: 2,
       } as unknown as ClearanceProfile;
-      expect(validatePayoutOption(profileWithLegacyCount, 'IMMEDIATE').allowed).toBe(false);
 
-      // Test via legacy hasPendingDecisions flag
       const profileWithLegacyFlag = {
         ...makeBaseProfile({ pendingDisciplinaryRecords: [] }),
         hasPendingDecisions: true,
       } as unknown as ClearanceProfile;
-      expect(validatePayoutOption(profileWithLegacyFlag, 'IMMEDIATE').allowed).toBe(false);
+
+      // Act
+      const resStats = validatePayoutOption(profileWithStats, 'IMMEDIATE');
+      const resCount = validatePayoutOption(profileWithLegacyCount, 'IMMEDIATE');
+      const resFlag = validatePayoutOption(profileWithLegacyFlag, 'IMMEDIATE');
+
+      // Assert
+      expect(resStats.allowed).toBe(false);
+      expect(resCount.allowed).toBe(false);
+      expect(resFlag.allowed).toBe(false);
     });
 
-    it('should block finalizeWorkerClearance when IMMEDIATE is requested for worker with pending decisions', async () => {
+    it('blocks finalizeWorkerClearance when IMMEDIATE is requested for worker with pending decisions', async () => {
+      // Arrange
       const mockRepo: Partial<WorkerOffboardingRepository> = {
         getWorkerClearanceProfile: vi.fn().mockResolvedValue(
           makeBaseProfile({
@@ -487,7 +553,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
                 amount: 100,
                 daysEquivalent: null,
                 reason: 'غرامة معلقة',
-                createdAt: new Date(),
+                createdAt: new Date('2026-09-09T00:00:00.000Z'),
               },
             ],
           })
@@ -507,14 +573,17 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
         payoutOption: 'IMMEDIATE',
       };
 
-      await expect(
-        service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN')
-      ).rejects.toThrow('لا يمكن صرف المخالصة فورياً لوجود قرارات إدارية معلقة بحق العامل');
+      // Act & Assert
+      // Act
+      const blockedPromise = service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN');
 
+      // Assert
+      await expect(blockedPromise).rejects.toThrow('لا يمكن صرف المخالصة فورياً لوجود قرارات إدارية معلقة بحق العامل');
       expect(mockRepo.finalizeWorkerClearance).not.toHaveBeenCalled();
     });
 
-    it('should permit finalizeWorkerClearance when WITH_PAYROLL is used for worker with pending decisions', async () => {
+    it('permits finalizeWorkerClearance when WITH_PAYROLL is used for worker with pending decisions', async () => {
+      // Arrange
       const mockRepo: Partial<WorkerOffboardingRepository> = {
         getWorkerClearanceProfile: vi.fn().mockResolvedValue(
           makeBaseProfile({
@@ -526,7 +595,7 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
                 amount: 100,
                 daysEquivalent: null,
                 reason: 'غرامة معلقة',
-                createdAt: new Date(),
+                createdAt: new Date('2026-09-09T00:00:00.000Z'),
               },
             ],
           })
@@ -558,7 +627,10 @@ describe('Challenger 1 Empirical Stress Test — Accounting Engine & Gating (Mil
         payoutOption: 'WITH_PAYROLL',
       };
 
+      // Act
       const result = await service.finalizeWorkerClearance(finalizeData, 'SUPER_ADMIN');
+
+      // Assert
       expect(result.success).toBe(true);
       expect(mockRepo.finalizeWorkerClearance).toHaveBeenCalledWith(
         expect.objectContaining({

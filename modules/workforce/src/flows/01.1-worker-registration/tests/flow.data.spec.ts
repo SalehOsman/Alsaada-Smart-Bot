@@ -1,12 +1,29 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createHash } from 'node:crypto';
 import { WorkerRegistrationService } from '../flow.service.js';
 import { WorkerRegistrationRepository } from '../flow.repository.js';
-import { decryptField } from '@alsaada/database';
+import { encryptField, decryptField } from '@alsaada/database';
 import type { PrismaClient } from '@alsaada/database';
 
 describe('Flow 01.1 Data Tests — PII Encryption, Blind Indexing & Standard Dates', () => {
-  it('should encrypt sensitive PII fields and generate blind indexes', async () => {
+  const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('encrypts sensitive PII fields and generates blind indexes for worker registration', async () => {
+    // Arrange
     const rawSecret = 'test-secret-key-32-chars-long-abc!!';
     const encryptionKey = createHash('sha256').update(rawSecret).digest('hex');
     const salt = 'test-salt-secret-value';
@@ -67,6 +84,7 @@ describe('Flow 01.1 Data Tests — PII Encryption, Blind Indexing & Standard Dat
     const originalPhone = '01012345678';
     const originalNatId = '29001012701234';
 
+    // Act
     await service.registerWorker({
       name: 'عبد الرحمن السيد محمود',
       idType: 'NATIONAL_ID',
@@ -75,6 +93,7 @@ describe('Flow 01.1 Data Tests — PII Encryption, Blind Indexing & Standard Dat
       jobTitleName: 'سائق',
     });
 
+    // Assert
     const resultPayload = capturedPayload as {
       phoneEncrypted: string;
       phoneBlindIndex: string;
@@ -100,5 +119,20 @@ describe('Flow 01.1 Data Tests — PII Encryption, Blind Indexing & Standard Dat
       const decryptedNatId = decryptField(resultPayload.nationalIdEncrypted, encryptionKey);
       expect(decryptedNatId).toBe(originalNatId);
     }
+  });
+
+  it('rejects decryption when an incorrect tampering key is provided', () => {
+    // Arrange
+    const originalPhone = '01012345678';
+    const rawSecret = 'test-secret-key-32-chars-long-abc!!';
+    const originalKey = createHash('sha256').update(rawSecret).digest('hex');
+    const wrongKey = createHash('sha256').update('wrong-secret-key-32-chars-long!!').digest('hex');
+
+    // Act
+    const encrypted = encryptField(originalPhone, originalKey);
+
+    // Assert
+    expect(encrypted).not.toBe(originalPhone);
+    expect(() => decryptField(encrypted, wrongKey)).toThrow();
   });
 });

@@ -6,6 +6,9 @@
 > **الحالة:** 🟢 مكتملة ومحققة 100% بنجاح معتمد ومختبر (All 58 Sovereign Units Sealed & Verified)  
 > **الميثاق المرجعي الحاكم:** بنود 1.1، 1.2، 1.4، 1.5، 1.6، 2.1، 2.2، 2.6، 2.7، و 2.8 من [`AGENTS.md`](file:///f:/Alsaada-Smart-Bot/AGENTS.md) و [`GEMINI.md`](file:///f:/Alsaada-Smart-Bot/GEMINI.md).
 
+> [!WARNING]
+> ⚠️ **إشعار إلغاء سيادي (Deprecation Notice):** تم إلغاء وسحب علم `--phrase` نهائياً واستبداله ببروتوكول التحدي والاستجابة المتغير (Dynamic OTP Nonce Challenge-Response Protocol) وفق خطة العمل السيادية رقم 90 (WP-90). لا يجوز لأي وكيل استخدام هذا العلم برمجياً أو تمرير عبارات الفتح عبر أسطر الأوامر، والمسار الوحيد المعتمد هو: `pnpm unlock:request <target>` ثم موافقة المستخدم المباشرة في الشات برمز التحدي ثم `pnpm unlock:confirm <target>`.
+
 ---
 
 ### 🎯 1. الميثاق الهندسي الجوهري للمحرك الموحد (The Unified Engine Manifesto)

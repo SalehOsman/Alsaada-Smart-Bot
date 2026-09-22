@@ -95,7 +95,10 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     restart: unless-stopped
-    command: ["pnpm", "--filter", "@alsaada/database", "run", "db:studio"]
+    # Prisma 7.10 removed the --hostname CLI option; Docker publishes the port and
+    # Prisma Studio binds correctly without that flag.
+    command: ["pnpm", "--filter", "@alsaada/database", "exec", "prisma", "studio", "--port", "5556", "--browser", "none"]
+
     ports:
       - "127.0.0.1:5555:5555"
     depends_on:
@@ -105,6 +108,18 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-alsaada_admin}:${DB_PASSWORD:-alsaada_secure_pass_2026}@postgres:5432/${DB_NAME:-alsaada_db}?schema=public
     networks:
       - alsaada-enterprise-internal
+
+  # Prisma ORM 7 Studio binds to loopback inside its container. Share the
+  # namespace and forward the published port to the internal Studio port.
+  studio-proxy:
+    image: alpine/socat:latest
+    container_name: alsaada_enterprise_studio_proxy
+    restart: unless-stopped
+    network_mode: "service:studio"
+    depends_on:
+      studio:
+        condition: service_started
+    command: ["TCP-LISTEN:5555,fork,reuseaddr,bind=0.0.0.0", "TCP:127.0.0.1:5556"]
 
   # -------------------------------------------------------------
   # 5. Alsaada Enterprise Admin Dashboard Web UI

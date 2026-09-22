@@ -1,11 +1,31 @@
-import { describe, expect, it } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parsePorcelainStatus } from '../pre-commit-test-guard.js';
-import { resolve } from 'node:path';
 
-describe('⚡ pre-commit-test-guard smart test runner', () => {
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
+describe('pre-commit-test-guard smart test runner', () => {
   const repoRoot = process.cwd();
 
-  it('1. ignores non-typescript files (markdown, json, yaml, css)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('ignores non-typescript files including markdown, json, yaml, and css', () => {
+    // Arrange
     const raw = [
       ' M README.md',
       ' M docs/work-plans/63-plan.md',
@@ -14,11 +34,15 @@ describe('⚡ pre-commit-test-guard smart test runner', () => {
       ' M pnpm-lock.yaml',
     ].join('\n');
 
+    // Act
     const result = parsePorcelainStatus(raw, repoRoot);
+
+    // Assert
     expect(result).toHaveLength(0);
   });
 
-  it('2. detects modified and untracked TypeScript files that exist on disk', () => {
+  it('detects modified and untracked TypeScript files that exist on disk', () => {
+    // Arrange
     const raw = [
       ' M package.json',
       ' M apps/bot-server/src/handlers/start.handler.ts',
@@ -26,40 +50,54 @@ describe('⚡ pre-commit-test-guard smart test runner', () => {
       ' M docs/19-registry.md',
     ].join('\n');
 
+    // Act
     const result = parsePorcelainStatus(raw, repoRoot);
-    expect(result.length).toBeGreaterThanOrEqual(1);
+
+    // Assert
+    expect(result.length).toBeGreaterThan(0);
     expect(result).toContain('apps/bot-server/src/handlers/start.handler.ts');
   });
 
-  it('3. ignores deleted TypeScript files (status D)', () => {
+  it('ignores deleted TypeScript files with status D', () => {
+    // Arrange
     const raw = [
       ' D apps/bot-server/src/handlers/old.handler.ts',
       'D  apps/bot-server/src/handlers/staged-deleted.handler.ts',
       ' M apps/bot-server/src/handlers/start.handler.ts',
     ].join('\n');
 
+    // Act
     const result = parsePorcelainStatus(raw, repoRoot);
+
+    // Assert
     expect(result).not.toContain('apps/bot-server/src/handlers/old.handler.ts');
     expect(result).not.toContain('apps/bot-server/src/handlers/staged-deleted.handler.ts');
     expect(result).toContain('apps/bot-server/src/handlers/start.handler.ts');
   });
 
-  it('4. handles git renamed files (A -> B)', () => {
+  it('handles git renamed files cleanly', () => {
+    // Arrange
     const raw = [
       'R  apps/bot-server/src/old.ts -> apps/bot-server/src/handlers/start.handler.ts',
     ].join('\n');
 
+    // Act
     const result = parsePorcelainStatus(raw, repoRoot);
+
+    // Assert
     expect(result).toContain('apps/bot-server/src/handlers/start.handler.ts');
   });
 
-  it('5. verifies .githooks/pre-commit contains strict main branch immunity guard', async () => {
-    const { readFileSync, existsSync } = await import('node:fs');
-    const { join } = await import('node:path');
+  it('verifies .githooks/pre-commit contains strict main branch immunity guard', () => {
+    // Arrange
     const hookPath = join(repoRoot, '.githooks/pre-commit');
-    expect(existsSync(hookPath)).toBe(true);
 
+    // Act
+    const hookExists = existsSync(hookPath);
     const content = readFileSync(hookPath, 'utf8');
+
+    // Assert
+    expect(hookExists).toBe(true);
     expect(content).toContain('CURRENT_BRANCH=');
     expect(content).toContain('[ "$CURRENT_BRANCH" = "main" ]');
     expect(content).toContain('git rev-parse --git-path MERGE_HEAD');
@@ -68,13 +106,16 @@ describe('⚡ pre-commit-test-guard smart test runner', () => {
     expect(content).toContain('exit 1');
   });
 
-  it('6. verifies .githooks/pre-commit.cmd contains Windows branch immunity guard', async () => {
-    const { readFileSync, existsSync } = await import('node:fs');
-    const { join } = await import('node:path');
+  it('verifies .githooks/pre-commit.cmd contains Windows branch immunity guard', () => {
+    // Arrange
     const hookPath = join(repoRoot, '.githooks/pre-commit.cmd');
-    expect(existsSync(hookPath)).toBe(true);
 
+    // Act
+    const hookExists = existsSync(hookPath);
     const content = readFileSync(hookPath, 'utf8');
+
+    // Assert
+    expect(hookExists).toBe(true);
     expect(content).toContain('CURRENT_BRANCH=');
     expect(content).toContain('if "%CURRENT_BRANCH%"=="main"');
     expect(content).toContain('git rev-parse --git-path MERGE_HEAD');
@@ -83,25 +124,31 @@ describe('⚡ pre-commit-test-guard smart test runner', () => {
     expect(content).toContain('exit /b 1');
   });
 
-  it('7. verifies branch guard decision logic: rejects direct main, permits merge and feature branches', () => {
-    function shouldRejectCommit(branch: string, hasMergeHead: boolean): boolean {
+  it('verifies branch guard decision logic rejecting direct main and permitting merge and feature branches', () => {
+    // Arrange
+    function rejectsDirectCommit(branch: string, hasMergeHead: boolean): boolean {
       if (branch === 'main') {
         return !hasMergeHead;
       }
       return false;
     }
 
-    // Direct commit on main without merge -> REJECTED
-    expect(shouldRejectCommit('main', false)).toBe(true);
+    // Act
+    const mainDirect = rejectsDirectCommit('main', false);
+    const mainMerge = rejectsDirectCommit('main', true);
+    const featStrict = rejectsDirectCommit('feat/strict-branch-governance', false);
+    const featAdvances = rejectsDirectCommit('feat/worker-advances', false);
+    const fixCanteen = rejectsDirectCommit('fix/canteen-stock-leak', false);
+    const planBranch = rejectsDirectCommit('plan/81-git-branching', false);
+    const choreBranch = rejectsDirectCommit('chore/docs-update', false);
 
-    // Merge commit on main with MERGE_HEAD present -> PERMITTED
-    expect(shouldRejectCommit('main', true)).toBe(false);
-
-    // Feature branches -> PERMITTED
-    expect(shouldRejectCommit('feat/strict-branch-governance', false)).toBe(false);
-    expect(shouldRejectCommit('feat/worker-advances', false)).toBe(false);
-    expect(shouldRejectCommit('fix/canteen-stock-leak', false)).toBe(false);
-    expect(shouldRejectCommit('plan/81-git-branching', false)).toBe(false);
-    expect(shouldRejectCommit('chore/docs-update', false)).toBe(false);
+    // Assert
+    expect(mainDirect).toBe(true);
+    expect(mainMerge).toBe(false);
+    expect(featStrict).toBe(false);
+    expect(featAdvances).toBe(false);
+    expect(fixCanteen).toBe(false);
+    expect(planBranch).toBe(false);
+    expect(choreBranch).toBe(false);
   });
 });

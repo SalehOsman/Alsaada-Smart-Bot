@@ -12,8 +12,11 @@ export const VALID_UNLOCK_PHRASES = new Set([
 export interface UnlockEntityOptions {
   phrase: string;
   reason: string;
-  root?: string;
-  evidenceDir?: string;
+  root?: string | undefined;
+  evidenceDir?: string | undefined;
+  challengeNonce?: string | undefined;
+  userTimestamp?: string | undefined;
+  verifiedBy?: ('USER_EXPLICIT' | 'HUMAN_OPERATOR' | 'TEST_HARNESS') | undefined;
 }
 
 export interface UnlockEntityResult {
@@ -114,18 +117,25 @@ export function unlockEntity(
   const evidenceFileName = `${today}-unlock-${safeId}.md`;
   const evidenceFilePath = join(evidenceDir, evidenceFileName);
 
+  const otpNonce = options.challengeNonce ?? 'N/A';
+  const verifiedBy = options.verifiedBy ?? 'USER_EXPLICIT';
+  const userTimestamp = options.userTimestamp ?? new Date().toISOString();
+
   const evidenceContent = `# ترخيص فك قفل الحوكمة: (${entityId})
 
 - **التاريخ:** ${today} (${new Date().toISOString()})
 - **معرف الكيان المفكوك:** \`${entityId}\`
 - **عبارة الاعتماد الصريحة المعتمدة:** **${phrase}**
+- **رمز التحدي لمرة واحدة (OTP Nonce):** \`${otpNonce}\`
+- **مصدر الاعتماد والتحقق الجنائي:** \`${verifiedBy}\`
+- **التوقيع الزمني لمدخل المستخدم:** \`${userTimestamp}\`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
 ${reason}
 
 ## نطاق التعديل المرخص
-تم رفع القفل التشفيري عن الكيان \`${entityId}\` حصراً لإجراء التعديلات المطلوبة.
+تم رفع القفل التشفيري عن الكيان \`${entityId}\` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).
 يُحظر تماماً تعديل أي ملف خارج نطاق هذا الكيان، وأي مساس بملف آخر سيسقط فوراً عند الـ Git Commit.
 فور الانتهاء من العمل واجتياز الاختبارات، يلزم إعادة ختم الكيان عبر:
 \`pnpm lock ${entityId}\`

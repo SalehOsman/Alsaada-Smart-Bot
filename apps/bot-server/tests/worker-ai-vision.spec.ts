@@ -1,15 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { aiVisionEngine } from '@alsaada/ai-vision-engine';
 import { extractFirstTwoNames } from '@alsaada/regional-engine';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('AI Vision ID Service & Document Verification Engine', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
     vi.restoreAllMocks();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('Document Type Guardrails & Strict Rejection Messages', () => {
-    it('should reject invalid document with the exact specified error message when image is not an ID card or passport', async () => {
-      // Mock fetch response from Gemini API indicating an irrelevant document
+    it('rejects invalid document with specified error message when image is not an ID card or passport', async () => {
+      // Arrange
       const mockGeminiResponse = {
         candidates: [
           {
@@ -38,12 +51,13 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
         json: async () => mockGeminiResponse,
       } as any);
 
-      // Temporary set API key for test
       vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
-
       const dummyBuffer = Buffer.from('fake-image-bytes');
+
+      // Act
       const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
 
+      // Assert
       expect(result.isValid).toBe(false);
       expect(result.detectedDocType).toBe('OTHER');
       expect(result.userErrorMessage).toContain(
@@ -51,7 +65,8 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       );
     });
 
-    it('should reject image if it is obscured by fingers or blurry', async () => {
+    it('rejects image when covered by fingers or blurry', async () => {
+      // Arrange
       const mockGeminiResponse = {
         candidates: [
           {
@@ -81,19 +96,34 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       } as any);
 
       vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
-
       const dummyBuffer = Buffer.from('fake-image-bytes');
+
+      // Act
       const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
 
+      // Assert
       expect(result.isValid).toBe(false);
       expect(result.isQualityAcceptable).toBe(false);
       expect(result.userErrorMessage).toContain('الصورة مغطاة بأصابع اليد أو بأجسام خارجية');
     });
+
+    it('returns configuration error when GEMINI_API_KEY is missing', async () => {
+      // Arrange
+      vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue([]);
+      const dummyBuffer = Buffer.from('fake-image-bytes');
+
+      // Act
+      const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
+
+      // Assert
+      expect(result.isValid).toBe(false);
+      expect(result.userErrorMessage).toContain('مفتاح GEMINI_API_KEY غير متوفر');
+    });
   });
 
   describe('National ID & Expiry Extraction', () => {
-    it('should extract 14-digit Egyptian National ID, name, and demographic info from front photo', async () => {
-      // 29504200101234 -> Born 1995-04-20, Cairo (01), Male (23 -> odd)
+    it('extracts 14-digit Egyptian National ID, name, and demographic info from front photo', async () => {
+      // Arrange
       const mockGeminiResponse = {
         candidates: [
           {
@@ -123,19 +153,23 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       } as any);
 
       vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
-
       const dummyBuffer = Buffer.from('fake-image-bytes');
+
+      // Act
       const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_FRONT');
 
+      // Assert
       expect(result.isValid).toBe(true);
       expect(result.nationalIdNumber).toBe('29504200101234');
       expect(result.fullName).toBe('عبد الله محمود حسن إبراهيم');
       expect(result.gender).toBe('MALE');
       expect(result.governorateNameAr).toBe('القاهرة');
       expect(result.birthDate).toBeInstanceOf(Date);
+      expect(result.userErrorMessage).toBeUndefined();
     });
 
-    it('should extract expiration date from back photo', async () => {
+    it('extracts expiration date from back photo', async () => {
+      // Arrange
       const mockGeminiResponse = {
         candidates: [
           {
@@ -165,15 +199,18 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       } as any);
 
       vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
-
       const dummyBuffer = Buffer.from('fake-image-bytes');
+
+      // Act
       const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'NATIONAL_ID_BACK');
 
+      // Assert
       expect(result.isValid).toBe(true);
       expect(result.expiryDateStr).toBe('15-08-2029');
     });
 
-    it('should extract passport number, name and expiry from passport photo', async () => {
+    it('extracts passport number, name and expiry from passport photo', async () => {
+      // Arrange
       const mockGeminiResponse = {
         candidates: [
           {
@@ -203,10 +240,12 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
       } as any);
 
       vi.spyOn(aiVisionEngine as any, 'getApiKeys').mockReturnValue(['test-gemini-key']);
-
       const dummyBuffer = Buffer.from('fake-image-bytes');
+
+      // Act
       const result = await aiVisionEngine.scanDocument(dummyBuffer, 'image/jpeg', 'PASSPORT');
 
+      // Assert
       expect(result.isValid).toBe(true);
       expect(result.passportNumber).toBe('A12345678');
       expect(result.fullName).toBe('جون دو سميث');
@@ -215,14 +254,37 @@ describe('AI Vision ID Service & Document Verification Engine', () => {
   });
 
   describe('Auto-Nickname Generation from Full Name', () => {
-    it('should generate first two names respecting compound prefixes (عبد الله محمود حسن -> عبد الله محمود)', () => {
-      const nick = extractFirstTwoNames('عبد الله محمود حسن إبراهيم');
+    it('generates first two names respecting compound prefixes', () => {
+      // Arrange
+      const inputFullName = 'عبد الله محمود حسن إبراهيم';
+
+      // Act
+      const nick = extractFirstTwoNames(inputFullName);
+
+      // Assert
       expect(nick).toBe('عبد الله محمود');
     });
 
-    it('should generate first two names respecting compound suffixes (أحمد سيف الدين علي -> أحمد سيف الدين)', () => {
-      const nick = extractFirstTwoNames('أحمد سيف الدين علي مصطفى');
+    it('generates first two names respecting compound suffixes', () => {
+      // Arrange
+      const inputFullName = 'أحمد سيف الدين علي مصطفى';
+
+      // Act
+      const nick = extractFirstTwoNames(inputFullName);
+
+      // Assert
       expect(nick).toBe('أحمد سيف الدين');
+    });
+
+    it('returns hyphen for empty input name string', () => {
+      // Arrange
+      const input = '';
+
+      // Act
+      const nick = extractFirstTwoNames(input);
+
+      // Assert
+      expect(nick).toBe('-');
     });
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import crypto from 'node:crypto';
 import {
   encryptField,
@@ -10,106 +10,181 @@ import {
   type ChainedRecord,
 } from '../src/index.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-11T12:00:00.000Z');
+
 describe('@alsaada/database security', () => {
-  const testKey = crypto.randomBytes(32).toString('hex');
+  const testKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
   const testSalt = 'alsaada_secret_salt_2026';
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   describe('Application-Level Field Encryption (AES-256-GCM)', () => {
     it('encrypts and decrypts sensitive values accurately', () => {
+      // Arrange
       const nationalId = '29505151201531';
-      const encrypted = encryptField(nationalId, testKey);
 
+      // Act
+      const encrypted = encryptField(nationalId, testKey);
+      const decrypted = decryptField(encrypted, testKey);
+
+      // Assert
       expect(encrypted).not.toBe(nationalId);
       expect(encrypted.split(':')).toHaveLength(3);
-
-      const decrypted = decryptField(encrypted, testKey);
       expect(decrypted).toBe(nationalId);
     });
 
     it('generates different ciphertexts for the same plaintext due to random IV', () => {
+      // Arrange
       const plaintext = '01012345678';
+
+      // Act
       const cipher1 = encryptField(plaintext, testKey);
       const cipher2 = encryptField(plaintext, testKey);
+      const decrypted1 = decryptField(cipher1, testKey);
+      const decrypted2 = decryptField(cipher2, testKey);
 
+      // Assert
       expect(cipher1).not.toBe(cipher2);
-      expect(decryptField(cipher1, testKey)).toBe(plaintext);
-      expect(decryptField(cipher2, testKey)).toBe(plaintext);
+      expect(decrypted1).toBe(plaintext);
+      expect(decrypted2).toBe(plaintext);
     });
 
     it('fails decryption when ciphertext or authTag is tampered with', () => {
+      // Arrange
       const encrypted = encryptField('secret_financial_data', testKey);
       const parts = encrypted.split(':');
 
-      // 1. Tamper with ciphertext deterministically (flip first hex character)
       const tamperedCipherParts = [...parts];
       tamperedCipherParts[2] =
         (tamperedCipherParts[2]![0] === '0' ? '1' : '0') + tamperedCipherParts[2]!.slice(1);
-      expect(() => decryptField(tamperedCipherParts.join(':'), testKey)).toThrow();
 
-      // 2. Tamper with authTag deterministically (flip first hex character)
       const tamperedTagParts = [...parts];
       tamperedTagParts[1] =
         (tamperedTagParts[1]![0] === '0' ? '1' : '0') + tamperedTagParts[1]!.slice(1);
-      expect(() => decryptField(tamperedTagParts.join(':'), testKey)).toThrow();
 
-      // 3. Tamper with IV deterministically (flip first hex character)
       const tamperedIvParts = [...parts];
       tamperedIvParts[0] =
         (tamperedIvParts[0]![0] === '0' ? '1' : '0') + tamperedIvParts[0]!.slice(1);
-      expect(() => decryptField(tamperedIvParts.join(':'), testKey)).toThrow();
+
+      // Act
+      const decryptCipher = () => decryptField(tamperedCipherParts.join(':'), testKey);
+      const decryptTag = () => decryptField(tamperedTagParts.join(':'), testKey);
+      const decryptIv = () => decryptField(tamperedIvParts.join(':'), testKey);
+
+      // Assert
+      expect(decryptCipher).toThrow();
+      expect(decryptTag).toThrow();
+      expect(decryptIv).toThrow();
     });
 
     it('fails decryption when payload format is invalid or parts are missing', () => {
-      expect(() => decryptField('invalid_single_part', testKey)).toThrow(
+      // Arrange
+      const invalidSingle = 'invalid_single_part';
+      const invalidTwoParts = 'part1:part2';
+      const invalidFourParts = 'part1:part2:part3:part4';
+
+      // Act
+      const decryptSingle = () => decryptField(invalidSingle, testKey);
+      const decryptTwo = () => decryptField(invalidTwoParts, testKey);
+      const decryptFour = () => decryptField(invalidFourParts, testKey);
+
+      // Assert
+      expect(decryptSingle).toThrow(
         'Invalid encrypted payload format: expected iv:authTag:ciphertext'
       );
-      expect(() => decryptField('part1:part2', testKey)).toThrow(
+      expect(decryptTwo).toThrow(
         'Invalid encrypted payload format: expected iv:authTag:ciphertext'
       );
-      expect(() => decryptField('part1:part2:part3:part4', testKey)).toThrow(
+      expect(decryptFour).toThrow(
         'Invalid encrypted payload format: expected iv:authTag:ciphertext'
       );
     });
 
     it('returns empty string when encrypting or decrypting empty or falsy values', () => {
-      expect(encryptField('', testKey)).toBe('');
-      expect(decryptField('', testKey)).toBe('');
+      // Arrange
+      const emptyInput = '';
+
+      // Act
+      const encryptedEmpty = encryptField(emptyInput, testKey);
+      const decryptedEmpty = decryptField(emptyInput, testKey);
+
+      // Assert
+      expect(encryptedEmpty).toBe('');
+      expect(decryptedEmpty).toBe('');
+      expect(encryptedEmpty).not.toBe('some_data');
     });
 
     it('fails encryption when key length is not 32 bytes', () => {
-      const shortKey = crypto.randomBytes(16).toString('hex');
-      expect(() => encryptField('secret_financial_data', shortKey)).toThrow(
+      // Arrange
+      const shortKey = '0123456789abcdef0123456789abcdef';
+
+      // Act
+      const encryptAction = () => encryptField('secret_financial_data', shortKey);
+
+      // Assert
+      expect(encryptAction).toThrow(
         'Invalid encryption key length: expected 32 bytes (64 hex characters), got 16 bytes'
       );
     });
 
     it('normalizes 64-hex keys and passphrase keys properly', () => {
+      // Arrange
       const hexKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-      expect(normalizeKeyToHex(hexKey)).toBe(hexKey);
-
       const passphrase = 'my-secret-passphrase';
       const expectedSha256 = crypto.createHash('sha256').update(passphrase).digest('hex');
-      expect(normalizeKeyToHex(passphrase)).toBe(expectedSha256);
-      expect(normalizeKeyToHex(passphrase)).toHaveLength(64);
 
-      expect(() => normalizeKeyToHex('')).toThrow('Cannot normalize empty encryption key.');
+      // Act
+      const normalizedHex = normalizeKeyToHex(hexKey);
+      const normalizedPassphrase = normalizeKeyToHex(passphrase);
+      const emptyAction = () => normalizeKeyToHex('');
+
+      // Assert
+      expect(normalizedHex).toBe(hexKey);
+      expect(normalizedPassphrase).toBe(expectedSha256);
+      expect(normalizedPassphrase).toHaveLength(64);
+      expect(emptyAction).toThrow('Cannot normalize empty encryption key.');
     });
   });
 
   describe('Blind Indexing (HMAC-SHA256)', () => {
     it('generates deterministic hashes for fast encrypted search', () => {
-      const hash1 = createBlindIndex('29505151201531', testSalt);
-      const hash2 = createBlindIndex('29505151201531', testSalt);
+      // Arrange
+      const sensitiveValue = '29505151201531';
 
+      // Act
+      const hash1 = createBlindIndex(sensitiveValue, testSalt);
+      const hash2 = createBlindIndex(sensitiveValue, testSalt);
+
+      // Assert
       expect(hash1).toBe(hash2);
-      expect(hash1).toHaveLength(64); // 32 bytes hex
+      expect(hash1).toHaveLength(64);
+      expect(hash1).not.toBe(sensitiveValue);
     });
 
     it('normalizes whitespace and case for consistent querying', () => {
-      const hash1 = createBlindIndex('admin@alsaada.com', testSalt);
-      const hash2 = createBlindIndex('  ADMIN@ALSAADA.COM  ', testSalt);
+      // Arrange
+      const emailLower = 'admin@alsaada.com';
+      const emailSpaced = '  ADMIN@ALSAADA.COM  ';
 
+      // Act
+      const hash1 = createBlindIndex(emailLower, testSalt);
+      const hash2 = createBlindIndex(emailSpaced, testSalt);
+
+      // Assert
       expect(hash1).toBe(hash2);
+      expect(hash1).not.toBe('');
     });
   });
 
@@ -149,30 +224,41 @@ describe('@alsaada/database security', () => {
     }
 
     it('validates an untampered ledger chain', () => {
+      // Arrange
       const chain = createSampleChain();
+
+      // Act
       const result = verifyLedgerChain(chain, genesisHash);
 
+      // Assert
       expect(result.isValid).toBe(true);
       expect(result.totalVerified).toBe(2);
+      expect(result.brokenRecordId).toBeUndefined();
     });
 
     it('detects tampering when an amount is illegally modified directly in the database', () => {
+      // Arrange
       const chain = createSampleChain();
-      // An attacker edits the amount from 5000 to 1000 in the DB directly
       chain[0]!.amount = 1000;
 
+      // Act
       const result = verifyLedgerChain(chain, genesisHash);
+
+      // Assert
       expect(result.isValid).toBe(false);
       expect(result.brokenRecordId).toBe('TXN-001');
       expect(result.error).toContain('Tampered record detected');
     });
 
     it('detects broken links when a record is deleted or reordered', () => {
+      // Arrange
       const chain = createSampleChain();
-      // Record 1 was deleted, leaving Record 2 pointing to non-existent previousHash
       const brokenChain = [chain[1]!];
 
+      // Act
       const result = verifyLedgerChain(brokenChain, genesisHash);
+
+      // Assert
       expect(result.isValid).toBe(false);
       expect(result.brokenRecordId).toBe('TXN-002');
       expect(result.error).toContain('Broken chain link');

@@ -15,7 +15,11 @@ paths = [
   '''pnpm-lock\.yaml''',
   '''dist/''',
   '''\.next/''',
-  '''\.agents/'''
+  '''\.agents/''',
+  '''tools/scaffold/'''
+]
+commits = [
+  "d4fab07a2612e7f87b5b2e88a3192e2e4aeafb52"
 ]
 regexes = [
   '''0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef''',

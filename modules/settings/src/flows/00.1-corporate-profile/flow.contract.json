@@ -15,6 +15,7 @@
   ],
   "entryPoints": [
     "action:settings:company_profile",
+    "action:confirm_edit_comp:<field>",
     "/company",
     "/org"
   ],
@@ -26,7 +27,9 @@
   ],
   "buttons": [
     "action:settings:company_profile",
+    "action:confirm_edit_comp:<field>",
     "action:edit_comp:tradeName",
+    "action:confirm_edit_comp:<field>",
     "action:edit_comp:legalName",
     "action:edit_comp:taxNumber",
     "action:edit_comp:commercialReg",

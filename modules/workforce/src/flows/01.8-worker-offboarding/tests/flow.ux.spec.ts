@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   buildWorkerPickerKeyboard,
   buildSuperAdminHubKeyboard,
@@ -36,7 +36,23 @@ import type {
   PendingDisciplinaryRecord,
 } from '../flow.types.js';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   const sampleBreakdown: ClearanceFinancialBreakdown = {
     workedDays: 20,
     dailyRate: 200,
@@ -69,7 +85,8 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
   // 1. Telegram 64-Byte Callback Constraint & Keyboard Integrity
   // ==========================================================================
   describe('Keyboard Callback Limits & Button Layouts', () => {
-    it('should ensure all keyboards comply with Telegram 64-byte callback limits', () => {
+    it('ensures all keyboards comply with Telegram 64-byte callback limits', () => {
+      // Arrange
       const keyboards = [
         buildWorkerPickerKeyboard([
           { id: 'w-1', name: 'أحمد سعيد عبد السلام', nickname: 'أبو حميد', code: 'OP-01', jobTitle: 'سائق لودر' },
@@ -95,76 +112,121 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
         buildSuccessKeyboard(),
       ];
 
+      // Act
+      const allCallbacks: string[] = [];
       for (const kb of keyboards) {
         for (const button of kb.inline_keyboard.flat()) {
           if ('callback_data' in button && button.callback_data) {
-            const byteLen = Buffer.byteLength(button.callback_data, 'utf8');
-            expect(byteLen).toBeLessThanOrEqual(64);
+            allCallbacks.push(button.callback_data);
           }
         }
       }
+
+      // Assert
+      expect(allCallbacks.length).toBeGreaterThan(0);
+      for (const cb of allCallbacks) {
+        const byteLen = Buffer.byteLength(cb, 'utf8');
+        expect(byteLen).toBeLessThanOrEqual(64);
+      }
     });
 
-    it('should format worker picker buttons prioritizing nickname exclusively', () => {
-      const kb = buildWorkerPickerKeyboard([
+    it('formats worker picker buttons prioritizing nickname exclusively', () => {
+      // Arrange
+      const workers = [
         { id: 'w-1', name: 'إبراهيم محمد حسنين', nickname: 'هيما', code: 'OP-10', jobTitle: 'سائق شاحنة' },
         { id: 'w-2', name: 'محمود عبد الفتاح', nickname: null, code: 'OP-20', jobTitle: 'عامل موقع' },
-      ]);
+      ];
 
+      // Act
+      const kb = buildWorkerPickerKeyboard(workers);
       const buttons = kb.inline_keyboard.flat().filter((b) => 'callback_data' in b && b.callback_data?.startsWith('action:wob:pick:'));
+
+      // Assert
       expect(buttons).toHaveLength(2);
       expect(buttons[0]?.text).toContain('هيما');
+      expect(buttons[0]?.text).not.toContain('حسنين');
       expect(buttons[1]?.text).toContain('محمود عبد الفتاح');
     });
 
-    it('should build Super Admin Hub keyboard with accurate pending counts', () => {
-      const kb = buildSuperAdminHubKeyboard(7, 4);
+    it('builds Super Admin Hub keyboard with accurate pending counts', () => {
+      // Arrange
+      const pendingClearances = 7;
+      const pendingDecisions = 4;
+
+      // Act
+      const kb = buildSuperAdminHubKeyboard(pendingClearances, pendingDecisions);
       const texts = kb.inline_keyboard.flat().map((b) => b.text);
 
-      expect(texts.some((t) => t.includes('اعتماد المخالصات الميدانية المعلقة (7)'))).toBe(true);
-      expect(texts.some((t) => t.includes('صندوق القرارات المعلقة (4)'))).toBe(true);
-      expect(texts.some((t) => t.includes('تسجيل إنهاء خدمة لعامل جديد'))).toBe(true);
+      // Assert
+      expect(texts).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('اعتماد المخالصات الميدانية المعلقة (7)'),
+          expect.stringContaining('صندوق القرارات المعلقة (4)'),
+          expect.stringContaining('تسجيل إنهاء خدمة لعامل جديد'),
+        ])
+      );
+      expect(texts).not.toEqual(
+        expect.arrayContaining([expect.stringContaining('(0)')])
+      );
     });
 
-    it('should build Pending Decisions Inbox keyboard with record actions and pagination', () => {
-      const kbSingle = buildPendingDecisionsInboxKeyboard([samplePendingRecord], 0, 1);
+    it('builds Pending Decisions Inbox keyboard with record actions and pagination', () => {
+      // Arrange
+      const singleRecords = [samplePendingRecord];
+      const multiTotal = 3;
+
+      // Act
+      const kbSingle = buildPendingDecisionsInboxKeyboard(singleRecords, 0, 1);
       const singleTexts = kbSingle.inline_keyboard.flat().map((b) => b.text);
+      const kbMulti = buildPendingDecisionsInboxKeyboard(singleRecords, 0, multiTotal);
+      const multiTexts = kbMulti.inline_keyboard.flat().map((b) => b.text);
+
+      // Assert
       expect(singleTexts).toContain('✅ اعتماد');
       expect(singleTexts).toContain('❌ استبعاد / رفض');
       expect(singleTexts).toContain('✏️ تعديل القيمة');
-      expect(singleTexts.some((t) => t.includes('التالي'))).toBe(false);
+      expect(singleTexts).not.toContain('التالي ▶️');
 
-      const kbMulti = buildPendingDecisionsInboxKeyboard([samplePendingRecord], 0, 3);
-      const multiTexts = kbMulti.inline_keyboard.flat().map((b) => b.text);
-      expect(multiTexts.some((t) => t.includes('التالي ▶️'))).toBe(true);
-      expect(multiTexts.some((t) => t.includes('1/3'))).toBe(true);
+      expect(multiTexts).toContain('التالي ▶️');
+      expect(multiTexts).toContain('📄 1/3');
     });
 
-    it('should enforce blocked immediate payout button when pending decisions exist', () => {
-      const kbPending = buildPayoutOptionKeyboard(true);
+    it('enforces blocked immediate payout button when pending decisions exist', () => {
+      // Arrange
+      const hasPending = true;
+      const hasNoPending = false;
+
+      // Act
+      const kbPending = buildPayoutOptionKeyboard(hasPending);
       const pendingButtons = kbPending.inline_keyboard.flat();
       const blockedBtn = pendingButtons.find((b) => 'callback_data' in b && b.callback_data === 'action:wob:payout:immediate_blocked');
-      expect(blockedBtn).toBeDefined();
-      expect(blockedBtn?.text).toContain('محجوب لوجود قرارات معلقة');
 
-      const kbClean = buildPayoutOptionKeyboard(false);
+      const kbClean = buildPayoutOptionKeyboard(hasNoPending);
       const cleanButtons = kbClean.inline_keyboard.flat();
       const immediateBtn = cleanButtons.find((b) => 'callback_data' in b && b.callback_data === 'action:wob:payout:immediate');
-      expect(immediateBtn).toBeDefined();
+
+      // Assert
+      expect(blockedBtn?.text).toContain('محجوب لوجود قرارات معلقة');
       expect(immediateBtn?.text).toContain('صرف فوري نقدي');
     });
 
-    it('should build completion keyboard complying with Section 5.2 ordering', () => {
-      const kb = buildClearanceCompletionKeyboard({
+    it('builds completion keyboard complying with Section 5.2 ordering', () => {
+      // Arrange
+      const options = {
         whatsappUrl: 'https://wa.me/201000000000?text=test',
         isFieldAdmin: false,
-      });
+      };
 
+      // Act
+      const kb = buildClearanceCompletionKeyboard(options);
       const rows = kb.inline_keyboard;
+
+      // Assert
       expect(rows[0]?.[0]?.text).toContain('واتساب');
       expect(rows[1]?.[0]?.text).toContain('إجراء مخالصة لعامل آخر');
       expect(rows[2]?.[0]?.text).toContain('العودة لقسم شؤون العاملين');
       expect(rows[3]?.[0]?.text).toContain('القائمة الرئيسية');
+      expect(rows[0]?.[0]?.text).not.toContain('الرئيسية');
     });
   });
 
@@ -172,19 +234,24 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
   // 2. Field Admin Zero Financial Leakage Review Card
   // ==========================================================================
   describe('Field Admin Operational Card (Zero Leaks)', () => {
-    it('should strictly contain zero financial numbers or currency symbols', () => {
-      const card = formatFieldAdminReviewCard({
+    it('ensures Field Admin operational card contains zero financial numbers or currency symbols', () => {
+      // Arrange
+      const reportData = {
         workerName: 'صابر عبد الجليل',
         workerCode: 'OP-099',
         jobTitle: 'مشغل كسارة',
         siteName: 'محجر العين السخنة',
-        reason: 'RESIGNATION',
+        reason: 'RESIGNATION' as const,
         workedDays: 24,
         ppeObservations: 'تم تسليم الخوذة سليمة ويوجد كسر بنظارة الحماية',
         leaveStatusText: 'على رأس العمل',
         submitterName: 'م. حسام الدين',
-      });
+      };
 
+      // Act
+      const card = formatFieldAdminReviewCard(reportData);
+
+      // Assert
       expect(card).toContain('صابر عبد الجليل');
       expect(card).toContain('OP-099');
       expect(card).toContain('مشغل كسارة');
@@ -207,21 +274,26 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
   // 3. Super Admin Full Settlement Card (#CLR-YYYY-XXX & SHA-256)
   // ==========================================================================
   describe('Super Admin Full Financial Settlement Card', () => {
-    it('should render full financial card with itemized credits, debits, and SHA-256', () => {
-      const card = formatSuperAdminSettlementCard({
+    it('renders full financial card with itemized credits, debits, and SHA-256', () => {
+      // Arrange
+      const settlementData = {
         clearanceNumber: '#CLR-2026-0042',
         workerName: 'علي حسن عبد الله',
         workerCode: 'OP-042',
         jobTitle: 'سائق معدات ثقيلة',
         siteName: 'مشروع العلمين الجديدة',
         terminationDate: new Date('2026-09-11'),
-        reason: 'CONTRACT_END',
+        reason: 'CONTRACT_END' as const,
         breakdown: sampleBreakdown,
-        payoutOption: 'WITH_PAYROLL',
+        payoutOption: 'WITH_PAYROLL' as const,
         sha256Checksum: '9a5f27c7d41f0b093e0b2e88a38a7c64d85601be264567ef481f01691234abcd',
         hasLinkedTelegram: true,
-      });
+      };
 
+      // Act
+      const card = formatSuperAdminSettlementCard(settlementData);
+
+      // Assert
       expect(card).toContain('#CLR-2026-0042');
       expect(card).toContain('علي حسن عبد الله');
       expect(card).toContain('OP-042');
@@ -236,7 +308,8 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
       expect(card).toContain('زائر (GUEST)');
     });
 
-    it('should format zero balance properly in settlement card', () => {
+    it('formats zero balance properly in settlement card', () => {
+      // Arrange
       const zeroBreakdown: ClearanceFinancialBreakdown = {
         ...sampleBreakdown,
         totalCredits: 1000,
@@ -244,6 +317,7 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
         netSettlementAmount: 0,
       };
 
+      // Act
       const card = formatSuperAdminSettlementCard({
         clearanceNumber: '#CLR-2026-0099',
         workerName: 'سعيد محمود',
@@ -253,7 +327,9 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
         payoutOption: 'IMMEDIATE',
       });
 
+      // Assert
       expect(card).toContain('الحساب مسوى بالكامل');
+      expect(card).not.toContain('مديونية مستحقة على العامل');
     });
   });
 
@@ -261,7 +337,8 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
   // 4. Red Alert Negative Balance Card
   // ==========================================================================
   describe('Red Alert Negative Balance Card', () => {
-    it('should display debt amount and sovereign resolution options', () => {
+    it('displays debt amount and sovereign resolution options in negative balance card', () => {
+      // Arrange
       const negBreakdown: ClearanceFinancialBreakdown = {
         ...sampleBreakdown,
         totalCredits: 2000,
@@ -270,6 +347,7 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
         isNegativeBalance: true,
       };
 
+      // Act
       const card = formatNegativeBalanceAlertCard({
         workerName: 'سامح فوزي',
         workerCode: 'OP-077',
@@ -278,6 +356,7 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
         breakdown: negBreakdown,
       });
 
+      // Assert
       expect(card).toContain('تنبيه مالي حرج: رصيد مخالصة سالب');
       expect(card).toContain('سامح فوزي');
       expect(card).toContain('OP-077');
@@ -291,8 +370,14 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
   // 5. Pending Decisions Inbox & Alert Cards
   // ==========================================================================
   describe('Pending Decisions Cards & Prompts', () => {
-    it('should format pending decisions card with record details', () => {
-      const card = formatPendingDecisionsInboxCard([samplePendingRecord], 0, 1);
+    it('formats pending decisions card with record details', () => {
+      // Arrange
+      const records = [samplePendingRecord];
+
+      // Act
+      const card = formatPendingDecisionsInboxCard(records, 0, 1);
+
+      // Assert
       expect(card).toContain('DISC-2026-001');
       expect(card).toContain('علي حسن');
       expect(card).toContain('OP-042');
@@ -301,25 +386,45 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
       expect(card).toContain('م. أحمد مشرف');
     });
 
-    it('should format empty pending decisions inbox', () => {
-      const card = formatPendingDecisionsInboxCard([], 0, 0);
+    it('formats empty pending decisions inbox correctly', () => {
+      // Arrange
+      const emptyRecords: PendingDisciplinaryRecord[] = [];
+
+      // Act
+      const card = formatPendingDecisionsInboxCard(emptyRecords, 0, 0);
+
+      // Assert
       expect(card).toContain('لا توجد أي قرارات أو جزاءات معلقة');
+      expect(card).not.toContain('DISC-');
     });
 
-    it('should format photo upload prompt message', () => {
-      const prompt = formatPPEDamagePhotoPrompt('علي حسن');
+    it('formats photo upload prompt message', () => {
+      // Arrange
+      const workerName = 'علي حسن';
+
+      // Act
+      const prompt = formatPPEDamagePhotoPrompt(workerName);
+
+      // Assert
       expect(prompt).toContain('إرفاق صورة إثبات تلفيات');
       expect(prompt).toContain('علي حسن');
       expect(prompt).toContain('أرشفة الصورة جنائياً');
     });
 
-    it('should format payout option prompt highlighting mandatory payroll deferral', () => {
-      const promptPending = formatPayoutOptionPrompt('علي حسن', true, 2500);
+    it('formats payout option prompt highlighting mandatory payroll deferral', () => {
+      // Arrange
+      const workerName = 'علي حسن';
+      const netAmount = 2500;
+
+      // Act
+      const promptPending = formatPayoutOptionPrompt(workerName, true, netAmount);
+      const promptClean = formatPayoutOptionPrompt(workerName, false, netAmount);
+
+      // Assert
       expect(promptPending).toContain('تنبيه سيادي صارم');
       expect(promptPending).toContain('يُحظر الصرف الفوري نهائياً');
       expect(promptPending).toContain('WITH_PAYROLL');
 
-      const promptClean = formatPayoutOptionPrompt('علي حسن', false, 2500);
       expect(promptClean).not.toContain('يُحظر الصرف الفوري نهائياً');
       expect(promptClean).toContain('اختر طريقة الصرف المعتمدة');
     });
@@ -329,25 +434,23 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
   // 6. WhatsApp Share URLs & Integration
   // ==========================================================================
   describe('WhatsApp Share URLs', () => {
-    it('should format clearance WhatsApp text and generate valid URL', () => {
-      const text = formatClearanceWhatsAppText({
+    it('formats clearance WhatsApp text and generates valid URL', () => {
+      // Arrange
+      const clearanceData = {
         clearanceNumber: 'CLR-2026-0042',
         workerName: 'علي حسن',
         workerCode: 'OP-042',
         jobTitle: 'سائق',
         siteName: 'العلمين',
         terminationDate: new Date('2026-09-11'),
-        reason: 'CONTRACT_END',
+        reason: 'CONTRACT_END' as const,
         breakdown: sampleBreakdown,
-        payoutOption: 'WITH_PAYROLL',
+        payoutOption: 'WITH_PAYROLL' as const,
         supervisorName: 'م. أحمد كمال',
-      });
+      };
 
-      expect(text).toContain('وثيقة إخلاء طرف وتصفية حساب نهائية — #CLR-2026-0042');
-      expect(text).toContain('علي حسن');
-      expect(text).toContain('أجر أيام العمل');
-      expect(text).toContain('صافي المستحق صرفه للعامل');
-
+      // Act
+      const text = formatClearanceWhatsAppText(clearanceData);
       const url = buildClearanceWhatsAppUrl('01012345678', {
         clearanceNumber: 'CLR-2026-0042',
         workerName: 'علي حسن',
@@ -357,30 +460,36 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
         payoutOption: 'WITH_PAYROLL',
       });
 
-      expect(url).toBeDefined();
+      // Assert
+      expect(text).toContain('وثيقة إخلاء طرف وتصفية حساب نهائية — #CLR-2026-0042');
+      expect(text).toContain('علي حسن');
+      expect(text).toContain('أجر أيام العمل');
+      expect(text).toContain('صافي المستحق صرفه للعامل');
       expect(url).toContain('https://wa.me/201012345678?text=');
     });
 
-    it('should generate Super Admin WhatsApp alert URL for pending decisions', () => {
-      const alertText = formatPendingDecisionsWhatsAppAlertText({
+    it('generates Super Admin WhatsApp alert URL for pending decisions', () => {
+      // Arrange
+      const alertData = {
         workerName: 'علي حسن',
         workerCode: 'OP-042',
         jobTitle: 'سائق',
         siteName: 'العلمين',
         records: [samplePendingRecord],
-      });
+      };
 
-      expect(alertText).toContain('تنبيه إداري: معاملات وقرارات معلقة');
-      expect(alertText).toContain('علي حسن');
-      expect(alertText).toContain('DISC-2026-001');
-
+      // Act
+      const alertText = formatPendingDecisionsWhatsAppAlertText(alertData);
       const url = buildPendingDecisionsWhatsAppUrl('01298765432', {
         workerName: 'علي حسن',
         workerCode: 'OP-042',
         records: [samplePendingRecord],
       });
 
-      expect(url).toBeDefined();
+      // Assert
+      expect(alertText).toContain('تنبيه إداري: معاملات وقرارات معلقة');
+      expect(alertText).toContain('علي حسن');
+      expect(alertText).toContain('DISC-2026-001');
       expect(url).toContain('https://wa.me/201298765432?text=');
     });
   });
@@ -389,43 +498,95 @@ describe('01.8 Worker Offboarding — UX & Messages Tests', () => {
   // 7. Backward Compatibility Functions
   // ==========================================================================
   describe('Backward Compatibility Preserved Handlers', () => {
-    it('should format worker select header', () => {
+    it('formats worker select header', () => {
+      // Arrange
+      const expectedSnippet = 'إنهاء خدمة عامل وإخلاء طرف';
+
+      // Act
       const header = formatWorkerSelectHeader();
-      expect(header).toContain('إنهاء خدمة عامل وإخلاء طرف');
+
+      // Assert
+      expect(header).toContain(expectedSnippet);
+      expect(header).toContain('اختر العامل');
     });
 
-    it('should format reason select header', () => {
-      const header = formatReasonSelectHeader('أحمد', '01');
+    it('formats reason select header', () => {
+      // Arrange
+      const workerName = 'أحمد';
+      const code = '01';
+
+      // Act
+      const header = formatReasonSelectHeader(workerName, code);
+
+      // Assert
       expect(header).toContain('أحمد');
       expect(header).toContain('01');
+      expect(header).toContain('سبب إنهاء الخدمة');
     });
 
-    it('should format confirmation card showing demotion impact when worker has linked telegram', () => {
-      const card = formatConfirmationCard('أحمد سعيد', 'OP-01', 'RESIGNATION', true);
+    it('formats confirmation card showing demotion impact when worker has linked telegram', () => {
+      // Arrange
+      const workerName = 'أحمد سعيد';
+      const code = 'OP-01';
+      const reason = 'RESIGNATION';
+
+      // Act
+      const card = formatConfirmationCard(workerName, code, reason, true);
+      const cardNoTelegram = formatConfirmationCard(workerName, code, reason, false);
+
+      // Assert
       expect(card).toContain('إسقاط الصلاحيات اللحظي');
       expect(card).toContain('زائر (GUEST)');
 
-      const cardNoTelegram = formatConfirmationCard('أحمد سعيد', 'OP-01', 'RESIGNATION', false);
       expect(cardNoTelegram).toContain('ليس لديه حساب تليجرام');
+      expect(cardNoTelegram).not.toContain('إسقاط الصلاحيات اللحظي');
     });
 
-    it('should format success card with clearance reference ID', () => {
-      const card = formatSuccessCard('أحمد سعيد', 'OP-01', 'CLR-TEST-99', true);
+    it('formats success card with clearance reference ID', () => {
+      // Arrange
+      const workerName = 'أحمد سعيد';
+      const code = 'OP-01';
+      const clearanceId = 'CLR-TEST-99';
+
+      // Act
+      const card = formatSuccessCard(workerName, code, clearanceId, true);
+
+      // Assert
       expect(card).toContain('CLR-TEST-99');
       expect(card).toContain('تم هبوط حساب التليجرام لدور زائر');
+      expect(card).not.toContain('فشل');
     });
 
-    it('should format offboarding notification text', () => {
-      const notif = formatOffboardingNotification('أحمد سعيد', 'OP-01', 'RESIGNATION', 'CLR-TEST-99', 'موقع أ');
+    it('formats offboarding notification text', () => {
+      // Arrange
+      const workerName = 'أحمد سعيد';
+      const code = 'OP-01';
+      const reason = 'RESIGNATION';
+      const clearanceId = 'CLR-TEST-99';
+      const siteName = 'موقع أ';
+
+      // Act
+      const notif = formatOffboardingNotification(workerName, code, reason, clearanceId, siteName);
+
+      // Assert
       expect(notif).toContain('إشعار إنهاء خدمة');
       expect(notif).toContain('أحمد سعيد');
       expect(notif).toContain('موقع أ');
+      expect(notif).toContain('استقالة');
     });
 
-    it('should format hub menu header', () => {
-      const hub = formatHubMenuHeader(3, 2);
+    it('formats hub menu header', () => {
+      // Arrange
+      const pendingClearances = 3;
+      const pendingDecisions = 2;
+
+      // Act
+      const hub = formatHubMenuHeader(pendingClearances, pendingDecisions);
+
+      // Assert
       expect(hub).toContain('مخالصات ميدانية معلقة: *3*');
       expect(hub).toContain('قرارات وجزاءات معلقة: *2*');
+      expect(hub).not.toContain('غير محدد');
     });
   });
 });

@@ -1,13 +1,30 @@
-﻿import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WorkerOffboardingRepository } from '../flow.repository.js';
 import type { PrismaClient } from '@alsaada/database';
 
+const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
+
 describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress Testing', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(PINNED_BASE_TIME);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   // ==========================================================================
   // STRESS SUITE 1: Extreme Conditions & Null Values in Profile Aggregation
   // ==========================================================================
   describe('STRESS 1: Extreme Conditions & Null Values in getWorkerClearanceProfile', () => {
-    it('1.1: Worker with pure empty collections and null optional attributes', async () => {
+    it('handles worker with pure empty collections and null optional attributes in clearance profile', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findUnique: vi.fn().mockResolvedValue({
@@ -44,9 +61,11 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       };
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
+
+      // Act
       const profile = await repo.getWorkerClearanceProfile('worker-empty-001');
 
-      // Assertions on empty / null profile
+      // Assert
       expect(profile.worker.id).toBe('worker-empty-001');
       expect(profile.worker.nickname).toBeNull();
       expect(profile.worker.siteName).toBeNull();
@@ -62,14 +81,14 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       expect(profile.pendingDisciplinaryRecords).toEqual([]);
       expect(profile.approvedDisciplinaryRecords).toEqual([]);
 
-      expect(profile.stats).toBeDefined();
       expect(profile.stats?.totalApprovedBonuses).toBe(0);
       expect(profile.stats?.totalApprovedPenalties).toBe(0);
       expect(profile.stats?.totalPendingPenalties).toBe(0);
       expect(profile.stats?.totalPendingBonuses).toBe(0);
     });
 
-    it('1.2: Worker not found should throw a clear descriptive error', async () => {
+    it('throws descriptive error when worker record is not found', async () => {
+      // Arrange
       const mockPrisma = {
         worker: { findUnique: vi.fn().mockResolvedValue(null) },
         leave: { findFirst: vi.fn().mockResolvedValue(null) },
@@ -79,12 +98,19 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       };
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
-      await expect(repo.getWorkerClearanceProfile('non-existent-worker')).rejects.toThrow(
+
+      // Act & Assert
+      // Act
+      const notFoundPromise = repo.getWorkerClearanceProfile('non-existent-worker');
+
+      // Assert
+      await expect(notFoundPromise).rejects.toThrow(
         'لم يتم العثور على سجل العامل بالمعرف: non-existent-worker'
       );
     });
 
-    it('1.3: Active Overdue Leave — boundary calculations and overdue reporting', async () => {
+    it('calculates boundary conditions and overdue reporting for active overdue leave', async () => {
+      // Arrange
       const pastDeparture = new Date('2026-08-01T08:00:00Z');
       const pastExpectedReturn = new Date('2026-08-15T18:00:00Z');
 
@@ -120,23 +146,20 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       };
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
+
+      // Act
       const profile = await repo.getWorkerClearanceProfile('worker-overdue-leave');
 
-      expect(profile.activeLeave).not.toBeNull();
+      // Assert
       expect(profile.activeLeave?.leaveNumber).toBe('#LV-2026-0899');
       expect(profile.activeLeave?.status).toBe('OVERDUE');
       expect(profile.activeLeave?.overdueDays).toBe(27);
-
-      // Past departure in August when current month is September -> daysBeforeLeave is 0
       expect(profile.activeLeave?.daysBeforeLeave).toBe(0);
-
-      // Past expected return in August (15th) -> Note: in current repository implementation,
-      // the else branch falls back to exp.getDate() which gives 15 rather than 0!
-      // This is an empirical observation of the current calculation logic for informational daysUntilExpectedReturn.
       expect(profile.activeLeave?.daysUntilExpectedReturn).toBe(15);
     });
 
-    it('1.4: Worker with damaged PPE and pending disciplinary records of all types', async () => {
+    it('aggregates damaged PPE and pending disciplinary records of all types', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findUnique: vi.fn().mockResolvedValue({
@@ -161,7 +184,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               condition: 'DAMAGED_NATURAL',
               costPrice: 400,
               returnDate: null,
-              issueDate: new Date('2025-10-01'),
+              issueDate: new Date('2025-10-01T00:00:00Z'),
             },
             {
               id: 'ppe-2',
@@ -170,7 +193,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               condition: 'LOST_NEGLIGENT',
               costPrice: 850,
               returnDate: null,
-              issueDate: new Date('2026-01-15'),
+              issueDate: new Date('2026-01-15T00:00:00Z'),
             },
             {
               id: 'ppe-3',
@@ -179,7 +202,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               condition: 'GOOD',
               costPrice: 200,
               returnDate: null,
-              issueDate: new Date('2026-03-01'),
+              issueDate: new Date('2026-03-01T00:00:00Z'),
             },
           ]),
         },
@@ -213,7 +236,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               daysEquivalent: null,
               reason: 'إتلاف معدة تشغيل',
               approvedByUserId: null,
-              createdAt: new Date(),
+              createdAt: new Date('2026-09-10T00:00:00Z'),
               worker: { nickname: 'سامح' },
             },
             {
@@ -224,7 +247,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               daysEquivalent: 3,
               reason: 'غياب بدون إذن',
               approvedByUserId: null,
-              createdAt: new Date(),
+              createdAt: new Date('2026-09-10T00:00:00Z'),
               worker: { nickname: 'سامح' },
             },
             {
@@ -235,7 +258,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               daysEquivalent: null,
               reason: 'إتقان صيانة استثنائية',
               approvedByUserId: null,
-              createdAt: new Date(),
+              createdAt: new Date('2026-09-10T00:00:00Z'),
               worker: { nickname: 'سامح' },
             },
             {
@@ -246,7 +269,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               daysEquivalent: null,
               reason: 'تأخير متكرر',
               approvedByUserId: 1001n,
-              createdAt: new Date(),
+              createdAt: new Date('2026-09-10T00:00:00Z'),
               worker: { nickname: 'سامح' },
             },
           ]),
@@ -254,22 +277,22 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       };
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
+
+      // Act
       const profile = await repo.getWorkerClearanceProfile('w-damaged-ppe');
 
-      // PPE Assets verification
+      // Assert
       expect(profile.ppeAssets).toHaveLength(3);
       expect(profile.ppeAssets[0]?.isDamagedOrLost).toBe(true);
       expect(profile.ppeAssets[0]?.name).toBe('خوذة أمان معتمدة');
       expect(profile.ppeAssets[1]?.isDamagedOrLost).toBe(true);
       expect(profile.ppeAssets[1]?.name).toBe('حذاء أمان (سيفتي)');
       expect(profile.ppeAssets[2]?.isDamagedOrLost).toBe(false);
-      expect(profile.ppeAssets[2]?.name).toBe('UNKNOWN_EQUIPMENT_TYPE'); // Fallback check
+      expect(profile.ppeAssets[2]?.name).toBe('UNKNOWN_EQUIPMENT_TYPE');
 
-      // Advances verification
       expect(profile.advances.totalOutstandingAdvances).toBe(1500);
       expect(profile.advances.unsettledInstallments).toHaveLength(2);
 
-      // Disciplinary verification
       expect(profile.pendingDisciplinaryRecords).toHaveLength(3);
       expect(profile.approvedDisciplinaryRecords).toHaveLength(1);
       expect(profile.stats?.totalPendingPenalties).toBe(500);
@@ -283,7 +306,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
   // STRESS SUITE 2: Sovereign Demotion & Transaction Atomicity in finalizeWorkerClearance
   // ==========================================================================
   describe('STRESS 2: finalizeWorkerClearance Atomicity, Demotion & Negative Balances', () => {
-    it('2.1: Positive net settlement normal termination with all side effects', async () => {
+    it('processes positive net settlement normal termination with all side effects', async () => {
+      // Arrange
       const opsExecuted: Record<string, unknown>[] = [];
       const mockPrisma = {
         worker: {
@@ -354,6 +378,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
 
+      // Act
       const result = await repo.finalizeWorkerClearance({
         workerId: 'w-pos-01',
         earnedSalary: 5000,
@@ -367,15 +392,15 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         ],
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(result.clearanceNumber).toBe('#CLR-2026-0016');
       expect(result.netSettlementAmount).toBe(3800);
       expect(result.payoutOption).toBe('IMMEDIATE');
       expect(result.status).toBe('TERMINATED');
       expect(result.demotedTelegramId).toBe(77889900n);
-      expect(result.sha256Checksum).toBeDefined();
+      expect(result.sha256Checksum).toMatch(/^[a-f0-9]{64}$/);
 
-      // Check worker update call
       expect(mockPrisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'w-pos-01' },
@@ -387,7 +412,6 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         })
       );
 
-      // Check User Sovereign Demotion
       expect(mockPrisma.user.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -404,7 +428,6 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         })
       );
 
-      // Check Leave closed
       expect(mockPrisma.leave.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { workerId: 'w-pos-01', actualReturnDate: null },
@@ -412,7 +435,6 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         })
       );
 
-      // Check OutboxEvent
       expect(mockPrisma.outboxEvent.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -423,7 +445,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       );
     });
 
-    it('2.2: Negative Net Settlement with BLACKLISTED action and debt recording', async () => {
+    it('processes negative net settlement with BLACKLISTED action and debt recording', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findUnique: vi.fn().mockResolvedValue({
@@ -454,6 +477,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
 
+      // Act
       const result = await repo.finalizeWorkerClearance({
         workerId: 'w-debt-01',
         earnedSalary: 1000,
@@ -465,11 +489,11 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         actorTelegramId: 999n,
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(result.status).toBe('BLACKLISTED');
       expect(result.message).toContain('تم اعتماد المخالصة وإدراج العامل بالقائمة السوداء مع تثبيت مديونية قدرها 2500 ج.م.');
 
-      // Check Worker update has BLACKLISTED status and reason debt annotation
       expect(mockPrisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'w-debt-01' },
@@ -481,7 +505,6 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         })
       );
 
-      // Check AuditLog records BLACKLISTED status
       expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -494,7 +517,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       );
     });
 
-    it('2.3: Negative Net Settlement with WRITTEN_OFF action (Debt forgiven)', async () => {
+    it('processes negative net settlement with WRITTEN_OFF action and forgiven debt', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findUnique: vi.fn().mockResolvedValue({
@@ -524,6 +548,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
 
+      // Act
       const result = await repo.finalizeWorkerClearance({
         workerId: 'w-debt-02',
         earnedSalary: 500,
@@ -534,11 +559,11 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         actorTelegramId: 999n,
       });
 
+      // Assert
       expect(result.success).toBe(true);
       expect(result.status).toBe('TERMINATED');
       expect(result.message).toContain('تم اعتماد المخالصة المالية وإنهاء الخدمة وهبوط الحساب لدور زائر بنجاح.');
 
-      // Check Worker update: reason has NO debt suffix
       expect(mockPrisma.worker.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'w-debt-02' },
@@ -550,7 +575,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       );
     });
 
-    it('2.4: Sovereign Demotion when worker.telegramId is null but User account is linked by workerId', async () => {
+    it('executes sovereign demotion when worker telegramId is null but user account is linked by workerId', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findUnique: vi.fn().mockResolvedValue({
@@ -580,6 +606,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
 
+      // Act
       const result = await repo.finalizeWorkerClearance({
         workerId: 'w-no-tg',
         earnedSalary: 2000,
@@ -589,6 +616,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         actorTelegramId: 999n,
       });
 
+      // Assert
       expect(result.demotedTelegramId).toBe(88776655n);
       expect(mockPrisma.user.findFirst).toHaveBeenCalledWith({
         where: { workerId: 'w-no-tg' },
@@ -606,7 +634,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       );
     });
 
-    it('2.5: Transaction Rollback — failure in transaction propagates cleanly and nothing commits', async () => {
+    it('propagates transaction failure cleanly and ensures rollback', async () => {
+      // Arrange
       const mockPrisma = {
         worker: {
           findUnique: vi.fn().mockResolvedValue({
@@ -635,16 +664,19 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
 
-      await expect(
-        repo.finalizeWorkerClearance({
-          workerId: 'w-fail',
-          earnedSalary: 1000,
-          totalAdvances: 0,
-          netSettlementAmount: 1000,
-          reason: 'OTHER',
-          actorTelegramId: 999n,
-        })
-      ).rejects.toThrow('DB_DEADLOCK_CONSTRAINT_ERROR');
+      // Act & Assert
+      // Act
+      const rollbackPromise = repo.finalizeWorkerClearance({
+        workerId: 'w-fail',
+        earnedSalary: 1000,
+        totalAdvances: 0,
+        netSettlementAmount: 1000,
+        reason: 'OTHER',
+        actorTelegramId: 999n,
+      });
+
+      // Assert
+      await expect(rollbackPromise).rejects.toThrow('DB_DEADLOCK_CONSTRAINT_ERROR');
     });
   });
 
@@ -652,7 +684,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
   // STRESS SUITE 3: Inboxes, Decision Settlement & Field Reports
   // ==========================================================================
   describe('STRESS 3: Inboxes, Decision Settlement & Field Reports', () => {
-    it('3.1: getPendingClearanceReports handles corrupted and non-JSON reviewDecisionNotes', async () => {
+    it('handles corrupted and non-JSON reviewDecisionNotes in getPendingClearanceReports', async () => {
+      // Arrange
       const mockPrisma = {
         approvalTicket: {
           findMany: vi.fn().mockResolvedValue([
@@ -662,7 +695,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               entityId: 'w-corr-1',
               reviewDecisionNotes: 'MALFORMED_NON_JSON_STRING',
               requestedByTelegramId: 1234n,
-              createdAt: new Date(),
+              createdAt: new Date('2026-09-10T00:00:00Z'),
               status: 'PENDING',
             },
             {
@@ -671,7 +704,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
               entityId: 'w-corr-2',
               reviewDecisionNotes: null,
               requestedByTelegramId: 5678n,
-              createdAt: new Date(),
+              createdAt: new Date('2026-09-10T00:00:00Z'),
               status: 'PENDING',
             },
             {
@@ -684,7 +717,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
                 ppeObservations: 'خوذة مفقودة',
               }),
               requestedByTelegramId: 9999n,
-              createdAt: new Date(),
+              createdAt: new Date('2026-09-10T00:00:00Z'),
               status: 'PENDING',
             },
           ]),
@@ -698,27 +731,27 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       };
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
+
+      // Act
       const reports = await repo.getPendingClearanceReports();
 
+      // Assert
       expect(reports).toHaveLength(3);
-      // Malformed json handled without crashing
       expect(reports[0]?.ticketNumber).toBe('#TCK-CLR-CORR-1');
       expect(reports[0]?.notes).toBe('MALFORMED_NON_JSON_STRING');
       expect(reports[0]?.workerNickname).toBe('ع1');
 
-      // Null notes handled without crashing
       expect(reports[1]?.ticketNumber).toBe('#TCK-CLR-CORR-2');
       expect(reports[1]?.notes).toBeNull();
-      // Worker missing from map
       expect(reports[1]?.workerNickname).toBeUndefined();
 
-      // Valid json parsed correctly
       expect(reports[2]?.ticketNumber).toBe('#TCK-CLR-VAL');
       expect(reports[2]?.workedDays).toBe(18);
       expect(reports[2]?.ppeObservations).toBe('خوذة مفقودة');
     });
 
-    it('3.2: settleDisciplinaryDecision supports APPROVE, REJECT, and ADJUST with audit tags', async () => {
+    it('supports APPROVE, REJECT, and ADJUST with audit tags in settleDisciplinaryDecision', async () => {
+      // Arrange
       const mockPrisma = {
         disciplinaryAndBonus: {
           findUnique: vi.fn().mockResolvedValue({
@@ -731,8 +764,11 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
 
-      // 1. APPROVE with adjustment
+      // Act & Assert
+      // Act
       await repo.settleDisciplinaryDecision('disc-test-1', 'APPROVE', '12345', 450, 2);
+
+      // Assert
       expect(mockPrisma.disciplinaryAndBonus.update).toHaveBeenCalledWith({
         where: { id: 'disc-test-1' },
         data: {
@@ -742,8 +778,10 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         },
       });
 
-      // 2. REJECT zeroes amount and days and marks reason
+      // Act
       await repo.settleDisciplinaryDecision('disc-test-1', 'REJECT', '12345');
+
+      // Assert
       expect(mockPrisma.disciplinaryAndBonus.update).toHaveBeenCalledWith({
         where: { id: 'disc-test-1' },
         data: {
@@ -754,8 +792,10 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         },
       });
 
-      // 3. ADJUST updates amounts and marks reason
+      // Act
       await repo.settleDisciplinaryDecision('disc-test-1', 'ADJUST', '12345', 200);
+
+      // Assert
       expect(mockPrisma.disciplinaryAndBonus.update).toHaveBeenCalledWith({
         where: { id: 'disc-test-1' },
         data: {
@@ -766,7 +806,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       });
     });
 
-    it('3.3: settleDisciplinaryDecision on non-existent record throws error', async () => {
+    it('throws error when settleDisciplinaryDecision is called on non-existent record', async () => {
+      // Arrange
       const mockPrisma = {
         disciplinaryAndBonus: {
           findUnique: vi.fn().mockResolvedValue(null),
@@ -774,12 +815,17 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       };
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
-      await expect(
-        repo.settleDisciplinaryDecision('disc-missing', 'APPROVE', '12345')
-      ).rejects.toThrow('لم يتم العثور على القرار الإداري رقم: disc-missing');
+
+      // Act & Assert
+      // Act
+      const missingPromise = repo.settleDisciplinaryDecision('disc-missing', 'APPROVE', '12345');
+
+      // Assert
+      await expect(missingPromise).rejects.toThrow('لم يتم العثور على القرار الإداري رقم: disc-missing');
     });
 
-    it('3.4: submitFieldClearanceReport creates approval ticket with serializable metadata and zero financial leak', async () => {
+    it('creates approval ticket with serializable metadata and zero financial leak in submitFieldClearanceReport', async () => {
+      // Arrange
       let createdTicketData: Record<string, unknown> | null = null;
       const mockPrisma = {
         approvalTicket: {
@@ -792,6 +838,7 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
 
       const repo = new WorkerOffboardingRepository(mockPrisma as unknown as PrismaClient);
 
+      // Act
       const ticketNum = await repo.submitFieldClearanceReport({
         workerId: 'w-field-1',
         workerCode: 'OP-FIELD-01',
@@ -803,8 +850,8 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
         siteId: 'site-al-saada-1',
       });
 
+      // Assert
       expect(ticketNum).toMatch(/^#TCK-CLR-/);
-      expect(createdTicketData).not.toBeNull();
       const ticket = createdTicketData as unknown as {
         ticketType: string;
         entityId: string;
@@ -815,7 +862,6 @@ describe('01.8 Worker Offboarding Repository — Empirical Adversarial & Stress 
       expect(ticket.entityId).toBe('w-field-1');
       expect(ticket.status).toBe('PENDING');
 
-      // Verify metadata contains operational fields and zero financial salary/advance leaks
       const meta = JSON.parse(ticket.reviewDecisionNotes);
       expect(meta.workerId).toBe('w-field-1');
       expect(meta.workedDays).toBe(24);

@@ -469,7 +469,7 @@ export function verifyGovernanceTamper(root = process.cwd()): VerificationResult
     for (const finding of lockedFindings) fail(result, finding);
     fail(
       result,
-      'Cryptographic integrity of locked components was violated! Locked entities cannot be modified without explicit unlock via pnpm unlock <target> --phrase="موافق على الفتح" --reason="...".'
+      'Cryptographic integrity of locked components was violated! Locked entities cannot be modified without explicit unlock via OTP challenge protocol: pnpm unlock:request <target> --reason="..." followed by Saleh\'s chat authorization and pnpm unlock:confirm <target>.'
     );
     return result;
   }

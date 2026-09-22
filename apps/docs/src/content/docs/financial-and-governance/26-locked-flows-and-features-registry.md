@@ -13,7 +13,7 @@ sidebar:
 > **ملف القفل التشفيري الحي (SSOT):** [`governance.lock.json`](/financial-and-governance/26-locked-flows-and-features-registry/)  
 > **المحرك البرمجي الموحد للقفل والفتح:** `pnpm lock <target>` | `pnpm unlock <target>`  
 > **تاريخ آخر قفل وتحديث سيادي:** 18 سبتمبر 2026 (Plan-70 Sealing)  
-> **إجمالي الكيانات السيادية المقفلة تشفيرياً:** **58 كياناً مستقلاً (659 ملفاً محمياً)**
+> **إجمالي الكيانات السيادية المقفلة تشفيرياً:** **115 كياناً مستقلاً (487 ملفاً محمياً)**
 
 ---
 
@@ -21,11 +21,11 @@ sidebar:
 1. **المحرك البرمجي الموحد للقفل والفتح (Single Unified Sovereign Engine):**
    - تخضع كافة أجزاء المنظومة (حزم النواة، تدفقات البوت، شاشات الداشبورد، البنية التحتية، ومحركات السرعة) لمحرك برمجي مركزي واحد:
      * **للقفل:** `pnpm lock <target>` (يستخدم `tools/governance/unified-lock-engine.ts`).
-     * **للفتح:** `pnpm unlock <target> --phrase="..." --reason="..."` (يستخدم `tools/governance/unified-unlock-engine.ts`).
+     * **للفتح:** بروتوكول التحدي والاستجابة المتغير (Work Plan 90): `pnpm unlock:request <target> --reason="..."` ثم موافقة صالح في الشات ثم `pnpm unlock:confirm <target>`.
    - تسجل كافة المكونات المقفلة في قاموس كيانات موحد بملف [`governance.lock.json`](/financial-and-governance/26-locked-flows-and-features-registry/) تحت المفتاح المعياري `lockedEntities: Record<string, LockedEntity>`.
 2. **قاعدة العزل الفردي المطلق وحظر الفتح أو الغلق الشامل (Absolute Zero Blast Radius):**
    - يُحظر تماماً فك قفل النظام بأكمله أو فتح حزم أو تدفقات أخرى عند الرغبة في تعديل مكون محدد.
-   - عند طلب فك قفل حزمة (مثلاً `package:regional-engine`) أو تدفق (مثلاً `flow:01.1`) أو شاشة (مثلاً `dashboard:workforce/new`)، **يُفتح فقط مجلد ذلك الكيان المحدد بمفرده (1/58)**، وتظل سائر الكيانات الـ 57 الأخرى في المنظومة مقفلة ومحصنة تشفيرياً 100%.
+   - عند طلب فك قفل حزمة (مثلاً `package:regional-engine`) أو تدفق (مثلاً `flow:01.1`) أو شاشة (مثلاً `dashboard:workforce/new`)، **يُفتح فقط مجلد ذلك الكيان المحدد بمفرده (1/115)**، وتظل سائر الكيانات الـ 114 الأخرى في المنظومة مقفلة ومحصنة تشفيرياً 100%.
    - أي محاولة من الوكيل أو المطور لتعديل أو لمس أي ملف خارج نطاق الكيان المفكوك تسقط فوراً عند الـ Git Commit بـ `Exit 1` بواسطة فاحص النزاهة الجنائية.
 3. **الحصانة المطلقة وصيغ الموافقة الحرفية الصارمة:**
    - **للقفل:** يتطلب موافقة المستخدم الحرفية حصراً: **«نعم اقفل»**.
@@ -34,17 +34,17 @@ sidebar:
 
 ---
 
-### 2️⃣ جدول حزم النواة المشتركة المقفلة تشفيرياً (`package:*`) — 7 حزم (175 ملفاً)
+### 2️⃣ جدول حزم النواة المشتركة المقفلة تشفيرياً (`package:*`) — 7 حزم (101 ملفاً)
 
 | معرف الكيان (`id`) | مسمى الحزمة ووظيفتها السيادية | المسار المعتمد | تاريخ القفل | عدد الملفات | وثيقة الإثبات الجنائي |
 | :---: | :--- | :--- | :---: | :---: | :--- |
-| **`package:core-components`** | **حزمة المكونات المعيارية الشاملة للمنظومة** (أزرار العمال، التاريخ، المبالغ، المقاصات، شاشات التأكيد) | [`packages/core-components`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/core-components) | `2026-09-18` | 83 ملفاً | [`docs/ai-execution-evidence/2026-09-18-lock-package_core-components.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_core-components.md) |
-| **`package:database`** | **نواة قاعدة البيانات المؤسسية والهاش التراكمي ونماذج Prisma** | [`packages/database`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/database) | `2026-09-18` | 38 ملفاً | [`docs/ai-execution-evidence/2026-09-18-lock-package_database.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_database.md) |
-| **`package:telemetry`** | **محرك القياس والاتزان وتتبع أزمنة الاستجابة ومراقبة الأداء** | [`packages/telemetry`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/telemetry) | `2026-09-18` | 19 ملفاً | [`docs/ai-execution-evidence/2026-09-18-lock-package_telemetry.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_telemetry.md) |
+| **`package:shared`** | **النواة المركزية المشتركة للأنواع العامة والنطاقات المؤسسية** | [`packages/shared`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/shared) | `2026-09-18` | 14 ملفاً | [`docs/ai-execution-evidence/2026-09-18-lock-package_shared.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_shared.md) |
+| **`package:database`** | **نواة قاعدة البيانات المؤسسية والهاش التراكمي ونماذج Prisma** | [`packages/database`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/database) | `2026-09-18` | 35 ملفاً | [`docs/ai-execution-evidence/2026-09-18-lock-package_database.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_database.md) |
+| **`package:telemetry`** | **محرك القياس والاتزان وتتبع أزمنة الاستجابة ومراقبة الأداء** | [`packages/telemetry`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/telemetry) | `2026-09-18` | 14 ملفاً | [`docs/ai-execution-evidence/2026-09-18-lock-package_telemetry.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_telemetry.md) |
 | **`package:rbac`** | **محرك الصلاحيات والتحكم بالأدوار والمصفوفة الأمنية** | [`packages/rbac`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/rbac) | `2026-09-18` | 12 ملفاً | [`docs/ai-execution-evidence/2026-09-18-lock-package_rbac.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_rbac.md) |
-| **`package:regional-engine`** | **محرك التوطين الإقليمي، تطهير الأرقام، العملات، والتوقيت المحلي** | [`packages/regional-engine`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/regional-engine) | `2026-09-18` | 9 ملفات | [`docs/ai-execution-evidence/2026-09-18-lock-package_regional-engine.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_regional-engine.md) |
+| **`package:regional-engine`** | **محرك التوطين الإقليمي، تطهير الأرقام، العملات، والتوقيت المحلي** | [`packages/regional-engine`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/regional-engine) | `2026-09-18` | 8 ملفات | [`docs/ai-execution-evidence/2026-09-18-lock-package_regional-engine.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_regional-engine.md) |
 | **`package:national-id-engine`** | **محرك التحقق الجنائي وتفكيك الرقم القومي المصري** | [`packages/national-id-engine`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/national-id-engine) | `2026-09-18` | 7 ملفات | [`docs/ai-execution-evidence/2026-09-18-lock-package_national-id-engine.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_national-id-engine.md) |
-| **`package:ai-vision-engine`** | **محرك الذكاء الاصطناعي البصري لقراءة ومعالجة الفواتير** | [`packages/ai-vision-engine`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/ai-vision-engine) | `2026-09-18` | 7 ملفات | [`docs/ai-execution-evidence/2026-09-18-lock-package_ai-vision-engine.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_ai-vision-engine.md) |
+| **`package:ai-vision-engine`** | **محرك الذكاء الاصطناعي البصري لقراءة ومعالجة المستندات والفواتير** | [`packages/ai-vision-engine`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/packages/ai-vision-engine) | `2026-09-18` | 7 ملفات | [`docs/ai-execution-evidence/2026-09-18-lock-package_ai-vision-engine.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-package_ai-vision-engine.md) |
 
 ---
 
@@ -75,7 +75,7 @@ sidebar:
 
 ---
 
-### 4️⃣ جدول شاشات لوحة التحكم المقفلة تشفيرياً (`dashboard:*`) — 29 شاشة (43 ملفاً)
+### 4️⃣ جدول شاشات لوحة التحكم المقفلة تشفيرياً (`dashboard:*`) — 32 شاشة (51 ملفاً)
 
 | معرف الشاشة (`id`) | اسم الشاشة ووظيفتها | مسار الصفحة بالداشبورد | تاريخ القفل | عدد الملفات | وثيقة الإثبات الجنائي |
 | :---: | :--- | :--- | :---: | :---: | :--- |
@@ -108,6 +108,9 @@ sidebar:
 | **`dashboard:workforce/evaluations`** | **مؤشر التزام وموثوقية العمال 360°** | `apps/admin-dashboard/src/app/admin/workforce/evaluations` | `2026-09-18` | 4 ملفات | [`docs/ai-execution-evidence/2026-09-18-lock-dashboard_workforce_evaluations.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-dashboard_workforce_evaluations.md) |
 | **`dashboard:workforce/export`** | **تصدير كشوف وملفات العمال إكسيل** | `apps/admin-dashboard/src/app/admin/workforce/export` | `2026-09-18` | 1 ملف | [`docs/ai-execution-evidence/2026-09-18-lock-dashboard_workforce_export.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-dashboard_workforce_export.md) |
 | **`dashboard:workforce/new`** | **تسجيل وتعيين عامل جديد بالداشبورد** | `apps/admin-dashboard/src/app/admin/workforce/new` | `2026-09-18` | 2 ملفات | [`docs/ai-execution-evidence/2026-09-18-lock-dashboard_workforce_new.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-18-lock-dashboard_workforce_new.md) |
+| **`dashboard:settings/bot-features`** | **مركز التحكم في موديولات وتدفقات وتوبيكات البوت** | `apps/admin-dashboard/src/app/admin/settings/bot-features` | `2026-09-19` | 4 ملفات | [`docs/ai-execution-evidence/2026-09-19-lock-dashboard_settings_bot-features.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-19-lock-dashboard_settings_bot-features.md) |
+| **`dashboard:settings/matrix`** | **شاشة إدارة المهن ومصفوفة الوظائف الميدانية** | `apps/admin-dashboard/src/app/admin/settings/matrix` | `2026-09-19` | 2 ملفات | [`docs/ai-execution-evidence/2026-09-19-lock-dashboard_settings_matrix.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-19-lock-dashboard_settings_matrix.md) |
+| **`dashboard:settings/telegram-groups`** | **إدارة وربط مجموعات وتوبيكات تليجرام** | `apps/admin-dashboard/src/app/admin/settings/telegram-groups` | `2026-09-19` | 2 ملفات | [`docs/ai-execution-evidence/2026-09-19-lock-dashboard_settings_telegram-groups.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/ai-execution-evidence/2026-09-19-lock-dashboard_settings_telegram-groups.md) |
 
 ---
 
@@ -120,7 +123,21 @@ sidebar:
 
 ---
 
-### 6️⃣ المسارات السيادية المحمية للحوكمة (`protectedPaths`) — 56 ملفاً
+### 6️⃣ جدول حزم وملفات الاختبارات المقفلة تشفيرياً (`test:*`) — 54 اختباراً جنائياً
+
+تخضع كافة ملفات الاختبارات الحاكمة للحماية التشفيرية الصارمة ضد أي تحايل أو تعديل عشوائي (Constitutional Rule 10.1 & Gate G10):
+
+| النطاق / التطبيق | عدد الاختبارات | الملفات والمحددات المقفلة تشفيرياً | الغرض الحاكم |
+| :--- | :---: | :--- | :--- |
+| **لوحة التحكم الإدارية (`apps/admin-dashboard/tests/`)** | 30 | • `adversarial-route-role-session.spec.ts`<br>• `approvals-treasury.spec.ts`<br>• `auth-claim-concurrency.spec.ts`<br>• `auth-claim.spec.ts`<br>• `auth-session.spec.ts`<br>• `bot-features-tree-and-telegram-unification.spec.ts`<br>• `dashboard-auth-ast.spec.ts`<br>• `dashboard-auth-r1-remediation.spec.ts`<br>• `dashboard-intelligence.spec.ts`<br>• `dashboard-preferences.spec.ts`<br>• `data-fetchers.spec.ts`<br>• `docs-portal-cockpit.spec.ts`<br>• `error-boundaries.spec.ts`<br>• `health-route.spec.ts`<br>• `legacy-auth-elimination.spec.ts`<br>• `middleware-session-guard.spec.ts`<br>• `middleware-trace.spec.ts`<br>• `parity/approvals-security-guard.spec.ts`<br>• `parity/settings-and-delegations-parity.spec.ts`<br>• `parity/workforce-parity.spec.ts`<br>• `permissions-matrix-and-telegram-groups.spec.ts`<br>• `pillar-4-cybersecurity-and-skeletons.spec.ts`<br>• `prisma-studio-rbac.spec.ts`<br>• `rbac.spec.ts`<br>• `role-overview.spec.ts`<br>• `screen-responsiveness.spec.ts`<br>• `secure-export.spec.ts`<br>• `sidebar-nav.spec.ts`<br>• `workforce-evaluations.spec.ts`<br>• `workforce-onboarding.spec.ts` | حماية أمن الجلسات، التوجيه المعادي، عزل الأدوار، ومطابقة واجهات الويب |
+| **خادم البوت التفاعلي (`apps/bot-server/tests/`)** | 20 | • `adversarial-dashboard-access.spec.ts`<br>• `boost-handler.spec.ts`<br>• `bot-handlers-sla.benchmark.spec.ts`<br>• `coordinates.spec.ts`<br>• `dashboard-command.spec.ts`<br>• `env-validation.spec.ts`<br>• `error-vault-and-telemetry.spec.ts`<br>• `fast-cache.benchmark.spec.ts`<br>• `fast-cache.spec.ts`<br>• `group-manager.spec.ts`<br>• `hr-rbac-masking.spec.ts`<br>• `main-menu.spec.ts`<br>• `modules-registry-and-autoloader.spec.ts`<br>• `outbox-circuit-breaker.spec.ts`<br>• `permanent-speed-engine.spec.ts`<br>• `reply-bar.keyboard.spec.ts`<br>• `screen-flow-and-hr-directory.spec.ts`<br>• `security-hardening-r07-r09.spec.ts`<br>• `session-monitor.spec.ts`<br>• `site-scope.spec.ts` | حماية زمن الاستجابة، بنشمارك السرعة، تحصين الأوامر، ومحرك الكاش |
+| **بوابة التوثيق والمكتبة (`apps/docs/tests/`)** | 1 | • `docs-portal.spec.ts` | سلامة بوابة التوثيق وعرض المعايير الدستورية |
+| **حزم النواة وقواعد البيانات (`packages/*/tests/`)** | 2 | • `packages/database/tests/hash-chain.stress.spec.ts`<br>• `packages/rbac/tests/rbac.spec.ts` | اختبارات إجهاد السلسلة التراكمية المشفرة وصحة مصفوفة الصلاحيات |
+| **محركات الحوكمة (`tools/governance/tests/`)** | 1 | • `docker-governance-lock.spec.ts` | التحقق من سلامة قفل حاويات Docker والبنية التحتية |
+
+---
+
+### 7️⃣ المسارات السيادية المحمية للحوكمة (`protectedPaths`) — 56 ملفاً
 
 تخضع الملفات والمجلدات التالية للحماية التشفيرية المباشرة ضد أي تعديل عشوائي:
 - **الملفات الدستورية والمعمارية:**
@@ -141,7 +158,7 @@ sidebar:
 
 ---
 
-### 7️⃣ أوامر إدارة القفل والفتح المعتمدة (المحرك الموحد)
+### 8️⃣ أوامر إدارة القفل والفتح المعتمدة (المحرك الموحد)
 
 ```bash
 # 1. إغلاق وقفل أي كيان بعد موافقة المستخدم «نعم اقفل»:
@@ -152,10 +169,12 @@ pnpm lock package:database
 pnpm lock dashboard:workforce/new
 pnpm lock infra:docker
 
-# 2. فك قفل كيان منفرد للتعديل بعد موافقة المستخدم «موافق على الفتح»:
-pnpm unlock <target> --phrase="موافق على الفتح" --reason="سبب التعديل المبرر"
-# مثال:
-pnpm unlock package:regional-engine --phrase="موافق على الفتح" --reason="إضافة عملة جديدة"
+# 2. فك قفل كيان منفرد للتعديل وفق بروتوكول التحدي والاستجابة (WP 90):
+# أ. طلب رمز التحدي المؤقت:
+pnpm unlock:request package:regional-engine --reason="إضافة عملة جديدة"
+# ب. توقف الوكيل وطلب اعتماد صالح في الشات بكتابة: «موافق على الفتح UNLOCK-XXXXXX»
+# ج. تأكيد فك القفل بعد التحقق الجنائي من سجل الشات:
+pnpm unlock:confirm package:regional-engine
 
 # 3. الفحص الجنائي الصارم لسلامة الأقفال ومنع التلاعب:
 pnpm governance:tamper-check
