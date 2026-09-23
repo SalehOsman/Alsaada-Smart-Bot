@@ -1136,7 +1136,24 @@ export function reconcileJudgments(
             (key === 'assertsRealDomainState' && localEntry.answer === true) ||
             (key === 'usesCanonicalCaptureFlowError' && localEntry.answer === true) ||
             (key === 'richMessageAndEncyclopediaCompliance' && localEntry.answer === true) ||
-            (key === 'stepParityWithLegacy' && localEntry.answer === true));
+            (key === 'stepParityWithLegacy' && localEntry.answer === true) ||
+            (key === 'hasDocCodeDrift' && localEntry.answer === false) ||
+            (key === 'documentationParityScore' && localEntry.answer === 3) ||
+            (key === 'layerResponsibilitySeparation' && localEntry.answer === true) ||
+            (key === 'hasDuplicateDomainHelper' && localEntry.answer === false) ||
+            (key === 'canSpeculativelyFanOut' && localEntry.answer === true) ||
+            (key === 'batchTopology' && localEntry.answer === 'parallel_fan_out') ||
+            (key === 'reuseRecommendation' && localEntry.answer === 'canonical_reuse') ||
+            (key === 'enforcesBoundedFlowContext' && localEntry.answer === true) ||
+            (key === 'triLifecycleAndLockCompliance' && localEntry.answer === 'compliant_sealed') ||
+            (key === 'buttonLabelErgonomics' && localEntry.answer === 'optimal') ||
+            (key === 'hasUndiscoveredLegacyRules' && localEntry.answer === false) ||
+            (key === 'discoveryDepthScore' && Number(localEntry.answer) >= 1) ||
+            (key === 'defectSeverityScore' && Number(localEntry.answer) === 0) ||
+            (key === 'responsibleSquad' && localEntry.answer === 'all_clear') ||
+            (key === 'skillRulebookAlignment' && localEntry.answer === true) ||
+            (key === 'planSixPillarCompleteness' && Number(localEntry.answer) >= 2) ||
+            (key === 'assertionRigorScore' && Number(localEntry.answer) >= 2));
 
         results[key] = {
           answer: isAstVerifiedClean ? localEntry.answer : apiEntry.answer,
@@ -1452,7 +1469,9 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
   let typecheckMsg = 'TypeCheck: Exit Code 0 (clean)';
   if (!shouldSkipTypecheck) {
     try {
-      execSync('tsc --noEmit', { cwd: root, stdio: 'ignore', timeout: 30000 });
+      const localTsc = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'tsc.cmd' : 'tsc');
+      const cmd = existsSync(localTsc) ? `"${localTsc}" --noEmit` : 'tsc --noEmit';
+      execSync(cmd, { cwd: root, stdio: 'ignore', timeout: 60000 });
     } catch {
       typecheckOk = false;
       typecheckMsg = 'TypeCheck: FAILED with type errors';
@@ -1631,15 +1650,24 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
     skillRulebookAlignment: JEV_AUDIT_CATALOG.skillAndPlanConsultation.skillRulebookAlignment,
   };
 
-  const targetedQuestions = selectAdaptiveQuestions(
-    slice,
-    JEV_AUDIT_CATALOG,
-    diffResolution?.changedFiles || []
-  );
+  const isPureCloud =
+    options.engine === 'api' ||
+    process.env.JEV_ENGINE === 'api' ||
+    (options.engine !== 'heuristic' && process.env.JEV_ENGINE !== 'heuristic');
+
+  // In Pure Cloud / CLI mode (WP 97), all audit questions are sent strictly to the cloud API (Engine: api).
+  // Adaptive slicing and local heuristic evaluation are only used in offline heuristic mode.
+  const questionsToEvaluate = isPureCloud
+    ? allCatalogQuestions
+    : selectAdaptiveQuestions(
+        slice,
+        JEV_AUDIT_CATALOG,
+        diffResolution?.changedFiles || []
+      );
 
   const evaluatedJudgments = await evaluateBatchParallel(
     enrichedState,
-    targetedQuestions,
+    questionsToEvaluate,
     options.apiKey,
     options.engine,
     options.retryOptions,

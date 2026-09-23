@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/rbac/tests/cascading-rbac.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:07:00.839Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:51:10.647Z)
 - **معرف الكيان:** `test:packages/rbac/tests/cascading-rbac.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/rbac/tests/cascading-rbac.spec.ts

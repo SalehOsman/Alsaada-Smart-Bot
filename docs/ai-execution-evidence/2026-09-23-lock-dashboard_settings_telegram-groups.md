@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (dashboard:settings/telegram-groups)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:07:00.839Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:51:10.647Z)
 - **معرف الكيان:** `dashboard:settings/telegram-groups`
 - **نوع الكيان:** `dashboard`
 - **العنوان:** شاشة لوحة التحكم: settings/telegram-groups

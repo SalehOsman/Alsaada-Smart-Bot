@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:apps/admin-dashboard/tests/error-boundaries.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:07:00.839Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:51:10.647Z)
 - **معرف الكيان:** `test:apps/admin-dashboard/tests/error-boundaries.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: apps/admin-dashboard/tests/error-boundaries.spec.ts

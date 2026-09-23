@@ -473,5 +473,54 @@ describe('Work Plan 97: Pure Cloud JEV Sentinel, Resilient Strategic Saleh Advis
       const searched = searchPrecedents('any search term', nonExistentDir);
       expect(searched).toEqual([]);
     });
+
+    it('ensures all 25 questions are evaluated with Engine: api provenance in Pure Cloud mode', async () => {
+      // Mock cloud API response returning answers for all requested catalog questions
+      const fetchMock = vi.fn().mockImplementation(async (_url: string, init: any) => {
+        const reqBody = JSON.parse(init.body);
+        const requestedQuestions = reqBody.questions || {};
+        const answers: Record<string, any> = {};
+
+        for (const [key, q] of Object.entries(requestedQuestions) as [string, any][]) {
+          if (q.type === 'noul') {
+            answers[key] = { type: 'noul', noul: 0.85, confidence: 0.95 };
+          } else if (q.type === 'choice') {
+            answers[key] = { type: 'choice', choice: q.choices?.[0] || 'optimal', confidence: 0.95 };
+          } else if (q.type === 'score') {
+            answers[key] = { type: 'score', score: 3, confidence: 0.95 };
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ answers }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      });
+      globalThis.fetch = fetchMock;
+
+      const report = await runJevAudit(
+        {
+          skipTypecheck: true,
+          engine: 'api',
+          apiKey: 'test-pure-cloud-key',
+        },
+        root
+      );
+
+      // Verify that all 25 questions were actually dispatched to the cloud server
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const firstCall = fetchMock.mock.calls[0];
+      expect(firstCall).toBeDefined();
+      const dispatchedBody = JSON.parse(String((firstCall![1] as any)?.body || '{}'));
+      expect(Object.keys(dispatchedBody.questions).length).toBe(25);
+
+      // Verify that all 25 judgments carry authentic Engine: api provenance
+      const judgments = report.systemOneJudgments;
+      const judgmentKeys = Object.keys(judgments);
+      expect(judgmentKeys.length).toBe(25);
+      for (const [key, judgment] of Object.entries(judgments)) {
+        expect(judgment.source, `Question ${key} must have source: 'api'`).toBe('api');
+      }
+    });
   });
 });
