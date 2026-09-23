@@ -28,7 +28,11 @@ export function pathExists(path: string): boolean {
 }
 
 export function readUtf8(path: string): string {
-  return readFileSync(path, 'utf8').replace(/^\uFEFF/, '');
+  try {
+    return readFileSync(path, 'utf8').replace(/^\uFEFF/, '');
+  } catch {
+    return '';
+  }
 }
 
 export function fileIsNonEmpty(path: string): boolean {
@@ -39,10 +43,24 @@ export function listFilesRecursive(root: string): string[] {
   if (!existsSync(root)) return [];
   const files: string[] = [];
   const visit = (current: string): void => {
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
+    let entries;
+    try {
+      entries = readdirSync(current, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
       const fullPath = join(current, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist') continue;
+        if (
+          entry.name === 'node_modules' ||
+          entry.name === '.git' ||
+          entry.name === 'dist' ||
+          entry.name === 'attachments' ||
+          entry.name.startsWith('tmp-test-')
+        ) {
+          continue;
+        }
         visit(fullPath);
       } else if (entry.isFile()) {
         files.push(fullPath);

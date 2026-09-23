@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T09:38:10.923Z",
+  "generatedAt": "2026-09-23T11:01:50.762Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -273,7 +273,7 @@
     },
     {
       "path": "tools/governance/common.ts",
-      "sha256": "f721b0b42082cd53d6839a55fc1a34caeddd151dc4114ce96259a9a32f8765f7"
+      "sha256": "efcacc53724fc53cca7a3f907f01f5b162e7ee5a588853ce9a847c7420f363c9"
     },
     {
       "path": "tools/governance/generate-topology.ts",
@@ -310,6 +310,10 @@
     {
       "path": "tools/governance/tests/agent-dispatcher.spec.ts",
       "sha256": "3b9c18e6a58711386f2917cb6833dee882a6da103ae06e0e6ef4ff26a319f9e9"
+    },
+    {
+      "path": "tools/governance/tests/ci-lock-attachments-exclusion.spec.ts",
+      "sha256": "4991034d73246cbbeabba9d62c2e4415a78c28b6fca6b6f995a3887ec0b935b8"
     },
     {
       "path": "tools/governance/tests/codex-transcript-provenance.spec.ts",
@@ -417,7 +421,7 @@
     },
     {
       "path": "tools/governance/unified-lock-engine.ts",
-      "sha256": "351435fdc4e66a91c9be801696f64f90c9a3589d388cf724e509b10e664de80e"
+      "sha256": "0aad9c5de1032cfbd80a0f2c968a8d26855b625561f246d146f9d7367894f1f8"
     },
     {
       "path": "tools/governance/unified-unlock-engine.ts",
@@ -481,7 +485,7 @@
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
-      "sha256": "1475afcf50a3a67a4360d6074d138b6b9eb74777c908c4a361b19ffbb49b5efc"
+      "sha256": "14a92a9f203bf75b82a98457e32e9f5b5014dad81b1acc15ff3f43960f48bbb2"
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
@@ -902,7 +906,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: analytics",
       "directory": "apps/admin-dashboard/src/app/admin/analytics",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/analytics/analytics-filter-bar.tsx",
@@ -919,7 +923,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: finance",
       "directory": "apps/admin-dashboard/src/app/admin/finance",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/finance/page.tsx",
@@ -932,7 +936,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: finance/treasury",
       "directory": "apps/admin-dashboard/src/app/admin/finance/treasury",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/finance/treasury/page.tsx",
@@ -949,7 +953,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: logistics",
       "directory": "apps/admin-dashboard/src/app/admin/logistics",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/logistics/page.tsx",
@@ -962,7 +966,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: logistics/canteen",
       "directory": "apps/admin-dashboard/src/app/admin/logistics/canteen",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/logistics/canteen/page.tsx",
@@ -975,7 +979,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: operations",
       "directory": "apps/admin-dashboard/src/app/admin/operations",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/operations/page.tsx",
@@ -988,7 +992,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: operations/equipment",
       "directory": "apps/admin-dashboard/src/app/admin/operations/equipment",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/operations/equipment/page.tsx",
@@ -1001,7 +1005,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: نظرة عامة (Overview)",
       "directory": "apps/admin-dashboard/src/app/admin/page.tsx",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/page.tsx",
@@ -1014,7 +1018,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/assignments",
       "directory": "apps/admin-dashboard/src/app/admin/settings/assignments",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/assignments/page.tsx",
@@ -1027,7 +1031,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/audit-vault",
       "directory": "apps/admin-dashboard/src/app/admin/settings/audit-vault",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/audit-vault/page.tsx",
@@ -1040,7 +1044,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/company",
       "directory": "apps/admin-dashboard/src/app/admin/settings/company",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/company/page.tsx",
@@ -1053,7 +1057,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/ghost-mode",
       "directory": "apps/admin-dashboard/src/app/admin/settings/ghost-mode",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/ghost-mode/page.tsx",
@@ -1066,7 +1070,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/jobs",
       "directory": "apps/admin-dashboard/src/app/admin/settings/jobs",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/jobs/jobs-client.tsx",
@@ -1083,7 +1087,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/preferences",
       "directory": "apps/admin-dashboard/src/app/admin/settings/preferences",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/preferences/page.tsx",
@@ -1096,7 +1100,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/prisma-studio",
       "directory": "apps/admin-dashboard/src/app/admin/settings/prisma-studio",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/prisma-studio/page.tsx",
@@ -1113,7 +1117,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/sites",
       "directory": "apps/admin-dashboard/src/app/admin/settings/sites",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/sites/page.tsx",
@@ -1126,7 +1130,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/studio",
       "directory": "apps/admin-dashboard/src/app/admin/settings/studio",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/studio/page.tsx",
@@ -1143,7 +1147,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/[id]/edit",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/[id]/edit",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/[id]/edit/edit-worker-client.tsx",
@@ -1160,7 +1164,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/clearances",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/clearances",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/clearances/clearances-client.tsx",
@@ -1177,7 +1181,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/directory",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/directory",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/directory/directory-client.tsx",
@@ -1194,7 +1198,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/evaluations",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/evaluations",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/evaluations/evaluation-details-modal.tsx",
@@ -1219,7 +1223,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/export",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/export",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/export/page.tsx",
@@ -1232,7 +1236,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/new",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/new",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/new/new-worker-client.tsx",
@@ -1249,7 +1253,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.10-notification-policies (00.10)",
       "directory": "modules/settings/src/flows/00.10-notification-policies",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.10-notification-policies/flow.contract.json",
@@ -1298,7 +1302,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.11-telegram-groups (00.11)",
       "directory": "modules/settings/src/flows/00.11-telegram-groups",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.11-telegram-groups/flow.contract.json",
@@ -1347,7 +1351,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.2-sites-hub (00.2)",
       "directory": "modules/settings/src/flows/00.2-sites-hub",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.2-sites-hub/flow.contract.json",
@@ -1396,7 +1400,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.3-job-matrix (00.3)",
       "directory": "modules/settings/src/flows/00.3-job-matrix",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.3-job-matrix/flow.contract.json",
@@ -1445,7 +1449,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.4-admin-profile (00.4)",
       "directory": "modules/settings/src/flows/00.4-admin-profile",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.4-admin-profile/flow.contract.json",
@@ -1494,7 +1498,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.6-ghost-mode (00.6)",
       "directory": "modules/settings/src/flows/00.6-ghost-mode",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/flow.contract.json",
@@ -1543,7 +1547,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.7-audit-incident-vault (00.7)",
       "directory": "modules/settings/src/flows/00.7-audit-incident-vault",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.7-audit-incident-vault/flow.contract.json",
@@ -1592,7 +1596,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.8-apm-telemetry (00.8)",
       "directory": "modules/settings/src/flows/00.8-apm-telemetry",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.8-apm-telemetry/flow.contract.json",
@@ -1641,7 +1645,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.9-emergency-cache (00.9)",
       "directory": "modules/settings/src/flows/00.9-emergency-cache",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.9-emergency-cache/flow.contract.json",
@@ -1690,7 +1694,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.1-worker-registration (01.1)",
       "directory": "modules/workforce/src/flows/01.1-worker-registration",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
@@ -1739,7 +1743,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.2.D-worker-edit (01.2.D)",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.cigarette-handler.ts",
@@ -1812,7 +1816,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.4-worker-export (01.4)",
       "directory": "modules/workforce/src/flows/01.4-worker-export",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.4-worker-export/flow.contract.json",
@@ -1865,7 +1869,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.5-worker-directory (01.5)",
       "directory": "modules/workforce/src/flows/01.5-worker-directory",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/flow.contract.json",
@@ -1918,7 +1922,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.6-worker-self-edit (01.6)",
       "directory": "modules/workforce/src/flows/01.6-worker-self-edit",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.6-worker-self-edit/flow.contract.json",
@@ -1967,7 +1971,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.7-guest-join-and-linking (01.7)",
       "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
@@ -2016,7 +2020,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.9-worker-commitment-index (01.9)",
       "directory": "modules/workforce/src/flows/01.9-worker-commitment-index",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
@@ -2073,7 +2077,7 @@
       "type": "infra",
       "title": "المحرك المؤسسي للسرعة الفائقة واستجابة البوت APM",
       "directory": "apps/bot-server/src/services",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/src/services/fast-cache.service.ts",
@@ -2098,7 +2102,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T09:38:10.923Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -2163,7 +2167,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.12-user-rbac-management (00.12)",
       "directory": "modules/settings/src/flows/00.12-user-rbac-management",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.12-user-rbac-management/flow.contract.json",
@@ -2212,7 +2216,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce",
       "directory": "apps/admin-dashboard/src/app/admin/workforce",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/loading.tsx",
@@ -2229,7 +2233,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings",
       "directory": "apps/admin-dashboard/src/app/admin/settings",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/loading.tsx",
@@ -2246,7 +2250,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: approvals",
       "directory": "apps/admin-dashboard/src/app/admin/approvals",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/approvals/approvals-client.tsx",
@@ -2267,7 +2271,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/telemetry",
       "directory": "apps/admin-dashboard/src/app/admin/settings/telemetry",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/telemetry/loading.tsx",
@@ -2288,7 +2292,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/notifications",
       "directory": "apps/admin-dashboard/src/app/admin/settings/notifications",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/notifications/page.tsx",
@@ -2301,7 +2305,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/bot-features",
       "directory": "apps/admin-dashboard/src/app/admin/settings/bot-features",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/bot-features/components/bot-node-card.tsx",
@@ -2326,7 +2330,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/matrix",
       "directory": "apps/admin-dashboard/src/app/admin/settings/matrix",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/matrix/matrix-client.tsx",
@@ -2343,7 +2347,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/telegram-groups",
       "directory": "apps/admin-dashboard/src/app/admin/settings/telegram-groups",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/telegram-groups/groups-client.tsx",
@@ -2360,7 +2364,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/users",
       "directory": "apps/admin-dashboard/src/app/admin/settings/users",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/users/page.tsx",
@@ -2377,7 +2381,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.5-admin-assignment (00.5)",
       "directory": "modules/settings/src/flows/00.5-admin-assignment",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/flow.contract.json",
@@ -2426,7 +2430,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/regional-engine",
       "directory": "packages/regional-engine",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/regional-engine/CHANGELOG.md",
@@ -2467,7 +2471,7 @@
       "type": "flow",
       "title": "تدفق البوت: 01.8-worker-offboarding (01.8)",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/flow.actions.ts",
@@ -2528,7 +2532,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/ai-vision-engine",
       "directory": "packages/ai-vision-engine",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/ai-vision-engine/CHANGELOG.md",
@@ -2565,7 +2569,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/rbac",
       "directory": "packages/rbac",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/rbac/CHANGELOG.md",
@@ -2622,7 +2626,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/rbac/tests/rbac.spec.ts",
       "directory": "packages/rbac/tests/rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/rbac/tests/rbac.spec.ts",
@@ -2635,7 +2639,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/docker-governance-lock.spec.ts",
       "directory": "tools/governance/tests/docker-governance-lock.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/docker-governance-lock.spec.ts",
@@ -2648,7 +2652,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/docs/tests/docs-portal.spec.ts",
       "directory": "apps/docs/tests/docs-portal.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/docs/tests/docs-portal.spec.ts",
@@ -2661,7 +2665,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/hash-chain.stress.spec.ts",
       "directory": "packages/database/tests/hash-chain.stress.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/hash-chain.stress.spec.ts",
@@ -2674,7 +2678,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
       "directory": "apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts",
@@ -2687,7 +2691,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
       "directory": "apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/auth-claim-concurrency.spec.ts",
@@ -2700,7 +2704,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/shared",
       "directory": "packages/shared",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/shared/CHANGELOG.md",
@@ -2765,7 +2769,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/auth-claim.spec.ts",
       "directory": "apps/admin-dashboard/tests/auth-claim.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/auth-claim.spec.ts",
@@ -2778,7 +2782,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/auth-session.spec.ts",
       "directory": "apps/admin-dashboard/tests/auth-session.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/auth-session.spec.ts",
@@ -2791,7 +2795,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts",
       "directory": "apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/bot-features-tree-and-telegram-unification.spec.ts",
@@ -2804,7 +2808,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts",
       "directory": "apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/dashboard-auth-ast.spec.ts",
@@ -2817,7 +2821,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts",
       "directory": "apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/dashboard-auth-r1-remediation.spec.ts",
@@ -2830,7 +2834,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-intelligence.spec.ts",
       "directory": "apps/admin-dashboard/tests/dashboard-intelligence.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/dashboard-intelligence.spec.ts",
@@ -2843,7 +2847,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/dashboard-preferences.spec.ts",
       "directory": "apps/admin-dashboard/tests/dashboard-preferences.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/dashboard-preferences.spec.ts",
@@ -2856,7 +2860,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/data-fetchers.spec.ts",
       "directory": "apps/admin-dashboard/tests/data-fetchers.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/data-fetchers.spec.ts",
@@ -2869,7 +2873,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/error-boundaries.spec.ts",
       "directory": "apps/admin-dashboard/tests/error-boundaries.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/error-boundaries.spec.ts",
@@ -2882,7 +2886,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts",
       "directory": "apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/legacy-auth-elimination.spec.ts",
@@ -2895,7 +2899,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/middleware-session-guard.spec.ts",
       "directory": "apps/admin-dashboard/tests/middleware-session-guard.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/middleware-session-guard.spec.ts",
@@ -2908,7 +2912,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/approvals-treasury.spec.ts",
       "directory": "apps/admin-dashboard/tests/approvals-treasury.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/approvals-treasury.spec.ts",
@@ -2921,7 +2925,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts",
       "directory": "apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/docs-portal-cockpit.spec.ts",
@@ -2934,7 +2938,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/health-route.spec.ts",
       "directory": "apps/admin-dashboard/tests/health-route.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/health-route.spec.ts",
@@ -2947,7 +2951,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/middleware-trace.spec.ts",
       "directory": "apps/admin-dashboard/tests/middleware-trace.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/middleware-trace.spec.ts",
@@ -2960,7 +2964,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
       "directory": "apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/parity/approvals-security-guard.spec.ts",
@@ -2973,7 +2977,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts",
       "directory": "apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/parity/settings-and-delegations-parity.spec.ts",
@@ -2986,7 +2990,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/parity/workforce-parity.spec.ts",
       "directory": "apps/admin-dashboard/tests/parity/workforce-parity.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/parity/workforce-parity.spec.ts",
@@ -2999,7 +3003,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts",
       "directory": "apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/permissions-matrix-and-telegram-groups.spec.ts",
@@ -3012,7 +3016,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts",
       "directory": "apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/pillar-4-cybersecurity-and-skeletons.spec.ts",
@@ -3025,7 +3029,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts",
       "directory": "apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/prisma-studio-rbac.spec.ts",
@@ -3038,7 +3042,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/rbac.spec.ts",
       "directory": "apps/admin-dashboard/tests/rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/rbac.spec.ts",
@@ -3051,7 +3055,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/role-overview.spec.ts",
       "directory": "apps/admin-dashboard/tests/role-overview.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/role-overview.spec.ts",
@@ -3064,7 +3068,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/screen-responsiveness.spec.ts",
       "directory": "apps/admin-dashboard/tests/screen-responsiveness.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/screen-responsiveness.spec.ts",
@@ -3077,7 +3081,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/secure-export.spec.ts",
       "directory": "apps/admin-dashboard/tests/secure-export.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/secure-export.spec.ts",
@@ -3090,7 +3094,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/sidebar-nav.spec.ts",
       "directory": "apps/admin-dashboard/tests/sidebar-nav.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/sidebar-nav.spec.ts",
@@ -3103,7 +3107,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/workforce-evaluations.spec.ts",
       "directory": "apps/admin-dashboard/tests/workforce-evaluations.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/workforce-evaluations.spec.ts",
@@ -3116,7 +3120,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
       "directory": "apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/workforce-onboarding.spec.ts",
@@ -3129,7 +3133,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/adversarial-dashboard-access.spec.ts",
       "directory": "apps/bot-server/tests/adversarial-dashboard-access.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/adversarial-dashboard-access.spec.ts",
@@ -3142,7 +3146,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/boost-handler.spec.ts",
       "directory": "apps/bot-server/tests/boost-handler.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/boost-handler.spec.ts",
@@ -3155,7 +3159,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts",
       "directory": "apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts",
@@ -3168,7 +3172,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/coordinates.spec.ts",
       "directory": "apps/bot-server/tests/coordinates.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/coordinates.spec.ts",
@@ -3181,7 +3185,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/dashboard-command.spec.ts",
       "directory": "apps/bot-server/tests/dashboard-command.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/dashboard-command.spec.ts",
@@ -3194,7 +3198,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/env-validation.spec.ts",
       "directory": "apps/bot-server/tests/env-validation.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/env-validation.spec.ts",
@@ -3207,7 +3211,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
       "directory": "apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/error-vault-and-telemetry.spec.ts",
@@ -3220,7 +3224,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/fast-cache.benchmark.spec.ts",
       "directory": "apps/bot-server/tests/fast-cache.benchmark.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/fast-cache.benchmark.spec.ts",
@@ -3233,7 +3237,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/fast-cache.spec.ts",
       "directory": "apps/bot-server/tests/fast-cache.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/fast-cache.spec.ts",
@@ -3246,7 +3250,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/group-manager.spec.ts",
       "directory": "apps/bot-server/tests/group-manager.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/group-manager.spec.ts",
@@ -3259,7 +3263,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/hr-rbac-masking.spec.ts",
       "directory": "apps/bot-server/tests/hr-rbac-masking.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/hr-rbac-masking.spec.ts",
@@ -3272,7 +3276,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/main-menu.spec.ts",
       "directory": "apps/bot-server/tests/main-menu.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/main-menu.spec.ts",
@@ -3285,7 +3289,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/modules-registry-and-autoloader.spec.ts",
       "directory": "apps/bot-server/tests/modules-registry-and-autoloader.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/modules-registry-and-autoloader.spec.ts",
@@ -3298,7 +3302,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/outbox-circuit-breaker.spec.ts",
       "directory": "apps/bot-server/tests/outbox-circuit-breaker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/outbox-circuit-breaker.spec.ts",
@@ -3311,7 +3315,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/permanent-speed-engine.spec.ts",
       "directory": "apps/bot-server/tests/permanent-speed-engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/permanent-speed-engine.spec.ts",
@@ -3324,7 +3328,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/reply-bar.keyboard.spec.ts",
       "directory": "apps/bot-server/tests/reply-bar.keyboard.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/reply-bar.keyboard.spec.ts",
@@ -3337,7 +3341,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
       "directory": "apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/screen-flow-and-hr-directory.spec.ts",
@@ -3350,7 +3354,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/security-hardening-r07-r09.spec.ts",
       "directory": "apps/bot-server/tests/security-hardening-r07-r09.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/security-hardening-r07-r09.spec.ts",
@@ -3363,7 +3367,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/session-monitor.spec.ts",
       "directory": "apps/bot-server/tests/session-monitor.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/session-monitor.spec.ts",
@@ -3376,7 +3380,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/site-scope.spec.ts",
       "directory": "apps/bot-server/tests/site-scope.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/site-scope.spec.ts",
@@ -3389,7 +3393,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T09:38:10.923Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3401,7 +3405,7 @@
         },
         {
           "path": "docker/Dockerfile",
-          "sha256": "1b462f6fc3419dba85d06322ed03b6a38b17d5fcfa9afc64291594ca106cfa8b"
+          "sha256": "93b8f3a3d0d5ae24c267c8a864aafca50bec1999baaec995fea88f9fa79c5c56"
         },
         {
           "path": "docker/Dockerfile.dashboard",
@@ -3426,7 +3430,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/national-id-engine",
       "directory": "packages/national-id-engine",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/national-id-engine/CHANGELOG.md",
@@ -3463,7 +3467,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: extensions/[module]/[[...path]]",
       "directory": "apps/admin-dashboard/src/app/admin/extensions/[module]/[[...path]]",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/extensions/[module]/[[...path]]/page.tsx",
@@ -3476,7 +3480,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.1-corporate-profile (00.1)",
       "directory": "modules/settings/src/flows/00.1-corporate-profile",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/flow.contract.json",
@@ -3525,7 +3529,7 @@
       "type": "flow",
       "title": "تدفق البوت: فحص النبض والاستجابة (99.1)",
       "directory": "modules/sandbox/src/flows/99.1-sandbox-ping",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/sandbox/src/flows/99.1-sandbox-ping/action.handler.ts",
@@ -3570,7 +3574,7 @@
       "type": "flow",
       "title": "تدفق البوت: العمليات الحسابية والقناع المالي (99.2)",
       "directory": "modules/sandbox/src/flows/99.2-sandbox-calc",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/sandbox/src/flows/99.2-sandbox-calc/action.handler.ts",
@@ -3615,7 +3619,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/core-components",
       "directory": "packages/core-components",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/CHANGELOG.md",
@@ -3920,7 +3924,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: admin-dashboard",
       "directory": "apps/admin-dashboard",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/.gitignore",
@@ -4221,7 +4225,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: bot-server",
       "directory": "apps/bot-server",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/assets/images/logo.jpg",
@@ -4382,7 +4386,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: docs",
       "directory": "apps/docs",
-      "lockedAt": "2026-09-23T08:51:42.171Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/docs/astro.config.mjs",
@@ -4703,7 +4707,7 @@
       "type": "module",
       "title": "موديول المنظومة: sandbox",
       "directory": "modules/sandbox",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/sandbox/database/relations.contract.json",
@@ -4756,7 +4760,7 @@
       "type": "module",
       "title": "موديول المنظومة: settings",
       "directory": "modules/settings",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/CHANGELOG.md",
@@ -4813,108 +4817,8 @@
       "type": "module",
       "title": "موديول المنظومة: workforce",
       "directory": "modules/workforce",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789515711788_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789515744740_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789515799627_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789516128952_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789516157960_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789539384442_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789541390016_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789542102090_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789542120659_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789549524103_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789550174189_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789550487363_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789593451534_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789594190460_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789595083213_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789601293572_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789602206532_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789607490208_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789627444855_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789729460092_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789787495815_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789787973218_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/1789992000000_my_contract.pdf",
-          "sha256": "0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/OP-DRV-001_back.jpg",
-          "sha256": "90f7a4cbc9a938c5dfd9f0b90766a8fe3d8e8c27b89e86134570c77d5acf2d8f"
-        },
-        {
-          "path": "modules/workforce/attachments/workers/OP-DRV-001/OP-DRV-001_front.jpg",
-          "sha256": "5a152babf68ef59f2428b526dc30a2691f742f761ccb74c6eab216b21b8db0cd"
-        },
         {
           "path": "modules/workforce/CHANGELOG.md",
           "sha256": "155fecc4c35392d716d95cff144e6a4b1b4124119f89ff1aaf3d752a625cbb81"
@@ -5014,7 +4918,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/module-api-auth.spec.ts",
       "directory": "apps/admin-dashboard/tests/module-api-auth.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/module-api-auth.spec.ts",
@@ -5027,7 +4931,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/module-client-boundaries.spec.ts",
       "directory": "apps/admin-dashboard/tests/module-client-boundaries.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/module-client-boundaries.spec.ts",
@@ -5040,7 +4944,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/module-pages.spec.ts",
       "directory": "apps/admin-dashboard/tests/module-pages.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/module-pages.spec.ts",
@@ -5053,7 +4957,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/catalog-bot-integration.spec.ts",
       "directory": "apps/bot-server/tests/catalog-bot-integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/catalog-bot-integration.spec.ts",
@@ -5066,7 +4970,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/catalog-session-routing.spec.ts",
       "directory": "apps/bot-server/tests/catalog-session-routing.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/catalog-session-routing.spec.ts",
@@ -5079,7 +4983,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/telegram-enforcer-and-lifecycle.spec.ts",
       "directory": "apps/bot-server/tests/telegram-enforcer-and-lifecycle.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/telegram-enforcer-and-lifecycle.spec.ts",
@@ -5092,7 +4996,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/telemetry-sla.spec.ts",
       "directory": "apps/bot-server/tests/telemetry-sla.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/telemetry-sla.spec.ts",
@@ -5105,7 +5009,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/worker-ai-vision.spec.ts",
       "directory": "apps/bot-server/tests/worker-ai-vision.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/worker-ai-vision.spec.ts",
@@ -5118,7 +5022,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/worker-attachments-and-address.spec.ts",
       "directory": "apps/bot-server/tests/worker-attachments-and-address.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/worker-attachments-and-address.spec.ts",
@@ -5131,7 +5035,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/worker-edit-governance.spec.ts",
       "directory": "apps/bot-server/tests/worker-edit-governance.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/worker-edit-governance.spec.ts",
@@ -5144,7 +5048,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/worker-excel.spec.ts",
       "directory": "apps/bot-server/tests/worker-excel.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/worker-excel.spec.ts",
@@ -5157,7 +5061,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/worker-full-wizard.spec.ts",
       "directory": "apps/bot-server/tests/worker-full-wizard.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/worker-full-wizard.spec.ts",
@@ -5170,7 +5074,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/worker-id-types.spec.ts",
       "directory": "apps/bot-server/tests/worker-id-types.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/worker-id-types.spec.ts",
@@ -5183,7 +5087,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/bot-server/tests/worker-linking-approval.spec.ts",
       "directory": "apps/bot-server/tests/worker-linking-approval.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "apps/bot-server/tests/worker-linking-approval.spec.ts",
@@ -5196,7 +5100,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/sandbox/tests/autodiscovery-e2e.spec.ts",
       "directory": "modules/sandbox/tests/autodiscovery-e2e.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/sandbox/tests/autodiscovery-e2e.spec.ts",
@@ -5209,7 +5113,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
       "directory": "modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
@@ -5222,7 +5126,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts",
       "directory": "modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts",
@@ -5235,7 +5139,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/sandbox/tests/sandbox-module.spec.ts",
       "directory": "modules/sandbox/tests/sandbox-module.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/sandbox/tests/sandbox-module.spec.ts",
@@ -5248,7 +5152,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.1-corporate-profile/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.data.spec.ts",
@@ -5261,7 +5165,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.1-corporate-profile/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.integration.spec.ts",
@@ -5274,7 +5178,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.1-corporate-profile/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.rbac.spec.ts",
@@ -5287,7 +5191,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.1-corporate-profile/tests/flow.rich-message.spec.ts",
       "directory": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.rich-message.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.rich-message.spec.ts",
@@ -5300,7 +5204,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.1-corporate-profile/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.unit.spec.ts",
@@ -5313,7 +5217,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.1-corporate-profile/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/tests/flow.ux.spec.ts",
@@ -5326,7 +5230,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.10-notification-policies/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.10-notification-policies/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.10-notification-policies/tests/flow.data.spec.ts",
@@ -5339,7 +5243,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.10-notification-policies/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.10-notification-policies/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.10-notification-policies/tests/flow.integration.spec.ts",
@@ -5352,7 +5256,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.10-notification-policies/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.10-notification-policies/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.10-notification-policies/tests/flow.rbac.spec.ts",
@@ -5365,7 +5269,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.10-notification-policies/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.10-notification-policies/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.10-notification-policies/tests/flow.unit.spec.ts",
@@ -5378,7 +5282,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.10-notification-policies/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.10-notification-policies/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.10-notification-policies/tests/flow.ux.spec.ts",
@@ -5391,7 +5295,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.11-telegram-groups/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.data.spec.ts",
@@ -5404,7 +5308,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.11-telegram-groups/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.integration.spec.ts",
@@ -5417,7 +5321,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.11-telegram-groups/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.rbac.spec.ts",
@@ -5430,7 +5334,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.11-telegram-groups/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.unit.spec.ts",
@@ -5443,7 +5347,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.11-telegram-groups/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.11-telegram-groups/tests/flow.ux.spec.ts",
@@ -5456,7 +5360,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.12-user-rbac-management/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.data.spec.ts",
@@ -5469,7 +5373,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.12-user-rbac-management/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.integration.spec.ts",
@@ -5482,7 +5386,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.12-user-rbac-management/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.rbac.spec.ts",
@@ -5495,7 +5399,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.12-user-rbac-management/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.unit.spec.ts",
@@ -5508,7 +5412,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.12-user-rbac-management/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.ux.spec.ts",
@@ -5521,7 +5425,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.2-sites-hub/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.2-sites-hub/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.2-sites-hub/tests/flow.data.spec.ts",
@@ -5534,7 +5438,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.2-sites-hub/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.2-sites-hub/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.2-sites-hub/tests/flow.integration.spec.ts",
@@ -5547,7 +5451,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.2-sites-hub/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.2-sites-hub/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.2-sites-hub/tests/flow.rbac.spec.ts",
@@ -5560,7 +5464,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.2-sites-hub/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.2-sites-hub/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.2-sites-hub/tests/flow.unit.spec.ts",
@@ -5573,7 +5477,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.2-sites-hub/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.2-sites-hub/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.2-sites-hub/tests/flow.ux.spec.ts",
@@ -5586,7 +5490,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.3-job-matrix/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.3-job-matrix/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.3-job-matrix/tests/flow.data.spec.ts",
@@ -5599,7 +5503,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.3-job-matrix/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.3-job-matrix/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.3-job-matrix/tests/flow.integration.spec.ts",
@@ -5612,7 +5516,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.3-job-matrix/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.3-job-matrix/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.3-job-matrix/tests/flow.rbac.spec.ts",
@@ -5625,7 +5529,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.3-job-matrix/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.3-job-matrix/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.3-job-matrix/tests/flow.unit.spec.ts",
@@ -5638,7 +5542,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.3-job-matrix/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.3-job-matrix/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.3-job-matrix/tests/flow.ux.spec.ts",
@@ -5651,7 +5555,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.4-admin-profile/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.4-admin-profile/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.4-admin-profile/tests/flow.data.spec.ts",
@@ -5664,7 +5568,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.4-admin-profile/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.4-admin-profile/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.4-admin-profile/tests/flow.integration.spec.ts",
@@ -5677,7 +5581,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.4-admin-profile/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.4-admin-profile/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.4-admin-profile/tests/flow.rbac.spec.ts",
@@ -5690,7 +5594,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.4-admin-profile/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.4-admin-profile/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.4-admin-profile/tests/flow.unit.spec.ts",
@@ -5703,7 +5607,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.4-admin-profile/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.4-admin-profile/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.4-admin-profile/tests/flow.ux.spec.ts",
@@ -5716,7 +5620,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.5-admin-assignment/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.data.spec.ts",
@@ -5729,7 +5633,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.5-admin-assignment/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.integration.spec.ts",
@@ -5742,7 +5646,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.5-admin-assignment/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.rbac.spec.ts",
@@ -5755,7 +5659,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.5-admin-assignment/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.unit.spec.ts",
@@ -5768,7 +5672,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.5-admin-assignment/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.5-admin-assignment/tests/flow.ux.spec.ts",
@@ -5781,7 +5685,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.6-ghost-mode/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.data.spec.ts",
@@ -5794,7 +5698,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.6-ghost-mode/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.integration.spec.ts",
@@ -5807,7 +5711,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.6-ghost-mode/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.rbac.spec.ts",
@@ -5820,7 +5724,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.6-ghost-mode/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.unit.spec.ts",
@@ -5833,7 +5737,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.6-ghost-mode/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.6-ghost-mode/tests/flow.ux.spec.ts",
@@ -5846,7 +5750,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.data.spec.ts",
@@ -5859,7 +5763,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.integration.spec.ts",
@@ -5872,7 +5776,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.rbac.spec.ts",
@@ -5885,7 +5789,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.unit.spec.ts",
@@ -5898,7 +5802,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.ux.spec.ts",
@@ -5911,7 +5815,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.8-apm-telemetry/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.data.spec.ts",
@@ -5924,7 +5828,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.8-apm-telemetry/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.integration.spec.ts",
@@ -5937,7 +5841,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.8-apm-telemetry/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.rbac.spec.ts",
@@ -5950,7 +5854,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.8-apm-telemetry/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.unit.spec.ts",
@@ -5963,7 +5867,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.8-apm-telemetry/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.ux.spec.ts",
@@ -5976,7 +5880,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.9-emergency-cache/tests/flow.data.spec.ts",
       "directory": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.data.spec.ts",
@@ -5989,7 +5893,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.9-emergency-cache/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.integration.spec.ts",
@@ -6002,7 +5906,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.9-emergency-cache/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.rbac.spec.ts",
@@ -6015,7 +5919,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.9-emergency-cache/tests/flow.unit.spec.ts",
       "directory": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.unit.spec.ts",
@@ -6028,7 +5932,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.9-emergency-cache/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.9-emergency-cache/tests/flow.ux.spec.ts",
@@ -6041,7 +5945,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
@@ -6054,7 +5958,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
@@ -6067,7 +5971,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.1-worker-registration/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.rbac.spec.ts",
@@ -6080,7 +5984,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.1-worker-registration/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.unit.spec.ts",
@@ -6093,7 +5997,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
@@ -6106,7 +6010,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.data.spec.ts",
@@ -6119,7 +6023,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.draft-store.spec.ts",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.draft-store.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.draft-store.spec.ts",
@@ -6132,7 +6036,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts",
@@ -6145,7 +6049,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.rbac.spec.ts",
@@ -6158,7 +6062,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.unit.spec.ts",
@@ -6171,7 +6075,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.ux.spec.ts",
@@ -6184,7 +6088,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.4-worker-export/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.4-worker-export/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.4-worker-export/tests/flow.data.spec.ts",
@@ -6197,7 +6101,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.4-worker-export/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.4-worker-export/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.4-worker-export/tests/flow.integration.spec.ts",
@@ -6210,7 +6114,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.4-worker-export/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.4-worker-export/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.4-worker-export/tests/flow.rbac.spec.ts",
@@ -6223,7 +6127,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.4-worker-export/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.4-worker-export/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.4-worker-export/tests/flow.unit.spec.ts",
@@ -6236,7 +6140,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.4-worker-export/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.4-worker-export/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.4-worker-export/tests/flow.ux.spec.ts",
@@ -6249,7 +6153,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.5-worker-directory/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.data.spec.ts",
@@ -6262,7 +6166,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts",
       "directory": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts",
@@ -6275,7 +6179,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.5-worker-directory/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.integration.spec.ts",
@@ -6288,7 +6192,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.5-worker-directory/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.rbac.spec.ts",
@@ -6301,7 +6205,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.5-worker-directory/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.unit.spec.ts",
@@ -6314,7 +6218,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.5-worker-directory/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.5-worker-directory/tests/flow.ux.spec.ts",
@@ -6327,7 +6231,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.data.spec.ts",
@@ -6340,7 +6244,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts",
@@ -6353,7 +6257,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.rbac.spec.ts",
@@ -6366,7 +6270,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.unit.spec.ts",
@@ -6379,7 +6283,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.ux.spec.ts",
@@ -6392,7 +6296,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.data.spec.ts",
@@ -6405,7 +6309,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
@@ -6418,7 +6322,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.rbac.spec.ts",
@@ -6431,7 +6335,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.unit.spec.ts",
@@ -6444,7 +6348,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.ux.spec.ts",
@@ -6457,7 +6361,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2-sanitization.stress.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2-sanitization.stress.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2-sanitization.stress.spec.ts",
@@ -6470,7 +6374,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts",
@@ -6483,7 +6387,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.data.spec.ts",
@@ -6496,7 +6400,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.integration.spec.ts",
@@ -6509,7 +6413,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.rbac.spec.ts",
@@ -6522,7 +6426,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
@@ -6535,7 +6439,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.service.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.service.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.service.spec.ts",
@@ -6548,7 +6452,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.unit.spec.ts",
@@ -6561,7 +6465,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.ux.spec.ts",
@@ -6574,7 +6478,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.data.spec.ts",
       "directory": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.data.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.data.spec.ts",
@@ -6587,7 +6491,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.integration.spec.ts",
       "directory": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.integration.spec.ts",
@@ -6600,7 +6504,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.rbac.spec.ts",
       "directory": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.rbac.spec.ts",
@@ -6613,7 +6517,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts",
       "directory": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts",
@@ -6626,7 +6530,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.ux.spec.ts",
       "directory": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.ux.spec.ts",
@@ -6639,7 +6543,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/ai-vision-engine/tests/engine.spec.ts",
       "directory": "packages/ai-vision-engine/tests/engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/ai-vision-engine/tests/engine.spec.ts",
@@ -6652,7 +6556,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/amount-picker.spec.ts",
       "directory": "packages/core-components/tests/amount-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/amount-picker.spec.ts",
@@ -6665,7 +6569,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/approval-workflow.spec.ts",
       "directory": "packages/core-components/tests/approval-workflow.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/approval-workflow.spec.ts",
@@ -6678,7 +6582,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/attachment-pipeline.spec.ts",
       "directory": "packages/core-components/tests/attachment-pipeline.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/attachment-pipeline.spec.ts",
@@ -6691,7 +6595,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/bot-catalog.spec.ts",
       "directory": "packages/core-components/tests/bot-catalog.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/bot-catalog.spec.ts",
@@ -6704,7 +6608,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/branded-types.spec.ts",
       "directory": "packages/core-components/tests/branded-types.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/branded-types.spec.ts",
@@ -6717,7 +6621,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/clearing-engine.spec.ts",
       "directory": "packages/core-components/tests/clearing-engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/clearing-engine.spec.ts",
@@ -6730,7 +6634,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/completion-card.spec.ts",
       "directory": "packages/core-components/tests/completion-card.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/completion-card.spec.ts",
@@ -6743,7 +6647,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/custody-gate.spec.ts",
       "directory": "packages/core-components/tests/custody-gate.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/custody-gate.spec.ts",
@@ -6756,7 +6660,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/date-picker.spec.ts",
       "directory": "packages/core-components/tests/date-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/date-picker.spec.ts",
@@ -6769,7 +6673,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/governorate-picker.spec.ts",
       "directory": "packages/core-components/tests/governorate-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/governorate-picker.spec.ts",
@@ -6782,7 +6686,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/in-place-flow.spec.ts",
       "directory": "packages/core-components/tests/in-place-flow.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/in-place-flow.spec.ts",
@@ -6795,7 +6699,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/installment-engine.spec.ts",
       "directory": "packages/core-components/tests/installment-engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/installment-engine.spec.ts",
@@ -6808,7 +6712,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/location-picker.spec.ts",
       "directory": "packages/core-components/tests/location-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/location-picker.spec.ts",
@@ -6821,7 +6725,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/module-v2-contract.spec.ts",
       "directory": "packages/core-components/tests/module-v2-contract.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/module-v2-contract.spec.ts",
@@ -6834,7 +6738,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/notification-engine.spec.ts",
       "directory": "packages/core-components/tests/notification-engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/notification-engine.spec.ts",
@@ -6847,7 +6751,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/notification-helper.spec.ts",
       "directory": "packages/core-components/tests/notification-helper.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/notification-helper.spec.ts",
@@ -6860,7 +6764,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/outbox-queue.spec.ts",
       "directory": "packages/core-components/tests/outbox-queue.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/outbox-queue.spec.ts",
@@ -6873,7 +6777,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/purchase-picker.spec.ts",
       "directory": "packages/core-components/tests/purchase-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/purchase-picker.spec.ts",
@@ -6886,7 +6790,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/quantity-picker.spec.ts",
       "directory": "packages/core-components/tests/quantity-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/quantity-picker.spec.ts",
@@ -6899,7 +6803,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/rich-message-builders.spec.ts",
       "directory": "packages/core-components/tests/rich-message-builders.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/rich-message-builders.spec.ts",
@@ -6912,7 +6816,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/shift-accrual.spec.ts",
       "directory": "packages/core-components/tests/shift-accrual.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/shift-accrual.spec.ts",
@@ -6925,7 +6829,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/source-picker.spec.ts",
       "directory": "packages/core-components/tests/source-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/source-picker.spec.ts",
@@ -6938,7 +6842,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/sovereign-auto-loader.spec.ts",
       "directory": "packages/core-components/tests/sovereign-auto-loader.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/sovereign-auto-loader.spec.ts",
@@ -6951,7 +6855,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/telegram-formatters.spec.ts",
       "directory": "packages/core-components/tests/telegram-formatters.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/telegram-formatters.spec.ts",
@@ -6964,7 +6868,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/topic-router.spec.ts",
       "directory": "packages/core-components/tests/topic-router.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/topic-router.spec.ts",
@@ -6977,7 +6881,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/wizard-session.spec.ts",
       "directory": "packages/core-components/tests/wizard-session.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/wizard-session.spec.ts",
@@ -6990,7 +6894,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/worker-commitment-engine.spec.ts",
       "directory": "packages/core-components/tests/worker-commitment-engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/worker-commitment-engine.spec.ts",
@@ -7003,7 +6907,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/core-components/tests/worker-picker.spec.ts",
       "directory": "packages/core-components/tests/worker-picker.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/core-components/tests/worker-picker.spec.ts",
@@ -7016,7 +6920,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/adversarial-m2-audit.spec.ts",
       "directory": "packages/database/tests/adversarial-m2-audit.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/adversarial-m2-audit.spec.ts",
@@ -7029,7 +6933,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/custody-transaction.repository.spec.ts",
       "directory": "packages/database/tests/custody-transaction.repository.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/custody-transaction.repository.spec.ts",
@@ -7042,7 +6946,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/hash-chain.spec.ts",
       "directory": "packages/database/tests/hash-chain.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/hash-chain.spec.ts",
@@ -7055,7 +6959,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/hash-ledger.extension.spec.ts",
       "directory": "packages/database/tests/hash-ledger.extension.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/hash-ledger.extension.spec.ts",
@@ -7068,7 +6972,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/hmac-keyring.spec.ts",
       "directory": "packages/database/tests/hmac-keyring.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/hmac-keyring.spec.ts",
@@ -7081,7 +6985,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/migration-rbac-and-sessions.spec.ts",
       "directory": "packages/database/tests/migration-rbac-and-sessions.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/migration-rbac-and-sessions.spec.ts",
@@ -7094,7 +6998,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/migration-trace-and-magic-claim.spec.ts",
       "directory": "packages/database/tests/migration-trace-and-magic-claim.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/migration-trace-and-magic-claim.spec.ts",
@@ -7107,7 +7011,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/milestone-1-schema-contract.spec.ts",
       "directory": "packages/database/tests/milestone-1-schema-contract.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/milestone-1-schema-contract.spec.ts",
@@ -7120,7 +7024,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/security.spec.ts",
       "directory": "packages/database/tests/security.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/security.spec.ts",
@@ -7133,7 +7037,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/soft-delete.spec.ts",
       "directory": "packages/database/tests/soft-delete.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/soft-delete.spec.ts",
@@ -7146,7 +7050,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/transactional-rls.spec.ts",
       "directory": "packages/database/tests/transactional-rls.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/transactional-rls.spec.ts",
@@ -7159,7 +7063,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/database/tests/verify-ledger-chain.spec.ts",
       "directory": "packages/database/tests/verify-ledger-chain.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/tests/verify-ledger-chain.spec.ts",
@@ -7172,7 +7076,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/national-id-engine/tests/national-id.spec.ts",
       "directory": "packages/national-id-engine/tests/national-id.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/national-id-engine/tests/national-id.spec.ts",
@@ -7185,7 +7089,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/rbac/tests/cascading-rbac.spec.ts",
       "directory": "packages/rbac/tests/cascading-rbac.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/rbac/tests/cascading-rbac.spec.ts",
@@ -7198,7 +7102,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/rbac/tests/dashboard-auth.spec.ts",
       "directory": "packages/rbac/tests/dashboard-auth.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/rbac/tests/dashboard-auth.spec.ts",
@@ -7211,7 +7115,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/regional-engine/tests/names.spec.ts",
       "directory": "packages/regional-engine/tests/names.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/regional-engine/tests/names.spec.ts",
@@ -7224,7 +7128,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/regional-engine/tests/regional.spec.ts",
       "directory": "packages/regional-engine/tests/regional.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/regional-engine/tests/regional.spec.ts",
@@ -7237,7 +7141,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/shared/tests/shared.spec.ts",
       "directory": "packages/shared/tests/shared.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/shared/tests/shared.spec.ts",
@@ -7250,7 +7154,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/telemetry/tests/adapters.spec.ts",
       "directory": "packages/telemetry/tests/adapters.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/tests/adapters.spec.ts",
@@ -7263,7 +7167,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/telemetry/tests/challenger-m1-2.stress.spec.ts",
       "directory": "packages/telemetry/tests/challenger-m1-2.stress.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/tests/challenger-m1-2.stress.spec.ts",
@@ -7276,7 +7180,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/telemetry/tests/context.spec.ts",
       "directory": "packages/telemetry/tests/context.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/tests/context.spec.ts",
@@ -7289,7 +7193,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/telemetry/tests/empirical-challenger-m1-r2.spec.ts",
       "directory": "packages/telemetry/tests/empirical-challenger-m1-r2.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/tests/empirical-challenger-m1-r2.spec.ts",
@@ -7302,7 +7206,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/telemetry/tests/incidents.spec.ts",
       "directory": "packages/telemetry/tests/incidents.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/tests/incidents.spec.ts",
@@ -7315,7 +7219,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/telemetry/tests/logger.spec.ts",
       "directory": "packages/telemetry/tests/logger.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/tests/logger.spec.ts",
@@ -7328,7 +7232,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: packages/telemetry/tests/redaction.spec.ts",
       "directory": "packages/telemetry/tests/redaction.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/telemetry/tests/redaction.spec.ts",
@@ -7341,7 +7245,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/agent-dispatcher.spec.ts",
       "directory": "tools/governance/tests/agent-dispatcher.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/agent-dispatcher.spec.ts",
@@ -7354,7 +7258,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/codex-transcript-provenance.spec.ts",
       "directory": "tools/governance/tests/codex-transcript-provenance.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/codex-transcript-provenance.spec.ts",
@@ -7367,7 +7271,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/core-immutability.spec.ts",
       "directory": "tools/governance/tests/core-immutability.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/core-immutability.spec.ts",
@@ -7380,7 +7284,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/governance-verifiers.spec.ts",
       "directory": "tools/governance/tests/governance-verifiers.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/governance-verifiers.spec.ts",
@@ -7393,7 +7297,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/jev-auditor.spec.ts",
       "directory": "tools/governance/tests/jev-auditor.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/jev-auditor.spec.ts",
@@ -7406,7 +7310,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/legacy-parity-verifier.spec.ts",
       "directory": "tools/governance/tests/legacy-parity-verifier.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/legacy-parity-verifier.spec.ts",
@@ -7419,7 +7323,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/module-boundaries.spec.ts",
       "directory": "tools/governance/tests/module-boundaries.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/module-boundaries.spec.ts",
@@ -7432,7 +7336,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/pre-commit-test-guard.spec.ts",
       "directory": "tools/governance/tests/pre-commit-test-guard.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/pre-commit-test-guard.spec.ts",
@@ -7445,7 +7349,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/rag-engine.spec.ts",
       "directory": "tools/governance/tests/rag-engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/rag-engine.spec.ts",
@@ -7458,7 +7362,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/saleh-audit-suite.spec.ts",
       "directory": "tools/governance/tests/saleh-audit-suite.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/saleh-audit-suite.spec.ts",
@@ -7471,7 +7375,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/test-constitutional-sentinel.spec.ts",
       "directory": "tools/governance/tests/test-constitutional-sentinel.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/test-constitutional-sentinel.spec.ts",
@@ -7484,7 +7388,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
       "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-23T09:38:10.214Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/unified-lock-engine.spec.ts",
@@ -7497,7 +7401,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/unlock-challenge-engine.spec.ts",
       "directory": "tools/governance/tests/unlock-challenge-engine.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/unlock-challenge-engine.spec.ts",
@@ -7510,7 +7414,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-boundary-deserialization.spec.ts",
       "directory": "tools/governance/tests/verify-boundary-deserialization.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-boundary-deserialization.spec.ts",
@@ -7523,7 +7427,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-code-security.spec.ts",
       "directory": "tools/governance/tests/verify-code-security.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-code-security.spec.ts",
@@ -7536,7 +7440,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-financial-integrity.spec.ts",
       "directory": "tools/governance/tests/verify-financial-integrity.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-financial-integrity.spec.ts",
@@ -7549,7 +7453,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-git-hygiene.spec.ts",
       "directory": "tools/governance/tests/verify-git-hygiene.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-git-hygiene.spec.ts",
@@ -7562,7 +7466,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-latency-anti-patterns.spec.ts",
       "directory": "tools/governance/tests/verify-latency-anti-patterns.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-latency-anti-patterns.spec.ts",
@@ -7575,7 +7479,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-performance-budget.spec.ts",
       "directory": "tools/governance/tests/verify-performance-budget.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-performance-budget.spec.ts",
@@ -7588,7 +7492,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-rbac-invariants.spec.ts",
       "directory": "tools/governance/tests/verify-rbac-invariants.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-rbac-invariants.spec.ts",
@@ -7601,7 +7505,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-secret-leakage.spec.ts",
       "directory": "tools/governance/tests/verify-secret-leakage.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-secret-leakage.spec.ts",
@@ -7614,7 +7518,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-test-authenticity.spec.ts",
       "directory": "tools/governance/tests/verify-test-authenticity.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-test-authenticity.spec.ts",
@@ -7627,7 +7531,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/catalog-boundaries.spec.ts",
       "directory": "tools/modules/tests/catalog-boundaries.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/catalog-boundaries.spec.ts",
@@ -7640,7 +7544,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/catalog-determinism.spec.ts",
       "directory": "tools/modules/tests/catalog-determinism.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/catalog-determinism.spec.ts",
@@ -7653,7 +7557,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/catalog.spec.ts",
       "directory": "tools/modules/tests/catalog.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/catalog.spec.ts",
@@ -7666,7 +7570,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/database-composition.spec.ts",
       "directory": "tools/modules/tests/database-composition.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/database-composition.spec.ts",
@@ -7679,7 +7583,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/existing-modules-parity.spec.ts",
       "directory": "tools/modules/tests/existing-modules-parity.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/existing-modules-parity.spec.ts",
@@ -7692,7 +7596,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/migration-concurrency.spec.ts",
       "directory": "tools/modules/tests/migration-concurrency.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/migration-concurrency.spec.ts",
@@ -7705,7 +7609,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/migration-upgrade.spec.ts",
       "directory": "tools/modules/tests/migration-upgrade.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/migration-upgrade.spec.ts",
@@ -7718,7 +7622,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/module-onboarding.e2e.spec.ts",
       "directory": "tools/modules/tests/module-onboarding.e2e.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/module-onboarding.e2e.spec.ts",
@@ -7731,7 +7635,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/modules/tests/release-artifact.spec.ts",
       "directory": "tools/modules/tests/release-artifact.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/modules/tests/release-artifact.spec.ts",
@@ -7744,7 +7648,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/scaffold/tests/flow-v2-scaffold.spec.ts",
       "directory": "tools/scaffold/tests/flow-v2-scaffold.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/scaffold/tests/flow-v2-scaffold.spec.ts",
@@ -7757,7 +7661,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/scaffold/tests/module-v2-scaffold.spec.ts",
       "directory": "tools/scaffold/tests/module-v2-scaffold.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/scaffold/tests/module-v2-scaffold.spec.ts",
@@ -7770,7 +7674,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/scaffold/tests/scaffold-write-scope.spec.ts",
       "directory": "tools/scaffold/tests/scaffold-write-scope.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/scaffold/tests/scaffold-write-scope.spec.ts",
@@ -7783,7 +7687,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/database",
       "directory": "packages/database",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "packages/database/CHANGELOG.md",
@@ -7932,11 +7836,24 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-incidents.spec.ts",
       "directory": "tools/governance/tests/verify-incidents.spec.ts",
-      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-incidents.spec.ts",
           "sha256": "c37fe8ea7e76724af377044a8aa6974c85f7054bd7f5250a566809624992edf0"
+        }
+      ]
+    },
+    "test:tools/governance/tests/ci-lock-attachments-exclusion.spec.ts": {
+      "id": "test:tools/governance/tests/ci-lock-attachments-exclusion.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/ci-lock-attachments-exclusion.spec.ts",
+      "directory": "tools/governance/tests/ci-lock-attachments-exclusion.spec.ts",
+      "lockedAt": "2026-09-23T11:01:52.476Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/ci-lock-attachments-exclusion.spec.ts",
+          "sha256": "4991034d73246cbbeabba9d62c2e4415a78c28b6fca6b6f995a3887ec0b935b8"
         }
       ]
     }

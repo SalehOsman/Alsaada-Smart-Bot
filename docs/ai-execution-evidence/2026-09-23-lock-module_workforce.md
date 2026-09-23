@@ -1,42 +1,17 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (module:workforce)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T08:30:11.969Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:01:52.476Z)
 - **معرف الكيان:** `module:workforce`
 - **نوع الكيان:** `module`
 - **العنوان:** موديول المنظومة: workforce
 - **المسار الأساسي:** `modules/workforce`
-- **عدد الملفات المقفلة:** 48 ملفاً
+- **عدد الملفات المقفلة:** 23 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789515711788_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789515744740_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789515799627_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789516128952_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789516157960_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789539384442_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789541390016_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789542102090_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789542120659_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789549524103_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789550174189_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789550487363_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789593451534_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789594190460_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789595083213_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789601293572_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789602206532_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789607490208_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789627444855_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789729460092_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789787495815_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789787973218_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/1789992000000_my_contract.pdf` | `0172eb74bd5c2bab64c3542149f84a55fcad9e766e0b45be011acd451c68d10b` |
-| `modules/workforce/attachments/workers/OP-DRV-001/OP-DRV-001_back.jpg` | `90f7a4cbc9a938c5dfd9f0b90766a8fe3d8e8c27b89e86134570c77d5acf2d8f` |
-| `modules/workforce/attachments/workers/OP-DRV-001/OP-DRV-001_front.jpg` | `5a152babf68ef59f2428b526dc30a2691f742f761ccb74c6eab216b21b8db0cd` |
 | `modules/workforce/CHANGELOG.md` | `155fecc4c35392d716d95cff144e6a4b1b4124119f89ff1aaf3d752a625cbb81` |
 | `modules/workforce/index.ts` | `31d05deea3ee1778f4feaed2d07e432a9599ec37d2abeea0e4d1a248199f45c0` |
 | `modules/workforce/module.contract.json` | `a3c2371d8ddc0f2e972e5ffe47e42f02a798d9ed9a07d505a5a40e5855b95b78` |

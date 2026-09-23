@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T08:30:11.969Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:01:52.476Z)
 - **معرف الكيان:** `test:apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: apps/admin-dashboard/tests/adversarial-route-role-session.spec.ts
