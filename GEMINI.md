@@ -109,6 +109,14 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 2. **السياق التشخيصي المقيد (`BoundedFlowContext`):** يُحظر تمرير `ctx?: unknown` إلى معالجات الأخطاء؛ يجب الالتزام بعقد `BoundedFlowContext` والمهلة القصوى غير المعطلة (`1500ms`) مع التراجع التلقائي إلى `writeEmergencyIncident`.
 3. **بوابة الفحص النحوي العميق (Gate G9 AST Sentinel):** يفحص `pnpm observability:verify` شجرة الـ AST عبر TypeScript Compiler API لإسقاط أي كتلة `catch` تبتلع الأخطاء صامتاً، أو دوال صورية غير مستوردة من `@alsaada/telemetry`، أو استدعاءات `captureFlowError` / `handle*Error` غير مسبوقة بـ `await`.
 
+### 8.4 ميثاق المستشار السيادي الدائم للمهارات والخطط (/jev × /saleh) والرسم البياني المعرفي (Work Plan 96)
+1. **الرسم البياني المعرفي السيادي الموحد (.agents/knowledge/sovereign-skill-graph.json):**
+   يمثل الرسم البياني المعرفي المرجع الرقمي الإلزامي لكافة مهارات المشروع الـ 11 (`.agents/skills/`)، ويربط كل نقطة مهارة بكتيبات القواعد الـ 12 (`Rulebooks 01–12`) وخطط العمل (`WP 88–96`) وبوابات الجودة الـ 23 (`G1–G23`)؛ ويُحظر وجود أي مهارة يتيمة، ويتم التحقق منه دورياً عبر `pnpm skills:verify`.
+2. **بروتوكول الاستشارة الثلاثية الإلزامي (The Triple-Checkpoint JEV Consultation Loop):**
+   - **الاستشارة القبلية (Pre-Task Plan Readiness):** قبل الشروع في كتابة أي كود أو اعتماد خطة، يستشير الوكيل محرك JEV عبر `pnpm jev:consult --plan <path>`؛ ويُحظر البدء بأي خطة يقل مؤشر جاهزيتها عن 90% (`Plan Readiness < 90%`).
+   - **التوجيه المرافق (Mid-Task Diff Sentinel):** تشغيل `pnpm jev --diff` للتحقق اللحظي من ميزانية الأزرار (36/16/7/3)، واستدعاءات captureFlowError، وعقود RichMessage.
+   - **التفتيش الجنائي الختامي (Post-Task Boosted Audit):** تشغيل `pnpm audit:saleh:boost` لحساب مؤشر CGI v2.0 عبر الأبعاد الـ 10؛ ويُمنع دمج أي فرع لا يحقق CGI >= 90%.
+
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.
 2. **Zod Runtime Deserialization:** Zero untyped `JSON.parse` across boundaries.
