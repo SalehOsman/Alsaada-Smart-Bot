@@ -48,3 +48,18 @@ To guarantee zero data loss, high concurrency safety, and deterministic producti
 
 1. **Correlation IDs:** Every incoming bot update or API request must be assigned a unique `traceId` / `correlationId` carried across log contexts, queue messages, and error responses.
 2. **Sub-300ms Budget (G6):** All bot command responses must complete and send a reply within 300ms. Heavy computations must be offloaded to worker queues.
+
+---
+
+## 4. Universal Flow Error Telemetry & Gate G9 AST Enforcement (`NEW-91`)
+
+1. **Single Point of Responsibility at Flow Boundary:**
+   - Only `controller.ts` and `error.handler.ts` at the flow boundary may invoke `await captureFlowError(error, boundedContext)` from `@alsaada/telemetry` and format the user error card containing `#ERR-XXXXXXXX`.
+   - Inner domain layers (`service.ts`, `repository.ts`, `validator.ts`) are strictly forbidden from calling `captureFlowError` or `ErrorVaultService.recordError`; they must throw or re-throw exceptions upward.
+   - `bot.catch` acts strictly as the outer safety net for unhandled framework escapes, preventing double-recording.
+2. **Bounded Diagnostics & Non-Blocking Persistence:**
+   - Flow error handlers must accept `BoundedFlowContext` (`flowId`, `moduleId`, `action`, `traceId`, `actorTelegramId`, `actorRole`, `metadata`); untyped `ctx?: unknown` parameters are prohibited by Gate G1 & Gate G9.
+   - Incident persistence via `IncidentSink` enforces a hard `1500ms` timeout and falls back deterministically to `writeEmergencyIncident` (`status: 'persisted' | 'emergency' | 'failed'`), while Super Admin Telegram alerts dispatch asynchronously in the background.
+3. **Deep TypeScript AST Gate G9 (`pnpm observability:verify`):**
+   - Inspects the TypeScript AST to reject empty/comment-only `catch` blocks, un-awaited `captureFlowError` or `handle*Error` calls, and local shadow declarations not imported from `@alsaada/telemetry`.
+

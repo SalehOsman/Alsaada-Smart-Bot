@@ -106,6 +106,8 @@ export function scaffoldModuleV2(options: ScaffoldModuleV2Options): ScaffoldModu
       '@alsaada/core-components': 'workspace:*',
       '@alsaada/database': 'workspace:*',
       '@alsaada/shared': 'workspace:*',
+      '@alsaada/telemetry': 'workspace:*',
+      zod: '^4.3.6',
     },
     devDependencies: {
       typescript: '^5.9.3',

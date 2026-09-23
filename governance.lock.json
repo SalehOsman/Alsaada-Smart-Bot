@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T11:01:50.762Z",
+  "generatedAt": "2026-09-23T11:25:28.240Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -65,7 +65,7 @@
     },
     {
       "path": ".agents/rules/09-enterprise-reliability-and-telemetry.md",
-      "sha256": "cb976e07d793583a2ef80154fddc95bad93ee84e7d50f42343139f648f614579"
+      "sha256": "8d3047ab99db00328ac6f29faca62ec6cbde20c08225dde6f878a6c80b820cea"
     },
     {
       "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
@@ -257,11 +257,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "6d9d3e7f9a6bdc86e4ab333b32920af2a9668c581be76d1591d00d5fdff71f52"
+      "sha256": "a2e59d2b63718ab8510f8216800006026d2265e09bfff4d8a6ce152308a8b1a7"
     },
     {
       "path": "package.json",
-      "sha256": "bb26797f594624697966cd90a222f1369bc76bf4acd7bcfac00d5aab755aab01"
+      "sha256": "cc0a470f7a4fab5f2a2a22f70ab6a473f06a099b0d18d0ff0cf94f53b2cdd414"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -285,7 +285,7 @@
     },
     {
       "path": "tools/governance/jev-auditor.ts",
-      "sha256": "f428da4a941852ca5f1eba5a73ed9e8ec7f40c90d1f72ab5c449229260719ba1"
+      "sha256": "f28ded57614af9e59b92214644d7aae882cf05259c3bbf65cd8ef437249a507f"
     },
     {
       "path": "tools/governance/pre-commit-test-guard.ts",
@@ -396,6 +396,10 @@
       "sha256": "769f17b639dacba0c908b6fdaad2d5238055ae636e4326fb3f73296cd9198a23"
     },
     {
+      "path": "tools/governance/tests/verify-observability-ast.spec.ts",
+      "sha256": "5cf22ca8028c710c406dcdf44ed6ae26a18c448ffdbe54e4e699de3256a200f9"
+    },
+    {
       "path": "tools/governance/tests/verify-performance-budget.spec.ts",
       "sha256": "01204c8c2303c9ca5a2d647de5fbb953528a95fc309c404d97042a7c6af0c9d8"
     },
@@ -421,7 +425,7 @@
     },
     {
       "path": "tools/governance/unified-lock-engine.ts",
-      "sha256": "0aad9c5de1032cfbd80a0f2c968a8d26855b625561f246d146f9d7367894f1f8"
+      "sha256": "aef2cd776481ba60729fca5b5f235d5b7579e410765f544591479cab9d6ea9c2"
     },
     {
       "path": "tools/governance/unified-unlock-engine.ts",
@@ -513,7 +517,7 @@
     },
     {
       "path": "tools/governance/verify-observability-contract.ts",
-      "sha256": "92d8a19e3f8d73151c70c74f082bc74d795689f3796edf4af5d8c9c790d729df"
+      "sha256": "a35de6696d3d6980a8079bb40ce1014a804b117f0470afcfce346a03c625e67c"
     },
     {
       "path": "tools/governance/verify-performance-budget.ts",
@@ -565,7 +569,7 @@
     },
     {
       "path": "tools/scaffold/scaffold-flow-v2.ts",
-      "sha256": "c6bdbaef4e0ecc1530251e747561283bbadbc70a523af2bfece6f59c66d64dc6"
+      "sha256": "97125c9281f4ca4753642eeca177c1f70965d0eacf168f4640115a9c912b1974"
     },
     {
       "path": "tools/scaffold/scaffold-flow.ts",
@@ -581,7 +585,7 @@
     },
     {
       "path": "tools/scaffold/scaffold-module-v2.ts",
-      "sha256": "71b0be95c01672e8a37f6d88678ea791f2073384b1a3058f43c8fd675660f0a8"
+      "sha256": "291de69e4375979f1873207bdaf6e72c7e18a48c430ae3275dd9ec6b0a57f832"
     },
     {
       "path": "tools/scaffold/scaffold-module.ts",
@@ -2102,7 +2106,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T11:01:52.476Z",
+      "lockedAt": "2026-09-23T11:25:28.240Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -3393,7 +3397,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T11:01:52.476Z",
+      "lockedAt": "2026-09-23T11:25:28.240Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -4386,7 +4390,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: docs",
       "directory": "apps/docs",
-      "lockedAt": "2026-09-23T11:01:52.476Z",
+      "lockedAt": "2026-09-23T11:25:27.868Z",
       "files": [
         {
           "path": "apps/docs/astro.config.mjs",
@@ -4598,7 +4602,7 @@
         },
         {
           "path": "apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md",
-          "sha256": "c6ad3f1c7d6e0a8afc4513c4e37eae8b4f6158c5387f74cf79e36040eff5af4a"
+          "sha256": "617240b7fb280205701aa84eedd98fdcafd89c48fe5f9c6b88abcdd411c3409f"
         },
         {
           "path": "apps/docs/src/content/docs/en/index.md",
@@ -7854,6 +7858,19 @@
         {
           "path": "tools/governance/tests/ci-lock-attachments-exclusion.spec.ts",
           "sha256": "4991034d73246cbbeabba9d62c2e4415a78c28b6fca6b6f995a3887ec0b935b8"
+        }
+      ]
+    },
+    "test:tools/governance/tests/verify-observability-ast.spec.ts": {
+      "id": "test:tools/governance/tests/verify-observability-ast.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-observability-ast.spec.ts",
+      "directory": "tools/governance/tests/verify-observability-ast.spec.ts",
+      "lockedAt": "2026-09-23T11:24:41.250Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/verify-observability-ast.spec.ts",
+          "sha256": "5cf22ca8028c710c406dcdf44ed6ae26a18c448ffdbe54e4e699de3256a200f9"
         }
       ]
     }
