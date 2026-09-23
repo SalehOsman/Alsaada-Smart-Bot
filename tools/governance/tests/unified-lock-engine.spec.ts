@@ -1,10 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  listEntityFiles,
-  normalizeBuffer,
-  resolveLockTarget,
-  sha256NormalizedFile,
-} from '../unified-lock-engine.js';
+import { listEntityFiles, normalizeBuffer, resolveLockTarget, sha256NormalizedFile } from '../unified-lock-engine.js';
 import { unlockEntity, VALID_UNLOCK_PHRASES } from '../unified-unlock-engine.js';
 
 const PINNED_BASE_TIME = new Date('2026-09-21T12:00:00.000Z');
@@ -233,6 +228,59 @@ describe('Unified Lock & Unlock Engine (Plan 70)', () => {
       expect(invalidPhraseResult.error).toContain('Invalid approval phrase');
       expect(missingReasonResult.ok).toBe(false);
       expect(missingReasonResult.error).toContain('justification reason');
+    });
+
+    it('strictly prohibits unlock-all feature across both engines', () => {
+      // Arrange & Act & Assert
+      expect(() => {
+        unlockEntity('all', { phrase: 'موافق على الفتح', reason: 'Unlocking all components' });
+      }).toThrow(/Constitutional Violation: unlock-all is strictly prohibited/);
+
+      expect(() => {
+        unlockEntity('unlock:all', { phrase: 'موافق على الفتح', reason: 'Unlocking all components' });
+      }).toThrow(/Constitutional Violation: unlock-all is strictly prohibited/);
+    });
+  });
+
+  describe('Comprehensive 100% Monorepo Discovery & Pre-Merge Lockdown', () => {
+    it('resolves app and test targets', () => {
+      const appBot = resolveLockTarget(root, 'app:bot-server');
+      const appDash = resolveLockTarget(root, 'app:admin-dashboard');
+      const appDocs = resolveLockTarget(root, 'app:docs');
+      const testTarget = resolveLockTarget(root, 'test:tools/governance/tests/unified-lock-engine.spec.ts');
+
+      expect(appBot).not.toBeNull();
+      expect(appBot?.type).toBe('app');
+      expect(appDash).not.toBeNull();
+      expect(appDash?.type).toBe('app');
+      expect(appDocs).not.toBeNull();
+      expect(appDocs?.type).toBe('app');
+      expect(testTarget).not.toBeNull();
+      expect(testTarget?.type).toBe('test');
+    });
+
+    it('discovers 100% of all lockable components across the monorepo independently (332/339 targets)', async () => {
+      const { discoverAllLockableTargets, listEntityFiles } = await import('../unified-lock-engine.js');
+      const targets = discoverAllLockableTargets(root);
+      const hasSandbox = listEntityFiles(root, 'modules/sandbox', 'module').length > 0;
+
+      expect(targets.length).toBe(hasSandbox ? 339 : 332);
+
+      const pkgs = targets.filter((t) => t.startsWith('package:'));
+      const flows = targets.filter((t) => t.startsWith('flow:'));
+      const dashboards = targets.filter((t) => t.startsWith('dashboard:'));
+      const apps = targets.filter((t) => t.startsWith('app:'));
+      const modules = targets.filter((t) => t.startsWith('module:'));
+      const infra = targets.filter((t) => t.startsWith('infra:'));
+      const tests = targets.filter((t) => t.startsWith('test:'));
+
+      expect(pkgs.length).toBe(8);
+      expect(flows.length).toBe(hasSandbox ? 22 : 20);
+      expect(dashboards.length).toBe(33);
+      expect(apps.length).toBe(3);
+      expect(modules.length).toBe(hasSandbox ? 3 : 2);
+      expect(infra.length).toBe(2);
+      expect(tests.length).toBe(hasSandbox ? 268 : 264);
     });
   });
 });

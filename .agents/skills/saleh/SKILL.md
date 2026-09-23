@@ -198,7 +198,7 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 
 - **`[PASS]`**: Work is genuinely complete, types are clean, real tests pass with verified assertions, zero flow divergence from `F:\HR`, presentation library fully adopted, and all applicable quality gates (G1–G23) pass with Exit Code 0.
 - **`[CONDITIONAL PASS]`**: Core functionality works and passes critical gates, but minor non-blocking issues exist (e.g., formatting lint, missing secondary edge-case test, button label slightly exceeding 16 chars). Ready-to-copy corrective prompt supplied.
-- **`[REJECT]`**: Agent cheated, tests were mocked away or unasserted, presentation library was bypassed with raw text, requirements were skipped, or regressions were introduced. Full forensic postmortem and ready-to-copy corrective prompt supplied.
+- **`[REJECT]`**: Agent cheated, tests were mocked away or unasserted, presentation library was bypassed with raw text, requirements were skipped, code was modified without an approved plan, fixes occurred on contaminated branches instead of isolated `fix/inc-...` branches, `pnpm incident:verify` failed with placeholders, the completion attestation card was omitted, or regressions were introduced. Full forensic postmortem and ready-to-copy corrective prompt supplied.
 
 ### Audit Report Format:
 
@@ -210,6 +210,9 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 - **Physical Reality:** [What git diff, AST inspection, and test execution actually proved]
 
 ### 2. Bullshit-Buster Findings
+- [ ] **Spec-First & Branch Isolation (WP 93):** Was code modified only after plan approval? Was an isolated branch (`fix/inc-*`, `feat/*`, `plan/*`) used from clean main?
+- [ ] **Defect Dossier Authenticity (WP 93):** Does `docs/code-incidents/` contain a verified report with 0 placeholders passing `pnpm incident:verify`?
+- [ ] **Mandatory Completion Attestation (WP 93):** Did the agent output the exact completion attestation formula?
 - [ ] **Sham Assertions:** Any `expect(true).toBe(true)` or unverified results?
 - [ ] **Mock Cheating:** Were critical database/business rules mocked out instead of tested?
 - [ ] **Presentation Bypass:** Were raw text replies used instead of the Unified Presentation Library?
@@ -236,7 +239,9 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 
 | Check Domain | Command | Governed Quality Gate |
 | :--- | :--- | :---: |
-| **Unified Audit Suite** | `tsx tools/governance/saleh-audit-suite.ts` | G1, G2, G5, G8, G10, G22 |
+| **Unified Audit Suite** | `tsx tools/governance/saleh-audit-suite.ts` | G1, G2, G5, G8, G10, G22, WP 93 |
+| **Defect Dossier Verification** | `pnpm incident:verify` | G14, G15, WP 93 |
+| **Incident Verifier Tests** | `pnpm test:incidents` | G10, WP 93 |
 | **Presentation & UX AST** | `tsx tools/governance/saleh-audit-suite.ts --presentation` | G5, G22 |
 | **AST Diff Inspection** | `ocr review --concurrency 2` or `pnpm ocr:review` | G14, G15 |
 | **Architecture Boundaries**| `pnpm arch:verify` | G2, G4 |

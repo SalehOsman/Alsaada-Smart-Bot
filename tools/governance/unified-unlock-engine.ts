@@ -26,11 +26,29 @@ export interface UnlockEntityResult {
   error?: string;
 }
 
+export function unlockAllEntities(): never {
+  throw new Error(
+    'Constitutional Violation: unlock-all is strictly prohibited. Unlocking must be granular per entity using dynamic OTP challenge protocol.'
+  );
+}
+
 export function unlockEntity(
   rawTarget: string,
   options: UnlockEntityOptions,
   root = options.root ?? process.cwd()
 ): UnlockEntityResult {
+  const normalizedTarget = (rawTarget ?? '').trim().toLowerCase();
+  if (
+    normalizedTarget === 'all' ||
+    normalizedTarget === '--all' ||
+    normalizedTarget === '*' ||
+    normalizedTarget === 'unlock:all'
+  ) {
+    throw new Error(
+      'Constitutional Violation: unlock-all is strictly prohibited. Unlocking must be granular per entity using dynamic OTP challenge protocol.'
+    );
+  }
+
   const phrase = (options.phrase ?? '').trim();
   if (!VALID_UNLOCK_PHRASES.has(phrase)) {
     return {
@@ -81,8 +99,11 @@ export function unlockEntity(
 
   if (!entityId || !lockData.lockedEntities[entityId]) {
     // Check if target is in legacy lockedFlows or lockedDashboardFeatures
-    const isLegacyFlow = lockData.lockedFlows && Object.keys(lockData.lockedFlows).includes(rawTarget.replace(/^flow:/, ''));
-    const isLegacyDash = lockData.lockedDashboardFeatures && Object.keys(lockData.lockedDashboardFeatures).includes(rawTarget.replace(/^dashboard:/, ''));
+    const isLegacyFlow =
+      lockData.lockedFlows && Object.keys(lockData.lockedFlows).includes(rawTarget.replace(/^flow:/, ''));
+    const isLegacyDash =
+      lockData.lockedDashboardFeatures &&
+      Object.keys(lockData.lockedDashboardFeatures).includes(rawTarget.replace(/^dashboard:/, ''));
 
     if (isLegacyFlow) {
       delete lockData.lockedFlows![rawTarget.replace(/^flow:/, '')];

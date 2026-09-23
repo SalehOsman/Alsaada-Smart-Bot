@@ -24,10 +24,15 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
    - Use `.agents/topology.json` for O(1) instantaneous discovery of flows, database models, and active vertical slices rather than issuing expensive recursive scans.
 5. **Predefined Script Execution Standard:**
    - Agents must exclusively run standardized npm scripts from `package.json` (`pnpm <script>`) rather than arbitrary ad-hoc command strings with custom dynamic flags, ensuring IDE command whitelist stability and zero approval prompt friction.
+6. **Mandatory Auto Re-Lock & Verbal Confirmation (إلزامية القفل التلقائي والتأكيد النصي):**
+   - After completing edits on any unlocked entity, the agent must automatically re-lock the entity (`pnpm lock <target>` or `pnpm lock:all`) before requesting branch merge with «ادمج الفرع» or concluding the session.
+   - The agent MUST explicitly output the verbatim confirmation in its final message:
+     > **«تم قفل الوظيفة [اسم/معرف الوظيفة]»** (e.g., `✅ تم قفل الوظيفة flow:01.1` or `✅ تم قفل الشاشة dashboard:workforce/clearances`).
+   - Leaving any entity unsealed before merge is strictly prohibited (`Exit 1`).
 
 ---
 
-## 2. Pre-Flight 9-Point Checklist
+## 2. Pre-Flight 10-Point Checklist
 
 Before declaring any coding or refactoring task complete, every agent must verify:
 
@@ -42,6 +47,7 @@ Before declaring any coding or refactoring task complete, every agent must verif
 | 7 | **Zero Blast Radius Audit** | `git diff --stat` (only intended files modified) |
 | 8 | **Git Hygiene & Version Parity** | `pnpm git-hygiene:verify` |
 | 9 | **Docs Parity & Constitutional Links** | `pnpm docs:parity` |
+| 10 | **Mandatory Entity Re-Locking** | `pnpm lock:verify` & confirmation: **«تم قفل الوظيفة [س]»** |
 
 ---
 
@@ -53,10 +59,12 @@ If Prettier or ESLint detects stylistic divergences, trailing spaces, or unorgan
 
 ---
 
-## 4. Binding Phase-by-Phase Protocol (بروتوكول المراحل الملزم)
+## 4. Binding Phase-by-Phase Protocol (بروتوكول المراحل الملزم — WP 94)
 
-1. **Sequential Phase Discipline:** Agents must execute complex, multi-stage implementation plans in strictly ordered phases (P0, P1, P2...).
+1. **Sequential Phase Discipline:** Agents must execute any task in strictly ordered phases (P0 to P5) matching the Tri-Lifecycle standard ([`WP-94`](../../docs/work-plans/94-plan-sovereign-tri-lifecycle-governance-and-ai-agent-invariant.md)).
 2. **No Early Declarations:** Agents are strictly prohibited from declaring a task complete, skipping intermediate checkpoints, or assuming success without running physical verification commands for each phase.
 3. **Phase Completion Deliverables:** Each phase must produce its verifiable artifacts (reports written, scripts compiled, tests executed, locks sealed) before advancing to the subsequent phase.
 4. **Mandatory Final Simulation:** Every execution must culminate in a clean run of `pnpm ci:simulate` (running all quality gates and Vitest suites) before presenting final results.
+5. **The 5 Report Cards Delivery:** Agents must deliver the structured 5-card completion report directly in chat prior to requesting merge.
+6. **Strict Merge Approval:** Merging to `main` (`git merge --no-ff`) is strictly blocked until the sovereign user issues the verbatim formula: **«ادمج الفرع»**.
 

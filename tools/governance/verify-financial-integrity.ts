@@ -257,6 +257,42 @@ export async function ensureFinancialTestFixtures(client: any): Promise<void> {
   console.log('✅ [FINANCIAL-INTEGRITY] Test fixtures successfully seeded and chained.');
 }
 
+export async function cleanupFinancialTestFixtures(client: any): Promise<void> {
+  if (!client) return;
+  try {
+    if (client.$executeRawUnsafe) {
+      await client.$executeRawUnsafe(`DELETE FROM "worker_expense_claims" WHERE "claimNumber" LIKE '#CLM-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "hospitality_expenses" WHERE "voucherNumber" LIKE 'HOSP-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "custody_expense_items" WHERE "receiptNumber" LIKE 'REC-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "custody_settlements" WHERE "settlementNumber" LIKE 'SET-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "supplier_payments" WHERE "paymentVoucher" LIKE 'SPAY-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "financial_ledgers" WHERE "voucherNumber" LIKE 'LED-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "financial_custodies" WHERE "custodyNumber" LIKE 'CUST-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "workers" WHERE code = 'WRK-GOV-TEST-01'`);
+      await client.$executeRawUnsafe(`DELETE FROM "suppliers" WHERE code = 'SUP-GOV-TEST-01'`);
+      await client.$executeRawUnsafe(`DELETE FROM "sites" WHERE code = 'STE_GOV_TEST_01'`);
+      await client.$executeRawUnsafe(`DELETE FROM "projects" WHERE code = 'PRJ_GOV_TEST_01'`);
+      await client.$executeRawUnsafe(`DELETE FROM "tenants" WHERE code = 'TENANT_GOV_TEST'`);
+    } else {
+      await client.workerExpenseClaim?.deleteMany?.({ where: { claimNumber: { startsWith: '#CLM-GOV-2026-' } } });
+      await client.hospitalityExpense?.deleteMany?.({ where: { voucherNumber: { startsWith: 'HOSP-GOV-2026-' } } });
+      await client.custodyExpenseItem?.deleteMany?.({ where: { receiptNumber: { startsWith: 'REC-GOV-2026-' } } });
+      await client.custodySettlement?.deleteMany?.({ where: { settlementNumber: { startsWith: 'SET-GOV-2026-' } } });
+      await client.supplierPayment?.deleteMany?.({ where: { paymentVoucher: { startsWith: 'SPAY-GOV-2026-' } } });
+      await client.financialLedger?.deleteMany?.({ where: { voucherNumber: { startsWith: 'LED-GOV-2026-' } } });
+      await client.financialCustody?.deleteMany?.({ where: { custodyNumber: { startsWith: 'CUST-GOV-2026-' } } });
+      await client.worker?.deleteMany?.({ where: { code: 'WRK-GOV-TEST-01' } });
+      await client.supplier?.deleteMany?.({ where: { code: 'SUP-GOV-TEST-01' } });
+      await client.site?.deleteMany?.({ where: { code: 'STE_GOV_TEST_01' } });
+      await client.project?.deleteMany?.({ where: { code: 'PRJ_GOV_TEST_01' } });
+      await client.tenant?.deleteMany?.({ where: { code: 'TENANT_GOV_TEST' } });
+    }
+    console.log('🧹 [FINANCIAL-INTEGRITY] Ephemeral test fixtures safely cleaned up.');
+  } catch (err) {
+    console.warn('⚠️ [FINANCIAL-INTEGRITY] Ephemeral cleanup warning:', err);
+  }
+}
+
 /**
  * 🏛️ بوابة النزاهة المالية والحوكمة المحاسبية (G13 - Enterprise Financial Integrity Gate)
  * 1. التحقق من سلامة السلاسل التشفيرية (HMAC-SHA256 Hash Chain) للنماذج المالية الستة.
@@ -270,29 +306,33 @@ export async function verifyFinancialIntegrity(
 ): Promise<VerificationResult> {
   const result = createResult();
   let client = options.prisma;
+  let seededFixtures = false;
 
-  if (!client) {
-    try {
-      const isLive = await isPortOpen(DEFAULT_POSTGRES_HOST, DEFAULT_POSTGRES_PORT);
-      if (isLive) {
-        await setupTestDatabase();
-        const testDbUrl = getTestDatabaseUrl();
-        const { createExtendedPrismaClient } = await import('../../packages/database/src/client.js');
-        client = createExtendedPrismaClient({
-          datasources: {
-            db: { url: testDbUrl },
-          },
-        });
-        await ensureFinancialTestFixtures(client);
-      } else {
-        const dbModule = await import('../../packages/database/src/client.js');
-        client = dbModule.prisma;
+  try {
+    if (!client) {
+      try {
+        const isLive = await isPortOpen(DEFAULT_POSTGRES_HOST, DEFAULT_POSTGRES_PORT);
+        if (isLive) {
+          await setupTestDatabase();
+          const testDbUrl = getTestDatabaseUrl();
+          const { createExtendedPrismaClient } = await import('../../packages/database/src/client.js');
+          client = createExtendedPrismaClient({
+            datasources: {
+              db: { url: testDbUrl },
+            },
+          });
+          await cleanupFinancialTestFixtures(client);
+          await ensureFinancialTestFixtures(client);
+          seededFixtures = true;
+        } else {
+          const dbModule = await import('../../packages/database/src/client.js');
+          client = dbModule.prisma;
+        }
+      } catch (err) {
+        fail(result, `Failed to load Prisma database client: ${String(err)}`);
+        return result;
       }
-    } catch (err) {
-      fail(result, `Failed to load Prisma database client: ${String(err)}`);
-      return result;
     }
-  }
 
   // 1. فحص السلاسل التشفيرية لكافة النماذج المالية الستة
   for (const model of PROTECTED_FINANCIAL_MODELS) {
@@ -519,6 +559,12 @@ export async function verifyFinancialIntegrity(
   }
 
   return result;
+} finally {
+  if (client && seededFixtures) {
+    await cleanupFinancialTestFixtures(client);
+    await client.$disconnect?.();
+  }
+}
 }
 
 if (isCliEntrypoint(import.meta.url) || process.argv[1]?.includes('verify-financial-integrity')) {

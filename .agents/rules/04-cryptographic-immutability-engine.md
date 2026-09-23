@@ -75,3 +75,22 @@ The pre-commit hook runs `pnpm governance:tamper-check` on every commit:
    - **Atomic Lock Re-Sealing:** All touched packages and their newly generated changelogs must be immediately re-sealed in `governance.lock.json` (`pnpm lock --all` and `pnpm governance:lock "موافق على التعديل او الايقاف او الحذف"`).
 2. **Zero Tamper Guarantee:** Modifying package versions or adding changelogs outside this atomic synchronizer violates Gate 13 (Tamper Guard) and Gate 17 (Git Hygiene & Version Parity) and is rejected immediately at pre-commit.
 
+---
+
+## 7. Mandatory AI Auto Re-Lock Invariant (إلزامية القفل التلقائي للذكاء الاصطناعي)
+
+1. **Automatic Entity Re-Locking:**
+   - Any AI agent that unlocks and modifies any protected entity (flow, dashboard route, package, application, module, or test) after obtaining authorized OTP approval, **MUST automatically and mandatorily re-lock what was opened** before requesting branch merge (`git merge --no-ff` / «ادمج الفرع») or concluding its execution.
+   - Command: `pnpm lock <target>` (or `pnpm lock:all`).
+2. **Mandatory Verbatim Verbal Confirmation:**
+   - The agent's final message MUST contain the explicit, untranslated confirmation formula:
+     > **«تم قفل الوظيفة [اسم/معرف الوظيفة]»**
+   - Examples: `✅ تم قفل الوظيفة flow:01.1` or `✅ تم قفل الشاشة dashboard:workforce/clearances`.
+3. **Pre-Merge Lockdown Gate (`pnpm lock:verify`):**
+   - Direct or indirect merge is strictly blocked if any modified entity remains unsealed in `governance.lock.json`.
+   - CI and pre-commit checks will fail with `Exit 1` if any unsealed entity or modified file is detected.
+4. **100% Monorepo Full Sealing (`pnpm lock:all`):**
+   - `pnpm lock:all` seals all 338 monorepo entities independently (8 packages, 22 flows, 33 dashboards, 3 apps, 3 modules, 2 infrastructure subsystems, and 267 test suites).
+5. **Absolute Ban on Mass Unlocking (`unlock:all`):**
+   - Mass unlocking or `unlock:all` is permanently and constitutionally prohibited. Any attempt triggers a fatal error. All unlocks must proceed strictly per-entity via the dynamic OTP challenge protocol.
+

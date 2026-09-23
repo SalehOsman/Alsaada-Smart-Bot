@@ -75,6 +75,13 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
    > **«✅ تم توثيق وحل الخلل بالكامل في مجلد المشاكل [INC-YYYYMMDD-SLUG] داخل الفرع المنعزل واجتياز الفحص الجنائي»**
 7. **Pre-Merge Incident Gate:** Passing `pnpm incident:verify` and `pnpm test:incidents` is a mandatory blocker before requesting branch merge (`git merge --no-ff` / «ادمج الفرع»).
 
+### 7.1 الإلزام القطعي بالمسارات التشغيلية الثلاثة (The Tri-Lifecycle Sovereignty — WP 94)
+بموجب ميثاق خطة العمل السيادية رقم 94 (`docs/work-plans/94-plan-sovereign-tri-lifecycle-governance-and-ai-agent-invariant.md`)، يخضع أي وكيل ذكاء اصطناعي أو أداة برمجية تعمل في هذا المستودع للإلزام الصارم والقطعي بالمسارات التشغيلية الثلاثة، مع حظر تام لأي خروج عنها:
+1. **مسار التعديل البرمجي (Rulebook 11):** صياغة الخطة واعتمادها أولاً، فك القفل المشفر برمز OTP المؤقت، التطوير بـ TDD، الفحص والتحقق، إعادة القفل التلقائي فوراً، تسليم البطاقات الخمس في الشات، والدمج بصيغة «ادمج الفرع».
+2. **مسار الإنشاء الجديد (Rulebook 12):** صياغة المواصفة السداسية واعتمادها أولاً، التوليد الهيكلي الآلي عبر `pnpm make:flow` لشريحة الـ 10 ملفات، التطوير المنضبط وعقود Zod، القفل التشفيري الأولي في `governance.lock.json`، توثيق سجل الترحيل `docs/19`، وتسليم البطاقات الخمس في الشات.
+3. **مسار إصلاح الأعطال والتحقيق الجنائي (Rulebook 08 / WP 93):** تجميد الكود فوراً عند فشل الاختبارات (حظر الترقيع الفوري)، فتح فرع الحادثة المنعزل `fix/inc-*`، تحرير الملف الجنائي المسبق في `docs/code-incidents/`، اعتماد الخطة بصيغة «موافق على خطة الإصلاح»، كتابة اختبار تراجع دائم (Permanent Regression Test)، اجتياز الفحص الآلي `pnpm incident:verify` و `pnpm test:incidents`، وإصدار بطاقة الإقرار الجنائي الإلزامية.
+- **عقوبة المخالفة:** يُسقط عمل الوكيل فوراً بحكم `[REJECT]` قطعي من `/saleh`، ويُمنع دمج الفرع نهائياً.
+
 ### 8. Telegram Mobile Ergonomics & 10-File Vertical Slice Standard
 1. **Strict 10-File Vertical Slice:** Every bot flow under `modules/<name>/src/flows/<code-slug>/` must contain exactly:
    `flow.contract.json`, `index.ts`, `controller.ts`, `menu.builder.ts`, `action.handler.ts`, `service.ts`, `types.ts`, `validator.ts`, `error.handler.ts`, and test under `<module>/tests/flows/`.

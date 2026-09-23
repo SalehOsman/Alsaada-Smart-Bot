@@ -12,6 +12,9 @@
 3. **Clean Re-engineering Principle:**
    - **DO NOT** copy spaghetti architecture, unvalidated globals, direct synchronous Google Sheets mutations, or unstructured procedural scripts from `F:\HR`.
    - **DO** extract the precise business requirements, invariants, and edge cases, re-implementing them cleanly within the enterprise 10-file vertical slice standard.
+4. **Suspension of Proactive Inspection (تعليق الفحص التلقائي):**
+   - AI agents are strictly forbidden from proactively reading, scanning, or inspecting `F:\HR` unless the user explicitly and specifically requests it for a given task.
+   - Respect user directives regarding scope without unsolicited legacy codebase traversals.
 
 ---
 

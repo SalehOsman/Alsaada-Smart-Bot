@@ -2,12 +2,19 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
 import { isCliEntrypoint, normalized, toRepoPath } from './common.js';
-import { APPROVAL_PHRASE, GOVERNANCE_LOCK_PATH, buildGovernanceLock, listDockerFiles, type GovernanceLock } from './verify-governance-lock.js';
+import {
+  APPROVAL_PHRASE,
+  GOVERNANCE_LOCK_PATH,
+  buildGovernanceLock,
+  listDockerFiles,
+  type GovernanceLock,
+} from './verify-governance-lock.js';
+import { syncMigrationRegistry } from './sync-migration-registry.js';
 
-export type LockedEntityType = 'flow' | 'dashboard' | 'package' | 'infra' | 'module' | 'test';
+export type LockedEntityType = 'flow' | 'dashboard' | 'package' | 'infra' | 'module' | 'app' | 'test';
 
 export interface LockedEntity {
-  id: string; // Standard format: "package:<name>" | "flow:<code>" | "dashboard:<path>" | "infra:<name>" | "module:<name>" | "test:<path>"
+  id: string; // Standard format: "package:<name>" | "flow:<code>" | "dashboard:<path>" | "infra:<name>" | "module:<name>" | "app:<name>" | "test:<path>"
   type: LockedEntityType;
   title: string;
   directory: string;
@@ -86,7 +93,14 @@ export function listEntityFiles(root: string, directoryOrFile: string, type: Loc
       const relRepoPath = normalized(toRepoPath(root, entryPath));
 
       if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist' || entry.name === '.turbo') {
+        if (
+          entry.name === 'node_modules' ||
+          entry.name === '.git' ||
+          entry.name === 'dist' ||
+          entry.name === '.turbo' ||
+          entry.name === '.next' ||
+          entry.name === '.astro'
+        ) {
           continue;
         }
 
@@ -118,21 +132,39 @@ export function listEntityFiles(root: string, directoryOrFile: string, type: Loc
           }
         }
 
-        visit(entryPath);
-      } else if (entry.isFile()) {
-        if (type === 'package') {
+        // Apps: do not descend into dashboard routes for admin-dashboard, and skip tests
+        if (type === 'app') {
+          if (entry.name === 'tests') {
+            continue;
+          }
           if (
-            entry.name.startsWith('.env') ||
-            entry.name.endsWith('.tsbuildinfo') ||
-            entry.name.endsWith('.log')
+            relRepoPath === 'apps/admin-dashboard/src/app/admin' ||
+            relRepoPath.startsWith('apps/admin-dashboard/src/app/admin/')
           ) {
             continue;
           }
         }
 
+        visit(entryPath);
+      } else if (entry.isFile()) {
+        if (entry.name.startsWith('.env') || entry.name.endsWith('.tsbuildinfo') || entry.name.endsWith('.log')) {
+          continue;
+        }
+
         // Skip test spec files from non-test entities (tests are locked independently under test:<path>)
         if (type !== 'test') {
           if (entry.name.endsWith('.spec.ts') || entry.name.endsWith('.test.ts')) {
+            continue;
+          }
+        }
+
+        // Apps: skip speed engine files in apps/bot-server (locked independently under infra:speed-engine)
+        if (type === 'app') {
+          if (
+            relRepoPath === 'apps/bot-server/src/services/fast-cache.service.ts' ||
+            relRepoPath === 'apps/bot-server/src/services/telemetry.service.ts' ||
+            relRepoPath === 'apps/bot-server/src/services/screen-flow.service.ts'
+          ) {
             continue;
           }
         }
@@ -160,7 +192,7 @@ export function resolveLockTarget(root: string, rawTarget: string): ResolvedTarg
   if (trimmed.startsWith('package:')) {
     const name = trimmed.replace(/^package:/, '');
     const pkgDir = join(root, 'packages', name);
-    if (existsSync(pkgDir)) {
+    if (existsSync(pkgDir) && listEntityFiles(root, `packages/${name}`, 'package').length > 0) {
       return {
         id: `package:${name}`,
         type: 'package',
@@ -185,12 +217,25 @@ export function resolveLockTarget(root: string, rawTarget: string): ResolvedTarg
   if (trimmed.startsWith('module:')) {
     const modName = trimmed.replace(/^module:/, '');
     const modDir = join(root, 'modules', modName);
-    if (existsSync(modDir)) {
+    if (existsSync(modDir) && listEntityFiles(root, `modules/${modName}`, 'module').length > 0) {
       return {
         id: `module:${modName}`,
         type: 'module',
         title: `موديول المنظومة: ${modName}`,
         directoryOrFile: `modules/${modName}`,
+      };
+    }
+  }
+
+  if (trimmed.startsWith('app:')) {
+    const appName = trimmed.replace(/^app:/, '');
+    const appDir = join(root, 'apps', appName);
+    if (existsSync(appDir) && listEntityFiles(root, `apps/${appName}`, 'app').length > 0) {
+      return {
+        id: `app:${appName}`,
+        type: 'app',
+        title: `تطبيق المنظومة: ${appName}`,
+        directoryOrFile: `apps/${appName}`,
       };
     }
   }
@@ -277,6 +322,19 @@ export function resolveLockTarget(root: string, rawTarget: string): ResolvedTarg
     const relSub = trimmed.replace(/^apps\/admin-dashboard\/src\/app\/admin\/?/, '');
     const dashRes = resolveDashboardTarget(root, relSub);
     if (dashRes) return dashRes;
+  }
+
+  if (trimmed.startsWith('apps/')) {
+    const appName = trimmed.replace(/^apps\//, '').split('/')[0] ?? '';
+    const appDir = join(root, 'apps', appName);
+    if (existsSync(appDir)) {
+      return {
+        id: `app:${appName}`,
+        type: 'app',
+        title: `تطبيق المنظومة: ${appName}`,
+        directoryOrFile: `apps/${appName}`,
+      };
+    }
   }
 
   // 3. Package name inference
@@ -398,7 +456,16 @@ function updateMigrationRegistryForFlow(
 ): void {
   const registryPaths = [
     join(root, 'docs', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
-    join(root, 'apps', 'docs', 'src', 'content', 'docs', 'data-and-migration', '19-legacy-to-enterprise-master-feature-migration-registry.md'),
+    join(
+      root,
+      'apps',
+      'docs',
+      'src',
+      'content',
+      'docs',
+      'data-and-migration',
+      '19-legacy-to-enterprise-master-feature-migration-registry.md'
+    ),
   ];
   const today = new Date().toISOString().slice(0, 10);
 
@@ -486,7 +553,10 @@ export function lockEntity(
   }
 
   if (filePaths.length === 0) {
-    return { ok: false, error: `Target "${rawTarget}" resolved to "${resolved.directoryOrFile}" but no files were found to lock.` };
+    return {
+      ok: false,
+      error: `Target "${rawTarget}" resolved to "${resolved.directoryOrFile}" but no files were found to lock.`,
+    };
   }
 
   const filesWithHashes = filePaths.map((relPath) => ({
@@ -588,25 +658,50 @@ ${entity.files.map((f) => `| \`${f.path}\` | \`${f.sha256}\` |`).join('\n')}
   return { ok: true, entity };
 }
 
+export function unlockAllEntities(): never {
+  throw new Error(
+    'Constitutional Violation: unlock-all is strictly prohibited. Unlocking must be granular per entity using dynamic OTP challenge protocol.'
+  );
+}
+
 export function discoverAllLockableTargets(root = process.cwd()): string[] {
   const targets: string[] = [];
 
-  // 1. Core Packages
+  // 1. Core Packages (8)
   const packagesDir = join(root, 'packages');
   if (existsSync(packagesDir)) {
     for (const entry of readdirSync(packagesDir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
+      if (entry.isDirectory() && listEntityFiles(root, `packages/${entry.name}`, 'package').length > 0) {
         targets.push(`package:${entry.name}`);
       }
     }
   }
 
-  // 2. Infrastructure
+  // 2. Infrastructure (2)
   targets.push('infra:docker');
   targets.push('infra:speed-engine');
 
-  // 3. Bot flows
+  // 3. Applications (3)
+  const appsDir = join(root, 'apps');
+  if (existsSync(appsDir)) {
+    for (const entry of readdirSync(appsDir, { withFileTypes: true })) {
+      if (entry.isDirectory() && listEntityFiles(root, `apps/${entry.name}`, 'app').length > 0) {
+        targets.push(`app:${entry.name}`);
+      }
+    }
+  }
+
+  // 4. Domain Modules (3)
   const modulesDir = join(root, 'modules');
+  if (existsSync(modulesDir)) {
+    for (const mod of readdirSync(modulesDir, { withFileTypes: true })) {
+      if (mod.isDirectory() && listEntityFiles(root, `modules/${mod.name}`, 'module').length > 0) {
+        targets.push(`module:${mod.name}`);
+      }
+    }
+  }
+
+  // 5. Bot flows (22)
   if (existsSync(modulesDir)) {
     for (const mod of readdirSync(modulesDir, { withFileTypes: true })) {
       if (!mod.isDirectory()) continue;
@@ -615,6 +710,7 @@ export function discoverAllLockableTargets(root = process.cwd()): string[] {
 
       for (const flowEntry of readdirSync(flowsDir, { withFileTypes: true })) {
         if (!flowEntry.isDirectory()) continue;
+        if (listEntityFiles(root, `modules/${mod.name}/src/flows/${flowEntry.name}`, 'flow').length === 0) continue;
         let flowKey = flowEntry.name.split('-')[0] ?? '';
         const contractPath = join(flowsDir, flowEntry.name, 'flow.contract.json');
         if (existsSync(contractPath)) {
@@ -630,7 +726,7 @@ export function discoverAllLockableTargets(root = process.cwd()): string[] {
     }
   }
 
-  // 4. Admin dashboard screens
+  // 6. Admin dashboard screens (33)
   const adminBase = join(root, 'apps', 'admin-dashboard', 'src', 'app', 'admin');
   if (existsSync(adminBase)) {
     const scanDir = (dir: string): void => {
@@ -648,7 +744,162 @@ export function discoverAllLockableTargets(root = process.cwd()): string[] {
     scanDir(adminBase);
   }
 
+  // 7. Test suites (267)
+  const scanTests = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (
+          entry.name === 'node_modules' ||
+          entry.name === '.git' ||
+          entry.name === 'dist' ||
+          entry.name === '.turbo' ||
+          entry.name === '.next' ||
+          entry.name === '.astro' ||
+          entry.name === 'coverage'
+        ) {
+          continue;
+        }
+        scanTests(full);
+      } else if (entry.isFile()) {
+        if (entry.name.endsWith('.spec.ts') || entry.name.endsWith('.test.ts')) {
+          targets.push(`test:${normalized(toRepoPath(root, full))}`);
+        }
+      }
+    }
+  };
+  scanTests(root);
+
   return targets.sort((a, b) => a.localeCompare(b));
+}
+
+export interface VerifyLockedResult {
+  ok: boolean;
+  totalDiscovered: number;
+  totalLocked: number;
+  unlockedEntities: string[];
+  modifiedUnsealedFiles: Array<{
+    entityId: string;
+    file: string;
+    expectedHash: string;
+    actualHash: string;
+  }>;
+  error?: string | undefined;
+}
+
+export function verifyAllEntitiesLocked(root = process.cwd()): VerifyLockedResult {
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  if (!existsSync(lockPath)) {
+    return {
+      ok: false,
+      totalDiscovered: 0,
+      totalLocked: 0,
+      unlockedEntities: [],
+      modifiedUnsealedFiles: [],
+      error: 'governance.lock.json does not exist.',
+    };
+  }
+
+  let lockData: GovernanceLock;
+  try {
+    lockData = JSON.parse(readFileSync(lockPath, 'utf8'));
+  } catch (err) {
+    return {
+      ok: false,
+      totalDiscovered: 0,
+      totalLocked: 0,
+      unlockedEntities: [],
+      modifiedUnsealedFiles: [],
+      error: `Failed to parse governance.lock.json: ${String(err)}`,
+    };
+  }
+
+  const lockedEntities = lockData.lockedEntities ?? {};
+  const discoveredTargets = discoverAllLockableTargets(root);
+  const unlockedEntities: string[] = [];
+  const modifiedUnsealedFiles: Array<{
+    entityId: string;
+    file: string;
+    expectedHash: string;
+    actualHash: string;
+  }> = [];
+
+  for (const target of discoveredTargets) {
+    const resolved = resolveLockTarget(root, target);
+    if (!resolved) {
+      unlockedEntities.push(target);
+      continue;
+    }
+
+    const lockedEntity = lockedEntities[resolved.id];
+    if (!lockedEntity) {
+      unlockedEntities.push(resolved.id);
+      continue;
+    }
+
+    // 1. Check all recorded files against disk
+    for (const recordedFile of lockedEntity.files) {
+      const fullPath = join(root, recordedFile.path);
+      if (!existsSync(fullPath)) {
+        modifiedUnsealedFiles.push({
+          entityId: resolved.id,
+          file: recordedFile.path,
+          expectedHash: recordedFile.sha256,
+          actualHash: 'FILE_MISSING',
+        });
+        continue;
+      }
+
+      const currentHash = sha256NormalizedFile(fullPath);
+      if (currentHash !== recordedFile.sha256) {
+        modifiedUnsealedFiles.push({
+          entityId: resolved.id,
+          file: recordedFile.path,
+          expectedHash: recordedFile.sha256,
+          actualHash: currentHash,
+        });
+      }
+    }
+
+    // 2. Check for newly added unrecorded files on disk
+    let currentFiles: string[] = [];
+    if (resolved.id === 'infra:docker') {
+      currentFiles = listDockerFiles(root);
+    } else if (resolved.id === 'infra:speed-engine') {
+      currentFiles = [
+        'apps/bot-server/src/services/fast-cache.service.ts',
+        'apps/bot-server/src/services/telemetry.service.ts',
+        'apps/bot-server/src/services/screen-flow.service.ts',
+        'tools/governance/verify-latency-anti-patterns.ts',
+      ].filter((p) => existsSync(join(root, p)));
+    } else {
+      currentFiles = listEntityFiles(root, resolved.directoryOrFile, resolved.type);
+    }
+
+    const recordedPaths = new Set(lockedEntity.files.map((f) => f.path));
+    for (const curFile of currentFiles) {
+      if (!recordedPaths.has(curFile)) {
+        modifiedUnsealedFiles.push({
+          entityId: resolved.id,
+          file: curFile,
+          expectedHash: 'UNRECORDED',
+          actualHash: sha256NormalizedFile(join(root, curFile)),
+        });
+      }
+    }
+  }
+
+  const ok = unlockedEntities.length === 0 && modifiedUnsealedFiles.length === 0;
+  return {
+    ok,
+    totalDiscovered: discoveredTargets.length,
+    totalLocked: Object.keys(lockedEntities).length,
+    unlockedEntities,
+    modifiedUnsealedFiles,
+    error: ok
+      ? undefined
+      : `Pre-merge lockdown verification failed: ${unlockedEntities.length} unlocked entity/entities, ${modifiedUnsealedFiles.length} modified unsealed file(s). All entities must be locked (pnpm lock <target>) before merge.`,
+  };
 }
 
 export function lockAllEntities(
@@ -659,27 +910,182 @@ export function lockAllEntities(
   const failed: Array<{ target: string; error: string }> = [];
   let successful = 0;
 
-  for (const target of targets) {
-    const result = lockEntity(root, target, options);
-    if (result.ok) {
-      successful++;
-    } else {
-      failed.push({ target, error: result.error ?? 'Unknown error' });
+  const lockPath = join(root, GOVERNANCE_LOCK_PATH);
+  let lockData: GovernanceLock;
+  if (existsSync(lockPath)) {
+    try {
+      const parsed = JSON.parse(readFileSync(lockPath, 'utf8'));
+      lockData = buildGovernanceLock(root, new Date().toISOString(), parsed);
+    } catch {
+      lockData = buildGovernanceLock(root);
     }
+  } else {
+    lockData = buildGovernanceLock(root);
   }
+
+  if (!lockData.lockedEntities) {
+    lockData.lockedEntities = {};
+  }
+
+  // 1. Synchronize migration registry first so docs/19 and apps/docs are up to date before hashing
+  try {
+    syncMigrationRegistry(root);
+  } catch {
+    // non-fatal
+  }
+
+  const commitRef = options.commitRef ?? 'Plan-Cryptographic-Lock-100';
+  const lockedAt = new Date().toISOString();
+  const today = lockedAt.slice(0, 10);
+  const evidenceDir = options.evidenceDir ?? join(root, 'docs', 'ai-execution-evidence');
+  if (!existsSync(evidenceDir)) mkdirSync(evidenceDir, { recursive: true });
+
+  for (const target of targets) {
+    const resolved = resolveLockTarget(root, target);
+    if (!resolved) {
+      failed.push({ target, error: `Could not resolve target: "${target}"` });
+      continue;
+    }
+
+    let filePaths: string[] = [];
+    if (resolved.id === 'infra:docker') {
+      filePaths = listDockerFiles(root);
+    } else if (resolved.id === 'infra:speed-engine') {
+      filePaths = [
+        'apps/bot-server/src/services/fast-cache.service.ts',
+        'apps/bot-server/src/services/telemetry.service.ts',
+        'apps/bot-server/src/services/screen-flow.service.ts',
+        'tools/governance/verify-latency-anti-patterns.ts',
+      ].filter((p) => existsSync(join(root, p)));
+    } else {
+      filePaths = listEntityFiles(root, resolved.directoryOrFile, resolved.type);
+    }
+
+    if (filePaths.length === 0) {
+      failed.push({
+        target,
+        error: `Target "${target}" resolved to "${resolved.directoryOrFile}" but no files were found.`,
+      });
+      continue;
+    }
+
+    const filesWithHashes = filePaths.map((relPath) => ({
+      path: relPath,
+      sha256: sha256NormalizedFile(join(root, relPath)),
+    }));
+
+    const entity: LockedEntity = {
+      id: resolved.id,
+      type: resolved.type,
+      title: resolved.title,
+      directory: resolved.directoryOrFile,
+      lockedAt,
+      files: filesWithHashes,
+    };
+
+    lockData.lockedEntities[entity.id] = entity;
+
+    // Write evidence file
+    const safeId = entity.id.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const evidenceFilePath = join(evidenceDir, `${today}-lock-${safeId}.md`);
+    const evidenceContent = `# توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (${entity.id})
+
+- **تاريخ القفل:** ${today} (${lockedAt})
+- **معرف الكيان:** \`${entity.id}\`
+- **نوع الكيان:** \`${entity.type}\`
+- **العنوان:** ${entity.title}
+- **المسار الأساسي:** \`${entity.directory}\`
+- **عدد الملفات المقفلة:** ${entity.files.length} ملفاً
+- **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
+- **مرجع الالتزام (Commit):** \`${commitRef}\`
+
+## قائمة البصمات الجنائية (SHA-256)
+| المسار | بصمة الهاش (SHA-256) |
+| :--- | :--- |
+${entity.files.map((f) => `| \`${f.path}\` | \`${f.sha256}\` |`).join('\n')}
+
+## بوابات التحقق المعتمدة
+- **CRLF/LF Sanitization:** PASS
+- **Tamper Protection:** ACTIVE
+- **Zero Blast Radius:** ISOLATED
+`;
+
+    try {
+      writeFileSync(evidenceFilePath, evidenceContent, 'utf8');
+    } catch {
+      // non-fatal
+    }
+
+    successful++;
+  }
+
+  // Write atomic update to governance.lock.json once
+  writeFileSync(lockPath, JSON.stringify(lockData, null, 2) + '\n', 'utf8');
 
   return { total: targets.length, successful, failed };
 }
 
 if (isCliEntrypoint(import.meta.url)) {
-  console.log('🔒 Running unified lock engine...');
-  const result = lockAllEntities(process.cwd());
-  console.log(`✅ Unified lock engine complete: ${result.successful}/${result.total} entities locked.`);
-  if (result.failed.length > 0) {
-    for (const f of result.failed) {
-      console.error(`   - ${f.target}: ${f.error}`);
-    }
+  const argv = process.argv.slice(2);
+
+  // Strictly prohibit unlock-all attempts
+  if (argv.some((a) => a.toLowerCase().includes('unlock') && a.toLowerCase().includes('all'))) {
+    console.error('🚨 [FATAL CONSTITUTIONAL BREACH: UNLOCK-ALL IS STRICTLY PROHIBITED]');
+    console.error('   Mass unlocking (unlock:all) is permanently forbidden.');
+    console.error('   Unlocking is strictly granular per entity via dynamic OTP challenge.');
     process.exit(1);
   }
-}
 
+  if (argv.includes('--verify-locked') || argv.includes('--check')) {
+    console.log('🔍 Verifying that 100% of monorepo entities are cryptographically locked...');
+    const verifyRes = verifyAllEntitiesLocked(process.cwd());
+    if (!verifyRes.ok) {
+      console.error(`❌ ${verifyRes.error}`);
+      if (verifyRes.unlockedEntities.length > 0) {
+        console.error(`   Unlocked entity IDs (${verifyRes.unlockedEntities.length}):`);
+        for (const u of verifyRes.unlockedEntities) {
+          console.error(`     - ${u}`);
+        }
+      }
+      if (verifyRes.modifiedUnsealedFiles.length > 0) {
+        console.error(`   Modified unsealed file(s) (${verifyRes.modifiedUnsealedFiles.length}):`);
+        for (const m of verifyRes.modifiedUnsealedFiles) {
+          console.error(`     - [${m.entityId}] ${m.file} (expected: ${m.expectedHash}, actual: ${m.actualHash})`);
+        }
+      }
+      process.exit(1);
+    }
+    console.log(
+      `✅ All ${verifyRes.totalLocked} entities are cryptographically locked and verified with 0 unsealed modifications.`
+    );
+    process.exit(0);
+  }
+
+  const isAll = argv.includes('--all') || argv.includes('all') || argv.length === 0;
+
+  if (isAll) {
+    console.log('🔒 Running unified lock engine (100% Sovereign Monorepo Batch Sealing)...');
+    const result = lockAllEntities(process.cwd());
+    console.log(`✅ Unified lock engine complete: ${result.successful}/${result.total} entities locked.`);
+    if (result.failed.length > 0) {
+      for (const f of result.failed) {
+        console.error(`   - ${f.target}: ${f.error}`);
+      }
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  const target = argv.filter((a) => !a.startsWith('--'))[0];
+  if (target) {
+    console.log(`🔒 Locking target "${target}"...`);
+    const result = lockEntity(process.cwd(), target);
+    if (!result.ok) {
+      console.error(`❌ Lock failed: ${result.error}`);
+      process.exit(1);
+    }
+    console.log(`✅ Successfully locked [${result.entity!.id}] (${result.entity!.title})`);
+    console.log(`   Files hashed: ${result.entity!.files.length} files`);
+    process.exit(0);
+  }
+}

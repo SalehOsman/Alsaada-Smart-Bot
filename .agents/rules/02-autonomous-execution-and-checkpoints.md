@@ -57,3 +57,18 @@ Agents are **strictly forbidden** from proposing or executing:
 1. **Self-Contained Work Units:** Plan changes in cohesive, self-verifying checkpoints.
 2. **Pre-Commit Verification:** Always execute local typechecks and targeted tests before staging.
 3. **No Guesswork Principle:** If requirements, edge cases, or accounting models are underspecified, stop immediately and ask for clarification rather than making assumptions.
+4. **Mandatory AI Auto Re-Lock & Verbal Confirmation (إلزامية القفل التلقائي والتأكيد النصي):**
+   - After completing edits on any unlocked entity, the agent MUST automatically re-lock the entity (`pnpm lock <target>` or `pnpm lock:all`) before requesting branch merge with «ادمج الفرع» or concluding the session.
+   - The agent MUST explicitly include the verbatim confirmation in its final message:
+     > **«تم قفل الوظيفة [اسم/معرف الوظيفة]»** (e.g., `✅ تم قفل الوظيفة flow:01.1` or `✅ تم قفل الشاشة dashboard:workforce/clearances`).
+   - Leaving any modified entity unsealed prior to merge is a fatal governance violation (`Exit 1`).
+
+---
+
+## 4. الإلزام القطعي بالمسارات التشغيلية الثلاثة (The Tri-Lifecycle Invariant — WP 94)
+
+يُحظر حظراً باتاً على أي وكيل ذكاء اصطناعي أو أداة برمجية الشروع في أي مهمة إلا بعد تصنيفها الصارم والالتزام الكامل بمراحلها وفق ميثاق **خطة العمل 94**:
+1. **مسار التعديل البرمجي ([`Rulebook 11`](11-modification-lifecycle-standard.md)):** صياغة الخطة مسبقاً، فك القفل المشفر برمز OTP المؤقت، التطوير بـ TDD، الفحص والتحقق، إعادة القفل التلقائي فوراً، تسليم البطاقات الخمس في الشات، والدمج بصيغة «ادمج الفرع».
+2. **مسار الإنشاء الجديد ([`Rulebook 12`](12-creation-lifecycle-standard.md)):** صياغة المواصفة السداسية واعتمادها، التوليد الهيكلي الآلي عبر `pnpm make:flow` لشريحة الـ 10 ملفات، التطوير المنضبط وعقود Zod، القفل التشفيري الأولي في `governance.lock.json`، توثيق سجل الترحيل `docs/19`، وتسليم البطاقات الخمس في الشات، والدمج بصيغة «ادمج الفرع».
+3. **مسار إصلاح الأعطال والتحقيق الجنائي ([`Rulebook 08`](08-code-defect-and-regression-postmortem.md) / WP 93):** تجميد الكود فوراً عند فشل الاختبارات (حظر الترقيع الفوري)، فتح فرع الحادثة المنعزل `fix/inc-*`، تحرير الملف الجنائي المسبق في `docs/code-incidents/`، اعتماد الخطة بصيغة «موافق على خطة الإصلاح»، كتابة اختبار تراجع دائم (Permanent Regression Test)، اجتياز الفحص الآلي `pnpm incident:verify` و `pnpm test:incidents`، وإصدار بطاقة الإقرار الجنائي الإلزامية.
+- **عقوبة المخالفة:** يُسقط عمل الوكيل فوراً بحكم `[REJECT]` قطعي من `/saleh`، وتُبطل أي تعديلات تمت خارج هذه المسارات.
