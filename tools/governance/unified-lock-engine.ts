@@ -752,6 +752,9 @@ export function discoverAllLockableTargets(
   const postBaselineTests = new Set([
     'tools/governance/tests/verify-observability-ast.spec.ts',
     'tools/governance/tests/ci-lock-attachments-exclusion.spec.ts',
+    'tools/governance/tests/jev-skill-consultant.spec.ts',
+    'tools/governance/tests/incident-financial-cleanup.spec.ts',
+    'tools/governance/tests/pure-cloud-jev.spec.ts',
   ]);
   const scanTests = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
