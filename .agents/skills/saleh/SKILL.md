@@ -211,6 +211,7 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 
 ### 2. Bullshit-Buster Findings
 - [ ] **Spec-First & Branch Isolation (WP 93):** Was code modified only after plan approval? Was an isolated branch (`fix/inc-*`, `feat/*`, `plan/*`) used from clean main?
+- [ ] **Sovereign Skill Graph & 11-Skill Knowledge Base (WP 96):** Does `sovereign-skill-graph.json` pass `pnpm skills:verify` with zero orphan skills?
 - [ ] **Defect Dossier Authenticity (WP 93):** Does `docs/code-incidents/` contain a verified report with 0 placeholders passing `pnpm incident:verify`?
 - [ ] **Mandatory Completion Attestation (WP 93):** Did the agent output the exact completion attestation formula?
 - [ ] **Sham Assertions:** Any `expect(true).toBe(true)` or unverified results?
@@ -229,6 +230,11 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 
 ### 4. Corrective Prompt (Ready to Copy)
 [Exact directive Saleh can paste directly to the worker agent to fix all issues immediately]
+
+### 5. JEV Permanent Co-Auditor Summary (WP 96)
+- **Composite Governance Index (CGI v2.0):** [0.0% to 100.0%]
+- **JEV Forensic Verdict:** [CERTIFIED PASS | CONDITIONAL PASS | REJECT]
+- **Plan Readiness & Skills Consultation:** Verified via `pnpm jev:consult`
 ```
 
 ---
@@ -240,6 +246,10 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 | Check Domain | Command | Governed Quality Gate |
 | :--- | :--- | :---: |
 | **Unified Audit Suite** | `tsx tools/governance/saleh-audit-suite.ts` | G1, G2, G5, G8, G10, G22, WP 93 |
+| **Boosted Arsenal & JEV Audit** | `pnpm audit:saleh:boost` | All Gates + Triple Guards + JEV |
+| **Sovereign Skill Graph** | `pnpm skills:verify` | WP 96 (11 Skills, Zero Orphans) |
+| **JEV Permanent Co-Auditor** | `pnpm jev:consult` | WP 96 (Pre/Mid/Post Checklists) |
+| **Triple Guard Arsenal** | `pnpm audit:guards` | Clean Code, Tests, Docs Guards |
 | **Defect Dossier Verification** | `pnpm incident:verify` | G14, G15, WP 93 |
 | **Incident Verifier Tests** | `pnpm test:incidents` | G10, WP 93 |
 | **Presentation & UX AST** | `tsx tools/governance/saleh-audit-suite.ts --presentation` | G5, G22 |

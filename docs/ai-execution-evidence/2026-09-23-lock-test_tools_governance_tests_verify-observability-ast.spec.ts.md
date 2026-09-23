@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/governance/tests/verify-observability-ast.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:39:23.966Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T13:50:40.414Z)
 - **معرف الكيان:** `test:tools/governance/tests/verify-observability-ast.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/governance/tests/verify-observability-ast.spec.ts
 - **المسار الأساسي:** `tools/governance/tests/verify-observability-ast.spec.ts`
 - **عدد الملفات المقفلة:** 1 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-70-Lock`
+- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |

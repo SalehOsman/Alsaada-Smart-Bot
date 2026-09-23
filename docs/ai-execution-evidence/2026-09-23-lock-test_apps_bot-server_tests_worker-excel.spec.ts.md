@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:apps/bot-server/tests/worker-excel.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:01:52.476Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T13:50:40.414Z)
 - **معرف الكيان:** `test:apps/bot-server/tests/worker-excel.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: apps/bot-server/tests/worker-excel.spec.ts
