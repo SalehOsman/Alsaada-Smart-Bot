@@ -3,6 +3,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createResult, fail, isCliEntrypoint, listFilesRecursive, printAndExit, toRepoPath, type VerificationResult } from './common.js';
 import { listEntityFiles, sha256NormalizedFile } from './unified-lock-engine.js';
+import {
+  isPathAuthorizedByActiveUnlock,
+  consumeActiveGovernanceUnlockForPath,
+} from './governance-unlock-session.js';
 
 export const APPROVAL_PHRASE = 'موافق على التعديل او الايقاف او الحذف';
 export const GOVERNANCE_LOCK_PATH = 'governance.lock.json';
@@ -167,15 +171,20 @@ function isExcluded(repoPath: string): boolean {
   return false;
 }
 
-export function listProtectedGovernanceFiles(root = process.cwd()): string[] {
+export function listProtectedGovernanceFiles(
+  root = process.cwd(),
+  customPaths?: { files?: readonly string[]; directories?: readonly string[] }
+): string[] {
   const files = new Set<string>();
+  const fileList = customPaths?.files ?? PROTECTED_GOVERNANCE_FILES;
+  const dirList = customPaths?.directories ?? PROTECTED_GOVERNANCE_DIRECTORIES;
 
-  for (const file of PROTECTED_GOVERNANCE_FILES) {
+  for (const file of fileList) {
     const fullPath = join(root, file);
     if (existsSync(fullPath) && !isExcluded(file)) files.add(file);
   }
 
-  for (const directory of PROTECTED_GOVERNANCE_DIRECTORIES) {
+  for (const directory of dirList) {
     const fullDirectory = join(root, directory);
     if (!existsSync(fullDirectory)) continue;
     for (const file of listFilesRecursive(fullDirectory)) {
@@ -187,6 +196,19 @@ export function listProtectedGovernanceFiles(root = process.cwd()): string[] {
   }
 
   return [...files].sort((left, right) => left.localeCompare(right));
+}
+
+export function isProtectedGovernancePath(filePath: string): boolean {
+  const norm = normalized(filePath).replace(/^\.\//, '').replace(/\/$/, '');
+  if ((PROTECTED_GOVERNANCE_FILES as readonly string[]).includes(norm)) {
+    return true;
+  }
+  for (const dir of PROTECTED_GOVERNANCE_DIRECTORIES) {
+    if (norm === dir || norm.startsWith(`${dir}/`)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function sha256File(path: string): string {
@@ -234,34 +256,89 @@ export function hashDirectoryFiles(dir: string, root = process.cwd()): Governanc
   }));
 }
 
+export interface BuildGovernanceLockOptions {
+  allowProtectedModifications?: boolean;
+}
+
 export function buildGovernanceLock(
   root = process.cwd(),
   generatedAt = new Date().toISOString(),
-  existingLock?: GovernanceLock | null
+  existingLock?: GovernanceLock | null,
+  options?: BuildGovernanceLockOptions
 ): GovernanceLock {
-  const protectedFiles = listProtectedGovernanceFiles(root);
-
-  let lockedFlows: Record<string, LockedFlowEntry> | undefined = existingLock?.lockedFlows;
-  let lockedDashboardFeatures: Record<string, LockedDashboardFeatureEntry> | undefined = existingLock?.lockedDashboardFeatures;
-  let lockedModules: Record<string, LockedModuleEntry> | undefined = existingLock?.lockedModules;
-  let lockedSpeedEngine: LockedSpeedEngineEntry | undefined = existingLock?.lockedSpeedEngine;
-  let lockedDocker: LockedDockerEntry | undefined = existingLock?.lockedDocker;
-  let lockedEntities: Record<string, import('./unified-lock-engine.js').LockedEntity> | undefined = existingLock?.lockedEntities;
-
-  if (!existingLock) {
+  let effectiveExisting = existingLock;
+  if (!effectiveExisting) {
     const lockPath = join(root, GOVERNANCE_LOCK_PATH);
     if (existsSync(lockPath)) {
       try {
-        const parsed = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
-        if (parsed.lockedFlows) lockedFlows = parsed.lockedFlows;
-        if (parsed.lockedDashboardFeatures) lockedDashboardFeatures = parsed.lockedDashboardFeatures;
-        if (parsed.lockedModules) lockedModules = parsed.lockedModules;
-        if (parsed.lockedSpeedEngine) lockedSpeedEngine = parsed.lockedSpeedEngine;
-        if (parsed.lockedDocker) lockedDocker = parsed.lockedDocker;
-        if (parsed.lockedEntities) lockedEntities = parsed.lockedEntities;
+        effectiveExisting = JSON.parse(readFileSync(lockPath, 'utf8')) as GovernanceLock;
       } catch {
-        // ignore
+        effectiveExisting = null;
       }
+    }
+  }
+
+  const protectedFiles = listProtectedGovernanceFiles(root, effectiveExisting?.protectedPaths);
+
+  let lockedFlows: Record<string, LockedFlowEntry> | undefined = effectiveExisting?.lockedFlows;
+  let lockedDashboardFeatures: Record<string, LockedDashboardFeatureEntry> | undefined = effectiveExisting?.lockedDashboardFeatures;
+  let lockedModules: Record<string, LockedModuleEntry> | undefined = effectiveExisting?.lockedModules;
+  let lockedSpeedEngine: LockedSpeedEngineEntry | undefined = effectiveExisting?.lockedSpeedEngine;
+  let lockedDocker: LockedDockerEntry | undefined = effectiveExisting?.lockedDocker;
+  let lockedEntities: Record<string, import('./unified-lock-engine.js').LockedEntity> | undefined = effectiveExisting?.lockedEntities;
+
+  // Physical Armor: Check for unauthorized on-disk modifications to protected governance files
+  if (effectiveExisting && Array.isArray(effectiveExisting.files) && effectiveExisting.files.length > 0) {
+    const existingFileMap = new Map(effectiveExisting.files.map((f) => [f.path, f.sha256]));
+    const unauthorizedModifications: Array<{ path: string; expected: string; actual: string }> = [];
+
+    for (const file of protectedFiles) {
+      const fullPath = join(root, file);
+      const currentHash = sha256NormalizedFile(fullPath);
+      const expectedHash = existingFileMap.get(file);
+
+      if (expectedHash && currentHash !== expectedHash) {
+        const isAuthorized =
+          options?.allowProtectedModifications === true ||
+          isPathAuthorizedByActiveUnlock(file, root);
+
+        if (!isAuthorized) {
+          unauthorizedModifications.push({
+            path: file,
+            expected: expectedHash,
+            actual: currentHash,
+          });
+        }
+      } else if (!expectedHash) {
+        // Newly added file to a protected directory
+        const isAuthorized =
+          options?.allowProtectedModifications === true ||
+          isPathAuthorizedByActiveUnlock(file, root);
+
+        if (!isAuthorized) {
+          unauthorizedModifications.push({
+            path: file,
+            expected: 'UNRECORDED_PROTECTED_FILE',
+            actual: currentHash,
+          });
+        }
+      }
+    }
+
+    if (unauthorizedModifications.length > 0) {
+      const details = unauthorizedModifications
+        .map((m) => `  - ${m.path} (expected: ${m.expected}, actual: ${m.actual})`)
+        .join('\n');
+      throw new Error(
+        `🚨 [CRITICAL GOVERNANCE BREACH: UNAUTHORIZED PROTECTED ENTITY MODIFICATION]\n` +
+        `   The following protected governance file(s) were modified on disk without an active authorized OTP unlock session:\n` +
+        `${details}\n` +
+        `   Sealing unauthorized changes into governance.lock.json is strictly forbidden.\n` +
+        `   Mandatory Dynamic OTP Challenge-Response Workflow (Work Plan 90):\n` +
+        `   1. Request OTP challenge: pnpm unlock:request <target> --reason="<justification>"\n` +
+        `   2. Obtain Saleh's untranslated approval in chat: «موافق على الفتح <UNLOCK-XXXXXX>»\n` +
+        `   3. Confirm unlock: pnpm unlock:confirm <target>\n`
+      );
     }
   }
 
@@ -323,9 +400,10 @@ export function buildGovernanceLock(
 export function writeGovernanceLock(
   root = process.cwd(),
   generatedAt = new Date().toISOString(),
-  existingLock?: GovernanceLock | null
+  existingLock?: GovernanceLock | null,
+  options?: BuildGovernanceLockOptions
 ): GovernanceLock {
-  const lock = buildGovernanceLock(root, generatedAt, existingLock);
+  const lock = buildGovernanceLock(root, generatedAt, existingLock, options);
   const outputPath = join(root, GOVERNANCE_LOCK_PATH);
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${JSON.stringify(lock, null, 2)}\n`, 'utf8');

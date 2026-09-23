@@ -97,7 +97,7 @@ export function createUnlockChallenge(
     }
   }
 
-  // Check legacy locks if not found in lockedEntities
+  // Check legacy locks or governance targets if not found in lockedEntities
   if (!entityId || !lockedEntities[entityId]) {
     const isLegacyFlow =
       lockData.lockedFlows &&
@@ -105,8 +105,11 @@ export function createUnlockChallenge(
     const isLegacyDash =
       lockData.lockedDashboardFeatures &&
       Object.keys(lockData.lockedDashboardFeatures).includes(target.replace(/^dashboard:/, ''));
+    const isGov = entityId && entityId.startsWith('governance:');
 
-    if (isLegacyFlow) {
+    if (isGov) {
+      // Governance target recognized
+    } else if (isLegacyFlow) {
       entityId = `flow:${target.replace(/^flow:/, '')}`;
     } else if (isLegacyDash) {
       entityId = `dashboard:${target.replace(/^dashboard:/, '')}`;
@@ -116,6 +119,13 @@ export function createUnlockChallenge(
         error: `Entity "${target}" is not currently locked in governance.lock.json.`,
       };
     }
+  }
+
+  if (!entityId) {
+    return {
+      ok: false,
+      error: `Could not resolve a locked entity ID for target "${target}".`,
+    };
   }
 
   const now = new Date();

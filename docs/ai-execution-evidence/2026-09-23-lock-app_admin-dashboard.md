@@ -1,18 +1,18 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:admin-dashboard)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:36:25.949Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T21:41:40.797Z)
 - **معرف الكيان:** `app:admin-dashboard`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: admin-dashboard
 - **المسار الأساسي:** `apps/admin-dashboard`
 - **عدد الملفات المقفلة:** 73 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+- **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `apps/admin-dashboard/.gitignore` | `65bc21ebf3708fe434fefb2fda661ba998835b5da34eddfaf5031d1642cfefb9` |
+| `apps/admin-dashboard/.gitignore` | `53b41443c4b9ee7ef7daec4525c0a0e12c060a12767e738d3d2f9e529d68bfb0` |
 | `apps/admin-dashboard/CHANGELOG.md` | `7e49566eb558447e4c5151c2054403eed4dbb0d209c7c544b9ae35298405f99e` |
 | `apps/admin-dashboard/next-env.d.ts` | `85ae5aee75f011967cf2d25cbc342f62d69314e9d925f7f4aa3456fc2cffcca6` |
 | `apps/admin-dashboard/next.config.ts` | `12d11ca5966c3f187beab5ea97faad11e2b0400429843745504853d9c9a4b36a` |

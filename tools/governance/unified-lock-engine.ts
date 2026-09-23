@@ -7,9 +7,14 @@ import {
   GOVERNANCE_LOCK_PATH,
   buildGovernanceLock,
   listDockerFiles,
+  isProtectedGovernancePath,
   type GovernanceLock,
 } from './verify-governance-lock.js';
 import { syncMigrationRegistry } from './sync-migration-registry.js';
+import {
+  isPathAuthorizedByActiveUnlock,
+  consumeActiveGovernanceUnlockForPath,
+} from './governance-unlock-session.js';
 
 export type LockedEntityType = 'flow' | 'dashboard' | 'package' | 'infra' | 'module' | 'app' | 'test';
 
@@ -282,6 +287,33 @@ export function resolveLockTarget(root: string, rawTarget: string): ResolvedTarg
         type: 'test',
         title: `ملف الاختبار المعتمد: ${testPath}`,
         directoryOrFile: testPath,
+      };
+    }
+  }
+
+  // 1.6. Governance & Protected Entities Resolution
+  if (trimmed.startsWith('governance:')) {
+    const govTarget = trimmed.replace(/^governance:/, '').replace(/^\.\//, '');
+    const fullPath = join(root, govTarget);
+    if (existsSync(fullPath)) {
+      return {
+        id: `governance:${govTarget}`,
+        type: 'infra',
+        title: `الحوكمة والدستور السيادي: ${govTarget}`,
+        directoryOrFile: govTarget,
+      };
+    }
+  }
+
+  const cleanGovTarget = trimmed.replace(/^\.\//, '').replace(/\/$/, '');
+  if (isProtectedGovernancePath(cleanGovTarget)) {
+    const fullPath = join(root, cleanGovTarget);
+    if (existsSync(fullPath)) {
+      return {
+        id: `governance:${cleanGovTarget}`,
+        type: 'infra',
+        title: `الحوكمة والدستور السيادي: ${cleanGovTarget}`,
+        directoryOrFile: cleanGovTarget,
       };
     }
   }
@@ -594,6 +626,23 @@ export function lockEntity(
   }
 
   lockData.lockedEntities[entity.id] = entity;
+
+  if (resolved.id.startsWith('governance:')) {
+    const fileHashMap = new Map(filesWithHashes.map((f) => [f.path, f.sha256]));
+    if (Array.isArray(lockData.files)) {
+      for (const entry of lockData.files) {
+        if (fileHashMap.has(entry.path)) {
+          entry.sha256 = fileHashMap.get(entry.path)!;
+          fileHashMap.delete(entry.path);
+        }
+      }
+      for (const [newPath, newHash] of fileHashMap) {
+        lockData.files.push({ path: newPath, sha256: newHash });
+      }
+      lockData.files.sort((a, b) => a.path.localeCompare(b.path));
+    }
+    consumeActiveGovernanceUnlockForPath(resolved.directoryOrFile, root);
+  }
 
   // Write atomic update with retry on Windows file contention
   let writeSuccess = false;
@@ -931,7 +980,10 @@ export function lockAllEntities(
     try {
       const parsed = JSON.parse(readFileSync(lockPath, 'utf8'));
       lockData = buildGovernanceLock(root, new Date().toISOString(), parsed);
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('CRITICAL GOVERNANCE BREACH')) {
+        throw err;
+      }
       lockData = buildGovernanceLock(root);
     }
   } else {
