@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:docs)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:51:10.647Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:04:35.371Z)
 - **معرف الكيان:** `app:docs`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: docs
@@ -64,7 +64,7 @@
 | `apps/docs/src/content/docs/core-architecture/17-worker-coding-and-silent-alias-resolution.md` | `92dbe8d1d8335935f7229203668cc6bf6d29f4a3d2d1d0ff7de34188c0e9ba84` |
 | `apps/docs/src/content/docs/core-architecture/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md` | `cad0c6a7b32b24276f102d3c0849f0859e43990e85e3890f2701f127e5dd746e` |
 | `apps/docs/src/content/docs/data-and-migration/18-enterprise-schema-and-entity-relationship-model.md` | `0645d69b3e08610a02781253deb23b5ea7d6a78ec36af665d35b852ddc3fc74d` |
-| `apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md` | `617240b7fb280205701aa84eedd98fdcafd89c48fe5f9c6b88abcdd411c3409f` |
+| `apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md` | `5b629b694f15548b5f107c48418e2798a81d8145fb47e9adc63fe8efe239acc2` |
 | `apps/docs/src/content/docs/en/index.md` | `1d590738ca35eae6273a95370a380d9e0d2e8f6ed7158c8cb2cb907e4965991a` |
 | `apps/docs/src/content/docs/financial-and-governance/08-universal-rbac-and-executive-role.md` | `1c16d72947ccaf9eaa9cf7470f374b41271a8cc1944edb91ff8e4eaacf93e5aa` |
 | `apps/docs/src/content/docs/financial-and-governance/09-database-governance-and-superadmin-console.md` | `02f300ec3a4e195a391303e00462aa7184a7827f3cb281a98248ec1ee63fb131` |

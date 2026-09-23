@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/modules/tests/catalog.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:51:10.647Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:04:35.371Z)
 - **معرف الكيان:** `test:tools/modules/tests/catalog.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/modules/tests/catalog.spec.ts
