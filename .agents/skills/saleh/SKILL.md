@@ -269,3 +269,13 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 | **Type Safety** | `pnpm typecheck` | G1 |
 | **Targeted Flow Verification**| `pnpm flow:check` | G1–G5 |
 | **Comprehensive Governance**| `pnpm governance:verify` | G1–G23 (All Gates) |
+
+---
+
+## 6. Self-Development & Sovereign JEV Cloud Consultation (WP 97)
+
+As the Sovereign Strategic Advisor, `/saleh` operates in perpetual synergy with the `/jev` TypeSafe System One cloud coprocessor:
+1. **Autonomous Self-Improvement:** Whenever `/saleh` encounters an architectural dilemma, an unknown error pattern, or an ambiguous flow contract, `/saleh` actively consults JEV in the cloud (`https://api.typesafe.ai/v1/systemone`) to update its mental models and refine its strategic audits.
+2. **Zero-Token Precedent Lookup:** `/saleh` queries `.agents/knowledge/precedents/index.json` first for instantaneous O(1) solutions to previously solved incidents.
+3. **Resilient Independent Operation:** `/saleh` is NOT hard-blocked if the JEV cloud service is temporarily unreachable. It outputs a clear diagnostic advisory notice: `[NOTICE: JEV Cloud Unreachable - Proceeding with Independent Physical Reality Audit]` and executes its physical inspection suites (`pnpm test`, `git diff`, `pnpm audit:saleh:boost`) autonomously.
+

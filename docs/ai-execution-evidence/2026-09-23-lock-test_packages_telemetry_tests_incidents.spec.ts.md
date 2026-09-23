@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/telemetry/tests/incidents.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:04:35.371Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:36:25.949Z)
 - **معرف الكيان:** `test:packages/telemetry/tests/incidents.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/telemetry/tests/incidents.spec.ts

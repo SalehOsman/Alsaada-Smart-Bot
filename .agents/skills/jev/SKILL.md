@@ -87,8 +87,8 @@ flowchart TD
 - **3-Tier Exponential Backoff Retry & Fail-Fast:** If a network failure occurs, `/jev` automatically executes 3 retries (1s -> 2s -> 4s with 5000ms timeout per request). If all 3 attempts fail, `/jev` aborts immediately with Exit Code 1 and displays the diagnostic error card.
 - **Deterministic Diff Resolution:** Analyzes `git diff -U3 HEAD` (working tree), merge-base (`origin/main...HEAD`), or `HEAD~1...HEAD` with zero ambiguity.
 - **Delta Chunking & AST Compression:** Diffs exceeding 300 lines are compressed into essential AST structural signatures (classes, functions, buttons, telemetry, and assertions), avoiding redundant text filler.
-- **Dynamic Adaptive Question Routing:** Only 2–4 targeted questions are dispatched based on the modified slice (flows, tests, arch, plans), reducing token consumption by 85%–90%.
-- **SHA-256 Caching:** All cloud evaluations are cached by cryptographic hash in `.governance-cache/jev-cloud-cache.json` for 0ms / 0-token repeat checks.
+- **Authentic Cloud Provenance & Full Evaluation:** All 25 governance catalog questions are dispatched to TypeSafe System One (or resolved from SHA-256 cloud cache) so that 100% of inspection dimensions carry authentic `Engine: api` provenance with zero local heuristic bypass in CLI mode.
+- **SHA-256 Caching & Token Economy:** All cloud evaluations are cached by cryptographic hash in `.governance-cache/jev-cloud-cache.json` for 0ms / 0-token repeat checks. Precedent index lookup (`.agents/knowledge/precedents/index.json`) provides instant 0-token resolution for verified patterns.
 - **Zero Blast Radius Guard:** Programmatic `engine: 'heuristic'` is strictly retained for offline unit tests.
 
 ---

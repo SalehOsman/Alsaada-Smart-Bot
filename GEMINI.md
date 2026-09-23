@@ -7,7 +7,10 @@
 
 ### 1. Sovereign Agent Identity, Precedence & Architecture
 1. **Precedence Hierarchy:** Direct User Orders > `GEMINI.md` (SSOT) > `docs/27` (Gates) > `.agents/rules/` (Domain Rulebooks) > Legacy Docs.
-2. **Constitutional Roles:** `/saleh` is the Sovereign Stakeholder Proxy & Chief Strategy Auditor equipped exclusively with the Triple Guard Arsenal (`clean-code-guard`, `test-guard`, `docs-guard`) in `.agents/skills/saleh/arsenal/` for `/boost` forensic auditing; Chief Arbitrator rules on conflicts; Squads execute vertical slices.
+2. **Constitutional Roles & Semantic Disambiguation:**
+   - **User Saleh (The Human Owner):** The sovereign user, code owner, and ultimate decision-maker who explicitly issues binding checkpoint approvals (`«ادمج الفرع»`, `«موافق على الفتح»`, `«نعم اقفل»`).
+   - **Agent Saleh (`/saleh`):** The autonomous Sovereign Stakeholder Proxy & Chief Strategy Auditor equipped with the Triple Guard Arsenal (`clean-code-guard`, `test-guard`, `docs-guard`). When the user references "Saleh" in operational or agent task contexts, it strictly refers to `/saleh`.
+   - **Agent Jev (`/jev`):** The Pure Cloud Quality Sentinel and TypeSafe System One coprocessor.
 3. **Multi-Agent Protocol:** Every major flow requires Challenger review (`challenger_security_concurrency`, `challenger_viewport_responsive`) and Arbitrator sign-off.
 
 ### 2. Primary Functional SSOT (`F:\HR` Parity) & Migration Registry
@@ -109,13 +112,22 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 2. **السياق التشخيصي المقيد (`BoundedFlowContext`):** يُحظر تمرير `ctx?: unknown` إلى معالجات الأخطاء؛ يجب الالتزام بعقد `BoundedFlowContext` والمهلة القصوى غير المعطلة (`1500ms`) مع التراجع التلقائي إلى `writeEmergencyIncident`.
 3. **بوابة الفحص النحوي العميق (Gate G9 AST Sentinel):** يفحص `pnpm observability:verify` شجرة الـ AST عبر TypeScript Compiler API لإسقاط أي كتلة `catch` تبتلع الأخطاء صامتاً، أو دوال صورية غير مستوردة من `@alsaada/telemetry`، أو استدعاءات `captureFlowError` / `handle*Error` غير مسبوقة بـ `await`.
 
-### 8.4 ميثاق المستشار السيادي الدائم للمهارات والخطط (/jev × /saleh) والرسم البياني المعرفي (Work Plan 96)
+### 8.4 ميثاق المستشار السيادي الدائم للمهارات والخطط (/jev × /saleh) وحارس الجودة السحابي (Work Plans 96 & 97)
 1. **الرسم البياني المعرفي السيادي الموحد (.agents/knowledge/sovereign-skill-graph.json):**
-   يمثل الرسم البياني المعرفي المرجع الرقمي الإلزامي لكافة مهارات المشروع الـ 11 (`.agents/skills/`)، ويربط كل نقطة مهارة بكتيبات القواعد الـ 12 (`Rulebooks 01–12`) وخطط العمل (`WP 88–96`) وبوابات الجودة الـ 23 (`G1–G23`)؛ ويُحظر وجود أي مهارة يتيمة، ويتم التحقق منه دورياً عبر `pnpm skills:verify`.
+   يمثل الرسم البياني المعرفي المرجع الرقمي الإلزامي لكافة مهارات المشروع الـ 11 (`.agents/skills/`)، ويربط كل نقطة مهارة بكتيبات القواعد الـ 12 (`Rulebooks 01–12`) وخطط العمل (`WP 88–97`) وبوابات الجودة الـ 23 (`G1–G23`)؛ ويُحظر وجود أي مهارة يتيمة، ويتم التحقق منه دورياً عبر `pnpm skills:verify`.
 2. **بروتوكول الاستشارة الثلاثية الإلزامي (The Triple-Checkpoint JEV Consultation Loop):**
    - **الاستشارة القبلية (Pre-Task Plan Readiness):** قبل الشروع في كتابة أي كود أو اعتماد خطة، يستشير الوكيل محرك JEV عبر `pnpm jev:consult --plan <path>`؛ ويُحظر البدء بأي خطة يقل مؤشر جاهزيتها عن 90% (`Plan Readiness < 90%`).
    - **التوجيه المرافق (Mid-Task Diff Sentinel):** تشغيل `pnpm jev --diff` للتحقق اللحظي من ميزانية الأزرار (36/16/7/3)، واستدعاءات captureFlowError، وعقود RichMessage.
-   - **التفتيش الجنائي الختامي (Post-Task Boosted Audit):** تشغيل `pnpm audit:saleh:boost` لحساب مؤشر CGI v2.0 عبر الأبعاد الـ 10؛ ويُمنع دمج أي فرع لا يحقق CGI >= 90%.
+   - **التفتيش الجنائي الختامي (Post-Task Boosted Audit):** تشغيل `pnpm audit:saleh:boost` لحساب مؤشر CGI v2.0 عبر الأبعاد الـ 10؛ ويُمنع دمج أي فرع لا يحقق CGI >= 95%.
+3. **الإلزام السحابي الحصري لحارس الجودة (/jev Pure Cloud Sentinel - WP 97):**
+   - يرتبط `/jev` سحابياً حصراً بمحرك TypeSafe System One (`https://api.typesafe.ai/v1/systemone`) عبر الـ CLI والـ CI، مع حظر قاطع ونهائي لأي تراجع صامت إلى الهجين المحلي (Zero Silent Local Fallback).
+   - تحمل كافة معايير الفحص الـ 25 إسناداً سحابياً حقيقياً `Engine: api`.
+   - في حال تعذر الاتصال، يُطبق بروتوكول التراجع التصاعدي الثلاثي (`1s -> 2s -> 4s Backoff` مع مهلة 5000ms لكل محاولة) ويسقط الفحص فوراً بـ Exit Code 1 مع طباعة البطاقة التشخيصية.
+4. **المستشار الاستراتيجي المرن والمطور ذاتياً (/saleh Resilient Coprocessor):**
+   - يستعين `/saleh` بـ JEV السحابي لتطوير قدراته وتدقيق الخطط وحل المعضلات بصورة دائمة.
+   - يتمتع `/saleh` بالمرونة؛ فإذا تعذر الاتصال بالسيرفر السحابي، لا يتعطل بل يسجل إشعار التعذر بشفافية ويستكمل أعماله الرقابية والفيزيائية مستقلاً.
+5. **اقتصاد التوكينات وفهرس السوابق الجنائية (Zero-Token Precedent Index):**
+   - يُلزم بالاستعلام أولاً من فهرس السوابق `.agents/knowledge/precedents/index.json` للاسترجاع الفوري بصفر توكن وزمن استجابة <1ms قبل استدعاء السحابة، وضغط الفروقات الكبيرة (>300 سطر) عبر AST Delta Compression.
 
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.
