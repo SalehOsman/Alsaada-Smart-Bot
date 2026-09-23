@@ -20,7 +20,7 @@
     "prepare": "git config core.hooksPath .githooks",
     "format": "prettier --write .",
     "preflight:fix": "prettier --write . && eslint --fix",
-    "make:flow": "tsx tools/scaffold/scaffold-flow.ts",
+    "make:flow": "tsx tools/scaffold/scaffold-flow-v2.ts",
     "make:test": "tsx tools/scaffold/scaffold-test.ts",
     "make:incident": "tsx tools/scaffold/scaffold-incident.ts",
     "branch:incident": "tsx tools/scaffold/scaffold-branch.ts incident",

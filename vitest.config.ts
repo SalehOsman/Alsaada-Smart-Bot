@@ -9,7 +9,11 @@ export default defineConfig({
       '@alsaada/shared/logger': path.resolve(__dirname, './packages/shared/src/logger/index.ts'),
       '@alsaada/shared/domain': path.resolve(__dirname, './packages/shared/src/domain/index.ts'),
       '@alsaada/shared': path.resolve(__dirname, './packages/shared/src/index.ts'),
+      '@alsaada/core-components/rich-message': path.resolve(__dirname, './packages/core-components/src/rich-message/index.ts'),
       '@alsaada/core-components': path.resolve(__dirname, './packages/core-components/src/index.ts'),
+      '@alsaada/telemetry': path.resolve(__dirname, './packages/telemetry/src/index.ts'),
+      '@alsaada/regional-engine': path.resolve(__dirname, './packages/regional-engine/src/index.ts'),
+      '@alsaada/national-id-engine': path.resolve(__dirname, './packages/national-id-engine/src/index.ts'),
     },
   },
   test: {

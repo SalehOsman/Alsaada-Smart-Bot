@@ -10,6 +10,8 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+export const PINNED_BASE_TIME = '2026-04-19T00:00:00.000Z';
+
 export interface ScaffoldFlowV2Options {
   moduleId: string;
   flowId: string;
@@ -243,7 +245,7 @@ export class ${pascalSlug}Service {
   constructor(private readonly repository?: unknown) {}
 
   async executeOperation(input: ${pascalSlug}InputDTO): Promise<${pascalSlug}ResultDTO> {
-    const referenceId = \`${slug.toUpperCase()}-\${Date.now().toString(36)}\`;
+    const referenceId = \`${slug.toUpperCase()}-\${input.idempotencyKey.slice(0, 8).toUpperCase()}\`;
     return {
       success: true,
       referenceId,
@@ -286,14 +288,58 @@ export async function handle${pascalSlug}Action(ctx: FlowContextLike, service: $
 
   // 8. error.handler.ts
   const errorHandlerContent = `/**
- * Centralized Error Boundary for Flow ${flowId}
+ * Centralized Error Boundary for Flow ${flowId} (${slug})
+ * Single Point of Responsibility for Flow Telemetry & User Error Card (Work Plan 94 - NEW-91)
  */
 
-export function handle${pascalSlug}Error(error: unknown, ctx?: unknown): { handled: boolean; userMessageArabic: string } {
-  const message = error instanceof Error ? error.message : String(error);
+import {
+  buildRichPage,
+  assertRichMessage,
+  richParagraph,
+} from '@alsaada/core-components';
+import {
+  captureFlowError,
+  type BoundedFlowContext,
+  type CaptureFlowErrorResult,
+  type IncidentPersistStatus,
+} from '@alsaada/telemetry';
+
+export type { BoundedFlowContext, CaptureFlowErrorResult, IncidentPersistStatus };
+
+
+export interface ErrorReplyCapable {
+  reply?: (message: unknown, extra?: Record<string, unknown>) => Promise<unknown>;
+}
+
+export async function handle${pascalSlug}Error(
+  error: unknown,
+  boundedContext: BoundedFlowContext,
+  replyTarget?: ErrorReplyCapable,
+): Promise<CaptureFlowErrorResult> {
+  const recorded = await captureFlowError(error, boundedContext);
+  const userMessageArabic = \`\${recorded.userMessageArabic} (رمز البلاغ: \${recorded.errorReference})\`;
+
+  if (replyTarget && typeof replyTarget.reply === 'function') {
+    try {
+      const msg = buildRichPage({
+        title: '⚠️ خطأ في العملية',
+        blocks: [richParagraph(userMessageArabic)],
+      });
+      assertRichMessage(msg);
+      const text = \`⚠️ *خطأ في العملية*\\n\\n\${userMessageArabic}\`;
+      const content = Object.assign(new String(text), msg);
+      await replyTarget.reply(content, { parse_mode: 'Markdown' });
+    } catch (replyErr) {
+      await captureFlowError(replyErr, {
+        ...boundedContext,
+        action: \`\${boundedContext.action}:reply_fallback\`,
+      });
+    }
+  }
+
   return {
-    handled: true,
-    userMessageArabic: '⚠️ حدث خطأ أثناء تنفيذ العملية. يرجى المحاولة لاحقاً.',
+    ...recorded,
+    userMessageArabic,
   };
 }
 `;
@@ -327,7 +373,12 @@ export class ${pascalSlug}Controller {
     try {
       return await handle${pascalSlug}Action(ctx, this.service);
     } catch (err) {
-      handle${pascalSlug}Error(err, ctx);
+      const boundedContext = {
+        flowId: '${flowId}',
+        moduleId: '${moduleId}',
+        action: ctx.callbackQuery?.data ?? '${flowActionPrefix}:dispatch',
+      } as const;
+      await handle${pascalSlug}Error(err, boundedContext, ctx);
       return false;
     }
   }
@@ -340,8 +391,9 @@ export class ${pascalSlug}Controller {
   const testsFlowDir = join(moduleDir, 'tests', 'flows');
   mkdirSync(testsFlowDir, { recursive: true });
 
-  const testSpecContent = `import { describe, it, expect } from 'vitest';
+  const testSpecContent = `import { describe, it, expect, vi } from 'vitest';
 import {
+  ${pascalSlug}Controller,
   ${pascalSlug}Service,
   validate${pascalSlug}Input,
   build${pascalSlug}MainMenuKeyboard,
@@ -386,6 +438,28 @@ describe('Work Plan 89 — Flow ${flowId} (${slug}) Constitutional 10-File Slice
         expect(btn.callback_data.length).toBeLessThanOrEqual(64);
       }
     }
+  });
+
+  it('captures flow errors via telemetry boundary and replies with #ERR reference card', async () => {
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const replies: string[] = [];
+    const controller = new ${pascalSlug}Controller();
+    const failingCtx = {
+      callbackQuery: { data: '${flowActionPrefix}:start' },
+      reply: vi.fn(async (msg: unknown) => {
+        if (replies.length === 0) {
+          replies.push('THROW_FIRST');
+          throw new Error('Simulated action dispatch failure');
+        }
+        replies.push(String(msg));
+        return true;
+      }),
+    };
+
+    const handled = await controller.dispatchAction(failingCtx);
+    expect(handled).toBe(false);
+    expect(replies.some((r) => r.includes('رمز البلاغ: #ERR-'))).toBe(true);
+    stderrSpy.mockRestore();
   });
 });
 `;

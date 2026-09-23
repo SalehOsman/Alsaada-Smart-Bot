@@ -595,16 +595,6 @@ export function lockEntity(
 
   lockData.lockedEntities[entity.id] = entity;
 
-  if (Array.isArray(lockData.files)) {
-    const updatedHashByPath = new Map(filesWithHashes.map((f) => [f.path, f.sha256]));
-    for (const fileEntry of lockData.files) {
-      const updatedSha = updatedHashByPath.get(fileEntry.path);
-      if (updatedSha) {
-        fileEntry.sha256 = updatedSha;
-      }
-    }
-  }
-
   // Write atomic update with retry on Windows file contention
   let writeSuccess = false;
   let lastErr: unknown;

@@ -104,6 +104,11 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 2. **حظر الاستحداث بلا مرجعية (Zero Specless Innovation):** يُحظر قطعيًا على أي وكيل ذكاء اصطناعي تصميم أو توليد أو تعديل أي ميزة، أمر، لوحة مفاتيح، رسالة خفية (`ephemeral`)، مسودة متدفقة (`streaming draft`)، أو كولاج وسائط دون مطابقة الهيكل والمحددات الواردة في الموسوعة.
 3. **قائمة الفحص الذاتي الإلزامية:** يُلزم كل وكيل ذكاء اصطناعي بمراجعة قائمة الفحص الذاتي (AI Self-Inspection Checklist) المحددة في الجزء السابع من الموسوعة قبل إنهاء مهمته البرمجية، واجتياز Gate G5 و Gate G22.
 
+### 8.3 الإلزام الدستوري بتسجيل وتتبع الأعطال في التدفقات وبوابة Gate G9 AST (`NEW-91`)
+1. **النقطة الأحادية للمسؤولية (Single Point of Responsibility):** تتحمل طبقة حدود التدفق (`controller.ts` و `error.handler.ts`) حصراً مسؤولية تسجيل الأعطال عبر `await captureFlowError(error, boundedContext)` المستورد من `@alsaada/telemetry` وإرجاع بطاقة البلاغ (`#ERR-XXXXXXXX`) للمستخدم؛ يُحظر على الطبقات الداخلية (`service.ts`, `repository.ts`, `validator.ts`) استدعاء خزينة الأعطال مباشرة وتلتزم برمي الاستثناءات أو إعادة رميها (`re-throw`).
+2. **السياق التشخيصي المقيد (`BoundedFlowContext`):** يُحظر تمرير `ctx?: unknown` إلى معالجات الأخطاء؛ يجب الالتزام بعقد `BoundedFlowContext` والمهلة القصوى غير المعطلة (`1500ms`) مع التراجع التلقائي إلى `writeEmergencyIncident`.
+3. **بوابة الفحص النحوي العميق (Gate G9 AST Sentinel):** يفحص `pnpm observability:verify` شجرة الـ AST عبر TypeScript Compiler API لإسقاط أي كتلة `catch` تبتلع الأخطاء صامتاً، أو دوال صورية غير مستوردة من `@alsaada/telemetry`، أو استدعاءات `captureFlowError` / `handle*Error` غير مسبوقة بـ `await`.
+
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.
 2. **Zod Runtime Deserialization:** Zero untyped `JSON.parse` across boundaries.
