@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T11:25:28.240Z",
+  "generatedAt": "2026-09-23T11:42:44.594Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -517,7 +517,7 @@
     },
     {
       "path": "tools/governance/verify-observability-contract.ts",
-      "sha256": "a35de6696d3d6980a8079bb40ce1014a804b117f0470afcfce346a03c625e67c"
+      "sha256": "f2ac33dd2758c8c700265682485445736965fafab8f0811e174c6dcad2c12d2a"
     },
     {
       "path": "tools/governance/verify-performance-budget.ts",
@@ -569,7 +569,7 @@
     },
     {
       "path": "tools/scaffold/scaffold-flow-v2.ts",
-      "sha256": "97125c9281f4ca4753642eeca177c1f70965d0eacf168f4640115a9c912b1974"
+      "sha256": "f7a0d6659df60252c4ef9ced9707c2bda34e4e1a847a387968d7a9b675d4c06d"
     },
     {
       "path": "tools/scaffold/scaffold-flow.ts",
@@ -2101,71 +2101,6 @@
         }
       ]
     },
-    "package:telemetry": {
-      "id": "package:telemetry",
-      "type": "package",
-      "title": "حزمة النواة: @alsaada/telemetry",
-      "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T11:25:28.240Z",
-      "files": [
-        {
-          "path": "packages/telemetry/CHANGELOG.md",
-          "sha256": "5fb1f8d832024aac7309f7e146bee99347d3bf5600a2ad05a1f58a6350201d8d"
-        },
-        {
-          "path": "packages/telemetry/package.json",
-          "sha256": "087645d5eb73fb068bd105759bf5e0c71170f6acf727e3a19ee8c824e0559456"
-        },
-        {
-          "path": "packages/telemetry/src/adapters/grammy.ts",
-          "sha256": "1bc66c761c4e2ef0ad2b72bf885ce8a5babada1107628e3befb0c773f90c7779"
-        },
-        {
-          "path": "packages/telemetry/src/adapters/next.ts",
-          "sha256": "868152aad32b45839b08b1a3fda6d2bf5cccfdbd375b43ed1111b1666d6cdfbd"
-        },
-        {
-          "path": "packages/telemetry/src/constants.ts",
-          "sha256": "62406f84cf5b5fae60f134c30689726230b40eece477cca48d07dbea2bf1f3ef"
-        },
-        {
-          "path": "packages/telemetry/src/context.ts",
-          "sha256": "90aa7053cfae80948cba0cfe458354c453ab6f5390b1a5baf91f5ba2dca7f9e3"
-        },
-        {
-          "path": "packages/telemetry/src/emergency-sink.ts",
-          "sha256": "58c95196d295f572a17f896f9a8df61229cbdad5c0ad39c823620b2e33d51b86"
-        },
-        {
-          "path": "packages/telemetry/src/incidents.ts",
-          "sha256": "8346ffc89739bf77fb494144a18afd607747f8239afa646807c89900941ad7ea"
-        },
-        {
-          "path": "packages/telemetry/src/index.ts",
-          "sha256": "1e0682e1a9591a55a3f54e6f8c5b196a22678718a15001b068cc9909c4aa2239"
-        },
-        {
-          "path": "packages/telemetry/src/logger.ts",
-          "sha256": "f38144c88face03ebd50c9fce4fac403bf42acc75710f5e6b4d3a665e5c38384"
-        },
-        {
-          "path": "packages/telemetry/src/redaction.ts",
-          "sha256": "6ffc105b20c53f9bd9dfae6c6c1c016b8abf3f263adfab3b7fc17e1f780c0240"
-        },
-        {
-          "path": "packages/telemetry/src/types.ts",
-          "sha256": "b73556b2448f975d8abcaa8218bf2fb3816ce8cd5bcf5d91459618beebeb419e"
-        },
-        {
-          "path": "packages/telemetry/src/version.ts",
-          "sha256": "79051b8a5a6d5f84d4261ef64b18111d82a3c25c3c4fe18b9c18adc5b757db0c"
-        },
-        {
-          "path": "packages/telemetry/tsconfig.json",
-          "sha256": "0adc8771a1796baa6401cd2a3c3aa7d905f381a0a107332bcff1d8133a1050e4"
-        }
-      ]
-    },
     "flow:00.12": {
       "id": "flow:00.12",
       "type": "flow",
@@ -3397,7 +3332,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T11:25:28.240Z",
+      "lockedAt": "2026-09-23T11:42:44.594Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -7866,11 +7801,101 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-observability-ast.spec.ts",
       "directory": "tools/governance/tests/verify-observability-ast.spec.ts",
-      "lockedAt": "2026-09-23T11:24:41.250Z",
+      "lockedAt": "2026-09-23T11:39:23.966Z",
       "files": [
         {
           "path": "tools/governance/tests/verify-observability-ast.spec.ts",
           "sha256": "5cf22ca8028c710c406dcdf44ed6ae26a18c448ffdbe54e4e699de3256a200f9"
+        }
+      ]
+    },
+    "package:telemetry": {
+      "id": "package:telemetry",
+      "type": "package",
+      "title": "حزمة النواة: @alsaada/telemetry",
+      "directory": "packages/telemetry",
+      "lockedAt": "2026-09-23T11:42:44.594Z",
+      "files": [
+        {
+          "path": "packages/telemetry/CHANGELOG.md",
+          "sha256": "5fb1f8d832024aac7309f7e146bee99347d3bf5600a2ad05a1f58a6350201d8d"
+        },
+        {
+          "path": "packages/telemetry/package.json",
+          "sha256": "087645d5eb73fb068bd105759bf5e0c71170f6acf727e3a19ee8c824e0559456"
+        },
+        {
+          "path": "packages/telemetry/src/adapters/grammy.ts",
+          "sha256": "1bc66c761c4e2ef0ad2b72bf885ce8a5babada1107628e3befb0c773f90c7779"
+        },
+        {
+          "path": "packages/telemetry/src/adapters/next.ts",
+          "sha256": "868152aad32b45839b08b1a3fda6d2bf5cccfdbd375b43ed1111b1666d6cdfbd"
+        },
+        {
+          "path": "packages/telemetry/src/constants.ts",
+          "sha256": "62406f84cf5b5fae60f134c30689726230b40eece477cca48d07dbea2bf1f3ef"
+        },
+        {
+          "path": "packages/telemetry/src/context.ts",
+          "sha256": "90aa7053cfae80948cba0cfe458354c453ab6f5390b1a5baf91f5ba2dca7f9e3"
+        },
+        {
+          "path": "packages/telemetry/src/emergency-sink.ts",
+          "sha256": "58c95196d295f572a17f896f9a8df61229cbdad5c0ad39c823620b2e33d51b86"
+        },
+        {
+          "path": "packages/telemetry/src/errors.ts",
+          "sha256": "e43d2cd27ff3abf8e563d53120e7a22d319090b2d4a6d46161baa072c6139c88"
+        },
+        {
+          "path": "packages/telemetry/src/flow-recorder.ts",
+          "sha256": "f5a7651acf00d43bea4bbb1b64002904cede989e26501477978e30a7c6762567"
+        },
+        {
+          "path": "packages/telemetry/src/incidents.ts",
+          "sha256": "8346ffc89739bf77fb494144a18afd607747f8239afa646807c89900941ad7ea"
+        },
+        {
+          "path": "packages/telemetry/src/index.ts",
+          "sha256": "5af35333bb89f9d15de40fa8117ddba5771e2e5a98c2a97b192aeeb22714ee24"
+        },
+        {
+          "path": "packages/telemetry/src/logger.ts",
+          "sha256": "f38144c88face03ebd50c9fce4fac403bf42acc75710f5e6b4d3a665e5c38384"
+        },
+        {
+          "path": "packages/telemetry/src/redaction.ts",
+          "sha256": "6ffc105b20c53f9bd9dfae6c6c1c016b8abf3f263adfab3b7fc17e1f780c0240"
+        },
+        {
+          "path": "packages/telemetry/src/sink.ts",
+          "sha256": "7e85f2aca93795a487b91524346fedd1412e90d985751a103863313351387748"
+        },
+        {
+          "path": "packages/telemetry/src/types.ts",
+          "sha256": "b73556b2448f975d8abcaa8218bf2fb3816ce8cd5bcf5d91459618beebeb419e"
+        },
+        {
+          "path": "packages/telemetry/src/version.ts",
+          "sha256": "79051b8a5a6d5f84d4261ef64b18111d82a3c25c3c4fe18b9c18adc5b757db0c"
+        },
+        {
+          "path": "packages/telemetry/tsconfig.json",
+          "sha256": "0adc8771a1796baa6401cd2a3c3aa7d905f381a0a107332bcff1d8133a1050e4"
+        }
+      ]
+    },
+    "test:packages/telemetry/tests/flow-recorder.spec.ts": {
+      "id": "test:packages/telemetry/tests/flow-recorder.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: packages/telemetry/tests/flow-recorder.spec.ts",
+      "directory": "packages/telemetry/tests/flow-recorder.spec.ts",
+      "lockedAt": "2026-09-23T11:40:29.722Z",
+      "files": [
+        {
+          "path": "packages/telemetry/tests/flow-recorder.spec.ts",
+          "sha256": "d825920cabd43aba4ca8c2d67e0bf15f2a387f9c9459d6c97671a83269184232"
         }
       ]
     }

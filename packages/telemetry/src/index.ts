@@ -76,6 +76,41 @@ export type {
 export { normalizeIncident } from './incidents.js';
 export { writeEmergencyIncident } from './emergency-sink.js';
 
+// Incident Sink Injection & Registry (Work Plan 94 - NEW-91)
+export type {
+  IncidentPersistStatus,
+  IncidentSink,
+  IncidentSinkPersistResult,
+} from './sink.js';
+export {
+  clearIncidentSink,
+  getIncidentSink,
+  setIncidentSink,
+} from './sink.js';
+
+// Standardized Error Taxonomy (Work Plan 94 - NEW-91)
+export type { AlsaadaErrorOptions } from './errors.js';
+export {
+  AlsaadaBaseError,
+  FinancialInvariantError,
+  OperationalError,
+  UnexpectedSystemError,
+  isOperationalError,
+} from './errors.js';
+
+// Flow Error Boundary Recorder & Non-Blocking Guard (Work Plan 94 - NEW-91)
+export type {
+  BoundedFlowContext,
+  CaptureFlowErrorResult,
+} from './flow-recorder.js';
+export {
+  FLOW_TELEMETRY_SINK_TIMEOUT_MS,
+  captureFlowError,
+  getCapturedFlowErrorResult,
+  isFlowErrorCaptured,
+} from './flow-recorder.js';
+
+
 // Adapters
 export {
   extractTelegramActor,

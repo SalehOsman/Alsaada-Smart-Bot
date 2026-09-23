@@ -122,8 +122,6 @@ export function inspectSourceObservabilityAst(
   const findings: ObservabilityAstFinding[] = [];
 
   const telemetryImportedBindings = new Set<string>();
-  const telemetryAllImports = new Set<string>();
-  let hasTelemetryNamespaceImport = false;
   const localShadowDeclarations = new Set<string>();
   let captureFlowErrorCallsCount = 0;
   let hasAwaitedCaptureFlowError = false;
@@ -136,12 +134,9 @@ export function inspectSourceObservabilityAst(
       const moduleName = node.moduleSpecifier.text;
       if (moduleName === '@alsaada/telemetry' || moduleName.startsWith('@alsaada/telemetry/')) {
         const namedBindings = node.importClause?.namedBindings;
-        if (namedBindings && ts.isNamespaceImport(namedBindings)) {
-          hasTelemetryNamespaceImport = true;
-        } else if (namedBindings && ts.isNamedImports(namedBindings)) {
+        if (namedBindings && ts.isNamedImports(namedBindings)) {
           for (const element of namedBindings.elements) {
             const importedName = element.propertyName ? element.propertyName.text : element.name.text;
-            telemetryAllImports.add(importedName);
             if (importedName === 'captureFlowError') {
               telemetryImportedBindings.add(element.name.text);
             }
@@ -163,19 +158,8 @@ export function inspectSourceObservabilityAst(
     }
   });
 
-  const hasValidTelemetryBridge =
-    hasTelemetryNamespaceImport &&
-    telemetryAllImports.has('normalizeIncident') &&
-    telemetryAllImports.has('writeEmergencyIncident');
-
   const isTrustedTelemetryBinding = (bindingName: string): boolean => {
-    if (telemetryImportedBindings.has(bindingName) && !localShadowDeclarations.has(bindingName)) {
-      return true;
-    }
-    if (bindingName === 'captureFlowError' && hasValidTelemetryBridge) {
-      return true;
-    }
-    return false;
+    return telemetryImportedBindings.has(bindingName) && !localShadowDeclarations.has(bindingName);
   };
 
   // 2. Recursive AST traversal
@@ -195,13 +179,8 @@ export function inspectSourceObservabilityAst(
       const isCaptureCall =
         callee === 'captureFlowError' ||
         (ts.isIdentifier(node.expression) && telemetryImportedBindings.has(node.expression.text));
-      const isInternalBridgeDelegation =
-        ts.isPropertyAccessExpression(node.expression) &&
-        ts.isIdentifier(node.expression.expression) &&
-        node.expression.expression.text === 'runtimeTelemetry' &&
-        node.expression.name.text === 'captureFlowError';
 
-      if (isCaptureCall && !isInternalBridgeDelegation) {
+      if (isCaptureCall) {
         captureFlowErrorCallsCount++;
         const isImportedFromTelemetry =
           ts.isIdentifier(node.expression) && isTrustedTelemetryBinding(node.expression.text);
@@ -370,7 +349,7 @@ export function inspectSourceObservabilityAst(
 
   // Post-traversal checks for error.handler role
   if (role === 'error.handler') {
-    if (localShadowDeclarations.has('captureFlowError') && !hasValidTelemetryBridge) {
+    if (localShadowDeclarations.has('captureFlowError')) {
       findings.push({
         rule: 'UNIMPORTED_CAPTURE_FLOW_ERROR',
         message: `Local shadow declaration of 'captureFlowError' in ${fileName} is forbidden. Must import from '@alsaada/telemetry'.`,
@@ -383,7 +362,7 @@ export function inspectSourceObservabilityAst(
         message: `Flow error handler (${fileName}) does not invoke captureFlowError(...) in executable AST (comments do not count).`,
         line: 1,
       });
-    } else if (telemetryImportedBindings.size === 0 && !hasValidTelemetryBridge) {
+    } else if (telemetryImportedBindings.size === 0) {
       findings.push({
         rule: 'UNIMPORTED_CAPTURE_FLOW_ERROR',
         message: `Flow error handler (${fileName}) calls captureFlowError without importing it from '@alsaada/telemetry'.`,
@@ -409,8 +388,7 @@ export function inspectSourceObservabilityAst(
     ok: findings.length === 0,
     findings,
     hasImportedCaptureFlowError:
-      (telemetryImportedBindings.size > 0 && !localShadowDeclarations.has('captureFlowError')) ||
-      hasValidTelemetryBridge,
+      telemetryImportedBindings.size > 0 && !localShadowDeclarations.has('captureFlowError'),
     hasAwaitedCaptureFlowError,
   };
 }

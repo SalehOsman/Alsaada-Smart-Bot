@@ -297,73 +297,15 @@ import {
   assertRichMessage,
   richParagraph,
 } from '@alsaada/core-components';
-import * as telemetry from '@alsaada/telemetry';
 import {
-  deriveIncidentCode,
-  generateTraceId,
-  getTraceId,
-  normalizeIncident,
-  writeEmergencyIncident,
+  captureFlowError,
+  type BoundedFlowContext,
+  type CaptureFlowErrorResult,
+  type IncidentPersistStatus,
 } from '@alsaada/telemetry';
 
-export type IncidentPersistStatus = 'persisted' | 'emergency' | 'failed';
+export type { BoundedFlowContext, CaptureFlowErrorResult, IncidentPersistStatus };
 
-export interface BoundedFlowContext {
-  readonly flowId: string;
-  readonly moduleId: string;
-  readonly action: string;
-  readonly traceId?: string | undefined;
-  readonly actorTelegramId?: bigint | undefined;
-  readonly actorRole?: string | undefined;
-  readonly metadata?: Readonly<Record<string, string | number | boolean>> | undefined;
-}
-
-export interface CaptureFlowErrorResult {
-  readonly handled: boolean;
-  readonly errorReference: string;
-  readonly traceId: string;
-  readonly status: IncidentPersistStatus;
-  readonly userMessageArabic: string;
-}
-
-const captureFlowError = async (
-  error: unknown,
-  boundedContext: BoundedFlowContext,
-): Promise<CaptureFlowErrorResult> => {
-  const runtimeTelemetry = telemetry as unknown as {
-    captureFlowError?: (
-      err: unknown,
-      ctx: BoundedFlowContext,
-    ) => Promise<CaptureFlowErrorResult>;
-  };
-  if (typeof runtimeTelemetry.captureFlowError === 'function') {
-    return await runtimeTelemetry.captureFlowError(error, boundedContext);
-  }
-
-  const activeTraceId = boundedContext.traceId ?? getTraceId() ?? generateTraceId();
-  const incident = normalizeIncident({
-    traceId: activeTraceId,
-    source: 'bot',
-    service: \`flow:\${boundedContext.moduleId}:\${boundedContext.flowId}\`,
-    severity: 'ERROR',
-    action: boundedContext.action,
-    sourceLocation: \`modules/\${boundedContext.moduleId}/src/flows/\${boundedContext.flowId}\`,
-    error,
-    actorTelegramId: boundedContext.actorTelegramId,
-    actorRole: boundedContext.actorRole,
-    environment: 'production',
-  });
-  const errorReference = deriveIncidentCode(incident.traceId).replace(/^TRC-/, '#ERR-');
-  writeEmergencyIncident(incident.traceId, \`FLOW_BOUNDARY_\${incident.errorName}\`);
-
-  return {
-    handled: true,
-    errorReference,
-    traceId: activeTraceId,
-    status: 'emergency',
-    userMessageArabic: 'تعذر إتمام العملية حالياً بسبب عطل فني وتم تسجيل البلاغ للمراجعة.',
-  };
-};
 
 export interface ErrorReplyCapable {
   reply?: (message: unknown, extra?: Record<string, unknown>) => Promise<unknown>;

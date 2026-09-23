@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/governance/tests/verify-observability-ast.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:24:41.250Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:39:23.966Z)
 - **معرف الكيان:** `test:tools/governance/tests/verify-observability-ast.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/governance/tests/verify-observability-ast.spec.ts
