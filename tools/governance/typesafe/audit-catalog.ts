@@ -299,15 +299,96 @@ export const JEV_AUDIT_CATALOG = {
       ],
     } satisfies ScoreQuestion,
   },
+
+  // 12. Error Telemetry & Observability Sentinel (Gate G9 / WP 91 / GEMINI.md 8.3)
+  observabilityAndG9: {
+    usesCanonicalCaptureFlowError: {
+      type: 'noul',
+      instructions: {
+        question: 'Does the vertical slice boundary (controller.ts and error.handler.ts) strictly call await captureFlowError(error, boundedContext) imported from @alsaada/telemetry and return an incident ticket (#ERR-XXXXXXXX) without swallowing errors?',
+        focus: 'Inspect catch blocks in controllers/handlers for unawaited captureFlowError or silent catch suppression.',
+      },
+      criteria: {
+        true: 'Boundary handlers call await captureFlowError and report user error tickets without swallowing.',
+        false: 'Errors swallowed silently in catch block, or unawaited captureFlowError, or mock handler used.',
+      },
+    } satisfies NoulQuestion,
+
+    enforcesBoundedFlowContext: {
+      type: 'noul',
+      instructions: {
+        question: 'Does error handling enforce BoundedFlowContext with flowSlug, flowKey, step, userId rather than loose untyped ctx?: unknown?',
+        focus: 'Verify BoundedFlowContext contract compliance and non-blocking timeout fallback.',
+      },
+      criteria: {
+        true: 'Strict BoundedFlowContext contract enforced with timeout and fallback.',
+        false: 'Loose untyped ctx?: unknown used or context lacks flow metadata.',
+      },
+    } satisfies NoulQuestion,
+  },
+
+  // 13. Tri-Lifecycle & Rich Message Governance (WP 90, WP 93, WP 94, WP 95, GEMINI.md 6, 7.1, 8.1, 8.2)
+  triLifecycleAndRichMessage: {
+    richMessageAndEncyclopediaCompliance: {
+      type: 'noul',
+      instructions: {
+        question: 'Are messages constructed using @alsaada/core-components/rich-message (buildRichPage, buildRichTable, buildRichConfirmation) and validated via assertRichMessage rather than raw strings?',
+        focus: 'Verify zero raw text policy, single format mode (blocks/markdown/html), and Telegram Encyclopedia limits.',
+      },
+      criteria: {
+        true: '100% compliant with rich-message builders and Telegram Encyclopedia formatting rules.',
+        false: 'Raw string bypass, direct ctx.reply("string"), or exceeding Telegram message length/keyboard budgets.',
+      },
+    } satisfies NoulQuestion,
+
+    triLifecycleAndLockCompliance: {
+      type: 'choice',
+      instructions: 'Classify compliance with Tri-Lifecycle sovereignty (Rulebook 11 Modification, Rulebook 12 Creation, Rulebook 08/WP 93 Defect Repair) and SHA-256 locks.',
+      criteria: {
+        compliant_sealed: 'Fully compliant with spec-first plans, OTP unlock verification, and sealed in governance.lock.json.',
+        missing_spec_or_dossier: 'Code modified without approved work plan or completed incident dossier.',
+        unlocked_entity_drift: 'Unlocked entity left unsealed in governance.lock.json.',
+      },
+    } satisfies ChoiceQuestion,
+  },
+
+  // 14. Permanent Skill & Plan Consultation (WP 96)
+  skillAndPlanConsultation: {
+    planSixPillarCompleteness: {
+      type: 'score',
+      instructions: 'Rate the completeness of the work plan against the 6 pillars (Scope, Data contracts, Telegram UX, Concurrency & Security, Test matrix, Acceptance criteria).',
+      criteria: [
+        'Level 0: No plan or shallow one-liner.',
+        'Level 1: Basic scope described but missing data contracts or UX budget.',
+        'Level 2: 4-5 pillars documented with test matrix and acceptance criteria.',
+        'Level 3: Full 6-pillar sovereign specification with verified physical paths and zero placeholders.',
+      ],
+    } satisfies ScoreQuestion,
+
+    skillRulebookAlignment: {
+      type: 'noul',
+      instructions: {
+        question: 'Are all assigned skills from the sovereign skill graph (.agents/knowledge/sovereign-skill-graph.json) properly consulted and aligned with Rulebooks 01-12?',
+        focus: 'Check skills alignment, rulebook references, and pre-task checklists.',
+      },
+      criteria: {
+        true: 'Complete alignment: assigned skills and rulebooks actively verified and enforced.',
+        false: 'Orphan skills, unreferenced rulebooks, or unfulfilled pre-task checklists.',
+      },
+    } satisfies NoulQuestion,
+  },
 } as const;
 
 export const JEV_GOVERNANCE_WEIGHTS = {
-  securityAndPrivacy: 0.20,
-  architectureAndTypes: 0.15,
+  securityAndPrivacy: 0.15,
+  architectureAndTypes: 0.12,
   testAuthenticity: 0.15,
   telegramErgonomics: 0.10,
-  legacyParity: 0.15,
-  temporalInvariants: 0.10,
+  legacyParity: 0.10,
+  temporalInvariants: 0.08,
   semanticReuse: 0.05,
-  docCodeParity: 0.10,
+  docCodeParity: 0.05,
+  observabilityAndG9: 0.10,
+  triLifecycleAndRichMessage: 0.10,
 } as const;
+

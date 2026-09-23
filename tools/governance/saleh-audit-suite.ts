@@ -18,6 +18,8 @@ import { verifyTestAuthenticity } from './verify-test-authenticity.js';
 import { verifyFieldMasking } from './verify-field-masking.js';
 import { checkCodeSecurity } from './verify-code-security.js';
 import { verifyIncidents } from './verify-incidents.js';
+import { verifySkillGraph } from './verify-skill-graph.js';
+import { runJevAudit, type JevAuditReport } from './jev-auditor.js';
 
 // ============================================================================
 // Types & Contracts
@@ -60,8 +62,10 @@ export interface SalehAuditReport {
     unlockAudit?: VerificationResult | undefined;
     guards?: VerificationResult | undefined;
     incidents?: VerificationResult | undefined;
+    skillGraph?: VerificationResult | undefined;
   };
   presentationFindings: PresentationFinding[];
+  jevReport?: JevAuditReport | undefined;
   summary: {
     passed: boolean;
     errorsCount: number;
@@ -569,6 +573,8 @@ export interface AuditSuiteOptions {
   unlockAudit?: boolean | undefined;
   guards?: boolean | undefined;
   incidents?: boolean | undefined;
+  skillGraph?: boolean | undefined;
+  jev?: boolean | undefined;
   strict?: boolean | undefined;
   json?: boolean | undefined;
 }
@@ -587,7 +593,8 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
       !options.security &&
       !options.unlockAudit &&
       !options.guards &&
-      !options.incidents);
+      !options.incidents &&
+      !options.skillGraph);
 
   let presentationRes: VerificationResult | undefined;
   let presentationFindings: PresentationFinding[] = [];
@@ -644,6 +651,20 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     incidentsRes = verifyIncidents(root);
   }
 
+  let skillGraphRes: VerificationResult | undefined;
+  if (runAll || options.guards || options.skillGraph) {
+    skillGraphRes = verifySkillGraph(root);
+  }
+
+  let jevAuditReport: JevAuditReport | undefined;
+  if (options.jev || options.guards || runAll) {
+    try {
+      jevAuditReport = await runJevAudit({ skipTypecheck: true, consult: true }, root);
+    } catch {
+      // fallback
+    }
+  }
+
   // Aggregate errors & warnings
   const allResults: VerificationResult[] = [
     ...(presentationRes ? [presentationRes] : []),
@@ -655,6 +676,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     ...(unlockAuditRes ? [unlockAuditRes] : []),
     ...(guardsRes ? [guardsRes] : []),
     ...(incidentsRes ? [incidentsRes] : []),
+    ...(skillGraphRes ? [skillGraphRes] : []),
   ];
 
   const totalErrors = allResults.reduce((acc, r) => acc + r.failures.length, 0);
@@ -679,6 +701,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
   if (unlockAuditRes) checkResults.unlockAudit = unlockAuditRes;
   if (guardsRes) checkResults.guards = guardsRes;
   if (incidentsRes) checkResults.incidents = incidentsRes;
+  if (skillGraphRes) checkResults.skillGraph = skillGraphRes;
 
   return {
     verdict,
@@ -690,6 +713,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     },
     checkResults,
     presentationFindings,
+    jevReport: jevAuditReport,
     summary: {
       passed: totalErrors === 0 && (!options.strict || totalWarnings === 0),
       errorsCount: totalErrors,
@@ -727,10 +751,12 @@ export function formatSalehVerdictReport(report: SalehAuditReport): string {
   const hasUnlockFraud = (report.checkResults.unlockAudit?.failures.length ?? 0) > 0;
   const hasGuardFailures = (report.checkResults.guards?.failures.length ?? 0) > 0;
   const hasIncidentFailures = (report.checkResults.incidents?.failures.length ?? 0) > 0;
+  const hasSkillGraphFailures = (report.checkResults.skillGraph?.failures.length ?? 0) > 0;
 
   lines.push(`- [${hasShamAssertions ? 'x' : ' '}] **Sham Assertions & Test Cheating:** ${hasShamAssertions ? 'DETECTED' : 'Clean (No fake assertions)'}`);
   lines.push(`- [${hasUnlockFraud ? 'x' : ' '}] **AI Self-Authorization & OTP Nonce Guard (WP 90):** ${hasUnlockFraud ? 'FRAUD/VIOLATIONS DETECTED' : 'Clean (Human OTP Provenance Verified)'}`);
   lines.push(`- [${hasGuardFailures ? 'x' : ' '}] **Triple Guard Arsenal (/boost):** ${hasGuardFailures ? 'FAILURES' : 'Clean (Arsenal verified & leak-proof)'}`);
+  lines.push(`- [${hasSkillGraphFailures ? 'x' : ' '}] **Sovereign Skill Graph & 11-Skill Knowledge Base (WP 96):** ${hasSkillGraphFailures ? 'FAILURES DETECTED' : 'Clean (100% Zero-Orphan Verified)'}`);
   lines.push(`- [${hasIncidentFailures ? 'x' : ' '}] **Code Incidents & Spec-First Dossier (WP 93):** ${hasIncidentFailures ? 'FAILURES / UNFILLED PLACEHOLDERS DETECTED' : 'Clean (100% Verified Dossiers)'}`);
   lines.push(`- [${hasRawMessageBypass ? 'x' : ' '}] **Presentation Bypass (Raw Replies):** ${hasRawMessageBypass ? 'DETECTED' : 'Clean (Unified Library used)'}`);
   lines.push(`- [${hasKeyboardOverflow ? 'x' : ' '}] **Mobile Ergonomics (36/16/7/3):** ${hasKeyboardOverflow ? 'WARNINGS/OVERFLOWS' : 'Clean (Within budget)'}`);
@@ -789,6 +815,17 @@ export function formatSalehVerdictReport(report: SalehAuditReport): string {
     lines.push('```');
   }
 
+  if (report.jevReport) {
+    lines.push('');
+    lines.push('### 5. JEV Permanent Co-Auditor Summary (WP 96)');
+    lines.push(`- **Composite Governance Index (CGI):** ${report.jevReport.cgi.toFixed(1)}%`);
+    lines.push(`- **JEV Verdict:** [${report.jevReport.overallVerdict}]`);
+    if (report.jevReport.consultationScorecard) {
+      lines.push(`- **Plan Readiness Score:** ${report.jevReport.consultationScorecard.planReadinessScore}%`);
+      lines.push(`- **Active Skills Consulted:** ${report.jevReport.consultationScorecard.skillsCovered.join(', ')}`);
+    }
+  }
+
   return lines.join('\n');
 }
 
@@ -814,6 +851,8 @@ Options:
   --unlock-audit    Run Unlock Audit & Anti-Self-Authorization scan (WP 90)
   --guards          Run Triple Guard Arsenal & Anti-Public-Leakage audit (/boost)
   --incidents       Run Defect Incidents & Spec-First Dossier audit (WP 93)
+  --skill-graph     Run Sovereign Skill Graph & 11-Skill verification (WP 96)
+  --jev             Run JEV Permanent Co-Auditor consultation (WP 96)
   --strict          Treat warnings as failures (returns Exit 1 on warnings)
   --json            Output results as JSON
   --help, -h        Show this help message
@@ -832,6 +871,8 @@ Options:
     unlockAudit: args.includes('--unlock-audit') || args.includes('--unlock'),
     guards: args.includes('--guards') || args.includes('--boost'),
     incidents: args.includes('--incidents') || args.includes('--incident'),
+    skillGraph: args.includes('--skill-graph') || args.includes('--boost'),
+    jev: args.includes('--jev') || args.includes('--boost') || (args.includes('--all') && args.includes('--guards')),
     strict: args.includes('--strict'),
     json: args.includes('--json'),
   };

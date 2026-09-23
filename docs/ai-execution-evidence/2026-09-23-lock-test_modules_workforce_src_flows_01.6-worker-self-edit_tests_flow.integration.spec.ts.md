@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:01:52.476Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T13:50:40.414Z)
 - **معرف الكيان:** `test:modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts

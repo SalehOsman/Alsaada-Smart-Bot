@@ -1,0 +1,390 @@
+{
+  "$schema": "./sovereign-skill-graph.schema.json",
+  "version": "1.0.0",
+  "generatedAt": "2026-09-23T15:00:00Z",
+  "totalSkills": 11,
+  "skills": [
+    {
+      "skillId": "saleh",
+      "category": "sovereign_auditor",
+      "title": "Sovereign Stakeholder Proxy & Chief Strategy Auditor",
+      "skillFilePath": ".agents/skills/saleh/SKILL.md",
+      "coreCompetencies": [
+        "Executive Strategy & Stakeholder Proxy",
+        "Two-Tier Prompt Optimization (Tier 1 Quick Directive, Tier 2 6-Pillar Spec)",
+        "Forensic Codebase Verification & Radical Candor Verdicts",
+        "Triple Guard Arsenal Command (clean-code-guard, test-guard, docs-guard)",
+        "Zero Direct Code Modification Invariant"
+      ],
+      "linkedRulebooks": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
+      "linkedWorkPlans": ["88", "90", "93", "94", "95", "96"],
+      "enforcedQualityGates": [
+        "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10",
+        "G11", "G12", "G13", "G14", "G15", "G16", "G17", "G18", "G19", "G20",
+        "G21", "G22", "G23"
+      ],
+      "jevConsultationQuestions": [
+        "skillAndPlanConsultation.planSixPillarCompleteness",
+        "skillAndPlanConsultation.skillRulebookAlignment",
+        "triLifecycleAndRichMessage.triLifecycleAndLockCompliance",
+        "squadAutonomousRouter.responsibleSquad"
+      ],
+      "preTaskChecklist": [
+        "Draft and approve 6-pillar specification before touching code",
+        "Verify target entities in governance.lock.json and obtain OTP unlock approval if modifying",
+        "Inspect Rulebooks 01-12 applicable to task"
+      ],
+      "postTaskChecklist": [
+        "Run boosted forensic audit (pnpm audit:saleh:boost)",
+        "Verify zero sham assertions and 100% real domain assertions",
+        "Execute auto re-lock (pnpm lock <target> or pnpm lock:all)"
+      ]
+    },
+    {
+      "skillId": "jev",
+      "category": "sovereign_auditor",
+      "title": "Chief Quality Sentinel & Permanent Skill/Plan Consultant",
+      "skillFilePath": ".agents/skills/jev/SKILL.md",
+      "coreCompetencies": [
+        "TypeSafe System One API (jev-latest) Co-Auditing",
+        "Speculative Fan-Out Batching & Fast Heuristics",
+        "Composite Governance Index (CGI v2.0 - 10 Dimensions) Calculation",
+        "Permanent Pre-Task Plan & Skill Readiness Consultation",
+        "Unified AST Scanning & Autonomous Squad Routing"
+      ],
+      "linkedRulebooks": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
+      "linkedWorkPlans": ["90", "91", "93", "94", "95", "96"],
+      "enforcedQualityGates": [
+        "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10",
+        "G11", "G12", "G13", "G14", "G15", "G16", "G17", "G18", "G19", "G20",
+        "G21", "G22", "G23"
+      ],
+      "jevConsultationQuestions": [
+        "testAuthenticity.assertsRealDomainState",
+        "testAuthenticity.excessiveMocking",
+        "testAuthenticity.assertionRigorScore",
+        "telegramUx.hasUnmaskedCompensation",
+        "telegramUx.buttonLabelErgonomics",
+        "legacyParity.stepParityWithLegacy",
+        "architecture.layerResponsibilitySeparation",
+        "diffAudit.hasSilentTestWeakening",
+        "diffAudit.scopeBlastRadius",
+        "legacyFeatureDiscovery.hasUndiscoveredLegacyRules",
+        "legacyFeatureDiscovery.discoveryDepthScore",
+        "speculativeFanOut.canSpeculativelyFanOut",
+        "speculativeFanOut.batchTopology",
+        "temporalInvariantGuard.violatesTemporalInvariants",
+        "temporalInvariantGuard.payrollCycleClassification",
+        "semanticReuseSentinel.hasDuplicateDomainHelper",
+        "semanticReuseSentinel.reuseRecommendation",
+        "squadAutonomousRouter.responsibleSquad",
+        "squadAutonomousRouter.defectSeverityScore",
+        "docCodeDriftRadar.hasDocCodeDrift",
+        "docCodeDriftRadar.documentationParityScore",
+        "observabilityAndG9.usesCanonicalCaptureFlowError",
+        "observabilityAndG9.enforcesBoundedFlowContext",
+        "triLifecycleAndRichMessage.richMessageAndEncyclopediaCompliance",
+        "triLifecycleAndRichMessage.triLifecycleAndLockCompliance",
+        "skillAndPlanConsultation.planSixPillarCompleteness",
+        "skillAndPlanConsultation.skillRulebookAlignment"
+      ],
+      "preTaskChecklist": [
+        "Run pre-task plan consultation (pnpm jev:consult --plan <path>)",
+        "Verify Plan Readiness Score >= 95%",
+        "Confirm no orphan skills or unaddressed quality gates"
+      ],
+      "postTaskChecklist": [
+        "Run post-task dual audit (pnpm audit:saleh:boost)",
+        "Confirm CGI v2.0 >= 95.0% and overall verdict CERTIFIED PASS",
+        "Verify squad routing returns all_clear"
+      ]
+    },
+    {
+      "skillId": "chief-arbitrator",
+      "category": "arbitrator",
+      "title": "Supreme Arbitrator & Constitutional Conflict Resolver",
+      "skillFilePath": ".agents/skills/chief-arbitrator/SKILL.md",
+      "coreCompetencies": [
+        "Cross-Squad & Challenger Conflict Adjudication",
+        "Rulebook Precedence Hierarchy Enforcement",
+        "Approval Formula & Gate Waiver Forensic Ruling",
+        "F:\\HR Baseline Parity Guarantee",
+        "Final Merge Sign-Off Authority"
+      ],
+      "linkedRulebooks": ["01", "02", "03", "04", "05"],
+      "linkedWorkPlans": ["88", "90", "94"],
+      "enforcedQualityGates": ["G1", "G3", "G5", "G7", "G11", "G12", "G13", "G21", "G22"],
+      "jevConsultationQuestions": [
+        "legacyParity.stepParityWithLegacy",
+        "telegramUx.buttonLabelErgonomics",
+        "temporalInvariantGuard.violatesTemporalInvariants",
+        "triLifecycleAndRichMessage.triLifecycleAndLockCompliance"
+      ],
+      "preTaskChecklist": [
+        "Check conflict arbitration requirements across squads",
+        "Verify F:\\HR baseline is referenced as authoritative baseline",
+        "Confirm branch isolation (OBOO invariant)"
+      ],
+      "postTaskChecklist": [
+        "Review challenger security and concurrency reports",
+        "Review challenger mobile viewport reports",
+        "Validate merge approval token readiness"
+      ]
+    },
+    {
+      "skillId": "open-code-review",
+      "category": "static_reviewer",
+      "title": "Alibaba Open Code Review (OCR) Static Analyzer",
+      "skillFilePath": ".agents/skills/open-code-review/SKILL.md",
+      "coreCompetencies": [
+        "Alibaba OCR Static Analysis Engine",
+        "Security, Performance, and Clean Architecture Rules Review",
+        "Automated Git Diff & AST Level Audit",
+        "Zero Blast Radius & Scope Containment",
+        "Pre-Commit Forensic Quality Gate Scan"
+      ],
+      "linkedRulebooks": ["05", "08", "09", "10"],
+      "linkedWorkPlans": ["91", "93", "94"],
+      "enforcedQualityGates": ["G1", "G6", "G9", "G15", "G16", "G17"],
+      "jevConsultationQuestions": [
+        "architecture.layerResponsibilitySeparation",
+        "observabilityAndG9.usesCanonicalCaptureFlowError",
+        "diffAudit.scopeBlastRadius"
+      ],
+      "preTaskChecklist": [
+        "Run git diff inspection on modified files",
+        "Verify no untracked files or blast radius leaks",
+        "Confirm G16 secrets and G17 SAST pass"
+      ],
+      "postTaskChecklist": [
+        "Execute ocr review --concurrency 2",
+        "Ensure 0 blocking defects found by OCR",
+        "Verify clean AST structure and formatting"
+      ]
+    },
+    {
+      "skillId": "squad-architecture-devops",
+      "category": "execution_squad",
+      "title": "Architecture & DevOps Engineering Squad",
+      "skillFilePath": ".agents/skills/squad-architecture-devops/SKILL.md",
+      "coreCompetencies": [
+        "Monorepo Layer Boundaries & Module Separation",
+        "Docker & Infrastructure Governance",
+        "Database Migrations & Schema Reversibility",
+        "Outbox Pattern & Asynchronous Job Scheduling",
+        "CI/CD Simulation & Build Optimization"
+      ],
+      "linkedRulebooks": ["03", "04", "09", "10"],
+      "linkedWorkPlans": ["89", "91", "92", "94"],
+      "enforcedQualityGates": ["G1", "G2", "G6", "G9", "G13", "G15", "G18", "G20", "G21"],
+      "jevConsultationQuestions": [
+        "architecture.layerResponsibilitySeparation",
+        "semanticReuseSentinel.hasDuplicateDomainHelper",
+        "observabilityAndG9.usesCanonicalCaptureFlowError",
+        "speculativeFanOut.canSpeculativelyFanOut"
+      ],
+      "preTaskChecklist": [
+        "Verify module boundaries and dependencies",
+        "Check database migration down script reversibility",
+        "Ensure Docker build and runtime isolation"
+      ],
+      "postTaskChecklist": [
+        "Run pnpm arch:verify and pnpm modules:verify",
+        "Verify zero layer leakage in controller/service layers",
+        "Execute CI simulation (pnpm ci:simulate)"
+      ]
+    },
+    {
+      "skillId": "squad-finance-security",
+      "category": "execution_squad",
+      "title": "Finance & Security Engineering Squad",
+      "skillFilePath": ".agents/skills/squad-finance-security/SKILL.md",
+      "coreCompetencies": [
+        "Double-Entry Financial Ledgers & Hash Chains",
+        "Cryptographic Immutability & Zero Hard Delete",
+        "Compensation Field Masking (Gate G8)",
+        "Cascading RBAC & Role Immunity",
+        "26th-25th Monthly Payroll Cycle Temporal Invariants"
+      ],
+      "linkedRulebooks": ["01", "04", "05", "09"],
+      "linkedWorkPlans": ["76", "77", "86", "90"],
+      "enforcedQualityGates": ["G7", "G8", "G11", "G12", "G13", "G16", "G17", "G21"],
+      "jevConsultationQuestions": [
+        "telegramUx.hasUnmaskedCompensation",
+        "temporalInvariantGuard.violatesTemporalInvariants",
+        "temporalInvariantGuard.payrollCycleClassification"
+      ],
+      "preTaskChecklist": [
+        "Verify PINNED_BASE_TIME in all temporal tests",
+        "Check financial calculations against F:\\HR parity baseline",
+        "Inspect compensation masking schemas (formatSpoiler, <tg-spoiler>)"
+      ],
+      "postTaskChecklist": [
+        "Run pnpm financial:verify and pnpm field-masking:verify",
+        "Confirm hash-chain ledger integrity and zero negative balances",
+        "Verify protect_content: true on financial flows"
+      ]
+    },
+    {
+      "skillId": "squad-implementation-ux",
+      "category": "execution_squad",
+      "title": "Implementation & Telegram UX Engineering Squad",
+      "skillFilePath": ".agents/skills/squad-implementation-ux/SKILL.md",
+      "coreCompetencies": [
+        "10-File Vertical Slice Architecture",
+        "Telegram Mobile Ergonomics (36/16/7/3 Budget)",
+        "InputRichMessage Block Builders (WP 95)",
+        "Official Telegram Encyclopedia Formatting Standards",
+        "Wizard Session State Lifecycle"
+      ],
+      "linkedRulebooks": ["01", "07", "11", "12"],
+      "linkedWorkPlans": ["09", "94", "95"],
+      "enforcedQualityGates": ["G2", "G4", "G5", "G6", "G8", "G9", "G22"],
+      "jevConsultationQuestions": [
+        "telegramUx.buttonLabelErgonomics",
+        "triLifecycleAndRichMessage.richMessageAndEncyclopediaCompliance",
+        "telegramUx.hasUnmaskedCompensation",
+        "observabilityAndG9.usesCanonicalCaptureFlowError"
+      ],
+      "preTaskChecklist": [
+        "Ensure 10-file vertical slice structure (pnpm make:flow if new)",
+        "Check button label budget (<= 16 chars) and callback (<= 36 bytes)",
+        "Use InputRichMessage templates exclusively (Zero Raw Text)"
+      ],
+      "postTaskChecklist": [
+        "Run pnpm telegram-contracts:verify and pnpm flow-contracts:verify",
+        "Include Mermaid stateDiagram-v2 in walkthrough.md",
+        "Verify assertRichMessage passes on all presentation templates"
+      ]
+    },
+    {
+      "skillId": "squad-qa-migration",
+      "category": "execution_squad",
+      "title": "QA, Testing & Migration Engineering Squad",
+      "skillFilePath": ".agents/skills/squad-qa-migration/SKILL.md",
+      "coreCompetencies": [
+        "F:\\HR 100% Functional Parity & Migration Registry (docs/19)",
+        "Gate G10 Test Authenticity & Anti-Cheating Invariants",
+        "Mutation Testing & Anti-Flake Verification",
+        "Spec-First Defect Dossiers & Permanent Regression Proofs (WP 93)",
+        "Bidirectional Documentation Citation Parity"
+      ],
+      "linkedRulebooks": ["01", "06", "08", "10"],
+      "linkedWorkPlans": ["74", "93", "94"],
+      "enforcedQualityGates": ["G3", "G4", "G10", "G14", "G19", "G23"],
+      "jevConsultationQuestions": [
+        "testAuthenticity.assertsRealDomainState",
+        "testAuthenticity.excessiveMocking",
+        "testAuthenticity.assertionRigorScore",
+        "diffAudit.hasSilentTestWeakening",
+        "docCodeDriftRadar.hasDocCodeDrift"
+      ],
+      "preTaskChecklist": [
+        "Locate legacy flow baseline in F:\\HR",
+        "Verify test target in modules/<module>/tests/flows/*.spec.ts",
+        "Verify zero placeholder invariant in defect dossiers"
+      ],
+      "postTaskChecklist": [
+        "Run pnpm test-authenticity:verify and pnpm legacy-parity:verify",
+        "Update docs/19 registry with commit hash and path",
+        "Verify pnpm incident:verify and pnpm test:incidents pass"
+      ]
+    },
+    {
+      "skillId": "clean-code-guard",
+      "category": "arsenal_guard",
+      "title": "Clean Code & AI Anti-Pattern Arsenal Guard",
+      "skillFilePath": ".agents/skills/saleh/arsenal/clean-code-guard/rules.md",
+      "coreCompetencies": [
+        "24 Clean Code Imperatives & AI Anti-Pattern Scanner",
+        "Single Responsibility & Layer Boundaries",
+        "Zero console.log Policy & Logger Enforcement",
+        "AST-Level G9 Error Telemetry Wiring Verification",
+        "Semantic Reuse Sentinel (@alsaada/shared)"
+      ],
+      "linkedRulebooks": ["05", "07", "09", "10"],
+      "linkedWorkPlans": ["91", "94", "95"],
+      "enforcedQualityGates": ["G1", "G2", "G5", "G6", "G8", "G9", "G17", "G22"],
+      "jevConsultationQuestions": [
+        "architecture.layerResponsibilitySeparation",
+        "semanticReuseSentinel.hasDuplicateDomainHelper",
+        "observabilityAndG9.usesCanonicalCaptureFlowError",
+        "triLifecycleAndRichMessage.richMessageAndEncyclopediaCompliance"
+      ],
+      "preTaskChecklist": [
+        "Inspect imports for canonical @alsaada/shared packages",
+        "Verify small function size (<= 20 lines) and intent-revealing names",
+        "Ensure error handling imports captureFlowError from @alsaada/telemetry"
+      ],
+      "postTaskChecklist": [
+        "Run pnpm audit:guards",
+        "Verify zero console calls in production code",
+        "Verify cyclomatic complexity <= 10 and nesting <= 4"
+      ]
+    },
+    {
+      "skillId": "test-guard",
+      "category": "arsenal_guard",
+      "title": "Test Authenticity & Anti-Cheating Arsenal Guard",
+      "skillFilePath": ".agents/skills/saleh/arsenal/test-guard/rules.md",
+      "coreCompetencies": [
+        "Gate G10 Test Authenticity & Anti-Cheating Sentinel",
+        "Deterministic Pinned Clock Invariant (PINNED_BASE_TIME)",
+        "Mocking Bounds & Real Database Transaction Testing",
+        "Silent Refactoring & Assertion Deletion Blocker",
+        "Double-Entry Ledger Invariant Verification"
+      ],
+      "linkedRulebooks": ["04", "06", "08"],
+      "linkedWorkPlans": ["90", "93", "94"],
+      "enforcedQualityGates": ["G10", "G11", "G14", "G23"],
+      "jevConsultationQuestions": [
+        "testAuthenticity.assertsRealDomainState",
+        "testAuthenticity.excessiveMocking",
+        "testAuthenticity.assertionRigorScore",
+        "diffAudit.hasSilentTestWeakening",
+        "temporalInvariantGuard.violatesTemporalInvariants"
+      ],
+      "preTaskChecklist": [
+        "Verify test file path in modules/<mod>/tests/flows/*.spec.ts",
+        "Ensure tests pin PINNED_BASE_TIME",
+        "Check test targets assert real state mutations"
+      ],
+      "postTaskChecklist": [
+        "Run pnpm test:pre-commit",
+        "Verify all assertions are deep (toEqual, toMatchObject)",
+        "Confirm no test assertions were skipped or deleted"
+      ]
+    },
+    {
+      "skillId": "docs-guard",
+      "category": "arsenal_guard",
+      "title": "Documentation Parity & Living Specification Arsenal Guard",
+      "skillFilePath": ".agents/skills/saleh/arsenal/docs-guard/rules.md",
+      "coreCompetencies": [
+        "Physical Symbol & Path Reality Verification",
+        "Living Specification Parity (docs/19, docs/26, docs/27)",
+        "Mermaid stateDiagram-v2 Validation in Flow Walkthroughs",
+        "Spec-First Incident Dossier Verification (WP 93)",
+        "Zero-Placeholder & Zero Marketing Fluff Enforcement"
+      ],
+      "linkedRulebooks": ["01", "07", "08"],
+      "linkedWorkPlans": ["91", "93", "94", "95"],
+      "enforcedQualityGates": ["G3", "G4", "G19"],
+      "jevConsultationQuestions": [
+        "docCodeDriftRadar.hasDocCodeDrift",
+        "docCodeDriftRadar.documentationParityScore",
+        "triLifecycleAndRichMessage.triLifecycleAndLockCompliance"
+      ],
+      "preTaskChecklist": [
+        "Verify all referenced paths and symbols physically exist",
+        "Confirm work plan or incident dossier is documented first",
+        "Check state transition diagrams match flow contract"
+      ],
+      "postTaskChecklist": [
+        "Run pnpm docs:audit and pnpm docs:parity",
+        "Verify docs/19 registry updated with commit hash",
+        "Ensure zero placeholders in documentation"
+      ]
+    }
+  ]
+}

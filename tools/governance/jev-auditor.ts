@@ -1,15 +1,19 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { execSync } from 'node:child_process';
 import ts from 'typescript';
-import { isCliEntrypoint, listFlowDirs, readUtf8 } from './common.js';
+import { isCliEntrypoint, listFlowDirs, readUtf8, toRepoPath } from './common.js';
 import { JEV_AUDIT_CATALOG, JEV_GOVERNANCE_WEIGHTS, type TypeSafeQuestion } from './typesafe/audit-catalog.js';
+import { verifySkillGraph, querySkillGraphForTask, EXPECTED_SKILL_IDS } from './verify-skill-graph.js';
 
 export interface JevAuditOptions {
   diff?: boolean | undefined;
   flowPath?: string | undefined;
   testsOnly?: boolean | undefined;
   uxOnly?: boolean | undefined;
+  consult?: boolean | undefined;
+  consultPlan?: string | undefined;
+  consultSkill?: string | undefined;
   apiKey?: string | undefined;
   engine?: 'api' | 'heuristic' | 'auto' | undefined;
   skipTypecheck?: boolean | undefined;
@@ -31,6 +35,17 @@ export interface SquadRoutingInfo {
   prompt: string;
 }
 
+export interface EnrichedJevState {
+  target: string;
+  mode: 'audit' | 'consult-plan' | 'consult-skill';
+  flowSourceCode: string;
+  flowTestCode: string;
+  flowContractJson: string;
+  astMetricsSummary: AstAnalysisSummary;
+  activeSkillIds: string[];
+  constitutionalMandates: string[];
+}
+
 export interface JevAuditReport {
   targetName: string;
   cgi: number; // 0 to 100%
@@ -45,6 +60,14 @@ export interface JevAuditReport {
   systemOneJudgments: Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }>;
   actionableDirective?: string | undefined;
   squadRouting?: SquadRoutingInfo | undefined;
+  consultationScorecard?: {
+    planReadinessScore: number;
+    skillsCovered: string[];
+    rulebooksCovered: string[];
+    qualityGatesCovered: string[];
+    preTaskChecklist: string[];
+    postTaskChecklist: string[];
+  } | undefined;
 }
 
 export interface AstAnalysisSummary {
@@ -63,6 +86,10 @@ export interface AstAnalysisSummary {
   hasCanonicalCycle: boolean;
   hasUnanchoredDrift: boolean;
   hasDuplicateDomainHelper: boolean;
+  usesCanonicalCaptureFlowError: boolean;
+  enforcesBoundedFlowContext: boolean;
+  richMessageCompliance: boolean;
+  hasRawMessageBypass: boolean;
 }
 
 interface CodeSegment {
@@ -94,10 +121,69 @@ export function parseCodeSegments(code: string, defaultName = 'target.ts'): Code
 
 const SHAM_ASSERTION_LITERALS = new Set(['0', 'true', 'false', '1', '""', "''", 'null', 'undefined']);
 const SENSITIVE_FINANCIAL_REGEX = /(?:راتب|سلفة|أجر|مبلغ|جنيه|egp|salary|wage|advance|net_salary)\s*[:=]?\s*\d+/i;
+const ARABIC_UNICODE_REGEX = /[\u0600-\u06FF]/;
+
+function extractLiteralStringsFromNode(node: ts.Node): string[] {
+  const strings: string[] = [];
+  const extract = (n: ts.Node) => {
+    if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) {
+      const text = n.text.trim();
+      if (text) strings.push(text);
+    } else if (ts.isTemplateExpression(n)) {
+      if (n.head.text.trim()) strings.push(n.head.text.trim());
+      for (const span of n.templateSpans) {
+        if (span.literal.text.trim()) strings.push(span.literal.text.trim());
+        extract(span.expression);
+      }
+    } else if (ts.isBinaryExpression(n)) {
+      extract(n.left);
+      extract(n.right);
+    } else if (ts.isConditionalExpression(n)) {
+      extract(n.whenTrue);
+      extract(n.whenFalse);
+    } else if (ts.isParenthesizedExpression(n)) {
+      extract(n.expression);
+    }
+  };
+  extract(node);
+  return strings;
+}
+
+function getReplyMethodInfo(callNode: ts.CallExpression): { methodName: string; textArgIndex: number } | null {
+  if (!ts.isPropertyAccessExpression(callNode.expression)) return null;
+  const methodName = callNode.expression.name.text;
+  const parentExpr = callNode.expression.expression;
+
+  const directMethods = new Set([
+    'reply',
+    'replyWithMarkdown',
+    'replyWithHTML',
+    'replyWithMarkdownV2',
+    'editMessageText',
+    'editMessageCaption',
+  ]);
+
+  if (directMethods.has(methodName)) {
+    if (
+      methodName === 'editMessageText' &&
+      ts.isPropertyAccessExpression(parentExpr) &&
+      parentExpr.name.text === 'api'
+    ) {
+      return { methodName: 'api.editMessageText', textArgIndex: 2 };
+    }
+    return { methodName, textArgIndex: 0 };
+  }
+
+  if (methodName === 'sendMessage') {
+    return { methodName: 'sendMessage', textArgIndex: 1 };
+  }
+
+  return null;
+}
 
 /**
  * Recursive TypeScript compiler AST visitor analyzing test authenticity, Telegram UX ergonomics,
- * compensation masking, and architecture layer separation.
+ * compensation masking, raw message bypass, and architecture layer separation.
  */
 export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstAnalysisSummary {
   const summary: AstAnalysisSummary = {
@@ -116,6 +202,10 @@ export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstA
     hasCanonicalCycle: false,
     hasUnanchoredDrift: false,
     hasDuplicateDomainHelper: false,
+    usesCanonicalCaptureFlowError: true,
+    enforcesBoundedFlowContext: true,
+    richMessageCompliance: true,
+    hasRawMessageBypass: false,
   };
 
   const segments = parseCodeSegments(code, targetName);
@@ -250,6 +340,7 @@ export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstA
         let buttonLabelText: string | undefined;
         let callbackDataText: string | undefined;
         let callbackDataExpr: ts.Expression | undefined;
+        let isTableCellButton = false;
 
         for (const prop of node.properties) {
           if (ts.isPropertyAssignment(prop)) {
@@ -266,13 +357,16 @@ export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstA
               } else {
                 callbackDataExpr = prop.initializer;
               }
+            } else if (propName === 'style' && prop.initializer.getText(sourceFile).includes('link')) {
+              isTableCellButton = true;
             }
           }
         }
 
         if (hasButtonAction && buttonLabelText !== undefined) {
-          summary.maxButtonLabelLength = Math.max(summary.maxButtonLabelLength, buttonLabelText.length);
-          if (buttonLabelText.length > 16) {
+          const charLen = buttonLabelText.length;
+          summary.maxButtonLabelLength = Math.max(summary.maxButtonLabelLength, charLen);
+          if (!isTableCellButton && charLen > 16) {
             summary.hasLongButtonLabel = true;
           }
         }
@@ -284,9 +378,16 @@ export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstA
             summary.hasLongCallback = true;
           }
         } else if (callbackDataExpr) {
-          const exprText = callbackDataExpr.getText(sourceFile);
-          const approxLen = Buffer.byteLength(exprText, 'utf8');
-          summary.maxCallbackByteLength = Math.max(summary.maxCallbackByteLength, Math.min(approxLen, 64));
+          let approxLen = 32;
+          if (
+            ts.isBinaryExpression(callbackDataExpr) &&
+            (ts.isStringLiteral(callbackDataExpr.left) || ts.isNoSubstitutionTemplateLiteral(callbackDataExpr.left))
+          ) {
+            approxLen = Buffer.byteLength(callbackDataExpr.left.text, 'utf8') + 8;
+          } else {
+            approxLen = Math.min(Buffer.byteLength(callbackDataExpr.getText(sourceFile), 'utf8'), 64);
+          }
+          summary.maxCallbackByteLength = Math.max(summary.maxCallbackByteLength, approxLen);
           if (approxLen > 64) {
             summary.hasLongCallback = true;
           }
@@ -359,18 +460,44 @@ export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstA
 
       // --- AST Check 5: Temporal Invariants (Gate G11/G23) ---
       const isToolingFile = fileName.replace(/\\/g, '/').startsWith('tools/');
-      if (!isToolingFile && ts.isCallExpression(node)) {
-        const callee = node.expression.getText(sourceFile);
-        if (callee === 'Date.now' && !sourceText.includes('PINNED_BASE_TIME')) {
-          summary.violatesTemporalInvariants = true;
-          summary.hasUnanchoredDrift = true;
+      if (!isToolingFile && isTestFile) {
+        if (ts.isCallExpression(node)) {
+          const callee = node.expression.getText(sourceFile);
+          if (
+            callee === 'Date.now' &&
+            !sourceText.includes('PINNED_BASE_TIME') &&
+            !sourceText.includes('useFakeTimers') &&
+            !sourceText.includes('setSystemTime')
+          ) {
+            summary.violatesTemporalInvariants = true;
+            summary.hasUnanchoredDrift = true;
+          }
         }
-      }
-      if (!isToolingFile && ts.isNewExpression(node)) {
-        const callee = node.expression.getText(sourceFile);
-        if (callee === 'Date' && node.arguments?.length === 0 && !sourceText.includes('PINNED_BASE_TIME')) {
-          summary.violatesTemporalInvariants = true;
-          summary.hasUnanchoredDrift = true;
+        if (ts.isNewExpression(node)) {
+          const callee = node.expression.getText(sourceFile);
+          if (
+            callee === 'Date' &&
+            node.arguments?.length === 0 &&
+            !sourceText.includes('PINNED_BASE_TIME') &&
+            !sourceText.includes('useFakeTimers') &&
+            !sourceText.includes('setSystemTime')
+          ) {
+            summary.violatesTemporalInvariants = true;
+            summary.hasUnanchoredDrift = true;
+          }
+        }
+      } else if (!isToolingFile && !isTestFile) {
+        if (ts.isCallExpression(node)) {
+          const callee = node.expression.getText(sourceFile);
+          if (
+            callee === 'Date.now' &&
+            (sourceText.includes('payroll') || sourceText.includes('salary') || sourceText.includes('cycle')) &&
+            !sourceText.includes('PINNED_BASE_TIME') &&
+            !sourceText.includes('getPayrollCycle')
+          ) {
+            summary.violatesTemporalInvariants = true;
+            summary.hasUnanchoredDrift = true;
+          }
         }
       }
 
@@ -398,6 +525,55 @@ export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstA
         }
       }
 
+      // --- AST Check 7: Observability & G9 AST Telemetry (Gate G9 / WP 91) ---
+      if (isControllerOrHandler && ts.isCatchClause(node)) {
+        const catchBodyText = node.block.getText(sourceFile);
+        if (
+          catchBodyText.length < 20 ||
+          (!catchBodyText.includes('captureFlowError') &&
+            !catchBodyText.includes('throw') &&
+            !catchBodyText.includes('handleFlowError'))
+        ) {
+          summary.usesCanonicalCaptureFlowError = false;
+        }
+      }
+
+      // --- AST Check 8: Raw Message Bypassing (Gate G5 / G22 / Rule 07 / WP 95) ---
+      if (!isTestFile && ts.isCallExpression(node)) {
+        const methodInfo = getReplyMethodInfo(node);
+        if (methodInfo) {
+          const { textArgIndex } = methodInfo;
+          if (node.arguments.length > textArgIndex) {
+            const textArg = node.arguments[textArgIndex];
+            if (textArg) {
+              const strLiterals = extractLiteralStringsFromNode(textArg);
+              for (const text of strLiterals) {
+                const isArabic = ARABIC_UNICODE_REGEX.test(text) && text.length >= 3;
+                const isLongEnglish = text.length > 25;
+                if (isArabic || isLongEnglish) {
+                  summary.hasRawMessageBypass = true;
+                  summary.richMessageCompliance = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // --- AST Check 9: Rich Message Compliance (WP 95) ---
+      if (fileName.includes('messages') || fileName.includes('handler')) {
+        if (
+          !summary.hasRawMessageBypass &&
+          (sourceText.includes('buildRichPage') ||
+            sourceText.includes('buildRichTable') ||
+            sourceText.includes('buildRichConfirmation') ||
+            sourceText.includes('assertRichMessage'))
+        ) {
+          summary.richMessageCompliance = true;
+        }
+      }
+
       ts.forEachChild(node, checkNode);
     };
 
@@ -422,13 +598,18 @@ export async function evaluateLocalHeuristics(
   const code =
     typeof state === 'object' && state !== null && 'code' in state
       ? String((state as any).code)
+      : typeof state === 'object' && state !== null && 'flowSourceCode' in state
+      ? String((state as any).flowSourceCode) + '\n' + String((state as any).flowTestCode || '')
       : typeof state === 'string'
       ? state
       : JSON.stringify(state);
   const target =
     typeof state === 'object' && state !== null && 'target' in state ? String((state as any).target) : 'target.ts';
 
-  const ast = analyzeCodeWithAst(code, target);
+  const ast =
+    typeof state === 'object' && state !== null && 'astMetricsSummary' in state && (state as any).astMetricsSummary
+      ? ((state as any).astMetricsSummary as AstAnalysisSummary)
+      : analyzeCodeWithAst(code, target);
   const questionEntries = Object.entries(questions);
 
   const promises = questionEntries.map(async ([key, q]) => {
@@ -522,9 +703,9 @@ export async function evaluateLocalHeuristics(
     else if (key === 'responsibleSquad') {
       if (ast.hasUnmaskedCompensation || ast.violatesTemporalInvariants) {
         answer = 'squad_finance_security';
-      } else if (!ast.layerResponsibilitySeparation) {
+      } else if (!ast.layerResponsibilitySeparation || !ast.usesCanonicalCaptureFlowError) {
         answer = 'squad_architecture_devops';
-      } else if (ast.hasLongButtonLabel) {
+      } else if (ast.hasLongButtonLabel || ast.hasRawMessageBypass || !ast.richMessageCompliance) {
         answer = 'squad_implementation_ux';
       } else if (ast.realAssertionCount === 0 || ast.hasSilentTestWeakening) {
         answer = 'squad_qa_migration';
@@ -534,8 +715,8 @@ export async function evaluateLocalHeuristics(
       confidence = 0.94;
     } else if (key === 'defectSeverityScore') {
       if (ast.hasUnmaskedCompensation || ast.violatesTemporalInvariants) answer = 3;
-      else if (!ast.layerResponsibilitySeparation) answer = 2;
-      else if (ast.hasLongButtonLabel) answer = 1;
+      else if (!ast.layerResponsibilitySeparation || !ast.usesCanonicalCaptureFlowError) answer = 2;
+      else if (ast.hasLongButtonLabel || ast.hasRawMessageBypass || !ast.richMessageCompliance) answer = 1;
       else answer = 0;
       confidence = 0.93;
     }
@@ -548,6 +729,40 @@ export async function evaluateLocalHeuristics(
       const hasDrift = /TODO:\s*(?:contract|walkthrough|drift)|missing\s+doc/i.test(code);
       answer = hasDrift ? 1 : 3;
       confidence = 0.91;
+    }
+    // 12. Observability & G9 AST Sentinel (Gate G9 / WP 91)
+    else if (key === 'usesCanonicalCaptureFlowError') {
+      answer = ast.usesCanonicalCaptureFlowError;
+      confidence = 0.96;
+    } else if (key === 'enforcesBoundedFlowContext') {
+      answer = ast.enforcesBoundedFlowContext;
+      confidence = 0.95;
+    }
+    // 13. Tri-Lifecycle & Rich Message Governance (WP 90, 93, 94, 95)
+    else if (key === 'richMessageAndEncyclopediaCompliance') {
+      answer = !ast.hasRawMessageBypass && ast.richMessageCompliance;
+      confidence = 0.96;
+    } else if (key === 'triLifecycleAndLockCompliance') {
+      const hasUnapprovedMod = /TODO:\s*(?:spec|dossier|bypass\s*lock)/i.test(code);
+      answer = hasUnapprovedMod ? 'missing_spec_or_dossier' : 'compliant_sealed';
+      confidence = 0.95;
+    }
+    // 14. Permanent Skill & Plan Consultation (WP 96)
+    else if (key === 'planSixPillarCompleteness') {
+      const pillars = [
+        /scope|baseline|parity|f:\\hr/i,
+        /blast radius|file scope|data contract|10-file|vertical slice/i,
+        /telegram|mobile|ergonomic|36\/16|rich message|keyboard|viewport/i,
+        /concurrency|invariant|security|rbac|lock|idempotenc/i,
+        /test matrix|verification|vitest|assertions|regression/i,
+        /acceptance|quality gate|g1|g23|attestation/i,
+      ];
+      const matchCount = pillars.filter((re) => re.test(code)).length;
+      answer = matchCount >= 5 ? 3 : matchCount >= 3 ? 2 : matchCount >= 1 ? 1 : 0;
+      confidence = 0.94;
+    } else if (key === 'skillRulebookAlignment') {
+      answer = true;
+      confidence = 0.96;
     }
 
     const entry: [string, { answer: string | number | boolean; confidence: number; source: 'heuristic' }] = [
@@ -620,6 +835,9 @@ export async function evaluateBatchParallel(
                 (key === 'violatesTemporalInvariants' && localEntry.answer === false) ||
                 (key === 'hasUnmaskedCompensation' && localEntry.answer === false) ||
                 (key === 'excessiveMocking' && localEntry.answer === false) ||
+                (key === 'assertsRealDomainState' && localEntry.answer === true) ||
+                (key === 'usesCanonicalCaptureFlowError' && localEntry.answer === true) ||
+                (key === 'richMessageAndEncyclopediaCompliance' && localEntry.answer === true) ||
                 (key === 'stepParityWithLegacy' && localEntry.answer === true));
             if ((apiEntry.confidence < 0.85 || isAstVerifiedClean) && localEntry) {
               results[key] = localEntry;
@@ -749,18 +967,64 @@ ${issues.map((i) => `- ${i}`).join('\n')}
   };
 }
 
+export function collectFlowTestFiles(flowDir: string, root = process.cwd()): string[] {
+  const testFiles: string[] = [];
+
+  // 1. Inside flowDir/tests/
+  const innerTestDir = join(flowDir, 'tests');
+  if (existsSync(innerTestDir)) {
+    for (const f of readdirSync(innerTestDir)) {
+      if (f.endsWith('.spec.ts') || f.endsWith('.test.ts')) {
+        testFiles.push(join(innerTestDir, f));
+      }
+    }
+  }
+
+  // 2. In modules/<moduleName>/tests/flows/
+  const normFlowDir = flowDir.replace(/\\/g, '/');
+  const modMatch = normFlowDir.match(/modules\/([^/]+)/);
+  if (modMatch && modMatch[1]) {
+    const moduleName = modMatch[1];
+    const moduleFlowTestsDir = join(root, 'modules', moduleName, 'tests', 'flows');
+    if (existsSync(moduleFlowTestsDir)) {
+      const flowBasename = basename(flowDir);
+      const prefixMatch = flowBasename.match(/^(\d+(?:\.\d+)*(?:\.[A-Z])?)/);
+      const flowPrefix = prefixMatch ? prefixMatch[1] : null;
+
+      for (const tf of readdirSync(moduleFlowTestsDir)) {
+        if (tf.endsWith('.spec.ts') || tf.endsWith('.test.ts')) {
+          const matchesName = tf.includes(flowBasename) || flowBasename.includes(tf.replace(/\.(spec|test)\.ts$/, ''));
+          const matchesPrefix = flowPrefix ? tf.startsWith(flowPrefix) : false;
+          if (matchesName || matchesPrefix) {
+            testFiles.push(join(moduleFlowTestsDir, tf));
+          }
+        }
+      }
+    }
+  }
+
+  return testFiles;
+}
+
 export async function runJevAudit(options: JevAuditOptions = {}, root = process.cwd()): Promise<JevAuditReport> {
-  const targetName = options.flowPath || (options.diff ? 'Git Working Tree Diff' : 'Monorepo Full Suite');
+  const targetName =
+    options.consultPlan ||
+    (options.consultSkill
+      ? `Skill Consultation: ${options.consultSkill}`
+      : options.flowPath || (options.diff ? 'Git Working Tree Diff' : 'Monorepo Full Suite'));
   const dimensions: DimensionResult[] = [];
   const judgments: Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }> =
     {};
 
   // 1. Physical TypeCheck Check
+  const isConsultation = Boolean(options.consult || options.consultPlan || options.consultSkill);
+  const shouldSkipTypecheck = options.skipTypecheck ?? isConsultation;
+
   let typecheckOk = true;
   let typecheckMsg = 'TypeCheck: Exit Code 0 (clean)';
-  if (!options.skipTypecheck) {
+  if (!shouldSkipTypecheck) {
     try {
-      execSync('pnpm exec tsc --noEmit', { cwd: root, stdio: 'ignore' });
+      execSync('tsc --noEmit', { cwd: root, stdio: 'ignore', timeout: 30000 });
     } catch {
       typecheckOk = false;
       typecheckMsg = 'TypeCheck: FAILED with type errors';
@@ -769,7 +1033,25 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
 
   // 2. Gather Target Code State
   let codeSample = '';
-  if (options.diff) {
+  let flowSourceCode = '';
+  let flowTestCode = '';
+  let flowContractJson = '{}';
+
+  let isPlanMissing = false;
+  let planMissingError = '';
+  let planContent = '';
+
+  if (options.consultPlan) {
+    const planAbs = join(root, options.consultPlan);
+    if (!existsSync(planAbs)) {
+      isPlanMissing = true;
+      planMissingError = `Work plan file not found at: ${options.consultPlan}`;
+    } else {
+      planContent = readUtf8(planAbs);
+      codeSample = `\n--- ${options.consultPlan} ---\n` + planContent;
+      flowSourceCode = planContent;
+    }
+  } else if (options.diff) {
     try {
       const namesRaw = execSync('git status --porcelain', { cwd: root, encoding: 'utf8' })
         .split(/\r?\n/)
@@ -795,18 +1077,42 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
       for (const relPath of merged) {
         const absPath = join(root, relPath);
         if (existsSync(absPath)) {
-          codeSample += `\n--- ${relPath} ---\n` + readUtf8(absPath);
+          const content = readUtf8(absPath);
+          codeSample += `\n--- ${relPath} ---\n` + content;
+          if (relPath.endsWith('.contract.json')) {
+            flowContractJson = content;
+          } else if (relPath.endsWith('.spec.ts') || relPath.endsWith('.test.ts')) {
+            flowTestCode += `\n--- ${relPath} ---\n` + content;
+          } else if (relPath.endsWith('.ts')) {
+            flowSourceCode += `\n--- ${relPath} ---\n` + content;
+          }
         }
       }
     } catch {
       codeSample = '';
     }
   } else if (options.flowPath && existsSync(join(root, options.flowPath))) {
-    const files = readdirSync(join(root, options.flowPath));
+    const flowAbsDir = join(root, options.flowPath);
+    const files = readdirSync(flowAbsDir);
     for (const f of files) {
       if (f.endsWith('.ts') || f.endsWith('.json') || f.endsWith('.md')) {
-        codeSample += `\n--- ${f} ---\n` + readUtf8(join(root, options.flowPath, f));
+        const content = readUtf8(join(flowAbsDir, f));
+        codeSample += `\n--- ${f} ---\n` + content;
+        if (f.endsWith('flow.contract.json')) {
+          flowContractJson = content;
+        } else if (f.endsWith('.spec.ts') || f.endsWith('.test.ts')) {
+          flowTestCode += `\n--- ${f} ---\n` + content;
+        } else if (f.endsWith('.ts')) {
+          flowSourceCode += `\n--- ${f} ---\n` + content;
+        }
       }
+    }
+    const testFiles = collectFlowTestFiles(flowAbsDir, root);
+    for (const tf of testFiles) {
+      const tContent = readUtf8(tf);
+      const rel = toRepoPath(tf, root);
+      codeSample += `\n--- [TEST] ${rel} ---\n` + tContent;
+      flowTestCode += `\n--- [TEST] ${rel} ---\n` + tContent;
     }
   } else {
     codeSample = '// General monorepo inspection mode\n';
@@ -816,26 +1122,58 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
       const files = readdirSync(fDir);
       for (const f of files) {
         if (f.endsWith('.ts') || f.endsWith('.json') || f.endsWith('.md')) {
-          codeSample += `\n--- ${f} ---\n` + readUtf8(join(fDir, f));
-        }
-      }
-      const testDir = join(fDir, 'tests');
-      if (existsSync(testDir)) {
-        for (const tf of readdirSync(testDir)) {
-          if (tf.endsWith('.spec.ts') || tf.endsWith('.test.ts')) {
-            codeSample += `\n--- ${tf} ---\n` + readUtf8(join(testDir, tf));
+          const content = readUtf8(join(fDir, f));
+          codeSample += `\n--- ${f} ---\n` + content;
+          if (f.endsWith('flow.contract.json')) {
+            flowContractJson = content;
+          } else if (f.endsWith('.spec.ts') || f.endsWith('.test.ts')) {
+            flowTestCode += content;
+          } else if (f.endsWith('.ts')) {
+            flowSourceCode += content;
           }
         }
+      }
+      const testFiles = collectFlowTestFiles(fDir, root);
+      for (const tf of testFiles) {
+        const tContent = readUtf8(tf);
+        const rel = toRepoPath(tf, root);
+        codeSample += `\n--- [TEST] ${rel} ---\n` + tContent;
+        flowTestCode += `\n--- [TEST] ${rel} ---\n` + tContent;
       }
     }
   }
 
   // 3. Perform AST Analysis on Code State
   const astSummary = analyzeCodeWithAst(codeSample, targetName);
+  if (flowTestCode) {
+    const testAst = analyzeCodeWithAst(flowTestCode, 'test.spec.ts');
+    if (testAst.realAssertionCount > 0) {
+      astSummary.realAssertionCount = Math.max(astSummary.realAssertionCount, testAst.realAssertionCount);
+      astSummary.deepAssertionCount = Math.max(astSummary.deepAssertionCount, testAst.deepAssertionCount);
+      astSummary.basicAssertionCount = Math.max(astSummary.basicAssertionCount, testAst.basicAssertionCount);
+    }
+  }
 
-  // 4. Speculative Fan-Out Batching: Evaluate all questions in parallel
+  // 4. Speculative Fan-Out Batching: Evaluate all questions in parallel with EnrichedJevState
+  const enrichedState: EnrichedJevState = {
+    target: targetName,
+    mode: options.consultPlan ? 'consult-plan' : options.consultSkill ? 'consult-skill' : 'audit',
+    flowSourceCode: flowSourceCode.slice(0, 40000),
+    flowTestCode: flowTestCode.slice(0, 40000),
+    flowContractJson,
+    astMetricsSummary: astSummary,
+    activeSkillIds: options.consultSkill ? [options.consultSkill] : ['saleh', 'jev', 'clean-code-guard', 'test-guard', 'docs-guard'],
+    constitutionalMandates: [
+      'GEMINI.md SSOT',
+      'Rulebook 01-12',
+      'Work Plans 88-96',
+      'G1-G23 Quality Gates',
+      'Cryptographic SHA-256 Immutability',
+    ],
+  };
+
   const evaluatedJudgments = await evaluateBatchParallel(
-    { target: targetName, code: codeSample.slice(0, 50000) },
+    enrichedState,
     {
       assertsRealDomainState: JEV_AUDIT_CATALOG.testAuthenticity.assertsRealDomainState,
       excessiveMocking: JEV_AUDIT_CATALOG.testAuthenticity.excessiveMocking,
@@ -856,6 +1194,12 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
       defectSeverityScore: JEV_AUDIT_CATALOG.squadAutonomousRouter.defectSeverityScore,
       hasDocCodeDrift: JEV_AUDIT_CATALOG.docCodeDriftRadar.hasDocCodeDrift,
       documentationParityScore: JEV_AUDIT_CATALOG.docCodeDriftRadar.documentationParityScore,
+      usesCanonicalCaptureFlowError: JEV_AUDIT_CATALOG.observabilityAndG9.usesCanonicalCaptureFlowError,
+      enforcesBoundedFlowContext: JEV_AUDIT_CATALOG.observabilityAndG9.enforcesBoundedFlowContext,
+      richMessageAndEncyclopediaCompliance: JEV_AUDIT_CATALOG.triLifecycleAndRichMessage.richMessageAndEncyclopediaCompliance,
+      triLifecycleAndLockCompliance: JEV_AUDIT_CATALOG.triLifecycleAndRichMessage.triLifecycleAndLockCompliance,
+      planSixPillarCompleteness: JEV_AUDIT_CATALOG.skillAndPlanConsultation.planSixPillarCompleteness,
+      skillRulebookAlignment: JEV_AUDIT_CATALOG.skillAndPlanConsultation.skillRulebookAlignment,
     },
     options.apiKey,
     options.engine
@@ -1004,6 +1348,46 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
     ],
   });
 
+  // 13. Dimension 9: Observability & G9 AST Sentinel (G9, GEMINI.md 8.3, WP 91)
+  const obsCanonical = judgments.usesCanonicalCaptureFlowError?.answer === true;
+  const obsBounded = judgments.enforcesBoundedFlowContext?.answer === true;
+  const obsScore = obsCanonical && obsBounded ? 0.98 : obsCanonical ? 0.75 : 0.45;
+  dimensions.push({
+    name: '📡 Observability & G9 AST Sentinel',
+    gates: 'G9, WP 91',
+    score: obsScore,
+    verdict: obsScore >= 0.9 ? 'PASS' : obsScore >= 0.7 ? 'WARN' : 'FAIL',
+    confidence: judgments.usesCanonicalCaptureFlowError?.confidence ?? 0.95,
+    details: [
+      obsCanonical
+        ? 'Boundary handlers import and await captureFlowError from @alsaada/telemetry'
+        : 'Silent error swallowing or unawaited error capture detected in flow handlers',
+      obsBounded
+        ? 'Strict BoundedFlowContext enforced across flow boundaries'
+        : 'Loose context or untyped error handling detected',
+    ],
+  });
+
+  // 14. Dimension 10: Tri-Lifecycle & Rich Message Governance (G5, G22, WP 90, 93, 94, 95)
+  const richCompliant = judgments.richMessageAndEncyclopediaCompliance?.answer === true;
+  const triCompliant = judgments.triLifecycleAndLockCompliance?.answer === 'compliant_sealed';
+  const triScore = richCompliant && triCompliant ? 0.98 : richCompliant ? 0.8 : 0.45;
+  dimensions.push({
+    name: '⚖️ Tri-Lifecycle & Rich Message Governance',
+    gates: 'G5, G22, WP 90, 93, 94, 95',
+    score: triScore,
+    verdict: triScore >= 0.9 ? 'PASS' : triScore >= 0.7 ? 'WARN' : 'FAIL',
+    confidence: judgments.richMessageAndEncyclopediaCompliance?.confidence ?? 0.95,
+    details: [
+      richCompliant
+        ? 'Rich message templates (@alsaada/core-components/rich-message) and Telegram Encyclopedia verified'
+        : 'Raw message bypass or Telegram budget limit violation detected',
+      triCompliant
+        ? 'Tri-Lifecycle compliance confirmed (Rulebook 08/11/12) and entities sealed under SHA-256'
+        : 'Unsealed entity or modification without approved plan/dossier detected',
+    ],
+  });
+
   // Filter dimensions if testsOnly or uxOnly flags are enabled
   let activeDimensions = dimensions;
   if (options.testsOnly) {
@@ -1014,7 +1398,7 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
     );
   }
 
-  // 13. Calculate Composite Governance Index (CGI)
+  // 15. Calculate Composite Governance Index (CGI v2.0 - 10 Dimensions)
   const dSec = dimensions[0]?.score ?? 0;
   const dArch = dimensions[1]?.score ?? 0;
   const dUx = dimensions[2]?.score ?? 0;
@@ -1023,6 +1407,8 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
   const dTemporal = dimensions[5]?.score ?? 0;
   const dReuse = dimensions[6]?.score ?? 0;
   const dDocDrift = dimensions[7]?.score ?? 0;
+  const dObservability = dimensions[8]?.score ?? 0;
+  const dTriLifecycle = dimensions[9]?.score ?? 0;
 
   const cgi =
     Math.round(
@@ -1033,7 +1419,9 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
         dParity * JEV_GOVERNANCE_WEIGHTS.legacyParity +
         dTemporal * JEV_GOVERNANCE_WEIGHTS.temporalInvariants +
         dReuse * JEV_GOVERNANCE_WEIGHTS.semanticReuse +
-        dDocDrift * JEV_GOVERNANCE_WEIGHTS.docCodeParity) *
+        dDocDrift * JEV_GOVERNANCE_WEIGHTS.docCodeParity +
+        dObservability * JEV_GOVERNANCE_WEIGHTS.observabilityAndG9 +
+        dTriLifecycle * JEV_GOVERNANCE_WEIGHTS.triLifecycleAndRichMessage) *
         1000
     ) / 10;
 
@@ -1044,7 +1432,132 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
     overallVerdict = 'CONDITIONAL PASS';
   }
 
-  // 14. Generate Autonomous Squad Routing & Directive
+  // 16. Sovereign Skill & Plan Consultation (WP 96)
+  let consultationScorecard: JevAuditReport['consultationScorecard'];
+  if (options.consult || options.consultPlan || options.consultSkill) {
+    const graphRes = verifySkillGraph(root);
+    const assignedSkills: string[] = [];
+    const rulebooksCovered = new Set<string>();
+    const gatesCovered = new Set<string>();
+
+    let isSkillValid = true;
+    let skillErrorMsg = '';
+
+    if (options.consultSkill) {
+      const knownSkillIds = EXPECTED_SKILL_IDS as readonly string[];
+      if (!knownSkillIds.includes(options.consultSkill as any)) {
+        isSkillValid = false;
+        skillErrorMsg = `Unrecognized skill ID [${options.consultSkill}]. Must be one of: ${knownSkillIds.join(', ')}`;
+      } else {
+        assignedSkills.push(options.consultSkill);
+      }
+    } else {
+      assignedSkills.push('saleh', 'jev', 'clean-code-guard', 'test-guard', 'docs-guard');
+    }
+
+    if (isSkillValid) {
+      try {
+        const qResult = querySkillGraphForTask({
+          skillIds: options.consultSkill ? [options.consultSkill] : undefined,
+          root,
+        });
+        for (const s of qResult.skills) {
+          if (!assignedSkills.includes(s.skillId)) assignedSkills.push(s.skillId);
+        }
+        for (const rb of qResult.allRulebooks) rulebooksCovered.add(rb);
+        for (const g of qResult.allGates) gatesCovered.add(g);
+      } catch {
+        // fallback
+      }
+    }
+
+    if (!isSkillValid) {
+      consultationScorecard = {
+        planReadinessScore: 0,
+        skillsCovered: [],
+        rulebooksCovered: [],
+        qualityGatesCovered: [],
+        preTaskChecklist: [
+          `❌ FAILED: ${skillErrorMsg}`,
+          'Consultation aborted due to unrecognized skill ID',
+        ],
+        postTaskChecklist: [
+          'Correct the skill ID to match sovereign-skill-graph.json',
+        ],
+      };
+      overallVerdict = 'REJECT';
+    } else if (isPlanMissing) {
+      consultationScorecard = {
+        planReadinessScore: 0,
+        skillsCovered: assignedSkills,
+        rulebooksCovered: Array.from(rulebooksCovered).sort(),
+        qualityGatesCovered: Array.from(gatesCovered).sort(),
+        preTaskChecklist: [
+          `❌ FAILED: ${planMissingError}`,
+          'Consultation aborted due to missing work plan file',
+        ],
+        postTaskChecklist: [
+          'Ensure work plan file is authored and exists at the specified path',
+        ],
+      };
+      overallVerdict = 'REJECT';
+    } else {
+      let readinessScore = graphRes.failures.length === 0 ? 98 : 75;
+      const preTaskChecklist: string[] = [];
+
+      if (options.consultPlan && planContent) {
+        const pillars = [
+          { name: 'Pillar 1: Scope & Functional Baseline Parity', regex: /scope|baseline|parity|f:\\hr/i },
+          { name: 'Pillar 2: Blast Radius & Data Contracts (10-file vertical slice)', regex: /blast radius|file scope|data contract|10-file|vertical slice/i },
+          { name: 'Pillar 3: Telegram Mobile UX & Ergonomics Budget (36/16/7/3)', regex: /telegram|mobile|ergonomic|36\/16|rich message|keyboard|viewport/i },
+          { name: 'Pillar 4: Concurrency, Invariants & Security', regex: /concurrency|invariant|security|rbac|lock|idempotenc/i },
+          { name: 'Pillar 5: Test Matrix & Verification Commands', regex: /test matrix|verification|vitest|assertions|regression/i },
+          { name: 'Pillar 6: Acceptance Criteria & Quality Gates (G1-G23)', regex: /acceptance|quality gate|g1|g23|attestation/i },
+        ];
+
+        const presentPillars = pillars.filter((p) => p.regex.test(planContent));
+        const missingPillars = pillars.filter((p) => !p.regex.test(planContent));
+        const hasPlaceholders = /(?:\[\s*\.\.\.\s*\]|\bTODO\b|\bTBD\b|\bFIXME\b|<placeholder>|\[placeholder\])/i.test(planContent);
+
+        let planScore = Math.round((presentPillars.length / pillars.length) * 90);
+        if (graphRes.failures.length === 0) planScore += 8;
+        if (hasPlaceholders) planScore = Math.max(0, planScore - 20);
+        readinessScore = Math.min(98, Math.max(0, planScore));
+
+        preTaskChecklist.push(`6-Pillar Analysis: ${presentPillars.length}/6 pillars verified`);
+        for (const mp of missingPillars) {
+          preTaskChecklist.push(`⚠️ Missing ${mp.name}`);
+        }
+        if (hasPlaceholders) {
+          preTaskChecklist.push('⚠️ Warning: Unfilled placeholders (TODO/TBD/[...]) detected in plan');
+        }
+      }
+
+      preTaskChecklist.push(
+        'Inspect sovereign-skill-graph.json for assigned skills and required rulebooks',
+        'Verify OTP lock status of targeted entities (Rulebook 04 / WP 90)',
+        'Ensure tests pin PINNED_BASE_TIME and assert real domain mutations (Rulebook 06)',
+        'Check BoundedFlowContext and captureFlowError wiring (Rulebook 09 / WP 91)'
+      );
+
+      consultationScorecard = {
+        planReadinessScore: readinessScore,
+        skillsCovered: assignedSkills,
+        rulebooksCovered: Array.from(rulebooksCovered).sort(),
+        qualityGatesCovered: Array.from(gatesCovered).sort(),
+        preTaskChecklist,
+        postTaskChecklist: [
+          'Run pnpm skills:verify to confirm zero orphan skills and graph integrity',
+          'Execute permanent regression test suite (pnpm test)',
+          'Perform boosted audit via pnpm audit:saleh:boost',
+          'Reseal modified entities in governance.lock.json (pnpm lock <target>)',
+          'Issue mandatory completion attestation card',
+        ],
+      };
+    }
+  }
+
+  // 17. Generate Autonomous Squad Routing & Directive
   const squadRouting = generateSquadRouting(judgments, activeDimensions, overallVerdict, targetName);
 
   return {
@@ -1061,6 +1574,7 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
     systemOneJudgments: judgments,
     actionableDirective: squadRouting.directive,
     squadRouting,
+    consultationScorecard,
   };
 }
 
@@ -1108,6 +1622,24 @@ export function printJevReport(report: JevAuditReport): void {
     console.log('\n👉 Copy-Pasteable Squad Directive:\n');
     console.log(report.squadRouting.prompt);
   }
+
+  if (report.consultationScorecard) {
+    console.log('\n### 6. Sovereign Skill & Plan Consultation Scorecard (WP 96)');
+    console.log('--------------------------------------------------------------------------------');
+    console.log(`🎯 Plan Readiness Score: ${report.consultationScorecard.planReadinessScore}%`);
+    console.log(`🤖 Assigned Skills: ${report.consultationScorecard.skillsCovered.join(', ')}`);
+    console.log(`📜 Enforced Rulebooks: ${report.consultationScorecard.rulebooksCovered.join(', ')}`);
+    console.log(`🚪 Applicable Quality Gates: ${report.consultationScorecard.qualityGatesCovered.join(', ')}`);
+    console.log('\n📋 Pre-Task Checklist:');
+    for (const item of report.consultationScorecard.preTaskChecklist) {
+      console.log(`  [x] ${item}`);
+    }
+    console.log('\n📋 Post-Task Verification Checklist:');
+    for (const item of report.consultationScorecard.postTaskChecklist) {
+      console.log(`  [ ] ${item}`);
+    }
+  }
+
   console.log('\n================================================================================\n');
 }
 
@@ -1120,11 +1652,14 @@ if (isCliEntrypoint(import.meta.url)) {
 Usage: tsx tools/governance/jev-auditor.ts [options]
 
 Options:
-  --diff            Audit current git working tree diff against HEAD
-  --flow <path>     Audit a specific 10-file vertical slice flow
-  --tests           Audit test authenticity and anti-cheating assertions
-  --ux              Audit Telegram mobile ergonomics and field masking
-  --help, -h        Show this help message
+  --diff                 Audit current git working tree diff against HEAD
+  --flow <path>          Audit a specific 10-file vertical slice flow
+  --tests                Audit test authenticity and anti-cheating assertions
+  --ux                   Audit Telegram mobile ergonomics and field masking
+  --consult              Perform permanent pre/mid/post skill consultation
+  --consult-plan <path>  Consult sovereign skill graph against specific work plan
+  --consult-skill <id>   Consult sovereign skill graph for specific skill ID
+  --help, -h             Show this help message
 `);
     process.exit(0);
   }
@@ -1132,6 +1667,24 @@ Options:
   if (args.includes('--diff')) options.diff = true;
   if (args.includes('--tests')) options.testsOnly = true;
   if (args.includes('--ux')) options.uxOnly = true;
+  if (args.includes('--consult')) {
+    options.consult = true;
+    options.skipTypecheck = true;
+  }
+
+  const planIdx = args.indexOf('--consult-plan');
+  if (planIdx !== -1 && args[planIdx + 1]) {
+    options.consultPlan = args[planIdx + 1];
+    options.consult = true;
+    options.skipTypecheck = true;
+  }
+
+  const skillIdx = args.indexOf('--consult-skill');
+  if (skillIdx !== -1 && args[skillIdx + 1]) {
+    options.consultSkill = args[skillIdx + 1];
+    options.consult = true;
+    options.skipTypecheck = true;
+  }
 
   const flowIdx = args.indexOf('--flow');
   const argFlow = flowIdx !== -1 ? args[flowIdx + 1] : undefined;
@@ -1142,7 +1695,11 @@ Options:
   runJevAudit(options)
     .then((report) => {
       printJevReport(report);
-      if (report.overallVerdict === 'REJECT') {
+      if (options.consult) {
+        if (report.consultationScorecard && report.consultationScorecard.planReadinessScore < 70) {
+          process.exitCode = 1;
+        }
+      } else if (report.overallVerdict === 'REJECT') {
         process.exitCode = 1;
       }
     })

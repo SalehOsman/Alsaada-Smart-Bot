@@ -11,7 +11,7 @@ import {
 
 describe('JEV Auditor & TypeSafe Governance Suite', () => {
   describe('1. Audit Catalog & 6 TypeSafe Capabilities', () => {
-    it('contains all 11 categories in the audit catalog', () => {
+    it('contains all 14 categories in the audit catalog', () => {
       const categories = Object.keys(JEV_AUDIT_CATALOG);
       expect(categories).toContain('testAuthenticity');
       expect(categories).toContain('telegramUx');
@@ -25,6 +25,10 @@ describe('JEV Auditor & TypeSafe Governance Suite', () => {
       expect(categories).toContain('semanticReuseSentinel');
       expect(categories).toContain('squadAutonomousRouter');
       expect(categories).toContain('docCodeDriftRadar');
+      // WP 96 additions
+      expect(categories).toContain('observabilityAndG9');
+      expect(categories).toContain('triLifecycleAndRichMessage');
+      expect(categories).toContain('skillAndPlanConsultation');
     });
 
     it('has valid question types (noul, choice, score) across all questions', () => {
@@ -89,7 +93,7 @@ describe('JEV Auditor & TypeSafe Governance Suite', () => {
       }
     });
 
-    it('ensures all 8 dimensions sum to exactly 1.0', () => {
+    it('ensures all 10 dimensions sum to exactly 1.0', () => {
       const dimensions = [
         JEV_GOVERNANCE_WEIGHTS.securityAndPrivacy,
         JEV_GOVERNANCE_WEIGHTS.architectureAndTypes,
@@ -99,6 +103,8 @@ describe('JEV Auditor & TypeSafe Governance Suite', () => {
         JEV_GOVERNANCE_WEIGHTS.temporalInvariants,
         JEV_GOVERNANCE_WEIGHTS.semanticReuse,
         JEV_GOVERNANCE_WEIGHTS.docCodeParity,
+        JEV_GOVERNANCE_WEIGHTS.observabilityAndG9,
+        JEV_GOVERNANCE_WEIGHTS.triLifecycleAndRichMessage,
       ];
 
       const sum = dimensions.reduce((acc, curr) => acc + curr, 0);
@@ -385,11 +391,11 @@ describe('JEV Auditor & TypeSafe Governance Suite', () => {
   });
 
   describe('6. Full Audit Report & CGI Computation', () => {
-    it('executes runJevAudit and returns all 8 dimensions with CGI calculation', async () => {
+    it('executes runJevAudit and returns all 10 dimensions with CGI calculation', async () => {
       const report = await runJevAudit({ skipTypecheck: true, engine: 'heuristic' });
 
       expect(report.targetName).toBeDefined();
-      expect(report.dimensions.length).toBe(8);
+      expect(report.dimensions.length).toBe(10);
 
       const dimensionNames = report.dimensions.map((d) => d.name);
       expect(dimensionNames.some((n) => n.includes('Security'))).toBe(true);
@@ -400,6 +406,8 @@ describe('JEV Auditor & TypeSafe Governance Suite', () => {
       expect(dimensionNames.some((n) => n.includes('Temporal Invariants'))).toBe(true);
       expect(dimensionNames.some((n) => n.includes('Semantic Reuse'))).toBe(true);
       expect(dimensionNames.some((n) => n.includes('Doc-Code Drift'))).toBe(true);
+      expect(dimensionNames.some((n) => n.includes('Observability'))).toBe(true);
+      expect(dimensionNames.some((n) => n.includes('Tri-Lifecycle'))).toBe(true);
 
       expect(report.cgi).toBeGreaterThan(0);
       expect(report.cgi).toBeLessThanOrEqual(100);
