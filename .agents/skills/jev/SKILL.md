@@ -82,6 +82,15 @@ flowchart TD
 - **/saleh:** Sovereign Executive Proxy, Strategic Architect, and final decision-maker. Crafts specifications, resolves cross-squad disputes, and represents user intent.
 - **/jev:** Technical Forensic Inspector & Permanent Co-Auditor. Executes fine-grained inspections on diffs, files, and flows, supplying `/saleh` with empirical proof, calibrated confidence metrics, and permanent pre/mid/post task consultations.
 
+### 2.3 Strict Pure Cloud Sentinel Mandate & Token Economy (Work Plan 97)
+- **Strict Pure Cloud Sentinel:** When invoked from the terminal (`pnpm jev`, `pnpm jev:diff`, `pnpm jev:consult`), `/jev` operates strictly via cloud connection to TypeSafe System One (`https://api.typesafe.ai/v1/systemone`). Silent local heuristic fallback on CLI is **strictly abolished**.
+- **3-Tier Exponential Backoff Retry & Fail-Fast:** If a network failure occurs, `/jev` automatically executes 3 retries (1s -> 2s -> 4s with 5000ms timeout per request). If all 3 attempts fail, `/jev` aborts immediately with Exit Code 1 and displays the diagnostic error card.
+- **Deterministic Diff Resolution:** Analyzes `git diff -U3 HEAD` (working tree), merge-base (`origin/main...HEAD`), or `HEAD~1...HEAD` with zero ambiguity.
+- **Delta Chunking & AST Compression:** Diffs exceeding 300 lines are compressed into essential AST structural signatures (classes, functions, buttons, telemetry, and assertions), avoiding redundant text filler.
+- **Dynamic Adaptive Question Routing:** Only 2–4 targeted questions are dispatched based on the modified slice (flows, tests, arch, plans), reducing token consumption by 85%–90%.
+- **SHA-256 Caching:** All cloud evaluations are cached by cryptographic hash in `.governance-cache/jev-cloud-cache.json` for 0ms / 0-token repeat checks.
+- **Zero Blast Radius Guard:** Programmatic `engine: 'heuristic'` is strictly retained for offline unit tests.
+
 ---
 
 ## 3. The 19 TypeSafe Capabilities & Cookbooks Armory

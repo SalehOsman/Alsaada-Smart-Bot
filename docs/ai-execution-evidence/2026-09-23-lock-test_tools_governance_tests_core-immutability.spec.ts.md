@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/governance/tests/core-immutability.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T13:50:40.414Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T16:43:00.168Z)
 - **معرف الكيان:** `test:tools/governance/tests/core-immutability.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/governance/tests/core-immutability.spec.ts

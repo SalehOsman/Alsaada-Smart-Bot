@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/core-components/tests/topic-router.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T13:50:40.414Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T16:43:00.168Z)
 - **معرف الكيان:** `test:packages/core-components/tests/topic-router.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/core-components/tests/topic-router.spec.ts

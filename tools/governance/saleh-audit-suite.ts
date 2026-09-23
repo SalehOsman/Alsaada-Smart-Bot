@@ -19,7 +19,7 @@ import { verifyFieldMasking } from './verify-field-masking.js';
 import { checkCodeSecurity } from './verify-code-security.js';
 import { verifyIncidents } from './verify-incidents.js';
 import { verifySkillGraph } from './verify-skill-graph.js';
-import { runJevAudit, type JevAuditReport } from './jev-auditor.js';
+import { runJevAudit, type JevAuditReport, type BackoffRetryOptions } from './jev-auditor.js';
 
 // ============================================================================
 // Types & Contracts
@@ -66,6 +66,7 @@ export interface SalehAuditReport {
   };
   presentationFindings: PresentationFinding[];
   jevReport?: JevAuditReport | undefined;
+  jevCloudNotice?: string | undefined;
   summary: {
     passed: boolean;
     errorsCount: number;
@@ -575,6 +576,8 @@ export interface AuditSuiteOptions {
   incidents?: boolean | undefined;
   skillGraph?: boolean | undefined;
   jev?: boolean | undefined;
+  jevEngine?: 'api' | 'heuristic' | 'auto' | undefined;
+  retryOptions?: BackoffRetryOptions | undefined;
   strict?: boolean | undefined;
   json?: boolean | undefined;
 }
@@ -657,11 +660,23 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
   }
 
   let jevAuditReport: JevAuditReport | undefined;
+  let jevCloudNotice: string | undefined;
   if (options.jev || options.guards || runAll) {
     try {
-      jevAuditReport = await runJevAudit({ skipTypecheck: true, consult: true }, root);
+      const jevEngine =
+        options.jevEngine ?? ((options.guards || options.jev) && !process.env.VITEST ? 'api' : 'heuristic');
+      jevAuditReport = await runJevAudit(
+        {
+          skipTypecheck: true,
+          consult: true,
+          engine: jevEngine,
+          retryOptions: options.retryOptions,
+        },
+        root
+      );
     } catch {
-      // fallback
+      // Resilient Advisory Fallback (WP 97): /saleh does NOT halt, logs transparent warning note and continues independent physical checks
+      jevCloudNotice = '⚠️ [ملاحظة حوكمية]: تعذر الاتصال بمحرك JEV السحابي مؤقتاً. واصل الوكيل صالح المراجعة استناداً إلى التحليل الاستراتيجي الفيزيائي المستقل.';
     }
   }
 
@@ -714,6 +729,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     checkResults,
     presentationFindings,
     jevReport: jevAuditReport,
+    jevCloudNotice,
     summary: {
       passed: totalErrors === 0 && (!options.strict || totalWarnings === 0),
       errorsCount: totalErrors,
@@ -815,9 +831,13 @@ export function formatSalehVerdictReport(report: SalehAuditReport): string {
     lines.push('```');
   }
 
-  if (report.jevReport) {
+  if (report.jevCloudNotice) {
     lines.push('');
-    lines.push('### 5. JEV Permanent Co-Auditor Summary (WP 96)');
+    lines.push('### 5. JEV Permanent Co-Auditor Summary (WP 96/97)');
+    lines.push(`> ${report.jevCloudNotice}`);
+  } else if (report.jevReport) {
+    lines.push('');
+    lines.push('### 5. JEV Permanent Co-Auditor Summary (WP 96/97)');
     lines.push(`- **Composite Governance Index (CGI):** ${report.jevReport.cgi.toFixed(1)}%`);
     lines.push(`- **JEV Verdict:** [${report.jevReport.overallVerdict}]`);
     if (report.jevReport.consultationScorecard) {

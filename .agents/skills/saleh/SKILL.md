@@ -84,6 +84,13 @@ flowchart TD
 - Running static security analysis: `pnpm sast:verify`.
 - Inspecting working tree and git diffs: `git diff`, `git status`, `git log`.
 
+### 2.3 Precedent-Indexed Knowledge & Resilient Advisory Doctrine (Work Plan 97)
+
+- **Zero-Token Precedent Retrieval:** Before formulating architectural advice or escalating dilemmas, `/saleh` queries the local sovereign precedent index at [`.agents/knowledge/precedents/index.json`](file:///f:/Alsaada-Smart-Bot/.agents/knowledge/precedents/index.json). Known issues (such as RTL table formatting, ephemeral test cleanup column names, and lock counting) are resolved instantly in **0ms and 0 tokens**.
+- **Resilient Advisory Continuity:** When running boosted forensic audits (`pnpm audit:saleh:boost`), `/saleh` leverages JEV live cloud consultation (`https://api.typesafe.ai/v1/systemone`). If the cloud server is temporarily unreachable, `/saleh` **does NOT halt** and does not abort user work. It transparently logs:
+  > `⚠️ [ملاحظة حوكمية]: تعذر الاتصال بمحرك JEV السحابي مؤقتاً. واصل الوكيل صالح المراجعة استناداً إلى التحليل الاستراتيجي الفيزيائي المستقل.`
+  and proceeds with its independent physical verification (AST analysis, test suite execution, and documentation parity).
+
 ---
 
 ## 3. The Seven Sovereign Mandates & Open-Source Armory
