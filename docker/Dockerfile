@@ -28,6 +28,7 @@ COPY packages/telemetry/package.json packages/telemetry/
 COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
 COPY modules/workforce/package.json modules/workforce/
 COPY modules/settings/package.json modules/settings/
+COPY modules/sandbox/package.json modules/sandbox/
 COPY apps/admin-dashboard/package.json apps/admin-dashboard/
 COPY apps/docs/package.json apps/docs/
 COPY apps/bot-server/package.json apps/bot-server/
@@ -69,6 +70,10 @@ COPY modules/settings/src/ modules/settings/src/
 COPY modules/settings/index.ts modules/settings/
 COPY modules/settings/module.contract.json modules/settings/
 COPY modules/settings/tsconfig.json modules/settings/
+COPY modules/sandbox/src/ modules/sandbox/src/
+COPY modules/sandbox/index.ts modules/sandbox/
+COPY modules/sandbox/module.contract.json modules/sandbox/
+COPY modules/sandbox/tsconfig.json modules/sandbox/
 COPY apps/bot-server/src/ apps/bot-server/src/
 COPY apps/bot-server/assets/ apps/bot-server/assets/
 COPY apps/bot-server/tsconfig.json apps/bot-server/

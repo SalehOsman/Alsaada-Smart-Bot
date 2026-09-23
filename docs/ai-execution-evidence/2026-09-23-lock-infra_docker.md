@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (infra:docker)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T08:30:11.969Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T11:01:52.476Z)
 - **معرف الكيان:** `infra:docker`
 - **نوع الكيان:** `infra`
 - **العنوان:** البنية التحتية والدوكر وقواعد البيانات
@@ -14,7 +14,7 @@
 | :--- | :--- |
 | `.dockerignore` | `d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a` |
 | `docker-compose.yml` | `000386b68bb88660646931d961732d320237d4f277b4fcc94f3d95cecdc3e9be` |
-| `docker/Dockerfile` | `1b462f6fc3419dba85d06322ed03b6a38b17d5fcfa9afc64291594ca106cfa8b` |
+| `docker/Dockerfile` | `93b8f3a3d0d5ae24c267c8a864aafca50bec1999baaec995fea88f9fa79c5c56` |
 | `docker/Dockerfile.dashboard` | `fd8198a13a12ac016e36daba9f225c844b28d3bc09e587bfb70d0d6bbacf6719` |
 | `docker/Dockerfile.docs` | `89064cb6dd682c11a03cf2f9137ef1ffa1df06e7c6b40b97290927f3df1d725e` |
 | `docker/nginx-docs.conf` | `2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa` |

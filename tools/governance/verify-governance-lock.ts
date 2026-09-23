@@ -218,7 +218,14 @@ export function hashDirectoryFiles(dir: string, root = process.cwd()): Governanc
   if (!existsSync(dir)) return [];
   const files = listFilesRecursive(dir)
     .map((filePath) => normalized(toRepoPath(root, filePath)))
-    .filter((repoPath) => !repoPath.includes('/node_modules/') && !repoPath.includes('/dist/'))
+    .filter(
+      (repoPath) =>
+        !repoPath.includes('/node_modules/') &&
+        !repoPath.includes('/dist/') &&
+        !repoPath.includes('/attachments/') &&
+        !repoPath.startsWith('attachments/') &&
+        !repoPath.endsWith('.tsbuildinfo')
+    )
     .sort((a, b) => a.localeCompare(b));
 
   return files.map((file) => ({
