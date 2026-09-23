@@ -365,7 +365,7 @@
     },
     {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "sha256": "44b2f4491c8968ddfd86892d99c9e52afccba7e1d4e02bfa869cf67acf3a9b4f"
+      "sha256": "080a872b3d7622f8c79aeb5f55f28f3c920754ac68e9eb72f1a7089131e32aca"
     },
     {
       "path": "tools/governance/tests/unlock-challenge-engine.spec.ts",
@@ -7322,19 +7322,6 @@
         }
       ]
     },
-    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
-      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
-      "type": "test",
-      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
-      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-23T11:01:52.476Z",
-      "files": [
-        {
-          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-          "sha256": "44b2f4491c8968ddfd86892d99c9e52afccba7e1d4e02bfa869cf67acf3a9b4f"
-        }
-      ]
-    },
     "test:tools/governance/tests/unlock-challenge-engine.spec.ts": {
       "id": "test:tools/governance/tests/unlock-challenge-engine.spec.ts",
       "type": "test",
@@ -7896,6 +7883,19 @@
         {
           "path": "packages/telemetry/tests/flow-recorder.spec.ts",
           "sha256": "d825920cabd43aba4ca8c2d67e0bf15f2a387f9c9459d6c97671a83269184232"
+        }
+      ]
+    },
+    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
+      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
+      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
+      "lockedAt": "2026-09-23T12:09:06.175Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
+          "sha256": "080a872b3d7622f8c79aeb5f55f28f3c920754ac68e9eb72f1a7089131e32aca"
         }
       ]
     }
