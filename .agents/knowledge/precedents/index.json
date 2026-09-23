@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "updatedAt": "2026-09-23T19:00:00Z",
   "description": "Zero-Token Precedent Index for Al-Saada Monorepo Governance & Strategic Advisory (Work Plan 97)",
-  "totalPrecedents": 4,
+  "totalPrecedents": 5,
   "precedents": [
     {
       "id": "PREC-20260923-01",
@@ -44,6 +44,16 @@
       "constitutionalGate": "G9 / G10",
       "approvedResolution": "Enforce 3-tier exponential backoff retry on JEV CLI with Exit 1 fail-fast and zero silent local fallback, while /saleh logs a transparent governance advisory notice and continues physical audits upon cloud unreachability.",
       "recordedAt": "2026-09-23T19:00:00Z"
+    },
+    {
+      "id": "PREC-20260923-05",
+      "issueSignature": "constitutional-approval-bypass-on-protected-files",
+      "keywords": ["constitutional", "bypass", "approval-formula", "otp", "gemini-md", "lock-engine", "saleh", "gatekeeper", "دستور", "تجاوز", "صيغة-الموافقة", "موافق", "قفل"],
+      "verdict": "strict_otp_provenance_and_verbatim_phrase_enforcement",
+      "confidence": 1.0,
+      "constitutionalGate": "G13 / G15",
+      "approvedResolution": "Reject informal confirmation ('موافق') for protected governance entities. Enforce physical OTP challenge validation before updating lock hashes in unified-lock-engine, verify commit provenance, and activate /saleh Adversarial Gatekeeper Interceptor prior to calling file-writing tools.",
+      "recordedAt": "2026-09-23T22:42:00Z"
     }
   ]
 }

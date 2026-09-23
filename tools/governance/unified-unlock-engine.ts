@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { GOVERNANCE_LOCK_PATH, type GovernanceLock } from './verify-governance-lock.js';
 import { type LockedEntity, resolveLockTarget } from './unified-lock-engine.js';
+import { registerActiveGovernanceUnlock } from './governance-unlock-session.js';
 
 export const VALID_UNLOCK_PHRASES = new Set([
   'موافق على الفتح',
@@ -84,20 +85,26 @@ export function unlockEntity(
   // Attempt resolution
   let entityId: string | null = null;
 
-  // Direct check
-  if (lockData.lockedEntities[rawTarget]) {
+  const resolved = resolveLockTarget(root, rawTarget);
+  if (resolved && resolved.id.startsWith('governance:')) {
+    entityId = resolved.id;
+    registerActiveGovernanceUnlock(
+      {
+        entityId,
+        target: rawTarget,
+        challengeNonce: options.challengeNonce ?? 'OTP-GOV',
+        unlockedAt: new Date().toISOString(),
+        allowedPaths: [resolved.directoryOrFile],
+      },
+      root
+    );
+  } else if (lockData.lockedEntities[rawTarget]) {
     entityId = rawTarget;
-  } else {
-    // Try resolver
-    const resolved = resolveLockTarget(root, rawTarget);
-    if (resolved && lockData.lockedEntities[resolved.id]) {
-      entityId = resolved.id;
-    } else if (resolved) {
-      entityId = resolved.id; // resolved but maybe not in lock?
-    }
+  } else if (resolved && lockData.lockedEntities[resolved.id]) {
+    entityId = resolved.id;
   }
 
-  if (!entityId || !lockData.lockedEntities[entityId]) {
+  if (!entityId || (!lockData.lockedEntities[entityId] && !entityId.startsWith('governance:'))) {
     // Check if target is in legacy lockedFlows or lockedDashboardFeatures
     const isLegacyFlow =
       lockData.lockedFlows && Object.keys(lockData.lockedFlows).includes(rawTarget.replace(/^flow:/, ''));
@@ -117,7 +124,7 @@ export function unlockEntity(
         error: `Entity "${rawTarget}" is not currently locked in governance.lock.json. Available entities: ${Object.keys(lockData.lockedEntities).join(', ')}`,
       };
     }
-  } else {
+  } else if (lockData.lockedEntities[entityId]) {
     // Remove strictly from lockedEntities
     delete lockData.lockedEntities[entityId];
   }

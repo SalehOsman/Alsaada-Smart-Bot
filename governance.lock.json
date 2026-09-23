@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T19:36:22.889Z",
+  "generatedAt": "2026-09-23T21:46:18.556Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -69,7 +69,7 @@
     },
     {
       "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "sha256": "97e8b01fec2c6b792be22ba9fb26d57679cd35537975dd4f531557443a0da3d7"
+      "sha256": "43dd31ac5fb0821d327c9558b3a8c2b1572485f27f409a968639ef9a950bfb1f"
     },
     {
       "path": ".agents/rules/11-modification-lifecycle-standard.md",
@@ -165,7 +165,7 @@
     },
     {
       "path": ".agents/skills/saleh/SKILL.md",
-      "sha256": "a9ceb135c9402c1df4bee203db0fd4cd1d2987ab906859cca0ef9461bc90903b"
+      "sha256": "617dfa99bd1b09ea858adf1bfcb4b2aca66e27eef56fa9194449a42df33bde0a"
     },
     {
       "path": ".agents/skills/squad-architecture-devops/SKILL.md",
@@ -257,11 +257,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "f3849ff7eee42be15cefd3947b30b366edc0011f1b82a7e92c533fbfd227fe96"
+      "sha256": "86a35153555196d72c7245570353cb9ed05684f04d2877f927408c90c3d1c0ac"
     },
     {
       "path": "package.json",
-      "sha256": "79046c2044da2d8424c8295de7f1778c3d7ff34dd19706d34ff059864ea4ed47"
+      "sha256": "9f4c8dbc1ec83a3917c213ad6c2bb88d2c1815afc9c1c8f01446a432d58e364f"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -278,6 +278,10 @@
     {
       "path": "tools/governance/generate-topology.ts",
       "sha256": "e09920b6fff7e5c92b842bda6870fd56b2c5e42d5287183ad18a064691db5dc1"
+    },
+    {
+      "path": "tools/governance/governance-unlock-session.ts",
+      "sha256": "3be632b6476104174a7e498f42a25f7c09ad72b02ed3e4cd2fad1003f01f7749"
     },
     {
       "path": "tools/governance/incident-summary.ts",
@@ -380,6 +384,10 @@
       "sha256": "1f91f55c23ce11b45ab5fe45863701346867e170421dbd43ced6de8daaab1002"
     },
     {
+      "path": "tools/governance/tests/unified-lock-engine-armor.spec.ts",
+      "sha256": "9927e6e3f7d35874fc40069b2de89e93adb685f09e109ed76f3a10674449cf41"
+    },
+    {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
       "sha256": "080a872b3d7622f8c79aeb5f55f28f3c920754ac68e9eb72f1a7089131e32aca"
     },
@@ -441,15 +449,15 @@
     },
     {
       "path": "tools/governance/unified-lock-engine.ts",
-      "sha256": "035afaa729c43d86a6d229fa20b847336218df36e85617be06a11db525bb9f1e"
+      "sha256": "f63e8550b1a582e7880988ffe3d513565989c89c50e6871352e63073b51fb28a"
     },
     {
       "path": "tools/governance/unified-unlock-engine.ts",
-      "sha256": "87ce26f2b5dcb7ba80f135ff276a6f4c86ff772c93a138047073792b2d5d8c43"
+      "sha256": "54faab3a775301692dab3a9bed9f2f2c2f9aaed27a3c4e5d4f47620928bfd83c"
     },
     {
       "path": "tools/governance/unlock-challenge-engine.ts",
-      "sha256": "b507e27796b264fe98b4e98c0827e0820734cb931e233e29c38aac416469f9ac"
+      "sha256": "2523f96640d1ad717385a86227c03553183d0e7b0178f7c03379215881cafddf"
     },
     {
       "path": "tools/governance/verify-ai-compliance.ts",
@@ -505,7 +513,7 @@
     },
     {
       "path": "tools/governance/verify-governance-lock.ts",
-      "sha256": "14a92a9f203bf75b82a98457e32e9f5b5014dad81b1acc15ff3f43960f48bbb2"
+      "sha256": "be411b5cd214f3881289428c4e98a3957f427e26bb68a9863586e4ac960084c7"
     },
     {
       "path": "tools/governance/verify-governance-tamper.ts",
@@ -3352,7 +3360,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T19:36:25.949Z",
+      "lockedAt": "2026-09-23T21:46:18.556Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3883,11 +3891,11 @@
       "type": "app",
       "title": "تطبيق المنظومة: admin-dashboard",
       "directory": "apps/admin-dashboard",
-      "lockedAt": "2026-09-23T19:36:25.949Z",
+      "lockedAt": "2026-09-23T21:41:40.797Z",
       "files": [
         {
           "path": "apps/admin-dashboard/.gitignore",
-          "sha256": "65bc21ebf3708fe434fefb2fda661ba998835b5da34eddfaf5031d1642cfefb9"
+          "sha256": "53b41443c4b9ee7ef7daec4525c0a0e12c060a12767e738d3d2f9e529d68bfb0"
         },
         {
           "path": "apps/admin-dashboard/CHANGELOG.md",
@@ -7821,7 +7829,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T19:36:25.949Z",
+      "lockedAt": "2026-09-23T21:46:18.556Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -7955,6 +7963,19 @@
         {
           "path": "tools/governance/tests/pure-cloud-jev.spec.ts",
           "sha256": "e77b2a0a1b85234da8dca394e9e75abf8bf97a1b007e088665accd13bf678452"
+        }
+      ]
+    },
+    "test:tools/governance/tests/unified-lock-engine-armor.spec.ts": {
+      "id": "test:tools/governance/tests/unified-lock-engine-armor.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine-armor.spec.ts",
+      "directory": "tools/governance/tests/unified-lock-engine-armor.spec.ts",
+      "lockedAt": "2026-09-23T21:25:06.990Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/unified-lock-engine-armor.spec.ts",
+          "sha256": "9927e6e3f7d35874fc40069b2de89e93adb685f09e109ed76f3a10674449cf41"
         }
       ]
     }

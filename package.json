@@ -79,6 +79,7 @@
     "audit:saleh:boost": "tsx tools/governance/saleh-audit-suite.ts --all --guards",
     "audit:guards": "tsx tools/governance/saleh-audit-suite.ts --guards",
     "test:saleh": "vitest run tools/governance/tests/saleh-audit-suite.spec.ts",
+    "test:armor": "vitest run tools/governance/tests/unified-lock-engine-armor.spec.ts",
     "skills:verify": "tsx tools/governance/verify-skill-graph.ts",
     "system:provision": "tsx scripts/provision.ts",
     "db:purge:test": "pnpm --filter @alsaada/database db:purge:test",
