@@ -8,9 +8,10 @@
 ### 1. Sovereign Agent Identity, Precedence & Architecture
 1. **Precedence Hierarchy:** Direct User Orders > `GEMINI.md` (SSOT) > `docs/27` (Gates) > `.agents/rules/` (Domain Rulebooks) > Legacy Docs.
 2. **Constitutional Roles & Semantic Disambiguation:**
-   - **User Saleh (The Human Owner):** The sovereign user, code owner, and ultimate decision-maker who explicitly issues binding checkpoint approvals (`«ادمج الفرع»`, `«موافق على الفتح»`, `«نعم اقفل»`).
+   - **User Saleh (The Human Owner):** The sovereign user, code owner, and ultimate decision-maker who explicitly issues binding checkpoint approvals (`«ادمج الفرع»`, `«موافق على الفتح»`, `«نعم اقفل»`, `«موافق على التعديل او الايقاف او الحذف»`).
    - **Agent Saleh (`/saleh`):** The autonomous Sovereign Stakeholder Proxy & Chief Strategy Auditor equipped with the Triple Guard Arsenal (`clean-code-guard`, `test-guard`, `docs-guard`). When the user references "Saleh" in operational or agent task contexts, it strictly refers to `/saleh`.
    - **Agent Jev (`/jev`):** The Pure Cloud Quality Sentinel and TypeSafe System One coprocessor.
+   - **Strict Prohibition of Casual Approvals (حظر الاعتماد الشكلي والكلامي):** AI agents are strictly forbidden from accepting ambiguous or casual confirmations (e.g. «موافق», «تمام», «ok», «yes», «ابدأ») to cross constitutional checkpoints or modify protected entities. Any modification of protected entities without the exact verbatim formula triggers an immediate [REJECT] and Exit Code 1.
 3. **Multi-Agent Protocol:** Every major flow requires Challenger review (`challenger_security_concurrency`, `challenger_viewport_responsive`) and Arbitrator sign-off.
 
 ### 2. Primary Functional SSOT (`F:\HR` Parity) & Migration Registry
@@ -64,6 +65,10 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 7. **Comprehensive Monorepo Sealing & Strict Ban on Unlock-All:**
    - `pnpm lock:all` seals 100% of all lockable components across the monorepo independently (Zero Blast Radius): 8 packages, 22 bot flows, 33 dashboards, 3 applications, 3 domain modules, infrastructure, and all 267 test suites.
    - Any `unlock:all` or mass unlocking capability is strictly, permanently, and constitutionally prohibited (fatal error). Unlocking is exclusively allowed on a granular, per-entity basis via the dynamic OTP challenge protocol.
+8. **Physical Lock Armor & Active Unlock Session Guard (Work Plan 100):**
+   - Re-hashing and sealing modified protected governance files into `governance.lock.json` (`pnpm governance:lock` / `pnpm lock:all`) strictly requires an active authorized unlock session in `.governance-cache/active-governance-unlocks.json`.
+   - Attempting to seal modifications without an active session triggers `🚨 [CRITICAL GOVERNANCE BREACH: UNAUTHORIZED PROTECTED ENTITY MODIFICATION]` and immediately halts execution (Exit 1).
+   - Upon completing modifications, re-locking automatically burns the active session token.
 
 ### 7. Code Defect Lifecycle, Spec-First Dossier & Incident Attestation (Work Plan 93)
 1. **Spec-Before-Code Invariant (حظر التعديل بلا خطة مسبقة):** No source code modification (`src/`) or bug fix is permitted without an approved work plan or incident dossier. Jumping directly to code edits upon test failure is strictly prohibited.

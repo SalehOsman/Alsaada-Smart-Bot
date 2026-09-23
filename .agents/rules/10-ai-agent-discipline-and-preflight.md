@@ -36,6 +36,10 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
 8. **Cross-Platform Tool Resolution & Documentation Portal Sync:**
    - Never hardcode bare CLI tools (e.g. `tsc`) in Node child process executions; resolve cross-platform binaries via `node_modules/.bin/tsc.cmd` on Windows.
    - Whenever documentation files (`docs/19`, ADRs, architecture specs) are modified, always execute `pnpm docs:sync` before `pnpm ci:simulate` to ensure complete AST synchronization with `apps/docs`.
+9. **Adversarial Gatekeeper & Zero Casual Approval Policy (Work Plan 100):**
+   - AI agents must operate in Adversarial Gatekeeper Mode when touching protected files (`GEMINI.md`, `AGENTS.md`, `.agents/rules/**`, `.agents/skills/**`, `governance.lock.json`).
+   - Casual approvals (`موافق`, `تمام`, `ok`, `yes`) in response to `/learn`, plans, or chat queries MUST NEVER be used as authorization to edit protected files.
+   - Modifying protected entities strictly mandates the verbatim constitutional formula `«موافق على التعديل او الايقاف او الحذف»` or the dynamic OTP challenge-response protocol `«موافق على الفتح <UNLOCK-XXXXXX>»`.
 
 ---
 
