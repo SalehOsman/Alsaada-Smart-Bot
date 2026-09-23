@@ -1,11 +1,11 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:docs)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T09:32:58.276Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T09:35:33.105Z)
 - **معرف الكيان:** `app:docs`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: docs
 - **المسار الأساسي:** `apps/docs`
-- **عدد الملفات المقفلة:** 77 ملفاً
+- **عدد الملفات المقفلة:** 78 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
@@ -83,9 +83,10 @@
 | `apps/docs/src/content/docs/living-architecture.md` | `227d2bc20b9ea917c4177581164b2378f8bf91d9783ddc05c95f94dcaf03812c` |
 | `apps/docs/src/content/docs/telegram-ux/05-master-implementation-roadmap.md` | `ef7893b0314290c1201cb3056a8e8b1aa4c0a9ca860caac5d48d9788b76a41b2` |
 | `apps/docs/src/content/docs/telegram-ux/06-tenant-onboarding-and-provisioning-wizard.md` | `815d7d85700300df8816c1a97e653f86cb67fd74afa4ff3270fb6563c7c7fc69` |
-| `apps/docs/src/content/docs/telegram-ux/22-telegram-ux-ui-design-system-and-ergonomics.md` | `e9d417942b4dd9b97427b926e629ee1ab0396c855a727ab59744a00c79b175eb` |
+| `apps/docs/src/content/docs/telegram-ux/22-telegram-ux-ui-design-system-and-ergonomics.md` | `be39741540c61852fdf8cdb01ee7382a166b7e518a24904ca48c782939461b07` |
 | `apps/docs/src/content/docs/telegram-ux/23-autonomous-agent-roster-and-rag.md` | `86229383c83c788952da77499e8df5be9a1b8f5921a48c2d3320f2c5f636f49d` |
 | `apps/docs/src/content/docs/telegram-ux/24-enterprise-feature-and-flow-master-specification.md` | `8583076b8fe2ae3fd6ea0ddc1dd7a7419fa308e8d53104fbf67a8918cc27aec0` |
+| `apps/docs/src/content/docs/telegram-ux/official-telegram-bot-features-and-formatting-encyclopedia.md` | `f2f88f0fc89d45717378f84671b071362ac2defc1b40a458a4b16a836c85f64f` |
 | `apps/docs/src/scripts/mermaid-pan-zoom.ts` | `6781d9c99d17dd2235d4e5f6c30ac73df43f06bde3425987bf053078764d41f1` |
 | `apps/docs/src/styles/custom.css` | `b1f83d80579bec875390abd67ec94008a1524d0480e33e62f78d16ea56046fec` |
 | `apps/docs/tsconfig.json` | `3828cda2d820e4115cf1e0fbab58c90d1c237e6884f170b04abac9158e4040b8` |

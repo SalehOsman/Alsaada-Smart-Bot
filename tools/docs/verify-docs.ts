@@ -104,7 +104,7 @@ export function verifyDocumentationPortal(
     const linkMatches = content.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g);
     for (const match of linkMatches) {
       const url = match[2]?.trim() ?? '';
-      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('#')) {
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tg://') || url.startsWith('#')) {
         continue;
       }
       checkedLinksCount++;

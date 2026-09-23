@@ -224,8 +224,8 @@ export function rewriteMarkdownLinks(markdown: string, docMap: Map<string, DocMa
   return markdown.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (fullMatch, text, url) => {
     const rawUrl = String(url).trim();
 
-    // Skip mailto, http(s), and fragment-only links
-    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('mailto:') || rawUrl.startsWith('#')) {
+    // Skip mailto, http(s), tg://, and fragment-only links
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('mailto:') || rawUrl.startsWith('tg://') || rawUrl.startsWith('#')) {
       return fullMatch;
     }
 

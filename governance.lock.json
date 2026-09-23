@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T09:33:54.237Z",
+  "generatedAt": "2026-09-23T09:36:33.037Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -57,7 +57,7 @@
     },
     {
       "path": ".agents/rules/07-telegram-ux-mobile-ergonomics.md",
-      "sha256": "8339b1d0459667c1c172cb5f9a5d1f3ea40fa28e5c3cd20c87cc6c0db7c1ca49"
+      "sha256": "d7c9f6caa446e28f1947df783bfd481720cfb86f49d9bcca520b10d00d63a7ca"
     },
     {
       "path": ".agents/rules/08-code-defect-and-regression-postmortem.md",
@@ -221,7 +221,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "c5e7193de69ace8c3a5b00b437dea2844854e671e7d10a8dd6a81eb1dca77fda"
+      "sha256": "031035d45b181b6b9268ea87d63e813753b79ae6e1a90d3c5c38c13bcab9e843"
     },
     {
       "path": "CLAUDE.md",
@@ -257,7 +257,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "2e709d4a01e877637acf5833cd73ac860ed55325085187e196544a66ca8a56b5"
+      "sha256": "6d9d3e7f9a6bdc86e4ab333b32920af2a9668c581be76d1591d00d5fdff71f52"
     },
     {
       "path": "package.json",
@@ -2098,7 +2098,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T09:33:54.237Z",
+      "lockedAt": "2026-09-23T09:36:33.037Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -3389,7 +3389,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T09:33:54.237Z",
+      "lockedAt": "2026-09-23T09:36:33.037Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -4292,7 +4292,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: docs",
       "directory": "apps/docs",
-      "lockedAt": "2026-09-23T09:32:58.276Z",
+      "lockedAt": "2026-09-23T09:35:33.105Z",
       "files": [
         {
           "path": "apps/docs/astro.config.mjs",
@@ -4580,7 +4580,7 @@
         },
         {
           "path": "apps/docs/src/content/docs/telegram-ux/22-telegram-ux-ui-design-system-and-ergonomics.md",
-          "sha256": "e9d417942b4dd9b97427b926e629ee1ab0396c855a727ab59744a00c79b175eb"
+          "sha256": "be39741540c61852fdf8cdb01ee7382a166b7e518a24904ca48c782939461b07"
         },
         {
           "path": "apps/docs/src/content/docs/telegram-ux/23-autonomous-agent-roster-and-rag.md",
@@ -4589,6 +4589,10 @@
         {
           "path": "apps/docs/src/content/docs/telegram-ux/24-enterprise-feature-and-flow-master-specification.md",
           "sha256": "8583076b8fe2ae3fd6ea0ddc1dd7a7419fa308e8d53104fbf67a8918cc27aec0"
+        },
+        {
+          "path": "apps/docs/src/content/docs/telegram-ux/official-telegram-bot-features-and-formatting-encyclopedia.md",
+          "sha256": "f2f88f0fc89d45717378f84671b071362ac2defc1b40a458a4b16a836c85f64f"
         },
         {
           "path": "apps/docs/src/scripts/mermaid-pan-zoom.ts",

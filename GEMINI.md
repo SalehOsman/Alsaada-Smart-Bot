@@ -99,6 +99,11 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
    - عدم تجاوز الحدود الخمسة: 32,768 حرفاً، 500 كتلة، 16 مستوى تداخل، 50 مرفق وسائط، 20 عموداً للجدول.
 4. **عقوبة المخالفة:** يُسقط التدفق فوراً في Gate G5 و Gate G22 ويُصدر ضده حكم `[REJECT]` قطعي من `/saleh`.
 
+### 8.2 الإلزام الدستوري بالموسوعة المرجعية الرسمية لتليجرام (Work Plan 95)
+1. **المرجع الدستوري الأعلى للواجهات:** تمثل الموسوعة المرجعية الرسمية في [`docs/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md`](docs/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md) المستندة لمواصفات منصة تليجرام الرسمية ([Telegram Bot Features](https://core.telegram.org/bots/features) و [Rich Markdown Style & Formatting Options](https://core.telegram.org/bots/api#rich-markdown-style)) المرجع التوثيقي والإرشادي الإلزامي لكافة وكلاء الذكاء الاصطناعي (AI Agents).
+2. **حظر الاستحداث بلا مرجعية (Zero Specless Innovation):** يُحظر قطعيًا على أي وكيل ذكاء اصطناعي تصميم أو توليد أو تعديل أي ميزة، أمر، لوحة مفاتيح، رسالة خفية (`ephemeral`)، مسودة متدفقة (`streaming draft`)، أو كولاج وسائط دون مطابقة الهيكل والمحددات الواردة في الموسوعة.
+3. **قائمة الفحص الذاتي الإلزامية:** يُلزم كل وكيل ذكاء اصطناعي بمراجعة قائمة الفحص الذاتي (AI Self-Inspection Checklist) المحددة في الجزء السابع من الموسوعة قبل إنهاء مهمته البرمجية، واجتياز Gate G5 و Gate G22.
+
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.
 2. **Zod Runtime Deserialization:** Zero untyped `JSON.parse` across boundaries.
