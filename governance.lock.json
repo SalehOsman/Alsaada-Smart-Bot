@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T14:28:34.877Z",
+  "generatedAt": "2026-09-23T14:36:20.216Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -69,7 +69,7 @@
     },
     {
       "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "sha256": "c75be67411b617aa5bc478543c8286217351d9b16265c8109fdc638abcee1a83"
+      "sha256": "26107dc313b616b607dd589b681f795d9aa27f883939397e2497e4890ab0cde7"
     },
     {
       "path": ".agents/rules/11-modification-lifecycle-standard.md",
@@ -221,7 +221,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "031035d45b181b6b9268ea87d63e813753b79ae6e1a90d3c5c38c13bcab9e843"
+      "sha256": "c9491a6823ab0cf9160f778af0334e61d3339a2ae30d9846b14cb3aafa89cf0f"
     },
     {
       "path": "CLAUDE.md",
@@ -257,7 +257,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "a2e59d2b63718ab8510f8216800006026d2265e09bfff4d8a6ce152308a8b1a7"
+      "sha256": "c304cb38393095b7fc759b20844bcd8d7381162b1615f0083f3fed174977cfa0"
     },
     {
       "path": "package.json",
@@ -3340,7 +3340,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T14:28:34.877Z",
+      "lockedAt": "2026-09-23T14:36:20.216Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -7809,7 +7809,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T14:28:34.877Z",
+      "lockedAt": "2026-09-23T14:36:20.216Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",

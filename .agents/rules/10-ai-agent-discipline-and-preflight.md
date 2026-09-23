@@ -68,3 +68,14 @@ If Prettier or ESLint detects stylistic divergences, trailing spaces, or unorgan
 5. **The 5 Report Cards Delivery:** Agents must deliver the structured 5-card completion report directly in chat prior to requesting merge.
 6. **Strict Merge Approval:** Merging to `main` (`git merge --no-ff`) is strictly blocked until the sovereign user issues the verbatim formula: **«ادمج الفرع»**.
 
+---
+
+## 5. Sovereign Skill Graph & Permanent JEV Consultation Protocol (Work Plan 96)
+
+1. **Pre-Task Consultation Gate (`pnpm jev:consult --plan <path>`):**
+   Before authoring or modifying any feature, defect repair, or architectural task, the agent must consult JEV to evaluate the proposed work plan. Proceeding with a plan scoring below 90% readiness (`Plan Readiness < 90%`) is strictly prohibited.
+2. **Sovereign Skill Graph Alignment (`pnpm skills:verify`):**
+   All 11 project skills (`.agents/skills/`) are bound to the authoritative knowledge graph in `.agents/knowledge/sovereign-skill-graph.json`. The agent must run `pnpm skills:verify` to ensure zero orphan skills and bidirectional link integrity across Rulebooks 01–12 and Quality Gates G1–G23.
+3. **Continuous Co-Auditor Calibration:**
+   During development, the agent should run `pnpm jev --diff` to catch mobile viewport overflows and telemetry wiring defects early. Final sign-off requires `pnpm audit:saleh:boost` validating CGI v2.0 >= 90%.
+
