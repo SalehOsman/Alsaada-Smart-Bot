@@ -262,11 +262,11 @@ export async function cleanupFinancialTestFixtures(client: any): Promise<void> {
   try {
     if (client.$executeRawUnsafe) {
       await client.$executeRawUnsafe(`DELETE FROM "worker_expense_claims" WHERE "claimNumber" LIKE '#CLM-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "hospitality_expenses" WHERE "voucherNumber" LIKE 'HOSP-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "custody_expense_items" WHERE "receiptNumber" LIKE 'REC-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "custody_settlements" WHERE "settlementNumber" LIKE 'SET-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "supplier_payments" WHERE "paymentVoucher" LIKE 'SPAY-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "financial_ledgers" WHERE "voucherNumber" LIKE 'LED-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "hospitality_expenses" WHERE "voucherId" LIKE '#HOSP-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "custody_expense_items" WHERE "custodyId" IN (SELECT id FROM "financial_custodies" WHERE "custodyNumber" LIKE 'CUST-GOV-2026-%')`);
+      await client.$executeRawUnsafe(`DELETE FROM "custody_settlements" WHERE "settlementNumber" LIKE '#SET-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "supplier_payments" WHERE "paymentNumber" LIKE '#SPAY-GOV-2026-%'`);
+      await client.$executeRawUnsafe(`DELETE FROM "financial_ledgers" WHERE "voucherNumber" LIKE '#ADV-GOV-%'`);
       await client.$executeRawUnsafe(`DELETE FROM "financial_custodies" WHERE "custodyNumber" LIKE 'CUST-GOV-2026-%'`);
       await client.$executeRawUnsafe(`DELETE FROM "workers" WHERE code = 'WRK-GOV-TEST-01'`);
       await client.$executeRawUnsafe(`DELETE FROM "suppliers" WHERE code = 'SUP-GOV-TEST-01'`);
@@ -275,11 +275,11 @@ export async function cleanupFinancialTestFixtures(client: any): Promise<void> {
       await client.$executeRawUnsafe(`DELETE FROM "tenants" WHERE code = 'TENANT_GOV_TEST'`);
     } else {
       await client.workerExpenseClaim?.deleteMany?.({ where: { claimNumber: { startsWith: '#CLM-GOV-2026-' } } });
-      await client.hospitalityExpense?.deleteMany?.({ where: { voucherNumber: { startsWith: 'HOSP-GOV-2026-' } } });
-      await client.custodyExpenseItem?.deleteMany?.({ where: { receiptNumber: { startsWith: 'REC-GOV-2026-' } } });
-      await client.custodySettlement?.deleteMany?.({ where: { settlementNumber: { startsWith: 'SET-GOV-2026-' } } });
-      await client.supplierPayment?.deleteMany?.({ where: { paymentVoucher: { startsWith: 'SPAY-GOV-2026-' } } });
-      await client.financialLedger?.deleteMany?.({ where: { voucherNumber: { startsWith: 'LED-GOV-2026-' } } });
+      await client.hospitalityExpense?.deleteMany?.({ where: { voucherId: { startsWith: '#HOSP-GOV-2026-' } } });
+      await client.custodyExpenseItem?.deleteMany?.({ where: { custody: { custodyNumber: { startsWith: 'CUST-GOV-2026-' } } } });
+      await client.custodySettlement?.deleteMany?.({ where: { settlementNumber: { startsWith: '#SET-GOV-2026-' } } });
+      await client.supplierPayment?.deleteMany?.({ where: { paymentNumber: { startsWith: '#SPAY-GOV-2026-' } } });
+      await client.financialLedger?.deleteMany?.({ where: { voucherNumber: { startsWith: '#ADV-GOV-' } } });
       await client.financialCustody?.deleteMany?.({ where: { custodyNumber: { startsWith: 'CUST-GOV-2026-' } } });
       await client.worker?.deleteMany?.({ where: { code: 'WRK-GOV-TEST-01' } });
       await client.supplier?.deleteMany?.({ where: { code: 'SUP-GOV-TEST-01' } });
