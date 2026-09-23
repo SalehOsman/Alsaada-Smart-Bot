@@ -5,6 +5,7 @@ export function scaffoldIncident(
   slug: string,
   titleArabic?: string,
   root = process.cwd(),
+  branch?: string,
 ): string {
   if (!slug) {
     throw new Error("Usage: pnpm make:incident <incident-slug> [titleArabic]");
@@ -33,33 +34,42 @@ export function scaffoldIncident(
 
   const incidentId = `INC-${today.replace(/-/g, "")}-${cleanSlug.toUpperCase().slice(0, 8)}`;
   const title = titleArabic ?? `تحليل الخلل البرمجي: ${cleanSlug}`;
+  const branchName = branch ?? `fix/inc-${today.replace(/-/g, "")}-${cleanSlug}`;
 
   if (existsSync(templatePath)) {
     content = readFileSync(templatePath, "utf8")
       .replace(/INC-YYYYMMDD-01/g, incidentId)
+      .replace(/fix\/inc-YYYYMMDD-slug/g, branchName)
       .replace(/YYYY-MM-DD/g, today)
       .replace(/\[عنوان المشكلة البرمجية بدقة وإيجاز\]/g, title);
   } else {
     content = `---
 incident_id: "${incidentId}"
 date: "${today}"
+branch: "${branchName}"
 component: "packages/shared"
 severity: "SEV-2"
 category: "CONCURRENCY_RACE_CONDITION"
 status: "RESOLVED"
+work_plan: "WP-93"
+affected_test: "packages/shared/tests/shared.spec.ts"
+regression_test: "packages/shared/tests/shared.spec.ts"
 ---
 
 # 📝 تقرير توثيق وتحليل الخلل البرمجي (Post-Incident Defect Report)
 ## ${title}
 
-### 1️⃣ بطاقة وسياق الخلل (Incident Scope)
+## 1️⃣ 📋 بطاقة وسياق الخلل (Incident Metadata & Scope)
 - **معرف الخلل:** \`${incidentId}\`
 - **تاريخ الاكتشاف:** \`${today}\`
+- **الفرع المنعزل:** \`${branchName}\`
 
-### 2️⃣ مخرجات الفشل (Symptoms & Failure)
-### 3️⃣ التحليل الجذري للسبب (5 Whys Root Cause Analysis)
-### 4️⃣ تفاصيل الحل وترخيص الكود المصدري («موافق على تعديل الكود المصدري»)
-### 5️⃣ التحقق واختبار الانحدار الدائم
+## 2️⃣ 🚨 التوصيف والأعراض ومخرجات الفشل (Symptoms & Error Signatures)
+## 3️⃣ 🔍 التحليل الجذري للسبب (Root Cause Analysis - RCA & 5 Whys)
+## 4️⃣ 🛠️ تفاصيل الحل المعماري المنفذ (Resolution & Architecture Adjustments)
+- **صيغة موافقة المستخدم المعتمدة حرفياً:** \`«موافق على تعديل الكود المصدري»\`
+## 5️⃣ 🧪 التحقق الميداني واختبار الانحدار الدائم (Verification & Regression Proof)
+## 6️⃣ 🛡️ التوصيات الوقائية والمقترحات الاحترافية لتفادي التكرار (Preventive Recommendations)
 `;
   }
 

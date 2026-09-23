@@ -1,20 +1,32 @@
-# Domain Rulebook 08: Code Defect Lifecycle & 5-Pillar RCA Standard
+# Domain Rulebook 08: Code Defect Lifecycle, Spec-First Dossier & Attestation Governance
 
-> **Authority:** Derived from [`GEMINI.md`](../../GEMINI.md) Part 7 & [`docs/code-incidents/`](../../docs/code-incidents/).  
-> **Status:** Mandatory Quality & Stability Protocol.
+> **Authority:** Derived from [`GEMINI.md`](../../GEMINI.md) Part 7, Work Plan 93, & [`docs/code-incidents/`](../../docs/code-incidents/).  
+> **Status:** Mandatory Quality & Stability Protocol (Gate G14 / G15 / WP 93).
 
 ---
 
-## 1. Hard Stop on Test Failures in Source Code (`src/`)
+## 1. Spec-Before-Code Invariant & Hard Stop on Test Failures
 
-1. **Immediate Execution Freeze:** If an automated test reveals an underlying defect or regression in production source code (`src/`), agents are strictly forbidden from making immediate, ad-hoc edits to fix the code.
-2. **Defect vs Specification Rule:**
+1. **Immediate Execution Freeze:** If an automated test reveals an underlying defect or regression in production source code (`src/`), agents are strictly forbidden from making immediate, ad-hoc edits to fix the code (Zero "Vibe-Fixing").
+2. **No Code Modification Without an Approved Plan:** Any bug fix or source code patch requires an approved work plan or formal incident dossier before touching a single line of production code.
+3. **Defect vs Specification Rule:**
    - A failing test is a signal of code regression or unintended side-effects.
    - Modifying code without root cause analysis creates compounding regressions.
 
 ---
 
-## 2. The 5-Pillar Root Cause Analysis (RCA) Protocol
+## 2. Mandatory Git Branch Isolation (OBOO Invariant)
+
+1. **One Branch, One Objective:** All defect fixes must take place on a dedicated, isolated branch created strictly from clean `main`:
+   ```bash
+   pnpm branch:incident <slug> [titleArabic]
+   ```
+   Branch naming: `fix/inc-<date>-<slug>` (e.g. `fix/inc-20260923-worker-clearance`).
+2. **Zero Branch Contamination:** It is strictly prohibited to fix defects inside feature branches or bundle unrelated features into incident branches.
+
+---
+
+## 3. The 5-Pillar Root Cause Analysis (RCA) Protocol
 
 Before proposing any fix to source code, the agent must generate a formal **5-Pillar RCA Report**:
 
@@ -31,24 +43,45 @@ Before proposing any fix to source code, the agent must generate a formal **5-Pi
 
 ---
 
-## 3. Mandatory Sovereign Fix Authorization Formula
+## 4. Mandatory Sovereign Fix Authorization Formulas
 
-To apply a source code modification following an RCA report, the agent must receive the verbatim, untranslated Arabic approval formula from the sovereign user:
-> **«موافق على تعديل الكود المصدري»**
-
----
-
-## 4. Permanent Regression Test Guarantee
-
-1. **Mandatory Regression Suite:** Every code fix must be accompanied by a dedicated, permanent regression test suite placed under `<module>/tests/regression/` or `<package>/tests/`.
-2. **Cryptographic Locking:** The new regression test must be locked under `test:<path>` in `governance.lock.json`.
-3. **Post-Incident Documentation:** A post-incident summary must be logged in `docs/code-incidents/<date>-incident-<slug>.md` using `pnpm make:incident`.
+To proceed with source code modifications following an RCA report, the agent must receive one of the verbatim, untranslated Arabic approval formulas from the sovereign user:
+> **«موافق على خطة الإصلاح»** or **«موافق على تعديل الكود المصدري»**
 
 ---
 
-## 5. Universal Incident Scope & Zero-Omission Standard
+## 5. The 6-Section Forensic Defect Dossier (`docs/code-incidents/`)
 
-1. **Broad Incident Scope:** The 5-Pillar RCA requirement applies universally to ALL system breakdowns, not merely runtime crashes in business logic:
+Every defect fix must produce an authenticated dossier in `docs/code-incidents/<date>-incident-<slug>.md` strictly implementing all 6 sections:
+1. **Section 1 — Incident Metadata & Scope:** YAML frontmatter (with `incident_id`, `date`, `branch`, `component`, `severity`, `category`, `status`, `work_plan`, `affected_test`, `regression_test`) and metadata table.
+2. **Section 2 — Symptoms & Error Signatures:** Exact failure logs and `Actual vs Expected` terminal outputs.
+3. **Section 3 — Root Cause Analysis (5 Whys) & F:\HR Baseline:** Comprehensive deep-dive and legacy behavior comparison.
+4. **Section 4 — Architectural Resolution & Source Fix:** Exact code diffs, modified files, and verbatim authorization formula.
+5. **Section 5 — Verification & Permanent Regression Proof:** Real terminal test execution proof and regression suite references.
+6. **Section 6 — Preventive Recommendations:** Immediate corrections taken and long-term architectural recommendations.
+
+### Zero-Placeholder & Physical Path Verification Gate:
+All reports must pass automated governance verification:
+```bash
+pnpm incident:verify
+pnpm test:incidents
+```
+The verifier enforces:
+- **Zero Placeholders:** Strict rejection of `[...]`, `TODO`, `TBD`, `[اشرح بدقة...]`, `path/to/...`, or template strings.
+- **Physical Reality:** Every referenced test file (`affected_test`, `regression_test`) and internal repo file link MUST exist physically on disk.
+
+---
+
+## 6. Mandatory Completion Attestation Card
+
+Upon completing the defect repair and verifying that `pnpm incident:verify` passes, the agent MUST conclude its report with the verbatim attestation card:
+> **«✅ تم توثيق وحل الخلل بالكامل في مجلد المشاكل [INC-YYYYMMDD-SLUG] داخل الفرع المنعزل واجتياز الفحص الجنائي»**
+
+---
+
+## 7. Universal Incident Scope & Zero-Omission Standard
+
+1. **Broad Incident Scope:** The 5-Pillar RCA requirement applies universally to ALL system breakdowns:
    - **CI & Build Pipeline Breakdowns:** Frozen-lockfile desynchronization, missing lifecycle scripts, and workflow failures.
    - **Monorepo Version Parity Desyncs:** Release mismatch between root and workspace packages, and un-synchronized release cascades.
    - **Data Validation & Algorithmic Regressions:** Mathematical failures in check-digit algorithms (e.g. Modulo-11), legacy test fixtures divergence, or state machine corruptions.
