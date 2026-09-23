@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:04:35.371Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:36:25.949Z)
 - **معرف الكيان:** `test:modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts

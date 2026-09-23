@@ -29,6 +29,13 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
    - The agent MUST explicitly output the verbatim confirmation in its final message:
      > **«تم قفل الوظيفة [اسم/معرف الوظيفة]»** (e.g., `✅ تم قفل الوظيفة flow:01.1` or `✅ تم قفل الشاشة dashboard:workforce/clearances`).
    - Leaving any entity unsealed before merge is strictly prohibited (`Exit 1`).
+7. **Pure Cloud JEV & Resilient /saleh Protocol (Work Plan 97):**
+   - Every invocation of `/jev` via CLI (`pnpm jev`, `pnpm jev:diff`, `pnpm jev:consult`) must run against the pure cloud endpoint `https://api.typesafe.ai/v1/systemone` with genuine `Engine: api` provenance. Never accept partial heuristic mock answers.
+   - `/saleh` continuously consults JEV cloud to expand its strategic knowledge base and solve complex bugs, but remains resilient: if JEV cloud is down, `/saleh` logs a transparent note and continues independent verification without halting.
+   - Prioritize zero-token precedent index lookup (`.agents/knowledge/precedents/index.json`) for known issue signatures before triggering LLM tokens.
+8. **Cross-Platform Tool Resolution & Documentation Portal Sync:**
+   - Never hardcode bare CLI tools (e.g. `tsc`) in Node child process executions; resolve cross-platform binaries via `node_modules/.bin/tsc.cmd` on Windows.
+   - Whenever documentation files (`docs/19`, ADRs, architecture specs) are modified, always execute `pnpm docs:sync` before `pnpm ci:simulate` to ensure complete AST synchronization with `apps/docs`.
 
 ---
 

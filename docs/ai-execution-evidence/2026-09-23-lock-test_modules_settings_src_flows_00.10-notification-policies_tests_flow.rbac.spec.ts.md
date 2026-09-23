@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/settings/src/flows/00.10-notification-policies/tests/flow.rbac.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:04:35.371Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:36:25.949Z)
 - **معرف الكيان:** `test:modules/settings/src/flows/00.10-notification-policies/tests/flow.rbac.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/settings/src/flows/00.10-notification-policies/tests/flow.rbac.spec.ts
