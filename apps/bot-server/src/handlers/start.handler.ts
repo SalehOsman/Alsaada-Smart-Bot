@@ -23,6 +23,10 @@ export async function renderRoleHome(ctx: MyContext, inPlace = false): Promise<v
   const text = buildWelcomeMessage(ctx, companyName);
   const keyboard = await buildDynamicMainMenuKeyboard(ctx);
 
+  if (ctx.needsInitialSetup && (ctx.effectiveRole === 'SUPER_ADMIN' || ctx.isRealSuperAdmin)) {
+    keyboard.row().text('🏢 إعداد ملف المنظومة (Flow 00.1)', 'action:settings:company_profile');
+  }
+
 
   if (inPlace && ctx.callbackQuery?.message && ctx.chat) {
     try {

@@ -2,10 +2,13 @@ import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { CLIENT_NAVIGATION_ITEMS } from '../../../.generated/catalog/dashboard.client';
-
 describe('Work Plan 89 — Dashboard Client Boundaries (Phase P4)', () => {
   it('verifies that dashboard.client.ts does not import server-only modules', () => {
-    const clientFilePath = path.resolve(process.cwd(), '.generated/catalog/dashboard.client.ts');
+    const candidatePaths = [
+      path.resolve(process.cwd(), '.generated/catalog/dashboard.client.ts'),
+      path.resolve(__dirname, '../../../.generated/catalog/dashboard.client.ts'),
+    ];
+    const clientFilePath = candidatePaths.find((p) => fs.existsSync(p)) || candidatePaths[0];
     expect(fs.existsSync(clientFilePath)).toBe(true);
 
     const clientContent = fs.readFileSync(clientFilePath, 'utf-8');

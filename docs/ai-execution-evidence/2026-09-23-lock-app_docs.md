@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:docs)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T09:35:33.105Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T08:51:42.171Z)
 - **معرف الكيان:** `app:docs`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: docs
@@ -64,7 +64,7 @@
 | `apps/docs/src/content/docs/core-architecture/17-worker-coding-and-silent-alias-resolution.md` | `92dbe8d1d8335935f7229203668cc6bf6d29f4a3d2d1d0ff7de34188c0e9ba84` |
 | `apps/docs/src/content/docs/core-architecture/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md` | `cad0c6a7b32b24276f102d3c0849f0859e43990e85e3890f2701f127e5dd746e` |
 | `apps/docs/src/content/docs/data-and-migration/18-enterprise-schema-and-entity-relationship-model.md` | `0645d69b3e08610a02781253deb23b5ea7d6a78ec36af665d35b852ddc3fc74d` |
-| `apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md` | `62c76323c9e8d99ceb824e6eb31c3f4720e5bf623675bdfb0b891dae44bd06a1` |
+| `apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md` | `c6ad3f1c7d6e0a8afc4513c4e37eae8b4f6158c5387f74cf79e36040eff5af4a` |
 | `apps/docs/src/content/docs/en/index.md` | `1d590738ca35eae6273a95370a380d9e0d2e8f6ed7158c8cb2cb907e4965991a` |
 | `apps/docs/src/content/docs/financial-and-governance/08-universal-rbac-and-executive-role.md` | `1c16d72947ccaf9eaa9cf7470f374b41271a8cc1944edb91ff8e4eaacf93e5aa` |
 | `apps/docs/src/content/docs/financial-and-governance/09-database-governance-and-superadmin-console.md` | `02f300ec3a4e195a391303e00462aa7184a7827f3cb281a98248ec1ee63fb131` |
@@ -80,7 +80,7 @@
 | `apps/docs/src/content/docs/foundations/01-architecture-and-tempot-synergy.md` | `3831c0ddf352c92c1d74e3e06076dd8632c62a6057d00bc8dd5575e763e44744` |
 | `apps/docs/src/content/docs/foundations/14-ai-agent-governance-and-file-rules.md` | `71c30d303e4c65fd052200f064ca8d9758604cae8f814b26a1b843b9a86d519c` |
 | `apps/docs/src/content/docs/index.md` | `5a3499da00db41708b51ca1758bb26cd4a45324fec3f8e4436989f3258b2bb3a` |
-| `apps/docs/src/content/docs/living-architecture.md` | `227d2bc20b9ea917c4177581164b2378f8bf91d9783ddc05c95f94dcaf03812c` |
+| `apps/docs/src/content/docs/living-architecture.md` | `d52a2763dc59dba368e403b709769c9593e1fafc3b6ce6584425a907a2149995` |
 | `apps/docs/src/content/docs/telegram-ux/05-master-implementation-roadmap.md` | `ef7893b0314290c1201cb3056a8e8b1aa4c0a9ca860caac5d48d9788b76a41b2` |
 | `apps/docs/src/content/docs/telegram-ux/06-tenant-onboarding-and-provisioning-wizard.md` | `815d7d85700300df8816c1a97e653f86cb67fd74afa4ff3270fb6563c7c7fc69` |
 | `apps/docs/src/content/docs/telegram-ux/22-telegram-ux-ui-design-system-and-ergonomics.md` | `be39741540c61852fdf8cdb01ee7382a166b7e518a24904ca48c782939461b07` |

@@ -302,3 +302,5 @@
 | **`00.9`** | **تدفق 00.9** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/settings/src/flows/00.9-emergency-cache` | `2026-09-22` (`Plan-Cryptographic-Lock-100`) |
 | **`01.7`** | **تدفق 01.7** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.7-guest-join-and-linking` | `2026-09-22` (`Plan-Cryptographic-Lock-100`) |
 | **`01.8`** | **تدفق 01.8** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/workforce/src/flows/01.8-worker-offboarding` | `2026-09-22` (`Plan-Cryptographic-Lock-100`) |
+| **`99.1`** | **تدفق 99.1** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/sandbox/src/flows/99.1-sandbox-ping` | `2026-09-23` (`Plan-70-Lock`) |
+| **`99.2`** | **تدفق 99.2** | النواة والتحسينات | 🟢 **مكتمل وموثق 100%** | `modules/sandbox/src/flows/99.2-sandbox-calc` | `2026-09-23` (`Plan-70-Lock`) |

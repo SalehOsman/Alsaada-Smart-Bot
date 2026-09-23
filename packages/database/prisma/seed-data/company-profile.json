@@ -1,28 +1,22 @@
 {
-  "tenantCode": "ALSAADA",
-  "tenantName": "شركة السعادة للمقاولات العامة والتعدين",
+  "tenantCode": "DEFAULT",
+  "tenantName": "المنظومة المؤسسية",
   "profile": {
-    "legalName": "شركة السعادة للمقاولات العامة والتوريدات والتعدين ش.م.م",
-    "tradeName": "شركة السعادة",
-    "commercialRegistrationNumber": "123456",
-    "taxRegistrationNumber": "789-012-345",
-    "headquartersAddress": "جمهورية مصر العربية — القاهرة / أسوان",
-    "primaryPhone": "+201000000000",
-    "officialEmail": "info@alsaada-contracting.com",
+    "legalName": "المنظومة المؤسسية",
+    "tradeName": "المنظومة الذكية",
+    "commercialRegistrationNumber": null,
+    "taxRegistrationNumber": null,
+    "headquartersAddress": null,
+    "primaryPhone": null,
+    "officialEmail": null,
     "baseCurrency": "EGP",
     "settings": {
       "officialWorkingHoursPerDay": 8,
       "weeklyRestDays": [
         "FRIDAY"
       ],
-      "emergencyContactPhone": "+201000000000",
-      "siteLocations": [
-        {
-          "code": "SITE-PHOS-01",
-          "name": "موقع مناجم فوسفات أسوان / السباعية",
-          "governorate": "أسوان"
-        }
-      ],
+      "emergencyContactPhone": null,
+      "siteLocations": [],
       "companyPolicies": {
         "advanceNoticeDays": 3,
         "maxAdvancePercentageOfSalary": 50,

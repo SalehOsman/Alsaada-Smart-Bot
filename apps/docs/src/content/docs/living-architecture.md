@@ -20,6 +20,7 @@ flowchart TD
   end
 
   subgraph Modules["🧩 طبقة موديولات الأعمال (Business Modules)"]
+    SANDBOX["@alsaada/sandbox\n(modules/sandbox)"]
     SETTINGS["@alsaada/settings\n(modules/settings)"]
     WORKFORCE["@alsaada/workforce\n(modules/workforce)"]
   end
@@ -59,6 +60,9 @@ flowchart TD
   BOT_SERVER --> TELEMETRY
   BOT_SERVER --> WORKFORCE
   BOT_SERVER --> SHARED
+  SANDBOX --> CORE_COMPONENTS
+  SANDBOX --> DATABASE
+  SANDBOX --> REGIONAL_ENGINE
   SETTINGS --> CORE_COMPONENTS
   SETTINGS --> DATABASE
   SETTINGS --> RBAC
@@ -84,20 +88,21 @@ flowchart TD
   classDef dataNode fill:#d97706,stroke:#b45309,stroke-width:2px,color:#fff;
 
   class ADMIN_DASHBOARD,BOT_SERVER,DOCS appNode;
-  class SETTINGS,WORKFORCE modNode;
+  class SANDBOX,SETTINGS,WORKFORCE modNode;
   class AI_VISION_ENGINE,CORE_COMPONENTS,NATIONAL_ID_ENGINE,RBAC,REGIONAL_ENGINE,SHARED,TELEMETRY coreNode;
   class DATABASE,LEDGER,SHEETS dataNode;
 ```
 
 ---
 
-## 📦 جرد حزم وموديولات المنظومة (13 حزم وموديولات معتمدة)
+## 📦 جرد حزم وموديولات المنظومة (14 حزم وموديولات معتمدة)
 
 | اسم الحزمة / الموديول | المسار البرمجي | الدور المعماري الرئيسي |
 | :--- | :--- | :--- |
 | **`@alsaada/admin-dashboard`** | `apps/admin-dashboard` | apps/admin-dashboard |
 | **`@alsaada/bot-server`** | `apps/bot-server` | apps/bot-server |
 | **`@alsaada/docs`** | `apps/docs` | apps/docs |
+| **`@alsaada/sandbox`** | `modules/sandbox` | modules/sandbox |
 | **`@alsaada/settings`** | `modules/settings` | modules/settings |
 | **`@alsaada/workforce`** | `modules/workforce` | modules/workforce |
 | **`@alsaada/ai-vision-engine`** | `packages/ai-vision-engine` | packages/ai-vision-engine |

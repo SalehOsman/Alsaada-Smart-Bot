@@ -23,10 +23,10 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
   const [decisions, setDecisions] = useState(initialDecisions);
 
   // Settlement Calculator State
-  const [calcWorker, setCalcWorker] = useState('ابراهيم العرجاني (MNT-AUT-001)');
-  const [calcWorkedDays, setCalcWorkedDays] = useState(18);
-  const [calcDailyWage, setCalcDailyWage] = useState(450);
-  const [calcAdvances, setCalcAdvances] = useState(1200);
+  const [calcWorker, setCalcWorker] = useState('');
+  const [calcWorkedDays, setCalcWorkedDays] = useState(0);
+  const [calcDailyWage, setCalcDailyWage] = useState(0);
+  const [calcAdvances, setCalcAdvances] = useState(0);
   const [calcPenalties, setCalcPenalties] = useState(0);
   const [calcPpeDeduction, setCalcPpeDeduction] = useState(0);
   const [payoutOption, setPayoutOption] = useState<'IMMEDIATE' | 'WITH_PAYROLL'>('IMMEDIATE');
@@ -47,7 +47,7 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
     const text = encodeURIComponent(
       `*سند مخالصة وتصفية مستحقات نهائي — السعادة سمارت بوت*\n` +
       `-----------------------------------------\n` +
-      `العامل: ${calcWorker}\n` +
+      `العامل: ${calcWorker || 'غير محدد'}\n` +
       `أيام العمل الفعلية: ${calcWorkedDays} يوم\n` +
       `إجمالي الأجر المستحق: ${earnedSalary.toLocaleString()} ج.م\n` +
       `إجمالي الاستقطاعات (سلف وعهد): ${totalDeductions.toLocaleString()} ج.م\n` +
@@ -341,6 +341,7 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">العامل المستهدف:</label>
                 <input
                   type="text"
+                  placeholder="أدخل اسم أو كود العامل (مثال: أحمد محمود)"
                   value={calcWorker}
                   onChange={(e) => setCalcWorker(e.target.value)}
                   className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg p-2.5 min-h-[44px] font-medium focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
@@ -351,8 +352,10 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">أيام العمل الميدانية:</label>
                 <input
                   type="number"
-                  value={calcWorkedDays}
-                  onChange={(e) => setCalcWorkedDays(Number(e.target.value))}
+                  min="0"
+                  placeholder="0"
+                  value={calcWorkedDays === 0 ? '' : calcWorkedDays}
+                  onChange={(e) => setCalcWorkedDays(Math.max(0, Number(e.target.value) || 0))}
                   className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg p-2.5 min-h-[44px] font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
                 />
               </div>
@@ -361,8 +364,10 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">أجر اليومية المعتمد (ج.م):</label>
                 <input
                   type="number"
-                  value={calcDailyWage}
-                  onChange={(e) => setCalcDailyWage(Number(e.target.value))}
+                  min="0"
+                  placeholder="0"
+                  value={calcDailyWage === 0 ? '' : calcDailyWage}
+                  onChange={(e) => setCalcDailyWage(Math.max(0, Number(e.target.value) || 0))}
                   className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg p-2.5 min-h-[44px] font-mono font-bold text-orange-700 dark:text-orange-400 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
                 />
               </div>
@@ -371,8 +376,10 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">إجمالي السلف والأقساط المستحقة (ج.م):</label>
                 <input
                   type="number"
-                  value={calcAdvances}
-                  onChange={(e) => setCalcAdvances(Number(e.target.value))}
+                  min="0"
+                  placeholder="0"
+                  value={calcAdvances === 0 ? '' : calcAdvances}
+                  onChange={(e) => setCalcAdvances(Math.max(0, Number(e.target.value) || 0))}
                   className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg p-2.5 min-h-[44px] font-mono font-bold text-rose-600 dark:text-rose-400 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
                 />
               </div>
@@ -381,8 +388,10 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">الجزاءات المعتمدة (ج.م):</label>
                 <input
                   type="number"
-                  value={calcPenalties}
-                  onChange={(e) => setCalcPenalties(Number(e.target.value))}
+                  min="0"
+                  placeholder="0"
+                  value={calcPenalties === 0 ? '' : calcPenalties}
+                  onChange={(e) => setCalcPenalties(Math.max(0, Number(e.target.value) || 0))}
                   className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg p-2.5 min-h-[44px] font-mono focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
                 />
               </div>
@@ -391,8 +400,10 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">استقطاعات تلفيات العهد / PPE (ج.م):</label>
                 <input
                   type="number"
-                  value={calcPpeDeduction}
-                  onChange={(e) => setCalcPpeDeduction(Number(e.target.value))}
+                  min="0"
+                  placeholder="0"
+                  value={calcPpeDeduction === 0 ? '' : calcPpeDeduction}
+                  onChange={(e) => setCalcPpeDeduction(Math.max(0, Number(e.target.value) || 0))}
                   className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg p-2.5 min-h-[44px] font-mono focus:outline-hidden focus:ring-2 focus:ring-orange-500/20"
                 />
               </div>
@@ -459,12 +470,23 @@ export function ClearancesClient({ initialClearances, initialDecisions }: Cleara
               </div>
             )}
 
+            {!calcWorker.trim() && (
+              <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 text-slate-400 text-[11px] text-center">
+                <span>يرجى إدخال اسم أو كود العامل وأيام العمل لتوليد السند المالي واعتماده.</span>
+              </div>
+            )}
+
             <div className="pt-2">
               <a
-                href={generateWhatsAppUrl()}
+                href={calcWorker.trim() ? generateWhatsAppUrl() : undefined}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold transition-colors text-xs min-h-[44px]"
+                aria-disabled={!calcWorker.trim()}
+                className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-colors text-xs min-h-[44px] ${
+                  calcWorker.trim()
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white cursor-pointer'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none border border-slate-700/50'
+                }`}
               >
                 <span>📲 إرسال السند للعامل عبر واتساب</span>
               </a>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T09:36:33.037Z",
+  "generatedAt": "2026-09-23T09:38:10.923Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -1160,11 +1160,11 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: workforce/clearances",
       "directory": "apps/admin-dashboard/src/app/admin/workforce/clearances",
-      "lockedAt": "2026-09-23T09:28:02.808Z",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/clearances/clearances-client.tsx",
-          "sha256": "fc00c5765a2de76c110af02afd097c499f854536256ee7164d7dfcfc599e3c2d"
+          "sha256": "5919c156656db43da558c2b4e8af25ae935ac0b8300d1149f11f5d1c105932e8"
         },
         {
           "path": "apps/admin-dashboard/src/app/admin/workforce/clearances/page.tsx",
@@ -2098,7 +2098,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T09:36:33.037Z",
+      "lockedAt": "2026-09-23T09:38:10.923Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -3389,7 +3389,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T09:36:33.037Z",
+      "lockedAt": "2026-09-23T09:38:10.923Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3517,6 +3517,96 @@
         {
           "path": "modules/settings/src/flows/00.1-corporate-profile/flow.validators.ts",
           "sha256": "0aa4fed0f6588a60253870ed80362f1b8632e6f5dcebbba3efde4c6d0867c4e5"
+        }
+      ]
+    },
+    "flow:99.1": {
+      "id": "flow:99.1",
+      "type": "flow",
+      "title": "تدفق البوت: فحص النبض والاستجابة (99.1)",
+      "directory": "modules/sandbox/src/flows/99.1-sandbox-ping",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "files": [
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/action.handler.ts",
+          "sha256": "4e9b79cbaac55a26d7761a1e63034db167bccf73ba70b793e9bb98313cb3a073"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/controller.ts",
+          "sha256": "0b811d5af9757b425a77a127c18c42c00861ae52b6fb04ede7081a7da6acc65a"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/error.handler.ts",
+          "sha256": "ab865ced127488c86bea70835796e39aa596cefdcac6f2f3818c175f4187c0b2"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/flow.contract.json",
+          "sha256": "6c5ec30174ad224cca10d1e7c2c0b88e7bbad2fe17dab7024717b6c85c712ef7"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/index.ts",
+          "sha256": "a17d90863a30228b9fa0d092f8966f49fded825d153fbbfe3e6e76c189dc5562"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/menu.builder.ts",
+          "sha256": "f61d65c670ae98675b26ada3bcb31fd2998441ef6cd89527699208d2a3b4cdaf"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/service.ts",
+          "sha256": "dba7ec555324e64509f80c331e8357e9d434195b87daa073f2b7be9be53e4cf8"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/types.ts",
+          "sha256": "2723e170a7ed1e220289f3b63d6c98e30aaf8d5094ecbccafe72aac845bb7306"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.1-sandbox-ping/validator.ts",
+          "sha256": "294ddb4e4dc0ec2943f61037761578b550823fcbf205464a8b6cf9d283000b9e"
+        }
+      ]
+    },
+    "flow:99.2": {
+      "id": "flow:99.2",
+      "type": "flow",
+      "title": "تدفق البوت: العمليات الحسابية والقناع المالي (99.2)",
+      "directory": "modules/sandbox/src/flows/99.2-sandbox-calc",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "files": [
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/action.handler.ts",
+          "sha256": "beacf1cdf8e8fc4335a81456900e8340f6029241465f2d7e652b6ee242331d78"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/controller.ts",
+          "sha256": "ebdae140a4a16a50a2f42e20629fd2cd95f7dee7a2bf2b1d8ec6dadc2754b3be"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/error.handler.ts",
+          "sha256": "442187d4cf81ddba4b4b2c6f0b1562cb011948ce40adb87833ff45d195603262"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/flow.contract.json",
+          "sha256": "a099df80cbe5f069fc2dbb34b48acec698ac6facf4070a08c56e07cf56f8215f"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/index.ts",
+          "sha256": "99ca2091cdff9cc3c03c1deac7af93149ed801de7d467328da79c322f0dfff25"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/menu.builder.ts",
+          "sha256": "6b13fda43b09aae4b408ee1f9c5572ab4a3bcb2bd4aab1ac9e28cdf530085613"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/service.ts",
+          "sha256": "57dac9b75cc589cd4e31d482dcace518d86c16ca7f6770ae68269877e970137a"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/types.ts",
+          "sha256": "d379068f7d95da8434363839b869443ad91a4021efe1e784108d89103b2b4aad"
+        },
+        {
+          "path": "modules/sandbox/src/flows/99.2-sandbox-calc/validator.ts",
+          "sha256": "32d64dac3e5ded05a15cd6cbbfca213ca791ddb6a129f75448acc7ab23402c7b"
         }
       ]
     },
@@ -4131,7 +4221,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: bot-server",
       "directory": "apps/bot-server",
-      "lockedAt": "2026-09-23T09:28:01.470Z",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
       "files": [
         {
           "path": "apps/bot-server/assets/images/logo.jpg",
@@ -4179,11 +4269,11 @@
         },
         {
           "path": "apps/bot-server/src/handlers/start.handler.ts",
-          "sha256": "adeb06d3891d9f950c39a9faf5691ac74190792cb3b6da8103b387b96901f041"
+          "sha256": "4dc6310e03cbc30c67a8a2f13d103cad0ddedfa3133035fa7ca81bd5186a6098"
         },
         {
           "path": "apps/bot-server/src/handlers/start.helpers.ts",
-          "sha256": "9956a52c06e78fc62f4c5d7cbd164607d5771248afc5997ec0e37d9c990cc7b4"
+          "sha256": "44aaa5deabd42d3cb57feefeeee3b7fb9aa770a13eb3088a7059efe062cb31ec"
         },
         {
           "path": "apps/bot-server/src/handlers/worker-linking.handler.ts",
@@ -4207,7 +4297,7 @@
         },
         {
           "path": "apps/bot-server/src/middlewares/auth.middleware.ts",
-          "sha256": "b0685a65f4e2cf1efbfb73667f11d66ad2a060bebfdac46187c904ce9ce8ca67"
+          "sha256": "5d88f14548c4804f8bb3d11c8a82ca925ec3fa838e227ad95d82f06a7b1c74f8"
         },
         {
           "path": "apps/bot-server/src/middlewares/telemetry.middleware.ts",
@@ -4239,7 +4329,7 @@
         },
         {
           "path": "apps/bot-server/src/services/dynamic-menu.service.ts",
-          "sha256": "f966cd506eb163a92c84a5703e367abddfcb3d4fad9c6881f761128c5866cd7b"
+          "sha256": "33ed15c29465fcaa19f0a8d234e86e19abef4c4c5e56a700121fce7473e23c12"
         },
         {
           "path": "apps/bot-server/src/services/error-vault.service.ts",
@@ -4275,7 +4365,7 @@
         },
         {
           "path": "apps/bot-server/src/types/context.ts",
-          "sha256": "906fa6be3bfaa9026810113260a4fca977404662c085cac98b6b6244b8d833d7"
+          "sha256": "6926ee4663ef2fecdd20141600ad12c4ebcd2a1fe7bdc4ddf28aa36c730e4648"
         },
         {
           "path": "apps/bot-server/src/utils/coordinates.ts",
@@ -4292,7 +4382,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: docs",
       "directory": "apps/docs",
-      "lockedAt": "2026-09-23T09:35:33.105Z",
+      "lockedAt": "2026-09-23T08:51:42.171Z",
       "files": [
         {
           "path": "apps/docs/astro.config.mjs",
@@ -4504,7 +4594,7 @@
         },
         {
           "path": "apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md",
-          "sha256": "62c76323c9e8d99ceb824e6eb31c3f4720e5bf623675bdfb0b891dae44bd06a1"
+          "sha256": "c6ad3f1c7d6e0a8afc4513c4e37eae8b4f6158c5387f74cf79e36040eff5af4a"
         },
         {
           "path": "apps/docs/src/content/docs/en/index.md",
@@ -4568,7 +4658,7 @@
         },
         {
           "path": "apps/docs/src/content/docs/living-architecture.md",
-          "sha256": "227d2bc20b9ea917c4177581164b2378f8bf91d9783ddc05c95f94dcaf03812c"
+          "sha256": "d52a2763dc59dba368e403b709769c9593e1fafc3b6ce6584425a907a2149995"
         },
         {
           "path": "apps/docs/src/content/docs/telegram-ux/05-master-implementation-roadmap.md",
@@ -4605,6 +4695,59 @@
         {
           "path": "apps/docs/tsconfig.json",
           "sha256": "3828cda2d820e4115cf1e0fbab58c90d1c237e6884f170b04abac9158e4040b8"
+        }
+      ]
+    },
+    "module:sandbox": {
+      "id": "module:sandbox",
+      "type": "module",
+      "title": "موديول المنظومة: sandbox",
+      "directory": "modules/sandbox",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "files": [
+        {
+          "path": "modules/sandbox/database/relations.contract.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "path": "modules/sandbox/database/schema.prisma",
+          "sha256": "9df8b78c02eec965593dca583cd4ef9c9fb6da48fcb25716f87858e73147a4e9"
+        },
+        {
+          "path": "modules/sandbox/index.ts",
+          "sha256": "31d05deea3ee1778f4feaed2d07e432a9599ec37d2abeea0e4d1a248199f45c0"
+        },
+        {
+          "path": "modules/sandbox/module.contract.json",
+          "sha256": "c21160492da6b9352e33ad6beeb62dd80556681a42584a17453771c27a7bdb19"
+        },
+        {
+          "path": "modules/sandbox/package.json",
+          "sha256": "3b28644f0a4d2c92654ccfe8225e86bc935d0a818313747f5e97e0867e31d852"
+        },
+        {
+          "path": "modules/sandbox/src/index.ts",
+          "sha256": "b4cef07b3f072abcd7d66ac3001314b822ba02b6aa3b9fe955fe0e97239cb612"
+        },
+        {
+          "path": "modules/sandbox/src/module.register.ts",
+          "sha256": "d93176bdc847bdd7e0f1fb915e7209e8e57758cc00e66037be8bc442d7fa6579"
+        },
+        {
+          "path": "modules/sandbox/src/module.routes.ts",
+          "sha256": "c701ef52bce222993517e99fb81df24854127178b770ad329aa4950e339745c5"
+        },
+        {
+          "path": "modules/sandbox/src/shared/permissions.ts",
+          "sha256": "567ccfcebde8abad73f2c60c55923c27314fecb541ebc3cebefb8fb57f8a6d5e"
+        },
+        {
+          "path": "modules/sandbox/src/shared/services.ts",
+          "sha256": "c74c9136e5822f58b5734b7b76deaf4a4c71cfbba102d88ec60fc6284158a7fd"
+        },
+        {
+          "path": "modules/sandbox/tsconfig.json",
+          "sha256": "62bdc92314df4da13cf227d07d7e88f9591bc0e535e28c3c0b5178c1f1dbf599"
         }
       ]
     },
@@ -4884,11 +5027,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/module-client-boundaries.spec.ts",
       "directory": "apps/admin-dashboard/tests/module-client-boundaries.spec.ts",
-      "lockedAt": "2026-09-23T09:28:03.958Z",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
       "files": [
         {
           "path": "apps/admin-dashboard/tests/module-client-boundaries.spec.ts",
-          "sha256": "2931c9033ce36d066e5623f9ed07510dd5a8db06d4f39bac1a361a47c5623356"
+          "sha256": "2ff5ea53cbf3c7bca6c857045a2f131f1b7bbff2d386f32db63d831549d19f9b"
         }
       ]
     },
@@ -5045,6 +5188,58 @@
         {
           "path": "apps/bot-server/tests/worker-linking-approval.spec.ts",
           "sha256": "fda5b8850633c80d58ee7ebc4b725c9c8b5196d58e86650b1d5dd72a5f238a4b"
+        }
+      ]
+    },
+    "test:modules/sandbox/tests/autodiscovery-e2e.spec.ts": {
+      "id": "test:modules/sandbox/tests/autodiscovery-e2e.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: modules/sandbox/tests/autodiscovery-e2e.spec.ts",
+      "directory": "modules/sandbox/tests/autodiscovery-e2e.spec.ts",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "files": [
+        {
+          "path": "modules/sandbox/tests/autodiscovery-e2e.spec.ts",
+          "sha256": "63c646dcc10be3ab86a0045a04f2f0df0547a31a80c3b6b578ff2ffc998842b3"
+        }
+      ]
+    },
+    "test:modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts": {
+      "id": "test:modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
+      "directory": "modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "files": [
+        {
+          "path": "modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
+          "sha256": "c1fba9ddb35d30633b29f68da1cee0eef8d96585aa5b7c3cfe3a68d0b8c265a8"
+        }
+      ]
+    },
+    "test:modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts": {
+      "id": "test:modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts",
+      "directory": "modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "files": [
+        {
+          "path": "modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts",
+          "sha256": "24f6d1c4315e8926a178551b0999db54d65670cd94f4b677b02751ebc9615670"
+        }
+      ]
+    },
+    "test:modules/sandbox/tests/sandbox-module.spec.ts": {
+      "id": "test:modules/sandbox/tests/sandbox-module.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: modules/sandbox/tests/sandbox-module.spec.ts",
+      "directory": "modules/sandbox/tests/sandbox-module.spec.ts",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
+      "files": [
+        {
+          "path": "modules/sandbox/tests/sandbox-module.spec.ts",
+          "sha256": "7734768d115db997bccb1f3203f5209bf3c3b0d9d8c3e946f8256339e81a3b7e"
         }
       ]
     },
@@ -7289,7 +7484,7 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
       "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-23T09:30:47.618Z",
+      "lockedAt": "2026-09-23T09:38:10.214Z",
       "files": [
         {
           "path": "tools/governance/tests/unified-lock-engine.spec.ts",
@@ -7588,7 +7783,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/database",
       "directory": "packages/database",
-      "lockedAt": "2026-09-23T09:28:03.376Z",
+      "lockedAt": "2026-09-23T08:30:11.969Z",
       "files": [
         {
           "path": "packages/database/CHANGELOG.md",
@@ -7648,11 +7843,11 @@
         },
         {
           "path": "packages/database/prisma/seed-data/company-profile.json",
-          "sha256": "318710c85b7b209e4330b14545d376e1426d61df11eb5d271a8945046650ee22"
+          "sha256": "fb24b8c44560a7bee5a53d1b1edcb9930fedf254755c40c6675cbd49632ce77a"
         },
         {
           "path": "packages/database/prisma/seeds/bot-menu-catalog.seed.ts",
-          "sha256": "510472439cb417ea6798d0704f0b6638de4af5c3d08baf9b6f329ddb5b9befa7"
+          "sha256": "d34d10481cf6765d7eaf3dcdd3d6ba69719cf722d46cc21f026256241745e115"
         },
         {
           "path": "packages/database/src/client.ts",
@@ -7704,23 +7899,23 @@
         },
         {
           "path": "packages/database/src/scripts/remediate-shift-templates-and-jobs.ts",
-          "sha256": "9fc28ddbb6c87190be35850c52f0ce35b4f74d9b3dfc2d9fcf30e8c695738db3"
+          "sha256": "e11d09b1d3c211be55ccb16b7958bf653167b60bc40e3d2d6ef6e109681ba68f"
         },
         {
           "path": "packages/database/src/scripts/seed-bot-menu-catalog.ts",
-          "sha256": "71ad5b80a3a1a5f7d39cadb8c49eefceb7399fe0385a1ac59660061d74db4592"
+          "sha256": "4a7be35683cd64eccc6ddc90ad7ab783d79c3ae82dab4259f98705b0ed5a83d0"
         },
         {
           "path": "packages/database/src/scripts/seed-canteen-cigarettes.ts",
-          "sha256": "0407713651a05147e84a8ee1c7bf161b6f9945e5168d711765c0fa797f6d92b4"
+          "sha256": "5a0b1f6abc59f55879a51301db151ea9a0abeb9252ea6d490b682332ebf60250"
         },
         {
           "path": "packages/database/src/scripts/seed-company-profile.ts",
-          "sha256": "bc69e640bd45b5e9cdc8bb2f391cff72405c018714de4f93c2cb5f3a2d37fe03"
+          "sha256": "9d5576b437227c38b0726e86a89f2fac33f4894205f6175ef8b08022d472a963"
         },
         {
           "path": "packages/database/src/scripts/seed-hq-site.ts",
-          "sha256": "79acc16318323a71a9dd963ac4dac3f854acb7d64edcc7a51fc6f73f31ba8dce"
+          "sha256": "c2f1682fb7c267a1177f953e825697013ce67b6da75faaa9ef3b975618c399dc"
         },
         {
           "path": "packages/database/src/scripts/studio-bridge.mjs",

@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T09:28:03.376Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T08:30:11.969Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
 - **المسار الأساسي:** `packages/database`
 - **عدد الملفات المقفلة:** 35 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-70-Lock`
+- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
@@ -26,8 +26,8 @@
 | `packages/database/prisma/migrations/20260918_immutable_financial_ledger_triggers/migration.sql` | `aae5ec466141299c6d58742c6674e6ba3518a417a5440f375256793dd81a8e5a` |
 | `packages/database/prisma/migrations/migration_lock.toml` | `162ff5818ed32b5113b4fb76482715281a9f8809c6ebd1b72dd604de469f1746` |
 | `packages/database/prisma/schema.prisma` | `8524f9db593b1ce89e039a58955c91e8d95a18b00a29096cf978674b3a2b6873` |
-| `packages/database/prisma/seed-data/company-profile.json` | `318710c85b7b209e4330b14545d376e1426d61df11eb5d271a8945046650ee22` |
-| `packages/database/prisma/seeds/bot-menu-catalog.seed.ts` | `510472439cb417ea6798d0704f0b6638de4af5c3d08baf9b6f329ddb5b9befa7` |
+| `packages/database/prisma/seed-data/company-profile.json` | `fb24b8c44560a7bee5a53d1b1edcb9930fedf254755c40c6675cbd49632ce77a` |
+| `packages/database/prisma/seeds/bot-menu-catalog.seed.ts` | `d34d10481cf6765d7eaf3dcdd3d6ba69719cf722d46cc21f026256241745e115` |
 | `packages/database/src/client.ts` | `5da20d0e2cff368b0ab29194cd47c4e978441b619ada661467dde2026136ee30` |
 | `packages/database/src/crypto/blind-index.ts` | `2ac9290b9870b11691db875f68c74aa7a77a9b3ba57541ec4c747a9e2457a7c9` |
 | `packages/database/src/crypto/cipher.ts` | `3d0043d35be884e7a90e0ffa4dabe1feda9daaa619a6cbc40d00de08f2c326f5` |
@@ -40,11 +40,11 @@
 | `packages/database/src/repositories/custody-transaction.repository.ts` | `a7e63e367d2757ba04590435271b6c65bc01e0fa545858359b41a32f6d7292a8` |
 | `packages/database/src/scripts/purge-test-data.ts` | `3313e0a136663baf1e772a243115de0509773a70f9c606fb8dd4c3ea21fa505f` |
 | `packages/database/src/scripts/remediate-job-matrix-and-cycles.ts` | `627dce421320345cadc59ac2c54d3dbcd38482e2825ce1832a54fa6d23b58c72` |
-| `packages/database/src/scripts/remediate-shift-templates-and-jobs.ts` | `9fc28ddbb6c87190be35850c52f0ce35b4f74d9b3dfc2d9fcf30e8c695738db3` |
-| `packages/database/src/scripts/seed-bot-menu-catalog.ts` | `71ad5b80a3a1a5f7d39cadb8c49eefceb7399fe0385a1ac59660061d74db4592` |
-| `packages/database/src/scripts/seed-canteen-cigarettes.ts` | `0407713651a05147e84a8ee1c7bf161b6f9945e5168d711765c0fa797f6d92b4` |
-| `packages/database/src/scripts/seed-company-profile.ts` | `bc69e640bd45b5e9cdc8bb2f391cff72405c018714de4f93c2cb5f3a2d37fe03` |
-| `packages/database/src/scripts/seed-hq-site.ts` | `79acc16318323a71a9dd963ac4dac3f854acb7d64edcc7a51fc6f73f31ba8dce` |
+| `packages/database/src/scripts/remediate-shift-templates-and-jobs.ts` | `e11d09b1d3c211be55ccb16b7958bf653167b60bc40e3d2d6ef6e109681ba68f` |
+| `packages/database/src/scripts/seed-bot-menu-catalog.ts` | `4a7be35683cd64eccc6ddc90ad7ab783d79c3ae82dab4259f98705b0ed5a83d0` |
+| `packages/database/src/scripts/seed-canteen-cigarettes.ts` | `5a0b1f6abc59f55879a51301db151ea9a0abeb9252ea6d490b682332ebf60250` |
+| `packages/database/src/scripts/seed-company-profile.ts` | `9d5576b437227c38b0726e86a89f2fac33f4894205f6175ef8b08022d472a963` |
+| `packages/database/src/scripts/seed-hq-site.ts` | `c2f1682fb7c267a1177f953e825697013ce67b6da75faaa9ef3b975618c399dc` |
 | `packages/database/src/scripts/studio-bridge.mjs` | `be69d461ed600413a0c7f4c117cf99b31509c03eea9efc3551af902bd05444ea` |
 | `packages/database/tsconfig.json` | `c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280` |
 

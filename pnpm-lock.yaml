@@ -359,6 +359,18 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  modules/sandbox:
+    dependencies:
+      '@alsaada/core-components':
+        specifier: workspace:*
+        version: link:../../packages/core-components
+      '@alsaada/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@alsaada/regional-engine':
+        specifier: workspace:*
+        version: link:../../packages/regional-engine
+
   modules/settings:
     dependencies:
       '@alsaada/core-components':

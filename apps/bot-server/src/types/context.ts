@@ -25,6 +25,7 @@ export interface MyContext extends Context {
   flowId?: string;
   cacheSource?: string;
   isBanned?: boolean;
+  needsInitialSetup?: boolean;
 }
 
 

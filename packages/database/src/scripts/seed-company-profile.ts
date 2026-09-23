@@ -12,7 +12,7 @@ try {
 
 export async function seedCompanyProfile(): Promise<void> {
   console.log('================================================================');
-  console.log('🏢 Seeding/Updating Al-Saada Company Profile...');
+  console.log('🏢 Seeding/Updating Default White-Label Company Profile...');
   console.log('================================================================');
 
   try {
@@ -29,13 +29,19 @@ export async function seedCompanyProfile(): Promise<void> {
     const raw = fs.readFileSync(jsonPath, 'utf-8');
     const data = JSON.parse(raw);
 
+    const tenantCode = process.env.TENANT_CODE || data.tenantCode || 'DEFAULT';
+    const tenantName = process.env.TENANT_NAME || data.tenantName || 'المنظومة المؤسسية';
+    const legalName = process.env.COMPANY_LEGAL_NAME || data.profile?.legalName || tenantName;
+    const tradeName = process.env.COMPANY_TRADE_NAME || data.profile?.tradeName || tenantName;
+    const baseCurrency = process.env.COMPANY_BASE_CURRENCY || data.profile?.baseCurrency || 'EGP';
+
     // 1. Ensure Tenant exists
     const tenant = await prisma.tenant.upsert({
-      where: { code: data.tenantCode },
-      update: { name: data.tenantName },
+      where: { code: tenantCode },
+      update: { name: tenantName },
       create: {
-        code: data.tenantCode,
-        name: data.tenantName,
+        code: tenantCode,
+        name: tenantName,
         isActive: true,
       },
     });
@@ -47,42 +53,34 @@ export async function seedCompanyProfile(): Promise<void> {
       where: { tenantId: tenant.id },
     });
 
+    const profileData = {
+      tenantId: tenant.id,
+      legalName,
+      tradeName,
+      commercialRegistrationNumber: data.profile?.commercialRegistrationNumber || null,
+      taxRegistrationNumber: data.profile?.taxRegistrationNumber || null,
+      headquartersAddress: data.profile?.headquartersAddress || null,
+      primaryPhone: data.profile?.primaryPhone || null,
+      officialEmail: data.profile?.officialEmail || null,
+      baseCurrency,
+      settings: data.profile?.settings || {},
+    };
+
     if (existingProfile) {
       await prisma.companyProfile.update({
         where: { id: existingProfile.id },
-        data: {
-          legalName: data.profile.legalName,
-          tradeName: data.profile.tradeName,
-          commercialRegistrationNumber: data.profile.commercialRegistrationNumber,
-          taxRegistrationNumber: data.profile.taxRegistrationNumber,
-          headquartersAddress: data.profile.headquartersAddress,
-          primaryPhone: data.profile.primaryPhone,
-          officialEmail: data.profile.officialEmail,
-          baseCurrency: data.profile.baseCurrency || 'EGP',
-          settings: data.profile.settings || {},
-        },
+        data: profileData,
       });
-      console.log(`✅ Company Profile updated successfully for: ${data.profile.tradeName}`);
+      console.log(`✅ Company Profile updated successfully for: ${tradeName}`);
     } else {
       await prisma.companyProfile.create({
-        data: {
-          tenantId: tenant.id,
-          legalName: data.profile.legalName,
-          tradeName: data.profile.tradeName,
-          commercialRegistrationNumber: data.profile.commercialRegistrationNumber,
-          taxRegistrationNumber: data.profile.taxRegistrationNumber,
-          headquartersAddress: data.profile.headquartersAddress,
-          primaryPhone: data.profile.primaryPhone,
-          officialEmail: data.profile.officialEmail,
-          baseCurrency: data.profile.baseCurrency || 'EGP',
-          settings: data.profile.settings || {},
-        },
+        data: profileData,
       });
-      console.log(`✅ Company Profile created successfully for: ${data.profile.tradeName}`);
+      console.log(`✅ Company Profile created successfully for: ${tradeName}`);
     }
 
     console.log('================================================================');
-    console.log('🎉 Company Profile Seed Completed Successfully.');
+    console.log('🎉 Default Company Profile Seed Completed Successfully.');
     console.log('================================================================');
   } catch (error) {
     console.error('❌ Failed to seed company profile:', error);

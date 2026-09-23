@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "2.0.0",
+  "id": "sandbox",
+  "version": "1.0.0",
+  "coreApiRange": "^2.0.0",
+  "titleArabic": "مختبر التجارب والتطوير الميداني",
+  "descriptionArabic": "وحدة مختبر التجارب والتطوير الميداني",
+  "category": "operations",
+  "status": "active",
+  "entry": "src/index.ts",
+  "callbackPrefixes": [
+    "action:sandbox:",
+    "wizard:sandbox:",
+    "menu:domain:sandbox",
+    "flow:99."
+  ],
+  "navigationPatterns": [
+    "🧪 المختبر التجريبي",
+    "المختبر التجريبي"
+  ],
+  "requiredCapabilities": [
+    "storage:attachment"
+  ],
+  "providedCapabilities": [],
+  "dependencies": [],
+  "permissions": [
+    "sandbox:access",
+    "sandbox:manage"
+  ],
+  "database": {
+    "schemaFile": "database/schema.prisma",
+    "relationsFile": "database/relations.contract.json"
+  }
+}
