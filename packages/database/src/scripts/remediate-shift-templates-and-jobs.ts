@@ -59,7 +59,6 @@ async function main() {
       OR: [
         { shiftSystem: { contains: '30 راحة' } },
         { shiftSystem: { contains: '20 راحة' } },
-        { code: 'MNT-AUT-001' },
       ],
     },
   });

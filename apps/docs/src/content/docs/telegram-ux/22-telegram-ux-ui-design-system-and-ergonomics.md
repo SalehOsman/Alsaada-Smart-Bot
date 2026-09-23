@@ -11,6 +11,7 @@ sidebar:
 > [!IMPORTANT]
 > تمثل هذه الوثيقة **الدستور الإلزامي والمعيار الموحد لتصميم وبناء واجهات تليجرام** في كافة موديولات وتدفقات منظومة السعادة سمارت بوت.
 > يلتزم بها كافة المطورين ووكلاء الذكاء الاصطناعي (AI Agents) لمنع أي تآكل في النصوص أو تشويش أو جمود في التفاعل الميداني.
+> **المرجع التقني والموسوعة الرسمية لمميزات وتنسيقات تليجرام:** [`docs/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md).
 
 ---
 

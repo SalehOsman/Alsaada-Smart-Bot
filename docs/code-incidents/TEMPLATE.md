@@ -1,6 +1,7 @@
 ---
 incident_id: "INC-YYYYMMDD-01"
 date: "YYYY-MM-DD"
+branch: "fix/inc-YYYYMMDD-slug"
 component: "packages/database" # أو اسم الحزمة/الموديول المعني
 severity: "SEV-2" # SEV-1 (Critical) | SEV-2 (High) | SEV-3 (Medium) | SEV-4 (Low)
 category: "CONCURRENCY_RACE_CONDITION" # [CONCURRENCY_RACE_CONDITION | FINANCIAL_LEDGER_INVARIANT | DATABASE_SCHEMA_MISMATCH | RBAC_AUTHORIZATION_LEAK | ASYNC_LIFECYCLE_LEAK | TYPE_CONVERSION_DRIFT | STATE_MACHINE_CORRUPTION]
@@ -26,6 +27,7 @@ regression_test: "packages/database/tests/example.spec.ts#L120-L150"
 | :--- | :--- | :--- |
 | **معرف الخلل (Incident ID)** | `INC-YYYYMMDD-01` | معرف تسلسلي زمني موحد |
 | **تاريخ الاكتشاف والحل** | `YYYY-MM-DD` | التوقيت الدقيق لاكتشاف العيب وحله |
+| **الفرع المنعزل (Branch)** | `fix/inc-YYYYMMDD-slug` | فرع Git المخصص لحل وتوثيق هذا الخلل فقط |
 | **المكون المتأثر (Component)** | `packages/database` | الحزمة أو الموديول أو التطبيق المعني |
 | **مستوى الخطورة (Severity)** | `SEV-2 (High)` | تقييم الأثر على استقرار وبيانات المنظومة |
 | **التصنيف المعماري (Category)** | `CONCURRENCY_RACE_CONDITION` | النمط الهندسي للخلل المنطقي |

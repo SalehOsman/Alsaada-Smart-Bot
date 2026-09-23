@@ -1,6 +1,7 @@
 # Domain Rulebook 07: Telegram Mobile UX & Ergonomics Standard
 
 > **Authority:** Derived from [`GEMINI.md`](../../GEMINI.md) Part 8 & [`docs/27`](../../docs/27-enterprise-ai-governance-and-quality-gates-constitution.md) (G5, G8, G22).  
+> **Official Telegram Reference:** [`docs/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md`](../../docs/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md) (Derived from core.telegram.org/bots/features & core.telegram.org/bots/api#rich-markdown-style).  
 > **Status:** Mandatory Sovereign Telegram Bot UX Standard.  
 > **Enforcement:** Audited continuously by `/saleh` and automated governance suites (`tools/governance/saleh-audit-suite.ts`).
 

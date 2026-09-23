@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "2.0.0",
+  "id": "99.2",
+  "flowCode": "99.2",
+  "flowName": "العمليات الحسابية والقناع المالي",
+  "module": "sandbox",
+  "slug": "sandbox-calc",
+  "titleArabic": "العمليات الحسابية والقناع المالي",
+  "descriptionArabic": "العمليات الحسابية والقناع المالي",
+  "category": "operations",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "FIELD_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "action:sandbox:calc",
+    "wizard:sandbox:calc"
+  ],
+  "navigationPath": [
+    "المختبر التجريبي",
+    "العمليات الحسابية والقناع المالي"
+  ],
+  "buttons": [
+    "action:sandbox:calc",
+    "wizard:sandbox:calc"
+  ],
+  "inputs": [
+    "number:amount"
+  ],
+  "outputs": [
+    "card:calc_result"
+  ],
+  "dataImpact": {
+    "database": [],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "99.1"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 300,
+    "stepP95": 500,
+    "commitP95": 500
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "classification": "NOVEL",
+  "telegramBudget": {
+    "maxUrlBytes": 512,
+    "maxCallbackBytes": 64,
+    "maxButtonChars": 16,
+    "maxKeyboardRows": 7,
+    "maxButtonsPerRow": 3
+  },
+  "idempotencyRequired": true,
+  "typesafeQuestions": [],
+  "entrypointFiles": {
+    "contract": "flow.contract.json",
+    "handler": "controller.ts",
+    "service": "service.ts",
+    "keyboard": "menu.builder.ts",
+    "types": "types.ts",
+    "validators": "validator.ts",
+    "messages": "menu.builder.ts",
+    "telemetry": "controller.ts",
+    "docs": "flow.docs.md"
+  }
+}

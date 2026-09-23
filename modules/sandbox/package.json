@@ -1,0 +1,17 @@
+{
+  "name": "@alsaada/sandbox",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alsaada/core-components": "workspace:*",
+    "@alsaada/database": "workspace:*",
+    "@alsaada/regional-engine": "workspace:*"
+  }
+}

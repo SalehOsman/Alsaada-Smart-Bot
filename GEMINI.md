@@ -14,6 +14,7 @@
 1. **The Primary Baseline:** `F:\HR` is the functional SSOT for all 126 flows. Behavior, screens, calculations, and accounting must match 100%. Legacy spaghetti code must never be copied; re-engineer cleanly.
 2. **Zero Flow Divergence:** AI agents are strictly forbidden from modifying, adding, or skipping wizard steps or business logic without explicit user instruction.
 3. **Master Migration Registry (`docs/19`):** Completed flows must be updated in [`docs/19`](docs/19-legacy-to-enterprise-master-feature-migration-registry.md) to `🟢 مكتمل وموثق 100%` with commit hash and path. Novel features must be logged under novel enterprise features.
+4. **Suspension of Proactive Inspection:** AI agents are strictly forbidden from proactively inspecting or reading `F:\HR` unless the user explicitly and specifically requests it for a given task.
 
 ### 3. Zone-Based Scoped Autonomy & Safe Command Whitelist
 1. **Autonomous Zone:** Safe reads, linting, formatting, typechecking, running targeted tests, generating code within the active branch and designated feature slice.
@@ -23,8 +24,13 @@
 
 ### 4. Git Branch Lifecycle & Strict Main Immunity
 1. **Strict Main Immunity:** Direct commits or pushes to `main` are prohibited (`Exit 1`).
-2. **Branch Naming:** `feat/<name>`, `fix/<name>`, `plan/<wp-number>-<slug>`, `chore/<name>`.
-3. **Pre-Merge Gate:** Must pass `pnpm ci:simulate` (23 gates + vitest) and manual testing recorded in `walkthrough.md`.
+2. **One Branch, One Objective (OBOO Invariant) & Branch Taxonomy:**
+   - `fix/inc-<date>-<slug>`: Dedicated isolated defect repair branch created strictly from clean `main` via `pnpm branch:incident <slug>`.
+   - `feat/<name>`: Dedicated isolated feature branch created from clean `main` via `pnpm branch:feature <name>`.
+   - `plan/<wp-number>-<slug>`: Work plan branch created from clean `main` via `pnpm branch:plan <slug>`.
+   - `chore/<name>`: Maintenance and infrastructure branch.
+   - **Zero Branch Contamination:** Mixing bug fixes into feature branches or piggybacking new features onto defect branches is strictly prohibited.
+3. **Pre-Merge Gate:** Must pass `pnpm ci:simulate` (23 gates + vitest), `pnpm incident:verify` (if defect fix), and manual testing recorded in `walkthrough.md`.
 4. **Verbatim Merge Approval:** Merging to `main` (`git merge --no-ff`) requires the verbatim, untranslated formula:
    > **«ادمج الفرع»**
 
@@ -47,13 +53,34 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
    - **Step 3 (Forensic Confirmation):** Run `pnpm unlock:confirm <target>`. The engine forensically verifies physical provenance from `transcript.jsonl` ensuring the phrase and OTP nonce were issued strictly by `USER_EXPLICIT` (Saleh) and burns the OTP nonce (single-use anti-replay guard).
 4. **Strict Prohibition of Self-Authorization & Fraud Enforcement:** AI agents are strictly forbidden from generating, authoring, or simulating approval formulas or nonces. Any self-authorization attempt triggers an immediate `[REJECT]` verdict, exits code 1, and logs a forensic incident.
 5. **Pre-Edit Lock Inspection:** Before modifying any file, agents must verify that the file is not locked in `governance.lock.json`. Touching a locked file without prior authorized unlock execution (`pnpm unlock:confirm`) is a constitutional breach.
+6. **Mandatory AI Auto Re-Lock Invariant (إلزامية القفل التلقائي للذكاء الاصطناعي):**
+   - Whenever an AI agent completes modifications to any unlocked entity (after receiving verified OTP approval), before requesting branch merge (`git merge --no-ff` / «ادمج الفرع») or concluding its turn, the agent MUST automatically and mandatorily re-lock what was opened: `pnpm lock <target>` (or `pnpm lock:all`).
+   - The agent MUST explicitly output the verbatim confirmation in its final message:
+     > **«تم قفل الوظيفة [س]»** (e.g. `✅ تم قفل الوظيفة flow:01.1` or `✅ تم قفل الشاشة dashboard:workforce/clearances`).
+   - **Strict Pre-Merge Lockdown Gate:** Any unsealed or modified entity that remains unlocked immediately aborts merge and CI execution with Exit 1 (`pnpm lock:verify`).
+7. **Comprehensive Monorepo Sealing & Strict Ban on Unlock-All:**
+   - `pnpm lock:all` seals 100% of all lockable components across the monorepo independently (Zero Blast Radius): 8 packages, 22 bot flows, 33 dashboards, 3 applications, 3 domain modules, infrastructure, and all 267 test suites.
+   - Any `unlock:all` or mass unlocking capability is strictly, permanently, and constitutionally prohibited (fatal error). Unlocking is exclusively allowed on a granular, per-entity basis via the dynamic OTP challenge protocol.
 
-### 7. Code Defect Lifecycle, 5-Pillar RCA & Regression Guarantee
-1. **Hard Stop on Test Failures:** If a test reveals a bug in source code (`src/`), direct modification is prohibited.
-2. **5-Pillar RCA Report:** Present (1) Failure details, (2) Root cause in source, (3) `F:\HR` parity baseline, (4) Blast radius & 2 options, (5) Work plan scope.
-3. **Verbatim Code Fix Authorization:** Modification requires verbatim approval:
-   > **«موافق على تعديل الكود المصدري»**
-4. **Mandatory Regression Test Guarantee:** Every fix must include a permanent regression test preventing recurrence. Post-incident report logged in `docs/code-incidents/`.
+### 7. Code Defect Lifecycle, Spec-First Dossier & Incident Attestation (Work Plan 93)
+1. **Spec-Before-Code Invariant (حظر التعديل بلا خطة مسبقة):** No source code modification (`src/`) or bug fix is permitted without an approved work plan or incident dossier. Jumping directly to code edits upon test failure is strictly prohibited.
+2. **Dedicated Branch Isolation (العزل الإلزامي التام في فروع Git منفصلة):** Every fix must occur in a dedicated isolated branch `fix/inc-<date>-<slug>` created directly from clean `main` (`pnpm branch:incident <slug>`).
+3. **Comprehensive Forensic Defect Dossier (`docs/code-incidents/`):** Mandatory authenticated report conforming strictly to `TEMPLATE.md` with all 6 sections:
+   (1) Metadata & Scope (including branch name), (2) Symptoms & Failure Signatures (Actual vs Expected terminal output), (3) 5 Whys RCA & `F:\HR` parity baseline, (4) Resolution details with exact diff and approval formula, (5) Permanent regression proof and real terminal execution log, (6) Preventive recommendations.
+4. **Zero-Placeholder Invariant (حظر التقارير الشكلية):** All reports must pass `pnpm incident:verify` with zero unfilled placeholders (`[...]`, `TODO`, `TBD`, `path/to/...`, etc.) and all referenced test/source file paths verified physically on disk.
+5. **Verbatim Code Fix Authorization Formula:** Modification requires verbatim approval:
+   > **«موافق على خطة الإصلاح»** or **«موافق على تعديل الكود المصدري»**
+6. **Mandatory Completion Attestation Card (بطاقة إقرار الاكتمال الجنائي الإلزامي):**
+   Upon completing the defect repair, the agent MUST output the verbatim attestation card in its completion report:
+   > **«✅ تم توثيق وحل الخلل بالكامل في مجلد المشاكل [INC-YYYYMMDD-SLUG] داخل الفرع المنعزل واجتياز الفحص الجنائي»**
+7. **Pre-Merge Incident Gate:** Passing `pnpm incident:verify` and `pnpm test:incidents` is a mandatory blocker before requesting branch merge (`git merge --no-ff` / «ادمج الفرع»).
+
+### 7.1 الإلزام القطعي بالمسارات التشغيلية الثلاثة (The Tri-Lifecycle Sovereignty — WP 94)
+بموجب ميثاق خطة العمل السيادية رقم 94 (`docs/work-plans/94-plan-sovereign-tri-lifecycle-governance-and-ai-agent-invariant.md`)، يخضع أي وكيل ذكاء اصطناعي أو أداة برمجية تعمل في هذا المستودع للإلزام الصارم والقطعي بالمسارات التشغيلية الثلاثة، مع حظر تام لأي خروج عنها:
+1. **مسار التعديل البرمجي (Rulebook 11):** صياغة الخطة واعتمادها أولاً، فك القفل المشفر برمز OTP المؤقت، التطوير بـ TDD، الفحص والتحقق، إعادة القفل التلقائي فوراً، تسليم البطاقات الخمس في الشات، والدمج بصيغة «ادمج الفرع».
+2. **مسار الإنشاء الجديد (Rulebook 12):** صياغة المواصفة السداسية واعتمادها أولاً، التوليد الهيكلي الآلي عبر `pnpm make:flow` لشريحة الـ 10 ملفات، التطوير المنضبط وعقود Zod، القفل التشفيري الأولي في `governance.lock.json`، توثيق سجل الترحيل `docs/19`، وتسليم البطاقات الخمس في الشات.
+3. **مسار إصلاح الأعطال والتحقيق الجنائي (Rulebook 08 / WP 93):** تجميد الكود فوراً عند فشل الاختبارات (حظر الترقيع الفوري)، فتح فرع الحادثة المنعزل `fix/inc-*`، تحرير الملف الجنائي المسبق في `docs/code-incidents/`، اعتماد الخطة بصيغة «موافق على خطة الإصلاح»، كتابة اختبار تراجع دائم (Permanent Regression Test)، اجتياز الفحص الآلي `pnpm incident:verify` و `pnpm test:incidents`، وإصدار بطاقة الإقرار الجنائي الإلزامية.
+- **عقوبة المخالفة:** يُسقط عمل الوكيل فوراً بحكم `[REJECT]` قطعي من `/saleh`، ويُمنع دمج الفرع نهائياً.
 
 ### 8. Telegram Mobile Ergonomics & 10-File Vertical Slice Standard
 1. **Strict 10-File Vertical Slice:** Every bot flow under `modules/<name>/src/flows/<code-slug>/` must contain exactly:
@@ -71,6 +98,11 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
    - تحديد نمط واحد فقط: إما `blocks` أو `markdown` أو `html`.
    - عدم تجاوز الحدود الخمسة: 32,768 حرفاً، 500 كتلة، 16 مستوى تداخل، 50 مرفق وسائط، 20 عموداً للجدول.
 4. **عقوبة المخالفة:** يُسقط التدفق فوراً في Gate G5 و Gate G22 ويُصدر ضده حكم `[REJECT]` قطعي من `/saleh`.
+
+### 8.2 الإلزام الدستوري بالموسوعة المرجعية الرسمية لتليجرام (Work Plan 95)
+1. **المرجع الدستوري الأعلى للواجهات:** تمثل الموسوعة المرجعية الرسمية في [`docs/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md`](docs/telegram/official-telegram-bot-features-and-formatting-encyclopedia.md) المستندة لمواصفات منصة تليجرام الرسمية ([Telegram Bot Features](https://core.telegram.org/bots/features) و [Rich Markdown Style & Formatting Options](https://core.telegram.org/bots/api#rich-markdown-style)) المرجع التوثيقي والإرشادي الإلزامي لكافة وكلاء الذكاء الاصطناعي (AI Agents).
+2. **حظر الاستحداث بلا مرجعية (Zero Specless Innovation):** يُحظر قطعيًا على أي وكيل ذكاء اصطناعي تصميم أو توليد أو تعديل أي ميزة، أمر، لوحة مفاتيح، رسالة خفية (`ephemeral`)، مسودة متدفقة (`streaming draft`)، أو كولاج وسائط دون مطابقة الهيكل والمحددات الواردة في الموسوعة.
+3. **قائمة الفحص الذاتي الإلزامية:** يُلزم كل وكيل ذكاء اصطناعي بمراجعة قائمة الفحص الذاتي (AI Self-Inspection Checklist) المحددة في الجزء السابع من الموسوعة قبل إنهاء مهمته البرمجية، واجتياز Gate G5 و Gate G22.
 
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.

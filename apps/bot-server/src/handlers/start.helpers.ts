@@ -45,18 +45,26 @@ export function buildWelcomeMessage(ctx: MyContext, companyName?: string): strin
   }
 
   switch (role) {
-    case 'SUPER_ADMIN':
+    case 'SUPER_ADMIN': {
+      const initialSetupNotice = ctx.needsInitialSetup
+        ? `⚠️ *تنبيه الإعداد الأولي للمنشأة:*\n` +
+          `لم يتم تسجيل بيانات شركتك الرسمية بعد.\n` +
+          `يمكنك إدخال وتعديل بيانات المنشأة عبر /company أو لوحة التحكم:\n` +
+          `🌐 \`/admin/settings/company\`\n\n`
+        : '';
       return (
         `${simulationBanner}` +
         `🏢 *منظومة ${company}*\n` +
-        `🤖 *محرك البوت المؤسسي الجديد (Al-Saada Enterprise Engine \`v${config.appVersion}\`)*\n\n` +
+        `🤖 *محرك البوت المؤسسي الجديد (Enterprise Engine \`v${config.appVersion}\`)*\n\n` +
         `مرحباً بك يا *${name}* 👋\n\n` +
         `🔹 *المعرف الرقمي:* \`${ctx.from?.id}\`\n` +
         `🔹 *الصلاحية المعتمدة:* ${roleTitle}\n` +
-        `🔹 *حالة الحساب:* 🟢 نشط ومعتمد\n` +
+        `🔹 *حالة الحساب:* 🟢 نشط ومعتمد ديناميكياً\n` +
         `🔹 *محرك البيانات:* PostgreSQL 16 (مشفر وموثق جنائياً)\n\n` +
+        initialSetupNotice +
         `اختر القسم المطلوب من لوحة التحكم أدناه:`
       );
+    }
 
     case 'GENERAL_ADMIN':
       return (

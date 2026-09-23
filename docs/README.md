@@ -67,5 +67,6 @@
 ### 📂 ثالثاً: المجلدات المتخصصة التابعة لقطاع التوثيق
 
 * **📋 خطط العمل الرسمية:** [`docs/work-plans/`](./work-plans/) — أرشيف خطط العمل المعتمدة ومسودات التطوير.
+* **📱 موسوعة ومعايير تليجرام الرسمية:** [`docs/telegram/`](./telegram/) — الموسوعة المرجعية الرسمية لمميزات وتنسيقات بوت تليجرام [`official-telegram-bot-features-and-formatting-encyclopedia.md`](./telegram/official-telegram-bot-features-and-formatting-encyclopedia.md) ومعيار الرسائل الغنية [`rich-messages-standard.md`](./telegram/rich-messages-standard.md).
 * **📑 أدلة إثبات التنفيذ والحوكمة:** [`docs/ai-execution-evidence/`](./ai-execution-evidence/) — تقارير الإثبات التوثيقي والبوابات المجتازة.
 * **🚚 دراسات الترحيل المتخصصة:** [`docs/migration/`](./migration/) — دراسات مقارنة الحقول والبيانات مع النظام السابق `F:\HR`.

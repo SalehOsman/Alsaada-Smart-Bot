@@ -17,6 +17,7 @@ import { verifyTelegramContracts } from './verify-telegram-contracts.js';
 import { verifyTestAuthenticity } from './verify-test-authenticity.js';
 import { verifyFieldMasking } from './verify-field-masking.js';
 import { checkCodeSecurity } from './verify-code-security.js';
+import { verifyIncidents } from './verify-incidents.js';
 
 // ============================================================================
 // Types & Contracts
@@ -58,6 +59,7 @@ export interface SalehAuditReport {
     security?: VerificationResult | undefined;
     unlockAudit?: VerificationResult | undefined;
     guards?: VerificationResult | undefined;
+    incidents?: VerificationResult | undefined;
   };
   presentationFindings: PresentationFinding[];
   summary: {
@@ -566,6 +568,7 @@ export interface AuditSuiteOptions {
   security?: boolean | undefined;
   unlockAudit?: boolean | undefined;
   guards?: boolean | undefined;
+  incidents?: boolean | undefined;
   strict?: boolean | undefined;
   json?: boolean | undefined;
 }
@@ -583,7 +586,8 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
       !options.fieldMasking &&
       !options.security &&
       !options.unlockAudit &&
-      !options.guards);
+      !options.guards &&
+      !options.incidents);
 
   let presentationRes: VerificationResult | undefined;
   let presentationFindings: PresentationFinding[] = [];
@@ -635,6 +639,11 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     guardsRes = verifyTripleGuardArsenal(root);
   }
 
+  let incidentsRes: VerificationResult | undefined;
+  if (runAll || options.incidents) {
+    incidentsRes = verifyIncidents(root);
+  }
+
   // Aggregate errors & warnings
   const allResults: VerificationResult[] = [
     ...(presentationRes ? [presentationRes] : []),
@@ -645,6 +654,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
     ...(securityRes ? [securityRes] : []),
     ...(unlockAuditRes ? [unlockAuditRes] : []),
     ...(guardsRes ? [guardsRes] : []),
+    ...(incidentsRes ? [incidentsRes] : []),
   ];
 
   const totalErrors = allResults.reduce((acc, r) => acc + r.failures.length, 0);
@@ -668,6 +678,7 @@ export async function runSalehAuditSuite(options: AuditSuiteOptions = {}): Promi
   if (securityRes) checkResults.security = securityRes;
   if (unlockAuditRes) checkResults.unlockAudit = unlockAuditRes;
   if (guardsRes) checkResults.guards = guardsRes;
+  if (incidentsRes) checkResults.incidents = incidentsRes;
 
   return {
     verdict,
@@ -715,10 +726,12 @@ export function formatSalehVerdictReport(report: SalehAuditReport): string {
   const hasTelegramContractFailures = (report.checkResults.telegramContracts?.failures.length ?? 0) > 0;
   const hasUnlockFraud = (report.checkResults.unlockAudit?.failures.length ?? 0) > 0;
   const hasGuardFailures = (report.checkResults.guards?.failures.length ?? 0) > 0;
+  const hasIncidentFailures = (report.checkResults.incidents?.failures.length ?? 0) > 0;
 
   lines.push(`- [${hasShamAssertions ? 'x' : ' '}] **Sham Assertions & Test Cheating:** ${hasShamAssertions ? 'DETECTED' : 'Clean (No fake assertions)'}`);
   lines.push(`- [${hasUnlockFraud ? 'x' : ' '}] **AI Self-Authorization & OTP Nonce Guard (WP 90):** ${hasUnlockFraud ? 'FRAUD/VIOLATIONS DETECTED' : 'Clean (Human OTP Provenance Verified)'}`);
   lines.push(`- [${hasGuardFailures ? 'x' : ' '}] **Triple Guard Arsenal (/boost):** ${hasGuardFailures ? 'FAILURES' : 'Clean (Arsenal verified & leak-proof)'}`);
+  lines.push(`- [${hasIncidentFailures ? 'x' : ' '}] **Code Incidents & Spec-First Dossier (WP 93):** ${hasIncidentFailures ? 'FAILURES / UNFILLED PLACEHOLDERS DETECTED' : 'Clean (100% Verified Dossiers)'}`);
   lines.push(`- [${hasRawMessageBypass ? 'x' : ' '}] **Presentation Bypass (Raw Replies):** ${hasRawMessageBypass ? 'DETECTED' : 'Clean (Unified Library used)'}`);
   lines.push(`- [${hasKeyboardOverflow ? 'x' : ' '}] **Mobile Ergonomics (36/16/7/3):** ${hasKeyboardOverflow ? 'WARNINGS/OVERFLOWS' : 'Clean (Within budget)'}`);
   lines.push(`- [${hasArchViolations ? 'x' : ' '}] **Architecture & 10-File Slice (G2):** ${hasArchViolations ? 'VIOLATIONS' : 'Clean (100% compliant)'}`);
@@ -800,6 +813,7 @@ Options:
   --security        Run Semgrep SAST security scan
   --unlock-audit    Run Unlock Audit & Anti-Self-Authorization scan (WP 90)
   --guards          Run Triple Guard Arsenal & Anti-Public-Leakage audit (/boost)
+  --incidents       Run Defect Incidents & Spec-First Dossier audit (WP 93)
   --strict          Treat warnings as failures (returns Exit 1 on warnings)
   --json            Output results as JSON
   --help, -h        Show this help message
@@ -817,6 +831,7 @@ Options:
     security: args.includes('--security'),
     unlockAudit: args.includes('--unlock-audit') || args.includes('--unlock'),
     guards: args.includes('--guards') || args.includes('--boost'),
+    incidents: args.includes('--incidents') || args.includes('--incident'),
     strict: args.includes('--strict'),
     json: args.includes('--json'),
   };

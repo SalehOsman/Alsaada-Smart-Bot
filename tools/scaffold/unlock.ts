@@ -28,6 +28,16 @@ export function runUnlockCli(argv = process.argv.slice(2), root = process.cwd())
     process.exit(1);
   }
 
+  // Check for prohibited unlock-all attempts
+  if (argv.some((a) => a === '--all' || a === 'all' || a === 'unlock:all' || a.includes('all'))) {
+    console.error('');
+    console.error('🚨 [FATAL CONSTITUTIONAL BREACH: UNLOCK-ALL IS STRICTLY PROHIBITED]');
+    console.error('   Mass unlocking (unlock:all) is permanently forbidden.');
+    console.error('   Unlocking is strictly granular per entity via dynamic OTP challenge.');
+    console.error('');
+    process.exit(1);
+  }
+
   const positionalArgs = argv.filter((a) => !a.startsWith('--'));
   const firstArg = positionalArgs[0] ?? '';
 

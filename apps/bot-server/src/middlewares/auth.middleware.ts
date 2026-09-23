@@ -37,30 +37,68 @@ export async function authMiddleware(ctx: MyContext, next: NextFunction): Promis
         where: { telegramId },
       });
 
+      const currentFullName = [from.first_name, from.last_name].filter(Boolean).join(' ') || (isSuperAdminEnv ? 'مدير عام المنظومة' : 'مستخدم جديد');
+      const currentUsername = from.username || null;
+
       if (!dbUser) {
-        // Auto-provision Super Admin if ID matches SUPER_ADMIN_TELEGRAM_ID
+        // Auto-provision Super Admin dynamically on first use if ID matches SUPER_ADMIN_TELEGRAM_ID
         const initialRole = isSuperAdminEnv ? 'SUPER_ADMIN' : 'GUEST';
         dbUser = await prisma.user.create({
           data: {
             telegramId,
-            username: from.username || null,
-            fullName: [from.first_name, from.last_name].filter(Boolean).join(' ') || 'مستخدم جديد',
+            username: currentUsername,
+            fullName: currentFullName,
             role: initialRole,
             isActive: isSuperAdminEnv ? true : false,
           },
         });
         console.log(`👤 [AUTH] New user provisioned: ${dbUser.fullName} (${dbUser.telegramId}) as ${dbUser.role}`);
-      } else if (isSuperAdminEnv && dbUser.role !== 'SUPER_ADMIN') {
-        dbUser = await prisma.user.update({
-          where: { telegramId },
-          data: { role: 'SUPER_ADMIN', isActive: true },
-        });
+      } else if (isSuperAdminEnv) {
+        // Ensure Super Admin remains active and update latest profile data from Telegram on first/subsequent use
+        const needsUpdate =
+          dbUser.role !== 'SUPER_ADMIN' ||
+          !dbUser.isActive ||
+          (currentUsername && dbUser.username !== currentUsername) ||
+          (currentFullName !== 'مدير عام المنظومة' && dbUser.fullName !== currentFullName);
+
+        if (needsUpdate) {
+          dbUser = await prisma.user.update({
+            where: { telegramId },
+            data: {
+              role: 'SUPER_ADMIN',
+              isActive: true,
+              ...(currentUsername ? { username: currentUsername } : {}),
+              ...(currentFullName ? { fullName: currentFullName } : {}),
+            },
+          });
+          console.log(`👤 [AUTH] Super Admin profile updated on access: ${dbUser.fullName} (${dbUser.telegramId})`);
+        }
       }
 
       return dbUser;
     });
 
     ctx.dbUser = user;
+
+    // Check if real company profile is set up or needs initial setup
+    if (isSuperAdminEnv) {
+      const isCompanyCustomized = await fastCache.rememberSWR('auth:company_setup_verified', 300, async () => {
+        try {
+          const profile = await prisma.companyProfile.findFirst({
+            select: { tradeName: true, legalName: true },
+          });
+          return Boolean(
+            profile &&
+            profile.tradeName &&
+            profile.tradeName !== 'المنظومة الذكية' &&
+            profile.legalName !== 'المنظومة المؤسسية'
+          );
+        } catch {
+          return true;
+        }
+      });
+      ctx.needsInitialSetup = !isCompanyCustomized;
+    }
 
     // Check for active impersonation mode if user is Super Admin (< 0.1ms via L1 cache)
     if (isSuperAdminEnv) {

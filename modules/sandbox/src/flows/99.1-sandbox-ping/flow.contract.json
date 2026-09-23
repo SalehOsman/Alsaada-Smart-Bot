@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "2.0.0",
+  "id": "99.1",
+  "flowCode": "99.1",
+  "flowName": "فحص النبض والاستجابة",
+  "module": "sandbox",
+  "slug": "sandbox-ping",
+  "titleArabic": "فحص النبض والاستجابة",
+  "descriptionArabic": "فحص النبض والاستجابة",
+  "category": "operations",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "FIELD_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "GUEST"
+  ],
+  "entryPoints": [
+    "action:sandbox:ping",
+    "wizard:sandbox:ping"
+  ],
+  "navigationPath": [
+    "المختبر التجريبي",
+    "فحص النبض والاستجابة"
+  ],
+  "buttons": [
+    "action:sandbox:ping",
+    "wizard:sandbox:ping"
+  ],
+  "inputs": [
+    "text:ping"
+  ],
+  "outputs": [
+    "card:pong"
+  ],
+  "dataImpact": {
+    "database": [],
+    "googleSheets": [],
+    "exports": [],
+    "notifications": []
+  },
+  "linkedFlows": [
+    "99.2"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 300,
+    "stepP95": 500,
+    "commitP95": 500
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "classification": "NOVEL",
+  "telegramBudget": {
+    "maxUrlBytes": 512,
+    "maxCallbackBytes": 64,
+    "maxButtonChars": 16,
+    "maxKeyboardRows": 7,
+    "maxButtonsPerRow": 3
+  },
+  "idempotencyRequired": true,
+  "typesafeQuestions": [],
+  "entrypointFiles": {
+    "contract": "flow.contract.json",
+    "handler": "controller.ts",
+    "service": "service.ts",
+    "keyboard": "menu.builder.ts",
+    "types": "types.ts",
+    "validators": "validator.ts",
+    "messages": "menu.builder.ts",
+    "telemetry": "controller.ts",
+    "docs": "flow.docs.md"
+  }
+}
