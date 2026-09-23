@@ -69,6 +69,8 @@ export function buildSystemSubKeyboard(isImpersonating?: boolean): InlineKeyboar
     .row()
     .text('🔔 حوكمة وضبط إشعارات المنظومة', 'action:settings:notification_policies')
     .row()
+    .text('💾 النسخ الاحتياطي', 'action:settings:backup_recovery')
+    .row()
     .text('🔙 العودة لقائمة الإعدادات', 'menu:super_admin_settings')
     .text('🏠 القائمة الرئيسية', 'action:main_menu');
 

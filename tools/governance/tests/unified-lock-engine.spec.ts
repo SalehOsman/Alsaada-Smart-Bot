@@ -259,12 +259,12 @@ describe('Unified Lock & Unlock Engine (Plan 70)', () => {
       expect(testTarget?.type).toBe('test');
     });
 
-    it('discovers 100% of all lockable components across the monorepo independently (333/340 targets)', async () => {
+    it('discovers 100% of all lockable components across the monorepo independently (342/349 targets)', async () => {
       const { discoverAllLockableTargets, listEntityFiles } = await import('../unified-lock-engine.js');
       const targets = discoverAllLockableTargets(root);
       const hasSandbox = listEntityFiles(root, 'modules/sandbox', 'module').length > 0;
 
-      expect(targets.length).toBe(hasSandbox ? 340 : 333);
+      expect(targets.length).toBe(hasSandbox ? 349 : 342);
 
       const pkgs = targets.filter((t) => t.startsWith('package:'));
       const flows = targets.filter((t) => t.startsWith('flow:'));
@@ -275,12 +275,12 @@ describe('Unified Lock & Unlock Engine (Plan 70)', () => {
       const tests = targets.filter((t) => t.startsWith('test:'));
 
       expect(pkgs.length).toBe(8);
-      expect(flows.length).toBe(hasSandbox ? 22 : 20);
-      expect(dashboards.length).toBe(33);
+      expect(flows.length).toBe(hasSandbox ? 23 : 21);
+      expect(dashboards.length).toBe(34);
       expect(apps.length).toBe(3);
       expect(modules.length).toBe(hasSandbox ? 3 : 2);
       expect(infra.length).toBe(2);
-      expect(tests.length).toBe(hasSandbox ? 269 : 265);
+      expect(tests.length).toBe(hasSandbox ? 276 : 272);
     });
   });
 });

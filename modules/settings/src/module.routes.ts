@@ -67,6 +67,11 @@ import { UserRbacRepository } from './flows/00.12-user-rbac-management/flow.repo
 import { UserRbacService } from './flows/00.12-user-rbac-management/flow.service.js';
 import { UserRbacHandler } from './flows/00.12-user-rbac-management/flow.handler.js';
 
+// Flow 00.13 System Backup & Recovery
+import { SystemBackupRecoveryRepository } from './flows/00.13-system-backup-recovery/flow.repository.js';
+import { SystemBackupRecoveryService } from './flows/00.13-system-backup-recovery/flow.service.js';
+import { SystemBackupRecoveryHandler } from './flows/00.13-system-backup-recovery/flow.handler.js';
+
 export interface SettingsModuleHandlers {
   corporateHandler: CorporateProfileHandler;
   sitesHandler: SitesHubHandler;
@@ -80,6 +85,7 @@ export interface SettingsModuleHandlers {
   notificationPoliciesHandler: NotificationPoliciesHandler;
   telegramGroupsHandler: TelegramGroupsHandler;
   userRbacHandler: UserRbacHandler;
+  backupRecoveryHandler: SystemBackupRecoveryHandler;
   handleTextInput: (ctx: SettingsModuleContext) => Promise<boolean>;
   handlePhotoInput: (ctx: SettingsModuleContext, fileId: string) => Promise<boolean>;
   handleLocationInput: (ctx: SettingsModuleContext) => Promise<boolean>;
@@ -154,6 +160,12 @@ export function registerSettingsRoutes(
   const userRbacService = new UserRbacService(userRbacRepo);
   const userRbacHandler = new UserRbacHandler(userRbacService);
   userRbacHandler.registerRoutes(bot);
+
+  // 00.13 System Backup & Recovery
+  const backupRecoveryRepo = new SystemBackupRecoveryRepository();
+  const backupRecoveryService = new SystemBackupRecoveryService(backupRecoveryRepo);
+  const backupRecoveryHandler = new SystemBackupRecoveryHandler(backupRecoveryService);
+  backupRecoveryHandler.registerRoutes(bot);
 
   // --- Central Hub & Navigation Routes ---
   bot.command(['settings', 'admin'], handleSettingsHub);
@@ -511,6 +523,7 @@ export function registerSettingsRoutes(
     notificationPoliciesHandler: notifPoliciesHandler,
     telegramGroupsHandler,
     userRbacHandler,
+    backupRecoveryHandler,
     handleTextInput,
     handlePhotoInput,
     handleLocationInput,

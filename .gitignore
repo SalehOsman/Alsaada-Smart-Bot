@@ -85,3 +85,10 @@ attachments/
 docs/code-incidents/*
 !docs/code-incidents/TEMPLATE.md
 !docs/code-incidents/.gitkeep
+
+# Automated System Backups (Physical Host Storage, Strict Zero-Track)
+backups/*
+!backups/**/.gitkeep
+
+# Git worktrees
+.worktrees/

@@ -15,6 +15,7 @@ import {
   Sparkles,
   Sliders,
   Bot,
+  Database,
 } from 'lucide-react';
 
 const SETTINGS_SECTIONS = [
@@ -87,6 +88,13 @@ const SETTINGS_SECTIONS = [
     href: '/admin/settings/bot-features',
     icon: Bot,
     badge: 'تحكم سيادي ولحظي',
+  },
+  {
+    title: 'النسخ الاحتياطي واستعادة الكوارث',
+    desc: 'إدارة لقطات قاعدة البيانات، حزم Git للكود، والمرفقات المشفرة مع مزامنة Google Drive (WP 99).',
+    href: '/admin/settings/backup',
+    icon: Database,
+    badge: 'استمرارية وRPO',
   },
 ];
 
