@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T14:36:20.216Z",
+  "generatedAt": "2026-09-23T15:55:07.132Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -336,6 +336,10 @@
       "sha256": "29006f2fe8c0bf70ddc02f46a0902b96400ce0525b09b64697c863829fd9f3a6"
     },
     {
+      "path": "tools/governance/tests/incident-financial-cleanup.spec.ts",
+      "sha256": "d46def843ea990a0f4545fe709f04b22bc6b21b7e69ffaab2d5d942a336d14c7"
+    },
+    {
       "path": "tools/governance/tests/jev-auditor.spec.ts",
       "sha256": "5ee2d7550cd5294978d285d374fb8573591e8c5c81e5c1ba71ec4d1ccef87dc2"
     },
@@ -477,7 +481,7 @@
     },
     {
       "path": "tools/governance/verify-financial-integrity.ts",
-      "sha256": "fd89764e23d46dfd7eb37ebe399b38a6b9980af695279ebec0c75c9e930ee1de"
+      "sha256": "350b40fc7ded1a5bcefba655d816b5273629a4016bc32787d09274a6a1006af9"
     },
     {
       "path": "tools/governance/verify-flow-contracts.ts",
@@ -3340,7 +3344,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-23T14:36:20.216Z",
+      "lockedAt": "2026-09-23T15:55:07.132Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -7809,7 +7813,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-23T14:36:20.216Z",
+      "lockedAt": "2026-09-23T15:55:07.132Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
