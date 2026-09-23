@@ -63,7 +63,7 @@ export function searchPrecedents(query: string, root = process.cwd()): Precedent
   const tokens = query
     .toLowerCase()
     .split(/[\s,._-]+/)
-    .filter((t) => t.length > 2);
+    .filter((t) => t.length >= 2);
 
   if (tokens.length === 0) return [];
 

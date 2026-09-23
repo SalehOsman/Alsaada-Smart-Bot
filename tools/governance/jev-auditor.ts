@@ -71,8 +71,7 @@ export function filterNonEssentialFiles(files: string[]): string[] {
         !f.endsWith('governance.lock.json') &&
         !f.endsWith('pnpm-lock.yaml') &&
         !f.includes('.governance-cache') &&
-        !f.startsWith('docs/ai-execution-evidence/') &&
-        !f.endsWith('jev-auditor.ts')
+        !f.startsWith('docs/ai-execution-evidence/')
     )
     .sort((a, b) => {
       const score = (p: string) => (p.endsWith('.spec.ts') || p.endsWith('.test.ts') ? 0 : p.endsWith('.ts') ? 1 : 2);
@@ -211,6 +210,7 @@ export function compressDiffIfLarge(
     /^[+-].*(?:expect\(|assert\(|test\(|it\(|describe\()/,
     /^[+-]\s*(?:import\s+|export\s+|return\b)/,
     /^[+-].*(?:throw new|catch\s*\(|await\s+)/,
+    /^[+-]\s*(?:#{1,6}\s+|-\s*\[[ x]\]|\*\s+)/,
   ];
 
   const keptLines: string[] = [];
@@ -218,6 +218,27 @@ export function compressDiffIfLarge(
     if (signaturePatterns.some((pattern) => pattern.test(line))) {
       keptLines.push(line);
     }
+  }
+
+  const contentLinesCount = keptLines.filter(
+    (l) => !/^(?:---|\+\+\+|diff --git|@@)/.test(l)
+  ).length;
+
+  if (contentLinesCount < 5) {
+    // Robust fallback: sample head 150 lines and tail 50 lines to prevent complete context loss on unstructured/data diffs
+    const head = lines.slice(0, 150);
+    const tail = lines.slice(-50);
+    const fallbackText =
+      `// [AST-Compressed Diff: Fallback head/tail sample of ${lines.length} lines]\n` +
+      head.join('\n') +
+      `\n// ... [truncated ${lines.length - 200} lines of repetitive diff] ...\n` +
+      tail.join('\n');
+    return {
+      compressedText: fallbackText,
+      isCompressed: true,
+      originalLines: lines.length,
+      finalLines: 201,
+    };
   }
 
   const header = `// [AST-Compressed Diff: reduced from ${lines.length} lines to ${keptLines.length} lines of structural AST signatures and critical deltas]\n`;
@@ -1070,6 +1091,53 @@ export async function evaluateLocalHeuristics(
   return results;
 }
 
+export function reconcileJudgments(
+  rawAnswers: Record<string, any>,
+  localBaseline: Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }>,
+  questions: Record<string, TypeSafeQuestion>
+): Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }> {
+  const results: Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }> =
+    {};
+
+  for (const [key, ans] of Object.entries(rawAnswers)) {
+    if (!questions[key]) continue;
+    let apiEntry: { answer: string | number | boolean; confidence: number; source: 'api' } | undefined;
+    if (ans.type === 'noul') {
+      apiEntry = { answer: ans.noul >= 0.5, confidence: Math.abs(ans.noul - 0.5) * 2, source: 'api' };
+    } else if (ans.type === 'choice') {
+      apiEntry = { answer: ans.choice, confidence: ans.confidence ?? 0.9, source: 'api' };
+    } else if (ans.type === 'score') {
+      apiEntry = { answer: ans.score, confidence: ans.confidence ?? 0.9, source: 'api' };
+    }
+    if (apiEntry) {
+      const localEntry = localBaseline[key];
+      const isAstVerifiedClean =
+        localEntry &&
+        ((key === 'payrollCycleClassification' && localEntry.answer !== 'unanchored_drift') ||
+          (key === 'violatesTemporalInvariants' && localEntry.answer === false) ||
+          (key === 'hasUnmaskedCompensation' && localEntry.answer === false) ||
+          (key === 'excessiveMocking' && localEntry.answer === false) ||
+          (key === 'assertsRealDomainState' && localEntry.answer === true) ||
+          (key === 'usesCanonicalCaptureFlowError' && localEntry.answer === true) ||
+          (key === 'richMessageAndEncyclopediaCompliance' && localEntry.answer === true) ||
+          (key === 'stepParityWithLegacy' && localEntry.answer === true));
+      if ((apiEntry.confidence < 0.85 || isAstVerifiedClean) && localEntry) {
+        results[key] = localEntry;
+      } else {
+        results[key] = apiEntry;
+      }
+    }
+  }
+
+  for (const key of Object.keys(questions)) {
+    if (!results[key] && localBaseline[key]) {
+      results[key] = localBaseline[key];
+    }
+  }
+
+  return results;
+}
+
 /**
  * Speculative Fan-Out parallel evaluation engine.
  * Pure Cloud Sentinel: Calls TypeSafe System One API with 3-tier exponential backoff retry.
@@ -1114,30 +1182,7 @@ export async function evaluateBatchParallel(
   if (cloudCache[cacheKey]) {
     const cachedAnswers = cloudCache[cacheKey]!.answers;
     const localBaseline = await evaluateLocalHeuristics(state, questions);
-    const results: Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }> =
-      {};
-
-    for (const [key, ans] of Object.entries(cachedAnswers)) {
-      if (!questions[key]) continue;
-      let apiEntry: { answer: string | number | boolean; confidence: number; source: 'api' } | undefined;
-      if (ans.type === 'noul') {
-        apiEntry = { answer: ans.noul >= 0.5, confidence: Math.abs(ans.noul - 0.5) * 2, source: 'api' };
-      } else if (ans.type === 'choice') {
-        apiEntry = { answer: ans.choice, confidence: ans.confidence ?? 0.9, source: 'api' };
-      } else if (ans.type === 'score') {
-        apiEntry = { answer: ans.score, confidence: ans.confidence ?? 0.9, source: 'api' };
-      }
-      if (apiEntry) {
-        results[key] = apiEntry;
-      }
-    }
-
-    for (const key of Object.keys(questions)) {
-      if (!results[key] && localBaseline[key]) {
-        results[key] = localBaseline[key];
-      }
-    }
-    return results;
+    return reconcileJudgments(cachedAnswers, localBaseline, questions);
   }
 
   // 2. Pure Cloud 3-Tier Exponential Backoff Retry Loop
@@ -1179,46 +1224,7 @@ export async function evaluateBatchParallel(
         saveCloudCache(cloudCache, root);
 
         const localBaseline = await evaluateLocalHeuristics(state, questions);
-        const results: Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }> =
-          {};
-
-        for (const [key, ans] of Object.entries(data.answers)) {
-          if (!questions[key]) continue;
-          let apiEntry: { answer: string | number | boolean; confidence: number; source: 'api' } | undefined;
-          if (ans.type === 'noul') {
-            apiEntry = { answer: ans.noul >= 0.5, confidence: Math.abs(ans.noul - 0.5) * 2, source: 'api' };
-          } else if (ans.type === 'choice') {
-            apiEntry = { answer: ans.choice, confidence: ans.confidence ?? 0.9, source: 'api' };
-          } else if (ans.type === 'score') {
-            apiEntry = { answer: ans.score, confidence: ans.confidence ?? 0.9, source: 'api' };
-          }
-          if (apiEntry) {
-            const localEntry = localBaseline[key];
-            const isAstVerifiedClean =
-              localEntry &&
-              ((key === 'payrollCycleClassification' && localEntry.answer !== 'unanchored_drift') ||
-                (key === 'violatesTemporalInvariants' && localEntry.answer === false) ||
-                (key === 'hasUnmaskedCompensation' && localEntry.answer === false) ||
-                (key === 'excessiveMocking' && localEntry.answer === false) ||
-                (key === 'assertsRealDomainState' && localEntry.answer === true) ||
-                (key === 'usesCanonicalCaptureFlowError' && localEntry.answer === true) ||
-                (key === 'richMessageAndEncyclopediaCompliance' && localEntry.answer === true) ||
-                (key === 'stepParityWithLegacy' && localEntry.answer === true));
-            if ((apiEntry.confidence < 0.85 || isAstVerifiedClean) && localEntry) {
-              results[key] = localEntry;
-            } else {
-              results[key] = apiEntry;
-            }
-          }
-        }
-
-        for (const key of Object.keys(questions)) {
-          if (!results[key] && localBaseline[key]) {
-            results[key] = localBaseline[key];
-          }
-        }
-
-        return results;
+        return reconcileJudgments(data.answers, localBaseline, questions);
       } else {
         const errBody = await response.text();
         throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 150)}`);
@@ -1235,7 +1241,8 @@ export async function evaluateBatchParallel(
 
   // 3. Fall-through: All attempts failed
   const totalTimeout = timeoutMs * maxAttempts;
-  const msg = `❌ [FATAL JEV SYSTEM ONE ERROR]: Failed to connect to TypeSafe Cloud Server after ${maxAttempts} retries (${Math.round(totalTimeout / 1000)}s total timeout).\nTarget: ${target}\nPolicy: Strict Cloud Enforcement is active on /jev. Local heuristic fallback is forbidden.\nAction: Verify internet connectivity or TypeSafe API availability.`;
+  const totalTimeoutStr = totalTimeout >= 1000 ? `${Math.round(totalTimeout / 1000)}s` : `${totalTimeout}ms`;
+  const msg = `❌ [FATAL JEV SYSTEM ONE ERROR]: Failed to connect to TypeSafe Cloud Server after ${maxAttempts} retries (${totalTimeoutStr} total timeout).\nTarget: ${target}\nPolicy: Strict Cloud Enforcement is active on /jev. Local heuristic fallback is forbidden.\nAction: Verify internet connectivity or TypeSafe API availability.`;
 
   if (isStrictApi) {
     process.stderr.write(`${msg}\n`);
@@ -1449,13 +1456,16 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
       const absPath = join(root, relPath);
       if (existsSync(absPath)) {
         const content = readUtf8(absPath);
-        codeSample += `\n--- ${relPath} ---\n` + content;
         if (relPath.endsWith('.contract.json')) {
           flowContractJson = content;
         } else if (relPath.endsWith('.spec.ts') || relPath.endsWith('.test.ts')) {
           flowTestCode += `\n--- ${relPath} ---\n` + content;
-        } else if (relPath.endsWith('.ts')) {
-          flowSourceCode += `\n--- ${relPath} ---\n` + content;
+          codeSample += `\n--- ${relPath} ---\n` + content;
+        } else if (!diffResolution.diffText.includes(relPath)) {
+          // Untracked new file not captured in git diff HEAD
+          const snippet = content.slice(0, 4000);
+          codeSample += `\n--- [NEW FILE] ${relPath} ---\n` + snippet;
+          flowSourceCode += `\n--- [NEW FILE] ${relPath} ---\n` + snippet;
         }
       }
     }

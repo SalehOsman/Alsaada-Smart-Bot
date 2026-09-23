@@ -290,5 +290,76 @@ describe('Work Plan 97: Pure Cloud JEV Sentinel, Resilient Strategic Saleh Advis
       expect(results[0]?.issueSignature).toBe('ephemeral-financial-fixtures-cleanup');
       expect(results[0]?.verdict).toBe('use_canonical_status_column');
     });
+
+    it('searches precedents by Arabic keyword query with high relevance', () => {
+      const arabicResults = searchPrecedents('تنظيف الجداول المالية واختبارات قاعدة البيانات', root);
+      expect(arabicResults.length).toBeGreaterThan(0);
+      expect(arabicResults[0]?.id).toBe('PREC-20260923-02');
+      expect(arabicResults[0]?.verdict).toBe('use_canonical_status_column');
+
+      const rtlResults = searchPrecedents('محاذاة جداول تليجرام لليمين', root);
+      expect(rtlResults.length).toBeGreaterThan(0);
+      expect(rtlResults[0]?.id).toBe('PREC-20260923-01');
+    });
+  });
+
+  describe('7. Cache Parity & Unstructured Diff Fallback Guards', () => {
+    it('guarantees identical judgment reconciliation whether serving from cache or live API', async () => {
+      const mockAnswers = {
+        buttonLabelErgonomics: { type: 'choice', choice: 'optimal', confidence: 0.95 },
+      };
+
+      // 1. First call: Live API fetch (will write to cache)
+      globalThis.fetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ answers: mockAnswers }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+
+      const target = `cache-parity-test-${Date.now()}`;
+      const liveResult = await evaluateBatchParallel(
+        { target },
+        { buttonLabelErgonomics: JEV_AUDIT_CATALOG.telegramUx.buttonLabelErgonomics },
+        'test-key',
+        'api',
+        undefined,
+        root
+      );
+
+      // 2. Second call: Cache hit (fetch should not be called again)
+      const fetchSpy = vi.fn();
+      globalThis.fetch = fetchSpy;
+
+      const cachedResult = await evaluateBatchParallel(
+        { target },
+        { buttonLabelErgonomics: JEV_AUDIT_CATALOG.telegramUx.buttonLabelErgonomics },
+        'test-key',
+        'api',
+        undefined,
+        root
+      );
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(cachedResult.buttonLabelErgonomics?.answer).toEqual(liveResult.buttonLabelErgonomics?.answer);
+      expect(cachedResult.buttonLabelErgonomics?.confidence).toEqual(liveResult.buttonLabelErgonomics?.confidence);
+      expect(cachedResult.buttonLabelErgonomics?.source).toEqual(liveResult.buttonLabelErgonomics?.source);
+    });
+
+    it('retains structured head/tail fallback on large non-code JSON/data diffs > 300 lines', () => {
+      const jsonLines = ['diff --git a/config.json b/config.json', '--- a/config.json', '+++ b/config.json', '@@ -1,400 +1,400 @@'];
+      for (let i = 0; i < 350; i++) {
+        jsonLines.push(`+  "unrelated_data_key_${i}": "raw_value_${i}",`);
+      }
+      const largeJsonDiff = jsonLines.join('\n');
+      expect(largeJsonDiff.split('\n').length).toBeGreaterThan(300);
+
+      const compressed = compressDiffIfLarge(largeJsonDiff, 300);
+      expect(compressed.isCompressed).toBe(true);
+      expect(compressed.compressedText).toContain('Fallback head/tail sample');
+      expect(compressed.compressedText).toContain('unrelated_data_key_0');
+      expect(compressed.compressedText).toContain('unrelated_data_key_349');
+      expect(compressed.finalLines).toBeLessThan(compressed.originalLines);
+    });
   });
 });

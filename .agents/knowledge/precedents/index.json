@@ -8,7 +8,7 @@
     {
       "id": "PREC-20260923-01",
       "issueSignature": "telegram-table-rtl-direction-alignment",
-      "keywords": ["telegram", "rich-message", "table", "rtl", "dir", "arabic", "alignment"],
+      "keywords": ["telegram", "rich-message", "table", "rtl", "dir", "arabic", "alignment", "تليجرام", "جدول", "جداول", "محاذاة", "يمين", "عربي", "تنسيق"],
       "verdict": "cell_rtl_marks",
       "confidence": 0.94,
       "constitutionalGate": "G5 / G22",
@@ -18,7 +18,7 @@
     {
       "id": "PREC-20260923-02",
       "issueSignature": "ephemeral-financial-fixtures-cleanup",
-      "keywords": ["financial", "test", "cleanup", "column", "status", "state", "teardown", "postgres"],
+      "keywords": ["financial", "test", "cleanup", "column", "status", "state", "teardown", "postgres", "مالية", "تنظيف", "عمود", "حالة", "اختبار"],
       "verdict": "use_canonical_status_column",
       "confidence": 0.98,
       "constitutionalGate": "G11 / G12",
@@ -28,7 +28,7 @@
     {
       "id": "PREC-20260923-03",
       "issueSignature": "unified-lock-target-count-integrity",
-      "keywords": ["lock", "governance", "target-count", "verification", "immutability", "unified-engine"],
+      "keywords": ["lock", "governance", "target-count", "verification", "immutability", "unified-engine", "قفل", "حوكمة", "عدد", "كيانات", "تشفير"],
       "verdict": "strict_entity_accounting",
       "confidence": 0.97,
       "constitutionalGate": "G13 / G15",
@@ -38,7 +38,7 @@
     {
       "id": "PREC-20260923-04",
       "issueSignature": "pure-cloud-jev-resilient-saleh-separation",
-      "keywords": ["jev", "saleh", "cloud", "fail-fast", "retry", "resilience", "systemone", "backoff"],
+      "keywords": ["jev", "saleh", "cloud", "fail-fast", "retry", "resilience", "systemone", "backoff", "جيف", "صالح", "سحابي", "فشل-سريع", "إعادة-المحاولة", "مرونة"],
       "verdict": "strict_cloud_sentinel_with_advisory_resilience",
       "confidence": 0.95,
       "constitutionalGate": "G9 / G10",
