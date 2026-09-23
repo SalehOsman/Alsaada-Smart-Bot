@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T16:43:00.168Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T17:46:06.351Z)
 - **معرف الكيان:** `test:modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts

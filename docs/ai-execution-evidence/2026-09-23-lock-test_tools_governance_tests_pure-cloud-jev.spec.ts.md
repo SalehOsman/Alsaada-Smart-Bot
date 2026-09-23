@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/governance/tests/pure-cloud-jev.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T16:43:00.168Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T17:46:06.351Z)
 - **معرف الكيان:** `test:tools/governance/tests/pure-cloud-jev.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/governance/tests/pure-cloud-jev.spec.ts
@@ -12,7 +12,7 @@
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `tools/governance/tests/pure-cloud-jev.spec.ts` | `1d55cac4c85d5df88d615b018835e629ea12f7a346b965b49b72f07f27494ae3` |
+| `tools/governance/tests/pure-cloud-jev.spec.ts` | `b700aa47df68baaa0ddf2a90aa43e3c4b66d011cdc987a2be6f56a31349e3e06` |
 
 ## بوابات التحقق المعتمدة
 - **CRLF/LF Sanitization:** PASS

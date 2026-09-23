@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/telemetry/tests/empirical-challenger-m1-r2.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T16:43:00.168Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T17:46:06.351Z)
 - **معرف الكيان:** `test:packages/telemetry/tests/empirical-challenger-m1-r2.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/telemetry/tests/empirical-challenger-m1-r2.spec.ts
