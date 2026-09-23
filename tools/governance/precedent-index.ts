@@ -38,7 +38,17 @@ export function loadPrecedentIndex(root = process.cwd()): PrecedentIndex {
 
   try {
     const raw = readFileSync(filePath, 'utf8');
-    return JSON.parse(raw) as PrecedentIndex;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.precedents)) {
+      return parsed as PrecedentIndex;
+    }
+    return {
+      version: '1.0.0',
+      updatedAt: new Date().toISOString(),
+      description: 'Zero-Token Precedent Index (invalid structure)',
+      totalPrecedents: 0,
+      precedents: [],
+    };
   } catch {
     return {
       version: '1.0.0',
@@ -52,14 +62,19 @@ export function loadPrecedentIndex(root = process.cwd()): PrecedentIndex {
 
 export function queryPrecedentBySignature(signature: string, root = process.cwd()): Precedent | undefined {
   const index = loadPrecedentIndex(root);
+  const precedents = Array.isArray(index?.precedents) ? index.precedents : [];
   const normalized = signature.trim().toLowerCase();
-  return index.precedents.find(
-    (p) => p.issueSignature.toLowerCase() === normalized || p.id.toLowerCase() === normalized
+  return precedents.find(
+    (p) =>
+      p &&
+      typeof p === 'object' &&
+      (p.issueSignature?.toLowerCase() === normalized || p.id?.toLowerCase() === normalized)
   );
 }
 
 export function searchPrecedents(query: string, root = process.cwd()): Precedent[] {
   const index = loadPrecedentIndex(root);
+  const precedents = Array.isArray(index?.precedents) ? index.precedents : [];
   const tokens = query
     .toLowerCase()
     .split(/[\s,._-]+/)
@@ -69,13 +84,15 @@ export function searchPrecedents(query: string, root = process.cwd()): Precedent
 
   const scored: Array<{ precedent: Precedent; score: number }> = [];
 
-  for (const p of index.precedents) {
+  for (const p of precedents) {
+    if (!p || typeof p !== 'object') continue;
     let score = 0;
-    const textBlob = `${p.issueSignature} ${p.keywords.join(' ')} ${p.approvedResolution}`.toLowerCase();
+    const keywords = Array.isArray(p.keywords) ? p.keywords : [];
+    const textBlob = `${p.issueSignature || ''} ${keywords.join(' ')} ${p.approvedResolution || ''}`.toLowerCase();
 
     for (const token of tokens) {
-      if (p.issueSignature.toLowerCase().includes(token)) score += 3;
-      if (p.keywords.some((k) => k.toLowerCase().includes(token))) score += 2;
+      if (p.issueSignature?.toLowerCase().includes(token)) score += 3;
+      if (keywords.some((k) => typeof k === 'string' && k.toLowerCase().includes(token))) score += 2;
       if (textBlob.includes(token)) score += 1;
     }
 

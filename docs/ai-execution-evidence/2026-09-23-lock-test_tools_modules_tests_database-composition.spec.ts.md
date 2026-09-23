@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/modules/tests/database-composition.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T17:46:06.351Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:07:00.839Z)
 - **معرف الكيان:** `test:tools/modules/tests/database-composition.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/modules/tests/database-composition.spec.ts

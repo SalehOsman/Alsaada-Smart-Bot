@@ -16,7 +16,7 @@ import {
   queryPrecedentBySignature,
   searchPrecedents,
 } from '../precedent-index.js';
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('Work Plan 97: Pure Cloud JEV Sentinel, Resilient Strategic Saleh Advisor, and Precedent-Indexed Token Economy', () => {
@@ -360,6 +360,118 @@ describe('Work Plan 97: Pure Cloud JEV Sentinel, Resilient Strategic Saleh Advis
       expect(compressed.compressedText).toContain('unrelated_data_key_0');
       expect(compressed.compressedText).toContain('unrelated_data_key_349');
       expect(compressed.finalLines).toBeLessThan(compressed.originalLines);
+    });
+  });
+
+  describe('8. Hardened Resilience, Provenance Invariants & Edge Case Armor', () => {
+    it('preserves source: api for noul questions and abolishes silent heuristic fallback under pure cloud engine: api', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            answers: {
+              assertsRealDomainState: { type: 'noul', noul: 0.82, confidence: 0.82 },
+            },
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      );
+
+      const results = await evaluateBatchParallel(
+        { code: 'test("sample", () => { expect(ledger.balance).toBe(100); });' },
+        { assertsRealDomainState: JEV_AUDIT_CATALOG.testAuthenticity.assertsRealDomainState },
+        'test-key',
+        'api',
+        undefined,
+        root
+      );
+
+      expect(results.assertsRealDomainState).toBeDefined();
+      expect(results.assertsRealDomainState?.source).toBe('api');
+      expect(results.assertsRealDomainState?.answer).toBe(true);
+      expect(results.assertsRealDomainState?.confidence).toBeGreaterThanOrEqual(0.82);
+    });
+
+    it('detects malformed/empty response body missing answers and fails fast via retry loop', async () => {
+      let attempts = 0;
+      globalThis.fetch = vi.fn().mockImplementation(async () => {
+        attempts++;
+        return new Response(JSON.stringify({ status: 'success_without_answers' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      });
+
+      await expect(
+        evaluateBatchParallel(
+          { target: 'malformed-test' },
+          { buttonLabelErgonomics: JEV_AUDIT_CATALOG.telegramUx.buttonLabelErgonomics },
+          'test-key',
+          'api',
+          { delays: [1, 2], timeoutMs: 50, maxRetries: 2 },
+          root
+        )
+      ).rejects.toThrow(/Invalid API response format/);
+
+      expect(attempts).toBe(2);
+    });
+
+    it('safely recovers without crashing when cloud cache file contains null or corrupted data', () => {
+      const cacheDir = join(root, '.governance-cache');
+      if (!existsSync(cacheDir)) {
+        mkdirSync(cacheDir, { recursive: true });
+      }
+      const cacheFile = join(cacheDir, 'jev-cloud-cache.json');
+      const backup = existsSync(cacheFile) ? loadCloudCache(root) : null;
+
+      try {
+        writeFileSync(cacheFile, 'null', 'utf8');
+        const loadedNull = loadCloudCache(root);
+        expect(loadedNull).toEqual({});
+
+        writeFileSync(cacheFile, '{ "invalid": "structure" }', 'utf8');
+        const loadedStruct = loadCloudCache(root);
+        expect(loadedStruct).toBeDefined();
+      } finally {
+        if (backup) {
+          saveCloudCache(backup, root);
+        } else if (existsSync(cacheFile)) {
+          rmSync(cacheFile, { force: true });
+        }
+      }
+    });
+
+    it('caps keptLines at maxLines when a massive diff contains thousands of signatures', () => {
+      const lines = ['diff --git a/huge.ts b/huge.ts', '--- a/huge.ts', '+++ b/huge.ts', '@@ -1,2000 +1,2000 @@'];
+      for (let i = 0; i < 600; i++) {
+        lines.push(`+ export function handler_${i}() { return ${i}; }`);
+      }
+      const massiveDiff = lines.join('\n');
+      expect(massiveDiff.split('\n').length).toBeGreaterThan(600);
+
+      const compressed = compressDiffIfLarge(massiveDiff, 300);
+      expect(compressed.isCompressed).toBe(true);
+      expect(compressed.finalLines).toBeLessThanOrEqual(300);
+      expect(compressed.finalLines).toBe(compressed.compressedText.split('\n').length);
+    });
+
+    it('routes tools/ changes to architecture slice in selectAdaptiveQuestions', () => {
+      const questions = selectAdaptiveQuestions('general', JEV_AUDIT_CATALOG, [
+        'tools/governance/jev-auditor.ts',
+      ]);
+      expect(questions.layerResponsibilitySeparation).toBeDefined();
+    });
+
+    it('safely handles non-existent or corrupted precedent index directories without throwing', () => {
+      const nonExistentDir = join(root, 'non-existent-subpath-' + Date.now());
+      const loaded = loadPrecedentIndex(nonExistentDir);
+      expect(loaded.totalPrecedents).toBe(0);
+      expect(loaded.precedents).toEqual([]);
+
+      const queried = queryPrecedentBySignature('any-sig', nonExistentDir);
+      expect(queried).toBeUndefined();
+
+      const searched = searchPrecedents('any search term', nonExistentDir);
+      expect(searched).toEqual([]);
     });
   });
 });

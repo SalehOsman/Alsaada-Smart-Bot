@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:apps/bot-server/tests/modules-registry-and-autoloader.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T17:46:06.351Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:07:00.839Z)
 - **معرف الكيان:** `test:apps/bot-server/tests/modules-registry-and-autoloader.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: apps/bot-server/tests/modules-registry-and-autoloader.spec.ts

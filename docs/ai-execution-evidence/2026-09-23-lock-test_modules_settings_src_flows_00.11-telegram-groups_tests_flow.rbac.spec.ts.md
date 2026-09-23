@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/settings/src/flows/00.11-telegram-groups/tests/flow.rbac.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T17:46:06.351Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:07:00.839Z)
 - **معرف الكيان:** `test:modules/settings/src/flows/00.11-telegram-groups/tests/flow.rbac.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/settings/src/flows/00.11-telegram-groups/tests/flow.rbac.spec.ts

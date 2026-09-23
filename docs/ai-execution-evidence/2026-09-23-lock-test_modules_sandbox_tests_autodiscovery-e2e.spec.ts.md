@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/sandbox/tests/autodiscovery-e2e.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T17:46:06.351Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T18:07:00.839Z)
 - **معرف الكيان:** `test:modules/sandbox/tests/autodiscovery-e2e.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/sandbox/tests/autodiscovery-e2e.spec.ts
