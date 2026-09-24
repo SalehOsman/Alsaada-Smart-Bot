@@ -265,7 +265,7 @@
     },
     {
       "path": "pnpm-workspace.yaml",
-      "sha256": "dd1ee7a896e042096898cf6c39a4978cb55f82eb0f231a5b0462a681d94b5645"
+      "sha256": "1370238fb3d5b654162d4402277fea92b1dcb0152e4ff1b1326de4673428d435"
     },
     {
       "path": "tools/governance/agent-dispatcher.ts",
@@ -8145,6 +8145,19 @@
         {
           "path": "tools/backup/tests/backup-suite.spec.ts",
           "sha256": "84f2049a758b63942a927eca575b47ff7df57f308562fa55ddf60c4cd58cadc3"
+        }
+      ]
+    },
+    "governance:pnpm-workspace.yaml": {
+      "id": "governance:pnpm-workspace.yaml",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: pnpm-workspace.yaml",
+      "directory": "pnpm-workspace.yaml",
+      "lockedAt": "2026-09-24T09:43:26.659Z",
+      "files": [
+        {
+          "path": "pnpm-workspace.yaml",
+          "sha256": "1370238fb3d5b654162d4402277fea92b1dcb0152e4ff1b1326de4673428d435"
         }
       ]
     }
