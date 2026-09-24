@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { googleDriveService } from '../../packages/google-engine/src/index.js';
 
 export const RECOVERY_KEY_SALT = 'alsaada-sovereign-recovery-salt-2026';
 export const PBKDF2_ITERATIONS = 100000;
@@ -158,69 +159,46 @@ export async function syncToGoogleDriveWithBackoff(
   }
 
   const fileData = readFileSync(filePath);
-  const totalBytes = fileData.length;
-  const maxRetries = options.maxRetries ?? 3;
-  let simulatedFailures = options.simulateFailureCount ?? 0;
-  let attempt = 0;
-  let lastError: Error | undefined;
+  const folderId = options.folderId ?? process.env.GOOGLE_DRIVE_FOLDER_ID ?? process.env.GDRIVE_FOLDER_ID;
 
-  // Delays for 3-tier exponential backoff: 2s, 4s, 8s (or scaled down in test mode)
-  const baseDelay = options.initialDelayMs ?? 2000;
+  // Execute upload via unified @alsaada/google-engine
+  const uploadRes = await googleDriveService.uploadBuffer({
+    fileName,
+    buffer: fileData,
+    mimeType: 'application/octet-stream',
+    folderId,
+    maxRetries: options.maxRetries ?? 3,
+    initialDelayMs: options.initialDelayMs ?? 2000,
+    simulateFailureCount: options.simulateFailureCount,
+  });
 
-  while (attempt < maxRetries) {
-    attempt++;
-    try {
-      if (simulatedFailures > 0) {
-        simulatedFailures--;
-        throw new Error(`Transient network glitch (HTTP 503 Service Unavailable, attempt ${attempt})`);
-      }
+  if (uploadRes.success) {
+    return {
+      success: true,
+      fileId: uploadRes.fileId,
+      attempts: uploadRes.attempts,
+      uploadedBytes: uploadRes.uploadedBytes,
+      provider: uploadRes.provider === 'google_drive' ? 'google_drive' : 'local_staged',
+    };
+  }
 
-      // If credentials exist or mock mode, perform chunked upload
-      const folderId = options.folderId ?? process.env.GDRIVE_FOLDER_ID;
-      const serviceAccount = options.serviceAccountEmail ?? process.env.GDRIVE_SERVICE_ACCOUNT_EMAIL;
-
-      if (!folderId || !serviceAccount) {
-        // Transparent advisory staging mode
-        return {
-          success: true,
-          fileId: `staged_${Date.now()}_${fileName}`,
-          attempts: attempt,
-          uploadedBytes: totalBytes,
-          provider: 'local_staged',
-        };
-      }
-
-      // Simulated resumable chunked upload
-      const chunkSize = options.chunkSizeBytes ?? 256 * 1024; // 256KB chunks
-      let offset = 0;
-      while (offset < totalBytes) {
-        const currentChunkEnd = Math.min(offset + chunkSize, totalBytes);
-        // Process chunk: fileData.subarray(offset, currentChunkEnd)
-        offset = currentChunkEnd;
-      }
-
-      return {
-        success: true,
-        fileId: `gdrive_${Date.now()}_${fileName}`,
-        attempts: attempt,
-        uploadedBytes: totalBytes,
-        provider: 'google_drive',
-      };
-    } catch (err: any) {
-      lastError = err;
-      if (attempt < maxRetries) {
-        const delay = baseDelay * Math.pow(2, attempt - 1);
-        await new Promise((r) => setTimeout(r, delay));
-      }
-    }
+  // If credentials are not present or test environment, fallback to staging
+  if (uploadRes.provider === 'local_fallback') {
+    return {
+      success: true,
+      fileId: `staged_${Date.now()}_${fileName}`,
+      attempts: uploadRes.attempts || 1,
+      uploadedBytes: fileData.length,
+      provider: 'local_staged',
+    };
   }
 
   return {
     success: false,
     fileId: '',
-    attempts: attempt,
+    attempts: uploadRes.attempts,
     uploadedBytes: 0,
     provider: 'google_drive',
-    error: `Upload failed after ${attempt} attempts: ${lastError?.message}`,
+    error: uploadRes.error,
   };
 }

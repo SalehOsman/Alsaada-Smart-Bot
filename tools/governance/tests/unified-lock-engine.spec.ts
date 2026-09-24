@@ -272,14 +272,14 @@ describe('Unified Lock & Unlock Engine (Plan 70)', () => {
       const infra = targets.filter((t) => t.startsWith('infra:'));
       const tests = targets.filter((t) => t.startsWith('test:'));
 
-      expect(targets.length).toBe(hasSandbox ? 354 : 347);
-      expect(pkgs.length).toBe(8);
+      expect(targets.length).toBe(hasSandbox ? 358 : 351);
+      expect(pkgs.length).toBe(9);
       expect(flows.length).toBe(hasSandbox ? 23 : 21);
       expect(dashboards.length).toBe(34);
       expect(apps.length).toBe(3);
       expect(modules.length).toBe(hasSandbox ? 3 : 2);
       expect(infra.length).toBe(2);
-      expect(tests.length).toBe(hasSandbox ? 281 : 277);
+      expect(tests.length).toBe(hasSandbox ? 284 : 280);
     });
   });
 });

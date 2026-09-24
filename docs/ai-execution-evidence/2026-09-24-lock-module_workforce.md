@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (module:workforce)
 
-- **تاريخ القفل:** 2026-09-24 (2026-09-24T07:24:48.305Z)
+- **تاريخ القفل:** 2026-09-24 (2026-09-24T23:12:33.295Z)
 - **معرف الكيان:** `module:workforce`
 - **نوع الكيان:** `module`
 - **العنوان:** موديول المنظومة: workforce
 - **المسار الأساسي:** `modules/workforce`
 - **عدد الملفات المقفلة:** 23 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+- **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
@@ -15,7 +15,7 @@
 | `modules/workforce/CHANGELOG.md` | `155fecc4c35392d716d95cff144e6a4b1b4124119f89ff1aaf3d752a625cbb81` |
 | `modules/workforce/index.ts` | `31d05deea3ee1778f4feaed2d07e432a9599ec37d2abeea0e4d1a248199f45c0` |
 | `modules/workforce/module.contract.json` | `a3c2371d8ddc0f2e972e5ffe47e42f02a798d9ed9a07d505a5a40e5855b95b78` |
-| `modules/workforce/package.json` | `c4c633e9e0a3e42c2e3359231786a1794caf701113eb2b719c735e9cdd20f1fd` |
+| `modules/workforce/package.json` | `5fcd79a7f0e33c3c60267969f6d4725d7a4e0356566ebc499c436976c9eb44f1` |
 | `modules/workforce/README.md` | `bec0e290f7fd6ddc917ed1662c90957c7537165421ff11a07d2e7b2b35fc4316` |
 | `modules/workforce/src/flows.manifest.ts` | `b9dae23a38d1ecbe0be5d40747f181fe07d8a789e8665d996551b10e9f46543f` |
 | `modules/workforce/src/hub/hr-hub.handler.ts` | `776a9cea735f8efca821da8bd1acd4b8f8405ba453768636d33cad90b7ed5eb7` |
@@ -29,7 +29,7 @@
 | `modules/workforce/src/module.telemetry.ts` | `e125098ed4de5f71e190498ca3fba1328c65990a6919e346409809c2f87741ed` |
 | `modules/workforce/src/services/worker-expiry-alert.service.ts` | `be0863dda15e5d903331a59de1d3d8d72bf2639c599fb19dc400b3a72b70be0b` |
 | `modules/workforce/src/services/worker-facade.service.ts` | `cdf3a0a264c99aab4f862fe60219ec72c11e5ea8a1c5cdab82e2350880617dfd` |
-| `modules/workforce/src/services/worker-storage.service.ts` | `a9e936c4bcc058c9bd076973996bed20fb27b09042a942ed1870dafd493e6de9` |
+| `modules/workforce/src/services/worker-storage.service.ts` | `6f055b12f04caae0c2e00697a79aabdf89140bcb172b233a51f986457779851d` |
 | `modules/workforce/src/shared/module.errors.ts` | `38a4f4aaa5d533af78aed875c84215d9db249aaa23c38cea4e38029159c15000` |
 | `modules/workforce/src/shared/module.messages.ts` | `196a04ba7e7a42df59a1612d18c938f1816763c762e10985e2a70afdebae4b24` |
 | `modules/workforce/src/shared/module.types.ts` | `fecd56005adc75c8d3ff81dafe65a4959905afea683f5da78d0275cc4983e85d` |
