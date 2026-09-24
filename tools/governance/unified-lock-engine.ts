@@ -817,7 +817,9 @@ export function discoverAllLockableTargets(
           entry.name === '.turbo' ||
           entry.name === '.next' ||
           entry.name === '.astro' ||
-          entry.name === 'coverage'
+          entry.name === 'coverage' ||
+          entry.name === '.cache' ||
+          entry.name.startsWith('tmp')
         ) {
           continue;
         }
