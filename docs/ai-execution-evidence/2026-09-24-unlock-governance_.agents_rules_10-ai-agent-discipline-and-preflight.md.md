@@ -1,15 +1,15 @@
 # ترخيص فك قفل الحوكمة: (governance:.agents/rules/10-ai-agent-discipline-and-preflight.md)
 
-- **التاريخ:** 2026-09-24 (2026-09-24T10:33:05.022Z)
+- **التاريخ:** 2026-09-24 (2026-09-24T19:06:19.094Z)
 - **معرف الكيان المفكوك:** `governance:.agents/rules/10-ai-agent-discipline-and-preflight.md`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-D77328`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-856A5C`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T10:32:45Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T19:06:08Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Codify WP-102 CLI learnings (pnpm run lock and --noEmit guard) in Rulebook 10
+Codify Principle 11 Tri-Tier Test Pyramid in Rulebook 10
 
 ## نطاق التعديل المرخص
 تم رفع القفل التشفيري عن الكيان `governance:.agents/rules/10-ai-agent-discipline-and-preflight.md` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).

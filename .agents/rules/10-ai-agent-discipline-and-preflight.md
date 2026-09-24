@@ -48,6 +48,10 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
     - Prohibits executing package installation commands (`pnpm install`, `pnpm add`, `npm install`) or container image build commands (`docker compose build`, `docker build`) during feature development or defect repair.
     - All testing and verification must execute 100% locally and air-gapped using `vitest`, `pnpm test`, `pnpm dev:bot`, and `pnpm ci:simulate` with zero network downloads (`prefer-offline=true`, `verify-deps-before-run=false`, and `supportedArchitectures` restricted to `win32`/`linux` `x64`).
     - Starting pre-built infrastructure containers (`pnpm docker:infra` / `docker compose up -d postgres redis`) is permitted; rebuilding application containers is strictly reserved for final production release.
+11. **The Tri-Tier Test Pyramid & Anti-Slowness Invariant (Work Plan 104):**
+    - Prohibits AI agents from running full monorepo test suites (`pnpm test`, `pnpm test:fast`, or `pnpm ci:simulate`) during the inner development loop.
+    - AI agents must achieve < 2s feedback cycles during TDD by executing targeted test commands: `pnpm test:smart`, `pnpm test:target <path>`, or `pnpm test:changed`.
+    - Static financial and accounting checks (Gate G12) must utilize in-memory verification (`memoryOnly: true`) for HMAC-SHA256 ledger integrity and balance equations unless financial models, accounting ledgers, or database schemas are explicitly modified.
 
 ---
 

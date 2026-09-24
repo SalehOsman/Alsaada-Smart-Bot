@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T18:50:22.184Z",
+  "generatedAt": "2026-09-24T19:08:06.878Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -53,7 +53,7 @@
     },
     {
       "path": ".agents/rules/06-testing-and-mutation-constitution.md",
-      "sha256": "9ee41bbd7b2c67b4a0ee4fac4b7e9c9f4c0cb14bfed9dbc6c897767d44af430f"
+      "sha256": "83db1da1ec5f2f7e9de5a1ca7a4f8369c681b19cdf6cc09001933b560b5ca6c9"
     },
     {
       "path": ".agents/rules/07-telegram-ux-mobile-ergonomics.md",
@@ -69,7 +69,7 @@
     },
     {
       "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "sha256": "ccd2cb37cee1cf8a9618fdab667663ed73d18bb570ccd64ece4ad43cac59bdce"
+      "sha256": "87735dfb0c7c52d48c74e53dc3282c90550b37925db95b20816186716e9aca96"
     },
     {
       "path": ".agents/rules/11-modification-lifecycle-standard.md",
@@ -3095,7 +3095,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-24T18:50:22.184Z",
+      "lockedAt": "2026-09-24T19:08:06.878Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -7571,7 +7571,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-24T18:50:22.184Z",
+      "lockedAt": "2026-09-24T19:08:06.878Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -7908,19 +7908,6 @@
         }
       ]
     },
-    "governance:.agents/rules/10-ai-agent-discipline-and-preflight.md": {
-      "id": "governance:.agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "type": "infra",
-      "title": "الحوكمة والدستور السيادي: .agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "directory": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "lockedAt": "2026-09-24T11:26:36.148Z",
-      "files": [
-        {
-          "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-          "sha256": "ccd2cb37cee1cf8a9618fdab667663ed73d18bb570ccd64ece4ad43cac59bdce"
-        }
-      ]
-    },
     "governance:.agents/skills": {
       "id": "governance:.agents/skills",
       "type": "infra",
@@ -8039,7 +8026,7 @@
       "type": "infra",
       "title": "الحوكمة والدستور السيادي: .agents/rules",
       "directory": ".agents/rules",
-      "lockedAt": "2026-09-24T11:26:17.468Z",
+      "lockedAt": "2026-09-24T19:07:58.026Z",
       "files": [
         {
           "path": ".agents/rules/01-fhr-baseline-parity.md",
@@ -8063,7 +8050,7 @@
         },
         {
           "path": ".agents/rules/06-testing-and-mutation-constitution.md",
-          "sha256": "9ee41bbd7b2c67b4a0ee4fac4b7e9c9f4c0cb14bfed9dbc6c897767d44af430f"
+          "sha256": "83db1da1ec5f2f7e9de5a1ca7a4f8369c681b19cdf6cc09001933b560b5ca6c9"
         },
         {
           "path": ".agents/rules/07-telegram-ux-mobile-ergonomics.md",
@@ -8079,7 +8066,7 @@
         },
         {
           "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-          "sha256": "ccd2cb37cee1cf8a9618fdab667663ed73d18bb570ccd64ece4ad43cac59bdce"
+          "sha256": "87735dfb0c7c52d48c74e53dc3282c90550b37925db95b20816186716e9aca96"
         },
         {
           "path": ".agents/rules/11-modification-lifecycle-standard.md",
@@ -8543,6 +8530,32 @@
         {
           "path": "GEMINI.md",
           "sha256": "b499f581aa1873a899b6c99139325e707424812977c4c7b5fe42d72e43061619"
+        }
+      ]
+    },
+    "governance:.agents/rules/06-testing-and-mutation-constitution.md": {
+      "id": "governance:.agents/rules/06-testing-and-mutation-constitution.md",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: .agents/rules/06-testing-and-mutation-constitution.md",
+      "directory": ".agents/rules/06-testing-and-mutation-constitution.md",
+      "lockedAt": "2026-09-24T19:05:46.280Z",
+      "files": [
+        {
+          "path": ".agents/rules/06-testing-and-mutation-constitution.md",
+          "sha256": "83db1da1ec5f2f7e9de5a1ca7a4f8369c681b19cdf6cc09001933b560b5ca6c9"
+        }
+      ]
+    },
+    "governance:.agents/rules/10-ai-agent-discipline-and-preflight.md": {
+      "id": "governance:.agents/rules/10-ai-agent-discipline-and-preflight.md",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: .agents/rules/10-ai-agent-discipline-and-preflight.md",
+      "directory": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
+      "lockedAt": "2026-09-24T19:06:50.915Z",
+      "files": [
+        {
+          "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
+          "sha256": "87735dfb0c7c52d48c74e53dc3282c90550b37925db95b20816186716e9aca96"
         }
       ]
     }

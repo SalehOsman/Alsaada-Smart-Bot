@@ -53,3 +53,25 @@ describe('Feature / Slice Name', () => {
 
 1. **Mutation Resilience:** Tests must survive mutation analysis (Stryker/Vitest mutation scans). If a boundary operator (e.g., `<` to `<=`) is altered, the test suite must fail.
 2. **Concurrency & Race Conditions:** Concurrent operations must be tested using `Promise.all` with deterministic race scenarios to prove thread and transaction isolation.
+
+---
+
+## 5. Tri-Tier Test Pyramid & Execution SLA (Work Plan 104)
+
+To preserve maximum engineering velocity without compromising constitutional rigor, all testing must strictly adhere to the **Tri-Tier Test Pyramid**:
+
+1. **Level 1: Inner Development Loop (< 2s SLA):**
+   - AI agents are **strictly forbidden** from executing the full test suite (`pnpm test` or `pnpm ci:simulate`) during internal TDD iterations or debugging.
+   - Inner-loop verification must exclusively use the targeted smart runner:
+     - `pnpm test:smart`: Automatically infers the active scope (flow, module, package, or affected files).
+     - `pnpm test:target <path>`: Directly tests a specific file or directory.
+     - `pnpm test:changed`: Tests files modified in the active git working tree.
+     - `pnpm test:modules <name>` / `pnpm test:packages <name>`: Scoped subsystem execution.
+     - `pnpm test:governance`: Tests governance and verification tools.
+2. **Level 2: Fast Pre-Commit Gate (< 6s SLA, Target ~2.5s):**
+   - Executed automatically by `.githooks/pre-commit` via `pnpm pre-commit:fast`.
+   - Concurrently verifies 12 static governance gates in-process via `Promise.all` alongside incremental typechecking (`tsc --incremental`) and smart blast-radius related tests.
+   - Never spawns sequential child processes for static gates.
+3. **Level 3: Full Monorepo Pre-Merge Simulation:**
+   - Full monorepo CI simulation (`pnpm ci:simulate`) is strictly reserved for the final pre-merge gate after all tasks are completed and verified on the isolated branch.
+
