@@ -147,6 +147,7 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 3. **Scaffolding Suite:** Always use generators: `pnpm make:flow`, `pnpm make:test`, `pnpm make:incident`.
 4. **Topology Map:** Query `.agents/topology.json` for O(1) instant location of flows, models, and slices.
 5. **Self-Healing Formatting:** Run `pnpm preflight:fix` to resolve formatting and lint errors cleanly.
+6. **Zero-Network Development & Air-Gapped Local Invariant (Work Plan 102):** Prohibits running `pnpm install`, `pnpm add`, `npm install`, or `docker compose build` during feature development or defect repair. All development and verification execute 100% locally via `vitest`, `pnpm test`, `pnpm dev:bot`, and `pnpm ci:simulate` (`prefer-offline=true`, `verify-deps-before-run=false`, and `supportedArchitectures` restricted to `win32`/`linux` `x64`).
 
 ### 11. Direct Action Appendix (ADHD Protocol)
 1. Be concise, direct, and structured. Eliminate conversational filler.
