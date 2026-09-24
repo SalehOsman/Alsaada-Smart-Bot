@@ -26,6 +26,7 @@ COPY packages/core-components/package.json packages/core-components/
 COPY packages/shared/package.json packages/shared/
 COPY packages/telemetry/package.json packages/telemetry/
 COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
+COPY packages/google-engine/package.json packages/google-engine/
 COPY modules/workforce/package.json modules/workforce/
 COPY modules/settings/package.json modules/settings/
 COPY modules/sandbox/package.json modules/sandbox/
@@ -62,6 +63,8 @@ COPY packages/telemetry/src/ packages/telemetry/src/
 COPY packages/telemetry/tsconfig.json packages/telemetry/
 COPY packages/ai-vision-engine/src/ packages/ai-vision-engine/src/
 COPY packages/ai-vision-engine/tsconfig.json packages/ai-vision-engine/
+COPY packages/google-engine/src/ packages/google-engine/src/
+COPY packages/google-engine/tsconfig.json packages/google-engine/
 COPY modules/workforce/src/ modules/workforce/src/
 COPY modules/workforce/index.ts modules/workforce/
 COPY modules/workforce/module.contract.json modules/workforce/

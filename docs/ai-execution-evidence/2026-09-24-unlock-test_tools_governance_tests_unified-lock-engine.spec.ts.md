@@ -1,15 +1,15 @@
 # ترخيص فك قفل الحوكمة: (test:tools/governance/tests/unified-lock-engine.spec.ts)
 
-- **التاريخ:** 2026-09-24 (2026-09-24T18:33:35.338Z)
+- **التاريخ:** 2026-09-24 (2026-09-24T23:22:40.436Z)
 - **معرف الكيان المفكوك:** `test:tools/governance/tests/unified-lock-engine.spec.ts`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-9634DC`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-D19490`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T18:33:28Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T23:22:34Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Adjust target count to 356 (283 tests)
+WP-106: Update package and target counts for @alsaada/google-engine
 
 ## نطاق التعديل المرخص
 تم رفع القفل التشفيري عن الكيان `test:tools/governance/tests/unified-lock-engine.spec.ts` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).

@@ -13,6 +13,7 @@
     "@alsaada/ai-vision-engine": "workspace:*",
     "@alsaada/core-components": "workspace:*",
     "@alsaada/database": "workspace:*",
+    "@alsaada/google-engine": "workspace:*",
     "@alsaada/national-id-engine": "workspace:*",
     "@alsaada/regional-engine": "workspace:*",
     "exceljs": "^4.4.0",

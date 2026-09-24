@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { googleDriveService as alsaadaDriveEngine } from '@alsaada/google-engine';
 // Replaced static config with process.env
 const config = {
   googleServiceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -172,78 +173,38 @@ export class WorkerStorageService {
   }
 
   /**
-   * ☁️ رفع ملف منفرد إلى مجلد محدد على Google Drive
+   * ☁️ رفع ملف منفرد إلى مجلد محدد على Google Drive عبر الحزمة النواة @alsaada/google-engine
    */
   async uploadFileToDrive(
     fileName: string,
     fileBuffer: Buffer,
-    mimeType = 'image/jpeg'
+    mimeType = 'image/jpeg',
+    folderId?: string
   ): Promise<string | null> {
-    const accessToken = await this.getGoogleAccessToken();
-    if (!accessToken) {
-      return null;
-    }
-
-    const folderId = config.googleDriveFolderId;
-    const metadata: any = {
-      name: fileName,
-      mimeType,
-    };
-
-    if (folderId && folderId.trim().length > 5) {
-      metadata.parents = [folderId.trim()];
-    }
-
     try {
-      const boundary = '-------314159265358979323846';
-      const delimiter = `\r\n--${boundary}\r\n`;
-      const closeDelimiter = `\r\n--${boundary}--`;
+      const res = await alsaadaDriveEngine.uploadBuffer({
+        fileName,
+        buffer: fileBuffer,
+        mimeType,
+        folderId: folderId || config.googleDriveFolderId,
+      });
 
-      const multipartRequestBody = Buffer.concat([
-        Buffer.from(
-          delimiter +
-            'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-            JSON.stringify(metadata) +
-            delimiter +
-            `Content-Type: ${mimeType}\r\n` +
-            'Content-Transfer-Encoding: base64\r\n\r\n'
-        ),
-        Buffer.from(fileBuffer.toString('base64')),
-        Buffer.from(closeDelimiter),
-      ]);
-
-      const res = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': `multipart/related; boundary=${boundary}`,
-          },
-          body: multipartRequestBody,
-        }
-      );
-
-      if (!res.ok) {
-        return null;
-      }
-
-      const fileData = (await res.json()) as any;
-      return fileData.id || null;
-    } catch {
+      return res.success ? res.fileId : null;
+    } catch (err) {
+      console.warn('⚠️ [STORAGE] Google Drive upload failed, falling back locally:', err);
       return null;
     }
   }
 
   /**
-   * 🚀 معالجة حفظ بطاقة العامل محلياً ورفعها إلى Google Drive ذرياً
+   * 🚀 معالجة حفظ بطاقة العامل محلياً ورفعها إلى Google Drive ذرياً في مجلد العامل
    */
   async processAndArchiveWorkerId(
     workerCode: string,
     frontBuffer?: Buffer,
     backBuffer?: Buffer
   ): Promise<SaveWorkerIdPhotosResult> {
-    // 1. الحفظ المحلي الإلزامي في attachments/worker-ids
+    // 1. الحفظ المحلي الإلزامي في attachments/workers/{sanitizedCode}/
     const local = this.saveWorkerIdLocally(workerCode, frontBuffer, backBuffer);
 
     // 2. الرفع إلى Google Drive إن كانت بيانات الاعتماد متوفرة
@@ -251,14 +212,31 @@ export class WorkerStorageService {
     let driveBackId: string | undefined = undefined;
 
     const sanitizedCode = workerCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+    
+    // إنشاء مجلد مستقل للعامل على Google Drive إن أمكن
+    let workerFolderId: string | undefined = undefined;
+    try {
+      const ensured = await alsaadaDriveEngine.ensureFolder(sanitizedCode);
+      if (ensured) workerFolderId = ensured;
+    } catch {}
 
     if (frontBuffer && frontBuffer.length > 0) {
-      const frontId = await this.uploadFileToDrive(`${sanitizedCode}_front.jpg`, frontBuffer);
+      const frontId = await this.uploadFileToDrive(
+        `${sanitizedCode}_front.jpg`,
+        frontBuffer,
+        'image/jpeg',
+        workerFolderId
+      );
       if (frontId) driveFrontId = frontId;
     }
 
     if (backBuffer && backBuffer.length > 0) {
-      const backId = await this.uploadFileToDrive(`${sanitizedCode}_back.jpg`, backBuffer);
+      const backId = await this.uploadFileToDrive(
+        `${sanitizedCode}_back.jpg`,
+        backBuffer,
+        'image/jpeg',
+        workerFolderId
+      );
       if (backId) driveBackId = backId;
     }
 
@@ -283,8 +261,14 @@ export class WorkerStorageService {
     let driveFileId: string | undefined = undefined;
 
     const sanitizedCode = workerCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+    let workerFolderId: string | undefined = undefined;
+    try {
+      const ensured = await alsaadaDriveEngine.ensureFolder(sanitizedCode);
+      if (ensured) workerFolderId = ensured;
+    } catch {}
+
     const driveName = `[${sanitizedCode}]_${saved.fileName}`;
-    const dId = await this.uploadFileToDrive(driveName, fileBuffer, mimeType);
+    const dId = await this.uploadFileToDrive(driveName, fileBuffer, mimeType, workerFolderId);
     if (dId) driveFileId = dId;
 
     return {
