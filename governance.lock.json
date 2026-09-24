@@ -69,7 +69,7 @@
     },
     {
       "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "sha256": "600736fa8bb71958e35495a360a26761a78e0a4ef482740425671603ee0acc79"
+      "sha256": "ccd2cb37cee1cf8a9618fdab667663ed73d18bb570ccd64ece4ad43cac59bdce"
     },
     {
       "path": ".agents/rules/11-modification-lifecycle-standard.md",
@@ -8230,11 +8230,11 @@
       "type": "infra",
       "title": "الحوكمة والدستور السيادي: .agents/rules/10-ai-agent-discipline-and-preflight.md",
       "directory": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "lockedAt": "2026-09-24T10:33:41.627Z",
+      "lockedAt": "2026-09-24T11:26:36.148Z",
       "files": [
         {
           "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-          "sha256": "600736fa8bb71958e35495a360a26761a78e0a4ef482740425671603ee0acc79"
+          "sha256": "ccd2cb37cee1cf8a9618fdab667663ed73d18bb570ccd64ece4ad43cac59bdce"
         }
       ]
     },
@@ -8557,6 +8557,63 @@
         {
           "path": ".agents/skills/squad-qa-migration/SKILL.md",
           "sha256": "fb4c96c7b1afb93e2f85957b57e9848be5ce80ae088c219ec6bb872d3d03c0e2"
+        }
+      ]
+    },
+    "governance:.agents/rules": {
+      "id": "governance:.agents/rules",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: .agents/rules",
+      "directory": ".agents/rules",
+      "lockedAt": "2026-09-24T11:26:17.468Z",
+      "files": [
+        {
+          "path": ".agents/rules/01-fhr-baseline-parity.md",
+          "sha256": "48aac5b7c5997ba81cd1a84caee8157102a56daf703893ee7311a0178128ff72"
+        },
+        {
+          "path": ".agents/rules/02-autonomous-execution-and-checkpoints.md",
+          "sha256": "c2b49440675bb036d7b10e4fff5acd2fc466f1cc43e638f90d338436a4d6647c"
+        },
+        {
+          "path": ".agents/rules/03-git-branch-lifecycle-and-immunity.md",
+          "sha256": "5880e8cb91be4cdd517e0b1117ea1b84ebf05c4c88fa10f33fd8020085bf8af7"
+        },
+        {
+          "path": ".agents/rules/04-cryptographic-immutability-engine.md",
+          "sha256": "b5d3a4065d89ca91afef864fe5a70003cfab81ba97290596b4403352aac267d7"
+        },
+        {
+          "path": ".agents/rules/05-quality-gates-taxonomy-g1-g23.md",
+          "sha256": "9b0b8f3dc4e4c688c8e948b13738f9b12fa453d1f022107b38eb251ea4ef4bdb"
+        },
+        {
+          "path": ".agents/rules/06-testing-and-mutation-constitution.md",
+          "sha256": "9ee41bbd7b2c67b4a0ee4fac4b7e9c9f4c0cb14bfed9dbc6c897767d44af430f"
+        },
+        {
+          "path": ".agents/rules/07-telegram-ux-mobile-ergonomics.md",
+          "sha256": "d7c9f6caa446e28f1947df783bfd481720cfb86f49d9bcca520b10d00d63a7ca"
+        },
+        {
+          "path": ".agents/rules/08-code-defect-and-regression-postmortem.md",
+          "sha256": "80f59b15c8635b81227c0afc4040c7d348a164963e9e0a52adadeab11a0ee150"
+        },
+        {
+          "path": ".agents/rules/09-enterprise-reliability-and-telemetry.md",
+          "sha256": "8d3047ab99db00328ac6f29faca62ec6cbde20c08225dde6f878a6c80b820cea"
+        },
+        {
+          "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
+          "sha256": "ccd2cb37cee1cf8a9618fdab667663ed73d18bb570ccd64ece4ad43cac59bdce"
+        },
+        {
+          "path": ".agents/rules/11-modification-lifecycle-standard.md",
+          "sha256": "982120e122702a709f5319d008eec002537cc395b370cedc49b38c8f63ff0684"
+        },
+        {
+          "path": ".agents/rules/12-creation-lifecycle-standard.md",
+          "sha256": "daeef2c89dabca01440625f5e49e033b79c3555672ccf822cfb098159076dda8"
         }
       ]
     }
