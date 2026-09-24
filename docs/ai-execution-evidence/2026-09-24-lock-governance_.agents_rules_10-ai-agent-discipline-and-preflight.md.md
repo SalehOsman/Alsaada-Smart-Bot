@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (governance:.agents/rules/10-ai-agent-discipline-and-preflight.md)
 
-- **تاريخ القفل:** 2026-09-24 (2026-09-24T10:15:38.924Z)
+- **تاريخ القفل:** 2026-09-24 (2026-09-24T10:33:41.627Z)
 - **معرف الكيان:** `governance:.agents/rules/10-ai-agent-discipline-and-preflight.md`
 - **نوع الكيان:** `infra`
 - **العنوان:** الحوكمة والدستور السيادي: .agents/rules/10-ai-agent-discipline-and-preflight.md
@@ -12,7 +12,7 @@
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `.agents/rules/10-ai-agent-discipline-and-preflight.md` | `c33a4acb92757827aa1e8fcb69bf83a4e694acd689db96569348887cdec42eaf` |
+| `.agents/rules/10-ai-agent-discipline-and-preflight.md` | `600736fa8bb71958e35495a360a26761a78e0a4ef482740425671603ee0acc79` |
 
 ## بوابات التحقق المعتمدة
 - **CRLF/LF Sanitization:** PASS
