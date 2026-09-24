@@ -198,7 +198,10 @@ function createCompleteFlow(root: string): string {
     'tests/flow.rbac.spec.ts',
     'tests/flow.data.spec.ts',
   ]) {
-    writeFileSync(join(flowDir, file), file.endsWith('.md') ? '# Flow\n' : 'export {};\n', 'utf8');
+    const content = file.endsWith('.md')
+      ? '# Flow\n\n```mermaid\nstateDiagram-v2\n  [*] --> Step1\n  Step1 --> Step2\n  Step2 --> [*]\n```\n'
+      : 'export {};\n';
+    writeFileSync(join(flowDir, file), content, 'utf8');
   }
   return flowDir;
 }

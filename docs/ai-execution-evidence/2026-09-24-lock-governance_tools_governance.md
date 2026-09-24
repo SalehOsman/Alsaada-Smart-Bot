@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (governance:tools/governance)
 
-- **تاريخ القفل:** 2026-09-24 (2026-09-24T11:00:40.028Z)
+- **تاريخ القفل:** 2026-09-24 (2026-09-24T12:31:26.887Z)
 - **معرف الكيان:** `governance:tools/governance`
 - **نوع الكيان:** `infra`
 - **العنوان:** الحوكمة والدستور السيادي: tools/governance
@@ -32,7 +32,7 @@
 | `tools/governance/unified-unlock-engine.ts` | `54faab3a775301692dab3a9bed9f2f2c2f9aaed27a3c4e5d4f47620928bfd83c` |
 | `tools/governance/unlock-challenge-engine.ts` | `2523f96640d1ad717385a86227c03553183d0e7b0178f7c03379215881cafddf` |
 | `tools/governance/verify-ai-compliance.ts` | `fa27a5b1e9c6e985ecfeb067463ee6f9204729a9dd3a40a79e9667693d43fc13` |
-| `tools/governance/verify-architecture.ts` | `e07ba5bc06da8d9e962d697ddb723e12693913dbfb4743323f5d98752553f824` |
+| `tools/governance/verify-architecture.ts` | `dffc658750aa0eca66b82f088868261773bd887e98da19901783360c425fa343` |
 | `tools/governance/verify-boundary-deserialization.ts` | `cd7278dc91ef37e68da6fe988a293dbd2bd2ddf3b1d637c4b168e6aa3c3b9889` |
 | `tools/governance/verify-code-security.ts` | `49f6cae4838e948441aca31aa70ffa530a9fc811bea6896f2380a59475f99f1c` |
 | `tools/governance/verify-core-immutability.ts` | `75ac4fa5b73df5d8f5eb9cb771b0e12d9e994fb4608d50270602610edcfd297e` |

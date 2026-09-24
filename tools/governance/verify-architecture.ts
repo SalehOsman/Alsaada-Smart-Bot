@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
+import ts from 'typescript';
 import {
   createResult,
   countLines,
@@ -44,6 +45,148 @@ const REQUIRED_FLOW_FILES_V2 = [
   'error.handler.ts',
   'flow.docs.md',
 ] as const;
+
+const PURE_FP_CORE_FILE_NAMES = new Set([
+  'flow.keyboard.ts',
+  'menu.builder.ts',
+  'flow.validators.ts',
+  'validator.ts',
+  'flow.messages.ts',
+  'action.handler.ts',
+  'error.handler.ts',
+  'flow.types.ts',
+  'types.ts',
+  'page.tsx',
+  'route.ts',
+]);
+
+const PURE_FUNCTION_REQUIRED_FILE_NAMES = new Set([
+  'flow.keyboard.ts',
+  'menu.builder.ts',
+  'flow.validators.ts',
+  'validator.ts',
+  'flow.messages.ts',
+]);
+
+const DI_OOP_SHELL_FILE_NAMES = new Set([
+  'flow.handler.ts',
+  'controller.ts',
+  'flow.service.ts',
+  'service.ts',
+  'flow.repository.ts',
+  'repository.ts',
+]);
+
+export function validateStrictFlowIsolation(
+  repoFilePath: string,
+  currentFlowDirName: string,
+  content: string
+): string[] {
+  const errors: string[] = [];
+  const sf = ts.createSourceFile(repoFilePath, content, ts.ScriptTarget.Latest, true);
+
+  for (const stmt of sf.statements) {
+    let specifier: string | null = null;
+    if (ts.isImportDeclaration(stmt) && stmt.moduleSpecifier && ts.isStringLiteral(stmt.moduleSpecifier)) {
+      specifier = stmt.moduleSpecifier.text;
+    } else if (ts.isExportDeclaration(stmt) && stmt.moduleSpecifier && ts.isStringLiteral(stmt.moduleSpecifier)) {
+      specifier = stmt.moduleSpecifier.text;
+    }
+
+    if (!specifier) continue;
+    const normSpec = specifier.replace(/\\/g, '/');
+
+    // Check if importing from a sibling flow directory: e.g. ../01.1-worker-registration/... or ../../flows/01.1-...
+    const siblingFlowMatch =
+      normSpec.match(/^\.\.\/([0-9]+\.[0-9A-Za-z.-]+-[a-z0-9-]+)(\/|$)/) ??
+      normSpec.match(/\/flows\/([0-9]+\.[0-9A-Za-z.-]+-[a-z0-9-]+)(\/|$)/);
+
+    if (siblingFlowMatch && siblingFlowMatch[1] && siblingFlowMatch[1] !== currentFlowDirName) {
+      errors.push(
+        `CROSS_FLOW_ISOLATION_BREACH: ${repoFilePath} imports from sibling flow "${specifier}". Each flow must be a 100% self-contained vertical slice.`
+      );
+    }
+  }
+
+  return errors;
+}
+
+export function validateFcisCodingParadigm(repoFilePath: string, content: string): string[] {
+  const errors: string[] = [];
+  const fileName = basename(repoFilePath);
+  const scriptKind = repoFilePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(repoFilePath, content, ts.ScriptTarget.Latest, true, scriptKind);
+
+  const isPureFpLayer = PURE_FP_CORE_FILE_NAMES.has(fileName);
+  const requiresExportedFunction = PURE_FUNCTION_REQUIRED_FILE_NAMES.has(fileName);
+  const isDiShellLayer = DI_OOP_SHELL_FILE_NAMES.has(fileName) || /\.service\.ts$|\.repository\.ts$/.test(fileName);
+
+  let exportedFunctionCount = 0;
+
+  for (const stmt of sf.statements) {
+    const modifiers = ts.canHaveModifiers(stmt) ? ts.getModifiers(stmt) : undefined;
+    const isExported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+
+    if (ts.isFunctionDeclaration(stmt) && isExported) {
+      exportedFunctionCount++;
+    }
+
+    if (ts.isClassDeclaration(stmt)) {
+      const className = stmt.name?.text ?? '<anonymous>';
+
+      // 1. No class declarations allowed in Pure FP Core layers
+      if (isPureFpLayer) {
+        errors.push(
+          `FCIS_PARADIGM_VIOLATION: ${repoFilePath} declares class "${className}" in a Pure Functional Core layer (${fileName}). Export standalone pure functions (export function) instead.`
+        );
+        continue;
+      }
+
+      // 2. Check heritage clauses (extends) in DI Service / Repository layers
+      if (isDiShellLayer && stmt.heritageClauses) {
+        for (const hc of stmt.heritageClauses) {
+          if (hc.token === ts.SyntaxKind.ExtendsKeyword) {
+            const baseText = hc.types.map((t) => t.getText(sf)).join(', ');
+            if (!/Error\b/.test(baseText)) {
+              errors.push(
+                `FCIS_PARADIGM_VIOLATION: ${repoFilePath} class "${className}" uses class inheritance (extends ${baseText}). Composition over inheritance is strictly required in FCIS.`
+              );
+            }
+          }
+        }
+      }
+
+      // 3. Universal ban on Static-Only Utility Classes across all monorepo zones (except legacy V1 flow.telemetry.ts adapter)
+      const hasConstructor = stmt.members.some((m) => ts.isConstructorDeclaration(m));
+      const methodMembers = stmt.members.filter((m) => ts.isMethodDeclaration(m));
+      const allMethodsStatic =
+        methodMembers.length > 0 &&
+        methodMembers.every((m) =>
+          (ts.canHaveModifiers(m) ? ts.getModifiers(m) : undefined)?.some(
+            (mod) => mod.kind === ts.SyntaxKind.StaticKeyword
+          )
+        );
+      if (!hasConstructor && allMethodsStatic && fileName !== 'flow.telemetry.ts') {
+        errors.push(
+          `FCIS_PARADIGM_VIOLATION: ${repoFilePath} declares static utility class "${className}". Export standalone pure functions (export function) instead.`
+        );
+      }
+    }
+  }
+
+  // 4. Require at least one top-level exported pure function in keyboard, messages, and validators files
+  // (unless it is a pure Zod schema file exporting *Schema or a 1-line empty test fixture stub)
+  if (requiresExportedFunction && exportedFunctionCount === 0 && content.trim() !== 'export {};') {
+    const hasZodSchemaExport = /export\s+const\s+\w+Schema\b/.test(content);
+    if (!hasZodSchemaExport) {
+      errors.push(
+        `FCIS_PARADIGM_VIOLATION: ${repoFilePath} must export top-level pure functions (export function ...) rather than only wrapping methods in an object or class.`
+      );
+    }
+  }
+
+  return errors;
+}
 
 export function validateMermaidStateDiagram(filePath: string, content: string): string[] {
   const errors: string[] = [];
@@ -136,6 +279,7 @@ export function verifyArchitecture(root = process.cwd()): VerificationResult {
   // 1. Flow file structure, lines, placeholders & any prohibition
   for (const flowDir of flowDirs) {
     const repoFlowPath = toRepoPath(root, flowDir);
+    const flowDirName = basename(flowDir);
     const contract = readContract(flowDir);
     const isV2 = contract.schemaVersion === '2.0.0' || existsSync(join(flowDir, 'controller.ts'));
     const requiredFiles = isV2 ? REQUIRED_FLOW_FILES_V2 : REQUIRED_FLOW_FILES_V1;
@@ -168,6 +312,14 @@ export function verifyArchitecture(root = process.cwd()): VerificationResult {
         fail(result, `${repoFilePath} contains placeholder text in a completed flow`);
       if (!contract.allowAny && /\bany\b/.test(text) && file.endsWith('.ts'))
         fail(result, `${repoFilePath} uses any without a documented exception`);
+
+      if (file.endsWith('.ts') && !file.endsWith('.spec.ts') && !file.endsWith('.test.ts')) {
+        const isoErrors = validateStrictFlowIsolation(repoFilePath, flowDirName, text);
+        for (const err of isoErrors) fail(result, err);
+
+        const fcisErrors = validateFcisCodingParadigm(repoFilePath, text);
+        for (const err of fcisErrors) fail(result, err);
+      }
     }
 
     // If flow directory has its own flow.plugin.ts, it must import FlowPlugin from @alsaada/core-components

@@ -257,7 +257,7 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "9a0b3500d9ab3fd7d0a5057245bcab9c3eedb6fbdb5b84e0cbc9ae58b7c35b93"
+      "sha256": "3fca581d10792a014dc3bbb5d7d926753d588cadc21447d9a67a42b43dae270d"
     },
     {
       "path": "package.json",
@@ -274,6 +274,10 @@
     {
       "path": "tools/governance/common.ts",
       "sha256": "efcacc53724fc53cca7a3f907f01f5b162e7ee5a588853ce9a847c7420f363c9"
+    },
+    {
+      "path": "tools/governance/gap-audit.ps1",
+      "sha256": "b75441a7957981dbbd180487f446a229404d9c4cc4b680ea63d754cf1d94dfbc"
     },
     {
       "path": "tools/governance/generate-topology.ts",
@@ -341,7 +345,7 @@
     },
     {
       "path": "tools/governance/tests/governance-verifiers.spec.ts",
-      "sha256": "29006f2fe8c0bf70ddc02f46a0902b96400ce0525b09b64697c863829fd9f3a6"
+      "sha256": "eea2772063145b218afcccfaff40e49d104c156bb74d4e234e96134452093fc8"
     },
     {
       "path": "tools/governance/tests/incident-financial-cleanup.spec.ts",
@@ -408,6 +412,10 @@
       "sha256": "0263ca433b3d7403582c74ccbe471d667f56d25302db5e47bebb12a5dd143551"
     },
     {
+      "path": "tools/governance/tests/verify-fcis-paradigm.spec.ts",
+      "sha256": "e080cb4f223dacd735972d2b15e894cb9a83c430da665befa70847de68ce153c"
+    },
+    {
       "path": "tools/governance/tests/verify-financial-integrity.spec.ts",
       "sha256": "b64526c9bf415a85aeae64b2b6d5a8afc6f339951854a25c09ef52b03ef8456b"
     },
@@ -469,7 +477,7 @@
     },
     {
       "path": "tools/governance/verify-architecture.ts",
-      "sha256": "e07ba5bc06da8d9e962d697ddb723e12693913dbfb4743323f5d98752553f824"
+      "sha256": "dffc658750aa0eca66b82f088868261773bd887e98da19901783360c425fa343"
     },
     {
       "path": "tools/governance/verify-boundary-deserialization.ts",
@@ -605,7 +613,7 @@
     },
     {
       "path": "tools/scaffold/scaffold-flow.ts",
-      "sha256": "325984d68a1328e653086bf008afdec73cf7bedb5fa26b039bf2064fb042f876"
+      "sha256": "7e5a297f2ebf23e97886330c9a26d556dd270f52851261e67dfe6219495c0024"
     },
     {
       "path": "tools/scaffold/scaffold-incident.ts",
@@ -664,11 +672,11 @@
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.keyboard.ts",
-          "sha256": "b12eac2e4a970249a032dbc5fc82ae832a0cc9d1efeaae331ad19079573993ce"
+          "sha256": "d05070b34171605d84a686ed335376e1f693ea279600a0fc5993f6318041d579"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.messages.ts",
-          "sha256": "8b2921415dbe06cbb682b113558339e0e6abf0abfae4283f009b148ab2154a35"
+          "sha256": "c00e3ee2d704a83bce41066f680351a7ab6a1b8eaccf074f7b5b5be207318e66"
         },
         {
           "path": "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
@@ -798,11 +806,11 @@
         },
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.keyboard.ts",
-          "sha256": "b46efdb4c559f9125fd304ec48a4eba59481084f4a68e22bebd820a64c8e45ee"
+          "sha256": "feed73efacb706ba0374fde503c1cf3c4f475af07f39a2f07415f9c15bd5d461"
         },
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.messages.ts",
-          "sha256": "b409610ae0e24a2ca4ee4d52798bdbd886def0abef29cc51533ffc2054fc923a"
+          "sha256": "16a327015f1d0a77e434312cd0e3af47d2cf53a1e97c175bcc979e40931c0e8b"
         },
         {
           "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.plugin.ts",
@@ -1725,234 +1733,6 @@
         }
       ]
     },
-    "flow:01.1": {
-      "id": "flow:01.1",
-      "type": "flow",
-      "title": "تدفق البوت: 01.1-worker-registration (01.1)",
-      "directory": "modules/workforce/src/flows/01.1-worker-registration",
-      "lockedAt": "2026-09-24T08:43:19.650Z",
-      "files": [
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
-          "sha256": "665b30bc32a753afdfa9b434bcbc0096a25a53951359016c86c86be6db8c40d7"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.docs.md",
-          "sha256": "75decf126e762e42c1b44b001ac12d89e9adf85412812d1c9a68d174e7051a36"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.handler.ts",
-          "sha256": "6cfada5b513e56767b792e631eee858ce716ddd1325897d71a0a3e167fb311d9"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.keyboard.ts",
-          "sha256": "b12eac2e4a970249a032dbc5fc82ae832a0cc9d1efeaae331ad19079573993ce"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.messages.ts",
-          "sha256": "8b2921415dbe06cbb682b113558339e0e6abf0abfae4283f009b148ab2154a35"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
-          "sha256": "ab52327af7d61a56fcbe409cbbbdf8f6c0def513b3f3c0674e873f7de78e6ec7"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
-          "sha256": "c09d17c43c6378eee82a7c69f9f4dbe96d01d05f5bd85b3ead74e82e04d34863"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.telemetry.ts",
-          "sha256": "7147a7851d288f63743a1c92816c4410d27a4edbf6fd290baf39d15e7437aeda"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.types.ts",
-          "sha256": "7a7704fa34c361549f424471eeff6c1c2a81a96fb79052099527e2f10f5682b2"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.validators.ts",
-          "sha256": "e21a25ee4dd6025e6ec7aa3c26e6924a990508b7d90e5c0653acec7919aad5b7"
-        }
-      ]
-    },
-    "flow:01.2.D": {
-      "id": "flow:01.2.D",
-      "type": "flow",
-      "title": "تدفق البوت: 01.2.D-worker-edit (01.2.D)",
-      "directory": "modules/workforce/src/flows/01.2.D-worker-edit",
-      "lockedAt": "2026-09-24T08:43:26.641Z",
-      "files": [
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.cigarette-handler.ts",
-          "sha256": "a91c459e90a438b322b4c8b2c17381095e179b5c95129de3687323737b9a9907"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.contract.json",
-          "sha256": "12194e5ba29ad22b386f84ee42b23cb9e377d98b1ceaa7373d3fd3c9c316d500"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.docs.md",
-          "sha256": "24671ccb700208824147824bc5c343fa1e356e561067da37877c8e76d1362507"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.draft-store.ts",
-          "sha256": "c528b4b4d760958fdf339c990922cf8cd0fd7a30c805274ff42af302ca84d515"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.entity-pickers.ts",
-          "sha256": "bd93fe6aa997fbf6c3b7b68c6d3ae3740369f218979e2ab3c370ad1fa552118f"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.field-input.ts",
-          "sha256": "ede3b4d6b84f8a2f3d6d5e32ec321931e587f46ffa423a260813328d10748771"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.handler.ts",
-          "sha256": "d7dcb54f820a11e7832ef43131cde754fe715440644e4b7d13e7ad16d8c1c55f"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.keyboard.ts",
-          "sha256": "21d0573877cf61cac82f57e4771ebc89a58555eec38046d2cb560a06a85462d5"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
-          "sha256": "4961cdab94ce686476532860c2185d5ecd26bd1e56cb6dd65df52268b1ded161"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
-          "sha256": "05c03c1afe78e300342df3af2f9e7debd24fb005f39991e0a0d5957521931e9d"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.salary-wizard.ts",
-          "sha256": "25fedbb74ce0e10dc2225ae051564ebe0c7b0230bb5e7182c85cf91f77b41df1"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
-          "sha256": "9a8c83eab77312def93c601a24480c589d2f9eae806fd48b6d00350f94def17b"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.telemetry.ts",
-          "sha256": "73f367e6dc869ec1daff42a27fdf490e85c92d4a04cfbf1b75b22c3b565b5726"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.ticket-handler.ts",
-          "sha256": "c73543fa68e265fa6e5b4c899bd9bd91db9fe623919e2f9e374bc00d7334cbb2"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
-          "sha256": "3077f994c4fdd80ef7f5d1a4bae8bd41f83e343f67883812aa9244341ef2e5ca"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.validators.ts",
-          "sha256": "e91732ce7c74b3d23827546798845fed3092e2472725f53d276a0581f2f3ef69"
-        }
-      ]
-    },
-    "flow:01.4": {
-      "id": "flow:01.4",
-      "type": "flow",
-      "title": "تدفق البوت: 01.4-worker-export (01.4)",
-      "directory": "modules/workforce/src/flows/01.4-worker-export",
-      "lockedAt": "2026-09-24T08:43:30.544Z",
-      "files": [
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.contract.json",
-          "sha256": "ce492cdb27e3161479a53fde55d46acfb9e7f6ace589b1ab20e2173283ed0b9c"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.docs.md",
-          "sha256": "410a071fb97f3f4ae4fa2909ebdd3571cb4de3361cd849659fd306fdf19d36ad"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.handler.ts",
-          "sha256": "643c67a02b8e86dc25dd1c69dfb1a4fbd1ce77951f948f109e19744311dcb9b0"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.keyboard.ts",
-          "sha256": "8ca13443853364f3b4a0fb1545dbeef354c08a7f1a85b941e1987463694674b2"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.messages.ts",
-          "sha256": "2ba8c83fec282361871daececc70143212140c5cc8abceeced89238afc565d0a"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
-          "sha256": "1e7d486511c37c11ea66907b77291812d39a7af5ad7235872a95cb4f989388f7"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.service.ts",
-          "sha256": "49c335580d99ae0eeb94582498fba2411b13c2fadc223645aa667286267632fd"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.telemetry.ts",
-          "sha256": "e19f4b46490c83b2180098a4bff066e179a85abe01267c1636f30b79f7465c39"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.template.ts",
-          "sha256": "33f51f822b254583909961ff4a5456464ab4d0a80d561d28d00260e47cc4c10e"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.types.ts",
-          "sha256": "aed47f3e9ce78a1283841248bdf8768c33928b5c1b1fc9dae047563ef34bffe5"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.4-worker-export/flow.validators.ts",
-          "sha256": "3740c6e783e6db8d7e88b9e66589fa7a2e907f1c8e7bfd1eb693c20b80d15768"
-        }
-      ]
-    },
-    "flow:01.5": {
-      "id": "flow:01.5",
-      "type": "flow",
-      "title": "تدفق البوت: 01.5-worker-directory (01.5)",
-      "directory": "modules/workforce/src/flows/01.5-worker-directory",
-      "lockedAt": "2026-09-24T08:43:33.121Z",
-      "files": [
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.contract.json",
-          "sha256": "32991284c5074f483c819a160bfac4ae8f105262c0b7d59c97247d991ed708bf"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.docs.md",
-          "sha256": "7885fe7e0d446628486e87d0191e9d732889eb010e02ce01b0c5088bd90bf3eb"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.documents-handler.ts",
-          "sha256": "74c350e54051b44d0aeabd2ad72f06a57faee69bdccd7182cf2f54793d159e17"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.handler.ts",
-          "sha256": "686335b2c212328e4e3e790ad71d2931d7f841449ef6e8943953e38adf9c28c6"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.keyboard.ts",
-          "sha256": "be5d04734978804d9c1ed79bb3430fdd58210d36848da8a8cdb69df83c4f5d8e"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.messages.ts",
-          "sha256": "88737fbb12575de63b4d0ef9fdab45eb5b422d93b135fa79e6485231bccd1535"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
-          "sha256": "ccdce7dc18745594032c7023d09f6ed10587e2cc8708dd6aa073362720df0574"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
-          "sha256": "f03fb39c9c666a96b82ea4e068edf22f8a9493a99e1e7f834ab3bb9006cd3a6b"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.telemetry.ts",
-          "sha256": "bfb4cb4069d0bb69c6dadc88ef5bdd887332ccba4a4ae895b608e727530c6518"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.types.ts",
-          "sha256": "0137dee2639ad45cc9e4a487898e2d65232751819ad4efb4a0fb3f58e7b6e03f"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.validators.ts",
-          "sha256": "af9f4d50b164e68343ec19010a4f5f93e4d03181a388d95b1ab8a22cc2e10672"
-        }
-      ]
-    },
     "flow:01.6": {
       "id": "flow:01.6",
       "type": "flow",
@@ -2048,63 +1828,6 @@
         {
           "path": "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.validators.ts",
           "sha256": "42e6ab4a6957586a47d82ea904f7797cad0ade2d7fc8b84d3ac437b8d90e43c0"
-        }
-      ]
-    },
-    "flow:01.9": {
-      "id": "flow:01.9",
-      "type": "flow",
-      "title": "تدفق البوت: 01.9-worker-commitment-index (01.9)",
-      "directory": "modules/workforce/src/flows/01.9-worker-commitment-index",
-      "lockedAt": "2026-09-24T08:43:42.581Z",
-      "files": [
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
-          "sha256": "d1e476cdbf9498f122a5838cbf23c35029b05a6ee88dc21006f501b3d2e41423"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.docs.md",
-          "sha256": "67bfc2fb4b6b939058f2ae160f40ce504ed5f3df6aedced05799ce31614ac070"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.handler.ts",
-          "sha256": "2a41a6da02c72ddc1c69a64baf54ed2539e30bef0e50576be0f418282f6fb66f"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.keyboard.ts",
-          "sha256": "b46efdb4c559f9125fd304ec48a4eba59481084f4a68e22bebd820a64c8e45ee"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.messages.ts",
-          "sha256": "b409610ae0e24a2ca4ee4d52798bdbd886def0abef29cc51533ffc2054fc923a"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.plugin.ts",
-          "sha256": "0fcd815e4a1724eda4580c535fcc1914f995f9952c9b0fe00a22d626726fff61"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts",
-          "sha256": "2c028803096b9f1b5f27aa75dcb7a7bba07f8473cd966c6cebf608482cfe09f5"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.service.ts",
-          "sha256": "726e480c139aa66853c3c4253daa4c3014865b99f9249127651d84c746839ab3"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.telemetry.ts",
-          "sha256": "c28c1304684b8fab815fd654e31c7c4c62cb761e55f3db7b07b55fd978baf507"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.types.ts",
-          "sha256": "d6e8a4e334ebdadd8ee93891b9e78f3621f64e69af14c36b6cd4a631240a7a8c"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.validators.ts",
-          "sha256": "9d587439787ab27193116e2dcfb79d701f7542321249d84f178e9933fe177826"
-        },
-        {
-          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/index.ts",
-          "sha256": "721bca4c59fe4b833a5b318ab30996641d5b146188c76211ddca8f087bb843a2"
         }
       ]
     },
@@ -7266,19 +6989,6 @@
         }
       ]
     },
-    "test:tools/governance/tests/governance-verifiers.spec.ts": {
-      "id": "test:tools/governance/tests/governance-verifiers.spec.ts",
-      "type": "test",
-      "title": "ملف الاختبار المعتمد: tools/governance/tests/governance-verifiers.spec.ts",
-      "directory": "tools/governance/tests/governance-verifiers.spec.ts",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
-      "files": [
-        {
-          "path": "tools/governance/tests/governance-verifiers.spec.ts",
-          "sha256": "29006f2fe8c0bf70ddc02f46a0902b96400ce0525b09b64697c863829fd9f3a6"
-        }
-      ]
-    },
     "test:tools/governance/tests/jev-auditor.spec.ts": {
       "id": "test:tools/governance/tests/jev-auditor.spec.ts",
       "type": "test",
@@ -8199,19 +7909,6 @@
         }
       ]
     },
-    "governance:GEMINI.md": {
-      "id": "governance:GEMINI.md",
-      "type": "infra",
-      "title": "الحوكمة والدستور السيادي: GEMINI.md",
-      "directory": "GEMINI.md",
-      "lockedAt": "2026-09-24T11:00:51.384Z",
-      "files": [
-        {
-          "path": "GEMINI.md",
-          "sha256": "9a0b3500d9ab3fd7d0a5057245bcab9c3eedb6fbdb5b84e0cbc9ae58b7c35b93"
-        }
-      ]
-    },
     "test:tests/air-gapped-development-invariant.spec.ts": {
       "id": "test:tests/air-gapped-development-invariant.spec.ts",
       "type": "test",
@@ -8235,215 +7932,6 @@
         {
           "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
           "sha256": "ccd2cb37cee1cf8a9618fdab667663ed73d18bb570ccd64ece4ad43cac59bdce"
-        }
-      ]
-    },
-    "governance:tools/governance": {
-      "id": "governance:tools/governance",
-      "type": "infra",
-      "title": "الحوكمة والدستور السيادي: tools/governance",
-      "directory": "tools/governance",
-      "lockedAt": "2026-09-24T11:00:40.028Z",
-      "files": [
-        {
-          "path": "tools/governance/agent-dispatcher.ts",
-          "sha256": "f9dc92058b625070c4e308080c5ba9dd5b269b0c52892324b09bcc3d3b5f0875"
-        },
-        {
-          "path": "tools/governance/common.ts",
-          "sha256": "efcacc53724fc53cca7a3f907f01f5b162e7ee5a588853ce9a847c7420f363c9"
-        },
-        {
-          "path": "tools/governance/gap-audit.ps1",
-          "sha256": "b75441a7957981dbbd180487f446a229404d9c4cc4b680ea63d754cf1d94dfbc"
-        },
-        {
-          "path": "tools/governance/generate-topology.ts",
-          "sha256": "e09920b6fff7e5c92b842bda6870fd56b2c5e42d5287183ad18a064691db5dc1"
-        },
-        {
-          "path": "tools/governance/governance-unlock-session.ts",
-          "sha256": "3be632b6476104174a7e498f42a25f7c09ad72b02ed3e4cd2fad1003f01f7749"
-        },
-        {
-          "path": "tools/governance/incident-summary.ts",
-          "sha256": "7b45224acb3a217ae7d304e87f1246a50109140510908ed2aaa5dea6458e2127"
-        },
-        {
-          "path": "tools/governance/jev-auditor.ts",
-          "sha256": "08c7bd0302c93eb163ed8310b8a6a58cc1929cbc0447cdf3cacee426855a669a"
-        },
-        {
-          "path": "tools/governance/pre-commit-test-guard.ts",
-          "sha256": "3a8cc03b1d67988f7136f2964d22210fdb7fa5dab68175e16917bd061527847d"
-        },
-        {
-          "path": "tools/governance/precedent-index.ts",
-          "sha256": "c2af38a8563540355bc97a5a0ce10634431b1c26230c4c8929909c4dc93171dc"
-        },
-        {
-          "path": "tools/governance/rag-engine.ts",
-          "sha256": "b7fe6c2367294846c600d6a95b6f3c1c378a2b5cb27c83bba97da186ce2e7bb6"
-        },
-        {
-          "path": "tools/governance/saleh-audit-suite.ts",
-          "sha256": "29dfb9b5553b2cff5316a84f04d15ef9ff7a0e148d95d475e5950fa74b927e6b"
-        },
-        {
-          "path": "tools/governance/sync-migration-registry.ts",
-          "sha256": "71ec96595aa0f38dc21ccc04b87aff736ddc175cac814054c5ec5e205d2d02f4"
-        },
-        {
-          "path": "tools/governance/test-constitutional-sentinel.ts",
-          "sha256": "b7bd3ec25b6ea60b82b1a3306af5da3d188ceae07a26be6e72aaa97447486cd2"
-        },
-        {
-          "path": "tools/governance/tests/fixtures/test-authenticity-fixtures.ts",
-          "sha256": "46129d13f55366cf0d6dedc837717626d68faf83cf55e226ec6c702558a2aaf4"
-        },
-        {
-          "path": "tools/governance/typesafe-guardrails.ts",
-          "sha256": "be9d4c0882fa043de920e8ebacbcda4988771b7db645712e1d44ae2779acab1d"
-        },
-        {
-          "path": "tools/governance/typesafe/audit-catalog.ts",
-          "sha256": "1e9bbe39366d2c5ead170a138aef7508d775a1c8fb9ceb29e8420d30888938ec"
-        },
-        {
-          "path": "tools/governance/unified-lock-engine.ts",
-          "sha256": "be686705c108b84feccd06285adebd6085ef9652f42015412c70c3cd7f3aff22"
-        },
-        {
-          "path": "tools/governance/unified-unlock-engine.ts",
-          "sha256": "54faab3a775301692dab3a9bed9f2f2c2f9aaed27a3c4e5d4f47620928bfd83c"
-        },
-        {
-          "path": "tools/governance/unlock-challenge-engine.ts",
-          "sha256": "2523f96640d1ad717385a86227c03553183d0e7b0178f7c03379215881cafddf"
-        },
-        {
-          "path": "tools/governance/verify-ai-compliance.ts",
-          "sha256": "fa27a5b1e9c6e985ecfeb067463ee6f9204729a9dd3a40a79e9667693d43fc13"
-        },
-        {
-          "path": "tools/governance/verify-architecture.ts",
-          "sha256": "e07ba5bc06da8d9e962d697ddb723e12693913dbfb4743323f5d98752553f824"
-        },
-        {
-          "path": "tools/governance/verify-boundary-deserialization.ts",
-          "sha256": "cd7278dc91ef37e68da6fe988a293dbd2bd2ddf3b1d637c4b168e6aa3c3b9889"
-        },
-        {
-          "path": "tools/governance/verify-code-security.ts",
-          "sha256": "49f6cae4838e948441aca31aa70ffa530a9fc811bea6896f2380a59475f99f1c"
-        },
-        {
-          "path": "tools/governance/verify-core-immutability.ts",
-          "sha256": "75ac4fa5b73df5d8f5eb9cb771b0e12d9e994fb4608d50270602610edcfd297e"
-        },
-        {
-          "path": "tools/governance/verify-dashboard-auth-contract.ts",
-          "sha256": "62affbd1f111f01ee6fedcdb04a0eea4803ff56dcf3185d3f47c82f2066027f6"
-        },
-        {
-          "path": "tools/governance/verify-docs-audit.ts",
-          "sha256": "89e79e05070a33f783d5892ce49071694722393aa78f800e21029cfe327bb177"
-        },
-        {
-          "path": "tools/governance/verify-docs-parity.ts",
-          "sha256": "dc5879b8733f25e033b1c2aac5eb476264015eb7753b5c622cbf30daec8708e7"
-        },
-        {
-          "path": "tools/governance/verify-field-masking.ts",
-          "sha256": "f77b9d6a515bae22a87a5775d390685087ef05e020adc315d847036c2bf183d4"
-        },
-        {
-          "path": "tools/governance/verify-financial-integrity.ts",
-          "sha256": "350b40fc7ded1a5bcefba655d816b5273629a4016bc32787d09274a6a1006af9"
-        },
-        {
-          "path": "tools/governance/verify-flow-contracts.ts",
-          "sha256": "0c0ee1d30dd2ed4e20c190087015a6928437fdd419b0486dd1ed16b04f2c29a1"
-        },
-        {
-          "path": "tools/governance/verify-flow-fast.ts",
-          "sha256": "fbfa006d7112528baefd2cbee0626d953b8eb2530cc2e1703f742316365cfe6b"
-        },
-        {
-          "path": "tools/governance/verify-git-hygiene.ts",
-          "sha256": "d9204b6dac354bc1ba892d340bb80c2aea91f974b70cde352369e30b289207cb"
-        },
-        {
-          "path": "tools/governance/verify-governance-lock.ts",
-          "sha256": "be411b5cd214f3881289428c4e98a3957f427e26bb68a9863586e4ac960084c7"
-        },
-        {
-          "path": "tools/governance/verify-governance-tamper.ts",
-          "sha256": "21d13ab2489d19fed185de85aa9b2f62804e899d13962f4a1693f725b8a8343f"
-        },
-        {
-          "path": "tools/governance/verify-incidents.ts",
-          "sha256": "15ba35c45e64c828e06b35e2150d62e716701b8c866779675fb13e2034943da5"
-        },
-        {
-          "path": "tools/governance/verify-latency-anti-patterns.ts",
-          "sha256": "6a995ade43beda40bdb9f8d3ebaff995e0c563a44a52ae1d9b32674cd9758fcf"
-        },
-        {
-          "path": "tools/governance/verify-legacy-parity.ts",
-          "sha256": "56319f50cf538d27463088749881fc006bdd5f914b8b0444284f00a175d4895d"
-        },
-        {
-          "path": "tools/governance/verify-migration-registry.ts",
-          "sha256": "97e59e9e224181936da6bc82b07885c563877d02302d39786e51488a8abfd21c"
-        },
-        {
-          "path": "tools/governance/verify-module-boundaries.ts",
-          "sha256": "66fca077ebee86df0fb791dbc7b2630aa7c02db7a4a9c97c20e3c29989e7f53b"
-        },
-        {
-          "path": "tools/governance/verify-observability-contract.ts",
-          "sha256": "f2ac33dd2758c8c700265682485445736965fafab8f0811e174c6dcad2c12d2a"
-        },
-        {
-          "path": "tools/governance/verify-performance-budget.ts",
-          "sha256": "97ac7b244666f9d4d57cea07e18ced4ebea37242251e60c302a220070b28c23a"
-        },
-        {
-          "path": "tools/governance/verify-rbac-invariants.ts",
-          "sha256": "8a8bee3045992da87cbfec0e4d96c10bde2e209ca6ff6883efaadb70ebbb0c1f"
-        },
-        {
-          "path": "tools/governance/verify-rbac-matrix.ts",
-          "sha256": "2ad7ecfa43c2bca64b0482e52ad2cb5cd161d1deab07d097e61fd187630e85cd"
-        },
-        {
-          "path": "tools/governance/verify-release-sync.ts",
-          "sha256": "32a0d165e9dfa2a0cf9c8e3c4afd55fac1a5730abf0d4a561777eab19efc99fb"
-        },
-        {
-          "path": "tools/governance/verify-secret-leakage.ts",
-          "sha256": "6aec42af1dc7ba2aebfb29a35b5767f8693a51a7de85f041947c749868bfc97e"
-        },
-        {
-          "path": "tools/governance/verify-shared-helpers.ts",
-          "sha256": "57845d0612b45c2b2874333aed26b5c821d285fe1df9cad89467068baa638ab8"
-        },
-        {
-          "path": "tools/governance/verify-skill-graph.ts",
-          "sha256": "704afa5116049f7f16ecf58a2681e9c4e7cf055e96aca641a68af66fb71dea93"
-        },
-        {
-          "path": "tools/governance/verify-telegram-contracts.ts",
-          "sha256": "f5fb4f7f133653fbdd1ccb7222095f7b8348c8c0ba5ad49b5975ea847ea4cb16"
-        },
-        {
-          "path": "tools/governance/verify-test-authenticity.ts",
-          "sha256": "2b89456e01cdf48b01ef2d9850b3619bcfbc5d292199f4e78df7f17fe37b017a"
-        },
-        {
-          "path": "tools/governance/verify-transcript-provenance.ts",
-          "sha256": "d6d310237815d9ac5db1124bbe7ccfd884c2eb1ededc18ec0ba325e602db5222"
         }
       ]
     },
@@ -8614,6 +8102,592 @@
         {
           "path": ".agents/rules/12-creation-lifecycle-standard.md",
           "sha256": "daeef2c89dabca01440625f5e49e033b79c3555672ccf822cfb098159076dda8"
+        }
+      ]
+    },
+    "governance:GEMINI.md": {
+      "id": "governance:GEMINI.md",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: GEMINI.md",
+      "directory": "GEMINI.md",
+      "lockedAt": "2026-09-24T11:51:28.075Z",
+      "files": [
+        {
+          "path": "GEMINI.md",
+          "sha256": "3fca581d10792a014dc3bbb5d7d926753d588cadc21447d9a67a42b43dae270d"
+        }
+      ]
+    },
+    "test:tools/governance/tests/verify-fcis-paradigm.spec.ts": {
+      "id": "test:tools/governance/tests/verify-fcis-paradigm.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/verify-fcis-paradigm.spec.ts",
+      "directory": "tools/governance/tests/verify-fcis-paradigm.spec.ts",
+      "lockedAt": "2026-09-24T12:00:34.036Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/verify-fcis-paradigm.spec.ts",
+          "sha256": "e080cb4f223dacd735972d2b15e894cb9a83c430da665befa70847de68ce153c"
+        }
+      ]
+    },
+    "flow:01.1": {
+      "id": "flow:01.1",
+      "type": "flow",
+      "title": "تدفق البوت: 01.1-worker-registration (01.1)",
+      "directory": "modules/workforce/src/flows/01.1-worker-registration",
+      "lockedAt": "2026-09-24T12:03:54.413Z",
+      "files": [
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
+          "sha256": "665b30bc32a753afdfa9b434bcbc0096a25a53951359016c86c86be6db8c40d7"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.docs.md",
+          "sha256": "75decf126e762e42c1b44b001ac12d89e9adf85412812d1c9a68d174e7051a36"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.handler.ts",
+          "sha256": "6cfada5b513e56767b792e631eee858ce716ddd1325897d71a0a3e167fb311d9"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.keyboard.ts",
+          "sha256": "d05070b34171605d84a686ed335376e1f693ea279600a0fc5993f6318041d579"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.messages.ts",
+          "sha256": "c00e3ee2d704a83bce41066f680351a7ab6a1b8eaccf074f7b5b5be207318e66"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "sha256": "ab52327af7d61a56fcbe409cbbbdf8f6c0def513b3f3c0674e873f7de78e6ec7"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
+          "sha256": "c09d17c43c6378eee82a7c69f9f4dbe96d01d05f5bd85b3ead74e82e04d34863"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.telemetry.ts",
+          "sha256": "7147a7851d288f63743a1c92816c4410d27a4edbf6fd290baf39d15e7437aeda"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.types.ts",
+          "sha256": "7a7704fa34c361549f424471eeff6c1c2a81a96fb79052099527e2f10f5682b2"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.1-worker-registration/flow.validators.ts",
+          "sha256": "e21a25ee4dd6025e6ec7aa3c26e6924a990508b7d90e5c0653acec7919aad5b7"
+        }
+      ]
+    },
+    "flow:01.2.D": {
+      "id": "flow:01.2.D",
+      "type": "flow",
+      "title": "تدفق البوت: 01.2.D-worker-edit (01.2.D)",
+      "directory": "modules/workforce/src/flows/01.2.D-worker-edit",
+      "lockedAt": "2026-09-24T12:08:18.964Z",
+      "files": [
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.cigarette-handler.ts",
+          "sha256": "a91c459e90a438b322b4c8b2c17381095e179b5c95129de3687323737b9a9907"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.contract.json",
+          "sha256": "12194e5ba29ad22b386f84ee42b23cb9e377d98b1ceaa7373d3fd3c9c316d500"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.docs.md",
+          "sha256": "24671ccb700208824147824bc5c343fa1e356e561067da37877c8e76d1362507"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.draft-store.ts",
+          "sha256": "c528b4b4d760958fdf339c990922cf8cd0fd7a30c805274ff42af302ca84d515"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.entity-pickers.ts",
+          "sha256": "bd93fe6aa997fbf6c3b7b68c6d3ae3740369f218979e2ab3c370ad1fa552118f"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.field-input.ts",
+          "sha256": "ede3b4d6b84f8a2f3d6d5e32ec321931e587f46ffa423a260813328d10748771"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.handler.ts",
+          "sha256": "d7dcb54f820a11e7832ef43131cde754fe715440644e4b7d13e7ad16d8c1c55f"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.keyboard.ts",
+          "sha256": "cf23b46658ee852c5ef688ac7b73e3de0d7b532c159265f25768c141e53c4fbb"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
+          "sha256": "3d0461dcbd04339e2ea1a36cc0837b5baa445fa8c219dd3dc234d78d849f24e1"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "sha256": "05c03c1afe78e300342df3af2f9e7debd24fb005f39991e0a0d5957521931e9d"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.salary-wizard.ts",
+          "sha256": "25fedbb74ce0e10dc2225ae051564ebe0c7b0230bb5e7182c85cf91f77b41df1"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
+          "sha256": "9a8c83eab77312def93c601a24480c589d2f9eae806fd48b6d00350f94def17b"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.telemetry.ts",
+          "sha256": "73f367e6dc869ec1daff42a27fdf490e85c92d4a04cfbf1b75b22c3b565b5726"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.ticket-handler.ts",
+          "sha256": "c73543fa68e265fa6e5b4c899bd9bd91db9fe623919e2f9e374bc00d7334cbb2"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
+          "sha256": "3077f994c4fdd80ef7f5d1a4bae8bd41f83e343f67883812aa9244341ef2e5ca"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.2.D-worker-edit/flow.validators.ts",
+          "sha256": "e91732ce7c74b3d23827546798845fed3092e2472725f53d276a0581f2f3ef69"
+        }
+      ]
+    },
+    "flow:01.4": {
+      "id": "flow:01.4",
+      "type": "flow",
+      "title": "تدفق البوت: 01.4-worker-export (01.4)",
+      "directory": "modules/workforce/src/flows/01.4-worker-export",
+      "lockedAt": "2026-09-24T12:11:07.197Z",
+      "files": [
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.contract.json",
+          "sha256": "ce492cdb27e3161479a53fde55d46acfb9e7f6ace589b1ab20e2173283ed0b9c"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.docs.md",
+          "sha256": "410a071fb97f3f4ae4fa2909ebdd3571cb4de3361cd849659fd306fdf19d36ad"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.handler.ts",
+          "sha256": "643c67a02b8e86dc25dd1c69dfb1a4fbd1ce77951f948f109e19744311dcb9b0"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.keyboard.ts",
+          "sha256": "9aae25b21b79be1935052423713871ff089abb1278dff89b3f2920d5b89685d2"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.messages.ts",
+          "sha256": "31313645e9554c4f601dc999eab764866c3a3c77ebae2288908d088e43d490ed"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+          "sha256": "1e7d486511c37c11ea66907b77291812d39a7af5ad7235872a95cb4f989388f7"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.service.ts",
+          "sha256": "49c335580d99ae0eeb94582498fba2411b13c2fadc223645aa667286267632fd"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.telemetry.ts",
+          "sha256": "e19f4b46490c83b2180098a4bff066e179a85abe01267c1636f30b79f7465c39"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.template.ts",
+          "sha256": "33f51f822b254583909961ff4a5456464ab4d0a80d561d28d00260e47cc4c10e"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.types.ts",
+          "sha256": "aed47f3e9ce78a1283841248bdf8768c33928b5c1b1fc9dae047563ef34bffe5"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.4-worker-export/flow.validators.ts",
+          "sha256": "f0a55ce612eb11ada377f0e953343c2ce3dbf1f23dc1dc5be66dd87761cc5961"
+        }
+      ]
+    },
+    "flow:01.5": {
+      "id": "flow:01.5",
+      "type": "flow",
+      "title": "تدفق البوت: 01.5-worker-directory (01.5)",
+      "directory": "modules/workforce/src/flows/01.5-worker-directory",
+      "lockedAt": "2026-09-24T12:13:18.088Z",
+      "files": [
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.contract.json",
+          "sha256": "32991284c5074f483c819a160bfac4ae8f105262c0b7d59c97247d991ed708bf"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.docs.md",
+          "sha256": "7885fe7e0d446628486e87d0191e9d732889eb010e02ce01b0c5088bd90bf3eb"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.documents-handler.ts",
+          "sha256": "74c350e54051b44d0aeabd2ad72f06a57faee69bdccd7182cf2f54793d159e17"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.handler.ts",
+          "sha256": "686335b2c212328e4e3e790ad71d2931d7f841449ef6e8943953e38adf9c28c6"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.keyboard.ts",
+          "sha256": "de78717b29ec84682f0e9922d87618c4682c773dbcca9253093d62afd30885e3"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.messages.ts",
+          "sha256": "fde6417f9979af8beaac1cdd3d4c480d14912176b2c438086fd67bcf3504a785"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+          "sha256": "ccdce7dc18745594032c7023d09f6ed10587e2cc8708dd6aa073362720df0574"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
+          "sha256": "f03fb39c9c666a96b82ea4e068edf22f8a9493a99e1e7f834ab3bb9006cd3a6b"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.telemetry.ts",
+          "sha256": "bfb4cb4069d0bb69c6dadc88ef5bdd887332ccba4a4ae895b608e727530c6518"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.types.ts",
+          "sha256": "0137dee2639ad45cc9e4a487898e2d65232751819ad4efb4a0fb3f58e7b6e03f"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.5-worker-directory/flow.validators.ts",
+          "sha256": "af9f4d50b164e68343ec19010a4f5f93e4d03181a388d95b1ab8a22cc2e10672"
+        }
+      ]
+    },
+    "flow:01.9": {
+      "id": "flow:01.9",
+      "type": "flow",
+      "title": "تدفق البوت: 01.9-worker-commitment-index (01.9)",
+      "directory": "modules/workforce/src/flows/01.9-worker-commitment-index",
+      "lockedAt": "2026-09-24T12:15:24.773Z",
+      "files": [
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
+          "sha256": "d1e476cdbf9498f122a5838cbf23c35029b05a6ee88dc21006f501b3d2e41423"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.docs.md",
+          "sha256": "67bfc2fb4b6b939058f2ae160f40ce504ed5f3df6aedced05799ce31614ac070"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.handler.ts",
+          "sha256": "2a41a6da02c72ddc1c69a64baf54ed2539e30bef0e50576be0f418282f6fb66f"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.keyboard.ts",
+          "sha256": "feed73efacb706ba0374fde503c1cf3c4f475af07f39a2f07415f9c15bd5d461"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.messages.ts",
+          "sha256": "16a327015f1d0a77e434312cd0e3af47d2cf53a1e97c175bcc979e40931c0e8b"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.plugin.ts",
+          "sha256": "0fcd815e4a1724eda4580c535fcc1914f995f9952c9b0fe00a22d626726fff61"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts",
+          "sha256": "2c028803096b9f1b5f27aa75dcb7a7bba07f8473cd966c6cebf608482cfe09f5"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.service.ts",
+          "sha256": "726e480c139aa66853c3c4253daa4c3014865b99f9249127651d84c746839ab3"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.telemetry.ts",
+          "sha256": "c28c1304684b8fab815fd654e31c7c4c62cb761e55f3db7b07b55fd978baf507"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.types.ts",
+          "sha256": "d6e8a4e334ebdadd8ee93891b9e78f3621f64e69af14c36b6cd4a631240a7a8c"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/flow.validators.ts",
+          "sha256": "9d587439787ab27193116e2dcfb79d701f7542321249d84f178e9933fe177826"
+        },
+        {
+          "path": "modules/workforce/src/flows/01.9-worker-commitment-index/index.ts",
+          "sha256": "721bca4c59fe4b833a5b318ab30996641d5b146188c76211ddca8f087bb843a2"
+        }
+      ]
+    },
+    "governance:tools/scaffold": {
+      "id": "governance:tools/scaffold",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: tools/scaffold",
+      "directory": "tools/scaffold",
+      "lockedAt": "2026-09-24T12:29:34.045Z",
+      "files": [
+        {
+          "path": "tools/scaffold/lock.ts",
+          "sha256": "2d3c8fde404071dab4ab1fb2452f8e75738d3bf76b3e3f4ab58aa39a59ef60c4"
+        },
+        {
+          "path": "tools/scaffold/scaffold-branch.ts",
+          "sha256": "4868ec081b1a9658d35148d3e43c73df7bf5279b66ca7839f92a83b485b86535"
+        },
+        {
+          "path": "tools/scaffold/scaffold-dashboard.ts",
+          "sha256": "1602a9db5d4f91ffec0b4ccc89a11fd5f0b81d6811a828df6b5b083f070314c0"
+        },
+        {
+          "path": "tools/scaffold/scaffold-flow-v2.ts",
+          "sha256": "f68fc502f5e312e232787fd916a8e0968cd738194b6cc656049a106c38aecc14"
+        },
+        {
+          "path": "tools/scaffold/scaffold-flow.ts",
+          "sha256": "7e5a297f2ebf23e97886330c9a26d556dd270f52851261e67dfe6219495c0024"
+        },
+        {
+          "path": "tools/scaffold/scaffold-incident.ts",
+          "sha256": "aaa8c2cb04e25c3c1185a865425a62624621c9be2635c51356b1c272227015d3"
+        },
+        {
+          "path": "tools/scaffold/scaffold-module-migration.ts",
+          "sha256": "0d5cbc6b4af28435536fc2a210ef1ec4756b9835b1d4f6d1b412570fc8b3c98e"
+        },
+        {
+          "path": "tools/scaffold/scaffold-module-v2.ts",
+          "sha256": "291de69e4375979f1873207bdaf6e72c7e18a48c430ae3275dd9ec6b0a57f832"
+        },
+        {
+          "path": "tools/scaffold/scaffold-module.ts",
+          "sha256": "22e14b20c8c459aa410ca4fb8b8494db3c76a6a0b06269f6fb4c21ef166e3579"
+        },
+        {
+          "path": "tools/scaffold/scaffold-test.ts",
+          "sha256": "647168a9f3f57d9cfbed6d1749aa9948f4e22c93c4639d101c073559d0581c68"
+        },
+        {
+          "path": "tools/scaffold/unlock.ts",
+          "sha256": "90455993b67df28b63bee27bc1aaede8375c22f91b8fb78ca64ebeea2c143d8e"
+        }
+      ]
+    },
+    "governance:tools/governance": {
+      "id": "governance:tools/governance",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: tools/governance",
+      "directory": "tools/governance",
+      "lockedAt": "2026-09-24T12:31:26.887Z",
+      "files": [
+        {
+          "path": "tools/governance/agent-dispatcher.ts",
+          "sha256": "f9dc92058b625070c4e308080c5ba9dd5b269b0c52892324b09bcc3d3b5f0875"
+        },
+        {
+          "path": "tools/governance/common.ts",
+          "sha256": "efcacc53724fc53cca7a3f907f01f5b162e7ee5a588853ce9a847c7420f363c9"
+        },
+        {
+          "path": "tools/governance/gap-audit.ps1",
+          "sha256": "b75441a7957981dbbd180487f446a229404d9c4cc4b680ea63d754cf1d94dfbc"
+        },
+        {
+          "path": "tools/governance/generate-topology.ts",
+          "sha256": "e09920b6fff7e5c92b842bda6870fd56b2c5e42d5287183ad18a064691db5dc1"
+        },
+        {
+          "path": "tools/governance/governance-unlock-session.ts",
+          "sha256": "3be632b6476104174a7e498f42a25f7c09ad72b02ed3e4cd2fad1003f01f7749"
+        },
+        {
+          "path": "tools/governance/incident-summary.ts",
+          "sha256": "7b45224acb3a217ae7d304e87f1246a50109140510908ed2aaa5dea6458e2127"
+        },
+        {
+          "path": "tools/governance/jev-auditor.ts",
+          "sha256": "08c7bd0302c93eb163ed8310b8a6a58cc1929cbc0447cdf3cacee426855a669a"
+        },
+        {
+          "path": "tools/governance/pre-commit-test-guard.ts",
+          "sha256": "3a8cc03b1d67988f7136f2964d22210fdb7fa5dab68175e16917bd061527847d"
+        },
+        {
+          "path": "tools/governance/precedent-index.ts",
+          "sha256": "c2af38a8563540355bc97a5a0ce10634431b1c26230c4c8929909c4dc93171dc"
+        },
+        {
+          "path": "tools/governance/rag-engine.ts",
+          "sha256": "b7fe6c2367294846c600d6a95b6f3c1c378a2b5cb27c83bba97da186ce2e7bb6"
+        },
+        {
+          "path": "tools/governance/saleh-audit-suite.ts",
+          "sha256": "29dfb9b5553b2cff5316a84f04d15ef9ff7a0e148d95d475e5950fa74b927e6b"
+        },
+        {
+          "path": "tools/governance/sync-migration-registry.ts",
+          "sha256": "71ec96595aa0f38dc21ccc04b87aff736ddc175cac814054c5ec5e205d2d02f4"
+        },
+        {
+          "path": "tools/governance/test-constitutional-sentinel.ts",
+          "sha256": "b7bd3ec25b6ea60b82b1a3306af5da3d188ceae07a26be6e72aaa97447486cd2"
+        },
+        {
+          "path": "tools/governance/tests/fixtures/test-authenticity-fixtures.ts",
+          "sha256": "46129d13f55366cf0d6dedc837717626d68faf83cf55e226ec6c702558a2aaf4"
+        },
+        {
+          "path": "tools/governance/typesafe-guardrails.ts",
+          "sha256": "be9d4c0882fa043de920e8ebacbcda4988771b7db645712e1d44ae2779acab1d"
+        },
+        {
+          "path": "tools/governance/typesafe/audit-catalog.ts",
+          "sha256": "1e9bbe39366d2c5ead170a138aef7508d775a1c8fb9ceb29e8420d30888938ec"
+        },
+        {
+          "path": "tools/governance/unified-lock-engine.ts",
+          "sha256": "be686705c108b84feccd06285adebd6085ef9652f42015412c70c3cd7f3aff22"
+        },
+        {
+          "path": "tools/governance/unified-unlock-engine.ts",
+          "sha256": "54faab3a775301692dab3a9bed9f2f2c2f9aaed27a3c4e5d4f47620928bfd83c"
+        },
+        {
+          "path": "tools/governance/unlock-challenge-engine.ts",
+          "sha256": "2523f96640d1ad717385a86227c03553183d0e7b0178f7c03379215881cafddf"
+        },
+        {
+          "path": "tools/governance/verify-ai-compliance.ts",
+          "sha256": "fa27a5b1e9c6e985ecfeb067463ee6f9204729a9dd3a40a79e9667693d43fc13"
+        },
+        {
+          "path": "tools/governance/verify-architecture.ts",
+          "sha256": "dffc658750aa0eca66b82f088868261773bd887e98da19901783360c425fa343"
+        },
+        {
+          "path": "tools/governance/verify-boundary-deserialization.ts",
+          "sha256": "cd7278dc91ef37e68da6fe988a293dbd2bd2ddf3b1d637c4b168e6aa3c3b9889"
+        },
+        {
+          "path": "tools/governance/verify-code-security.ts",
+          "sha256": "49f6cae4838e948441aca31aa70ffa530a9fc811bea6896f2380a59475f99f1c"
+        },
+        {
+          "path": "tools/governance/verify-core-immutability.ts",
+          "sha256": "75ac4fa5b73df5d8f5eb9cb771b0e12d9e994fb4608d50270602610edcfd297e"
+        },
+        {
+          "path": "tools/governance/verify-dashboard-auth-contract.ts",
+          "sha256": "62affbd1f111f01ee6fedcdb04a0eea4803ff56dcf3185d3f47c82f2066027f6"
+        },
+        {
+          "path": "tools/governance/verify-docs-audit.ts",
+          "sha256": "89e79e05070a33f783d5892ce49071694722393aa78f800e21029cfe327bb177"
+        },
+        {
+          "path": "tools/governance/verify-docs-parity.ts",
+          "sha256": "dc5879b8733f25e033b1c2aac5eb476264015eb7753b5c622cbf30daec8708e7"
+        },
+        {
+          "path": "tools/governance/verify-field-masking.ts",
+          "sha256": "f77b9d6a515bae22a87a5775d390685087ef05e020adc315d847036c2bf183d4"
+        },
+        {
+          "path": "tools/governance/verify-financial-integrity.ts",
+          "sha256": "350b40fc7ded1a5bcefba655d816b5273629a4016bc32787d09274a6a1006af9"
+        },
+        {
+          "path": "tools/governance/verify-flow-contracts.ts",
+          "sha256": "0c0ee1d30dd2ed4e20c190087015a6928437fdd419b0486dd1ed16b04f2c29a1"
+        },
+        {
+          "path": "tools/governance/verify-flow-fast.ts",
+          "sha256": "fbfa006d7112528baefd2cbee0626d953b8eb2530cc2e1703f742316365cfe6b"
+        },
+        {
+          "path": "tools/governance/verify-git-hygiene.ts",
+          "sha256": "d9204b6dac354bc1ba892d340bb80c2aea91f974b70cde352369e30b289207cb"
+        },
+        {
+          "path": "tools/governance/verify-governance-lock.ts",
+          "sha256": "be411b5cd214f3881289428c4e98a3957f427e26bb68a9863586e4ac960084c7"
+        },
+        {
+          "path": "tools/governance/verify-governance-tamper.ts",
+          "sha256": "21d13ab2489d19fed185de85aa9b2f62804e899d13962f4a1693f725b8a8343f"
+        },
+        {
+          "path": "tools/governance/verify-incidents.ts",
+          "sha256": "15ba35c45e64c828e06b35e2150d62e716701b8c866779675fb13e2034943da5"
+        },
+        {
+          "path": "tools/governance/verify-latency-anti-patterns.ts",
+          "sha256": "6a995ade43beda40bdb9f8d3ebaff995e0c563a44a52ae1d9b32674cd9758fcf"
+        },
+        {
+          "path": "tools/governance/verify-legacy-parity.ts",
+          "sha256": "56319f50cf538d27463088749881fc006bdd5f914b8b0444284f00a175d4895d"
+        },
+        {
+          "path": "tools/governance/verify-migration-registry.ts",
+          "sha256": "97e59e9e224181936da6bc82b07885c563877d02302d39786e51488a8abfd21c"
+        },
+        {
+          "path": "tools/governance/verify-module-boundaries.ts",
+          "sha256": "66fca077ebee86df0fb791dbc7b2630aa7c02db7a4a9c97c20e3c29989e7f53b"
+        },
+        {
+          "path": "tools/governance/verify-observability-contract.ts",
+          "sha256": "f2ac33dd2758c8c700265682485445736965fafab8f0811e174c6dcad2c12d2a"
+        },
+        {
+          "path": "tools/governance/verify-performance-budget.ts",
+          "sha256": "97ac7b244666f9d4d57cea07e18ced4ebea37242251e60c302a220070b28c23a"
+        },
+        {
+          "path": "tools/governance/verify-rbac-invariants.ts",
+          "sha256": "8a8bee3045992da87cbfec0e4d96c10bde2e209ca6ff6883efaadb70ebbb0c1f"
+        },
+        {
+          "path": "tools/governance/verify-rbac-matrix.ts",
+          "sha256": "2ad7ecfa43c2bca64b0482e52ad2cb5cd161d1deab07d097e61fd187630e85cd"
+        },
+        {
+          "path": "tools/governance/verify-release-sync.ts",
+          "sha256": "32a0d165e9dfa2a0cf9c8e3c4afd55fac1a5730abf0d4a561777eab19efc99fb"
+        },
+        {
+          "path": "tools/governance/verify-secret-leakage.ts",
+          "sha256": "6aec42af1dc7ba2aebfb29a35b5767f8693a51a7de85f041947c749868bfc97e"
+        },
+        {
+          "path": "tools/governance/verify-shared-helpers.ts",
+          "sha256": "57845d0612b45c2b2874333aed26b5c821d285fe1df9cad89467068baa638ab8"
+        },
+        {
+          "path": "tools/governance/verify-skill-graph.ts",
+          "sha256": "704afa5116049f7f16ecf58a2681e9c4e7cf055e96aca641a68af66fb71dea93"
+        },
+        {
+          "path": "tools/governance/verify-telegram-contracts.ts",
+          "sha256": "f5fb4f7f133653fbdd1ccb7222095f7b8348c8c0ba5ad49b5975ea847ea4cb16"
+        },
+        {
+          "path": "tools/governance/verify-test-authenticity.ts",
+          "sha256": "2b89456e01cdf48b01ef2d9850b3619bcfbc5d292199f4e78df7f17fe37b017a"
+        },
+        {
+          "path": "tools/governance/verify-transcript-provenance.ts",
+          "sha256": "d6d310237815d9ac5db1124bbe7ccfd884c2eb1ededc18ec0ba325e602db5222"
+        }
+      ]
+    },
+    "test:tools/governance/tests/governance-verifiers.spec.ts": {
+      "id": "test:tools/governance/tests/governance-verifiers.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/governance-verifiers.spec.ts",
+      "directory": "tools/governance/tests/governance-verifiers.spec.ts",
+      "lockedAt": "2026-09-24T12:35:10.264Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/governance-verifiers.spec.ts",
+          "sha256": "eea2772063145b218afcccfaff40e49d104c156bb74d4e234e96134452093fc8"
         }
       ]
     }

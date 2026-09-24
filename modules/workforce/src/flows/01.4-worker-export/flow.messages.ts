@@ -66,3 +66,12 @@ export const FLOW_MESSAGES = {
     `تم استخراج الكشف بتنسيق RTL احترافي وجاهز للطباعة والتدقيق.`,
   EXPORT_ERROR: '❌ تعذر استخراج كشف العاملين حالياً. يرجى المحاولة لاحقاً.',
 } as const;
+
+export function formatWorkerExportSuccessCaption(label: string, count: number, isSuperAdmin: boolean): string {
+  return FLOW_MESSAGES.EXPORT_SUCCESS_CAPTION(label, count, isSuperAdmin);
+}
+
+export function formatWorkerImportSuccessMessage(totalRows: number, workersCreated: number): string {
+  return FLOW_MESSAGES.IMPORT_SUCCESS(totalRows, workersCreated);
+}
+

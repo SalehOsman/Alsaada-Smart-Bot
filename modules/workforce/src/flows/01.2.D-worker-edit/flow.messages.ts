@@ -424,3 +424,12 @@ export const WorkerEditMessages = {
     return body;
   },
 };
+
+export function formatWorkerEditPersonalTabCard(worker: WorkerCardView, isSuperAdmin: boolean): string {
+  return WorkerEditMessages.tab1PersonalCard(worker, isSuperAdmin);
+}
+
+export function formatWorkerEditJobTabCard(worker: WorkerCardView, isSuperAdmin: boolean): string {
+  return WorkerEditMessages.tab2JobCard(worker, isSuperAdmin);
+}
+

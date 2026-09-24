@@ -136,6 +136,21 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 6. **الإلزام الصارم ببيان عداد طلبات النموذج السحابي (Mandatory Cloud Model Request Telemetry Invariant):**
    - يُلزم الوكيلان `/jev` و `/saleh` إلزاماً قطعياً وصارماً في **كل جولة عمل وكل تقرير نهائي** بإدراج جدول **«📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)»** موضحاً بدقة: عدد الطلبات الفعلية المرسلة للنموذج السحابي (`cloudRequestsSent`)، وإجمالي محاولات الاتصال بالشبكة (`httpAttemptsTotal`)، والاستجابات المسترجعة من الكاش التشفيري (`cloudCacheHits`)، وفهرس السوابق (`precedentHits`)، وإجمالي المعايير المقيمة (`questionsDispatchedToCloud`)؛ ويُعد غياب هذا البيان مخالفة تستوجب `[REJECT]` فوري.
 
+### 8.5 الإلزام الدستوري القطعي بمنهجية FCIS البرمجية وعزل الشرائح وحارس شجرة الكود الشامل (Work Plan 101)
+بموجب ميثاق خطة العمل السيادية رقم 101 (`docs/work-plans/101-plan-sovereign-fcis-coding-paradigm-and-ast-enforcement.md`)، يخضع كل وكيل ذكاء اصطناعي أو أداة برمجية في كافة مناطق المستودع الخمس (`packages/*`, `modules/*`, `apps/bot-server`, `apps/admin-dashboard`, `tools/*`) لمنهجية **«FCIS: Functional Core, Injectable Service Shell»** بلا أي استثناء:
+1. **النواة الوظيفية النقية (Pure Functional Core — 80%):**
+   - تُكتب كافة ملفات (`validator.ts` / `flow.validators.ts`, `menu.builder.ts` / `flow.keyboard.ts`, `flow.messages.ts`, `controller.ts` / `flow.handler.ts`, `action.handler.ts`, `error.handler.ts`, `flow.telemetry.ts`) وكافة مكونات React والـ Hooks (`*.tsx`, `use*.ts`) ومسارات الـ API (`route.ts`) وأدوات الحوكمة (`tools/*`) والدوال المشتركة في `packages/*` **حصراً كدوال نقية مصدرة مباشرة (`export function` / `export async function`)** ومخططات `Zod`.
+   - **حظر الكلاسات الاستاتيكية الصورية:** يُحظر قطعياً تعريف `class` يحتوي على دوال `static` (مثل `class XKeyboards { static ... }`) أو الاكتفاء بكائن تجميع بدون تصدير الدوال النقية مباشرة.
+2. **غلاف حقن الاعتماديات (Injectable OOP Shell Only — 20%):**
+   - يُحصر تعريف `export class` في ملفات الخدمات والمستودعات والمحركات فقط (`*.service.ts` / `service.ts`, `*.repository.ts` / `repository.ts`, `*.store.ts`, `*.engine.ts`, `*.client.ts`, `*.manager.ts`) أو أخطاء النظام (`extends Error`).
+   - يجب أن تكون جميع خصائص الكلاس عديمة الحالة الخاصة بالمستخدم (`private readonly` محقونة عبر الـ `constructor` حصراً لمنع تداخل الجلسات `Race Conditions` — Gate G21).
+3. **حظر الوراثة بين الخدمات (Zero Inheritance Invariant — Ban extends):**
+   - يُحظر استخدام الوراثة (`extends`) بين أي خدمات أو مستودعات؛ ويُعتمد مبدأ التركيب (`Composition`) وتطبيق الواجهات (`implements`) حصراً.
+4. **العزل الهيكلي التام وحظر الاستيراد العابر بين التدفقات (100% Vertical Slice Isolation):**
+   - تحتفظ كل وظيفة (`Flow`) بملفاتها الـ 10 المستقلة داخل مجلدها المعزول، ويُحظر قطعياً على أي ملف داخل وظيفة `Flow A` أن يستورد أي دالة أو كلاس أو نوع من داخل مجلد وظيفة شقيقة `Flow B` (`CROSS_FLOW_ISOLATION_BREACH`).
+5. **بوابة الفحص النحوي الشامل (Gate G2 Universal FCIS AST Sentinel):**
+   - يفحص `pnpm arch:verify` (`tools/governance/verify-architecture.ts`) شجرة الكود (`TypeScript AST`) لجميع التدفقات والملفات، ويُسقط أي مخالفة فوراً بـ `Exit Code 1`.
+
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.
 2. **Zod Runtime Deserialization:** Zero untyped `JSON.parse` across boundaries.

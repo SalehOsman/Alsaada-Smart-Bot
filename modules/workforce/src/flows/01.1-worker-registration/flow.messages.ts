@@ -510,3 +510,19 @@ export const WorkerRegistrationMessages = {
     }
   },
 };
+
+export function formatWorkerRegistrationStepPrompt(
+  step: WorkerWizardStep,
+  state: PendingWorkerWizardState,
+  userRole?: string
+): string {
+  return WorkerRegistrationMessages.getStepPrompt(step, state, userRole);
+}
+
+export function formatWorkerRegistrationConfirmationCard(
+  state: PendingWorkerWizardState,
+  userRole?: string
+): string {
+  return WorkerRegistrationMessages.confirmationCard(state, userRole);
+}
+
