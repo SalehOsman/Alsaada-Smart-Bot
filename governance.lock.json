@@ -69,7 +69,7 @@
     },
     {
       "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
-      "sha256": "43dd31ac5fb0821d327c9558b3a8c2b1572485f27f409a968639ef9a950bfb1f"
+      "sha256": "c33a4acb92757827aa1e8fcb69bf83a4e694acd689db96569348887cdec42eaf"
     },
     {
       "path": ".agents/rules/11-modification-lifecycle-standard.md",
@@ -257,15 +257,15 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "86a35153555196d72c7245570353cb9ed05684f04d2877f927408c90c3d1c0ac"
+      "sha256": "4ebe64437da31c89d4664e694d3ac2b044b7b1a15cbd40c843661a20e658f654"
     },
     {
       "path": "package.json",
-      "sha256": "4ba6e87781910293af9a423f8800d350d5ed91b361a7ca0ae1d57cd8ff5523a7"
+      "sha256": "7bbbb82c3c397c9ceb888386a02d222024481a3e8d377dc964a7a0b0688b45e2"
     },
     {
       "path": "pnpm-workspace.yaml",
-      "sha256": "1370238fb3d5b654162d4402277fea92b1dcb0152e4ff1b1326de4673428d435"
+      "sha256": "fa8b6ac19192513c99ccc96703590f0fb47a2e6fe60e3690ea891d94b972e697"
     },
     {
       "path": "tools/governance/agent-dispatcher.ts",
@@ -8170,6 +8170,71 @@
         {
           "path": "tools/governance/tests/verify-architecture-diagrams.spec.ts",
           "sha256": "018dbd12e3b71507f0fe093c092ab3d93ada1931bded76de798756c4bdbe8aa1"
+        }
+      ]
+    },
+    "governance:pnpm-workspace.yaml": {
+      "id": "governance:pnpm-workspace.yaml",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: pnpm-workspace.yaml",
+      "directory": "pnpm-workspace.yaml",
+      "lockedAt": "2026-09-24T10:00:57.699Z",
+      "files": [
+        {
+          "path": "pnpm-workspace.yaml",
+          "sha256": "fa8b6ac19192513c99ccc96703590f0fb47a2e6fe60e3690ea891d94b972e697"
+        }
+      ]
+    },
+    "governance:package.json": {
+      "id": "governance:package.json",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: package.json",
+      "directory": "package.json",
+      "lockedAt": "2026-09-24T10:03:58.936Z",
+      "files": [
+        {
+          "path": "package.json",
+          "sha256": "7bbbb82c3c397c9ceb888386a02d222024481a3e8d377dc964a7a0b0688b45e2"
+        }
+      ]
+    },
+    "governance:.agents/rules/10-ai-agent-discipline-and-preflight.md": {
+      "id": "governance:.agents/rules/10-ai-agent-discipline-and-preflight.md",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: .agents/rules/10-ai-agent-discipline-and-preflight.md",
+      "directory": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
+      "lockedAt": "2026-09-24T10:15:38.924Z",
+      "files": [
+        {
+          "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
+          "sha256": "c33a4acb92757827aa1e8fcb69bf83a4e694acd689db96569348887cdec42eaf"
+        }
+      ]
+    },
+    "governance:GEMINI.md": {
+      "id": "governance:GEMINI.md",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: GEMINI.md",
+      "directory": "GEMINI.md",
+      "lockedAt": "2026-09-24T10:17:43.185Z",
+      "files": [
+        {
+          "path": "GEMINI.md",
+          "sha256": "4ebe64437da31c89d4664e694d3ac2b044b7b1a15cbd40c843661a20e658f654"
+        }
+      ]
+    },
+    "test:tests/air-gapped-development-invariant.spec.ts": {
+      "id": "test:tests/air-gapped-development-invariant.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tests/air-gapped-development-invariant.spec.ts",
+      "directory": "tests/air-gapped-development-invariant.spec.ts",
+      "lockedAt": "2026-09-24T10:17:43.712Z",
+      "files": [
+        {
+          "path": "tests/air-gapped-development-invariant.spec.ts",
+          "sha256": "c760bb7bcb5b601f2da92798866ad1fdfbc123bac4116642cd869a3c2b543b43"
         }
       ]
     }

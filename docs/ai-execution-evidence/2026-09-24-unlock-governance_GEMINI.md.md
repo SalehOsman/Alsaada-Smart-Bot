@@ -1,18 +1,18 @@
-# ترخيص فك قفل الحوكمة: (governance:pnpm-workspace.yaml)
+# ترخيص فك قفل الحوكمة: (governance:GEMINI.md)
 
-- **التاريخ:** 2026-09-24 (2026-09-24T09:59:57.630Z)
-- **معرف الكيان المفكوك:** `governance:pnpm-workspace.yaml`
+- **التاريخ:** 2026-09-24 (2026-09-24T10:16:42.069Z)
+- **معرف الكيان المفكوك:** `governance:GEMINI.md`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-7E9DC9`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-9C16E6`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T09:59:36Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T10:16:24Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Add supportedArchitectures win32 and linux x64 for Work Plan 102
+Codify Zero-Network Development Invariant in GEMINI.md for Work Plan 102
 
 ## نطاق التعديل المرخص
-تم رفع القفل التشفيري عن الكيان `governance:pnpm-workspace.yaml` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).
+تم رفع القفل التشفيري عن الكيان `governance:GEMINI.md` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).
 يُحظر تماماً تعديل أي ملف خارج نطاق هذا الكيان، وأي مساس بملف آخر سيسقط فوراً عند الـ Git Commit.
 فور الانتهاء من العمل واجتياز الاختبارات، يلزم إعادة ختم الكيان عبر:
-`pnpm lock governance:pnpm-workspace.yaml`
+`pnpm lock governance:GEMINI.md`

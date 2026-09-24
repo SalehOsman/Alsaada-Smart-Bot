@@ -40,6 +40,10 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
    - AI agents must operate in Adversarial Gatekeeper Mode when touching protected files (`GEMINI.md`, `AGENTS.md`, `.agents/rules/**`, `.agents/skills/**`, `governance.lock.json`).
    - Casual approvals (`موافق`, `تمام`, `ok`, `yes`) in response to `/learn`, plans, or chat queries MUST NEVER be used as authorization to edit protected files.
    - Modifying protected entities strictly mandates the verbatim constitutional formula `«موافق على التعديل او الايقاف او الحذف»` or the dynamic OTP challenge-response protocol `«موافق على الفتح <UNLOCK-XXXXXX>»`.
+10. **Zero-Network Development & Air-Gapped Local Invariant (Work Plan 102):**
+    - Prohibits executing package installation commands (`pnpm install`, `pnpm add`, `npm install`) or container image build commands (`docker compose build`, `docker build`) during feature development or defect repair.
+    - All testing and verification must execute 100% locally and air-gapped using `vitest`, `pnpm test`, `pnpm dev:bot`, and `pnpm ci:simulate` with zero network downloads (`prefer-offline=true`, `verify-deps-before-run=false`, and `supportedArchitectures` restricted to `win32`/`linux` `x64`).
+    - Starting pre-built infrastructure containers (`pnpm docker:infra` / `docker compose up -d postgres redis`) is permitted; rebuilding application containers is strictly reserved for final production release.
 
 ---
 
