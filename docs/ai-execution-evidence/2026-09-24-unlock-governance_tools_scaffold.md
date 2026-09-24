@@ -1,15 +1,15 @@
 # ترخيص فك قفل الحوكمة: (governance:tools/scaffold)
 
-- **التاريخ:** 2026-09-24 (2026-09-24T09:01:55.075Z)
+- **التاريخ:** 2026-09-24 (2026-09-24T12:28:44.383Z)
 - **معرف الكيان المفكوك:** `governance:tools/scaffold`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-080BD0`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-43FF08`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T08:59:22Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-24T12:28:16Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Upgrade flow scaffolding to generate Mermaid stateDiagram-v2
+Update scaffold-flow.ts to generate pure FCIS exported functions in flow.keyboard.ts and flow.messages.ts under Work Plan 101
 
 ## نطاق التعديل المرخص
 تم رفع القفل التشفيري عن الكيان `governance:tools/scaffold` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).

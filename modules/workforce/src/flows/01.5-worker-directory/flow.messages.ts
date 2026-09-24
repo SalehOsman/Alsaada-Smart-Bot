@@ -174,3 +174,12 @@ export const WorkerDirectoryMessages = {
     return `⚠️ تعذر العثور على الملف على الخادم، قد يكون قد تم نقله أو حذفه.`;
   },
 };
+
+export function formatWorkerDirectoryHeader(total: number, page: number, totalPages: number, searchQuery?: string): string {
+  return WorkerDirectoryMessages.directoryHeader(total, page, totalPages, searchQuery);
+}
+
+export function formatWorkerProfile360Card(p: WorkerProfile360, isIdRevealed = false): string {
+  return WorkerDirectoryMessages.profile360Card(p, isIdRevealed);
+}
+

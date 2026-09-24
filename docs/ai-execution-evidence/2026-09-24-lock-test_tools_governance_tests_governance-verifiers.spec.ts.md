@@ -1,18 +1,18 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/governance/tests/governance-verifiers.spec.ts)
 
-- **تاريخ القفل:** 2026-09-24 (2026-09-24T07:24:48.305Z)
+- **تاريخ القفل:** 2026-09-24 (2026-09-24T12:35:10.264Z)
 - **معرف الكيان:** `test:tools/governance/tests/governance-verifiers.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/governance/tests/governance-verifiers.spec.ts
 - **المسار الأساسي:** `tools/governance/tests/governance-verifiers.spec.ts`
 - **عدد الملفات المقفلة:** 1 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+- **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `tools/governance/tests/governance-verifiers.spec.ts` | `29006f2fe8c0bf70ddc02f46a0902b96400ce0525b09b64697c863829fd9f3a6` |
+| `tools/governance/tests/governance-verifiers.spec.ts` | `eea2772063145b218afcccfaff40e49d104c156bb74d4e234e96134452093fc8` |
 
 ## بوابات التحقق المعتمدة
 - **CRLF/LF Sanitization:** PASS

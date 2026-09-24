@@ -90,3 +90,18 @@ export const WorkerCommitmentMessages = {
     );
   },
 };
+
+export function formatWorkerCommitmentMainMenu(stats: CommitmentStatsSummary, siteName?: string): string {
+  return WorkerCommitmentMessages.mainMenu(stats, siteName);
+}
+
+export function formatWorkerCommitmentPickerHeader(
+  total: number,
+  page: number,
+  totalPages: number,
+  siteName?: string,
+  searchQuery?: string
+): string {
+  return WorkerCommitmentMessages.pickerHeader(total, page, totalPages, siteName, searchQuery);
+}
+

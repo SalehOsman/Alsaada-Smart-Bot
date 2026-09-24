@@ -188,50 +188,57 @@ export class ${pascalName}Service {
   const kbContent = `import { InlineKeyboard } from 'grammy';
 import { buildConfirmationKeyboard, buildCompletionKeyboard, buildWhatsAppLink } from '@alsaada/core-components';
 
-export class ${pascalName}Keyboards {
-  static confirmationKeyboard(flowKey: string): InlineKeyboard {
-    return buildConfirmationKeyboard(\`action:\${flowKey}:confirm\`, \`action:\${flowKey}:cancel\`);
-  }
-
-  static completionKeyboard(receiptId: string, summaryText?: string): InlineKeyboard {
-    const whatsAppLink = summaryText
-      ? buildWhatsAppLink({ phone: '', message: summaryText })
-      : undefined;
-    return buildCompletionKeyboard({
-      actionDomain: '${flowSlug}',
-      receiptNumber: receiptId,
-      whatsAppLink,
-    });
-  }
+export function confirmationKeyboard(flowKey: string): InlineKeyboard {
+  return buildConfirmationKeyboard(\`action:\${flowKey}:confirm\`, \`action:\${flowKey}:cancel\`);
 }
+
+export function completionKeyboard(receiptId: string, summaryText?: string): InlineKeyboard {
+  const whatsAppLink = summaryText
+    ? buildWhatsAppLink({ phone: '', message: summaryText })
+    : undefined;
+  return buildCompletionKeyboard({
+    actionDomain: '${flowSlug}',
+    receiptNumber: receiptId,
+    whatsAppLink,
+  });
+}
+
+export const ${pascalName}Keyboards = {
+  confirmationKeyboard,
+  completionKeyboard,
+} as const;
 `;
   writeFileSync(join(targetDir, 'flow.keyboard.ts'), kbContent, 'utf8');
 
   // 6. flow.messages.ts
   const messagesContent = `import { formatBreadcrumbs, formatConfirmationCard } from '@alsaada/core-components';
 
-export class ${pascalName}Messages {
-  static initPrompt(title: string): string {
-    const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'البداية']);
-    return \`\${breadcrumb}📋 *\${title}*\\n────────────────────────────\\nيرجى تحديد البيانات المطلوبة:\`;
-  }
-
-  static confirmationCard(workerName: string, amount: number, recordedBy = 'المشرف'): string {
-    const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'مراجعة وتأكيد']);
-    const card = formatConfirmationCard({
-      operationTitle: '${flowTitleArabic}',
-      workerName,
-      amount,
-      recordedBy,
-    });
-    return \`\${breadcrumb}\${card}\\nهل تؤكد حفظ واعتماد المعاملة؟\`;
-  }
-
-  static successReceipt(refId: string): string {
-    const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'إتمام العملية']);
-    return \`\${breadcrumb}✅ *تم اعتماد العملية بنجاح*\\n────────────────────────────\\nرقم السند: \`\`\${refId}\`\`;
-  }
+export function initPrompt(title: string): string {
+  const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'البداية']);
+  return \`\${breadcrumb}📋 *\${title}*\\n────────────────────────────\\nيرجى تحديد البيانات المطلوبة:\`;
 }
+
+export function confirmationCard(workerName: string, amount: number, recordedBy = 'المشرف'): string {
+  const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'مراجعة وتأكيد']);
+  const card = formatConfirmationCard({
+    operationTitle: '${flowTitleArabic}',
+    workerName,
+    amount,
+    recordedBy,
+  });
+  return \`\${breadcrumb}\${card}\\nهل تؤكد حفظ واعتماد المعاملة؟\`;
+}
+
+export function successReceipt(refId: string): string {
+  const breadcrumb = formatBreadcrumbs(['الرئيسية', '${flowTitleArabic}', 'إتمام العملية']);
+  return \`\${breadcrumb}✅ *تم اعتماد العملية بنجاح*\\n────────────────────────────\\nرقم السند: \`\`\${refId}\`\`;
+}
+
+export const ${pascalName}Messages = {
+  initPrompt,
+  confirmationCard,
+  successReceipt,
+} as const;
 `;
   writeFileSync(join(targetDir, 'flow.messages.ts'), messagesContent, 'utf8');
 
