@@ -33,10 +33,12 @@ To maintain architectural purity and prevent hallucinated patterns, all agents m
    - Every invocation of `/jev` via CLI (`pnpm jev`, `pnpm jev:diff`, `pnpm jev:consult`) must run against the pure cloud endpoint `https://api.typesafe.ai/v1/systemone` with genuine `Engine: api` provenance. Never accept partial heuristic mock answers.
    - `/saleh` continuously consults JEV cloud to expand its strategic knowledge base and solve complex bugs, but remains resilient: if JEV cloud is down, `/saleh` logs a transparent note and continues independent verification without halting.
    - Prioritize zero-token precedent index lookup (`.agents/knowledge/precedents/index.json`) for known issue signatures before triggering LLM tokens.
+   - Every work round and final report involving `/jev` or `/saleh` MUST include the **Mandatory Cloud Model Request Telemetry Statement (`📡 بيان طلبات النموذج السحابي الإلزامي`)** detailing `cloudRequestsSent`, `httpAttemptsTotal`, `cloudCacheHits`, `precedentHits`, `questionsDispatchedToCloud`, and `engineMode`.
 8. **Cross-Platform Tool Resolution & Documentation Portal Sync:**
    - Never hardcode bare CLI tools (e.g. `tsc`) in Node child process executions; resolve cross-platform binaries via `node_modules/.bin/tsc.cmd` on Windows.
    - Never run `tsc` without `--noEmit` (`pnpm typecheck`), as emitted `.js`/`.d.ts` files inside `src/` or `tools/` trigger `UNRECORDED` file errors in Gate G13 (`governance:tamper-check`).
    - Prefer `pnpm run lock <target>` over `pnpm lock <target>` in `pnpm@12.4.2` to bypass built-in package manager subcommand collision and execute lock sealing instantaneously.
+   - When modifying test files under `tools/governance/tests/*.spec.ts`, always execute **dual-layer sealing**: run `pnpm lock test:tools/governance/tests/<file>.spec.ts` (to update `lockedEntities`) followed by `pnpm governance:lock` (with `tools/governance` active in `.governance-cache/active-governance-unlocks.json` to update the top-level `files` array) before running `pnpm governance:tamper-check`.
    - Whenever documentation files (`docs/19`, ADRs, architecture specs) are modified, always execute `pnpm docs:sync` before `pnpm ci:simulate` to ensure complete AST synchronization with `apps/docs`.
 9. **Adversarial Gatekeeper & Zero Casual Approval Policy (Work Plan 100):**
    - AI agents must operate in Adversarial Gatekeeper Mode when touching protected files (`GEMINI.md`, `AGENTS.md`, `.agents/rules/**`, `.agents/skills/**`, `governance.lock.json`).
