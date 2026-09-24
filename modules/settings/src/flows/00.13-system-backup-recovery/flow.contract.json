@@ -1,0 +1,86 @@
+{
+  "flowCode": "00.13",
+  "flowName": "منظومة النسخ الاحتياطي واستعادة الكوارث",
+  "module": "settings",
+  "status": "Implemented",
+  "allowedRoles": [
+    "SUPER_ADMIN",
+    "GENERAL_ADMIN"
+  ],
+  "blockedRoles": [
+    "WORKER",
+    "SUPPLIER",
+    "GUEST",
+    "FIELD_ADMIN",
+    "ACCOUNTANT",
+    "EXECUTIVE"
+  ],
+  "entryPoints": [
+    "action:settings:backup_recovery",
+    "/backup",
+    "/backup_status"
+  ],
+  "navigationPath": [
+    "القائمة الرئيسية",
+    "إعدادات النظام",
+    "أداء وتشغيل المنظومة والرقابة",
+    "النسخ الاحتياطي واستعادة الكوارث"
+  ],
+  "buttons": [
+    "action:settings:backup_recovery",
+    "bck:now",
+    "bck:drill",
+    "bck:list",
+    "bck:status",
+    "bck:back"
+  ],
+  "inputs": [
+    "select:backup_action",
+    "text:confirmation_code"
+  ],
+  "outputs": [
+    "card:backup_status",
+    "card:backup_in_progress",
+    "card:backup_success",
+    "card:drill_result",
+    "card:backups_list"
+  ],
+  "dataImpact": {
+    "database": [],
+    "googleSheets": [],
+    "exports": [
+      "backups/database/",
+      "backups/codebase/",
+      "backups/assets/"
+    ],
+    "notifications": [
+      "topic:system_governance"
+    ]
+  },
+  "linkedFlows": [
+    "00.7",
+    "00.8"
+  ],
+  "performanceSlaMs": {
+    "buttonP95": 500,
+    "stepP95": 500,
+    "commitP95": 1000
+  },
+  "telegramBudget": {
+    "maxUrlBytes": 512,
+    "maxCallbackBytes": 36,
+    "maxButtonChars": 16,
+    "maxKeyboardRows": 7,
+    "maxButtonsPerRow": 3
+  },
+  "requiredTests": [
+    "unit",
+    "integration",
+    "ux",
+    "rbac",
+    "data"
+  ],
+  "manualUatRequired": false,
+  "allowAny": false,
+  "classification": "NOVEL"
+}

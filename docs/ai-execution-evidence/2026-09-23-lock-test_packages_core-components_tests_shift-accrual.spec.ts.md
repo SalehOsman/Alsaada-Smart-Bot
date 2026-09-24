@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/core-components/tests/shift-accrual.spec.ts)
 
-- **تاريخ القفل:** 2026-09-23 (2026-09-23T19:36:25.949Z)
+- **تاريخ القفل:** 2026-09-23 (2026-09-23T22:10:45.651Z)
 - **معرف الكيان:** `test:packages/core-components/tests/shift-accrual.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/core-components/tests/shift-accrual.spec.ts

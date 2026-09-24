@@ -125,7 +125,7 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
 
     // 3. Push schema to fresh test database
     console.log('🚀 [TEST-DB] Synchronizing schema via prisma db push...');
-    const childEnv: Record<string, string | undefined> = { ...process.env, DATABASE_URL: testDbUrl };
+    const childEnv: NodeJS.ProcessEnv = { ...process.env, DATABASE_URL: testDbUrl };
     childEnv.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION =
       process.env.PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION || 'موافق على الفتح';
     delete childEnv.ANTIGRAVITY_AGENT;

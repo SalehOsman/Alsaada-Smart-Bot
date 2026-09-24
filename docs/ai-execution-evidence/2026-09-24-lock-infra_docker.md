@@ -1,0 +1,26 @@
+# توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (infra:docker)
+
+- **تاريخ القفل:** 2026-09-24 (2026-09-24T07:24:48.305Z)
+- **معرف الكيان:** `infra:docker`
+- **نوع الكيان:** `infra`
+- **العنوان:** البنية التحتية والدوكر وقواعد البيانات
+- **المسار الأساسي:** `docker`
+- **عدد الملفات المقفلة:** 7 ملفاً
+- **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
+- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+
+## قائمة البصمات الجنائية (SHA-256)
+| المسار | بصمة الهاش (SHA-256) |
+| :--- | :--- |
+| `.dockerignore` | `d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a` |
+| `docker-compose.yml` | `8a6e8547e170ef5ab25fdaf3d4c404a22daf9f25b69ec898ac3c32437a53083b` |
+| `docker/Dockerfile` | `93b8f3a3d0d5ae24c267c8a864aafca50bec1999baaec995fea88f9fa79c5c56` |
+| `docker/Dockerfile.dashboard` | `fd8198a13a12ac016e36daba9f225c844b28d3bc09e587bfb70d0d6bbacf6719` |
+| `docker/Dockerfile.docs` | `89064cb6dd682c11a03cf2f9137ef1ffa1df06e7c6b40b97290927f3df1d725e` |
+| `docker/nginx-docs.conf` | `2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa` |
+| `docker/postgres/init-scripts/01-init-security.sql` | `98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f` |
+
+## بوابات التحقق المعتمدة
+- **CRLF/LF Sanitization:** PASS
+- **Tamper Protection:** ACTIVE
+- **Zero Blast Radius:** ISOLATED

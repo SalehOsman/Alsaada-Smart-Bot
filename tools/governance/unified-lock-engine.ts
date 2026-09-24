@@ -812,6 +812,7 @@ export function discoverAllLockableTargets(
         if (
           entry.name === 'node_modules' ||
           entry.name === '.git' ||
+          entry.name === '.worktrees' ||
           entry.name === 'dist' ||
           entry.name === '.turbo' ||
           entry.name === '.next' ||
