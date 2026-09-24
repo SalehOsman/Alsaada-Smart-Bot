@@ -1,41 +1,61 @@
-# وثيقة اعتماد التدفق: [01.1] تسجيل وتعيين عامل / موظف جديد
-## Flow Dossier: [01.1] Enterprise Worker Onboarding & Identity Wizard
+# تدفق 01.1: معالج تسجيل وتعيين العمالة الميدانية (Worker Registration Wizard)
+## Flow 01.1: Comprehensive Worker Onboarding & National ID Verification Wizard
 
-### 1️⃣ البطاقة التعريفية والمواصفات
-* **كود التدفق:** `01.1` (موروث من `01.2.A Workforce`)
-* **الموديول المسؤول:** `modules/workforce`
-* **الحالة:** 🟢 معتمد وموثق 100%
-* **الأدوار المصرح لها (RBAC):** `SUPER_ADMIN`, `GENERAL_ADMIN`, `FIELD_ADMIN`, `ACCOUNTANT`, `EXECUTIVE`
-* **الأدوار المحجوبة:** `WORKER`, `SUPPLIER`, `GUEST`
-
----
-
-### 2️⃣ مسارات الاستدعاء
-* **مسار القائمة:** `👥 الموارد البشرية` ⬅️ `📁 شؤون العاملين والتعيينات` ⬅️ `➕ تسجيل وتعيين عامل جديد`
-* **Callback Query:** `action:worker:add_single`
+> **الموديول:** `modules/workforce`  
+> **كود التدفق:** `01.1`  
+> **الرتب المصرح لها:** `SUPER_ADMIN`, `GENERAL_ADMIN`, `FIELD_ADMIN`  
+> **ميزانية التيليجرام:** 36/16/7/3  
+> **حالة التدفق:** 🟢 مكتمل وموثق 100%  
 
 ---
 
-### 3️⃣ خطوات المعالج الميداني
-1. **تحديد نوع الوثيقة:** بطاقة الرقم القومي المصري (14 رقماً) أو جواز سفر وافد.
-2. **التقاط أو تخطي الصورة:** إرسال صورة وجه/ظهر البطاقة للتدقيق بالذكاء الاصطناعي أو المتابعة اليدوية الفورية.
-3. **بيانات الهوية:** الاسم الكامل، اسم الشهرة (اللقب الميداني)، رقم الإثبات القومي، ورقم الهاتف.
-4. **البيانات الوظيفية والميدانية:** وسيلة الصرف المالي، المهنة والمسمى الوظيفي، وموقع العمل الميداني.
-5. **بيانات التعيين والسلامة:** تاريخ مباشرة العمل (صيغة يوم-شهر-سنة `DD-MM-YYYY`)، رخصة القيادة، والموقف من التجنيد وهاتف الطوارئ.
-6. **بطاقة المراجعة والتأكيد:** مراجعة شاملة لكافة البيانات قبل الحفظ.
-7. **الاعتماد والتسجيل:** توليد كود العامل الذكي، تشفير البيانات الحساسة (AES-256) مع فهارس عمياء، وحفظ السجل ذرّياً مع سجل التدقيق وقفل الحدث في صندوق الرسائل الصادرة Outbox.
-8. **لوحة الإتمام الرباعية:** رابط واتساب الترحيبي الفوري متضمناً توقيع أمان HMAC-SHA256 لدعوة العامل للبوت، وزر تسجيل عامل آخر، والعودة للقسم، والقائمة الرئيسية.
+### 🗺️ مخطط دورة حياة التدفق (State Machine Diagram)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: تشغيل التدفق
+    
+    Idle --> DocTypeSelection: menu:hr:onboarding
+    
+    state DocTypeSelection {
+        [*] --> ChooseDocument: nat_id / passport
+        ChooseDocument --> PhotoPrompt: اختيار نوع الوثيقة
+    }
+    
+    state OnboardingWizard {
+        [*] --> PhotoPrompt
+        PhotoPrompt --> OcrProcessing: إرسال صورة البطاقة
+        PhotoPrompt --> ManualInput: تخطي الذكاء الاصطناعي
+        
+        OcrProcessing --> NationalIdVerification: استخراج البيانات آلياً
+        ManualInput --> NationalIdVerification: إدخال الرقم القومي
+        
+        NationalIdVerification --> NationalIdVerification: فشل فحص Modulo-11 (إعادة)
+        NationalIdVerification --> FullNamePrompt: رقم قومي سليم
+        
+        FullNamePrompt --> NicknamePrompt: اعتماد الاسم الرسمي
+        NicknamePrompt --> PhoneNumberPrompt: اختيار اسم الشهرة
+        PhoneNumberPrompt --> PayoutMethodPrompt: إدخال رقم الهاتف
+        PayoutMethodPrompt --> JobSelectionPrompt: تحديد طريقة الصرف (محفظة/كاش)
+        JobSelectionPrompt --> SiteAssignmentPrompt: اختيار المهنة
+        SiteAssignmentPrompt --> WageConfirmationPrompt: اختيار موقع العمل
+        WageConfirmationPrompt --> SummaryConfirmationCard: تحديد الأجر اليومي
+    }
+    
+    SummaryConfirmationCard --> SaveWorkerRecord: wizard:worker:confirm (تأكيد نهائي)
+    SummaryConfirmationCard --> CancelWizard: wizard:worker:cancel (إلغاء)
+    
+    SaveWorkerRecord --> WorkerCreatedCard: توليد كود العامل وبطاقة العمل
+    CancelWizard --> MainMenu: تنظيف الجلسة
+    
+    WorkerCreatedCard --> [*]: إنهاء
+    MainMenu --> [*]: إنهاء
+```
 
 ---
 
-### 4️⃣ الأثر على قواعد البيانات والشيتات
-* **قاعدة البيانات:** جدول `Worker`، جدول `AuditLog`، وجدول `OutboxEvent`.
-* **جوجل شيت:** مزامنة لحظية عبر طابور الصادر لشيت `Workers` بدون حظر المستخدم ميدانياً.
-* **الأمان:** تشفير كامل لأرقام الهواتف والبطاقات وحسابات البنوك بمفتاح النظام.
-
----
-
-### 5️⃣ حدود الأداء المعتمدة (SLA)
-* **استجابة الأزرار والتنقل الموضعي:** أقل من 700ms (الفعلي المقاس < 80ms).
-* **معالجة خطوات الإدخال والتحقق:** أقل من 1200ms.
-* **الاعتماد والحفظ الذري في المعاملة:** أقل من 2000ms (الفعلي المقاس < 150ms).
+### 🛡️ القواعد الحوكمية المعمارية المطبقة
+1. **التحقق الجنائي من الرقم القومي (Gate G1):** فحص خوارزمية Modulo-11 المصرية واستخراج تاريخ الميلاد والمحافظة.
+2. **شريحة الـ 10 ملفات (Gate G2):** فصل جلسات المعالج عبر `UniversalWizardSessionEngine`.
+3. **حجب الأجور والبيانات الحساسة (Gate G8):** تطبيق `formatSpoiler` على تفاصيل الأجر والراتب اليومي.
+4. **ميزانية التيليجرام (Gate G5):** الالتزام بألا يتجاوز طول الـ Callback الـ 36 بايت.

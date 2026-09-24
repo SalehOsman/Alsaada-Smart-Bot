@@ -271,6 +271,37 @@ export class ${pascalName}Messages {
 
 ## ملخص الوظيفة وقواعد العمل
 توثيق تدفق ${flowTitleArabic} وفق ميثاق حوكمة منظومة السعادة.
+
+## مخطط دورة حياة التدفق (State Machine Diagram)
+
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle: تشغيل التدفق / الأمر
+    Idle --> InProgress: بدء المعالج وتوليد الجلسة
+    
+    state InProgress {
+        [*] --> PromptInput: عرض الشاشة وطلب المدخلات
+        PromptInput --> ValidatingInput: استقبال مدخلات المستخدم
+        ValidatingInput --> PromptInput: خطأ بالمدخلات (إعادة المحاولة)
+        ValidatingInput --> ReviewCard: صحة المدخلات وعرض بطاقة المراجعة
+    }
+    
+    ReviewCard --> ActionConfirmed: تأكيد الإجراء (cb:confirm)
+    ReviewCard --> Cancelled: إلغاء الإجراء (cb:cancel)
+    
+    ActionConfirmed --> ExecutionSuccess: نجاح العملية والتسجيل
+    ActionConfirmed --> ExecutionFailed: خطأ بالنظام (خزانة الأعطال)
+    
+    ExecutionSuccess --> [*]: إنهاء الجلسة وبطاقة الإنجاز
+    Cancelled --> [*]: إلغاء الجلسة والعودة
+    ExecutionFailed --> [*]: إشعار الخطأ
+\`\`\`
+
+## الحالات والانتقالات (State Transitions)
+- **Idle ⟵ [*]:** بدء تشغيل الأمر واستقبال الطلب.
+- **InProgress:** إدارة الجلسة واستقبال وتدقيق المدخلات.
+- **ReviewCard:** عرض بطاقة المراجعة والتأكيد المزدوج.
+- **Completed / Cancelled:** الحالات الطرفية للإنهاء والتراجع.
 `;
   writeFileSync(join(targetDir, 'flow.docs.md'), docsContent, 'utf8');
 

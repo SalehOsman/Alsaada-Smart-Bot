@@ -1,38 +1,58 @@
-# وثيقة اعتماد التدفق: [00.6] محاكاة وتقمص الأدوار الميدانية (Ghost / Simulation Mode)
-## Flow Dossier: [00.6] Strict 5-Persona Simulation Mode & Role Handshake
+# تدفق 00.6: وضع المحاكاة وانتحال الأدوار (Ghost Mode)
+## Flow 00.6: Super Admin Impersonation & Ghost Mode Hub
 
-### 1️⃣ البطاقة التعريفية والمواصفات
-* **كود التدفق:** `00.6`
-* **الموديول المسؤول:** `modules/settings`
-* **الحالة:** 🟢 معتمد وموثق 100%
-* **الأدوار المصرح لها بالدخول:** `SUPER_ADMIN` حصراً.
-* **الأدوار المحجوبة عنها أداة المحاكاة:** كافة الأدوار الأخرى (محجوبة 100%).
-
----
-
-### 2️⃣ مصفوفة الهويات الخمس المعتمدة حصراً (Strict 5-Persona Simulation System)
-1. **`GENERAL_ADMIN` (محاكاة جينرال أدمن / إدارة عامة):** معاينة المنظومة بصلاحيات إدارية تنفيذية كاملة ورؤية الرواتب وكافة المواقع مع حجب أدوات الحوكمة القصوى.
-2. **`FIELD_ADMIN` (محاكاة مشرف موقع ميداني):** معاينة البوت بصلاحيات المشرف الميداني مع ربطه بالموقع التشغيلي الأول وحجب الرواتب بالكامل (0 رواتب) وتحويل كافة التعديلات إلى مسار التذاكر المعلقة.
-3. **`WORKER` (تقمص دور عامل فعلي بعينه):** اختيار عامل نشط بعينه من قائمة العمال، لمعاينة بوابة الخدمة الذاتية (ملفي الوظيفي، قسيمة الراتب الشخصية، رصيد الإجازات، مسحوبات الكانتين الخاصة به).
-4. **`SUPPLIER` (تقمص دور مورد فعلي بعينه):** اختيار مورد نشط بعينه من قائمة الموردين، لمعاينة بوابة الموردين وحركات التوريد وكشف الحساب المالي للمورد.
-5. **`GUEST` (محاكاة مستخدم جديد / زائر):** معاينة شاشة الترحيب وبوابة طلب الانضمام والتسجيل.
+> **الموديول:** `modules/settings`  
+> **كود التدفق:** `00.6`  
+> **الرتب المصرح لها:** `SUPER_ADMIN` حصراً  
+> **ميزانية التيليجرام:** 36/16/7/3  
+> **حالة التدفق:** 🟢 مكتمل وموثق 100%  
 
 ---
 
-### 3️⃣ مصفوفة الأثر على واجهات الأدوار (Multi-Role Interface Impact Matrix)
+### 🗺️ مخطط دورة حياة التدفق (State Machine Diagram)
 
-| الدور التشغيلي | أثر الواجهة (UI Impact & Path) | نطاق البيانات المرئية (Data Scope) | الصلاحية الإجرائية (Action / Mutability) | أزرار التحكم ومسار الخروج |
-| :--- | :--- | :--- | :--- | :--- |
-| **👑 مدير عام (SUPER_ADMIN)** | `🏛️ الإعدادات والحوكمة` ⬅️ `🎭 محاكاة الأدوار الميدانية` | رؤية محرك المحاكاة كاملاً وقوائم اختيار العمال والموردين | تفعيل المحاكاة، إنهاء المحاكاة والعودة الفورية كمدير عام | زر إنهاء المحاكاة في لوحة الرد السفلية الدائمة |
-| **👔 إدارة عامة (GENERAL_ADMIN)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً | لا يوجد |
-| **🛡️ مشرف ميداني (FIELD_ADMIN)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً | لا يوجد |
-| **👷 عامل مسجل (WORKER)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً | لا يوجد |
-| **🚚 مورد / مقاول (SUPPLIER)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً | لا يوجد |
-| **👤 زائر (GUEST)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً | لا يوجد |
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: تشغيل التدفق
+    
+    Idle --> GhostMenu: action:ghost_mode:menu
+    
+    state GhostMenu {
+        [*] --> SelectRole
+        SelectRole --> ImpersonateAdmin: action:impersonate:GENERAL_ADMIN / FIELD_ADMIN
+        SelectRole --> PickWorker: action:impersonate:pick_worker
+        SelectRole --> PickSupplier: action:impersonate:pick_supplier
+        SelectRole --> ImpersonateGuest: action:impersonate:GUEST
+        
+        state PickWorker {
+            [*] --> RenderWorkersGrid
+            RenderWorkersGrid --> ActivateWorkerGhost: action:impersonate:worker:*
+        }
+        
+        state PickSupplier {
+            [*] --> RenderSuppliersGrid
+            RenderSuppliersGrid --> ActivateSupplierGhost: action:impersonate:supplier:*
+        }
+    }
+    
+    ImpersonateAdmin --> ActiveGhostSession: تفعيل جلسة المحاكاة
+    ActivateWorkerGhost --> ActiveGhostSession: تفعيل جلسة المحاكاة
+    ActivateSupplierGhost --> ActiveGhostSession: تفعيل جلسة المحاكاة
+    ImpersonateGuest --> ActiveGhostSession: تفعيل جلسة المحاكاة
+    
+    ActiveGhostSession --> ExitGhost: action:exit_impersonate
+    ExitGhost --> GhostMenu: العودة كمدير عام
+    
+    GhostMenu --> SettingsMenu: menu:super_admin_settings
+    GhostMenu --> MainMenu: action:main_menu
+    
+    SettingsMenu --> [*]: إنهاء
+    MainMenu --> [*]: إنهاء
+```
 
 ---
 
-### 4️⃣ ميثاق الحماية والتعافي الميداني
-1. **تزامن الكاش اللحظي (L1 Invalidation):** فور تفعيل أو إلغاء المحاكاة، يتم استدعاء `invalidateUserCache(telegramId)` لمحو مفاتيح `auth:imp:${telegramId}` و `auth:ent:${telegramId}` لمنع الارتداد لصلاحيات السوبر أدمن.
-2. **صمام الأمان والزر الدائم:** تثبيت زر `[ 🎭 إنهاء وضع المحاكاة (العودة كمدير عام) ]` في شريط الأزرار السفلي التفاعلي (`ReplyKeyboardMarkup`) والأمر `/exit_ghost` للعودة من أي شاشة بنقرة واحدة.
-3. **سلامة الماركداون والوقاية من `#ERR-LT22`:** تغليف كافة مسميات الأدوار بأكواد أحادية لتفادي خطأ تفكيك الرموز الخاصة في تيليجرام API.
+### 🛡️ القواعد الحوكمية المعمارية المطبقة
+1. **عقد الشريحة الرأسية (Gate G2):** عزل جلسة المحاكاة داخل الـ Session Store وعدم المساس ببيانات المستخدم الأصلية.
+2. **ميزانية التيليجرام (Gate G5):** الالتزام بميزانية الـ Callbacks والأزرار المقتضبة (36/16/7/3).
+3. **الحصانة الأمنية (Gate G7):** الحظر القطعي لغير السوبر أدمن من استدعاء وضع المحاكاة.

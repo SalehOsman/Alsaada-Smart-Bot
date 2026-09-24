@@ -182,11 +182,11 @@ export function auditPresentationCompliance(root: string = process.cwd()): {
         file: toRepoPath(repoRoot, targetFile),
         line: 1,
         type: 'MISSING_STATE_DIAGRAM',
-        severity: 'WARNING',
+        severity: 'ERROR',
         message: `Flow '${flowName}' walkthrough is missing mandatory Mermaid stateDiagram-v2 (Rule 07 Section 5)`,
       };
       findings.push(finding);
-      warn(result, `[${finding.type}] ${finding.file}: ${finding.message}`);
+      fail(result, `[${finding.type}] ${finding.file}: ${finding.message}`);
     }
 
     // B. Check flow.messages.ts

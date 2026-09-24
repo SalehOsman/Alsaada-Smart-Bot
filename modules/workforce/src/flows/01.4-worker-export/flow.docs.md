@@ -1,36 +1,57 @@
-# وثيقة اعتماد التدفق: [01.4] تصدير واستيراد كشوف العمالة المتقدم إكسيل RTL
-## Flow Dossier: [01.4] Full DB Parity Worker Import/Export Engine
+# تدفق 01.4: تصدير واستيراد كشوف العمالة (Excel Import & Export)
+## Flow 01.4: Worker Excel Roster Export & Bulk Import Hub
 
-### 1️⃣ بطاقة الوظيفة وميثاق التشغيل
-* **كود الوظيفة:** `01.4`
-* **الموديول التابع:** `@alsaada/workforce` (الموارد البشرية والعمالة)
-* **الحالة:** 🟢 معتمد وموثق 100%
-* **الأدوار المصرح لها بالاستيراد وتنزيل القالب:** `SUPER_ADMIN` حصراً.
-* **الأدوار المصرح لها بالتصدير العام:** `SUPER_ADMIN`, `GENERAL_ADMIN`, `FIELD_ADMIN`, `ACCOUNTANT`, `EXECUTIVE`.
-* **الأدوار المحجوبة:** `WORKER`, `SUPPLIER`, `GUEST`.
+> **الموديول:** `modules/workforce`  
+> **كود التدفق:** `01.4`  
+> **الرتب المصرح لها:** `SUPER_ADMIN`, `GENERAL_ADMIN`  
+> **ميزانية التيليجرام:** 36/16/7/3  
+> **حالة التدفق:** 🟢 مكتمل وموثق 100%  
 
 ---
 
-### 2️⃣ مصفوفة الأثر على واجهات الأدوار (Multi-Role Interface Impact Matrix)
+### 🗺️ مخطط دورة حياة التدفق (State Machine Diagram)
 
-| الدور التشغيلي | أثر الواجهة (UI Impact & Path) | نطاق البيانات المصدرة في الإكسيل | الصلاحية الإجرائية (Action / Mutability) |
-| :--- | :--- | :--- | :--- |
-| **👑 مدير عام (SUPER_ADMIN)** | `👥 الموارد البشرية والعمالة` ⬅️ `📊 كشوف وتقارير العمالة` | **43 عموداً شاملاً** (البيانات الإدارية، مهمات السلامة، السكن، التأمينات، والأعمدة المالية والرواتب وحسابات الصرف ومخصص السجائر) | تصدير كامل شامل، تنزيل قالب الاستيراد، ورفع ملفات الاستيراد الجماعي |
-| **👔 إدارة عامة (GENERAL_ADMIN)** | `👥 الموارد البشرية والعمالة` ⬅️ `📊 كشوف وتقارير العمالة` | **43 عموداً شاملاً** | تصدير شامل وتصفية حسب الأقسام والمحافظات والمهن |
-| **🛡️ مشرف ميداني (FIELD_ADMIN)** | `👥 الموارد البشرية والعمالة` ⬅️ `📊 كشوف وتقارير العمالة` | **32 عموداً إدارياً وتشغيلياً فقط (**حجب تام للأعمدة الـ 11 المالية - 0 رواتب**) | تصدير الكشف التشغيلي الميداني فقط (ممنوع من الاستيراد وتنزيل القالب) |
-| **👷 عامل مسجل (WORKER)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً |
-| **🚚 مورد / مقاول (SUPPLIER)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً |
-| **👤 زائر (GUEST)** | **محجوبة تماماً (0 أثر)** | لا شيء (محجوبة برمجياً قبل العرض) | محظور تماماً |
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: تشغيل التدفق
+    
+    Idle --> ExportMenu: action:worker_export:start
+    
+    state ExportMenu {
+        [*] --> SelectExportFilter
+        SelectExportFilter --> ExportAllRoster: action:worker_export:do:all
+        SelectExportFilter --> FilterByDepartment: action:worker_export:dept_menu
+        SelectExportFilter --> FilterByJobTitle: action:worker_export:job_menu:*
+        SelectExportFilter --> FilterByGovernorate: action:worker_export:gov_menu
+        
+        state FilterByDepartment {
+            [*] --> PickDept
+            PickDept --> GenerateDeptExcel: action:worker_export:do:d:*
+        }
+        
+        state FilterByJobTitle {
+            [*] --> PickJob
+            PickJob --> GenerateJobExcel: action:worker_export:do:j:*
+        }
+        
+        state FilterByGovernorate {
+            [*] --> PickGov
+            PickGov --> GenerateGovExcel: action:worker_export:do:g:*
+        }
+    }
+    
+    ExportAllRoster --> BuildExcelBuffer: جلب سجلات العمالة
+    GenerateDeptExcel --> BuildExcelBuffer: تصفية القسم
+    GenerateJobExcel --> BuildExcelBuffer: تصفية المهنة
+    GenerateGovExcel --> BuildExcelBuffer: تصفية المحافظة
+    
+    BuildExcelBuffer --> SendDocumentAttachment: إنشاء وتنسيق ملف XLSX
+    SendDocumentAttachment --> [*]: تسليم الكشف والإنهاء
+```
 
 ---
 
-### 3️⃣ قواعد العمل والنزاهة المؤسسية (Business Rules)
-1. **تطابق مخطط قاعدة البيانات بنسبة 100% (Full DB Schema Parity):**
-   - تم تضمين كافة الحقول التشغيلية والتأمينية المسجلة: وحدة السكن والعنبر (`barracksUnit`)، رقم السرير (`bedNumber`)، الرقم التأميني (`insuranceNumber`)، الموقف التأميني (`insuranceStatus`)، مقاس السيفتي (`ppeShoeSize`)، مقاس الأفرول (`ppeUniformSize`)، الملاحظات الطبية (`medicalNotes`).
-   - استبدال مسمى "البدلات الثابتة" بمسمى **"الراتب الإضافي"**.
-   - إضافة بيانات الصرف: اسم صاحب المحفظة (`walletOwnerName`)، معرف إنستاباي (`instaPayHandle`)، صنف السجائر المعتمد (`cigaretteBrand`).
-2. **الحجب المالي الصارم (RBAC Financial Data Masking):**
-   - المشرف الميداني يحصل على 32 عموداً تشغيلياً خالياً تماماً من أي ذكر للأجر اليومي، الراتب الأساسي، الراتب الإضافي، إجمالي الراتب، أو الحسابات المالية.
-   - السوبر أدمن يحصل على 43 عموداً متكاملاً مع تلوين مميز للأعمدة المالية باللون الأخضر الداكن (`#1E7E34`).
-3. **سياسة السجائر الافتراضية:** القيمة الافتراضية المعتمدة هي `NONE` (بدون مخصص).
-4. **النزاهة الذرية للاستيراد:** فحص صفوف الملف بالكامل ورفض العملية ذرياً في حال وجود خطأ بصف واحد مع إرجاع تقرير الأخطاء التفصيلي.
+### 🛡️ القواعد الحوكمية المعمارية المطبقة
+1. **عقد الشريحة الرأسية (Gate G2):** توليد ملفات Excel في الذاكرة دون تلويث القرص بملفات مؤقتة.
+2. **ميزانية التيليجرام (Gate G5):** إرسال الكشف كمستند (`sendDocument`) مع كابشن لا يتجاوز 1024 حرفاً.
+3. **أمان البيانات (Gate G8):** قصر التصدير الشامل للرواتب على الحسابات الإدارية المعتمدة.

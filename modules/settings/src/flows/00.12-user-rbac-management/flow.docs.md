@@ -1,11 +1,55 @@
-# تدفق 00.12: إدارة المستخدمين وتفويض الأدوار وربط العاملين (User RBAC Directory & Worker Linking)
+# تدفق 00.12: إدارة وتفويض المستخدمين ومصفوفة الأدوار (User RBAC Management)
+## Flow 00.12: User Management, RBAC Matrix & Worker Linking Hub
 
-## الوصف والهدف المعماري
-الترحيل المعماري الشامل للوظيفة الموروثة `10.2` لإدارة المستخدمين، تفويض الأدوار والصلاحيات، الربط المباشر والإنشاء المسبق للعضوية، ورادارات التحقق الميداني والتعارض الأمني.
+> **الموديول:** `modules/settings`  
+> **كود التدفق:** `00.12`  
+> **الرتب المصرح لها:** `SUPER_ADMIN`, `GENERAL_ADMIN`  
+> **ميزانية التيليجرام:** 36/16/7/3  
+> **حالة التدفق:** 🟢 مكتمل وموثق 100%  
 
-## المعايير والضوابط المعتمدة
-1. **الاستعراض المقسم لصفحات:** استعراض المستخدمين (8 في كل صفحة) مع شارات الأدوار والحالة.
-2. **البحث السريع:** بالاسم أو المعرف الرقمي أو كود العامل أو الهاتف.
-3. **رادار التحقق اللحظي (`getChat`):** معاينة هوية الحساب في تيليجرام قبل إتمام الربط.
-4. **رادار التعارض الأمني:** فحص المعرفات المكررة وتنزيل الحساب القديم لـ GUEST.
-5. **حراس السيادة:** حظر تعديل النفس وحظر عزل آخر سوبر أدمن نشط.
+---
+
+### 🗺️ مخطط دورة حياة التدفق (State Machine Diagram)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: تشغيل التدفق
+    
+    Idle --> UserDirectory: action:settings:user_rbac أو urb:dir
+    
+    state UserDirectory {
+        [*] --> RenderUsersPage
+        RenderUsersPage --> UserDetailCard: urb:u:* (اختيار مستخدم)
+        RenderUsersPage --> SearchUser: urb:s (بحث بالاسم/المعرف)
+        RenderUsersPage --> LinkWorkerDirect: urb:lw (ربط عامل بحساب)
+        
+        state UserDetailCard {
+            [*] --> RenderCard
+            RenderCard --> ChangeUserRole: تغيير رتبة المستخدم
+            RenderCard --> ToggleBanState: حظر / فك حظر المستخدم
+            RenderCard --> UnlinkWorker: فك ربط ملف العامل
+            ChangeUserRole --> RenderCard: تحديث الرتبة
+            ToggleBanState --> RenderCard: تحديث حالة الحظر
+            UnlinkWorker --> RenderCard: تم فك الارتباط
+        }
+        
+        state SearchUser {
+            [*] --> PromptSearchQuery
+            PromptSearchQuery --> RenderSearchResults: تنفيذ البحث
+            RenderSearchResults --> UserDetailCard: اختيار من النتائج
+        }
+    }
+    
+    UserDirectory --> IdentitySubMenu: action:settings_sub:identity
+    UserDirectory --> MainMenu: action:main_menu
+    
+    IdentitySubMenu --> [*]: إنهاء
+    MainMenu --> [*]: إنهاء
+```
+
+---
+
+### 🛡️ القواعد الحوكمية المعمارية المطبقة
+1. **عقد الشريحة الرأسية (Gate G2):** فصل طبقة تفويض المستخدمين عن الجلسات الميدانية.
+2. **ميزانية التيليجرام (Gate G5):** الالتزام بميزانية الـ Callbacks والتقسيم الصفحي للأدوار.
+3. **حصانة السوبر أدمن (Gate G7):** حظر تخفيض رتبة السوبر أدمن أو حظره لمنع تعطيل الإدارة العليا.

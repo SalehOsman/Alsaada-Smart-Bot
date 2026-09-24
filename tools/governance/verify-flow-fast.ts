@@ -13,6 +13,7 @@ import {
   toRepoPath,
   type VerificationResult,
 } from './common.js';
+import { validateMermaidStateDiagram } from './verify-architecture.js';
 
 const REQUIRED_FLOW_FILES = [
   'flow.contract.json',
@@ -102,6 +103,19 @@ export function verifyFlowFast(options: FastFlowOptions = {}): VerificationResul
     const fullPath = join(targetDir, file);
     if (!fileIsNonEmpty(fullPath)) {
       fail(result, `${repoFlowPath} is missing required file: ${file}`);
+    }
+  }
+
+  // 1.1 Check mandatory Mermaid state diagram in flow.docs.md / walkthrough.md
+  const docsPath = existsSync(join(targetDir, 'flow.docs.md'))
+    ? join(targetDir, 'flow.docs.md')
+    : existsSync(join(targetDir, 'walkthrough.md'))
+      ? join(targetDir, 'walkthrough.md')
+      : null;
+  if (docsPath) {
+    const docErrors = validateMermaidStateDiagram(toRepoPath(root, docsPath), readUtf8(docsPath));
+    for (const err of docErrors) {
+      fail(result, err);
     }
   }
 
