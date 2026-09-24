@@ -25,7 +25,7 @@ export interface BackupItem {
   codeBundleFile?: string | undefined;
   totalSizeBytes: number;
   isIntegrityIntact: boolean;
-  artifactsCount: number;
+  artifactsCount?: number | undefined;
 }
 
 export interface BackupClientProps {

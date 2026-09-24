@@ -7713,15 +7713,15 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/backup",
       "directory": "apps/admin-dashboard/src/app/admin/settings/backup",
-      "lockedAt": "2026-09-24T13:26:19.443Z",
+      "lockedAt": "2026-09-24T19:53:36.497Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/backup/backup-client.tsx",
-          "sha256": "5f4c789c59ef16601aaf4544cdcff2b1605e48741065e34e35e9f79eef6d35aa"
+          "sha256": "6aedf261d63ad495f005ed986b6b2dce0c71537ff61ca957e2637c5d6d370323"
         },
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/backup/page.tsx",
-          "sha256": "3e079af2e5ffe87b2abd8c7c507a82d4be27acd24d6f791796f8a3b14b756271"
+          "sha256": "48e848a060b3e1add33b7377e3c74fd0f178030504231b2b3f04f3565405184d"
         }
       ]
     },
@@ -8556,6 +8556,32 @@
         {
           "path": ".agents/rules/10-ai-agent-discipline-and-preflight.md",
           "sha256": "87735dfb0c7c52d48c74e53dc3282c90550b37925db95b20816186716e9aca96"
+        }
+      ]
+    },
+    "test:apps/admin-dashboard/tests/backup-page-regression.spec.ts": {
+      "id": "test:apps/admin-dashboard/tests/backup-page-regression.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: apps/admin-dashboard/tests/backup-page-regression.spec.ts",
+      "directory": "apps/admin-dashboard/tests/backup-page-regression.spec.ts",
+      "lockedAt": "2026-09-24T20:12:37.619Z",
+      "files": [
+        {
+          "path": "apps/admin-dashboard/tests/backup-page-regression.spec.ts",
+          "sha256": "880d84c0d7e5b601dfafec319ca53e6a9f7d34829ec3e9cbc62c7131f93c3539"
+        }
+      ]
+    },
+    "test:tools/docker/tests/docker-build-telemetry.spec.ts": {
+      "id": "test:tools/docker/tests/docker-build-telemetry.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/docker/tests/docker-build-telemetry.spec.ts",
+      "directory": "tools/docker/tests/docker-build-telemetry.spec.ts",
+      "lockedAt": "2026-09-24T20:12:54.095Z",
+      "files": [
+        {
+          "path": "tools/docker/tests/docker-build-telemetry.spec.ts",
+          "sha256": "06a880aeb79368134d48acf7cfe15885b645e0d38e516f44f6fd452ffc43742e"
         }
       ]
     }
