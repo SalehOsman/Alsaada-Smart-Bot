@@ -3087,7 +3087,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-24T11:02:24.576Z",
+      "lockedAt": "2026-09-24T13:25:58.274Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -3095,7 +3095,7 @@
         },
         {
           "path": "docker-compose.yml",
-          "sha256": "8a6e8547e170ef5ab25fdaf3d4c404a22daf9f25b69ec898ac3c32437a53083b"
+          "sha256": "2e0a4dcab61bc69b5b9b3b703f78d7e91f5142e9fcc61f18d4e0b1ee5729c88b"
         },
         {
           "path": "docker/Dockerfile",
@@ -3108,6 +3108,10 @@
         {
           "path": "docker/Dockerfile.docs",
           "sha256": "89064cb6dd682c11a03cf2f9137ef1ffa1df06e7c6b40b97290927f3df1d725e"
+        },
+        {
+          "path": "docker/Dockerfile.studio",
+          "sha256": "10522c6e08b91dbc54b5f0d342aba0455efdbabf7faa1f10b2047f0714961ad7"
         },
         {
           "path": "docker/nginx-docs.conf",
@@ -3626,7 +3630,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: admin-dashboard",
       "directory": "apps/admin-dashboard",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
+      "lockedAt": "2026-09-24T13:26:25.138Z",
       "files": [
         {
           "path": "apps/admin-dashboard/.gitignore",
@@ -3658,11 +3662,11 @@
         },
         {
           "path": "apps/admin-dashboard/src/app/api/admin/backup/restore/route.ts",
-          "sha256": "5576edca1ced601a2eb374ebe30d7e4cc4207ac6a7d4ce08f4477eb657df4455"
+          "sha256": "16abead85ce855e5fe60249a17d82297d76e2f1cc7a9b5d4133c3fa350f53459"
         },
         {
           "path": "apps/admin-dashboard/src/app/api/admin/backup/route.ts",
-          "sha256": "0c5d24b609806931ff316c12f79dc892a7cf0619841e565f48619d3cf2a63b1e"
+          "sha256": "6795de11dc43bc9d8cd41e994b3f3df531f2742eeb0a7d9e4e7c3585b737efa0"
         },
         {
           "path": "apps/admin-dashboard/src/app/api/admin/bot-features/route.ts",
@@ -4096,7 +4100,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: docs",
       "directory": "apps/docs",
-      "lockedAt": "2026-09-24T08:44:30.557Z",
+      "lockedAt": "2026-09-24T13:26:47.018Z",
       "files": [
         {
           "path": "apps/docs/astro.config.mjs",
@@ -4308,7 +4312,7 @@
         },
         {
           "path": "apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md",
-          "sha256": "6aca57d7b08b414d89abd18946d830c02d9612275bbde799677677f493ef9c76"
+          "sha256": "42fb92107029bb2da38256581f14bb3a0973155bca5e27f3beff60b0102fde66"
         },
         {
           "path": "apps/docs/src/content/docs/en/index.md",
@@ -7714,7 +7718,7 @@
       "type": "dashboard",
       "title": "شاشة لوحة التحكم: settings/backup",
       "directory": "apps/admin-dashboard/src/app/admin/settings/backup",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
+      "lockedAt": "2026-09-24T13:26:19.443Z",
       "files": [
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/backup/backup-client.tsx",
@@ -7722,7 +7726,7 @@
         },
         {
           "path": "apps/admin-dashboard/src/app/admin/settings/backup/page.tsx",
-          "sha256": "b6ab3420adc6aef6fa566f22d7ace6c9b8236ba84a69f3a51f22f40805a9c124"
+          "sha256": "3e079af2e5ffe87b2abd8c7c507a82d4be27acd24d6f791796f8a3b14b756271"
         }
       ]
     },
@@ -7731,7 +7735,7 @@
       "type": "flow",
       "title": "تدفق البوت: 00.13-system-backup-recovery (00.13)",
       "directory": "modules/settings/src/flows/00.13-system-backup-recovery",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
+      "lockedAt": "2026-09-24T13:36:38.282Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.contract.json",
@@ -7755,11 +7759,11 @@
         },
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.repository.ts",
-          "sha256": "9f9ff56fb203c5c6005f1b22cd8fdb764e577605e3ed8af48a438fcd0942681d"
+          "sha256": "ebeddf6ef53beef4ac8fecc5e38c45e0bd4898cf65a97bb0e17a368c53ccd475"
         },
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.service.ts",
-          "sha256": "ab84ff50398c902ce942cb72cacd929daa86079375e7fa18ccf41f611f28d837"
+          "sha256": "1d33c1bb2611f44f7bd07c309cc15f7c89851a36e121ce22eed2604e3d8763f6"
         },
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.telemetry.ts",
@@ -7767,7 +7771,7 @@
         },
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.types.ts",
-          "sha256": "7ef39b1b5f0faef1c738ca7dae8d542fd57376a7e54d2827c378cb432e6a7da7"
+          "sha256": "be8568f17d24e629c050f34a30b470fcd05001fc10d96891c8141921ebfa8b65"
         },
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.validators.ts",
@@ -7849,11 +7853,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/tests/flows/00.13-system-backup-recovery.spec.ts",
       "directory": "modules/settings/tests/flows/00.13-system-backup-recovery.spec.ts",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
+      "lockedAt": "2026-09-24T13:46:03.552Z",
       "files": [
         {
           "path": "modules/settings/tests/flows/00.13-system-backup-recovery.spec.ts",
-          "sha256": "98f53df97068e0155be463f8318d51bf64b88b3148715edf238ca32f2632cd0b"
+          "sha256": "424bce789c49049e6be47e0760829dea4a72723b1cc547ac7f96dd6651d65f1c"
         }
       ]
     },

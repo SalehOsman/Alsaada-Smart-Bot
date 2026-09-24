@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { createFullBackup, listBackups } from '../../../../../../../tools/backup/backup-manager.js';
-import { runDisasterRecoveryDrill } from '../../../../../../../tools/backup/verify-disaster-recovery.js';
+import { SystemBackupRecoveryService } from '@alsaada/settings';
+
+const backupService = new SystemBackupRecoveryService();
 
 export async function GET() {
   try {
@@ -15,18 +16,18 @@ export async function GET() {
       return NextResponse.json({ error: 'غير مصرح لك بإدارة النسخ الاحتياطي واستعادة الكوارث' }, { status: 403 });
     }
 
-    const backups = await listBackups();
-    const latest = backups[0] ?? null;
+    const stats = await backupService.getBackupStatus();
+    const backups = await backupService.listRecentBackups();
 
     return NextResponse.json({
       success: true,
       stats: {
-        totalBackups: backups.length,
-        latestBackupAt: latest?.createdAt ?? null,
-        rpoStatus: latest ? 'HEALTHY' : 'NEEDS_BACKUP',
-        cloudSyncEnabled: Boolean(process.env.GDRIVE_FOLDER_ID),
-        encryptionType: 'AES-256-GCM',
-        zeroBloatLimitMb: 30,
+        totalBackups: stats.totalBackups,
+        latestBackupAt: stats.latestBackupAt,
+        rpoStatus: stats.rpoStatus,
+        cloudSyncEnabled: stats.cloudSyncEnabled,
+        encryptionType: stats.encryptionType,
+        zeroBloatLimitMb: stats.zeroBloatLimitMb,
       },
       backups,
     });
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
     const action = body.action ?? 'create';
 
     if (action === 'drill') {
-      const drillResult = await runDisasterRecoveryDrill();
+      const drillResult = await backupService.runDrill();
       return NextResponse.json({
         success: drillResult.ok,
         action: 'drill',
@@ -63,9 +64,7 @@ export async function POST(req: Request) {
     }
 
     // Default action: create full backup
-    const manifest = await createFullBackup({
-      syncCloud: Boolean(process.env.GDRIVE_FOLDER_ID),
-    });
+    const manifest = await backupService.executeBackupNow();
 
     return NextResponse.json({
       success: true,

@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1
+# ==============================================================================
+# Al-Saada Smart Bot Enterprise — Dedicated Prisma Studio Dockerfile
+# ==============================================================================
+# High-speed isolated database studio container.
+# Eliminates bot-server and modules compilation overhead (<30s build time).
+# ==============================================================================
+
+FROM node:24-alpine
+
+ENV DATABASE_URL="postgresql://build_placeholder:dummy@127.0.0.1:5432/build_db?schema=public"
+
+WORKDIR /app
+
+# Install pnpm & necessary database client tools
+RUN npm install -g pnpm@12.4.2
+RUN apk add --no-cache openssl git
+
+# Copy monorepo root manifests & database package manifest
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/database/package.json packages/database/
+
+# Install database dependencies with BuildKit pnpm store cache
+ENV GIT_DIR=/tmp/alsaada-build.git
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    git init --bare "$GIT_DIR" \
+    && pnpm install --filter @alsaada/database... --frozen-lockfile=true
+
+# Copy Prisma schema and database configuration
+COPY packages/database/prisma/ packages/database/prisma/
+COPY packages/database/src/ packages/database/src/
+COPY packages/database/tsconfig.json packages/database/
+COPY packages/database/prisma.config.ts packages/database/
+COPY tsconfig.json ./
+
+# Generate Prisma Client
+RUN pnpm --filter @alsaada/database db:generate
+
+EXPOSE 5556
+
+CMD ["pnpm", "--filter", "@alsaada/database", "exec", "prisma", "studio", "--port", "5556", "--browser", "none"]

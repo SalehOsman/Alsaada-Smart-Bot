@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { createFullBackup, restoreBackup } from '../../../../../../../../tools/backup/backup-manager.js';
+import { SystemBackupRecoveryService } from '@alsaada/settings';
+
+const backupService = new SystemBackupRecoveryService();
 
 export async function POST(req: Request) {
   try {
@@ -32,13 +34,10 @@ export async function POST(req: Request) {
     }
 
     // Step 1: Automated Safety Snapshot before restoration
-    const preRestoreSafetySnapshot = await createFullBackup();
+    const preRestoreSafetySnapshot = await backupService.executeBackupNow();
 
     // Step 2: Execute Restore with Post-Restore Verification Gate
-    const restoreResult = await restoreBackup({
-      backupId,
-      keyOrPassphrase: coldPassphrase,
-    });
+    const restoreResult = await backupService.restoreBackup(backupId, coldPassphrase);
 
     if (!restoreResult.success) {
       return NextResponse.json(
