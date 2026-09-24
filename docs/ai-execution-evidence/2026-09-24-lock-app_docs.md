@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:docs)
 
-- **تاريخ القفل:** 2026-09-24 (2026-09-24T07:24:48.305Z)
+- **تاريخ القفل:** 2026-09-24 (2026-09-24T08:44:30.557Z)
 - **معرف الكيان:** `app:docs`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: docs
 - **المسار الأساسي:** `apps/docs`
 - **عدد الملفات المقفلة:** 78 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+- **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
@@ -64,7 +64,7 @@
 | `apps/docs/src/content/docs/core-architecture/17-worker-coding-and-silent-alias-resolution.md` | `92dbe8d1d8335935f7229203668cc6bf6d29f4a3d2d1d0ff7de34188c0e9ba84` |
 | `apps/docs/src/content/docs/core-architecture/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md` | `cad0c6a7b32b24276f102d3c0849f0859e43990e85e3890f2701f127e5dd746e` |
 | `apps/docs/src/content/docs/data-and-migration/18-enterprise-schema-and-entity-relationship-model.md` | `0645d69b3e08610a02781253deb23b5ea7d6a78ec36af665d35b852ddc3fc74d` |
-| `apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md` | `6ed63272f9c6c17e836315845643081c443a7911113df7b4387e5432915e1531` |
+| `apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md` | `6aca57d7b08b414d89abd18946d830c02d9612275bbde799677677f493ef9c76` |
 | `apps/docs/src/content/docs/en/index.md` | `1d590738ca35eae6273a95370a380d9e0d2e8f6ed7158c8cb2cb907e4965991a` |
 | `apps/docs/src/content/docs/financial-and-governance/08-universal-rbac-and-executive-role.md` | `1c16d72947ccaf9eaa9cf7470f374b41271a8cc1944edb91ff8e4eaacf93e5aa` |
 | `apps/docs/src/content/docs/financial-and-governance/09-database-governance-and-superadmin-console.md` | `02f300ec3a4e195a391303e00462aa7184a7827f3cb281a98248ec1ee63fb131` |

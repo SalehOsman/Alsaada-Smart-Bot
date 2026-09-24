@@ -21,3 +21,24 @@
 - ⚠️ **كشف العمال قيد المتابعة:** كشف دوري مفلتر ومقسم لصفحات للعمال ذوي التقييم الأقل من 60.
 - 🏆 **لوحة شرف الأكثر التزاماً:** تكريم للعمال الملتزمين بأعلى درجات الانضباط.
 - 📊 **تصدير كشف التقييمات إكسيل RTL:** توليد ملف إكسيل معتمد بتنسيق عربي كامل وملخص إحصائي للإدارة والمواقع.
+
+## مخطط حالات التدفق (State Machine Diagram)
+
+```mermaid
+stateDiagram-v2
+    [*] --> CommitmentHub: تشغيل تدفق مؤشر التزام العمال
+    CommitmentHub --> QueryWorker: زر استعلام تقييم عامل
+    CommitmentHub --> UnderReviewList: زر كشف العمال قيد المتابعة
+    CommitmentHub --> HonorRoll: زر لوحة شرف الأكثر التزاماً
+    CommitmentHub --> ExportExcel: زر تصدير كشف التقييمات إكسيل
+    
+    QueryWorker --> SearchInput: بحث بالاسم أو كود العامل أو تصفح القوائم
+    SearchInput --> DisplayScoreCard: استعراض تفاصيل النقاط ومحاور التقييم
+    UnderReviewList --> DisplayScoreCard: اختيار عامل قيد المتابعة
+    HonorRoll --> DisplayScoreCard: اختيار عامل متميز
+    
+    DisplayScoreCard --> CommitmentHub: العودة للرئيسية
+    ExportExcel --> DocumentDelivered: توليد ملف Excel RTL وإرساله للبوت
+    DocumentDelivered --> CommitmentHub: العودة للرئيسية
+    CommitmentHub --> [*]: إنهاء التدفق والعودة للقائمة
+```

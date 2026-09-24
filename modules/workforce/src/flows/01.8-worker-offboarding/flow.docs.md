@@ -45,3 +45,38 @@
 8. **التنفيذ الذري وبطاقة النجاح:**
    - تنفيذ المعاملة داخل `$transaction` بضمان ACID.
    - بطاقة الإنجاز مع رابط إرسال الواتساب وزر البدء من جديد وزر العودة للبوابة.
+
+## مخطط حالات التدفق (State Machine Diagram)
+
+```mermaid
+stateDiagram-v2
+    [*] --> SelectWorker: بدء تدفق إنهاء الخدمة والمخالصة
+    SelectWorker --> RoleRouting: اختيار العامل المراد إنهاء خدمته
+    RoleRouting --> FieldClearance: المشرف الميداني (حجب مالي تام)
+    RoleRouting --> AdminSettlement: الإدارة العليا والمحاسبين
+    
+    state FieldClearance {
+        [*] --> PPEAudit: فحص مهمات الوقاية والعهد
+        PPEAudit --> UploadPhotoProof: توثيق صور التلفيات (اختياري)
+        PPEAudit --> ConfirmFieldReport: تسليم سليم دون تلفيات
+        UploadPhotoProof --> ConfirmFieldReport: حفظ الصورة بسند المخالصة
+        ConfirmFieldReport --> [*]: إرسال التقرير الميداني للإدارة
+    }
+    
+    state AdminSettlement {
+        [*] --> CheckPendingDecisions: فحص الجزاءات والمكافآت المعلقة
+        CheckPendingDecisions --> ResolvePending: اعتماد / استبعاد / ترحيل للمسير
+        ResolvePending --> ComputeNetBalance: احتساب أيام العمل وصافي المستحقات
+        ComputeNetBalance --> StandardPayout: صافي مستحق موجب أو صفري
+        ComputeNetBalance --> NegativeBalanceAlert: صافي سالب (مديونية على العامل)
+        NegativeBalanceAlert --> HandleDebt: إسقاط إداري أو إدراج بالقائمة السوداء
+        StandardPayout --> FinalApproval: اختيار آلية الصرف (فوري / مسير)
+        HandleDebt --> FinalApproval: توثيق مديونية العامل
+        FinalApproval --> [*]: إصدار سند المخالصة المشفر SHA-256
+    }
+    
+    FieldClearance --> ExecuteDemotion: اعتماد الإخلاء الميداني
+    AdminSettlement --> ExecuteDemotion: اعتماد التصفية المالية
+    ExecuteDemotion --> Completed: هبوط رتبة الحساب فورياً إلى GUEST وتفريغ الكاش
+    Completed --> [*]: إرسال سند المخالصة عبر واتساب والإنهاء
+```

@@ -387,7 +387,50 @@ export class ${pascalSlug}Controller {
   writeFileSync(join(flowDir, 'controller.ts'), controllerContent, 'utf8');
   filesCreated.push(join('src', 'flows', flowFolderName, 'controller.ts').replace(/\\/g, '/'));
 
-  // 10. Test fixture: modules/<module>/tests/flows/<id>-<slug>.spec.ts
+  // 10. flow.docs.md (State Machine & Documentation Standard)
+  const docsContent = `# تدفق ${flowId}: ${titleArabic} (\`${slug}\`)
+## Flow ${flowId}: ${pascalSlug} (Work Plan Standard)
+
+> **الموديول:** \`modules/${moduleId}\`  
+> **كود التدفق:** \`${flowId}\`  
+> **الرتب المصرح لها:** \`SUPER_ADMIN\`, \`FIELD_ADMIN\`  
+> **ميزانية التيليجرام:** 36/16/7/3  
+
+---
+
+### 🗺️ مخطط دورة حياة التدفق (State Machine Diagram)
+
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle: تشغيل التدفق / الأمر
+    
+    Idle --> Prompt: بدء الجلسة (INIT)
+    
+    state Prompt {
+        [*] --> RenderPrompt: عرض الشاشة وطلب المدخلات
+        RenderPrompt --> Validating: استقبال المدخلات
+        Validating --> RenderPrompt: خطأ بالمدخلات (إعادة المحاولة)
+        Validating --> ConfirmCard: صحة المدخلات وعرض بطاقة المراجعة
+    }
+    
+    ConfirmCard --> ExecutionSuccess: تأكيد الإجراء (${flowActionPrefix}:confirm)
+    ConfirmCard --> Cancelled: إلغاء الإجراء (${flowActionPrefix}:cancel)
+    
+    ExecutionSuccess --> [*]: إنهاء الجلسة وبطاقة الإنجاز (COMPLETED)
+    Cancelled --> [*]: إلغاء الجلسة والعودة
+\`\`\`
+
+---
+
+### 🛡️ القواعد الحوكمية المعمارية
+1. **عقد الشريحة الرأسية (G2):** الالتزام بمعمارية الـ 10 ملفات واستقلالية التدفق.
+2. **ميزانية تليجرام (G5):** طول الـ Callback لا يتجاوز 36 بايت والتسميات أقل من 16 حرفاً.
+3. **خزانة الأعطال (G9):** توثيق كافة الأعطال عبر \`captureFlowError\` وبطاقة البلاغ \`#ERR-XXXXXXXX\`.
+`;
+  writeFileSync(join(flowDir, 'flow.docs.md'), docsContent, 'utf8');
+  filesCreated.push(join('src', 'flows', flowFolderName, 'flow.docs.md').replace(/\\/g, '/'));
+
+  // 11. Test fixture: modules/<module>/tests/flows/<id>-<slug>.spec.ts
   const testsFlowDir = join(moduleDir, 'tests', 'flows');
   mkdirSync(testsFlowDir, { recursive: true });
 

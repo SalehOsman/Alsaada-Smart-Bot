@@ -42,7 +42,75 @@ const REQUIRED_FLOW_FILES_V2 = [
   'types.ts',
   'validator.ts',
   'error.handler.ts',
+  'flow.docs.md',
 ] as const;
+
+export function validateMermaidStateDiagram(filePath: string, content: string): string[] {
+  const errors: string[] = [];
+
+  // 1. Must contain stateDiagram-v2 or stateDiagram
+  if (!content.includes('stateDiagram-v2') && !content.includes('stateDiagram')) {
+    errors.push(`${filePath} is missing mandatory Mermaid state diagram (stateDiagram-v2)`);
+    return errors;
+  }
+
+  // 2. Extract Mermaid blocks
+  const mermaidMatches = content.match(/```mermaid[\s\S]*?```/g);
+  if (!mermaidMatches || mermaidMatches.length === 0) {
+    errors.push(`${filePath} contains no valid fenced \`\`\`mermaid code block`);
+    return errors;
+  }
+
+  let validDiagramFound = false;
+
+  for (const block of mermaidMatches) {
+    if (!block.includes('stateDiagram-v2') && !block.includes('stateDiagram')) {
+      continue;
+    }
+
+    const blockErrors: string[] = [];
+
+    // Check entry transition: [*] -->
+    if (!/\[\*\]\s*-->/.test(block)) {
+      blockErrors.push(`${filePath}: state diagram is missing initial entry transition ([*] -->)`);
+    }
+
+    // Check terminal transition: --> [*]
+    if (!/-->\s*\[\*\]/.test(block)) {
+      blockErrors.push(`${filePath}: state diagram is missing terminal transition (--> [*])`);
+    }
+
+    // Count transitions (-->)
+    const arrowCount = (block.match(/-->/g) || []).length;
+    if (arrowCount < 3) {
+      blockErrors.push(
+        `${filePath}: state diagram must contain at least 3 state transitions (found ${arrowCount})`
+      );
+    }
+
+    // Check balanced braces for sub-states: count { and }
+    const openBraces = (block.match(/\{/g) || []).length;
+    const closeBraces = (block.match(/\}/g) || []).length;
+    if (openBraces !== closeBraces) {
+      blockErrors.push(
+        `${filePath}: state diagram has unbalanced sub-state braces ({: ${openBraces}, }: ${closeBraces})`
+      );
+    }
+
+    if (blockErrors.length === 0) {
+      validDiagramFound = true;
+      break;
+    } else {
+      errors.push(...blockErrors);
+    }
+  }
+
+  if (validDiagramFound) {
+    return [];
+  }
+
+  return errors.length > 0 ? errors : [`${filePath} does not contain a valid stateDiagram-v2 block`];
+}
 
 const COMPLETED_STATUSES = new Set(['Implemented', 'UAT_PASS']);
 
@@ -115,6 +183,28 @@ export function verifyArchitecture(root = process.cwd()): VerificationResult {
       if (!pluginText.includes('@alsaada/core-components')) {
         fail(result, `${toRepoPath(root, pluginFile)} must import FlowPlugin from @alsaada/core-components`);
       }
+    }
+
+    // Validate mandatory Mermaid state diagram in flow.docs.md / walkthrough.md (Rule 07 Section 5 & Gate G22)
+    const flowDocsFile = join(flowDir, 'flow.docs.md');
+    const walkthroughFile = join(flowDir, 'walkthrough.md');
+    const activeDocFile = existsSync(flowDocsFile)
+      ? flowDocsFile
+      : existsSync(walkthroughFile)
+        ? walkthroughFile
+        : null;
+
+    if (activeDocFile) {
+      const docContent = readUtf8(activeDocFile);
+      const diagramErrors = validateMermaidStateDiagram(toRepoPath(root, activeDocFile), docContent);
+      for (const diagErr of diagramErrors) {
+        fail(result, diagErr);
+      }
+    } else {
+      fail(
+        result,
+        `${repoFlowPath} is missing mandatory flow documentation file (flow.docs.md or walkthrough.md)`
+      );
     }
   }
 

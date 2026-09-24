@@ -28,3 +28,21 @@
 ## الأمان والتدقيق الجنائي
 - تسجيل كل تعديل في جدول `AuditLog` موثقاً بالمعرف الرقمي وقيمتي ما قبل وبعد التعديل.
 - إطلاق حدث في طابور `OutboxEvent` للمزامنة الخلفية مع سجلات العمالة.
+
+## مخطط حالات التدفق (State Machine Diagram)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: تشغيل البوت / القائمة الذاتية
+    Idle --> SelectingField: wizard worker_self_edit start
+    SelectingField --> EnteringValue: اختيار حقل مسموح (هاتف، طوارئ، محفظة)
+    EnteringValue --> ReviewSummary: إدخال القيمة والتحقق من صحتها
+    ReviewSummary --> SelectingField: زر العودة / تغيير حقل
+    ReviewSummary --> Cancelled: زر الإلغاء
+    ReviewSummary --> PersistingUpdate: زر التأكيد والحفظ
+    PersistingUpdate --> Completed: نجاح التحديث وتسجيل التدقيق الجنائي
+    PersistingUpdate --> ErrorState: فشل الحفظ أو قيد مالي محظور
+    Completed --> [*]: إرسال بطاقة الإشعار والإنهاء
+    Cancelled --> [*]: إلغاء العملية والعودة للملف
+    ErrorState --> [*]: عرض رسالة الخطأ والإنهاء
+```

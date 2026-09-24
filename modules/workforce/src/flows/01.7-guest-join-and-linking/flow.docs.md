@@ -18,3 +18,22 @@
 - تفعيل الحساب: `User.role = 'WORKER'`, `User.workerId = worker.id`.
 - ربط العامل: `Worker.telegramId = applicantTelegramId`.
 - تفريغ الكاش وتحديث الأوامر الجانبية فورياً.
+
+## مخطط حالات التدفق (State Machine Diagram)
+
+```mermaid
+stateDiagram-v2
+    [*] --> AwaitingApplication: زائر غير مسجل يفتح البوت
+    AwaitingApplication --> CollectingGuestInfo: wizard guest_join start
+    CollectingGuestInfo --> SubmittingApplication: إدخال البيانات الشخصية ورقم الهاتف
+    SubmittingApplication --> PendingAdminReview: حفظ الطلب وإشعار الإدارة
+    PendingAdminReview --> IssuingEncryptedToken: موافقة الإدارة وتوليد رمز HMAC (24h)
+    PendingAdminReview --> Rejected: رفض الطلب من قبل الإدارة
+    IssuingEncryptedToken --> OutOfBandDelivery: إرسال الرابط المشفر لواتساب العامل
+    OutOfBandDelivery --> VerifyingIdentity: فتح الرابط بالبوت وفحص تطابق المعرف
+    VerifyingIdentity --> AccountLinked: تطابق التوكن ومعرف التيليجرام
+    VerifyingIdentity --> ValidationFailed: انتهاء صلاحية التوكن أو عدم تطابق المعرف
+    AccountLinked --> [*]: ترقية الدور إلى WORKER واستهلاك التوكن
+    Rejected --> [*]: إشعار الزائر بالرفض
+    ValidationFailed --> [*]: حظر العملية وتسجيل تنبيه أمني
+```
