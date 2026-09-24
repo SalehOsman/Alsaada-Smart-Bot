@@ -89,6 +89,7 @@ flowchart TD
 - **Delta Chunking & AST Compression:** Diffs exceeding 300 lines are compressed into essential AST structural signatures (classes, functions, buttons, telemetry, and assertions), avoiding redundant text filler.
 - **Authentic Cloud Provenance & Full Evaluation:** All 25 governance catalog questions are dispatched to TypeSafe System One (or resolved from SHA-256 cloud cache) so that 100% of inspection dimensions carry authentic `Engine: api` provenance with zero local heuristic bypass in CLI mode.
 - **SHA-256 Caching & Token Economy:** All cloud evaluations are cached by cryptographic hash in `.governance-cache/jev-cloud-cache.json` for 0ms / 0-token repeat checks. Precedent index lookup (`.agents/knowledge/precedents/index.json`) provides instant 0-token resolution for verified patterns.
+- **الإلزام الصارم ببيان عداد طلبات النموذج السحابي (Mandatory Cloud Model Request Telemetry Invariant):** يُلزم الوكيل `/jev` إلزاماً قطعياً وصارماً في **كل جولة عمل وكل تقرير نهائي** بإرفاق جدول **«📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)»** الذي يوضح بدقة: عدد الطلبات الفعلية المرسلة للنموذج السحابي (`cloudRequestsSent`)، وإجمالي محاولات الشبكة (`httpAttemptsTotal`)، والاستجابات المسترجعة من الكاش التشفيري (`cloudCacheHits`)، وفهرس السوابق (`precedentHits`)، وإجمالي المعايير المقيمة (`questionsDispatchedToCloud`). يُعد إغفال هذا البيان في أي جولة أو تقرير مخالفة دستورية تستوجب الرفض الفوري (`[REJECT]`).
 - **Zero Blast Radius Guard:** Programmatic `engine: 'heuristic'` is strictly retained for offline unit tests.
 
 ---
@@ -270,16 +271,25 @@ When invoked via `/jev`, the agent outputs a structured report:
 - `observability_g9_compliant`: Yes (Confidence: 0.97, Engine: physical-ast)
 - `rich_message_compliant`: Yes (Confidence: 0.95, Engine: physical-ast)
 
-### 4. JEV Consultation & Skill Alignment (WP 96)
+### 4. 📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)
+| المؤشر الرقابي (Telemetry Metric) | القيمة (Value) | التفاصيل والإسناد (Provenance) |
+| :--- | :---: | :--- |
+| **عدد الطلبات الفعلية المرسلة للنموذج السحابي (`cloudRequestsSent`)** | **`1`** | `https://api.typesafe.ai/v1/systemone` (`jev-latest`) |
+| **إجمالي محاولات الاتصال بالشبكة (`httpAttemptsTotal`)** | **`1`** | Retries: `0` |
+| **الاستجابات المسترجعة من الكاش التشفيري (`cloudCacheHits`)** | **`0`** | `.governance-cache/jev-cloud-cache.json` (SHA-256) |
+| **الاستعلامات المحلولة من فهرس السوابق (`precedentHits`)** | **`1`** | `.agents/knowledge/precedents/index.json` (0 Tokens) |
+| **إجمالي المعايير المقيمة سحابياً (`questionsDispatchedToCloud`)** | **`25`** | Engine Mode: `api` |
+
+### 5. JEV Consultation & Skill Alignment (WP 96)
 - **Consultation Phase:** [Pre-Task | Mid-Task | Post-Task]
 - **Target Plan / Skill:** [Path or Skill Name]
 - **6-Pillar Plan Score:** Level 3 (Full 6-pillar sovereign specification)
 - **Skill Graph Alignment:** 11/11 skills verified, 0 orphan skills
 
-### 5. Forensic Verdict & Directive
+### 6. Forensic Verdict & Directive
 👉 **VERDICT: [CERTIFIED PASS | CONDITIONAL PASS | REJECT]**
 
-### 6. Autonomous Squad Routing & Corrective Directive (if not Certified Pass)
+### 7. Autonomous Squad Routing & Corrective Directive (if not Certified Pass)
 - **Responsible Squad:** @squad-finance-security | @squad-implementation-ux | @squad-architecture-devops | @squad-qa-migration
 - **Copy-Pasteable Squad Directive:**
   ```markdown

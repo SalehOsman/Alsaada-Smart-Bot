@@ -133,6 +133,8 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
    - يتمتع `/saleh` بالمرونة؛ فإذا تعذر الاتصال بالسيرفر السحابي، لا يتعطل بل يسجل إشعار التعذر بشفافية ويستكمل أعماله الرقابية والفيزيائية مستقلاً.
 5. **اقتصاد التوكينات وفهرس السوابق الجنائية (Zero-Token Precedent Index):**
    - يُلزم بالاستعلام أولاً من فهرس السوابق `.agents/knowledge/precedents/index.json` للاسترجاع الفوري بصفر توكن وزمن استجابة <1ms قبل استدعاء السحابة، وضغط الفروقات الكبيرة (>300 سطر) عبر AST Delta Compression.
+6. **الإلزام الصارم ببيان عداد طلبات النموذج السحابي (Mandatory Cloud Model Request Telemetry Invariant):**
+   - يُلزم الوكيلان `/jev` و `/saleh` إلزاماً قطعياً وصارماً في **كل جولة عمل وكل تقرير نهائي** بإدراج جدول **«📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)»** موضحاً بدقة: عدد الطلبات الفعلية المرسلة للنموذج السحابي (`cloudRequestsSent`)، وإجمالي محاولات الاتصال بالشبكة (`httpAttemptsTotal`)، والاستجابات المسترجعة من الكاش التشفيري (`cloudCacheHits`)، وفهرس السوابق (`precedentHits`)، وإجمالي المعايير المقيمة (`questionsDispatchedToCloud`)؛ ويُعد غياب هذا البيان مخالفة تستوجب `[REJECT]` فوري.
 
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.

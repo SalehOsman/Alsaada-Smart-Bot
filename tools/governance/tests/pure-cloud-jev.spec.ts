@@ -3,6 +3,7 @@ import {
   compressDiffIfLarge,
   evaluateBatchParallel,
   FatalJevSystemOneError,
+  formatJevReport,
   loadCloudCache,
   resolveGitDiff,
   runJevAudit,
@@ -521,6 +522,127 @@ describe('Work Plan 97: Pure Cloud JEV Sentinel, Resilient Strategic Saleh Advis
       for (const [key, judgment] of Object.entries(judgments)) {
         expect(judgment.source, `Question ${key} must have source: 'api'`).toBe('api');
       }
+    });
+  });
+
+  describe('9. Mandatory Cloud Model Request Telemetry Statement (/jev & /saleh)', () => {
+    it('tracks exact cloudRequestsSent=1 and httpAttemptsTotal=1 on live cloud API execution and prints mandatory telemetry table in JEV report', async () => {
+      const cachePath = join(root, '.governance-cache', 'jev-cloud-cache.json');
+      if (existsSync(cachePath)) {
+        rmSync(cachePath, { force: true });
+      }
+
+      globalThis.fetch = vi.fn().mockImplementation(async (_url: string, init: any) => {
+        const reqBody = JSON.parse(init.body);
+        const requestedQuestions = reqBody.questions || {};
+        const answers: Record<string, any> = {};
+        for (const [key, q] of Object.entries(requestedQuestions) as [string, any][]) {
+          if (q.type === 'noul') {
+            answers[key] = { type: 'noul', noul: 0.9, confidence: 0.96 };
+          } else if (q.type === 'choice') {
+            answers[key] = { type: 'choice', choice: q.choices?.[0] || 'optimal', confidence: 0.96 };
+          } else if (q.type === 'score') {
+            answers[key] = { type: 'score', score: 3, confidence: 0.96 };
+          }
+        }
+        return new Response(JSON.stringify({ answers }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      });
+
+      const report = await runJevAudit(
+        {
+          skipTypecheck: true,
+          engine: 'api',
+          apiKey: `telemetry-live-key-${Date.now()}`,
+        },
+        root
+      );
+
+      expect(report.cloudTelemetry).toBeDefined();
+      expect(report.cloudTelemetry.cloudRequestsSent).toBe(1);
+      expect(report.cloudTelemetry.httpAttemptsTotal).toBe(1);
+      expect(report.cloudTelemetry.cloudCacheHits).toBe(0);
+      expect(report.cloudTelemetry.questionsDispatchedToCloud).toBe(25);
+      expect(report.cloudTelemetry.engineMode).toBe('api');
+
+      const formatted = formatJevReport(report);
+      expect(formatted).toContain('بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)');
+      expect(formatted).toContain('cloudRequestsSent');
+      expect(formatted).toContain('1');
+    });
+
+    it('tracks cloudRequestsSent=2 when first HTTP attempt fails and second retry succeeds', async () => {
+      const cachePath = join(root, '.governance-cache', 'jev-cloud-cache.json');
+      if (existsSync(cachePath)) {
+        rmSync(cachePath, { force: true });
+      }
+
+      let attempt = 0;
+      globalThis.fetch = vi.fn().mockImplementation(async (_url: string, init: any) => {
+        attempt++;
+        if (attempt === 1) {
+          throw new Error('Temporary 502 Bad Gateway');
+        }
+        const reqBody = JSON.parse(init.body);
+        const requestedQuestions = reqBody.questions || {};
+        const answers: Record<string, any> = {};
+        for (const [key, q] of Object.entries(requestedQuestions) as [string, any][]) {
+          answers[key] =
+            q.type === 'noul'
+              ? { type: 'noul', noul: 0.9, confidence: 0.95 }
+              : q.type === 'choice'
+              ? { type: 'choice', choice: q.choices?.[0] || 'optimal', confidence: 0.95 }
+              : { type: 'score', score: 3, confidence: 0.95 };
+        }
+        return new Response(JSON.stringify({ answers }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      });
+
+      const report = await runJevAudit(
+        {
+          skipTypecheck: true,
+          engine: 'api',
+          apiKey: `telemetry-retry-key-${Date.now()}`,
+          retryOptions: { delays: [1, 2, 4], timeoutMs: 50, maxRetries: 3 },
+        },
+        root
+      );
+
+      expect(report.cloudTelemetry.cloudRequestsSent).toBe(2);
+      expect(report.cloudTelemetry.httpAttemptsTotal).toBe(2);
+      expect(report.cloudTelemetry.cloudCacheHits).toBe(0);
+    });
+
+    it('records cloudRequestsSent=3 in SalehAuditReport and formats mandatory telemetry statement even when cloud fails all 3 retries', async () => {
+      process.env.TYPESAFE_API_KEY = 'test-telemetry-outage-key';
+      const cachePath = join(root, '.governance-cache', 'jev-cloud-cache.json');
+      if (existsSync(cachePath)) {
+        rmSync(cachePath, { force: true });
+      }
+
+      globalThis.fetch = vi.fn().mockImplementation(async () => {
+        throw new Error('Network unreachable');
+      });
+
+      const salehReport = await runSalehAuditSuite({
+        guards: true,
+        jev: true,
+        jevEngine: 'api',
+        retryOptions: { delays: [1, 2, 4], timeoutMs: 20, maxRetries: 3 },
+      });
+
+      expect(salehReport.cloudTelemetry).toBeDefined();
+      expect(salehReport.cloudTelemetry?.cloudRequestsSent).toBe(3);
+      expect(salehReport.cloudTelemetry?.httpAttemptsTotal).toBe(3);
+
+      const formattedSaleh = formatSalehVerdictReport(salehReport);
+      expect(formattedSaleh).toContain('بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)');
+      expect(formattedSaleh).toContain('cloudRequestsSent');
+      expect(formattedSaleh).toContain('3');
     });
   });
 });

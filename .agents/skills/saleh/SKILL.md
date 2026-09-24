@@ -90,6 +90,7 @@ flowchart TD
 - **Resilient Advisory Continuity:** When running boosted forensic audits (`pnpm audit:saleh:boost`), `/saleh` leverages JEV live cloud consultation (`https://api.typesafe.ai/v1/systemone`). If the cloud server is temporarily unreachable, `/saleh` **does NOT halt** and does not abort user work. It transparently logs:
   > `⚠️ [ملاحظة حوكمية]: تعذر الاتصال بمحرك JEV السحابي مؤقتاً. واصل الوكيل صالح المراجعة استناداً إلى التحليل الاستراتيجي الفيزيائي المستقل.`
   and proceeds with its independent physical verification (AST analysis, test suite execution, and documentation parity).
+- **الإلزام الصارم ببيان عداد طلبات النموذج السحابي (Mandatory Cloud Model Request Telemetry Invariant):** يُلزم الوكيل `/saleh` (وكذلك الوكيل `/jev`) في **كل جولة عمل وكل تقرير نهائي** بإرفاق قسم إلزامي ثابت بعنوان **«📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)»** يوضح العدد الدقيق للطلبات المرسلة فعلياً للنموذج السحابي (`cloudRequestsSent`)، وإجمالي محاولات الشبكة (`httpAttemptsTotal`)، والاستجابات المسترجعة من الكاش (`cloudCacheHits`)، وفهرس السوابق (`precedentHits`)، وإجمالي المعايير المقيمة (`questionsDispatchedToCloud`). يُعد غياب هذا البيان في أي جولة أو تقرير مخالفة تستوجب الرفض الفوري (`[REJECT]`).
 
 ---
 
@@ -231,6 +232,7 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 - [ ] **Cryptographic Lock Integrity (G13):** Was `governance.lock.json` bypassed or are unrecorded files present?
 - [ ] **Adversarial Gatekeeper Mode & Approval Provenance (WP 100):** Were constitutionally protected files (`GEMINI.md`, `AGENTS.md`, `.agents/rules/**`, `.agents/skills/**`, `governance.lock.json`) modified without verbatim untranslated formulas (`«موافق على التعديل او الايقاف او الحذف»`) or dynamic OTP challenge-response (`«موافق على الفتح <UNLOCK-XXXXXX>»`)? Casual approvals (`موافق`) are strictly rejected.
 - [ ] **Constitutional Docs Parity (G19):** Are all mandatory governance docs referenced across AGENTS.md and GEMINI.md?
+- [ ] **Mandatory Cloud Model Request Telemetry:** Did `/jev` and `/saleh` include the exact Cloud Model Request Telemetry statement (`cloudRequestsSent`, `httpAttemptsTotal`, `cloudCacheHits`, `precedentHits`) in the round and final report?
 - [ ] **Physical Reality Proof:** Were tests executed directly in terminal and actual exit code 0 verified?
 
 ### 3. Concrete Evidence
@@ -243,6 +245,15 @@ When Saleh asks `/saleh` to evaluate a worker agent's completed work, `/saleh` r
 - **Composite Governance Index (CGI v2.0):** [0.0% to 100.0%]
 - **JEV Forensic Verdict:** [CERTIFIED PASS | CONDITIONAL PASS | REJECT]
 - **Plan Readiness & Skills Consultation:** Verified via `pnpm jev:consult`
+
+### 6. 📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)
+| المؤشر الرقابي (Telemetry Metric) | القيمة (Value) | التفاصيل والإسناد (Provenance) |
+| :--- | :---: | :--- |
+| **عدد الطلبات الفعلية المرسلة للنموذج السحابي (`cloudRequestsSent`)** | **`1`** | `https://api.typesafe.ai/v1/systemone` (`jev-latest`) |
+| **إجمالي محاولات الاتصال بالشبكة (`httpAttemptsTotal`)** | **`1`** | Retries: `0` |
+| **الاستجابات المسترجعة من الكاش التشفيري (`cloudCacheHits`)** | **`0`** | `.governance-cache/jev-cloud-cache.json` (SHA-256) |
+| **الاستعلامات المحلولة من فهرس السوابق (`precedentHits`)** | **`1`** | `.agents/knowledge/precedents/index.json` (0 Tokens) |
+| **إجمالي المعايير المقيمة سحابياً (`questionsDispatchedToCloud`)** | **`25`** | Engine Mode: `api` |
 ```
 
 ---
@@ -279,6 +290,7 @@ As the Sovereign Strategic Advisor, `/saleh` operates in perpetual synergy with 
 1. **Autonomous Self-Improvement:** Whenever `/saleh` encounters an architectural dilemma, an unknown error pattern, or an ambiguous flow contract, `/saleh` actively consults JEV in the cloud (`https://api.typesafe.ai/v1/systemone`) to update its mental models and refine its strategic audits.
 2. **Zero-Token Precedent Lookup:** `/saleh` queries `.agents/knowledge/precedents/index.json` first for instantaneous O(1) solutions to previously solved incidents.
 3. **Resilient Independent Operation:** `/saleh` is NOT hard-blocked if the JEV cloud service is temporarily unreachable. It outputs a clear diagnostic advisory notice: `[NOTICE: JEV Cloud Unreachable - Proceeding with Independent Physical Reality Audit]` and executes its physical inspection suites (`pnpm test`, `git diff`, `pnpm audit:saleh:boost`) autonomously.
+4. **Mandatory Cloud Request Telemetry Reporting:** Every work round and final report issued by `/saleh` must strictly report the exact count of cloud requests sent (`cloudRequestsSent`) and total HTTP attempts (`httpAttemptsTotal`) to the cloud model, even when 0 (read-only / cache hit) or when 3 attempts failed during an outage.
 
 ---
 
