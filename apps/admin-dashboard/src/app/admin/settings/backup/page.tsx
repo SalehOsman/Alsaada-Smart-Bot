@@ -26,7 +26,11 @@ export default async function AdminBackupSettingsPage() {
     );
   }
 
-  const backups = await backupService.listRecentBackups();
+  const rawBackups = await backupService.listRecentBackups();
+  const backups = rawBackups.map((b) => ({
+    ...b,
+    artifactsCount: b.artifactsCount ?? 0,
+  }));
   const stats = await backupService.getBackupStatus();
 
   return (

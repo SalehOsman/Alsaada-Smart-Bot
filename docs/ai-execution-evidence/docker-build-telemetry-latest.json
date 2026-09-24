@@ -1,0 +1,446 @@
+{
+  "timestamp": "2026-09-24T20:13:45.588Z",
+  "command": "docker build -f docker/Dockerfile.dashboard -t alsaada-dashboard-test .",
+  "totalDurationSeconds": 266.1,
+  "success": true,
+  "exitCode": 0,
+  "cachedStepsCount": 0,
+  "executedStepsCount": 62,
+  "bottlenecks": [],
+  "steps": [
+    {
+      "stepIndex": 1,
+      "description": "[internal] load build definition from Dockerfile.dashboard",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 2,
+      "description": "[internal] load metadata for docker.io/library/node:24-alpine",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 3,
+      "description": "[internal] load .dockerignore",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 4,
+      "description": "[builder  1/55] FROM docker.io/library/node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 5,
+      "description": "[runner 3/5] RUN npm install -g pnpm@12.4.2",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 6,
+      "description": "[builder  2/55] WORKDIR /app",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 7,
+      "description": "[runner 4/5] RUN apk add --no-cache openssl dumb-init tzdata",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 8,
+      "description": "[internal] load build context",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 9,
+      "description": "[builder 34/55] COPY packages/telemetry/src/ packages/telemetry/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 10,
+      "description": "[builder 11/55] COPY packages/shared/package.json packages/shared/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 11,
+      "description": "[builder 27/55] COPY packages/regional-engine/tsconfig.json packages/regional-engine/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 12,
+      "description": "[builder 22/55] COPY packages/database/tsconfig.json packages/database/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 13,
+      "description": "[builder 14/55] COPY modules/workforce/package.json modules/workforce/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 14,
+      "description": "[builder 36/55] COPY packages/ai-vision-engine/src/ packages/ai-vision-engine/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 15,
+      "description": "[builder 42/55] COPY modules/settings/src/ modules/settings/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 16,
+      "description": "[builder 39/55] COPY modules/workforce/index.ts modules/workforce/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 17,
+      "description": "[builder 41/55] COPY modules/workforce/tsconfig.json modules/workforce/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 18,
+      "description": "[builder  9/55] COPY packages/national-id-engine/package.json packages/national-id-engine/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 19,
+      "description": "[builder 31/55] COPY packages/core-components/tsconfig.json packages/core-components/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 20,
+      "description": "[builder  7/55] COPY packages/rbac/package.json packages/rbac/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 21,
+      "description": "[builder 29/55] COPY packages/national-id-engine/tsconfig.json packages/national-id-engine/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 22,
+      "description": "[builder 50/55] COPY apps/admin-dashboard/postcss.config.mjs apps/admin-dashboard/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 23,
+      "description": "[builder  3/55] RUN npm install -g pnpm@12.4.2",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 24,
+      "description": "[builder 12/55] COPY packages/telemetry/package.json packages/telemetry/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 25,
+      "description": "[builder 40/55] COPY modules/workforce/module.contract.json modules/workforce/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 26,
+      "description": "[builder 10/55] COPY packages/core-components/package.json packages/core-components/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 27,
+      "description": "[builder 49/55] COPY apps/admin-dashboard/next.config.ts apps/admin-dashboard/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 28,
+      "description": "[builder 30/55] COPY packages/core-components/src/ packages/core-components/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 29,
+      "description": "[builder 35/55] COPY packages/telemetry/tsconfig.json packages/telemetry/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 30,
+      "description": "[builder  4/55] RUN apk add --no-cache openssl git",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 31,
+      "description": "[builder  8/55] COPY packages/regional-engine/package.json packages/regional-engine/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 32,
+      "description": "[builder 26/55] COPY packages/regional-engine/src/ packages/regional-engine/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 33,
+      "description": "[builder 47/55] COPY apps/admin-dashboard/public/ apps/admin-dashboard/public/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 34,
+      "description": "[builder 13/55] COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 35,
+      "description": "[builder 16/55] COPY apps/admin-dashboard/package.json apps/admin-dashboard/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 36,
+      "description": "[builder 43/55] COPY modules/settings/index.ts modules/settings/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 37,
+      "description": "[builder 48/55] COPY apps/admin-dashboard/next-env.d.ts apps/admin-dashboard/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 38,
+      "description": "[builder 15/55] COPY modules/settings/package.json modules/settings/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 39,
+      "description": "[builder 23/55] COPY packages/database/prisma.config.ts packages/database/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 40,
+      "description": "[builder 38/55] COPY modules/workforce/src/ modules/workforce/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 41,
+      "description": "[builder 46/55] COPY apps/admin-dashboard/src/ apps/admin-dashboard/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 42,
+      "description": "[builder 28/55] COPY packages/national-id-engine/src/ packages/national-id-engine/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 43,
+      "description": "[builder 33/55] COPY packages/shared/tsconfig.json packages/shared/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 44,
+      "description": "[builder 20/55] COPY packages/database/prisma/ packages/database/prisma/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 45,
+      "description": "[builder 32/55] COPY packages/shared/src/ packages/shared/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 46,
+      "description": "[builder 17/55] COPY apps/docs/package.json apps/docs/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 47,
+      "description": "[builder 18/55] COPY apps/bot-server/package.json apps/bot-server/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 48,
+      "description": "[builder 51/55] COPY apps/admin-dashboard/tailwind.config.ts apps/admin-dashboard/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 49,
+      "description": "[builder 37/55] COPY packages/ai-vision-engine/tsconfig.json packages/ai-vision-engine/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 50,
+      "description": "[builder 44/55] COPY modules/settings/module.contract.json modules/settings/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 51,
+      "description": "[builder 21/55] COPY packages/database/src/ packages/database/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 52,
+      "description": "[builder 52/55] COPY apps/admin-dashboard/tsconfig.json apps/admin-dashboard/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 53,
+      "description": "[builder  5/55] COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 54,
+      "description": "[builder 19/55] RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store     git init --bare \"/tmp/alsaada-build.git\"     && pnpm config set package-import-method copy     && pnpm config set fetch-retries 5     && pnpm config set fetch-retry-maxtimeout 120000     && pnpm config set network-concurrency 4     && pnpm install --frozen-lockfile=true",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 55,
+      "description": "[builder 53/55] COPY tsconfig.json ./",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 56,
+      "description": "[builder 25/55] COPY packages/rbac/tsconfig.json packages/rbac/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 57,
+      "description": "[builder  6/55] COPY packages/database/package.json packages/database/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 58,
+      "description": "[builder 24/55] COPY packages/rbac/src/ packages/rbac/src/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 59,
+      "description": "[builder 45/55] COPY modules/settings/tsconfig.json modules/settings/",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 60,
+      "description": "[builder 54/55] RUN pnpm --filter @alsaada/database db:generate",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 61,
+      "description": "[builder 55/55] RUN pnpm --filter @alsaada/admin-dashboard... build",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    },
+    {
+      "stepIndex": 62,
+      "description": "[runner 5/5] COPY --from=builder --chown=node:node /app /app",
+      "durationSeconds": 0,
+      "isCached": false,
+      "status": "DONE"
+    }
+  ]
+}
