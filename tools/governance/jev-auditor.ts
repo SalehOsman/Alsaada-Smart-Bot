@@ -14,12 +14,26 @@ export interface BackoffRetryOptions {
   maxRetries?: number | undefined;
 }
 
+export interface JevCloudTelemetry {
+  cloudRequestsSent: number;
+  httpAttemptsTotal: number;
+  cloudCacheHits: number;
+  precedentHits: number;
+  questionsDispatchedToCloud: number;
+  engineMode: 'api' | 'heuristic';
+  endpoint: string;
+}
+
 export class FatalJevSystemOneError extends Error {
   public readonly targetName: string;
-  constructor(message: string, targetName: string) {
+  public readonly cloudRequestsSent: number;
+  public readonly httpAttemptsTotal: number;
+  constructor(message: string, targetName: string, cloudRequestsSent = 0, httpAttemptsTotal = 0) {
     super(message);
     this.name = 'FatalJevSystemOneError';
     this.targetName = targetName;
+    this.cloudRequestsSent = cloudRequestsSent;
+    this.httpAttemptsTotal = httpAttemptsTotal;
   }
 }
 
@@ -378,6 +392,7 @@ export interface JevAuditReport {
     maxCallbackBytes: number;
   };
   systemOneJudgments: Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }>;
+  cloudTelemetry: JevCloudTelemetry;
   actionableDirective?: string | undefined;
   squadRouting?: SquadRoutingInfo | undefined;
   consultationScorecard?: {
@@ -1195,6 +1210,31 @@ export function reconcileJudgments(
  * Enforces fail-fast (Exit 1) and zero silent local fallback in CLI / API mode (WP 97).
  * Retains programmatic engine: 'heuristic' for offline vitest suites.
  */
+export function attachCloudTelemetry<T extends object>(targetObj: T, telemetry: JevCloudTelemetry): T {
+  Object.defineProperty(targetObj, '__cloudTelemetry', {
+    value: telemetry,
+    enumerable: false,
+    configurable: true,
+    writable: true,
+  });
+  return targetObj;
+}
+
+export function extractCloudTelemetry(targetObj: unknown, fallbackEngine: 'api' | 'heuristic' = 'heuristic'): JevCloudTelemetry {
+  if (targetObj && typeof targetObj === 'object' && '__cloudTelemetry' in (targetObj as any)) {
+    return (targetObj as any).__cloudTelemetry as JevCloudTelemetry;
+  }
+  return {
+    cloudRequestsSent: 0,
+    httpAttemptsTotal: 0,
+    cloudCacheHits: 0,
+    precedentHits: 0,
+    questionsDispatchedToCloud: 0,
+    engineMode: fallbackEngine,
+    endpoint: 'https://api.typesafe.ai/v1/systemone',
+  };
+}
+
 export async function evaluateBatchParallel(
   state: unknown,
   questions: Record<string, TypeSafeQuestion>,
@@ -1205,9 +1245,21 @@ export async function evaluateBatchParallel(
 ): Promise<Record<string, { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }>> {
   const isExplicitHeuristic =
     engine === 'heuristic' || apiKey === 'heuristic' || process.env.JEV_ENGINE === 'heuristic';
+  const questionCount = Object.keys(questions).length;
+  const precedentIndex = loadPrecedentIndex(root);
+  const precedentHitsCount = precedentIndex.totalPrecedents > 0 ? 1 : 0;
 
   if (isExplicitHeuristic) {
-    return evaluateLocalHeuristics(state, questions);
+    const localRes = await evaluateLocalHeuristics(state, questions);
+    return attachCloudTelemetry(localRes, {
+      cloudRequestsSent: 0,
+      httpAttemptsTotal: 0,
+      cloudCacheHits: 0,
+      precedentHits: precedentHitsCount,
+      questionsDispatchedToCloud: 0,
+      engineMode: 'heuristic',
+      endpoint: 'https://api.typesafe.ai/v1/systemone',
+    });
   }
 
   const isStrictApi = engine === 'api' || process.env.JEV_ENGINE === 'api';
@@ -1217,10 +1269,19 @@ export async function evaluateBatchParallel(
   if (!token) {
     if (isStrictApi) {
       const msg = `❌ [FATAL JEV SYSTEM ONE ERROR]: Missing TYPESAFE_API_KEY environment variable.\nTarget: ${target}\nPolicy: Strict Cloud Enforcement is active on /jev. Local heuristic fallback is forbidden.\nAction: Provide TYPESAFE_API_KEY or set engine: 'heuristic' for offline testing.`;
-      throw new FatalJevSystemOneError(msg, target);
+      throw new FatalJevSystemOneError(msg, target, 0, 0);
     }
     // Programmatic auto without token (e.g. offline dev / vitest)
-    return evaluateLocalHeuristics(state, questions);
+    const localRes = await evaluateLocalHeuristics(state, questions);
+    return attachCloudTelemetry(localRes, {
+      cloudRequestsSent: 0,
+      httpAttemptsTotal: 0,
+      cloudCacheHits: 0,
+      precedentHits: precedentHitsCount,
+      questionsDispatchedToCloud: 0,
+      engineMode: 'heuristic',
+      endpoint: 'https://api.typesafe.ai/v1/systemone',
+    });
   }
 
   // 1. Check SHA-256 Cloud Cache (0ms / 0 tokens)
@@ -1232,7 +1293,16 @@ export async function evaluateBatchParallel(
   if (cloudCache[cacheKey] && cloudCache[cacheKey]?.answers) {
     const cachedAnswers = cloudCache[cacheKey]!.answers;
     const localBaseline = await evaluateLocalHeuristics(state, questions);
-    return reconcileJudgments(cachedAnswers, localBaseline, questions, isStrictApi);
+    const reconciled = reconcileJudgments(cachedAnswers, localBaseline, questions, isStrictApi);
+    return attachCloudTelemetry(reconciled, {
+      cloudRequestsSent: 0,
+      httpAttemptsTotal: 0,
+      cloudCacheHits: 1,
+      precedentHits: precedentHitsCount,
+      questionsDispatchedToCloud: questionCount,
+      engineMode: 'api',
+      endpoint: 'https://api.typesafe.ai/v1/systemone',
+    });
   }
 
   // 2. Pure Cloud 3-Tier Exponential Backoff Retry Loop
@@ -1241,10 +1311,12 @@ export async function evaluateBatchParallel(
   const maxAttempts = retryOptions?.maxRetries ?? 3;
 
   let lastError: Error | null = null;
+  let attemptsDispatched = 0;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    attemptsDispatched++;
 
     try {
       const response = await fetch('https://api.typesafe.ai/v1/systemone', {
@@ -1279,7 +1351,16 @@ export async function evaluateBatchParallel(
       saveCloudCache(cloudCache, root);
 
       const localBaseline = await evaluateLocalHeuristics(state, questions);
-      return reconcileJudgments(data.answers, localBaseline, questions, isStrictApi);
+      const reconciled = reconcileJudgments(data.answers, localBaseline, questions, isStrictApi);
+      return attachCloudTelemetry(reconciled, {
+        cloudRequestsSent: attemptsDispatched,
+        httpAttemptsTotal: attemptsDispatched,
+        cloudCacheHits: 0,
+        precedentHits: precedentHitsCount,
+        questionsDispatchedToCloud: questionCount,
+        engineMode: 'api',
+        endpoint: 'https://api.typesafe.ai/v1/systemone',
+      });
     } catch (err: any) {
       lastError = err;
       if (attempt < maxAttempts) {
@@ -1298,11 +1379,20 @@ export async function evaluateBatchParallel(
   const msg = `❌ [FATAL JEV SYSTEM ONE ERROR]: Failed to connect to TypeSafe Cloud Server after ${maxAttempts} retries (${totalTimeoutStr} total timeout).${errorDetail}\nTarget: ${target}\nPolicy: Strict Cloud Enforcement is active on /jev. Local heuristic fallback is forbidden.\nAction: Verify internet connectivity or TypeSafe API availability.`;
 
   if (isStrictApi) {
-    throw new FatalJevSystemOneError(msg, target);
+    throw new FatalJevSystemOneError(msg, target, attemptsDispatched, attemptsDispatched);
   }
 
   process.stderr.write(`⚠️ [TypeSafe API] ${lastError?.message || 'Connection failed'}. Falling back to local AST.\n`);
-  return evaluateLocalHeuristics(state, questions);
+  const fallbackRes = await evaluateLocalHeuristics(state, questions);
+  return attachCloudTelemetry(fallbackRes, {
+    cloudRequestsSent: attemptsDispatched,
+    httpAttemptsTotal: attemptsDispatched,
+    cloudCacheHits: 0,
+    precedentHits: precedentHitsCount,
+    questionsDispatchedToCloud: questionCount,
+    engineMode: 'heuristic',
+    endpoint: 'https://api.typesafe.ai/v1/systemone',
+  });
 }
 
 export const evaluateWithSystemOne = evaluateBatchParallel;
@@ -2040,6 +2130,7 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
 
   // 17. Generate Autonomous Squad Routing & Directive
   const squadRouting = generateSquadRouting(judgments, activeDimensions, overallVerdict, targetName);
+  const cloudTelemetry = extractCloudTelemetry(evaluatedJudgments, isPureCloud ? 'api' : 'heuristic');
 
   return {
     targetName,
@@ -2053,75 +2144,114 @@ export async function runJevAudit(options: JevAuditOptions = {}, root = process.
       maxCallbackBytes: astSummary.maxCallbackByteLength || 32,
     },
     systemOneJudgments: judgments,
+    cloudTelemetry,
     actionableDirective: squadRouting.directive,
     squadRouting,
     consultationScorecard,
   };
 }
 
-export function printJevReport(report: JevAuditReport): void {
-  console.log('\n================================================================================');
-  console.log(`🔬 JEV FORENSIC INSPECTION REPORT: [${report.targetName}]`);
-  console.log('================================================================================\n');
+export function formatJevReport(report: JevAuditReport): string {
+  const lines: string[] = [];
+  lines.push('\n================================================================================');
+  lines.push(`🔬 JEV FORENSIC INSPECTION REPORT: [${report.targetName}]`);
+  lines.push('================================================================================\n');
 
-  console.log('### 1. Executive Scorecard');
-  console.log('--------------------------------------------------------------------------------');
-  console.log('| Dimension | Quality Gates | Verdict | Score | Confidence |');
-  console.log('| :--- | :---: | :---: | :---: | :---: |');
+  lines.push('### 1. Executive Scorecard');
+  lines.push('--------------------------------------------------------------------------------');
+  lines.push('| Dimension | Quality Gates | Verdict | Score | Confidence |');
+  lines.push('| :--- | :---: | :---: | :---: | :---: |');
   for (const d of report.dimensions) {
-    console.log(
+    lines.push(
       `| ${d.name.padEnd(38)} | ${d.gates.padEnd(14)} | [${d.verdict.padEnd(4)}] | ${(Math.round(d.score * 100) + '%').padStart(5)} | ${d.confidence.toFixed(2)} |`
     );
   }
-  console.log('--------------------------------------------------------------------------------');
-  console.log(`🎯 Composite Governance Index (CGI): ${report.cgi.toFixed(1)}% / 100%`);
-  console.log(`⚖️ Forensic Verdict: [${report.overallVerdict}]`);
-  console.log('--------------------------------------------------------------------------------\n');
+  lines.push('--------------------------------------------------------------------------------');
+  lines.push(`🎯 Composite Governance Index (CGI): ${report.cgi.toFixed(1)}% / 100%`);
+  lines.push(`⚖️ Forensic Verdict: [${report.overallVerdict}]`);
+  lines.push('--------------------------------------------------------------------------------\n');
 
-  console.log('### 2. Physical Reality Proofs');
-  console.log(`- ${report.physicalChecks.typecheck.message}`);
-  console.log(`- Real Domain Assertions Checked: ${report.physicalChecks.assertionsVerified}`);
-  console.log(
+  lines.push('### 2. Physical Reality Proofs');
+  lines.push(`- ${report.physicalChecks.typecheck.message}`);
+  lines.push(`- Real Domain Assertions Checked: ${report.physicalChecks.assertionsVerified}`);
+  lines.push(
     `- Mobile Budget Check: Max Label = ${report.physicalChecks.maxButtonLabelChars} chars (Limit: 16), Max Callback = ${report.physicalChecks.maxCallbackBytes} bytes (Limit: 36)\n`
   );
 
-  console.log('### 3. TypeSafe System One Micro-Judgments');
+  lines.push('### 3. TypeSafe System One Micro-Judgments');
   for (const [k, v] of Object.entries(report.systemOneJudgments)) {
-    console.log(`- ${k}: ${v.answer} (Confidence: ${v.confidence.toFixed(2)}, Engine: ${v.source})`);
+    lines.push(`- ${k}: ${v.answer} (Confidence: ${v.confidence.toFixed(2)}, Engine: ${v.source})`);
   }
 
+  const telemetry = report.cloudTelemetry ?? {
+    cloudRequestsSent: 0,
+    httpAttemptsTotal: 0,
+    cloudCacheHits: 0,
+    precedentHits: 0,
+    questionsDispatchedToCloud: 0,
+    engineMode: 'heuristic' as const,
+    endpoint: 'https://api.typesafe.ai/v1/systemone',
+  };
+  const retriesCount = Math.max(0, telemetry.httpAttemptsTotal - 1);
+
+  lines.push('\n### 📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)');
+  lines.push('--------------------------------------------------------------------------------');
+  lines.push('| المؤشر الرقابي (Telemetry Metric) | القيمة (Value) | التفاصيل والإسناد (Provenance) |');
+  lines.push('| :--- | :---: | :--- |');
+  lines.push(
+    `| عدد الطلبات الفعلية المرسلة للنموذج السحابي (cloudRequestsSent) | ${telemetry.cloudRequestsSent} | ${telemetry.endpoint} |`
+  );
+  lines.push(
+    `| إجمالي محاولات الاتصال بالشبكة (httpAttemptsTotal) | ${telemetry.httpAttemptsTotal} | Retries: ${retriesCount} |`
+  );
+  lines.push(
+    `| الاستجابات المسترجعة من الكاش التشفيري (cloudCacheHits) | ${telemetry.cloudCacheHits} | .governance-cache/jev-cloud-cache.json (SHA-256) |`
+  );
+  lines.push(
+    `| الاستعلامات المحلولة من فهرس السوابق (precedentHits) | ${telemetry.precedentHits} | .agents/knowledge/precedents/index.json (0 Tokens) |`
+  );
+  lines.push(
+    `| إجمالي المعايير المقيمة سحابياً (questionsDispatchedToCloud) | ${telemetry.questionsDispatchedToCloud} | Engine Mode: ${telemetry.engineMode} |`
+  );
+  lines.push('--------------------------------------------------------------------------------');
+
   if (report.actionableDirective) {
-    console.log('\n### 4. Forensic Directive');
-    console.log(`👉 ${report.actionableDirective}`);
+    lines.push('\n### 4. Forensic Directive');
+    lines.push(`👉 ${report.actionableDirective}`);
   }
 
   if (report.squadRouting && report.squadRouting.responsibleSquad !== 'none') {
-    console.log('\n### 5. Autonomous Squad Routing & Corrective Directive');
-    console.log(`- Responsible Squad: ${report.squadRouting.responsibleSquad}`);
-    console.log(`- Suggested Skill: ${report.squadRouting.suggestedSkill}`);
-    console.log(`- Directive: ${report.squadRouting.directive}`);
-    console.log('\n👉 Copy-Pasteable Squad Directive:\n');
-    console.log(report.squadRouting.prompt);
+    lines.push('\n### 5. Autonomous Squad Routing & Corrective Directive');
+    lines.push(`- Responsible Squad: ${report.squadRouting.responsibleSquad}`);
+    lines.push(`- Suggested Skill: ${report.squadRouting.suggestedSkill}`);
+    lines.push(`- Directive: ${report.squadRouting.directive}`);
+    lines.push('\n👉 Copy-Pasteable Squad Directive:\n');
+    lines.push(report.squadRouting.prompt);
   }
 
   if (report.consultationScorecard) {
-    console.log('\n### 6. Sovereign Skill & Plan Consultation Scorecard (WP 96)');
-    console.log('--------------------------------------------------------------------------------');
-    console.log(`🎯 Plan Readiness Score: ${report.consultationScorecard.planReadinessScore}%`);
-    console.log(`🤖 Assigned Skills: ${report.consultationScorecard.skillsCovered.join(', ')}`);
-    console.log(`📜 Enforced Rulebooks: ${report.consultationScorecard.rulebooksCovered.join(', ')}`);
-    console.log(`🚪 Applicable Quality Gates: ${report.consultationScorecard.qualityGatesCovered.join(', ')}`);
-    console.log('\n📋 Pre-Task Checklist:');
+    lines.push('\n### 6. Sovereign Skill & Plan Consultation Scorecard (WP 96)');
+    lines.push('--------------------------------------------------------------------------------');
+    lines.push(`🎯 Plan Readiness Score: ${report.consultationScorecard.planReadinessScore}%`);
+    lines.push(`🤖 Assigned Skills: ${report.consultationScorecard.skillsCovered.join(', ')}`);
+    lines.push(`📜 Enforced Rulebooks: ${report.consultationScorecard.rulebooksCovered.join(', ')}`);
+    lines.push(`🚪 Applicable Quality Gates: ${report.consultationScorecard.qualityGatesCovered.join(', ')}`);
+    lines.push('\n📋 Pre-Task Checklist:');
     for (const item of report.consultationScorecard.preTaskChecklist) {
-      console.log(`  [x] ${item}`);
+      lines.push(`  [x] ${item}`);
     }
-    console.log('\n📋 Post-Task Verification Checklist:');
+    lines.push('\n📋 Post-Task Verification Checklist:');
     for (const item of report.consultationScorecard.postTaskChecklist) {
-      console.log(`  [ ] ${item}`);
+      lines.push(`  [ ] ${item}`);
     }
   }
 
-  console.log('\n================================================================================\n');
+  lines.push('\n================================================================================\n');
+  return lines.join('\n');
+}
+
+export function printJevReport(report: JevAuditReport): void {
+  console.log(formatJevReport(report));
 }
 
 if (isCliEntrypoint(import.meta.url)) {
