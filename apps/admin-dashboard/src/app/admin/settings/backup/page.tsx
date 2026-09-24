@@ -2,8 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Database, ShieldCheck } from 'lucide-react';
 import { requireDashboardUser } from '@/lib/auth';
-import { listBackups } from '../../../../../../../tools/backup/backup-manager.js';
+import { SystemBackupRecoveryService } from '@alsaada/settings';
 import { BackupClient } from './backup-client';
+
+const backupService = new SystemBackupRecoveryService();
 
 export const metadata = {
   title: 'النسخ الاحتياطي واستعادة الكوارث | لوحة التحكم',
@@ -24,17 +26,8 @@ export default async function AdminBackupSettingsPage() {
     );
   }
 
-  const backups = await listBackups();
-  const latest = backups[0] ?? null;
-
-  const stats = {
-    totalBackups: backups.length,
-    latestBackupAt: latest?.createdAt ?? null,
-    rpoStatus: latest ? 'HEALTHY' : 'NEEDS_BACKUP',
-    cloudSyncEnabled: Boolean(process.env.GDRIVE_FOLDER_ID),
-    encryptionType: 'AES-256-GCM',
-    zeroBloatLimitMb: 30,
-  };
+  const backups = await backupService.listRecentBackups();
+  const stats = await backupService.getBackupStatus();
 
   return (
     <div className="space-y-6">

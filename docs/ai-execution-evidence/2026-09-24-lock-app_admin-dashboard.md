@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:admin-dashboard)
 
-- **تاريخ القفل:** 2026-09-24 (2026-09-24T07:24:48.305Z)
+- **تاريخ القفل:** 2026-09-24 (2026-09-24T13:26:25.138Z)
 - **معرف الكيان:** `app:admin-dashboard`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: admin-dashboard
 - **المسار الأساسي:** `apps/admin-dashboard`
 - **عدد الملفات المقفلة:** 75 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+- **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
@@ -19,8 +19,8 @@
 | `apps/admin-dashboard/package.json` | `5cec81fe43669cff502afab715b6c9edbc182c2c399d97593f85955a7fd88046` |
 | `apps/admin-dashboard/postcss.config.mjs` | `e32657baf631d7c5f4dc67b4b2ee0ec8e7d5b3c41860e09cddce7c0377cd80bc` |
 | `apps/admin-dashboard/public/logo.png` | `3060061dec548204ec715bb122f478e4adc0fd8ed44dfe8d062903c63c186f45` |
-| `apps/admin-dashboard/src/app/api/admin/backup/restore/route.ts` | `5576edca1ced601a2eb374ebe30d7e4cc4207ac6a7d4ce08f4477eb657df4455` |
-| `apps/admin-dashboard/src/app/api/admin/backup/route.ts` | `0c5d24b609806931ff316c12f79dc892a7cf0619841e565f48619d3cf2a63b1e` |
+| `apps/admin-dashboard/src/app/api/admin/backup/restore/route.ts` | `16abead85ce855e5fe60249a17d82297d76e2f1cc7a9b5d4133c3fa350f53459` |
+| `apps/admin-dashboard/src/app/api/admin/backup/route.ts` | `6795de11dc43bc9d8cd41e994b3f3df531f2742eeb0a7d9e4e7c3585b737efa0` |
 | `apps/admin-dashboard/src/app/api/admin/bot-features/route.ts` | `7f7857529d2f6268c8d2b3e4a125120aa587c9c8b55deee46ac58bcad45c7cc7` |
 | `apps/admin-dashboard/src/app/api/admin/docs/status/route.ts` | `3a758cd83de468ea9f946e6122e14f3e5a18890761101630ec80e462cbf81453` |
 | `apps/admin-dashboard/src/app/api/admin/docs/sync/route.ts` | `a8ea0a372b2c3c6d54eb5794451bb77a08757f6c835ad2504d6d52738df72290` |

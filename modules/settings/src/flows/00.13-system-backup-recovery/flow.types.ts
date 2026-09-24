@@ -28,6 +28,9 @@ export interface DisasterRecoveryDrillDto {
 export interface BackupListItemDto {
   backupId: string;
   createdAt: string;
+  dbDumpFile?: string | undefined;
+  codeBundleFile?: string | undefined;
   totalSizeBytes: number;
   isIntegrityIntact: boolean;
+  artifactsCount?: number | undefined;
 }

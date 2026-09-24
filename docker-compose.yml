@@ -93,7 +93,7 @@ services:
     container_name: alsaada_enterprise_studio
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.studio
     restart: unless-stopped
     # Prisma 7.10 removed the --hostname CLI option; Docker publishes the port and
     # Prisma Studio binds correctly without that flag.

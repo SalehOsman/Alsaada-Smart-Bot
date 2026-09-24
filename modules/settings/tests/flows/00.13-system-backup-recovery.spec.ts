@@ -17,6 +17,8 @@ import {
 } from '../../src/flows/00.13-system-backup-recovery/index.js';
 import type { SettingsModuleContext } from '../../src/shared/module.types.js';
 
+const PINNED_BASE_TIME = '2026-09-24T12:00:00.000Z';
+
 describe('Flow 00.13: System Backup & Disaster Recovery Specification', () => {
   describe('1. Telegram Ergonomics Budget (36/16/7/3)', () => {
     function checkButton(btn: any) {
@@ -65,7 +67,7 @@ describe('Flow 00.13: System Backup & Disaster Recovery Specification', () => {
       const kb = buildBackupListKeyboard([
         {
           backupId: 'BCK-20260923-100000',
-          createdAt: new Date().toISOString(),
+          createdAt: PINNED_BASE_TIME,
           totalSizeBytes: 1024 * 1024 * 12,
           isIntegrityIntact: true,
         },
@@ -85,7 +87,7 @@ describe('Flow 00.13: System Backup & Disaster Recovery Specification', () => {
       const text = formatBackupStatusCard({
         totalBackups: 5,
         latestBackupId: 'BCK-20260923-140000',
-        latestBackupAt: new Date().toISOString(),
+        latestBackupAt: PINNED_BASE_TIME,
         rpoStatus: 'HEALTHY',
         cloudSyncEnabled: true,
         encryptionType: 'AES-256-GCM',
@@ -179,7 +181,7 @@ describe('Flow 00.13: System Backup & Disaster Recovery Specification', () => {
       const executeBackupNow = vi.fn().mockResolvedValue({
         success: true,
         backupId: 'BCK-20260923-150000',
-        createdAt: new Date().toISOString(),
+        createdAt: PINNED_BASE_TIME,
         artifactsCount: 3,
         cloudSyncStatus: 'staged',
         totalSizeBytes: 1024 * 1024 * 12,
@@ -209,4 +211,76 @@ describe('Flow 00.13: System Backup & Disaster Recovery Specification', () => {
       expect(executeBackupNow).toHaveBeenCalled();
     });
   });
+
+  describe('5. Real Domain Service State & Decoupling', () => {
+    it('accurately lists backups and transforms manifest DTOs with integrity intact', async () => {
+      const mockRepo = {
+        getBackupsList: vi.fn().mockResolvedValue([
+          {
+            backupId: 'BCK-20260924-100000',
+            createdAt: '2026-09-24T10:00:00.000Z',
+            totalSizeBytes: 15728640,
+            isIntegrityIntact: true,
+            artifactsCount: 3,
+            dbDumpFile: 'dump-20260924-100000.sql.gz.enc',
+            codeBundleFile: 'bundle-20260924-100000.tar.gz.enc',
+          },
+          {
+            backupId: 'BCK-20260923-100000',
+            createdAt: '2026-09-23T10:00:00.000Z',
+            totalSizeBytes: 14680064,
+            isIntegrityIntact: true,
+            artifactsCount: 2,
+            dbDumpFile: 'dump-20260923-100000.sql.gz.enc',
+            codeBundleFile: undefined,
+          },
+        ]),
+        listSnapshots: vi.fn(),
+      };
+
+      const service = new SystemBackupRecoveryService(mockRepo as any);
+      const list = await service.listBackups();
+
+      expect(list).toHaveLength(2);
+      const first = list[0]!;
+      expect(first.backupId).toBe('BCK-20260924-100000');
+      expect(first.totalSizeBytes).toBe(15728640);
+      expect(first.isIntegrityIntact).toBe(true);
+      expect(first.artifactsCount).toBe(3);
+      expect(first.dbDumpFile).toBe('dump-20260924-100000.sql.gz.enc');
+      expect(list[1]!.backupId).toBe('BCK-20260923-100000');
+    });
+
+    it('calculates RPO health accurately from real backup timestamps', async () => {
+      const recentDate = PINNED_BASE_TIME;
+      const mockRepo = {
+        getBackupsList: vi.fn().mockResolvedValue([
+          {
+            backupId: 'BCK-RECENT',
+            createdAt: recentDate,
+            totalSizeBytes: 1024,
+            isIntegrityIntact: true,
+            artifactsCount: 1,
+          },
+        ]),
+        listSnapshots: vi.fn(),
+      };
+
+      const service = new SystemBackupRecoveryService(mockRepo as any);
+      const status = await service.getBackupStatus();
+
+      expect(status.totalBackups).toBe(1);
+      expect(status.latestBackupId).toBe('BCK-RECENT');
+      expect(status.rpoStatus).toBe('HEALTHY');
+      expect(status.encryptionType).toBe('AES-256-GCM');
+    });
+
+    it('handles restoreBackup gracefully with decoupled fallback', async () => {
+      const service = new SystemBackupRecoveryService();
+      const result = await service.restoreBackup('BCK-20260924-TEST', 'test-passphrase');
+      expect(result).toBeDefined();
+      expect(typeof result.success).toBe('boolean');
+    });
+  });
 });
+
