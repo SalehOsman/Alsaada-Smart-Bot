@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Al-Saada Smart Bot Enterprise — Pre-Commit Governance Guard
+# Al-Saada Smart Bot Enterprise — Fast Pre-Commit Governance Orchestrator (Work Plan 104)
 
 # ==============================================================================
 # 0. صمام الحماية السيادي: حظر الـ Commit المباشر على main (Main Branch Immunity)
@@ -19,90 +19,16 @@ if [ "$CURRENT_BRANCH" = "main" ]; then
 fi
 
 # ==============================================================================
-# 0.1. حماية من تلف ملفات الاختبار (Redirect Poisoning Guard)
+# 1. تشغيل منسق الالتزام السريع المتوازي (Pre-Commit Fast Orchestrator < 6s)
 # ==============================================================================
-FORBIDDEN_PATTERN='^\{"numTotalTestSuites'
-for f in $(git diff --cached --name-only --diff-filter=ACM); do
-  if [ -f "$f" ] && echo "$f" | grep -Eq '\.(spec|test)\.[jt]sx?$'; then
-    if grep -Eq "$FORBIDDEN_PATTERN" "$f" 2>/dev/null; then
-      echo "❌ [PRE-COMMIT ERROR] ملف اختبار مُتلف باسم $f — يحتوي مخرجات vitest JSON"
-      exit 1
-    fi
-  fi
-done
+echo "⚡ [PRE-COMMIT] تشغيل منسق الحوكمة السريع المتوازي (Work Plan 104)..."
 
-echo "🔍 [PRE-COMMIT] Running strict TypeScript, contracts, and architecture checks..."
-
-pnpm typecheck || {
-  echo "❌ [PRE-COMMIT ERROR] Typecheck failed (G1). Run 'pnpm typecheck' to inspect errors."
+pnpm pre-commit:fast || {
+  echo ""
+  echo "❌ [PRE-COMMIT ERROR] فشل فحص بوابات الحوكمة أو الاختبارات المرتبطة."
+  echo "📌 للمزيد من التفاصيل أو الإصلاح السريع: pnpm pre-commit:fast"
+  echo ""
   exit 1
 }
 
-pnpm arch:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Architecture verification failed (G2). Run 'pnpm arch:verify' to inspect handler line counts and required files."
-  exit 1
-}
-
-pnpm migration:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Migration registry verification failed (G3). Run 'pnpm migration:verify' to inspect docs/19 parity."
-  exit 1
-}
-
-pnpm flow-contracts:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Flow contracts verification failed (G4). Run 'pnpm flow-contracts:verify' to inspect contract errors."
-  exit 1
-}
-
-pnpm telegram-contracts:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Telegram contracts violated (G5). Run 'pnpm telegram-contracts:verify' to inspect URL/Callback byte limits."
-  exit 1
-}
-
-pnpm latency:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Latency anti-patterns detected (G6). Run 'pnpm latency:verify' to inspect blocking deleteMessage or awaited setMyCommands."
-  exit 1
-}
-
-pnpm rbac-matrix:verify || {
-  echo "❌ [PRE-COMMIT ERROR] RBAC matrix verification failed (G7). Run 'pnpm rbac-matrix:verify' to inspect deprecated roles or illegal permissions."
-  exit 1
-}
-
-pnpm field-masking:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Field masking verification failed (G8). Run 'pnpm field-masking:verify' to inspect unmasked salary/compensation fields."
-  exit 1
-}
-
-pnpm observability:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Observability verification failed (G9). Run 'pnpm observability:verify' to inspect console.error or empty catch blocks."
-  exit 1
-}
-
-pnpm test-authenticity:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Test authenticity check failed (G10). Run 'pnpm test-authenticity:verify' to inspect sham assertions."
-  exit 1
-}
-
-pnpm legacy-parity:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Legacy parity verification failed (G11). Run 'pnpm legacy-parity:verify' to inspect accounting invariants."
-  exit 1
-}
-
-pnpm financial:verify || {
-  echo "❌ [PRE-COMMIT ERROR] Financial integrity verification failed (G12). Run 'pnpm financial:verify' to inspect financial ledger errors."
-  exit 1
-}
-
-pnpm governance:tamper-check || {
-  echo "❌ [PRE-COMMIT ERROR] Governance tamper check failed (G13). Run 'pnpm governance:tamper-check' to inspect modified locked components."
-  exit 1
-}
-
-pnpm test:pre-commit || {
-  echo "❌ [PRE-COMMIT ERROR] Smart test guard failed (G14). Run 'pnpm test:pre-commit' to inspect failing tests on modified code."
-  exit 1
-}
-
-echo "✅ [PRE-COMMIT] All 14 verifiers and smart test guard passed successfully."
 exit 0
-

@@ -22,9 +22,10 @@
 
 ### 3. Zone-Based Scoped Autonomy & Safe Command Whitelist
 1. **Autonomous Zone:** Safe reads, linting, formatting, typechecking, running targeted tests, generating code within the active branch and designated feature slice.
-2. **Safe Command Whitelist:** `git status`, `git diff`, `git log`, `pnpm typecheck`, `pnpm test`, `pnpm arch:verify`, `pnpm flow:check`, `pnpm preflight:fix`, `pnpm ci:simulate`, `pnpm audit:saleh`, `pnpm audit:saleh:boost`, `pnpm audit:guards`, `pnpm test:saleh`, `ocr review`.
+2. **Safe Command Whitelist:** `git status`, `git diff`, `git log`, `pnpm typecheck`, `pnpm test`, `pnpm test:smart`, `pnpm test:target`, `pnpm test:changed`, `pnpm test:modules`, `pnpm test:packages`, `pnpm test:governance`, `pnpm pre-commit:fast`, `pnpm arch:verify`, `pnpm flow:check`, `pnpm preflight:fix`, `pnpm ci:simulate`, `pnpm audit:saleh`, `pnpm audit:saleh:boost`, `pnpm audit:guards`, `pnpm test:saleh`, `ocr review`.
 3. **Command Standardization Standard:** Agents are strictly required to use predefined npm scripts (`pnpm <script>`) rather than arbitrary ad-hoc command strings with custom flags, ensuring IDE command whitelist stability and zero approval prompt friction.
 4. **Destructive Blacklist (Strictly Prohibited without user confirmation):** `git reset --hard`, `git clean -f`, `rm -rf`, dropping tables outside isolated test DB, modifying files outside task scope (`Zero Blast Radius`).
+5. **Tri-Tier Test Pyramid & Anti-Slowness Invariant (Work Plan 104):** To preserve engineering velocity without compromising rigor, agents are strictly forbidden from executing the full test suite (`pnpm test` or `pnpm ci:simulate`) during the inner development loop (TDD cycles). Inner-loop execution must strictly use the targeted test runner (`pnpm test:smart` or `pnpm test:target <path>`), achieving < 2s cycle times. Pre-commit hooks execute `pnpm pre-commit:fast` (< 6s budget). Full monorepo simulation (`pnpm ci:simulate`) is strictly reserved for pre-merge validation.
 
 ### 4. Git Branch Lifecycle & Strict Main Immunity
 1. **Strict Main Immunity:** Direct commits or pushes to `main` are prohibited (`Exit 1`).

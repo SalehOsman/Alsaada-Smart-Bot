@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-24T11:02:24.576Z",
+  "generatedAt": "2026-09-24T18:50:22.184Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -193,7 +193,7 @@
     },
     {
       "path": ".githooks/pre-commit",
-      "sha256": "b815b5eecaca5f93f4cd02e10ce9aa7b6fb6f45753664e0a72985cff252bce89"
+      "sha256": "1d10c4da2f364aa038aca9dd4c0b4c0b69d9004c2e02baac623cc2deb32b1e71"
     },
     {
       "path": ".githooks/pre-commit.cmd",
@@ -257,11 +257,11 @@
     },
     {
       "path": "GEMINI.md",
-      "sha256": "3fca581d10792a014dc3bbb5d7d926753d588cadc21447d9a67a42b43dae270d"
+      "sha256": "b499f581aa1873a899b6c99139325e707424812977c4c7b5fe42d72e43061619"
     },
     {
       "path": "package.json",
-      "sha256": "7bbbb82c3c397c9ceb888386a02d222024481a3e8d377dc964a7a0b0688b45e2"
+      "sha256": "f4ddad53a78ad2c1a8e2aca899cc46cf10ce0c5f51d6bac31113c27ff9df434c"
     },
     {
       "path": "pnpm-workspace.yaml",
@@ -274,10 +274,6 @@
     {
       "path": "tools/governance/common.ts",
       "sha256": "efcacc53724fc53cca7a3f907f01f5b162e7ee5a588853ce9a847c7420f363c9"
-    },
-    {
-      "path": "tools/governance/gap-audit.ps1",
-      "sha256": "b75441a7957981dbbd180487f446a229404d9c4cc4b680ea63d754cf1d94dfbc"
     },
     {
       "path": "tools/governance/generate-topology.ts",
@@ -296,6 +292,10 @@
       "sha256": "08c7bd0302c93eb163ed8310b8a6a58cc1929cbc0447cdf3cacee426855a669a"
     },
     {
+      "path": "tools/governance/pre-commit-orchestrator.ts",
+      "sha256": "23bdae221a1231c04db6ca504de9c82efecfd936a9f95339b3427a71d68f277a"
+    },
+    {
       "path": "tools/governance/pre-commit-test-guard.ts",
       "sha256": "3a8cc03b1d67988f7136f2964d22210fdb7fa5dab68175e16917bd061527847d"
     },
@@ -310,6 +310,10 @@
     {
       "path": "tools/governance/saleh-audit-suite.ts",
       "sha256": "29dfb9b5553b2cff5316a84f04d15ef9ff7a0e148d95d475e5950fa74b927e6b"
+    },
+    {
+      "path": "tools/governance/smart-test-runner.ts",
+      "sha256": "11f03dcdfe10170bd87614f76f880b4fc7f2041cd73ad8353e7540c7fa155815"
     },
     {
       "path": "tools/governance/sync-migration-registry.ts",
@@ -368,6 +372,10 @@
       "sha256": "80d407be54d3cee131b6afc3b49685c5c173596631aac1dadd160947da98037e"
     },
     {
+      "path": "tools/governance/tests/pre-commit-orchestrator.spec.ts",
+      "sha256": "1e2cd6aa70af6eac610eeaffbb7210a8f38ef0bd62946d922e9e38c65eb477a8"
+    },
+    {
       "path": "tools/governance/tests/pre-commit-test-guard.spec.ts",
       "sha256": "db767b96adad6afa0d10236189ffad939be7745db469578301e5a60fad4be4a6"
     },
@@ -393,7 +401,7 @@
     },
     {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "sha256": "b4815590ff8855699a2d433c2ab93294b44f32993c0debb515e85b3771ee7b69"
+      "sha256": "29e76b54a6472367ad63e85458dd983a71e78d78cb4cee52ce4cf7fb0a4b3bf1"
     },
     {
       "path": "tools/governance/tests/unlock-challenge-engine.spec.ts",
@@ -461,7 +469,7 @@
     },
     {
       "path": "tools/governance/unified-lock-engine.ts",
-      "sha256": "be686705c108b84feccd06285adebd6085ef9652f42015412c70c3cd7f3aff22"
+      "sha256": "03e6f26c6312aace9068d940691c15dbbd50db8a0b1d74cbb0d25244714c1129"
     },
     {
       "path": "tools/governance/unified-unlock-engine.ts",
@@ -509,7 +517,7 @@
     },
     {
       "path": "tools/governance/verify-financial-integrity.ts",
-      "sha256": "350b40fc7ded1a5bcefba655d816b5273629a4016bc32787d09274a6a1006af9"
+      "sha256": "e9899aee6a3f8a85a590a73559df7be6088fbf69735627a934b77d7f9ec85b73"
     },
     {
       "path": "tools/governance/verify-flow-contracts.ts",
@@ -3087,7 +3095,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-24T13:25:58.274Z",
+      "lockedAt": "2026-09-24T18:50:22.184Z",
       "files": [
         {
           "path": ".dockerignore",
@@ -7563,7 +7571,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-24T11:02:24.576Z",
+      "lockedAt": "2026-09-24T18:50:22.184Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -7645,19 +7653,6 @@
         {
           "path": "packages/telemetry/tests/flow-recorder.spec.ts",
           "sha256": "d825920cabd43aba4ca8c2d67e0bf15f2a387f9c9459d6c97671a83269184232"
-        }
-      ]
-    },
-    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
-      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
-      "type": "test",
-      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
-      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
-      "files": [
-        {
-          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-          "sha256": "b4815590ff8855699a2d433c2ab93294b44f32993c0debb515e85b3771ee7b69"
         }
       ]
     },
@@ -7900,19 +7895,6 @@
         }
       ]
     },
-    "governance:package.json": {
-      "id": "governance:package.json",
-      "type": "infra",
-      "title": "الحوكمة والدستور السيادي: package.json",
-      "directory": "package.json",
-      "lockedAt": "2026-09-24T10:03:58.936Z",
-      "files": [
-        {
-          "path": "package.json",
-          "sha256": "7bbbb82c3c397c9ceb888386a02d222024481a3e8d377dc964a7a0b0688b45e2"
-        }
-      ]
-    },
     "test:tests/air-gapped-development-invariant.spec.ts": {
       "id": "test:tests/air-gapped-development-invariant.spec.ts",
       "type": "test",
@@ -8106,19 +8088,6 @@
         {
           "path": ".agents/rules/12-creation-lifecycle-standard.md",
           "sha256": "daeef2c89dabca01440625f5e49e033b79c3555672ccf822cfb098159076dda8"
-        }
-      ]
-    },
-    "governance:GEMINI.md": {
-      "id": "governance:GEMINI.md",
-      "type": "infra",
-      "title": "الحوكمة والدستور السيادي: GEMINI.md",
-      "directory": "GEMINI.md",
-      "lockedAt": "2026-09-24T11:51:28.075Z",
-      "files": [
-        {
-          "path": "GEMINI.md",
-          "sha256": "3fca581d10792a014dc3bbb5d7d926753d588cadc21447d9a67a42b43dae270d"
         }
       ]
     },
@@ -8473,215 +8442,6 @@
         }
       ]
     },
-    "governance:tools/governance": {
-      "id": "governance:tools/governance",
-      "type": "infra",
-      "title": "الحوكمة والدستور السيادي: tools/governance",
-      "directory": "tools/governance",
-      "lockedAt": "2026-09-24T12:31:26.887Z",
-      "files": [
-        {
-          "path": "tools/governance/agent-dispatcher.ts",
-          "sha256": "f9dc92058b625070c4e308080c5ba9dd5b269b0c52892324b09bcc3d3b5f0875"
-        },
-        {
-          "path": "tools/governance/common.ts",
-          "sha256": "efcacc53724fc53cca7a3f907f01f5b162e7ee5a588853ce9a847c7420f363c9"
-        },
-        {
-          "path": "tools/governance/gap-audit.ps1",
-          "sha256": "b75441a7957981dbbd180487f446a229404d9c4cc4b680ea63d754cf1d94dfbc"
-        },
-        {
-          "path": "tools/governance/generate-topology.ts",
-          "sha256": "e09920b6fff7e5c92b842bda6870fd56b2c5e42d5287183ad18a064691db5dc1"
-        },
-        {
-          "path": "tools/governance/governance-unlock-session.ts",
-          "sha256": "3be632b6476104174a7e498f42a25f7c09ad72b02ed3e4cd2fad1003f01f7749"
-        },
-        {
-          "path": "tools/governance/incident-summary.ts",
-          "sha256": "7b45224acb3a217ae7d304e87f1246a50109140510908ed2aaa5dea6458e2127"
-        },
-        {
-          "path": "tools/governance/jev-auditor.ts",
-          "sha256": "08c7bd0302c93eb163ed8310b8a6a58cc1929cbc0447cdf3cacee426855a669a"
-        },
-        {
-          "path": "tools/governance/pre-commit-test-guard.ts",
-          "sha256": "3a8cc03b1d67988f7136f2964d22210fdb7fa5dab68175e16917bd061527847d"
-        },
-        {
-          "path": "tools/governance/precedent-index.ts",
-          "sha256": "c2af38a8563540355bc97a5a0ce10634431b1c26230c4c8929909c4dc93171dc"
-        },
-        {
-          "path": "tools/governance/rag-engine.ts",
-          "sha256": "b7fe6c2367294846c600d6a95b6f3c1c378a2b5cb27c83bba97da186ce2e7bb6"
-        },
-        {
-          "path": "tools/governance/saleh-audit-suite.ts",
-          "sha256": "29dfb9b5553b2cff5316a84f04d15ef9ff7a0e148d95d475e5950fa74b927e6b"
-        },
-        {
-          "path": "tools/governance/sync-migration-registry.ts",
-          "sha256": "71ec96595aa0f38dc21ccc04b87aff736ddc175cac814054c5ec5e205d2d02f4"
-        },
-        {
-          "path": "tools/governance/test-constitutional-sentinel.ts",
-          "sha256": "b7bd3ec25b6ea60b82b1a3306af5da3d188ceae07a26be6e72aaa97447486cd2"
-        },
-        {
-          "path": "tools/governance/tests/fixtures/test-authenticity-fixtures.ts",
-          "sha256": "46129d13f55366cf0d6dedc837717626d68faf83cf55e226ec6c702558a2aaf4"
-        },
-        {
-          "path": "tools/governance/typesafe-guardrails.ts",
-          "sha256": "be9d4c0882fa043de920e8ebacbcda4988771b7db645712e1d44ae2779acab1d"
-        },
-        {
-          "path": "tools/governance/typesafe/audit-catalog.ts",
-          "sha256": "1e9bbe39366d2c5ead170a138aef7508d775a1c8fb9ceb29e8420d30888938ec"
-        },
-        {
-          "path": "tools/governance/unified-lock-engine.ts",
-          "sha256": "be686705c108b84feccd06285adebd6085ef9652f42015412c70c3cd7f3aff22"
-        },
-        {
-          "path": "tools/governance/unified-unlock-engine.ts",
-          "sha256": "54faab3a775301692dab3a9bed9f2f2c2f9aaed27a3c4e5d4f47620928bfd83c"
-        },
-        {
-          "path": "tools/governance/unlock-challenge-engine.ts",
-          "sha256": "2523f96640d1ad717385a86227c03553183d0e7b0178f7c03379215881cafddf"
-        },
-        {
-          "path": "tools/governance/verify-ai-compliance.ts",
-          "sha256": "fa27a5b1e9c6e985ecfeb067463ee6f9204729a9dd3a40a79e9667693d43fc13"
-        },
-        {
-          "path": "tools/governance/verify-architecture.ts",
-          "sha256": "dffc658750aa0eca66b82f088868261773bd887e98da19901783360c425fa343"
-        },
-        {
-          "path": "tools/governance/verify-boundary-deserialization.ts",
-          "sha256": "cd7278dc91ef37e68da6fe988a293dbd2bd2ddf3b1d637c4b168e6aa3c3b9889"
-        },
-        {
-          "path": "tools/governance/verify-code-security.ts",
-          "sha256": "49f6cae4838e948441aca31aa70ffa530a9fc811bea6896f2380a59475f99f1c"
-        },
-        {
-          "path": "tools/governance/verify-core-immutability.ts",
-          "sha256": "75ac4fa5b73df5d8f5eb9cb771b0e12d9e994fb4608d50270602610edcfd297e"
-        },
-        {
-          "path": "tools/governance/verify-dashboard-auth-contract.ts",
-          "sha256": "62affbd1f111f01ee6fedcdb04a0eea4803ff56dcf3185d3f47c82f2066027f6"
-        },
-        {
-          "path": "tools/governance/verify-docs-audit.ts",
-          "sha256": "89e79e05070a33f783d5892ce49071694722393aa78f800e21029cfe327bb177"
-        },
-        {
-          "path": "tools/governance/verify-docs-parity.ts",
-          "sha256": "dc5879b8733f25e033b1c2aac5eb476264015eb7753b5c622cbf30daec8708e7"
-        },
-        {
-          "path": "tools/governance/verify-field-masking.ts",
-          "sha256": "f77b9d6a515bae22a87a5775d390685087ef05e020adc315d847036c2bf183d4"
-        },
-        {
-          "path": "tools/governance/verify-financial-integrity.ts",
-          "sha256": "350b40fc7ded1a5bcefba655d816b5273629a4016bc32787d09274a6a1006af9"
-        },
-        {
-          "path": "tools/governance/verify-flow-contracts.ts",
-          "sha256": "0c0ee1d30dd2ed4e20c190087015a6928437fdd419b0486dd1ed16b04f2c29a1"
-        },
-        {
-          "path": "tools/governance/verify-flow-fast.ts",
-          "sha256": "fbfa006d7112528baefd2cbee0626d953b8eb2530cc2e1703f742316365cfe6b"
-        },
-        {
-          "path": "tools/governance/verify-git-hygiene.ts",
-          "sha256": "d9204b6dac354bc1ba892d340bb80c2aea91f974b70cde352369e30b289207cb"
-        },
-        {
-          "path": "tools/governance/verify-governance-lock.ts",
-          "sha256": "be411b5cd214f3881289428c4e98a3957f427e26bb68a9863586e4ac960084c7"
-        },
-        {
-          "path": "tools/governance/verify-governance-tamper.ts",
-          "sha256": "21d13ab2489d19fed185de85aa9b2f62804e899d13962f4a1693f725b8a8343f"
-        },
-        {
-          "path": "tools/governance/verify-incidents.ts",
-          "sha256": "15ba35c45e64c828e06b35e2150d62e716701b8c866779675fb13e2034943da5"
-        },
-        {
-          "path": "tools/governance/verify-latency-anti-patterns.ts",
-          "sha256": "6a995ade43beda40bdb9f8d3ebaff995e0c563a44a52ae1d9b32674cd9758fcf"
-        },
-        {
-          "path": "tools/governance/verify-legacy-parity.ts",
-          "sha256": "56319f50cf538d27463088749881fc006bdd5f914b8b0444284f00a175d4895d"
-        },
-        {
-          "path": "tools/governance/verify-migration-registry.ts",
-          "sha256": "97e59e9e224181936da6bc82b07885c563877d02302d39786e51488a8abfd21c"
-        },
-        {
-          "path": "tools/governance/verify-module-boundaries.ts",
-          "sha256": "66fca077ebee86df0fb791dbc7b2630aa7c02db7a4a9c97c20e3c29989e7f53b"
-        },
-        {
-          "path": "tools/governance/verify-observability-contract.ts",
-          "sha256": "f2ac33dd2758c8c700265682485445736965fafab8f0811e174c6dcad2c12d2a"
-        },
-        {
-          "path": "tools/governance/verify-performance-budget.ts",
-          "sha256": "97ac7b244666f9d4d57cea07e18ced4ebea37242251e60c302a220070b28c23a"
-        },
-        {
-          "path": "tools/governance/verify-rbac-invariants.ts",
-          "sha256": "8a8bee3045992da87cbfec0e4d96c10bde2e209ca6ff6883efaadb70ebbb0c1f"
-        },
-        {
-          "path": "tools/governance/verify-rbac-matrix.ts",
-          "sha256": "2ad7ecfa43c2bca64b0482e52ad2cb5cd161d1deab07d097e61fd187630e85cd"
-        },
-        {
-          "path": "tools/governance/verify-release-sync.ts",
-          "sha256": "32a0d165e9dfa2a0cf9c8e3c4afd55fac1a5730abf0d4a561777eab19efc99fb"
-        },
-        {
-          "path": "tools/governance/verify-secret-leakage.ts",
-          "sha256": "6aec42af1dc7ba2aebfb29a35b5767f8693a51a7de85f041947c749868bfc97e"
-        },
-        {
-          "path": "tools/governance/verify-shared-helpers.ts",
-          "sha256": "57845d0612b45c2b2874333aed26b5c821d285fe1df9cad89467068baa638ab8"
-        },
-        {
-          "path": "tools/governance/verify-skill-graph.ts",
-          "sha256": "704afa5116049f7f16ecf58a2681e9c4e7cf055e96aca641a68af66fb71dea93"
-        },
-        {
-          "path": "tools/governance/verify-telegram-contracts.ts",
-          "sha256": "f5fb4f7f133653fbdd1ccb7222095f7b8348c8c0ba5ad49b5975ea847ea4cb16"
-        },
-        {
-          "path": "tools/governance/verify-test-authenticity.ts",
-          "sha256": "2b89456e01cdf48b01ef2d9850b3619bcfbc5d292199f4e78df7f17fe37b017a"
-        },
-        {
-          "path": "tools/governance/verify-transcript-provenance.ts",
-          "sha256": "d6d310237815d9ac5db1124bbe7ccfd884c2eb1ededc18ec0ba325e602db5222"
-        }
-      ]
-    },
     "test:tools/governance/tests/governance-verifiers.spec.ts": {
       "id": "test:tools/governance/tests/governance-verifiers.spec.ts",
       "type": "test",
@@ -8692,6 +8452,97 @@
         {
           "path": "tools/governance/tests/governance-verifiers.spec.ts",
           "sha256": "eea2772063145b218afcccfaff40e49d104c156bb74d4e234e96134452093fc8"
+        }
+      ]
+    },
+    "governance:package.json": {
+      "id": "governance:package.json",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: package.json",
+      "directory": "package.json",
+      "lockedAt": "2026-09-24T18:12:55.672Z",
+      "files": [
+        {
+          "path": "package.json",
+          "sha256": "f4ddad53a78ad2c1a8e2aca899cc46cf10ce0c5f51d6bac31113c27ff9df434c"
+        }
+      ]
+    },
+    "test:tools/governance/tests/pre-commit-orchestrator.spec.ts": {
+      "id": "test:tools/governance/tests/pre-commit-orchestrator.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/pre-commit-orchestrator.spec.ts",
+      "directory": "tools/governance/tests/pre-commit-orchestrator.spec.ts",
+      "lockedAt": "2026-09-24T18:25:28.764Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/pre-commit-orchestrator.spec.ts",
+          "sha256": "1e2cd6aa70af6eac610eeaffbb7210a8f38ef0bd62946d922e9e38c65eb477a8"
+        }
+      ]
+    },
+    "governance:.githooks/pre-commit": {
+      "id": "governance:.githooks/pre-commit",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: .githooks/pre-commit",
+      "directory": ".githooks/pre-commit",
+      "lockedAt": "2026-09-24T18:28:12.881Z",
+      "files": [
+        {
+          "path": ".githooks/pre-commit",
+          "sha256": "1d10c4da2f364aa038aca9dd4c0b4c0b69d9004c2e02baac623cc2deb32b1e71"
+        }
+      ]
+    },
+    "governance:tools/governance/unified-lock-engine.ts": {
+      "id": "governance:tools/governance/unified-lock-engine.ts",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: tools/governance/unified-lock-engine.ts",
+      "directory": "tools/governance/unified-lock-engine.ts",
+      "lockedAt": "2026-09-24T18:37:25.374Z",
+      "files": [
+        {
+          "path": "tools/governance/unified-lock-engine.ts",
+          "sha256": "03e6f26c6312aace9068d940691c15dbbd50db8a0b1d74cbb0d25244714c1129"
+        }
+      ]
+    },
+    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
+      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
+      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
+      "lockedAt": "2026-09-24T18:37:34.813Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
+          "sha256": "29e76b54a6472367ad63e85458dd983a71e78d78cb4cee52ce4cf7fb0a4b3bf1"
+        }
+      ]
+    },
+    "governance:tools/governance/smart-test-runner.ts": {
+      "id": "governance:tools/governance/smart-test-runner.ts",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: tools/governance/smart-test-runner.ts",
+      "directory": "tools/governance/smart-test-runner.ts",
+      "lockedAt": "2026-09-24T18:47:25.047Z",
+      "files": [
+        {
+          "path": "tools/governance/smart-test-runner.ts",
+          "sha256": "11f03dcdfe10170bd87614f76f880b4fc7f2041cd73ad8353e7540c7fa155815"
+        }
+      ]
+    },
+    "governance:GEMINI.md": {
+      "id": "governance:GEMINI.md",
+      "type": "infra",
+      "title": "الحوكمة والدستور السيادي: GEMINI.md",
+      "directory": "GEMINI.md",
+      "lockedAt": "2026-09-24T18:50:11.035Z",
+      "files": [
+        {
+          "path": "GEMINI.md",
+          "sha256": "b499f581aa1873a899b6c99139325e707424812977c4c7b5fe42d72e43061619"
         }
       ]
     }
