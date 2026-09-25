@@ -8311,19 +8311,6 @@
         }
       ]
     },
-    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
-      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
-      "type": "test",
-      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
-      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-25T21:41:01.117Z",
-      "files": [
-        {
-          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-          "sha256": "a0e711caaf4d4d27e63f6dd5d7e599c70bdf921d16566addb01c96cba24bf241"
-        }
-      ]
-    },
     "test:tools/modules/tests/existing-modules-parity.spec.ts": {
       "id": "test:tools/modules/tests/existing-modules-parity.spec.ts",
       "type": "test",
@@ -8830,6 +8817,19 @@
         {
           "path": "tests/wave-4-ci-contracts-and-coverage-invariants.spec.ts",
           "sha256": "92fb0b4a9f6991efc7912dba3937d525f1e5b857b0e828404b8b33ed1a0335d3"
+        }
+      ]
+    },
+    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
+      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
+      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
+      "lockedAt": "2026-09-25T23:20:32.356Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
+          "sha256": "a987bb6cccc695504867010d10e62947e508b4772d1df9ea4376da86752300a0"
         }
       ]
     }
