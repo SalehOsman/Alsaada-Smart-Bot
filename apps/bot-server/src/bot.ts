@@ -68,12 +68,15 @@ import { handleMenuPlaceholder } from './handlers/placeholder.handler.js';
 import {
   handleSwitchToWorker,
   handleSwitchToFieldAdmin,
+  handleWorkerPayslipHears,
+  handleWorkerStatementHears,
+  handleFieldTankLevelHears,
   type WorkforceModuleContext,
 } from '@alsaada/workforce';
-import { handleSettingsHub } from '@alsaada/settings';
+import { handleSettingsHub, handleSupplierInvoicesHears } from '@alsaada/settings';
 import { buildRegisteredModules } from './modules.registry.js';
 import type { ModuleRuntimeContext } from '@alsaada/core-components';
-import { prisma } from './db.js';
+import { systemDataService } from './services/system-data.service.js';
 import { syncUserCommandsScope } from './services/command-scope.service.js';
 import { getImpersonatedRole, getPersistentKeyboardMsg, clearPersistentKeyboardMsg } from './redis.js';
 import { fastCache } from './services/fast-cache.service.js';
@@ -92,6 +95,9 @@ import {
   configureScreenTracker,
   UnifiedNotificationDispatcher,
   NotificationPolicyEngine,
+  buildRichPage,
+  richParagraph,
+  assertRichMessage,
   type ForumTopicConfig,
 } from '@alsaada/core-components';
 
@@ -165,11 +171,7 @@ export async function createBot(): Promise<Bot<MyContext>> {
   configureNotificationHelper({
     dispatcher: notificationDispatcher,
     async resolveSiteGroup(siteId: string) {
-      const site = await prisma.site.findUnique({
-        where: { id: siteId },
-        select: { telegramGroupId: true },
-      });
-      return site?.telegramGroupId ?? null;
+      return systemDataService.resolveSiteGroup(siteId);
     },
   });
 
@@ -329,6 +331,7 @@ export async function createBot(): Promise<Bot<MyContext>> {
         if (ctx.callbackQuery) {
           await ctx.answerCallbackQuery({ text: '🚧 النظام في وضع الصيانة المجدولة حالياً.', show_alert: true }).catch(() => {});
         } else {
+          assertRichMessage(buildRichPage({ title: 'وضع الصيانة', blocks: [richParagraph(maintenanceMsg)] }));
           await ctx.reply(maintenanceMsg, { parse_mode: 'Markdown' }).catch(() => {});
         }
         return;
@@ -357,7 +360,7 @@ export async function createBot(): Promise<Bot<MyContext>> {
   // 5. Build and Initialize Unified Module Bus (Plan 43 Microkernel)
 
   const runtimeContext: ModuleRuntimeContext<MyContext> = {
-    prisma,
+    prisma: systemDataService.getDbClient(),
     redis,
     api: bot.api,
     telemetry: telemetryService,
@@ -503,13 +506,13 @@ export async function createBot(): Promise<Bot<MyContext>> {
     await screenFlowService.cleanupIncomingUserMessage(ctx);
     await screenFlowService.cleanupUnfinishedFlow(ctx);
     const keyboard = new InlineKeyboard().text('🏠 القائمة الرئيسية', 'action:main_menu');
-    const sent = await ctx.reply(
-      '❌ *تم إلغاء المعاملة الحالية والتراجع بنجاح.*\nتم إفراغ كافة البيانات المؤقتة، ويمكنك بدء إجراء جديد من القائمة الرئيسية أو الأوامر الجانبية.',
-      {
-        parse_mode: 'Markdown',
-        reply_markup: keyboard,
-      }
-    );
+    const cancelText =
+      '❌ *تم إلغاء المعاملة الحالية والتراجع بنجاح.*\nتم إفراغ كافة البيانات المؤقتة، ويمكنك بدء إجراء جديد من القائمة الرئيسية أو الأوامر الجانبية.';
+    assertRichMessage(buildRichPage({ title: 'إلغاء المعاملة', blocks: [richParagraph(cancelText)] }));
+    const sent = await ctx.reply(cancelText, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
     if (ctx.chat) {
       await screenFlowService.trackActiveScreen(telegramId, ctx.chat.id, sent.message_id, 'cancel', false);
     }
@@ -551,113 +554,20 @@ export async function createBot(): Promise<Bot<MyContext>> {
   });
   bot.hears(/بطاقة معرفي/, async (ctx) => {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
-    await ctx.reply(
-      `🆔 *بطاقة المعرف الرقمي الخاصة بك*\n` +
-      `────────────────────────────\n` +
-      `🔹 المعرف: \`${ctx.from?.id}\`\n` +
-      `🔹 الاسم: *${ctx.from?.first_name || ''} ${ctx.from?.last_name || ''}*\n` +
-      `🔹 الصفة: *${ctx.effectiveRole || 'GUEST'}*\n\n` +
-      `يرجى تزويد إدارة المنظومة بهذا المعرف عند طلب اعتماد الصلاحيات.`,
-      { parse_mode: 'Markdown' }
-    );
+    await handleGuestIdentity(ctx);
   });
   bot.hears(/قسيمة راتبي/, async (ctx) => {
-    if (!ctx.workerId) {
-      await ctx.reply(
-        '⚠️ *عذراً، حسابك غير مرتبط بملف عامل ميداني.*\n\nيرجى التواصل مع مشرف الموقع للحصول على كود الدعوة الخاص بك لربط حسابك الوظيفي.',
-        { parse_mode: 'Markdown' }
-      );
-      return;
-    }
-    const worker = await prisma.worker.findUnique({
-      where: { id: ctx.workerId },
-      select: { 
-        basicSalary: true, 
-        additionalSalary: true, 
-        name: true, 
-        jobTitle: true,
-        customAllowances: { where: { isActive: true } },
-        dutyRosters: { where: { status: 'PRESENT' } },
-        leaves: { where: { status: 'APPROVED' } }
-      }
-    });
-    if (!worker) return;
-
-    const allowances = worker.customAllowances.reduce((acc, curr) => acc + Number(curr.amount), 0);
-    const presentDays = worker.dutyRosters.length;
-    const leaveDays = worker.leaves.length;
-
-    await ctx.reply(
-      `🧾 *قسيمة راتبي*\n\nالاسم: ${worker.name}\nالوظيفة: ${worker.jobTitle}\n\nالراتب الأساسي: ${worker.basicSalary} ج.م\nالراتب الإضافي: ${worker.additionalSalary} ج.م\nالبدلات: ${allowances} ج.م\n\nأيام الحضور: ${presentDays}\nأيام الإجازات المعتمدة: ${leaveDays}\n\n_سيتم دمج تفاصيل الحضور والانصراف والمكافآت فور إغلاق دورة الرواتب الشهرية._`,
-      { parse_mode: 'Markdown' }
-    );
+    await handleWorkerPayslipHears(ctx as unknown as WorkforceModuleContext, systemDataService.getDbClient());
   });
   bot.hears(/كشف حسابي/, async (ctx) => {
-    if (!ctx.workerId) {
-      await ctx.reply('⚠️ *عذراً، حسابك غير مرتبط بملف عامل.*', { parse_mode: 'Markdown' });
-      return;
-    }
-
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    const ledgers = await prisma.financialLedger.findMany({
-      where: {
-        workerId: ctx.workerId,
-        transactionType: { in: ['ADVANCE_CASH', 'WITHDRAWAL_CIGARETTES', 'WITHDRAWAL_PURCHASES'] },
-        accountingMonth: currentMonth,
-        isDeleted: false
-      }
-    });
-
-    const cashAdvances = ledgers.filter(l => l.transactionType === 'ADVANCE_CASH').reduce((acc, l) => acc + Number(l.amount), 0);
-    const canteenWithdrawals = ledgers.filter(l => l.transactionType === 'WITHDRAWAL_CIGARETTES' || l.transactionType === 'WITHDRAWAL_PURCHASES').reduce((acc, l) => acc + Number(l.amount), 0);
-
-    if (cashAdvances === 0 && canteenWithdrawals === 0) {
-      await ctx.reply('📊 *كشف حسابي*\n\nلا توجد سلف أو مسحوبات (كانتين/نقدي) مسجلة لك خلال الشهر الحالي.\n\n_يتم تحديث الرصيد لحظياً بعد كل عملية سحب._', { parse_mode: 'Markdown' });
-      return;
-    }
-
-    await ctx.reply(
-      `📊 *كشف حسابي لشهر ${currentMonth}*\n\nسلف نقدية: ${cashAdvances} ج.م\nمسحوبات (كانتين/عينية): ${canteenWithdrawals} ج.م\n\n_يتم تحديث الرصيد لحظياً بعد كل عملية سحب._`,
-      { parse_mode: 'Markdown' }
-    );
+    await handleWorkerStatementHears(ctx as unknown as WorkforceModuleContext, systemDataService.getDbClient());
   });
   bot.hears(/لوحة المؤشرات/, handleDashboardCommand);
   bot.hears(/فواتيري ومستخلصاتي/, async (ctx) => {
-    if (ctx.effectiveRole !== 'SUPPLIER') {
-      await ctx.reply('⚠️ *عذراً، هذه البوابة مخصصة للموردين المعتمدين فقط.*', { parse_mode: 'Markdown' });
-      return;
-    }
-    
-    if (!ctx.from?.id) return;
-    
-    const supplier = await prisma.supplier.findUnique({
-      where: { telegramId: BigInt(ctx.from.id) },
-      include: { invoices: { take: 5, orderBy: { invoiceDate: 'desc' } } }
-    });
-    
-    if (!supplier) {
-        await ctx.reply('⚠️ *عذراً، حسابك غير مرتبط بملف مورد.*', { parse_mode: 'Markdown' });
-        return;
-    }
-
-    if (supplier.invoices.length === 0) {
-      await ctx.reply('🧾 *بوابة مستخلصات الموردين*\n\nلا توجد فواتير مسجلة للمراجعة.', { parse_mode: 'Markdown' });
-      return;
-    }
-    
-    let text = `🧾 *بوابة مستخلصات الموردين*\n\n`;
-    for (const inv of supplier.invoices) {
-        const date = inv.invoiceDate.toISOString().split('T')[0];
-        text += `فاتورة: ${inv.invoiceNumber} | التاريخ: ${date} | الإجمالي: ${inv.totalAmount} ج.م | الحالة: ${inv.paymentStatus}\n`;
-    }
-    
-    await ctx.reply(text, { parse_mode: 'Markdown' });
+    await handleSupplierInvoicesHears(ctx, systemDataService.getDbClient());
   });
   bot.hears(/🚜 تسجيل منسوب/, async (ctx) => {
-    await ctx.reply(
-      '🚜 *تسجيل منسوب*\n\nيرجى التوجه إلى وحدة القياس بالموقع ورفع صورة واضحة لشريط القياس والمؤشر الخاص بالخزان لإتمام المطابقة الميدانية.',
-      { parse_mode: 'Markdown' }
-    );
+    await handleFieldTankLevelHears(ctx as unknown as WorkforceModuleContext);
   });
   bot.hears(DASHBOARD_REPLY_BUTTON_TEXT, handleDashboardCommand);
 
@@ -714,18 +624,9 @@ export async function createBot(): Promise<Bot<MyContext>> {
     const chatId = ctx.chatJoinRequest.chat.id;
 
     try {
-      const authorizedUser = await prisma.user.findFirst({
-        where: {
-          telegramId: BigInt(userId),
-          isActive: true,
-          isBanned: false,
-          assignedSite: {
-            telegramGroupId: BigInt(chatId),
-          },
-        },
-      });
+      const isAuthorized = await systemDataService.isUserAuthorizedForGroup(userId, chatId);
 
-      if (authorizedUser) {
+      if (isAuthorized) {
         await ctx.approveChatJoinRequest(userId);
         console.log(`✅ [JOIN REQUEST] Approved supervisor/worker ${userId} for group ${chatId}`);
       } else {

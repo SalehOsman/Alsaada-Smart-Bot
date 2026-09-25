@@ -72,7 +72,11 @@ flowchart TD
    - يتم التحقق آلياً عبر `pnpm single-tenant:verify` (`tools/governance/verify-single-tenant-invariants.ts`).
    - يفحص `schema.prisma` وكافة ملفات `apps/` و `modules/` للتأكد التام من خلوها من أي أثر لـ `Tenant` أو `tenantId`.
 
-2. **حارس مطابقة التوثيق والواقع الفيزيائي (Doc Reality Parity Sentinel):**
+2. **حارس نقاء خادم البوت (Bot Server Purity Sentinel):**
+   - يتم التحقق آلياً عبر `pnpm bot-purity:verify` (`tools/governance/verify-bot-server-purity.ts`).
+   - يفحص شجرة AST لملف `apps/bot-server/src/bot.ts` ويمنع استعلام الجداول التشغيلية المباشر أو استخدام النصوص المجردة.
+
+3. **حارس مطابقة التوثيق والواقع الفيزيائي (Doc Reality Parity Sentinel):**
    - يتم التحقق آلياً عبر `pnpm doc-parity:verify` (`tools/governance/verify-doc-reality-parity.ts`).
    - يمنع أي ادعاء غير حقيقي بوجود محركات متعددة أو خوادم غير مستخدمة ويضمن تطابق التوثيق مع واقع الشفرة المصدرية.
 
