@@ -34,3 +34,24 @@ export interface BackupListItemDto {
   isIntegrityIntact: boolean;
   artifactsCount?: number | undefined;
 }
+
+export interface SnapshotDetailDto {
+  backupId: string;
+  createdAt: string;
+  totalSizeBytes: number;
+  databaseSize?: number | undefined;
+  codebaseSize?: number | undefined;
+  isIntegrityIntact: boolean;
+  artifactsCount: number;
+  cloudSyncStatus: string;
+  cloudUrl?: string | undefined;
+}
+
+export interface RestoreExecutionResultDto {
+  success: boolean;
+  backupId: string;
+  safetyBackupId?: string | undefined;
+  rtoSeconds: number;
+  restoredAt: string;
+  error?: string | undefined;
+}
