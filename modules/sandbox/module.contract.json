@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "coreApiRange": "^2.0.0",
   "titleArabic": "مختبر التجارب والتطوير الميداني",
-  "descriptionArabic": "وحدة مختبر التجارب والتطوير الميداني",
+  "descriptionArabic": "وحدة مختبر التجارب والتطوير الميداني (بيئة اختبار وتطوير معزولة لا تساهم بنماذج إنتاجية)",
   "category": "operations",
   "status": "active",
   "entry": "src/index.ts",
@@ -27,8 +27,9 @@
     "sandbox:access",
     "sandbox:manage"
   ],
+  "isTestOnly": true,
   "database": {
-    "schemaFile": "database/schema.prisma",
-    "relationsFile": "database/relations.contract.json"
+    "schemaFiles": [],
+    "migrationsDir": null
   }
 }

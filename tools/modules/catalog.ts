@@ -17,6 +17,7 @@ import {
   type CapabilityId,
   type FlowDefinitionV2,
   type FlowId,
+  type ModuleDatabaseContract,
   type ModuleDefinitionV2,
   type ModuleId,
   type TelegramErgonomicsBudget,
@@ -130,6 +131,8 @@ export function scanMonorepoCatalog(root = process.cwd()): MonorepoCatalog {
     let requiredCapabilities: CapabilityId[] = [asCapabilityId('storage:attachment')];
     let callbackPrefixes: string[] = [`action:${modName}:`, `wizard:${modName}:`];
     let isV1Compatible = false;
+    let databaseContract: ModuleDatabaseContract | undefined;
+    let isTestOnly = false;
 
     if (existsSync(v2ContractPath)) {
       try {
@@ -163,6 +166,24 @@ export function scanMonorepoCatalog(root = process.cwd()): MonorepoCatalog {
         }
         if (Array.isArray(parsed.callbackPrefixes)) {
           callbackPrefixes = parsed.callbackPrefixes;
+        }
+
+        if (parsed.database && typeof parsed.database === 'object') {
+          const rawDb = parsed.database as Record<string, unknown>;
+          const schemaFiles: string[] = [];
+          if (Array.isArray(rawDb.schemaFiles)) {
+            schemaFiles.push(...rawDb.schemaFiles.map(String));
+          } else if (rawDb.schemaFile) {
+            schemaFiles.push(String(rawDb.schemaFile));
+          }
+          databaseContract = {
+            schemaFiles,
+            relationsFile: rawDb.relationsFile ? String(rawDb.relationsFile) : undefined,
+            migrationsDir: rawDb.migrationsDir !== undefined ? (rawDb.migrationsDir === null ? null : String(rawDb.migrationsDir)) : undefined,
+          };
+        }
+        if (parsed.isTestOnly !== undefined) {
+          isTestOnly = Boolean(parsed.isTestOnly);
         }
       } catch {
         // fallback to defaults
@@ -297,6 +318,8 @@ export function scanMonorepoCatalog(root = process.cwd()): MonorepoCatalog {
       callbackPrefixes,
       sourceDirectory: moduleDirRel,
       isV1Compatible,
+      isTestOnly,
+      database: databaseContract,
       moduleHash,
     };
 

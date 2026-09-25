@@ -16,7 +16,7 @@ if (fs.existsSync(rootEnv)) {
 }
 
 export default defineConfig({
-  schema: path.join(__dirname, 'prisma/schema.prisma'),
+  schema: path.join(__dirname, '../../.generated/database/schema'),
   datasource: {
     url: process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
   },

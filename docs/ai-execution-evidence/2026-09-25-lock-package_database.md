@@ -1,11 +1,11 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T15:30:09.336Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T18:30:07.823Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
 - **المسار الأساسي:** `packages/database`
-- **عدد الملفات المقفلة:** 35 ملفاً
+- **عدد الملفات المقفلة:** 36 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
@@ -13,8 +13,8 @@
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
 | `packages/database/CHANGELOG.md` | `9306c7957c1fa2e1ee9fa80ab06abe82e9a43b195e707736e801e6f094a92148` |
-| `packages/database/package.json` | `92a6b16d3c413de3f745554560c696122d392727e43593a9c2dd8d954900e766` |
-| `packages/database/prisma.config.ts` | `7f96b4560ae8a2037d80524b18c42d4259803ec9659eb6cbaca6714230118609` |
+| `packages/database/package.json` | `d6c39f8b8f1aeb9e309dfd17eff4a437ec72b1cf020575cbf53128373cfadc77` |
+| `packages/database/prisma.config.ts` | `747b5eaa3500d184f02630e257a1786865ee368ee319a2f529905fd08569e3db` |
 | `packages/database/prisma/migrations/20260911000000_init_enterprise_hash_ledger/migration.sql` | `30ca6a54b21f14cc6233e8e667b69c437522f77453ebe2cd9e4b45e9c7cecaee` |
 | `packages/database/prisma/migrations/20260912090000_add_trace_incidents_and_magic_claim/migration.sql` | `dc6fcabbc939db2b4f9e3a55a359e975da821101425cf50fbc749b990a232118` |
 | `packages/database/prisma/migrations/20260913010000_align_financial_ledger_hash_defaults/migration.sql` | `4871d26a537ecee548e54aa2ce493ed386ea84e42e7e48830f20ff4b5fe243b7` |
@@ -24,8 +24,9 @@
 | `packages/database/prisma/migrations/20260916000000_telemetry_bot_performance_columns/migration.sql` | `18b421ef4dfbdeb21274cbaebe079d90de5b4ae83c16ad436080483c05dae191` |
 | `packages/database/prisma/migrations/20260917010000_add_ppe_site_and_worker_commitment_scores/migration.sql` | `5fa03cdbcb8db1bd694e56404c896231b0610f57fd333a54f0b29c7d3f7e8f9c` |
 | `packages/database/prisma/migrations/20260918_immutable_financial_ledger_triggers/migration.sql` | `aae5ec466141299c6d58742c6674e6ba3518a417a5440f375256793dd81a8e5a` |
+| `packages/database/prisma/migrations/20260925210000_single_company_nullable_tenant/migration.sql` | `4cc02faccbfa751c523e484b29a772aaef112bff672f2152a6c4779078b476ce` |
 | `packages/database/prisma/migrations/migration_lock.toml` | `162ff5818ed32b5113b4fb76482715281a9f8809c6ebd1b72dd604de469f1746` |
-| `packages/database/prisma/schema.prisma` | `a2ea7e830db204710af42f739b73b80675b34a5614a694e56b52e25bdde48789` |
+| `packages/database/prisma/schema.prisma` | `be595c041a36c57c6e9e3b10766273716563d408edae4e429ed7a50e59783243` |
 | `packages/database/prisma/seed-data/company-profile.json` | `fb24b8c44560a7bee5a53d1b1edcb9930fedf254755c40c6675cbd49632ce77a` |
 | `packages/database/prisma/seeds/bot-menu-catalog.seed.ts` | `d34d10481cf6765d7eaf3dcdd3d6ba69719cf722d46cc21f026256241745e115` |
 | `packages/database/src/client.ts` | `5da20d0e2cff368b0ab29194cd47c4e978441b619ada661467dde2026136ee30` |

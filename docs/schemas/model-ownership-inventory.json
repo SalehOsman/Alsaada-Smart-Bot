@@ -1,0 +1,3418 @@
+{
+  "CompanyProfile": {
+    "model": "CompanyProfile",
+    "camelCase": "companyProfile",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 57,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts"
+        ],
+        "settings": [
+          "modules/settings/src/flows/00.1-corporate-profile/flow.contract.json",
+          "modules/settings/src/flows/00.1-corporate-profile/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CompanyProfile.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/remediate-job-matrix-and-cycles.ts",
+          "packages/database/src/scripts/seed-company-profile.ts"
+        ]
+      }
+    }
+  },
+  "Project": {
+    "model": "Project",
+    "camelCase": "project",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 66,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.2-sites-hub/flow.contract.json",
+          "modules/settings/src/flows/00.2-sites-hub/flow.handler.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.keyboard.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.repository.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.service.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.types.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/tests/approval-workflow.spec.ts",
+          "packages/core-components/tests/sovereign-auto-loader.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/PhosphateExtract.ts",
+          "packages/database/src/generated/client/models/Project.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/seed-hq-site.ts",
+          "packages/database/tests/milestone-1-schema-contract.spec.ts"
+        ]
+      }
+    }
+  },
+  "Site": {
+    "model": "Site",
+    "camelCase": "site",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 280,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.handler.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.validators.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.service.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.template.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.types.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.validators.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.handler.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2-sanitization.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.service.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.service.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows.manifest.ts",
+          "modules/workforce/src/services/worker-expiry-alert.service.ts",
+          "modules/workforce/src/services/worker-facade.service.ts"
+        ],
+        "settings": [
+          "modules/settings/src/flows/00.10-notification-policies/flow.contract.json",
+          "modules/settings/src/flows/00.10-notification-policies/flow.docs.md",
+          "modules/settings/src/flows/00.10-notification-policies/flow.keyboard.ts",
+          "modules/settings/src/flows/00.10-notification-policies/flow.messages.ts",
+          "modules/settings/src/flows/00.10-notification-policies/flow.service.ts",
+          "modules/settings/src/flows/00.10-notification-policies/flow.types.ts",
+          "modules/settings/src/flows/00.10-notification-policies/flow.validators.ts",
+          "modules/settings/src/flows/00.10-notification-policies/tests/flow.data.spec.ts",
+          "modules/settings/src/flows/00.10-notification-policies/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.10-notification-policies/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/flow.contract.json",
+          "modules/settings/src/flows/00.11-telegram-groups/flow.handler.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/flow.keyboard.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/flow.messages.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/flow.repository.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/flow.service.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/flow.telemetry.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/tests/flow.data.spec.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.11-telegram-groups/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.repository.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.contract.json",
+          "modules/settings/src/flows/00.2-sites-hub/flow.docs.md",
+          "modules/settings/src/flows/00.2-sites-hub/flow.handler.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.keyboard.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.messages.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.repository.ts",
+          "modules/settings/src/flows/00.2-sites-hub/flow.service.ts",
+          "modules/settings/src/flows/00.2-sites-hub/tests/flow.data.spec.ts",
+          "modules/settings/src/flows/00.2-sites-hub/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.2-sites-hub/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.2-sites-hub/tests/flow.ux.spec.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.contract.json",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.docs.md",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.keyboard.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.messages.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.repository.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.data.spec.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.repository.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.service.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.contract.json",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.repository.ts",
+          "modules/settings/src/module.routes.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/src/contracts/capability.contract.ts",
+          "packages/core-components/src/governorate-picker/keyboard.ts",
+          "packages/core-components/src/multi-channel/notification-dispatcher.ts",
+          "packages/core-components/src/multi-channel/notification-helper.ts",
+          "packages/core-components/src/multi-channel/notification-policy.ts",
+          "packages/core-components/src/worker-picker/filter.ts",
+          "packages/core-components/tests/clearing-engine.spec.ts",
+          "packages/core-components/tests/governorate-picker.spec.ts",
+          "packages/core-components/tests/location-picker.spec.ts",
+          "packages/core-components/tests/notification-engine.spec.ts",
+          "packages/core-components/tests/notification-helper.spec.ts",
+          "packages/core-components/tests/purchase-picker.spec.ts",
+          "packages/core-components/tests/worker-commitment-engine.spec.ts",
+          "packages/core-components/tests/worker-picker.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/AdvanceRequest.ts",
+          "packages/database/src/generated/client/models/CampFoodItem.ts",
+          "packages/database/src/generated/client/models/CanteenItem.ts",
+          "packages/database/src/generated/client/models/DutyRoster.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/FoodInboundShipment.ts",
+          "packages/database/src/generated/client/models/FoodWasteLog.ts",
+          "packages/database/src/generated/client/models/FuelTank.ts",
+          "packages/database/src/generated/client/models/HospitalityExpense.ts",
+          "packages/database/src/generated/client/models/KitchenMealDispense.ts",
+          "packages/database/src/generated/client/models/Leave.ts",
+          "packages/database/src/generated/client/models/MealSurvey.ts",
+          "packages/database/src/generated/client/models/PhosphateProductionSlip.ts",
+          "packages/database/src/generated/client/models/PPEAsset.ts",
+          "packages/database/src/generated/client/models/Project.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SiteAccommodation.ts",
+          "packages/database/src/generated/client/models/SiteTask.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerCommitmentScore.ts",
+          "packages/database/src/generated/client/models/WorkerDelegation.ts",
+          "packages/database/src/generated/client/models/WorkerExpenseClaim.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/seed-canteen-cigarettes.ts",
+          "packages/database/src/scripts/seed-hq-site.ts",
+          "packages/database/tests/custody-transaction.repository.spec.ts",
+          "packages/database/tests/milestone-1-schema-contract.spec.ts",
+          "packages/database/tests/transactional-rls.spec.ts"
+        ],
+        "rbac": [
+          "packages/rbac/src/catalog.ts",
+          "packages/rbac/src/evaluator.ts",
+          "packages/rbac/src/types.ts",
+          "packages/rbac/tests/cascading-rbac.spec.ts",
+          "packages/rbac/tests/rbac.spec.ts"
+        ],
+        "telemetry": [
+          "packages/telemetry/tests/adapters.spec.ts",
+          "packages/telemetry/tests/challenger-m1-2.stress.spec.ts"
+        ]
+      }
+    }
+  },
+  "SiteAccommodation": {
+    "model": "SiteAccommodation",
+    "camelCase": "siteAccommodation",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 43,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SiteAccommodation.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "SiteAccommodationAssignment": {
+    "model": "SiteAccommodationAssignment",
+    "camelCase": "siteAccommodationAssignment",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 41,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/SiteAccommodation.ts",
+          "packages/database/src/generated/client/models/SiteAccommodationAssignment.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "CompanyDocument": {
+    "model": "CompanyDocument",
+    "camelCase": "companyDocument",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 38,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CompanyDocument.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "Department": {
+    "model": "Department",
+    "camelCase": "department",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 91,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.service.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.types.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts",
+          "modules/workforce/src/services/worker-facade.service.ts"
+        ],
+        "settings": [
+          "modules/settings/src/flows/00.10-notification-policies/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.3-job-matrix/flow.contract.json",
+          "modules/settings/src/flows/00.3-job-matrix/flow.docs.md",
+          "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts",
+          "modules/settings/src/flows/00.3-job-matrix/tests/flow.data.spec.ts",
+          "modules/settings/src/flows/00.3-job-matrix/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.3-job-matrix/tests/flow.ux.spec.ts",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.contract.json",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Department.ts",
+          "packages/database/src/generated/client/models/JobTitle.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "JobTitle": {
+    "model": "JobTitle",
+    "camelCase": "jobTitle",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 164,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.messages.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.types.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.service.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.types.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.messages.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.types.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.docs.md",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.types.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.messages.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.types.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.actions.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.handler.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.messages.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.steps.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.types.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2-sanitization.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.service.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.service.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.types.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.ux.spec.ts",
+          "modules/workforce/src/services/worker-expiry-alert.service.ts",
+          "modules/workforce/src/services/worker-facade.service.ts"
+        ],
+        "settings": [
+          "modules/settings/src/flows/00.3-job-matrix/flow.contract.json",
+          "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts",
+          "modules/settings/src/flows/00.3-job-matrix/flow.service.ts",
+          "modules/settings/src/flows/00.3-job-matrix/flow.types.ts",
+          "modules/settings/src/flows/00.3-job-matrix/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.contract.json",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/src/types.ts",
+          "packages/core-components/src/worker-commitment/engine.ts",
+          "packages/core-components/src/worker-commitment/formatter.ts",
+          "packages/core-components/src/worker-commitment/types.ts",
+          "packages/core-components/src/worker-picker/filter.ts",
+          "packages/core-components/src/worker-picker/keyboard.ts",
+          "packages/core-components/tests/worker-commitment-engine.spec.ts",
+          "packages/core-components/tests/worker-picker.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Department.ts",
+          "packages/database/src/generated/client/models/JobSalaryHistory.ts",
+          "packages/database/src/generated/client/models/JobTitle.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/remediate-job-matrix-and-cycles.ts",
+          "packages/database/src/scripts/remediate-shift-templates-and-jobs.ts",
+          "packages/database/tests/milestone-1-schema-contract.spec.ts"
+        ],
+        "rbac": [
+          "packages/rbac/tests/rbac.spec.ts"
+        ]
+      }
+    }
+  },
+  "JobSalaryHistory": {
+    "model": "JobSalaryHistory",
+    "camelCase": "jobSalaryHistory",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/JobSalaryHistory.ts",
+          "packages/database/src/generated/client/models/JobTitle.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "CycleTransitionHistory": {
+    "model": "CycleTransitionHistory",
+    "camelCase": "cycleTransitionHistory",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 39,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CycleTransitionHistory.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "ShiftCycleTemplate": {
+    "model": "ShiftCycleTemplate",
+    "camelCase": "shiftCycleTemplate",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/ShiftCycleTemplate.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/remediate-shift-templates-and-jobs.ts"
+        ]
+      }
+    }
+  },
+  "Worker": {
+    "model": "Worker",
+    "camelCase": "worker",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 398,
+      "modules": {
+        "workforce": [
+          "modules/workforce/module.contract.json",
+          "modules/workforce/README.md",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.docs.md",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.cigarette-handler.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.contract.json",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.docs.md",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.field-input.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.handler.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.salary-wizard.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.contract.json",
+          "modules/workforce/src/flows/01.4-worker-export/flow.docs.md",
+          "modules/workforce/src/flows/01.4-worker-export/flow.handler.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.service.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.contract.json",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.docs.md",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.documents-handler.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.service.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.contract.json",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.docs.md",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.handler.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.service.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.docs.md",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.handler.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.service.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.contract.json",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.docs.md",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.handler.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.messages.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.service.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.types.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2-sanitization.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.challenger-m2.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.service.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.docs.md",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.keyboard.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.plugin.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.service.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.rbac.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows.manifest.ts",
+          "modules/workforce/src/hub/hr-hub.handler.ts",
+          "modules/workforce/src/hub/hub.keyboards.ts",
+          "modules/workforce/src/hub/hub.routes.ts",
+          "modules/workforce/src/hub/identity-switch.handler.ts",
+          "modules/workforce/src/index.ts",
+          "modules/workforce/src/module.register.ts",
+          "modules/workforce/src/module.routes.ts",
+          "modules/workforce/src/services/worker-expiry-alert.service.ts",
+          "modules/workforce/src/services/worker-facade.service.ts",
+          "modules/workforce/src/services/worker-storage.service.ts"
+        ],
+        "settings": [
+          "modules/settings/src/flows/00.1-corporate-profile/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.contract.json",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.docs.md",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.handler.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.keyboard.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.messages.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.repository.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.service.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.telemetry.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.3-job-matrix/flow.handler.ts",
+          "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts",
+          "modules/settings/src/flows/00.3-job-matrix/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.4-admin-profile/flow.contract.json",
+          "modules/settings/src/flows/00.4-admin-profile/flow.docs.md",
+          "modules/settings/src/flows/00.4-admin-profile/flow.keyboard.ts",
+          "modules/settings/src/flows/00.4-admin-profile/tests/flow.ux.spec.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.docs.md",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.keyboard.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.repository.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.service.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.ux.spec.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.contract.json",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.repository.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.8-apm-telemetry/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.repository.ts",
+          "modules/settings/src/flows/00.9-emergency-cache/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.9-emergency-cache/tests/flow.rbac.spec.ts",
+          "modules/settings/src/module.routes.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/src/index.ts",
+          "packages/core-components/src/purchase-picker/suggestions.ts",
+          "packages/core-components/src/worker-picker/keyboard.ts",
+          "packages/core-components/tests/amount-picker.spec.ts",
+          "packages/core-components/tests/governorate-picker.spec.ts",
+          "packages/core-components/tests/in-place-flow.spec.ts",
+          "packages/core-components/tests/outbox-queue.spec.ts",
+          "packages/core-components/tests/shift-accrual.spec.ts",
+          "packages/core-components/tests/wizard-session.spec.ts",
+          "packages/core-components/tests/worker-commitment-engine.spec.ts",
+          "packages/core-components/tests/worker-picker.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/AdvanceInstallment.ts",
+          "packages/database/src/generated/client/models/AdvanceRequest.ts",
+          "packages/database/src/generated/client/models/CanteenItem.ts",
+          "packages/database/src/generated/client/models/Department.ts",
+          "packages/database/src/generated/client/models/DisciplinaryAndBonus.ts",
+          "packages/database/src/generated/client/models/DutyRoster.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/FinancialLedger.ts",
+          "packages/database/src/generated/client/models/FoodInboundShipment.ts",
+          "packages/database/src/generated/client/models/FuelTank.ts",
+          "packages/database/src/generated/client/models/HospitalityExpense.ts",
+          "packages/database/src/generated/client/models/JobTitle.ts",
+          "packages/database/src/generated/client/models/KitchenMealDispense.ts",
+          "packages/database/src/generated/client/models/Leave.ts",
+          "packages/database/src/generated/client/models/LeaveAllowance.ts",
+          "packages/database/src/generated/client/models/MealSurvey.ts",
+          "packages/database/src/generated/client/models/PayrollRecord.ts",
+          "packages/database/src/generated/client/models/PPEAsset.ts",
+          "packages/database/src/generated/client/models/SalaryHistory.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SiteAccommodationAssignment.ts",
+          "packages/database/src/generated/client/models/SiteTask.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerBalanceSnapshot.ts",
+          "packages/database/src/generated/client/models/WorkerChangeLog.ts",
+          "packages/database/src/generated/client/models/WorkerClearance.ts",
+          "packages/database/src/generated/client/models/WorkerCommitmentScore.ts",
+          "packages/database/src/generated/client/models/WorkerCustomAllowance.ts",
+          "packages/database/src/generated/client/models/WorkerDelegation.ts",
+          "packages/database/src/generated/client/models/WorkerDocument.ts",
+          "packages/database/src/generated/client/models/WorkerEditRequest.ts",
+          "packages/database/src/generated/client/models/WorkerExpenseClaim.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/remediate-job-matrix-and-cycles.ts",
+          "packages/database/src/scripts/remediate-shift-templates-and-jobs.ts",
+          "packages/database/tests/custody-transaction.repository.spec.ts",
+          "packages/database/tests/hash-chain.stress.spec.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts",
+          "packages/database/tests/milestone-1-schema-contract.spec.ts",
+          "packages/database/tests/soft-delete.spec.ts"
+        ],
+        "rbac": [
+          "packages/rbac/src/catalog.ts",
+          "packages/rbac/src/permissions.ts",
+          "packages/rbac/src/profiles.ts",
+          "packages/rbac/tests/cascading-rbac.spec.ts",
+          "packages/rbac/tests/dashboard-auth.spec.ts",
+          "packages/rbac/tests/rbac.spec.ts"
+        ],
+        "telemetry": [
+          "packages/telemetry/src/incidents.ts",
+          "packages/telemetry/tests/empirical-challenger-m1-r2.spec.ts",
+          "packages/telemetry/tests/redaction.spec.ts"
+        ]
+      }
+    }
+  },
+  "WorkerDocument": {
+    "model": "WorkerDocument",
+    "camelCase": "workerDocument",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 50,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.contract.json",
+          "modules/workforce/src/flows/01.5-worker-directory/flow.repository.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerDocument.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "WorkerEditRequest": {
+    "model": "WorkerEditRequest",
+    "camelCase": "workerEditRequest",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.contract.json",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts",
+          "modules/workforce/src/hub/hr-hub.handler.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerEditRequest.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "SalaryHistory": {
+    "model": "SalaryHistory",
+    "camelCase": "salaryHistory",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts"
+        ],
+        "settings": [
+          "modules/settings/src/flows/00.3-job-matrix/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/SalaryHistory.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "WorkerChangeLog": {
+    "model": "WorkerChangeLog",
+    "camelCase": "workerChangeLog",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 45,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerChangeLog.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "WorkerCustomAllowance": {
+    "model": "WorkerCustomAllowance",
+    "camelCase": "workerCustomAllowance",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 43,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerCustomAllowance.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/tests/milestone-1-schema-contract.spec.ts"
+        ]
+      }
+    }
+  },
+  "PPEAsset": {
+    "model": "PPEAsset",
+    "camelCase": "pPEAsset",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 46,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/PPEAsset.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "DisciplinaryAndBonus": {
+    "model": "DisciplinaryAndBonus",
+    "camelCase": "disciplinaryAndBonus",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.contract.json",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
+          "modules/workforce/src/hub/hr-hub.handler.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/DisciplinaryAndBonus.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "WorkerClearance": {
+    "model": "WorkerClearance",
+    "camelCase": "workerClearance",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.contract.json",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerClearance.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "WorkerBalanceSnapshot": {
+    "model": "WorkerBalanceSnapshot",
+    "camelCase": "workerBalanceSnapshot",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 40,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerBalanceSnapshot.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "WorkerCommitmentScore": {
+    "model": "WorkerCommitmentScore",
+    "camelCase": "workerCommitmentScore",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 46,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.repository.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerCommitmentScore.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "Leave": {
+    "model": "Leave",
+    "camelCase": "leave",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 78,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json"
+        ],
+        "settings": [
+          "modules/settings/src/flows/00.5-admin-assignment/flow.docs.md",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.keyboard.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.messages.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.ux.spec.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/src/worker-commitment/engine.ts",
+          "packages/core-components/tests/worker-commitment-engine.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Leave.ts",
+          "packages/database/src/generated/client/models/LeaveAllowance.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ],
+        "rbac": [
+          "packages/rbac/src/evaluator.ts",
+          "packages/rbac/tests/cascading-rbac.spec.ts"
+        ]
+      }
+    }
+  },
+  "LeaveAllowance": {
+    "model": "LeaveAllowance",
+    "camelCase": "leaveAllowance",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/Leave.ts",
+          "packages/database/src/generated/client/models/LeaveAllowance.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "DutyRoster": {
+    "model": "DutyRoster",
+    "camelCase": "dutyRoster",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/DutyRoster.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "SiteTask": {
+    "model": "SiteTask",
+    "camelCase": "siteTask",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 41,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SiteTask.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "CompanyTreasury": {
+    "model": "CompanyTreasury",
+    "camelCase": "companyTreasury",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 40,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CompanyTreasury.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/SupplierPayment.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "FinancialCustody": {
+    "model": "FinancialCustody",
+    "camelCase": "financialCustody",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 53,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CompanyTreasury.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/FinancialLedger.ts",
+          "packages/database/src/generated/client/models/HospitalityExpense.ts",
+          "packages/database/src/generated/client/models/LeaveAllowance.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SupplierPayment.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerExpenseClaim.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts"
+        ]
+      }
+    }
+  },
+  "CustodyExpenseItem": {
+    "model": "CustodyExpenseItem",
+    "camelCase": "custodyExpenseItem",
+    "category": "SHARED_CORE",
+    "rationale": "Protected financial model under strict double-entry ledger invariant (G11, G12, G13).",
+    "financialImmunity": true,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CustodyExpenseItem.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts",
+          "packages/database/tests/hash-chain.spec.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts"
+        ]
+      }
+    }
+  },
+  "CustodySettlement": {
+    "model": "CustodySettlement",
+    "camelCase": "custodySettlement",
+    "category": "SHARED_CORE",
+    "rationale": "Protected financial model under strict double-entry ledger invariant (G11, G12, G13).",
+    "financialImmunity": true,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CustodySettlement.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts",
+          "packages/database/tests/hash-chain.stress.spec.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts"
+        ]
+      }
+    }
+  },
+  "HospitalityExpense": {
+    "model": "HospitalityExpense",
+    "camelCase": "hospitalityExpense",
+    "category": "SHARED_CORE",
+    "rationale": "Protected financial model under strict double-entry ledger invariant (G11, G12, G13).",
+    "financialImmunity": true,
+    "references": {
+      "totalFiles": 44,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/HospitalityExpense.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts"
+        ]
+      }
+    }
+  },
+  "WorkerExpenseClaim": {
+    "model": "WorkerExpenseClaim",
+    "camelCase": "workerExpenseClaim",
+    "category": "SHARED_CORE",
+    "rationale": "Protected financial model under strict double-entry ledger invariant (G11, G12, G13).",
+    "financialImmunity": true,
+    "references": {
+      "totalFiles": 45,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/PayrollRecord.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerExpenseClaim.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts"
+        ]
+      }
+    }
+  },
+  "AdvanceRequest": {
+    "model": "AdvanceRequest",
+    "camelCase": "advanceRequest",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.9-worker-commitment-index/flow.contract.json"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/AdvanceRequest.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts"
+        ]
+      }
+    }
+  },
+  "FinancialLedger": {
+    "model": "FinancialLedger",
+    "camelCase": "financialLedger",
+    "category": "SHARED_CORE",
+    "rationale": "Protected financial model under strict double-entry ledger invariant (G11, G12, G13).",
+    "financialImmunity": true,
+    "references": {
+      "totalFiles": 59,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CanteenItem.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/FinancialLedger.ts",
+          "packages/database/src/generated/client/models/Supplier.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts",
+          "packages/database/src/ledger/verify-ledger-chain.ts",
+          "packages/database/tests/adversarial-m2-audit.spec.ts",
+          "packages/database/tests/hash-chain.spec.ts",
+          "packages/database/tests/hash-chain.stress.spec.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts",
+          "packages/database/tests/soft-delete.spec.ts",
+          "packages/database/tests/verify-ledger-chain.spec.ts"
+        ]
+      }
+    }
+  },
+  "AdvanceInstallment": {
+    "model": "AdvanceInstallment",
+    "camelCase": "advanceInstallment",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 45,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/AdvanceInstallment.ts",
+          "packages/database/src/generated/client/models/FinancialLedger.ts",
+          "packages/database/src/generated/client/models/PayrollRun.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts"
+        ]
+      }
+    }
+  },
+  "Supplier": {
+    "model": "Supplier",
+    "camelCase": "supplier",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 71,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.6-ghost-mode/flow.docs.md",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.keyboard.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.repository.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.service.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/tests/flow.ux.spec.ts",
+          "modules/settings/src/module.routes.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/tests/branded-types.spec.ts",
+          "packages/core-components/tests/clearing-engine.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/EquipmentMaintenance.ts",
+          "packages/database/src/generated/client/models/FinancialLedger.ts",
+          "packages/database/src/generated/client/models/FoodInboundShipment.ts",
+          "packages/database/src/generated/client/models/Supplier.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models/SupplierPayment.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/tests/hash-chain.stress.spec.ts"
+        ],
+        "rbac": [
+          "packages/rbac/tests/dashboard-auth.spec.ts"
+        ]
+      }
+    }
+  },
+  "SupplierInvoice": {
+    "model": "SupplierInvoice",
+    "camelCase": "supplierInvoice",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SparePartsRequest.ts",
+          "packages/database/src/generated/client/models/Supplier.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models/SupplierPayment.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts"
+        ]
+      }
+    }
+  },
+  "SupplierInvoiceItem": {
+    "model": "SupplierInvoiceItem",
+    "camelCase": "supplierInvoiceItem",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 39,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models/SupplierInvoiceItem.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "SupplierPayment": {
+    "model": "SupplierPayment",
+    "camelCase": "supplierPayment",
+    "category": "SHARED_CORE",
+    "rationale": "Protected financial model under strict double-entry ledger invariant (G11, G12, G13).",
+    "financialImmunity": true,
+    "references": {
+      "totalFiles": 46,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CompanyTreasury.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/Supplier.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models/SupplierPayment.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts",
+          "packages/database/tests/hash-chain.spec.ts",
+          "packages/database/tests/hash-chain.stress.spec.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts"
+        ]
+      }
+    }
+  },
+  "Equipment": {
+    "model": "Equipment",
+    "camelCase": "equipment",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 77,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/tests/sovereign-auto-loader.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/DutyRoster.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/EquipmentMaintenance.ts",
+          "packages/database/src/generated/client/models/FuelDispenseLog.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SparePartsRequest.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "FuelTank": {
+    "model": "FuelTank",
+    "camelCase": "fuelTank",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 43,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/FuelTank.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "FuelDispenseLog": {
+    "model": "FuelDispenseLog",
+    "camelCase": "fuelDispenseLog",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/FuelDispenseLog.ts",
+          "packages/database/src/generated/client/models/FuelTank.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "EquipmentMaintenance": {
+    "model": "EquipmentMaintenance",
+    "camelCase": "equipmentMaintenance",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 40,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/EquipmentMaintenance.ts",
+          "packages/database/src/generated/client/models/Supplier.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "SparePartsRequest": {
+    "model": "SparePartsRequest",
+    "camelCase": "sparePartsRequest",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 40,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/SparePartsRequest.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "CanteenItem": {
+    "model": "CanteenItem",
+    "camelCase": "canteenItem",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 60,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.messages.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.service.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.types.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CanteenItem.ts",
+          "packages/database/src/generated/client/models/CanteenItemPriceHistory.ts",
+          "packages/database/src/generated/client/models/FinancialLedger.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/seed-canteen-cigarettes.ts",
+          "packages/database/tests/milestone-1-schema-contract.spec.ts"
+        ]
+      }
+    }
+  },
+  "CanteenItemPriceHistory": {
+    "model": "CanteenItemPriceHistory",
+    "camelCase": "canteenItemPriceHistory",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 40,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CanteenItem.ts",
+          "packages/database/src/generated/client/models/CanteenItemPriceHistory.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/tests/milestone-1-schema-contract.spec.ts"
+        ]
+      }
+    }
+  },
+  "CampFoodItem": {
+    "model": "CampFoodItem",
+    "camelCase": "campFoodItem",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 39,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/CampFoodItem.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "FoodInboundShipment": {
+    "model": "FoodInboundShipment",
+    "camelCase": "foodInboundShipment",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/FoodInboundShipment.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Supplier.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "Recipe": {
+    "model": "Recipe",
+    "camelCase": "recipe",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 39,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/KitchenMealDispense.ts",
+          "packages/database/src/generated/client/models/Recipe.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "KitchenMealDispense": {
+    "model": "KitchenMealDispense",
+    "camelCase": "kitchenMealDispense",
+    "category": "SHARED_CORE",
+    "rationale": "Shared enterprise model (procurement, fleet, catering, treasury, or advances) managed in core.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/KitchenMealDispense.ts",
+          "packages/database/src/generated/client/models/Recipe.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "FoodWasteLog": {
+    "model": "FoodWasteLog",
+    "camelCase": "foodWasteLog",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 39,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/FoodWasteLog.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "MealSurvey": {
+    "model": "MealSurvey",
+    "camelCase": "mealSurvey",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 41,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/MealSurvey.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "MarketPriceBenchmark": {
+    "model": "MarketPriceBenchmark",
+    "camelCase": "marketPriceBenchmark",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 38,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/MarketPriceBenchmark.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "PhosphateProductionSlip": {
+    "model": "PhosphateProductionSlip",
+    "camelCase": "phosphateProductionSlip",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 41,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/PhosphateProductionSlip.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "PhosphateExtract": {
+    "model": "PhosphateExtract",
+    "camelCase": "phosphateExtract",
+    "category": "DEPRECATED_ISOLATED",
+    "rationale": "Zero references in application code. Retained in deprecated isolation registry without physical drop under Safe Deprecation Policy.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 39,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/PhosphateExtract.ts",
+          "packages/database/src/generated/client/models/Project.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "PayrollRun": {
+    "model": "PayrollRun",
+    "camelCase": "payrollRun",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 40,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/AdvanceInstallment.ts",
+          "packages/database/src/generated/client/models/PayrollRecord.ts",
+          "packages/database/src/generated/client/models/PayrollRun.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "PayrollRecord": {
+    "model": "PayrollRecord",
+    "camelCase": "payrollRecord",
+    "category": "DOMAIN_WORKFORCE",
+    "rationale": "Owned by workforce domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 44,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/PayrollRecord.ts",
+          "packages/database/src/generated/client/models/PayrollRun.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerExpenseClaim.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/ledger/hash-ledger.extension.ts",
+          "packages/database/tests/hash-ledger.extension.spec.ts"
+        ]
+      }
+    }
+  },
+  "User": {
+    "model": "User",
+    "camelCase": "user",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 408,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.service.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.field-input.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.5-worker-directory/tests/flow.documents.spec.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.docs.md",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.contract.json",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts",
+          "modules/workforce/src/flows/01.9-worker-commitment-index/tests/flow.unit.spec.ts"
+        ],
+        "settings": [
+          "modules/settings/module.contract.json",
+          "modules/settings/README.md",
+          "modules/settings/src/flows/00.1-corporate-profile/flow.handler.ts",
+          "modules/settings/src/flows/00.1-corporate-profile/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.contract.json",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.docs.md",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.handler.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.keyboard.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.messages.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.repository.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.service.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.12-user-rbac-management/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.3-job-matrix/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.4-admin-profile/flow.contract.json",
+          "modules/settings/src/flows/00.4-admin-profile/flow.repository.ts",
+          "modules/settings/src/flows/00.4-admin-profile/flow.service.ts",
+          "modules/settings/src/flows/00.4-admin-profile/tests/flow.integration.spec.ts",
+          "modules/settings/src/flows/00.4-admin-profile/tests/flow.rbac.spec.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.contract.json",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.handler.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.keyboard.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.messages.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.repository.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/flow.service.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.5-admin-assignment/tests/flow.ux.spec.ts",
+          "modules/settings/src/flows/00.6-ghost-mode/flow.repository.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.handler.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.keyboard.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.messages.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.repository.ts",
+          "modules/settings/src/flows/00.7-audit-incident-vault/tests/flow.unit.spec.ts",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.contract.json",
+          "modules/settings/src/flows/00.9-emergency-cache/flow.repository.ts",
+          "modules/settings/src/index.ts",
+          "modules/settings/src/module.routes.ts"
+        ],
+        "sandbox": [
+          "modules/sandbox/src/flows/99.1-sandbox-ping/action.handler.ts",
+          "modules/sandbox/tests/flows/99.1-sandbox-ping.spec.ts",
+          "modules/sandbox/tests/flows/99.2-sandbox-calc.spec.ts"
+        ],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "ai-vision-engine": [
+          "packages/ai-vision-engine/tests/engine.spec.ts"
+        ],
+        "core-components": [
+          "packages/core-components/src/amount-picker/validator.ts",
+          "packages/core-components/src/bot-catalog/bot-feature-registry.service.ts",
+          "packages/core-components/src/bot-catalog/feature-gate-guard.ts",
+          "packages/core-components/src/formatting/telegram-formatters.ts",
+          "packages/core-components/src/in-place-flow/manager.ts",
+          "packages/core-components/src/in-place-flow/types.ts",
+          "packages/core-components/src/location-picker/card.ts",
+          "packages/core-components/src/module-bus/sovereign-auto-loader.ts",
+          "packages/core-components/src/module-bus/typesafe-flow-router.ts",
+          "packages/core-components/src/quantity-picker/validator.ts",
+          "packages/core-components/src/rich-message/index.ts",
+          "packages/core-components/src/wizard-session/wizard-session.engine.ts",
+          "packages/core-components/tests/in-place-flow.spec.ts",
+          "packages/core-components/tests/sovereign-auto-loader.spec.ts",
+          "packages/core-components/tests/wizard-session.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/AdvanceInstallment.ts",
+          "packages/database/src/generated/client/models/AdvanceRequest.ts",
+          "packages/database/src/generated/client/models/ApprovalTicket.ts",
+          "packages/database/src/generated/client/models/AuditLog.ts",
+          "packages/database/src/generated/client/models/BotMenuNode.ts",
+          "packages/database/src/generated/client/models/BotMenuPermission.ts",
+          "packages/database/src/generated/client/models/BotMenuSnapshot.ts",
+          "packages/database/src/generated/client/models/BotPerformanceLog.ts",
+          "packages/database/src/generated/client/models/CampFoodItem.ts",
+          "packages/database/src/generated/client/models/CanteenItem.ts",
+          "packages/database/src/generated/client/models/CanteenItemPriceHistory.ts",
+          "packages/database/src/generated/client/models/CompanyDocument.ts",
+          "packages/database/src/generated/client/models/CompanyProfile.ts",
+          "packages/database/src/generated/client/models/CompanyTreasury.ts",
+          "packages/database/src/generated/client/models/CustodyExpenseItem.ts",
+          "packages/database/src/generated/client/models/CustodySettlement.ts",
+          "packages/database/src/generated/client/models/CycleTransitionHistory.ts",
+          "packages/database/src/generated/client/models/DashboardAuthLink.ts",
+          "packages/database/src/generated/client/models/DashboardSession.ts",
+          "packages/database/src/generated/client/models/DeadLetterEvent.ts",
+          "packages/database/src/generated/client/models/Department.ts",
+          "packages/database/src/generated/client/models/DisciplinaryAndBonus.ts",
+          "packages/database/src/generated/client/models/DutyRoster.ts",
+          "packages/database/src/generated/client/models/Equipment.ts",
+          "packages/database/src/generated/client/models/EquipmentMaintenance.ts",
+          "packages/database/src/generated/client/models/FinancialCustody.ts",
+          "packages/database/src/generated/client/models/FinancialLedger.ts",
+          "packages/database/src/generated/client/models/FoodInboundShipment.ts",
+          "packages/database/src/generated/client/models/FoodWasteLog.ts",
+          "packages/database/src/generated/client/models/FuelDispenseLog.ts",
+          "packages/database/src/generated/client/models/FuelTank.ts",
+          "packages/database/src/generated/client/models/HospitalityExpense.ts",
+          "packages/database/src/generated/client/models/JobSalaryHistory.ts",
+          "packages/database/src/generated/client/models/JobTitle.ts",
+          "packages/database/src/generated/client/models/KitchenMealDispense.ts",
+          "packages/database/src/generated/client/models/Leave.ts",
+          "packages/database/src/generated/client/models/LeaveAllowance.ts",
+          "packages/database/src/generated/client/models/MarketPriceBenchmark.ts",
+          "packages/database/src/generated/client/models/MealSurvey.ts",
+          "packages/database/src/generated/client/models/NotificationQueue.ts",
+          "packages/database/src/generated/client/models/OutboxEvent.ts",
+          "packages/database/src/generated/client/models/PayrollRecord.ts",
+          "packages/database/src/generated/client/models/PayrollRun.ts",
+          "packages/database/src/generated/client/models/PhosphateExtract.ts",
+          "packages/database/src/generated/client/models/PhosphateProductionSlip.ts",
+          "packages/database/src/generated/client/models/PPEAsset.ts",
+          "packages/database/src/generated/client/models/Project.ts",
+          "packages/database/src/generated/client/models/Recipe.ts",
+          "packages/database/src/generated/client/models/SalaryHistory.ts",
+          "packages/database/src/generated/client/models/ShiftCycleTemplate.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/SiteAccommodation.ts",
+          "packages/database/src/generated/client/models/SiteAccommodationAssignment.ts",
+          "packages/database/src/generated/client/models/SiteTask.ts",
+          "packages/database/src/generated/client/models/SparePartsRequest.ts",
+          "packages/database/src/generated/client/models/SupervisorLifecycleLog.ts",
+          "packages/database/src/generated/client/models/Supplier.ts",
+          "packages/database/src/generated/client/models/SupplierInvoice.ts",
+          "packages/database/src/generated/client/models/SupplierInvoiceItem.ts",
+          "packages/database/src/generated/client/models/SupplierPayment.ts",
+          "packages/database/src/generated/client/models/SystemErrorLog.ts",
+          "packages/database/src/generated/client/models/TelegramEnforcementTask.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models/UserWizardDraft.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerBalanceSnapshot.ts",
+          "packages/database/src/generated/client/models/WorkerChangeLog.ts",
+          "packages/database/src/generated/client/models/WorkerClearance.ts",
+          "packages/database/src/generated/client/models/WorkerCommitmentScore.ts",
+          "packages/database/src/generated/client/models/WorkerCustomAllowance.ts",
+          "packages/database/src/generated/client/models/WorkerDelegation.ts",
+          "packages/database/src/generated/client/models/WorkerDocument.ts",
+          "packages/database/src/generated/client/models/WorkerEditRequest.ts",
+          "packages/database/src/generated/client/models/WorkerExpenseClaim.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/purge-test-data.ts",
+          "packages/database/tests/adversarial-m2-audit.spec.ts",
+          "packages/database/tests/hash-chain.spec.ts",
+          "packages/database/tests/hash-chain.stress.spec.ts",
+          "packages/database/tests/migration-rbac-and-sessions.spec.ts",
+          "packages/database/tests/soft-delete.spec.ts"
+        ],
+        "google-engine": [
+          "packages/google-engine/scripts/get-google-oauth-token.ts",
+          "packages/google-engine/scripts/verify-google-connectivity.ts",
+          "packages/google-engine/src/auth.ts"
+        ],
+        "rbac": [
+          "packages/rbac/tests/cascading-rbac.spec.ts",
+          "packages/rbac/tests/dashboard-auth.spec.ts"
+        ],
+        "shared": [
+          "packages/shared/src/testing/mock-context.ts"
+        ],
+        "telemetry": [
+          "packages/telemetry/src/constants.ts",
+          "packages/telemetry/src/errors.ts",
+          "packages/telemetry/src/flow-recorder.ts",
+          "packages/telemetry/tests/adapters.spec.ts",
+          "packages/telemetry/tests/challenger-m1-2.stress.spec.ts",
+          "packages/telemetry/tests/flow-recorder.spec.ts",
+          "packages/telemetry/tests/logger.spec.ts"
+        ]
+      }
+    }
+  },
+  "BotMenuPermission": {
+    "model": "BotMenuPermission",
+    "camelCase": "botMenuPermission",
+    "category": "DOMAIN_SETTINGS",
+    "rationale": "Owned by settings domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 44,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.12-user-rbac-management/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/BotMenuPermission.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "SupervisorLifecycleLog": {
+    "model": "SupervisorLifecycleLog",
+    "camelCase": "supervisorLifecycleLog",
+    "category": "DOMAIN_SETTINGS",
+    "rationale": "Owned by settings domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.5-admin-assignment/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/SupervisorLifecycleLog.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "TelegramEnforcementTask": {
+    "model": "TelegramEnforcementTask",
+    "camelCase": "telegramEnforcementTask",
+    "category": "DOMAIN_SETTINGS",
+    "rationale": "Owned by settings domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 46,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.5-admin-assignment/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/TelegramEnforcementTask.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "AuditLog": {
+    "model": "AuditLog",
+    "camelCase": "auditLog",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 93,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.ux.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.contract.json",
+          "modules/workforce/src/flows/01.2.D-worker-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.2.D-worker-edit/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.contract.json",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.docs.md",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.contract.json",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/AuditLog.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "BotPerformanceLog": {
+    "model": "BotPerformanceLog",
+    "camelCase": "botPerformanceLog",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 51,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.contract.json",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.repository.ts",
+          "modules/settings/src/flows/00.8-apm-telemetry/flow.contract.json",
+          "modules/settings/src/flows/00.8-apm-telemetry/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/BotPerformanceLog.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "ApprovalTicket": {
+    "model": "ApprovalTicket",
+    "camelCase": "approvalTicket",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 56,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.contract.json",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/src/approval-workflow/types.ts",
+          "packages/core-components/src/approval-workflow/workflow.ts",
+          "packages/core-components/tests/approval-workflow.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/ApprovalTicket.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "UserWizardDraft": {
+    "model": "UserWizardDraft",
+    "camelCase": "userWizardDraft",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 41,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/UserWizardDraft.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "NotificationQueue": {
+    "model": "NotificationQueue",
+    "camelCase": "notificationQueue",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 40,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/NotificationQueue.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "OutboxEvent": {
+    "model": "OutboxEvent",
+    "camelCase": "outboxEvent",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 67,
+      "modules": {
+        "workforce": [
+          "modules/workforce/src/flows/01.1-worker-registration/flow.contract.json",
+          "modules/workforce/src/flows/01.1-worker-registration/flow.repository.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.1-worker-registration/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.4-worker-export/flow.contract.json",
+          "modules/workforce/src/flows/01.4-worker-export/flow.repository.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.contract.json",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.docs.md",
+          "modules/workforce/src/flows/01.6-worker-self-edit/flow.repository.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.6-worker-self-edit/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.contract.json",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/flow.repository.ts",
+          "modules/workforce/src/flows/01.7-guest-join-and-linking/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.contract.json",
+          "modules/workforce/src/flows/01.8-worker-offboarding/flow.repository.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.data.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.integration.spec.ts",
+          "modules/workforce/src/flows/01.8-worker-offboarding/tests/flow.repository.stress.spec.ts"
+        ],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "core-components": [
+          "packages/core-components/src/multi-channel/notification-helper.ts",
+          "packages/core-components/src/outbox-queue/types.ts",
+          "packages/core-components/src/outbox-queue/worker.ts",
+          "packages/core-components/tests/notification-helper.spec.ts"
+        ],
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/OutboxEvent.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "DeadLetterEvent": {
+    "model": "DeadLetterEvent",
+    "camelCase": "deadLetterEvent",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 41,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/DeadLetterEvent.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "SystemErrorLog": {
+    "model": "SystemErrorLog",
+    "camelCase": "systemErrorLog",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 52,
+      "modules": {
+        "workforce": [],
+        "settings": [
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.contract.json",
+          "modules/settings/src/flows/00.7-audit-incident-vault/flow.repository.ts"
+        ],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/SystemErrorLog.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/tests/migration-trace-and-magic-claim.spec.ts"
+        ]
+      }
+    }
+  },
+  "DashboardAuthLink": {
+    "model": "DashboardAuthLink",
+    "camelCase": "dashboardAuthLink",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/DashboardAuthLink.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/tests/migration-rbac-and-sessions.spec.ts",
+          "packages/database/tests/migration-trace-and-magic-claim.spec.ts"
+        ]
+      }
+    }
+  },
+  "DashboardSession": {
+    "model": "DashboardSession",
+    "camelCase": "dashboardSession",
+    "category": "SHARED_CORE",
+    "rationale": "Protected core system/infrastructure model (company profile, user, outbox, audit, errors).",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 80,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/DashboardSession.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/tests/migration-rbac-and-sessions.spec.ts"
+        ]
+      }
+    }
+  },
+  "WorkerDelegation": {
+    "model": "WorkerDelegation",
+    "camelCase": "workerDelegation",
+    "category": "DOMAIN_SETTINGS",
+    "rationale": "Owned by settings domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 48,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/extensions/soft-delete-metadata.ts",
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/Site.ts",
+          "packages/database/src/generated/client/models/User.ts",
+          "packages/database/src/generated/client/models/Worker.ts",
+          "packages/database/src/generated/client/models/WorkerDelegation.ts",
+          "packages/database/src/generated/client/models.ts"
+        ]
+      }
+    }
+  },
+  "BotMenuNode": {
+    "model": "BotMenuNode",
+    "camelCase": "botMenuNode",
+    "category": "DOMAIN_SETTINGS",
+    "rationale": "Owned by settings domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 42,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/BotMenuNode.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/seed-bot-menu-catalog.ts"
+        ]
+      }
+    }
+  },
+  "BotMenuSnapshot": {
+    "model": "BotMenuSnapshot",
+    "camelCase": "botMenuSnapshot",
+    "category": "DOMAIN_SETTINGS",
+    "rationale": "Owned by settings domain services, repositories, or bot flows per Work Plan 112.",
+    "financialImmunity": false,
+    "references": {
+      "totalFiles": 41,
+      "modules": {
+        "workforce": [],
+        "settings": [],
+        "sandbox": [],
+        "other": []
+      },
+      "apps": {
+        "bot": [],
+        "dashboard": [],
+        "studio": []
+      },
+      "packages": {
+        "database": [
+          "packages/database/src/generated/client/browser.ts",
+          "packages/database/src/generated/client/client.ts",
+          "packages/database/src/generated/client/internal/class.ts",
+          "packages/database/src/generated/client/internal/prismaNamespace.ts",
+          "packages/database/src/generated/client/internal/prismaNamespaceBrowser.ts",
+          "packages/database/src/generated/client/models/BotMenuSnapshot.ts",
+          "packages/database/src/generated/client/models.ts",
+          "packages/database/src/scripts/seed-bot-menu-catalog.ts"
+        ]
+      }
+    }
+  }
+}

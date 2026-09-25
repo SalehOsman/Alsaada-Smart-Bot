@@ -1,0 +1,73 @@
+{
+  "version": "1.0.0",
+  "description": "Registry of unused/deprecated Prisma models under Safe Deprecation Policy (WP 112). These models MUST NOT be physically dropped from the database to preserve historical data.",
+  "generatedAt": "2026-09-25T17:46:49.466Z",
+  "totalDeprecated": 13,
+  "models": [
+    {
+      "model": "SiteAccommodation",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "SiteAccommodationAssignment",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "CompanyDocument",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "SupplierInvoiceItem",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "EquipmentMaintenance",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "SparePartsRequest",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "CampFoodItem",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "Recipe",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "FoodWasteLog",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "MealSurvey",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "MarketPriceBenchmark",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "PhosphateProductionSlip",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    },
+    {
+      "model": "PhosphateExtract",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+    }
+  ]
+}

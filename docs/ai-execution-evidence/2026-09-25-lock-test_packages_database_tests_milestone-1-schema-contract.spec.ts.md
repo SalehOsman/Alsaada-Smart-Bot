@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/database/tests/milestone-1-schema-contract.spec.ts)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T15:31:16.011Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T18:30:38.748Z)
 - **معرف الكيان:** `test:packages/database/tests/milestone-1-schema-contract.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/database/tests/milestone-1-schema-contract.spec.ts
@@ -12,7 +12,7 @@
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `packages/database/tests/milestone-1-schema-contract.spec.ts` | `5e4afc7995f6d5c45e6cf2679488ad7d869d32aca34a962d5341e0788de74911` |
+| `packages/database/tests/milestone-1-schema-contract.spec.ts` | `696f3e56b2a7a6694052edcab63308ebb8f6c5d166b918bb873f4b388d0116d6` |
 
 ## بوابات التحقق المعتمدة
 - **CRLF/LF Sanitization:** PASS
