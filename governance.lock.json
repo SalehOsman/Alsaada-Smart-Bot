@@ -401,7 +401,7 @@
     },
     {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "sha256": "e91969d262bec0b684329d8a6b23fea6210cf2419785f1e19b315bd608e53aae"
+      "sha256": "c0a41660da38995c9f4f5716a79ad2f190d1f5dd64e976332d2f1e85d21136db"
     },
     {
       "path": "tools/governance/tests/unlock-challenge-engine.spec.ts",
@@ -8157,19 +8157,6 @@
         }
       ]
     },
-    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
-      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
-      "type": "test",
-      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
-      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-24T23:23:36.860Z",
-      "files": [
-        {
-          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-          "sha256": "e91969d262bec0b684329d8a6b23fea6210cf2419785f1e19b315bd608e53aae"
-        }
-      ]
-    },
     "app:docs": {
       "id": "app:docs",
       "type": "app",
@@ -8657,6 +8644,19 @@
         {
           "path": "docker/postgres/init-scripts/01-init-security.sql",
           "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
+        }
+      ]
+    },
+    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
+      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
+      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
+      "lockedAt": "2026-09-25T13:30:22.489Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
+          "sha256": "c0a41660da38995c9f4f5716a79ad2f190d1f5dd64e976332d2f1e85d21136db"
         }
       ]
     }
