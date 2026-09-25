@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-25T21:40:59.250Z",
+  "generatedAt": "2026-09-25T22:17:06.722Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -537,7 +537,7 @@
     },
     {
       "path": "tools/governance/verify-financial-integrity.ts",
-      "sha256": "e9899aee6a3f8a85a590a73559df7be6088fbf69735627a934b77d7f9ec85b73"
+      "sha256": "d02b77c9dfefe6a64e54232328292fec9469be99c3287d731c884d5272359f5a"
     },
     {
       "path": "tools/governance/verify-flow-contracts.ts",
@@ -6394,7 +6394,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-25T21:41:01.117Z",
+      "lockedAt": "2026-09-25T22:17:06.722Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -8407,7 +8407,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-25T21:41:01.117Z",
+      "lockedAt": "2026-09-25T22:17:06.722Z",
       "files": [
         {
           "path": ".dockerignore",

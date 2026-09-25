@@ -39,21 +39,11 @@ export async function ensureFinancialTestFixtures(client: any): Promise<void> {
 
   console.log('🌱 [FINANCIAL-INTEGRITY] Seeding live isolated test fixtures (>50 chained records)...');
 
-  // 1. Master entities: Tenant, Project, Site, Worker, Supplier
-  const tenant = await client.tenant.upsert({
-    where: { code: 'TENANT_GOV_TEST' },
-    update: {},
-    create: {
-      code: 'TENANT_GOV_TEST',
-      name: 'شركة السعادة للتعدين - بيئة التحقق المالي',
-    },
-  });
-
+  // 1. Master entities: Project, Site, Worker, Supplier
   const project = await client.project.upsert({
     where: { code: 'PRJ_GOV_TEST_01' },
     update: {},
     create: {
-      tenantId: tenant.id,
       code: 'PRJ_GOV_TEST_01',
       name: 'مشروع التحقق المؤسسي للنزاهة المالية',
     },
@@ -73,7 +63,6 @@ export async function ensureFinancialTestFixtures(client: any): Promise<void> {
     where: { code: 'WRK-GOV-TEST-01' },
     update: {},
     create: {
-      tenantId: tenant.id,
       siteId: site.id,
       code: 'WRK-GOV-TEST-01',
       name: 'عامل اختبار مالي 1',
@@ -89,7 +78,6 @@ export async function ensureFinancialTestFixtures(client: any): Promise<void> {
     where: { code: 'SUP-GOV-TEST-01' },
     update: {},
     create: {
-      tenantId: tenant.id,
       code: 'SUP-GOV-TEST-01',
       name: 'مورد اختبار مالي 1',
       category: 'SPARE_PARTS',
@@ -242,7 +230,6 @@ export async function ensureFinancialTestFixtures(client: any): Promise<void> {
     await client.workerExpenseClaim.create({
       data: {
         claimNumber: `#CLM-GOV-2026-${String(i).padStart(4, '0')}`,
-        tenantId: tenant.id,
         workerId: worker.id,
         siteId: site.id,
         amount: 800.0,
@@ -273,7 +260,6 @@ export async function cleanupFinancialTestFixtures(client: any): Promise<void> {
       await client.$executeRawUnsafe(`DELETE FROM "suppliers" WHERE code = 'SUP-GOV-TEST-01'`);
       await client.$executeRawUnsafe(`DELETE FROM "sites" WHERE code = 'STE_GOV_TEST_01'`);
       await client.$executeRawUnsafe(`DELETE FROM "projects" WHERE code = 'PRJ_GOV_TEST_01'`);
-      await client.$executeRawUnsafe(`DELETE FROM "tenants" WHERE code = 'TENANT_GOV_TEST'`);
     } else {
       await client.workerExpenseClaim?.deleteMany?.({ where: { claimNumber: { startsWith: '#CLM-GOV-2026-' } } });
       await client.hospitalityExpense?.deleteMany?.({ where: { voucherId: { startsWith: '#HOSP-GOV-2026-' } } });
@@ -286,7 +272,6 @@ export async function cleanupFinancialTestFixtures(client: any): Promise<void> {
       await client.supplier?.deleteMany?.({ where: { code: 'SUP-GOV-TEST-01' } });
       await client.site?.deleteMany?.({ where: { code: 'STE_GOV_TEST_01' } });
       await client.project?.deleteMany?.({ where: { code: 'PRJ_GOV_TEST_01' } });
-      await client.tenant?.deleteMany?.({ where: { code: 'TENANT_GOV_TEST' } });
     }
     console.log('🧹 [FINANCIAL-INTEGRITY] Ephemeral test fixtures safely cleaned up.');
   } catch (err) {
