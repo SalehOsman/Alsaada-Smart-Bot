@@ -40,7 +40,7 @@
 | **26** | [`26-locked-flows-and-features-registry.md`](./26-locked-flows-and-features-registry.md) | السجل المرجعي الشامل للوظائف المقفلة والحصانة التشفيرية ومحرك القفل المركزي. |
 | **27** | [`27-enterprise-ai-governance-and-quality-gates-constitution.md`](./27-enterprise-ai-governance-and-quality-gates-constitution.md) | دستور حوكمة الذكاء الاصطناعي وبوابات الجودة المؤسسية الموحدة. |
 | **28** | [`28-enterprise-safe-upgrade-and-living-release-standard.md`](./28-enterprise-safe-upgrade-and-living-release-standard.md) | دستور إدارة الإصدارات الحية ومنهجية التحديثات الآمنة بنمط الأثر الصفري وبوابة الحوكمة رقم 21. |
-| **28** | [`28-master-tests-physical-reality-and-compliance-ledger.md`](./28-master-tests-physical-reality-and-compliance-ledger.md) | السجل المرجعي الشامل للواقع الفيزيائي للاختبارات (235 ملفاً) والامتثال الدستوري. |
+| **29** | [`29-master-tests-physical-reality-and-compliance-ledger.md`](./29-master-tests-physical-reality-and-compliance-ledger.md) | السجل المرجعي الشامل للواقع الفيزيائي للاختبارات (291 جناحاً حقيقياً) والامتثال الدستوري. |
 
 ---
 
@@ -48,6 +48,10 @@
 
 يحتوي مجلد [`docs/periodic-audits/`](./periodic-audits/) على تقارير التدقيق الجنائي الفني والمراجعات الميدانية المنتظمة:
 
+* **📅 25 سبتمبر 2026:**
+  - [`docs/periodic-audits/2026-09-25/`](./periodic-audits/2026-09-25/) — التدقيق الجنائي الدوري الشامل لواقع الكود ومنظومة العزل، واعتماد معمارية Hono مع خادم تليجرام المحلي On-Premise.
+* **📅 23 سبتمبر 2026:**
+  - [`docs/periodic-audits/2026-09-23/`](./periodic-audits/2026-09-23/) — تقرير التحقق الميداني من مطابقة مخرجات المحادثات المرجعية ومعايير الجودة.
 * **📅 19 سبتمبر 2026:**
   - [`comprehensive-forensic-engineering-audit.md`](./periodic-audits/2026-09-19/comprehensive-forensic-engineering-audit.md) — **وثيقة التدقيق الجنائي الفني الشامل للمنظومة**: التقرير الجنائي المعتمد الصادر عن هيئة المحلفين التقنية العليا (فحص معمارية الإضافات، النزاهة المحاسبية والتشفير المالي، أمن الداشبورد، بوابات الجودة، الإجابات الحاسمة على الأسئلة الخمسة، والمخطط الهندسي التنفيذي الجاهز - النسخة المعتمدة والمعدلة CERI: 70.40%).
 * **📅 17 سبتمبر 2026:**

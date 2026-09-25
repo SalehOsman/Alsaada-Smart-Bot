@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:docs)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T15:31:31.122Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T16:51:49.758Z)
 - **معرف الكيان:** `app:docs`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: docs
@@ -82,7 +82,7 @@
 | `apps/docs/src/content/docs/index.md` | `5a3499da00db41708b51ca1758bb26cd4a45324fec3f8e4436989f3258b2bb3a` |
 | `apps/docs/src/content/docs/living-architecture.md` | `fc499c0e05a5e31011652edd59262298062f2213bdae9d586414dd29cf671c08` |
 | `apps/docs/src/content/docs/telegram-ux/05-master-implementation-roadmap.md` | `ef7893b0314290c1201cb3056a8e8b1aa4c0a9ca860caac5d48d9788b76a41b2` |
-| `apps/docs/src/content/docs/telegram-ux/06-tenant-onboarding-and-provisioning-wizard.md` | `815d7d85700300df8816c1a97e653f86cb67fd74afa4ff3270fb6563c7c7fc69` |
+| `apps/docs/src/content/docs/telegram-ux/06-tenant-onboarding-and-provisioning-wizard.md` | `7117c11cb54b76d16ebaff112dee84404ea22ef35e3bc5decc44c816fdaef908` |
 | `apps/docs/src/content/docs/telegram-ux/22-telegram-ux-ui-design-system-and-ergonomics.md` | `be39741540c61852fdf8cdb01ee7382a166b7e518a24904ca48c782939461b07` |
 | `apps/docs/src/content/docs/telegram-ux/23-autonomous-agent-roster-and-rag.md` | `86229383c83c788952da77499e8df5be9a1b8f5921a48c2d3320f2c5f636f49d` |
 | `apps/docs/src/content/docs/telegram-ux/24-enterprise-feature-and-flow-master-specification.md` | `8583076b8fe2ae3fd6ea0ddc1dd7a7419fa308e8d53104fbf67a8918cc27aec0` |

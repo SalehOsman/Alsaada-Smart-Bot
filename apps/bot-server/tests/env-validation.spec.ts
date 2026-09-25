@@ -37,6 +37,9 @@ describe('Startup Environment Fail-Fast Validation (validateStartupEnv)', () => 
     dashboardSessionTtlHours: 8,
     dashboardSessionNoticeMinutes: 15,
     dashboardSessionExtensionHours: 8,
+    telegramApiRoot: 'https://api.telegram.org',
+    telegramLocal: false,
+    webhookUrl: '',
     gitCommitSha: '20bcd180a05ef25ec9990ad44b9a19f7ce7abff2',
     buildTime: '2026-09-13T12:00:00.000Z',
   };

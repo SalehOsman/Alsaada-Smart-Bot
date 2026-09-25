@@ -94,6 +94,9 @@ export interface AppConfig {
   dashboardSessionTtlHours: number;
   dashboardSessionNoticeMinutes: number;
   dashboardSessionExtensionHours: number;
+  telegramApiRoot: string;
+  telegramLocal: boolean;
+  webhookUrl: string;
   gitCommitSha?: string;
   buildTime?: string;
 }
@@ -124,6 +127,9 @@ export function loadConfig(): AppConfig {
   const dashboardSessionTtlHours = parseInt(process.env.DASHBOARD_SESSION_TTL_HOURS || '8', 10);
   const dashboardSessionNoticeMinutes = parseInt(process.env.DASHBOARD_SESSION_NOTICE_MINUTES || '60', 10);
   const dashboardSessionExtensionHours = parseInt(process.env.DASHBOARD_SESSION_EXTENSION_HOURS || '8', 10);
+  const telegramApiRoot = process.env.TELEGRAM_API_ROOT || 'https://api.telegram.org';
+  const telegramLocal = process.env.TELEGRAM_LOCAL === 'true';
+  const webhookUrl = process.env.WEBHOOK_URL || '';
 
   if (!botToken || botToken === 'YOUR_NEW_BOT_TOKEN_HERE') {
     logger.warn('BOT_TOKEN is not configured or uses a placeholder', {
@@ -154,6 +160,9 @@ export function loadConfig(): AppConfig {
     dashboardSessionTtlHours,
     dashboardSessionNoticeMinutes,
     dashboardSessionExtensionHours,
+    telegramApiRoot,
+    telegramLocal,
+    webhookUrl,
     gitCommitSha,
     buildTime,
   };

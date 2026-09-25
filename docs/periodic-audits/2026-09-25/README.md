@@ -48,6 +48,7 @@
 - [مراجعة فجوات التوثيق](./مراجعة-فجوات-التوثيق/README.md)
 - [فحص الملفات البرمجية](./مراجعة-الملفات-البرمجية/README.md)
 - [الفجوات الأخرى](./الفجوات-الأخرى.md)
+- [خطة مخطط قاعدة البيانات واكتشاف الموديولات](./16-plan-functional-database-schema-and-module-autodiscovery.md)
 - [11 المالية](./11-finance-and-domain-integrity.md)
 - [12 Telegram](./12-telegram-flows-and-parity.md)
 - [13 النسخ](./13-backup-recovery-and-continuity.md)

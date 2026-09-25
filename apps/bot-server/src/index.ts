@@ -1,11 +1,14 @@
 import dns from 'node:dns';
-import http from 'node:http';
 
 // Fix for Egyptian ISP IPv6 routing blackhole: prioritize IPv4 to eliminate 1.5s - 3s DNS timeouts
 dns.setDefaultResultOrder('ipv4first');
 
 import { run } from '@grammyjs/runner';
-import { connectDatabase, disconnectDatabase } from './db.js';
+import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
+import { webhookCallback } from 'grammy';
+import { connectDatabase, disconnectDatabase, pingDatabase } from './db.js';
+import { redis } from './redis.js';
 import { createBot } from './bot.js';
 import { config, validateStartupEnv } from './config/env.js';
 import { systemDataService } from './services/system-data.service.js';
@@ -59,52 +62,99 @@ async function bootstrap() {
         console.warn('⚠️ [TELEGRAM] Could not set side menu commands:', err.message);
       });
 
-
-    const runner = run(bot, {
-      runner: {
-        fetch: {
-          allowed_updates: ['message', 'callback_query'],
-          timeout: 30,
+    let runner: ReturnType<typeof run> | null = null;
+    if (!config.webhookUrl) {
+      runner = run(bot, {
+        runner: {
+          fetch: {
+            allowed_updates: ['message', 'callback_query'],
+            timeout: 30,
+          },
         },
-      },
-    });
+      });
+      console.log('⚡ [POLLING] grammY Runner started in polling mode.');
+    }
 
     // ⚡ Start Session Monitor
     sessionMonitorService.startMonitoring(bot.api);
 
-    // 4. Lightweight Native HTTP Health Endpoint (for Docker Healthcheck & Provenance Verification)
-    const healthServer = http.createServer((req, res) => {
-      const url = req.url || '';
-      if (url === '/api/health' || url === '/health' || url === '/ping') {
-        const body = JSON.stringify({
-          status: 'ready',
-          service: 'bot-server',
-          version: config.appVersion,
-          commitSha: config.gitCommitSha,
-          buildTime: config.buildTime,
-          timestamp: new Date().toISOString(),
-        });
-        res.writeHead(200, {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store',
-        });
-        res.end(body);
-        return;
-      }
+    // 4. Enterprise Hono Engine: Deep Health Probes & Local Webhook Handler
+    const app = new Hono();
 
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('Not Found');
+    // 4.1 Liveness Probe (process vitality)
+    app.get('/health/liveness', (c) => {
+      return c.json({
+        status: 'live',
+        service: 'bot-server',
+        version: config.appVersion,
+        timestamp: new Date().toISOString(),
+      }, 200);
     });
 
-    healthServer.listen(config.port, '0.0.0.0', () => {
-      console.log(`📡 [HEALTH] HTTP Health server listening on 0.0.0.0:${config.port}`);
+    // 4.2 Readiness & Comprehensive Health Probes (runner/webhook, postgres, and redis)
+    const handleDeepHealth = async (c: any) => {
+      let isDbHealthy = false;
+      let isRedisHealthy = false;
+      const isRunnerHealthy = config.webhookUrl ? true : (runner?.isRunning() ?? false);
+
+      let dbLatencyMs: number | null = null;
+      try {
+        dbLatencyMs = await pingDatabase();
+        isDbHealthy = typeof dbLatencyMs === 'number' && dbLatencyMs >= 0;
+      } catch {
+        isDbHealthy = false;
+      }
+
+      try {
+        const pingRes = await redis.ping();
+        isRedisHealthy = pingRes === 'PONG';
+      } catch {
+        isRedisHealthy = false;
+      }
+
+      const allHealthy = isRunnerHealthy && isDbHealthy && isRedisHealthy;
+      const statusCode = allHealthy ? 200 : 503;
+
+      return c.json({
+        status: allHealthy ? 'ready' : 'unhealthy',
+        service: 'bot-server',
+        mode: config.webhookUrl ? 'webhook' : 'polling',
+        telegramApiRoot: config.telegramApiRoot,
+        checks: {
+          runner: isRunnerHealthy,
+          database: isDbHealthy,
+          redis: isRedisHealthy,
+        },
+        version: config.appVersion,
+        commitSha: config.gitCommitSha,
+        buildTime: config.buildTime,
+        timestamp: new Date().toISOString(),
+      }, statusCode);
+    };
+
+    app.get('/api/health', handleDeepHealth);
+    app.get('/health/readiness', handleDeepHealth);
+    app.get('/health', handleDeepHealth);
+    app.get('/ping', handleDeepHealth);
+
+    // 4.3 Webhook Handler (for Local Bot API or Cloud Webhooks)
+    if (config.webhookUrl) {
+      app.post('/webhook', webhookCallback(bot, 'hono'));
+      console.log(`🔗 [WEBHOOK] Telegram Webhook registered on /webhook (URL: ${config.webhookUrl})`);
+    }
+
+    const server = serve({
+      fetch: app.fetch,
+      port: config.port,
+    }, (info) => {
+      console.log(`📡 [HEALTH] Hono Web & Health server listening on 0.0.0.0:${info.port}`);
     });
 
     const shutdown = async () => {
       console.log('\n🛑 [SHUTDOWN] Received termination signal. Stopping bot...');
       sessionMonitorService.stopMonitoring();
-      healthServer.close();
-      if (runner.isRunning()) {
+      server.close();
+      if (runner && runner.isRunning()) {
         await runner.stop();
       }
       await disconnectDatabase();

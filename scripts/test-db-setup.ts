@@ -14,6 +14,24 @@ export function getTestDatabaseUrl(): string {
   return base.replace(/\/alsaada_db\?/, `/${TEST_DB_NAME}?`);
 }
 
+export function assertTestDatabaseSafety(url: string): void {
+  const sanitized = url.replace('postgresql://', 'http://');
+  try {
+    const parsed = new URL(sanitized);
+    const dbName = parsed.pathname.replace(/^\//, '').split('?')[0];
+    if (dbName === 'alsaada_db') {
+      throw new Error(`🚨 [FATAL TEST ISOLATION BREACH] Target database "${dbName}" is the primary production database! Tests are strictly prohibited from targeting alsaada_db.`);
+    }
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes('FATAL TEST ISOLATION BREACH')) {
+      throw err;
+    }
+    if (url.includes('/alsaada_db?') || url.endsWith('/alsaada_db')) {
+      throw new Error(`🚨 [FATAL TEST ISOLATION BREACH] Target database is alsaada_db!`);
+    }
+  }
+}
+
 export function isPortOpen(host: string, port: number, timeoutMs = 1500): Promise<boolean> {
   return new Promise((resolve) => {
     const socket = new net.Socket();
@@ -84,6 +102,7 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
     'postgresql://alsaada_admin:alsaada_secure_pass_2026@127.0.0.1:5432/alsaada_db?schema=public';
   const basePrisma = createExtendedPrismaClient({ connectionString: baseDbUrl });
   const testDbUrl = getTestDatabaseUrl();
+  assertTestDatabaseSafety(testDbUrl);
 
   try {
     await basePrisma.$connect();

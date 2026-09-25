@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:bot-server)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T15:31:07.470Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T16:51:23.875Z)
 - **معرف الكيان:** `app:bot-server`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: bot-server
@@ -14,9 +14,9 @@
 | :--- | :--- |
 | `apps/bot-server/assets/images/logo.jpg` | `2b1d53c8098a86718217b162c7c9bbff4b0c1f5c0f8041f11b82694210fe865f` |
 | `apps/bot-server/CHANGELOG.md` | `430e0e9072f16d0ac5324b078ddbe04b25ddccdfd46227c7e484f472f557dedc` |
-| `apps/bot-server/package.json` | `7cdb3d8ee2aac8151aa13b78bcc1a393e788d2626bad91e1d6ec208eccdc74df` |
-| `apps/bot-server/src/bot.ts` | `66de49a5bd85296407cf359a909b839d133338bee7907d143b41f6dc9989d7dd` |
-| `apps/bot-server/src/config/env.ts` | `9cda9170497fa5e10e38a862b9a78192c6265a273a47caf306a9f98220c110b3` |
+| `apps/bot-server/package.json` | `9c1bad325223f964469f8bc0ccd3c0b8d5e87fdcdf61384faea3f4cdeea23739` |
+| `apps/bot-server/src/bot.ts` | `8baba96ada7ec4ce4f5dc4ab9a498077838c1b7d91801a759b4cf77e7d9a9cbb` |
+| `apps/bot-server/src/config/env.ts` | `29dffe13043240be27a9eefe7e9d614672096c3385f71865923248f9ea1c1346` |
 | `apps/bot-server/src/db.ts` | `fa2abb433d158257057742ca4fec4880a6c881f5d4c426d44de74ea0767a3e31` |
 | `apps/bot-server/src/handlers/boost.handler.ts` | `573345e7408234e756507784cc221f9fc2ef1dda4f6f754fcaefcda6db05745b` |
 | `apps/bot-server/src/handlers/dashboard.handler.ts` | `91a92cba8468628fefb06f51ff45e2c0ea10c13a916115f976202ef7cba05134` |
@@ -27,7 +27,7 @@
 | `apps/bot-server/src/handlers/start.helpers.ts` | `44aaa5deabd42d3cb57feefeeee3b7fb9aa770a13eb3088a7059efe062cb31ec` |
 | `apps/bot-server/src/handlers/worker-linking.handler.ts` | `d301b67d67d4e60caba1a40e4baa9cf4b063ca6d2f863aa6143c1848aaeefc5a` |
 | `apps/bot-server/src/handlers/worker-portal.handler.ts` | `c4f34bfb340d328e33ad4b47b15d84031f756c0f9a86677022b768e325bbea5b` |
-| `apps/bot-server/src/index.ts` | `29240c57e5e6a3fbc4b1644694bd39509ffae1fac6f8638bc8f0dd49dbf757a0` |
+| `apps/bot-server/src/index.ts` | `68c8d62c09ff4276624585ad655f208dd4be97de0e934c527a45636e7b44fed3` |
 | `apps/bot-server/src/keyboards/main-menu.keyboard.ts` | `6d86735d84b7a5e184ec0c97556d45e28b46012ee70c6c02df07591645760f55` |
 | `apps/bot-server/src/keyboards/reply-bar.keyboard.ts` | `acc9f046878a03a2e435d7891445815724358aa53c60764d855fb957f36abb90` |
 | `apps/bot-server/src/middlewares/auth.middleware.ts` | `5d88f14548c4804f8bb3d11c8a82ca925ec3fa838e227ad95d82f06a7b1c74f8` |
