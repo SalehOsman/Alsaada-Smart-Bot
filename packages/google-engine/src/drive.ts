@@ -216,6 +216,51 @@ export class GoogleDriveService {
     }
   }
 
+  private readonly folderCache: Map<string, string> = new Map();
+
+  /**
+   * Clears the in-memory Google Drive folder ID cache.
+   */
+  clearFolderCache(): void {
+    this.folderCache.clear();
+  }
+
+  /**
+   * Recursively ensures a hierarchical folder path in Google Drive (e.g. 'backups/database/daily').
+   * Uses an in-memory cache to minimize Google Drive API query overhead (<50ms for known nodes).
+   */
+  async ensureDirectoryTree(pathString: string, baseFolderId?: string): Promise<string | null> {
+    if (!pathString || !pathString.trim()) {
+      return baseFolderId || this.auth.getDriveFolderId();
+    }
+
+    const segments = pathString
+      .replace(/\\/g, '/')
+      .split('/')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    let currentParent = baseFolderId || this.auth.getDriveFolderId();
+
+    for (const segment of segments) {
+      const cacheKey = `${currentParent}:${segment}`;
+      if (this.folderCache.has(cacheKey)) {
+        currentParent = this.folderCache.get(cacheKey)!;
+        continue;
+      }
+
+      const folderId = await this.ensureFolder(segment, currentParent);
+      if (!folderId) {
+        return null;
+      }
+
+      this.folderCache.set(cacheKey, folderId);
+      currentParent = folderId;
+    }
+
+    return currentParent;
+  }
+
   /**
    * Fetches metadata for an existing file in Google Drive.
    */

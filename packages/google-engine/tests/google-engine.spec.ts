@@ -123,6 +123,28 @@ describe('Enterprise Google Engine Suite (@alsaada/google-engine)', () => {
       expect(res.provider).toBe('local_fallback');
       expect(res.error).toContain('File not found on disk');
     });
+    it('creates nested directory tree and utilizes cache to prevent redundant calls', async () => {
+      const mockAuth = {
+        getDriveFolderId: () => 'root-vault-123',
+        getDriveAccessToken: async () => 'mock-token',
+      } as any;
+
+      const drive = new GoogleDriveService(mockAuth);
+      const ensureSpy = vi.spyOn(drive, 'ensureFolder')
+        .mockResolvedValueOnce('folder-backups')
+        .mockResolvedValueOnce('folder-database')
+        .mockResolvedValueOnce('folder-daily');
+
+      // First call resolves tree
+      const leafId = await drive.ensureDirectoryTree('backups/database/daily');
+      expect(leafId).toBe('folder-daily');
+      expect(ensureSpy).toHaveBeenCalledTimes(3);
+
+      // Second call utilizes in-memory cache
+      const cachedLeafId = await drive.ensureDirectoryTree('backups/database/daily');
+      expect(cachedLeafId).toBe('folder-daily');
+      expect(ensureSpy).toHaveBeenCalledTimes(3); // Zero redundant API calls!
+    });
   });
 
   describe('3. GoogleSheetsService', () => {

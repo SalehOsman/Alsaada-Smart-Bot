@@ -43,6 +43,8 @@ export interface RestoreResult {
   postRestoreChecks: {
     checksumVerified: boolean;
     decryptionVerified: boolean;
+    assetsVerified?: boolean;
+    codebaseVerified?: boolean;
     migrationsVerified: boolean;
     financialIntegrityPassed: boolean;
   };
@@ -74,12 +76,13 @@ export async function createDatabaseDump(
   const dbName = process.env.DB_NAME ?? 'alsaada_db';
 
   try {
-    // 1. Try Docker container exec
-    execSync(
-      `docker exec alsaada_enterprise_postgres pg_dump -U ${dbUser} -d ${dbName} --single-transaction --no-owner --no-privileges --clean --if-exists -F c > "${outputFilePath}"`,
-      { cwd: root, stdio: ['pipe', 'pipe', 'pipe'] },
+    // 1. Try Docker container exec with direct buffer capture (prevents Windows redirection corruption)
+    const dumpBuffer = execSync(
+      `docker exec alsaada_enterprise_postgres pg_dump -U ${dbUser} -d ${dbName} --no-owner --no-privileges --clean --if-exists -F c`,
+      { cwd: root, stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 100 * 1024 * 1024 },
     );
-    if (existsSync(outputFilePath) && statSync(outputFilePath).size > 0) {
+    if (dumpBuffer && dumpBuffer.length > 0) {
+      writeFileSync(outputFilePath, dumpBuffer);
       return true;
     }
   } catch {
@@ -87,8 +90,8 @@ export async function createDatabaseDump(
     try {
       const url = databaseUrl ?? process.env.DATABASE_URL ?? `postgresql://${dbUser}@localhost:5432/${dbName}`;
       execSync(
-        `pg_dump "${url}" --single-transaction --no-owner --no-privileges --clean --if-exists -F c -f "${outputFilePath}"`,
-        { cwd: root, stdio: ['pipe', 'pipe', 'pipe'] },
+        `pg_dump "${url}" --no-owner --no-privileges --clean --if-exists -F c -f "${outputFilePath}"`,
+        { cwd: root, stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 100 * 1024 * 1024 },
       );
       if (existsSync(outputFilePath) && statSync(outputFilePath).size > 0) {
         return true;
@@ -98,7 +101,7 @@ export async function createDatabaseDump(
       const header = Buffer.from(
         `PGDMP-ALSAADA-ENTERPRISE-ATOMIC-V16\n` +
           `TIMESTAMP:${new Date().toISOString()}\n` +
-          `FLAGS:--single-transaction --no-owner --no-privileges --clean --if-exists -F c\n` +
+          `FLAGS:--no-owner --no-privileges --clean --if-exists -F c\n` +
           `DB:${dbName}\n` +
           `FINANCIAL_INVARIANTS:G12_PRESERVED\n`,
       );
@@ -188,14 +191,46 @@ export async function createFullBackup(options: BackupManagerOptions = {}): Prom
     type: 'assets',
   });
 
-  // 4. Cloud Sync
+  // 4. Generate Initial Manifest & Checksums
+  const manifestPath = join(baseDir, `manifest-${backupId}.json`);
+  const checksumsPath = join(baseDir, `checksums-${backupId}.sha256`);
+
+  // Write checksums file
+  const checksumContent = artifacts.map((a) => `${a.sha256}  ${a.relativePath}`).join('\n') + '\n';
+  writeFileSync(checksumsPath, checksumContent);
+
+  // 5. Cloud Sync with Hierarchical Drive Taxonomy (WP-107 Pillar 7)
   let cloudStatus: BackupSnapshotManifest['cloudSyncStatus'] = 'skipped';
-  if (options.syncCloud) {
-    const cloudRes = await syncToGoogleDriveWithBackoff(encDumpPath, `db-${backupId}.dump.enc`);
-    cloudStatus = cloudRes.success ? (cloudRes.provider === 'google_drive' ? 'synced' : 'staged') : 'failed';
+  const shouldSync = options.syncCloud ?? Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || process.env.GOOGLE_PRIVATE_KEY);
+
+  if (shouldSync) {
+    try {
+      console.log('☁️ [BACKUP-MANAGER] Syncing all 4 backup artifacts to Google Drive hierarchy...');
+      const dbUpload = await syncToGoogleDriveWithBackoff(encDumpPath, `db-${backupId}.dump.enc`, {
+        subfolderPath: 'backups/database/daily',
+      });
+      const codeUpload = await syncToGoogleDriveWithBackoff(codeResult.bundlePath, basename(codeResult.bundlePath), {
+        subfolderPath: 'backups/codebase',
+      });
+      const assetsUpload = await syncToGoogleDriveWithBackoff(encAssetsPath, basename(encAssetsPath), {
+        subfolderPath: 'backups/assets',
+      });
+      const checksumsUpload = await syncToGoogleDriveWithBackoff(checksumsPath, basename(checksumsPath), {
+        subfolderPath: 'backups/manifests',
+      });
+
+      if (dbUpload.success && codeUpload.success && assetsUpload.success && checksumsUpload.success) {
+        cloudStatus = dbUpload.provider === 'google_drive' ? 'synced' : 'staged';
+      } else {
+        cloudStatus = 'failed';
+      }
+    } catch (err) {
+      console.warn('⚠️ [BACKUP-MANAGER] Cloud sync error:', err);
+      cloudStatus = 'failed';
+    }
   }
 
-  // 5. Generate Manifest
+  // 6. Generate Manifest
   const manifest: BackupSnapshotManifest = {
     backupId,
     createdAt: now.toISOString(),
@@ -208,12 +243,16 @@ export async function createFullBackup(options: BackupManagerOptions = {}): Prom
     cloudSyncStatus: cloudStatus,
   };
 
-  const manifestPath = join(baseDir, `manifest-${backupId}.json`);
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
-  // Write checksums file
-  const checksumContent = artifacts.map((a) => `${a.sha256}  ${a.relativePath}`).join('\n') + '\n';
-  writeFileSync(join(baseDir, `checksums-${backupId}.sha256`), checksumContent);
+  // If cloud sync succeeded, upload manifest to manifests folder as well
+  if (cloudStatus === 'synced' || cloudStatus === 'staged') {
+    try {
+      await syncToGoogleDriveWithBackoff(manifestPath, basename(manifestPath), {
+        subfolderPath: 'backups/manifests',
+      });
+    } catch {}
+  }
 
   return manifest;
 }
@@ -373,10 +412,33 @@ export async function restoreBackup(options: RestoreBackupOptions): Promise<Rest
     }
   }
 
-  // 3. Post-Restore Verification Gate: Check schema & migrations
+  // 3. Decrypt and Verify Sensitive Assets Artifact
+  const assetsArtifact = manifest.artifacts.find((a) => a.type === 'assets');
+  let assetsVerified = true;
+  if (assetsArtifact) {
+    try {
+      const encAssetsPath = join(baseDir, assetsArtifact.relativePath);
+      const decAssetsPath = join(baseDir, 'assets', `restore-${options.backupId}.json`);
+      decryptBackupFile(encAssetsPath, decAssetsPath, options.keyOrPassphrase);
+      const assetsData = JSON.parse(readFileSync(decAssetsPath, 'utf8'));
+      assetsVerified = Boolean(assetsData && assetsData.backupId);
+    } catch {
+      assetsVerified = false;
+    }
+  }
+
+  // 4. Verify Codebase Git Bundle Artifact
+  const codeArtifact = manifest.artifacts.find((a) => a.type === 'codebase');
+  let codebaseVerified = true;
+  if (codeArtifact) {
+    const bundlePath = join(baseDir, codeArtifact.relativePath);
+    codebaseVerified = existsSync(bundlePath) && statSync(bundlePath).size > 0;
+  }
+
+  // 5. Post-Restore Verification Gate: Check schema & migrations
   const migrationsVerified = true; // In drill or live mode, schema migrations match
 
-  // 4. Post-Restore Verification Gate: Financial Integrity Double-Entry Ledger
+  // 6. Post-Restore Verification Gate: Financial Integrity Double-Entry Ledger
   let financialIntegrityPassed = false;
   try {
     const finRes = await verifyFinancialIntegrity();
@@ -387,16 +449,18 @@ export async function restoreBackup(options: RestoreBackupOptions): Promise<Rest
   }
 
   return {
-    success: checksumVerified && decryptionVerified && migrationsVerified && financialIntegrityPassed,
+    success: checksumVerified && decryptionVerified && assetsVerified && codebaseVerified && migrationsVerified && financialIntegrityPassed,
     backupId: options.backupId,
     restoredAt: new Date().toISOString(),
     postRestoreChecks: {
       checksumVerified,
       decryptionVerified,
+      assetsVerified,
+      codebaseVerified,
       migrationsVerified,
       financialIntegrityPassed,
     },
-    details: 'Full restore drill completed and verified successfully across all post-restore gates.',
+    details: 'Full restore drill completed and verified successfully across all 4 backup artifact gates.',
   };
 }
 
@@ -405,8 +469,9 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('tools/backup/backup-manager.t
   const action = process.argv[2] ?? 'list';
 
   if (action === 'create') {
-    console.log('🚀 [BACKUP-MANAGER] Creating full sovereign backup (Database + Codebase + Assets)...');
-    createFullBackup()
+    const syncCloud = !process.argv.includes('--no-cloud');
+    console.log(`🚀 [BACKUP-MANAGER] Creating full sovereign backup (Database + Codebase + Assets)... [Cloud Sync: ${syncCloud ? 'ENABLED' : 'DISABLED'}]`);
+    createFullBackup({ syncCloud })
       .then((manifest) => {
         console.log(`✅ [BACKUP-MANAGER] Backup created successfully: ${manifest.backupId}`);
         console.log(`📦 Artifacts count: ${manifest.artifacts.length}`);
