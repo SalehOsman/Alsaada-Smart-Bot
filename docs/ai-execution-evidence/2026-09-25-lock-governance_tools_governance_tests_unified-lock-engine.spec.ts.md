@@ -1,9 +1,9 @@
-# توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/governance/tests/unified-lock-engine.spec.ts)
+# توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (governance:tools/governance/tests/unified-lock-engine.spec.ts)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T23:20:32.356Z)
-- **معرف الكيان:** `test:tools/governance/tests/unified-lock-engine.spec.ts`
-- **نوع الكيان:** `test`
-- **العنوان:** ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T23:22:45.800Z)
+- **معرف الكيان:** `governance:tools/governance/tests/unified-lock-engine.spec.ts`
+- **نوع الكيان:** `infra`
+- **العنوان:** الحوكمة والدستور السيادي: tools/governance/tests/unified-lock-engine.spec.ts
 - **المسار الأساسي:** `tools/governance/tests/unified-lock-engine.spec.ts`
 - **عدد الملفات المقفلة:** 1 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)

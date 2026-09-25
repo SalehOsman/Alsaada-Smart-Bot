@@ -71,8 +71,9 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @alsaada/database db:generate
 
-      - name: Push Database Schema
-        run: pnpm --filter @alsaada/database db:push --accept-data-loss
+      - name: Deploy Database Migrations
+        id: migrate
+        run: pnpm --filter @alsaada/database db:migrate
 
       - name: Setup Isolated Test Database
         run: pnpm tsx scripts/test-db-setup.ts --require-live
@@ -81,12 +82,15 @@ jobs:
         run: pnpm --filter "./packages/**" --filter "./modules/**" build
 
       - name: Compile TypeScript Across Monorepo
+        id: typecheck
         run: pnpm typecheck
 
       - name: Verify Docs AST & Parity (Zero Drift)
+        id: docs
         run: pnpm docs:check
 
       - name: Run Automated Test Suites
+        id: test
         run: pnpm test
 
       - name: Install Security Scanners (Gitleaks & Semgrep)
@@ -99,14 +103,17 @@ jobs:
           semgrep --version
 
       - name: Verify Git Hygiene & Version Parity
+        id: git_hygiene
         run: pnpm git-hygiene:verify
         env:
           CI: 'true'
 
       - name: Run Full Enterprise Governance Gate
+        id: governance
         run: pnpm governance:verify
 
       - name: Build Docker Container
+        id: docker
         run: docker build -t alsaada-bot:local -f docker/Dockerfile .
 
       - name: Publish Governance Step Summary
@@ -116,9 +123,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check / Quality Gate | Target / Standard | Result |" >> $GITHUB_STEP_SUMMARY
           echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-          echo "| **TypeScript Typecheck** | Strict TS 5.9+ across monorepo | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Docs AST Zero Drift** | SSOT AST documentation parity | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Automated Test Suites** | Postgres 16 + Redis 7 + Vitest | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Git Hygiene (Gate 17)** | Version parity & clean working tree | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Enterprise Governance** | 20 Mandatory Architecture & Financial Gates | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Docker Production Build** | Multi-stage image with pnpm 12 & frozen lockfile | ✅ PASS |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Database Migrations** | Strict prisma migrate deploy | ${{ steps.migrate.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **TypeScript Typecheck** | Strict TS 5.9+ across monorepo | ${{ steps.typecheck.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Docs AST Zero Drift** | SSOT AST documentation parity | ${{ steps.docs.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Automated Test Suites** | Postgres 16 + Redis 7 + Vitest | ${{ steps.test.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Git Hygiene (Gate 17)** | Version parity & clean working tree | ${{ steps.git_hygiene.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Enterprise Governance** | 20 Mandatory Architecture & Financial Gates | ${{ steps.governance.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Docker Production Build** | Multi-stage image with pnpm 12 & frozen lockfile | ${{ steps.docker.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
