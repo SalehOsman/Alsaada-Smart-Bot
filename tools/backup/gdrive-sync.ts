@@ -16,6 +16,7 @@ export interface EncryptionResult {
 
 export interface CloudUploadOptions {
   folderId?: string | undefined;
+  subfolderPath?: string | undefined;
   serviceAccountEmail?: string | undefined;
   privateKey?: string | undefined;
   maxRetries?: number | undefined;
@@ -159,7 +160,16 @@ export async function syncToGoogleDriveWithBackoff(
   }
 
   const fileData = readFileSync(filePath);
-  const folderId = options.folderId ?? process.env.GOOGLE_DRIVE_FOLDER_ID ?? process.env.GDRIVE_FOLDER_ID;
+  let folderId = options.folderId;
+  if (!folderId && options.subfolderPath) {
+    try {
+      const treeId = await googleDriveService.ensureDirectoryTree(options.subfolderPath);
+      if (treeId) {
+        folderId = treeId;
+      }
+    } catch {}
+  }
+  folderId = folderId ?? process.env.GOOGLE_DRIVE_FOLDER_ID ?? process.env.GDRIVE_FOLDER_ID;
 
   // Execute upload via unified @alsaada/google-engine
   const uploadRes = await googleDriveService.uploadBuffer({

@@ -65,6 +65,7 @@ services:
         condition: service_healthy
     volumes:
       - ./attachments:/app/attachments
+      - ./backups:/app/backups
     env_file:
       - .env
     environment:
@@ -137,6 +138,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ./backups:/app/backups
     env_file:
       - .env
     environment:
@@ -203,7 +206,7 @@ services:
       BACKUP_KEEP_WEEKS: ${BACKUP_KEEP_WEEKS:-4}
       BACKUP_KEEP_MONTHS: ${BACKUP_KEEP_MONTHS:-6}
       HEALTHCHECK_PORT: 80
-      POSTGRES_EXTRA_OPTS: "--single-transaction --no-owner --no-privileges --clean --if-exists -F c"
+      POSTGRES_EXTRA_OPTS: "--no-owner --no-privileges --clean --if-exists -F c"
     depends_on:
       postgres:
         condition: service_healthy

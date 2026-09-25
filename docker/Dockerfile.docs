@@ -29,8 +29,10 @@ COPY packages/core-components/package.json packages/core-components/
 COPY packages/shared/package.json packages/shared/
 COPY packages/telemetry/package.json packages/telemetry/
 COPY packages/ai-vision-engine/package.json packages/ai-vision-engine/
+COPY packages/google-engine/package.json packages/google-engine/
 COPY modules/workforce/package.json modules/workforce/
 COPY modules/settings/package.json modules/settings/
+COPY modules/sandbox/package.json modules/sandbox/
 COPY apps/admin-dashboard/package.json apps/admin-dashboard/
 COPY apps/bot-server/package.json apps/bot-server/
 COPY apps/docs/package.json apps/docs/
