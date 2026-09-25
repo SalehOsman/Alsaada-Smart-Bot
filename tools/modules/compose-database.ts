@@ -423,19 +423,23 @@ export function composeDatabaseSchema(options: DatabaseCompositionOptions = {}):
   const generatedFiles: string[] = [];
 
   if (!options.dryRun) {
-    // 1. Write legacy single-file schema
+    // 1. Write legacy single-file schema conditionally
     mkdirSync(dirname(outputPath), { recursive: true });
     const adjustedComposed = adjustGeneratorClientOutput(composedSchema, outputPath, root);
-    writeFileSync(outputPath, adjustedComposed, 'utf8');
+    if (!existsSync(outputPath) || readFileSync(outputPath, 'utf8') !== adjustedComposed) {
+      writeFileSync(outputPath, adjustedComposed, 'utf8');
+    }
     generatedFiles.push(outputPath);
 
-    // 2. Write multi-file schema folder
+    // 2. Write multi-file schema folder conditionally
     mkdirSync(schemaFolderPath, { recursive: true });
 
     // 00-core.prisma
     const coreOutFile = join(schemaFolderPath, '00-core.prisma');
     const adjustedCore = adjustGeneratorClientOutput(coreSchemaText, coreOutFile, root);
-    writeFileSync(coreOutFile, adjustedCore, 'utf8');
+    if (!existsSync(coreOutFile) || readFileSync(coreOutFile, 'utf8') !== adjustedCore) {
+      writeFileSync(coreOutFile, adjustedCore, 'utf8');
+    }
     generatedFiles.push(coreOutFile);
 
     const manifestFiles: ManifestSchemaFileEntry[] = [
@@ -453,7 +457,9 @@ export function composeDatabaseSchema(options: DatabaseCompositionOptions = {}):
       const moduleOutFile = join(schemaFolderPath, frag.targetFilename);
       const header = `// =============================================================\n// Module Extension: ${frag.moduleId}\n// Generated deterministically by compose-database.ts\n// =============================================================\n\n`;
       const fullModContent = header + frag.fragmentContent + '\n';
-      writeFileSync(moduleOutFile, fullModContent, 'utf8');
+      if (!existsSync(moduleOutFile) || readFileSync(moduleOutFile, 'utf8') !== fullModContent) {
+        writeFileSync(moduleOutFile, fullModContent, 'utf8');
+      }
       generatedFiles.push(moduleOutFile);
 
       manifestFiles.push({
@@ -465,18 +471,31 @@ export function composeDatabaseSchema(options: DatabaseCompositionOptions = {}):
       });
     }
 
-    // Write manifest.json
+    // Write manifest.json deterministically (preserve generatedAt if compositeHash has not changed)
+    let existingGeneratedAt = new Date().toISOString();
+    if (existsSync(manifestPath)) {
+      try {
+        const existing = JSON.parse(readFileSync(manifestPath, 'utf8'));
+        if (existing.compositeHash === schemaHash && existing.generatedAt) {
+          existingGeneratedAt = existing.generatedAt;
+        }
+      } catch {}
+    }
+
     const manifest = {
       version: '2.0.0',
       description: 'Sovereign Multi-File Database Schema Manifest (Work Plan 112)',
-      generatedAt: new Date().toISOString(),
+      generatedAt: existingGeneratedAt,
       compositeHash: schemaHash,
       totalModels: coreModelNames.size + moduleModelsCount,
       coreModelsCount: coreModelNames.size,
       moduleModelsCount,
       files: manifestFiles,
     };
-    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+    const newManifestJson = JSON.stringify(manifest, null, 2);
+    if (!existsSync(manifestPath) || readFileSync(manifestPath, 'utf8') !== newManifestJson) {
+      writeFileSync(manifestPath, newManifestJson, 'utf8');
+    }
     generatedFiles.push(manifestPath);
 
     // Synchronize migrations
