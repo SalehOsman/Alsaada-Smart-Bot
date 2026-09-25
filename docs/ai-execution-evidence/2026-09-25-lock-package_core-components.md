@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:core-components)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T17:58:35.515Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T23:05:51.793Z)
 - **معرف الكيان:** `package:core-components`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/core-components
@@ -36,7 +36,7 @@
 | `packages/core-components/src/contracts/flow.contract.ts` | `10453f59a1c4bd4361c177faec4038809d352dd48b947b010ae56ec0d21a9798` |
 | `packages/core-components/src/contracts/index.ts` | `4caba54ef131c01d396a788d5514a2193c1db4d295d5de6a01e126ed55910d62` |
 | `packages/core-components/src/contracts/module-v2.contract.ts` | `277f25e3961e3c401ef9db44aa9d313c08294f2d85fac8958036b741e53c7d8b` |
-| `packages/core-components/src/contracts/module.contract.ts` | `744be841855ccc3b810652382a1fc482f701623a68fc8d25d18d91e9764409af` |
+| `packages/core-components/src/contracts/module.contract.ts` | `f28b92e7a9645593e38f11764ae74d5947872cd260f7268260db06f04ebf621a` |
 | `packages/core-components/src/contracts/typesafe-primitives.contract.ts` | `c7f37ff56e3fc3254b7822d3879a42a649f1f4dd78cae753f3c63feb5d7c4608` |
 | `packages/core-components/src/custody-gate/gate.ts` | `4e717c75921f9982e8df43979ee05e27e6c8f6872e2ec8ba477ea1250301e000` |
 | `packages/core-components/src/custody-gate/types.ts` | `224004c552b354e00a4aefb447fd51b9c854018259d93b8234655c99568b2d10` |

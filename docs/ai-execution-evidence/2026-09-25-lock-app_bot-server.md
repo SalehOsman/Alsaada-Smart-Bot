@@ -1,11 +1,11 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:bot-server)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T16:51:23.875Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T23:13:47.375Z)
 - **معرف الكيان:** `app:bot-server`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: bot-server
 - **المسار الأساسي:** `apps/bot-server`
-- **عدد الملفات المقفلة:** 38 ملفاً
+- **عدد الملفات المقفلة:** 39 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
@@ -15,7 +15,7 @@
 | `apps/bot-server/assets/images/logo.jpg` | `2b1d53c8098a86718217b162c7c9bbff4b0c1f5c0f8041f11b82694210fe865f` |
 | `apps/bot-server/CHANGELOG.md` | `430e0e9072f16d0ac5324b078ddbe04b25ddccdfd46227c7e484f472f557dedc` |
 | `apps/bot-server/package.json` | `9c1bad325223f964469f8bc0ccd3c0b8d5e87fdcdf61384faea3f4cdeea23739` |
-| `apps/bot-server/src/bot.ts` | `8baba96ada7ec4ce4f5dc4ab9a498077838c1b7d91801a759b4cf77e7d9a9cbb` |
+| `apps/bot-server/src/bot.ts` | `643c8b5672fa6fbde2ae578356fa04459ceffffd00997a410dd8a442587ca133` |
 | `apps/bot-server/src/config/env.ts` | `29dffe13043240be27a9eefe7e9d614672096c3385f71865923248f9ea1c1346` |
 | `apps/bot-server/src/db.ts` | `fa2abb433d158257057742ca4fec4880a6c881f5d4c426d44de74ea0767a3e31` |
 | `apps/bot-server/src/handlers/boost.handler.ts` | `573345e7408234e756507784cc221f9fc2ef1dda4f6f754fcaefcda6db05745b` |
@@ -34,6 +34,7 @@
 | `apps/bot-server/src/middlewares/telemetry.middleware.ts` | `e874e8411f411aef792b18795b5ea8ad43249c51fdbbb75f7c553dd4a770d6a6` |
 | `apps/bot-server/src/modules.registry.ts` | `243d5bf0925b0c70721d0a6dd414ea6378638cb71802e61b2a7b7b3928b662f4` |
 | `apps/bot-server/src/redis.ts` | `128689f81357470bd8afd9645b604326c439528e468774eaed38e7e3bf613cba` |
+| `apps/bot-server/src/routers/business-hears.router.ts` | `f206b6abe4ce5626713f613f23bc806b2a7b734dbb78dab3f243b4f32a4674c3` |
 | `apps/bot-server/src/routers/command-polymorphic.router.ts` | `8016e5f832fa8dcd2b347659268adcfec981f367d381170b52d66c39bd8799e5` |
 | `apps/bot-server/src/services/command-scope.service.ts` | `387f92064795253449a84704b2b55f97d2ae7423f520e4436e8308bb0aad4d3e` |
 | `apps/bot-server/src/services/dashboard-auth.service.ts` | `5ae8216c083db3163eddef87b0d0b46444906c0f42ce4001f13ff1c8c7f5ae65` |
@@ -45,7 +46,7 @@
 | `apps/bot-server/src/services/scope.service.ts` | `cef96a6c9277daa2b08663aa0d2c525aed4d6859a487ed930987e15c0805c229` |
 | `apps/bot-server/src/services/session-monitor.service.ts` | `01e0f8e841f1ec8e6196be4fc766f5baa77f28ad7df16c340c2650563acec241` |
 | `apps/bot-server/src/services/supervisor-lifecycle.service.ts` | `2507fdbf65bf4d7bf432d0b808b2b691b2f50700f35577e2e49450df9ee67f96` |
-| `apps/bot-server/src/services/system-data.service.ts` | `a40a37707aada21bc6bb7f936f50e1898b8ad827a2419934d4726df0d0373d9d` |
+| `apps/bot-server/src/services/system-data.service.ts` | `8218fd6410cef418037c698fdc2e5cddfedfcf941c4cc2c79a948a574cc34006` |
 | `apps/bot-server/src/services/telegram-group-enforcer.service.ts` | `f762ecb1c022f952f5e8d1f794523fcf1a017aa3047806be3dc842ad35388e5f` |
 | `apps/bot-server/src/types/context.ts` | `6926ee4663ef2fecdd20141600ad12c4ebcd2a1fe7bdc4ddf28aa36c730e4648` |
 | `apps/bot-server/src/utils/coordinates.ts` | `5bd7ad6b10977d87d0be1f35f6aac5af851d0f939a0bf89cbb1532dd699085b8` |

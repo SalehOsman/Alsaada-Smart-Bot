@@ -68,12 +68,11 @@ import { handleMenuPlaceholder } from './handlers/placeholder.handler.js';
 import {
   handleSwitchToWorker,
   handleSwitchToFieldAdmin,
-  handleWorkerPayslipHears,
-  handleWorkerStatementHears,
   handleFieldTankLevelHears,
   type WorkforceModuleContext,
 } from '@alsaada/workforce';
-import { handleSettingsHub, handleSupplierInvoicesHears } from '@alsaada/settings';
+import { handleSettingsHub } from '@alsaada/settings';
+import { registerBusinessHearsRoutes } from './routers/business-hears.router.js';
 import { buildRegisteredModules } from './modules.registry.js';
 import type { ModuleRuntimeContext } from '@alsaada/core-components';
 import { systemDataService } from './services/system-data.service.js';
@@ -556,16 +555,8 @@ export async function createBot(): Promise<Bot<MyContext>> {
     if (ctx.from) await clearAllPendingUserActions(BigInt(ctx.from.id));
     await handleGuestIdentity(ctx);
   });
-  bot.hears(/قسيمة راتبي/, async (ctx) => {
-    await handleWorkerPayslipHears(ctx as unknown as WorkforceModuleContext, systemDataService.getDbClient());
-  });
-  bot.hears(/كشف حسابي/, async (ctx) => {
-    await handleWorkerStatementHears(ctx as unknown as WorkforceModuleContext, systemDataService.getDbClient());
-  });
+  registerBusinessHearsRoutes(bot);
   bot.hears(/لوحة المؤشرات/, handleDashboardCommand);
-  bot.hears(/فواتيري ومستخلصاتي/, async (ctx) => {
-    await handleSupplierInvoicesHears(ctx, systemDataService.getDbClient());
-  });
   bot.hears(/🚜 تسجيل منسوب/, async (ctx) => {
     await handleFieldTankLevelHears(ctx as unknown as WorkforceModuleContext);
   });
