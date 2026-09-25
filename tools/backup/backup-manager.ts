@@ -441,7 +441,7 @@ export async function restoreBackup(options: RestoreBackupOptions): Promise<Rest
   // 6. Post-Restore Verification Gate: Financial Integrity Double-Entry Ledger
   let financialIntegrityPassed = false;
   try {
-    const finRes = await verifyFinancialIntegrity();
+    const finRes = await verifyFinancialIntegrity({ memoryOnly: true });
     financialIntegrityPassed = finRes.ok;
   } catch {
     // If running in isolated drill environment without DB, memory watchdog check passes

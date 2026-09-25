@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { scanMonorepoCatalog } from '../catalog.js';
 import { validateMonorepoCatalog } from '../validate-catalog.js';
@@ -25,26 +26,26 @@ import {
 
 describe('Work Plan 89 — End-to-End Module Onboarding & Acceptance Verification (Phase P11)', () => {
   const fixtureDir = path.resolve(__dirname, 'fixtures/acceptance-module');
-  const tempModuleDir = path.resolve(process.cwd(), 'modules/sample-domain');
+  const tempRootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'alsaada-e2e-onboarding-'));
+  const tempModulesDir = path.join(tempRootDir, 'modules');
+  const tempModuleDir = path.join(tempModulesDir, 'sample-domain');
 
   beforeAll(() => {
-    // Copy fixture to modules/sample-domain for realistic monorepo scanner testing
-    if (fs.existsSync(tempModuleDir)) {
-      fs.rmSync(tempModuleDir, { recursive: true, force: true });
-    }
+    // Copy fixture to isolated temporary directory inside os.tmpdir()
+    fs.mkdirSync(tempModulesDir, { recursive: true });
     fs.cpSync(fixtureDir, tempModuleDir, { recursive: true });
   });
 
   afterAll(() => {
-    // Clean up temporary module so we never leave clutter in the working directory
-    if (fs.existsSync(tempModuleDir)) {
-      fs.rmSync(tempModuleDir, { recursive: true, force: true });
+    // Clean up temporary module inside os.tmpdir() so we never touch working tree
+    if (fs.existsSync(tempRootDir)) {
+      fs.rmSync(tempRootDir, { recursive: true, force: true });
     }
   });
 
   // 1. Catalog Autodiscovery
   it('E2E-1: dynamically discovers sample-domain module and flows 89.1 and 89.2', () => {
-    const catalog = scanMonorepoCatalog(process.cwd());
+    const catalog = scanMonorepoCatalog(tempRootDir);
     const sampleMod = catalog.modules.find((m) => m.id === 'sample-domain');
 
     expect(sampleMod).toBeDefined();
@@ -66,7 +67,7 @@ describe('Work Plan 89 — End-to-End Module Onboarding & Acceptance Verificatio
     expect(flow2?.titleArabic).toBe('تدفق العينة الثاني - استعلام وسجل');
 
     // Verify catalog validation passes
-    const validation = validateMonorepoCatalog(catalog);
+    const validation = validateMonorepoCatalog(catalog, tempRootDir);
     expect(validation.valid).toBe(true);
     expect(validation.errors).toHaveLength(0);
   });
@@ -137,9 +138,9 @@ describe('Work Plan 89 — End-to-End Module Onboarding & Acceptance Verificatio
 
   // 6. Production Release Artifact Packaging & Verification
   it('E2E-6: builds, packages, and verifies production release artifact for sample-domain', () => {
-    const outDir = path.join(process.cwd(), 'tmp-test-release-artifact');
+    const outDir = path.join(tempRootDir, 'release-artifact');
     const releaseResult = buildRelease({
-      root: process.cwd(),
+      root: tempRootDir,
       outDir,
     });
 
@@ -154,12 +155,9 @@ describe('Work Plan 89 — End-to-End Module Onboarding & Acceptance Verificatio
     // Verify release artifact integrity
     const verifyResult = verifyRelease({
       manifestPath: releaseResult.manifestPath,
-      root: process.cwd(),
+      root: tempRootDir,
     });
     expect(verifyResult.ok).toBe(true);
     expect(verifyResult.errors).toHaveLength(0);
-
-    // Cleanup release output
-    fs.rmSync(outDir, { recursive: true, force: true });
   });
 });

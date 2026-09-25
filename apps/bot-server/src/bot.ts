@@ -116,6 +116,7 @@ export async function createBot(): Promise<Bot<MyContext>> {
 
   const bot = new Bot<MyContext>(token, {
     client: {
+      apiRoot: config.telegramApiRoot,
       fetch: nativeFetchAdapter,
       baseFetchConfig: {
         compress: true,

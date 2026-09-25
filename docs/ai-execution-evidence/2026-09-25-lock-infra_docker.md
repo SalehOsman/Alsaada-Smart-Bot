@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (infra:docker)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T12:53:55.109Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T16:51:39.922Z)
 - **معرف الكيان:** `infra:docker`
 - **نوع الكيان:** `infra`
 - **العنوان:** البنية التحتية والدوكر وقواعد البيانات
@@ -13,7 +13,7 @@
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
 | `.dockerignore` | `d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a` |
-| `docker-compose.yml` | `e1fdbc3b725838e2f0e550ec85aca449902a3ae0e8d9c9a74d2dc9fed77121da` |
+| `docker-compose.yml` | `883964654ff628587b26e9569b730af38fb0f7ffc00d9769cf68ef07a25a39ca` |
 | `docker/Dockerfile` | `c997292238d67a1f057d78526d20f3ce84f5a700c72db42ea592b7e0c834e69c` |
 | `docker/Dockerfile.dashboard` | `1659f3cc340cc36cb701146f8b7261b1a3de303f1a945094811feed53f944186` |
 | `docker/Dockerfile.docs` | `5ba5b9da3ce20adfbde07deab5e64ad09cd7380c5cb8c52ae391524575e75437` |

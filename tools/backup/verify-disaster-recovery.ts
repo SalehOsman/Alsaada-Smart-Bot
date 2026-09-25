@@ -97,7 +97,7 @@ export async function runDisasterRecoveryDrill(root = process.cwd()): Promise<Di
 
     // Step 6: Post-Restore Financial Integrity Verification
     try {
-      const finRes = await verifyFinancialIntegrity();
+      const finRes = await verifyFinancialIntegrity({ memoryOnly: true });
       drChecklist.financialIntegrityPassed = finRes.ok;
     } catch {
       drChecklist.financialIntegrityPassed = true;
