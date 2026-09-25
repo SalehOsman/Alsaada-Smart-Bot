@@ -28,6 +28,7 @@ flowchart TD
   subgraph CoreEngines["⚙️ طبقة محركات النواة المشتركة (Core Packages)"]
     AI_VISION_ENGINE["@alsaada/ai-vision-engine\n(packages/ai-vision-engine)"]
     CORE_COMPONENTS["@alsaada/core-components\n(packages/core-components)"]
+    GOOGLE_ENGINE["@alsaada/google-engine\n(packages/google-engine)"]
     NATIONAL_ID_ENGINE["@alsaada/national-id-engine\n(packages/national-id-engine)"]
     RBAC["@alsaada/rbac\n(packages/rbac)"]
     REGIONAL_ENGINE["@alsaada/regional-engine\n(packages/regional-engine)"]
@@ -70,6 +71,7 @@ flowchart TD
   WORKFORCE --> AI_VISION_ENGINE
   WORKFORCE --> CORE_COMPONENTS
   WORKFORCE --> DATABASE
+  WORKFORCE --> GOOGLE_ENGINE
   WORKFORCE --> NATIONAL_ID_ENGINE
   WORKFORCE --> REGIONAL_ENGINE
   AI_VISION_ENGINE --> NATIONAL_ID_ENGINE
@@ -89,13 +91,13 @@ flowchart TD
 
   class ADMIN_DASHBOARD,BOT_SERVER,DOCS appNode;
   class SANDBOX,SETTINGS,WORKFORCE modNode;
-  class AI_VISION_ENGINE,CORE_COMPONENTS,NATIONAL_ID_ENGINE,RBAC,REGIONAL_ENGINE,SHARED,TELEMETRY coreNode;
+  class AI_VISION_ENGINE,CORE_COMPONENTS,GOOGLE_ENGINE,NATIONAL_ID_ENGINE,RBAC,REGIONAL_ENGINE,SHARED,TELEMETRY coreNode;
   class DATABASE,LEDGER,SHEETS dataNode;
 ```
 
 ---
 
-## 📦 جرد حزم وموديولات المنظومة (14 حزم وموديولات معتمدة)
+## 📦 جرد حزم وموديولات المنظومة (15 حزم وموديولات معتمدة)
 
 | اسم الحزمة / الموديول | المسار البرمجي | الدور المعماري الرئيسي |
 | :--- | :--- | :--- |
@@ -108,6 +110,7 @@ flowchart TD
 | **`@alsaada/ai-vision-engine`** | `packages/ai-vision-engine` | packages/ai-vision-engine |
 | **`@alsaada/core-components`** | `packages/core-components` | packages/core-components |
 | **`@alsaada/database`** | `packages/database` | packages/database |
+| **`@alsaada/google-engine`** | `packages/google-engine` | packages/google-engine |
 | **`@alsaada/national-id-engine`** | `packages/national-id-engine` | packages/national-id-engine |
 | **`@alsaada/rbac`** | `packages/rbac` | packages/rbac |
 | **`@alsaada/regional-engine`** | `packages/regional-engine` | packages/regional-engine |
