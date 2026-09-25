@@ -44,6 +44,20 @@ describe('Docker manifest and monorepo workspace parity guard (INC-20260925-DOCK
 
     expect(packageDirs.length).toBeGreaterThanOrEqual(9);
 
+    const dockerfileStudio = readFileSync(join(root, 'docker', 'Dockerfile.studio'), 'utf8');
+
+    expect(dockerfileBot).toContain('COPY tools/modules/compose-database.ts tools/modules/compose-database.ts');
+    expect(dockerfileDashboard).toContain('COPY tools/modules/compose-database.ts tools/modules/compose-database.ts');
+    expect(dockerfileStudio).toContain('COPY tools/modules/compose-database.ts tools/modules/compose-database.ts');
+
+    for (const mod of moduleDirs) {
+      if (existsSync(join(root, 'modules', mod, 'database'))) {
+        expect(dockerfileBot).toContain(`COPY modules/${mod}/database/ modules/${mod}/database/`);
+        expect(dockerfileDashboard).toContain(`COPY modules/${mod}/database/ modules/${mod}/database/`);
+        expect(dockerfileStudio).toContain(`COPY modules/${mod}/database/ modules/${mod}/database/`);
+      }
+    }
+
     // Verify packages in Bot and Dashboard Dockerfiles (Full manifest + source)
     for (const pkg of packageDirs) {
       expect(dockerfileBot).toContain(`COPY packages/${pkg}/package.json packages/${pkg}/`);
