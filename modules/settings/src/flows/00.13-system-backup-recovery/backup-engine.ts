@@ -45,7 +45,7 @@ export function deriveEncryptionKey(passphrase?: string): Buffer {
 export function encryptBackupFile(inputPath: string, outputPath: string, keyOrPassphrase?: string): string {
   const key = deriveEncryptionKey(keyOrPassphrase);
   const iv = randomBytes(IV_LENGTH_BYTES);
-  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const cipher = createCipheriv('aes-256-gcm', key, iv, { authTagLength: AUTH_TAG_LENGTH_BYTES });
 
   const plainBuffer = readFileSync(inputPath);
   const encrypted = Buffer.concat([cipher.update(plainBuffer), cipher.final()]);
@@ -69,7 +69,7 @@ export function decryptBackupFile(inputPath: string, outputPath: string, keyOrPa
   const authTag = fileBuffer.subarray(IV_LENGTH_BYTES, IV_LENGTH_BYTES + AUTH_TAG_LENGTH_BYTES);
   const ciphertext = fileBuffer.subarray(IV_LENGTH_BYTES + AUTH_TAG_LENGTH_BYTES);
 
-  const decipher = createDecipheriv('aes-256-gcm', key, iv);
+  const decipher = createDecipheriv('aes-256-gcm', key, iv, { authTagLength: AUTH_TAG_LENGTH_BYTES });
   decipher.setAuthTag(authTag);
 
   const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
