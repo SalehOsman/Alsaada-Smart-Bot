@@ -278,6 +278,41 @@ export class SystemDataService {
   async pingDatabase(): Promise<void> {
     await prisma.$queryRawUnsafe('SELECT 1');
   }
+
+  /**
+   * توفير عميل قاعدة البيانات لتهيئة الموديولات دون استيراد مباشر في bot.ts
+   */
+  getDbClient() {
+    return prisma;
+  }
+
+  /**
+   * استرجاع معرف مجموعة تليجرام الخاصة بالموقع الميداني
+   */
+  async resolveSiteGroup(siteId: string): Promise<bigint | null> {
+    const site = await prisma.site.findUnique({
+      where: { id: siteId },
+      select: { telegramGroupId: true },
+    });
+    return site?.telegramGroupId ?? null;
+  }
+
+  /**
+   * التحقق من صلاحية انضمام المستخدم لمجموعة تليجرام الخاصة بالموقع
+   */
+  async isUserAuthorizedForGroup(userId: number | bigint, chatId: number | bigint): Promise<boolean> {
+    const authorizedUser = await prisma.user.findFirst({
+      where: {
+        telegramId: BigInt(userId),
+        isActive: true,
+        isBanned: false,
+        assignedSite: {
+          telegramGroupId: BigInt(chatId),
+        },
+      },
+    });
+    return Boolean(authorizedUser);
+  }
 }
 
 export const systemDataService = new SystemDataService();

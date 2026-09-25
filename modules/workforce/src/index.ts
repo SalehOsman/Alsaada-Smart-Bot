@@ -98,6 +98,7 @@ export * from './services/worker-storage.service.js';
 export * from './services/worker-expiry-alert.service.js';
 export * from './hub/hr-hub.handler.js';
 export * from './hub/identity-switch.handler.js';
+export * from './hub/worker-self-service.handler.js';
 export * from './hub/hub.routes.js';
 
 
