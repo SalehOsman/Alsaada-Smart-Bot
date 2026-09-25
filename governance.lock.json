@@ -7342,19 +7342,6 @@
         }
       ]
     },
-    "test:tests/docker-manifest-parity.spec.ts": {
-      "id": "test:tests/docker-manifest-parity.spec.ts",
-      "type": "test",
-      "title": "ملف الاختبار المعتمد: tests/docker-manifest-parity.spec.ts",
-      "directory": "tests/docker-manifest-parity.spec.ts",
-      "lockedAt": "2026-09-25T20:09:11.554Z",
-      "files": [
-        {
-          "path": "tests/docker-manifest-parity.spec.ts",
-          "sha256": "97062ecc92cd2a701f90b7a1eefa23ac75fa10b35fe579aea58f3090d3b9cb86"
-        }
-      ]
-    },
     "package:google-engine": {
       "id": "package:google-engine",
       "type": "package",
@@ -7410,47 +7397,6 @@
         {
           "path": "packages/google-engine/tests/google-engine.spec.ts",
           "sha256": "ea1498a0b83d62af0dedbf5b840a4580743533b46b0170d42ee34faa65cf8464"
-        }
-      ]
-    },
-    "infra:docker": {
-      "id": "infra:docker",
-      "type": "infra",
-      "title": "البنية التحتية والدوكر وقواعد البيانات",
-      "directory": "docker",
-      "lockedAt": "2026-09-25T20:09:11.554Z",
-      "files": [
-        {
-          "path": ".dockerignore",
-          "sha256": "d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a"
-        },
-        {
-          "path": "docker-compose.yml",
-          "sha256": "883964654ff628587b26e9569b730af38fb0f7ffc00d9769cf68ef07a25a39ca"
-        },
-        {
-          "path": "docker/Dockerfile",
-          "sha256": "c997292238d67a1f057d78526d20f3ce84f5a700c72db42ea592b7e0c834e69c"
-        },
-        {
-          "path": "docker/Dockerfile.dashboard",
-          "sha256": "1659f3cc340cc36cb701146f8b7261b1a3de303f1a945094811feed53f944186"
-        },
-        {
-          "path": "docker/Dockerfile.docs",
-          "sha256": "5ba5b9da3ce20adfbde07deab5e64ad09cd7380c5cb8c52ae391524575e75437"
-        },
-        {
-          "path": "docker/Dockerfile.studio",
-          "sha256": "10522c6e08b91dbc54b5f0d342aba0455efdbabf7faa1f10b2047f0714961ad7"
-        },
-        {
-          "path": "docker/nginx-docs.conf",
-          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
-        },
-        {
-          "path": "docker/postgres/init-scripts/01-init-security.sql",
-          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
         }
       ]
     },
@@ -7560,327 +7506,6 @@
         {
           "path": "tests/doc-reality-parity.spec.ts",
           "sha256": "46ada0926d03dcbbea06b1d63d8932ca0703d559d3aad200044c4cff346e29c1"
-        }
-      ]
-    },
-    "app:docs": {
-      "id": "app:docs",
-      "type": "app",
-      "title": "تطبيق المنظومة: docs",
-      "directory": "apps/docs",
-      "lockedAt": "2026-09-25T20:09:11.554Z",
-      "files": [
-        {
-          "path": "apps/docs/astro.config.mjs",
-          "sha256": "ea3e8a2346c9ff7ac54df9bdd978cf9271b366e55ca84775e28e914f80b18923"
-        },
-        {
-          "path": "apps/docs/package.json",
-          "sha256": "daf696c4fa3f43ff11fc1a3e0b7b834c96904cc0e9ad8803b9880379c4c3bdff"
-        },
-        {
-          "path": "apps/docs/src/assets/hero-logo.svg",
-          "sha256": "c0020c79665637cc3c35fe87024079b70fd5b8414aa885fffeba0b7579170ef6"
-        },
-        {
-          "path": "apps/docs/src/components/Head.astro",
-          "sha256": "bcbec2651fdf158f85fa8ffd054e6a7784464a835c830e55d7e3e31c2f9e7f78"
-        },
-        {
-          "path": "apps/docs/src/content.config.ts",
-          "sha256": "ee756dfba4122d2acc94a39b2555d9f200fff56a87a8c0b10f9cd01df26a8b62"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-001.md",
-          "sha256": "6a2ac7588ab1d655119753cb9c0845e7bcf0c84194669d3a87bcc2f667a5823b"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-002.md",
-          "sha256": "f789d81918366c899e7d9250b49f268015fd6135b7b7de1ad31fe1d917b45916"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-003.md",
-          "sha256": "10ad92fec52e2525ada868f3199533c71f56aaeac5513b6edcae8e5c5f0577bb"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-004.md",
-          "sha256": "100ac0322b472ca6d997dc2336f67b0ef1d11c80440236a2747578b0852a80de"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-005.md",
-          "sha256": "1042fa7e097c79d1f358e1f0b3e045b3fd597702394a06c7a2f7d9cf374b148a"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-006.md",
-          "sha256": "b39605ea694661cc68253c202592982a78edd7ae079628039c5a52a54b0447d3"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-007.md",
-          "sha256": "f0ff379852018bb464e41f72e3a86b6eaa800d9dc167124a16f2f8b58c1dc4d5"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-008.md",
-          "sha256": "f9a9dec18220820cf53be20f9175d74d13c74438346623da1efed2fe700d1b5f"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-009.md",
-          "sha256": "5a4dafd32e1f9af8a09c09525e4c37c969eaf5a825e48e13a59c89ec4993268f"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-010.md",
-          "sha256": "00c0cacd4ebccbe14edfb6537ddde5c5909f8d3c05bf4d9da3f484e3656595bd"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-011.md",
-          "sha256": "642d8e1459199e4589879532275ded5d2e640b976ed5dcb7cfc6995a5fa20edd"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-012.md",
-          "sha256": "092f7f28de6f6ff513fba32dd2266904360f00e5ca3f488fdf5420287982f998"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-013.md",
-          "sha256": "fbed84c093f1c0aa920c3a1b10b40280c8c7e64a018d7cf96d25a45587556485"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-014.md",
-          "sha256": "1e0fecd258fd57a7d83fa8acc93a4564b8965113e8d8625ab59814932805d4e2"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-015.md",
-          "sha256": "4c007e513aff4d48820a1685a643c3c5b9f2ad72ff8d298654421962e770c138"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-016.md",
-          "sha256": "81cec8c93928c14f56656e066198e265fce5743c07cd2931859d3c8b918328b3"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-017.md",
-          "sha256": "8a8cbc07490cfc558e0c4763e39a4a4a0cc5e57f93933ebb1e3fcda22038f555"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-018.md",
-          "sha256": "227016d1c2ba4e22d61dc8292731d1d951fce6a8dfb5811b717aeb0f43162684"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-019.md",
-          "sha256": "32b60e2fd36da5dd3a1cd4a501ca9c436c312e8caa83a4ae03e206de6ed10dd0"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-020.md",
-          "sha256": "eaffba11122f0c34bd113b0247ae9321b48b71bbecf484b9bb583737e6ee9d65"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-021.md",
-          "sha256": "efbfd20209c0fae53ed6084d309c213e9cd8759a85ce3e6f942b8f7c7cb16546"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-022.md",
-          "sha256": "a808983008e4648e07b93c4796a0aebec9ed5a817047cefb0cec9fd8800110b6"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-023.md",
-          "sha256": "931ffdd8a685934c5bb38932e8c74c71000069e87d66b7381bd670b3d02dcabb"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-024.md",
-          "sha256": "8b829d7798279b709570c2ee6d944f263d15e1417923508f9d97db229b71b30a"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-025.md",
-          "sha256": "c26dccd98bd9293d953810f19a67ab81eae81d1deeb86e7b0fc4d82e4f5a5c0f"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-026.md",
-          "sha256": "44b8828c7aa80b2444415f0a09f49a7c1b5e6a8638e491b7e907efa3c73a6ee7"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-027.md",
-          "sha256": "fffd858e360f2610fd117d89ebd95515c72ce57e1545140a6b03a98d4f84f5bd"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-028.md",
-          "sha256": "cb49299a5be3624c3cca9400b20768478dbe625fabbd408b5108ce53b8a23d10"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-029.md",
-          "sha256": "48f828761a992cd29b9b07d4f00904597bdb4a467f6e795b700b3551afa1e817"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-030.md",
-          "sha256": "30442ea56ac17864b7519ad2f79a1083439046d1d5e2a3883798d65a8425d7db"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-031.md",
-          "sha256": "95522f9fc31d28305f52761ed12ec1184995bd512b226f4c9b58f9ab52392c03"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-032.md",
-          "sha256": "8981988eab1500fb1ac89ac042e2f6e2404325218c32928dfaab9e3f13f50f4b"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-033.md",
-          "sha256": "0793f75bbd957978729d5e5f45abb86634e7c09708ed00d244f09046b4c5bc53"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-034.md",
-          "sha256": "e454e2dd27debd07601cd3696659435aa4da181c11f4dba10e73679556b61b50"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-035.md",
-          "sha256": "3974aad2cdb9bb6d69192e920550ddb3bdea0675f1afa70ea1ce885647b1f683"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-036.md",
-          "sha256": "2a770f6ecf5313fa221ac0330c142a28726a14dcd10aca1f4eee654b9f9be047"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/adr-037.md",
-          "sha256": "ffc3e3ba9c9917377e75fbbfb7170b2427ee9d015f9e5d0fe7de73caed3cd00a"
-        },
-        {
-          "path": "apps/docs/src/content/docs/adrs/index.md",
-          "sha256": "4341178eab25e3a6f781feda348749492951c50547316113de8aa7620da123d6"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/02-core-shared-components-catalog.md",
-          "sha256": "5cbbdcf09c2aaae94867095757e72b58bbf263a499d790915ba12d6f4bbd03b6"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/03-ai-vision-invoice-engine.md",
-          "sha256": "bd3f959dfeb41be080f636276311dcb768245991ca13ac84d0371a27d434a35d"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/04-google-sheets-auto-provisioner.md",
-          "sha256": "225e76a030e9a0c5e18f0edaae8fbb9a7fed2f5a5d8bd99e56a77701530aa075"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/07-sheets-topology-and-registry-resolver.md",
-          "sha256": "c5f4720584484c8fc3ee28f61fa8475092eb007e816a6c347a688bf534569c10"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/10-telegram-id-identity-verification.md",
-          "sha256": "49e49c9ccaee42b361c3c9e3fb0c73e80d1ccfb96789dad44393ce8dee6b26ea"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/11-universal-invitation-and-onboarding-engine.md",
-          "sha256": "fa9ec55e65b90811440426f6b325ff6e1c237d78d7e976492d8063d28f884464"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/17-worker-coding-and-silent-alias-resolution.md",
-          "sha256": "92dbe8d1d8335935f7229203668cc6bf6d29f4a3d2d1d0ff7de34188c0e9ba84"
-        },
-        {
-          "path": "apps/docs/src/content/docs/core-architecture/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md",
-          "sha256": "cad0c6a7b32b24276f102d3c0849f0859e43990e85e3890f2701f127e5dd746e"
-        },
-        {
-          "path": "apps/docs/src/content/docs/data-and-migration/18-enterprise-schema-and-entity-relationship-model.md",
-          "sha256": "0645d69b3e08610a02781253deb23b5ea7d6a78ec36af665d35b852ddc3fc74d"
-        },
-        {
-          "path": "apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md",
-          "sha256": "0694051aa619056f5d3bbb4a1bf6c78abefec8776a96ae5cd98890da636fcbb7"
-        },
-        {
-          "path": "apps/docs/src/content/docs/en/index.md",
-          "sha256": "1d590738ca35eae6273a95370a380d9e0d2e8f6ed7158c8cb2cb907e4965991a"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/08-universal-rbac-and-executive-role.md",
-          "sha256": "1c16d72947ccaf9eaa9cf7470f374b41271a8cc1944edb91ff8e4eaacf93e5aa"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/09-database-governance-and-superadmin-console.md",
-          "sha256": "02f300ec3a4e195a391303e00462aa7184a7827f3cb281a98248ec1ee63fb131"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/12-system-configuration-and-operational-simplicity.md",
-          "sha256": "bfe58779d6fd1fc2d8bc57746c2fe7c0e43bd97214eb0ffad3693d68e07181d3"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/13-closed-loop-financial-and-pnl-engine.md",
-          "sha256": "1f5ad0872c362bb89558e287334ff0f8b6364d30d0b6f19214392014db9f23f9"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/15-universal-module-and-flow-standard.md",
-          "sha256": "247b6cb2f0af55bca9f51b4f27c508bb3b0ecc04bb7944db8c640f88b8f2965e"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/16-database-security-and-tamper-proof-ledger.md",
-          "sha256": "5bf9aae471841070f0d8436fa55f950632fa288c3ddad4ea2eaab219029cc9de"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/20-super-admin-settings-and-control-hub-guide.md",
-          "sha256": "a19b2a48657f3667bd00f7099bcc4b88010261fe84841dc83b39faafbabb72af"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/21-mandatory-module-architecture-and-gates.md",
-          "sha256": "c7d09ecaeb5468586e7d6dabb09f05b138e56cdaafc6176eddf4b8441296b82b"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/26-locked-flows-and-features-registry.md",
-          "sha256": "931668e479875b306050c2a1f7f90e552cf36a5565174a6eb090869843cfaa3e"
-        },
-        {
-          "path": "apps/docs/src/content/docs/financial-and-governance/27-enterprise-ai-governance-and-quality-gates-constitution.md",
-          "sha256": "9b7cd6d3e462a36bc4bb09675cf186600c291b878c1ed6a98e5846a0ccfc6840"
-        },
-        {
-          "path": "apps/docs/src/content/docs/foundations/00-baseline-and-ssot-charter.md",
-          "sha256": "25bb3f58027ce7b8b6e6a3189b864ce25e61153bafa5a64da266513a4423f8b9"
-        },
-        {
-          "path": "apps/docs/src/content/docs/foundations/01-architecture-and-tempot-synergy.md",
-          "sha256": "3831c0ddf352c92c1d74e3e06076dd8632c62a6057d00bc8dd5575e763e44744"
-        },
-        {
-          "path": "apps/docs/src/content/docs/foundations/14-ai-agent-governance-and-file-rules.md",
-          "sha256": "71c30d303e4c65fd052200f064ca8d9758604cae8f814b26a1b843b9a86d519c"
-        },
-        {
-          "path": "apps/docs/src/content/docs/index.md",
-          "sha256": "5a3499da00db41708b51ca1758bb26cd4a45324fec3f8e4436989f3258b2bb3a"
-        },
-        {
-          "path": "apps/docs/src/content/docs/living-architecture.md",
-          "sha256": "fc499c0e05a5e31011652edd59262298062f2213bdae9d586414dd29cf671c08"
-        },
-        {
-          "path": "apps/docs/src/content/docs/telegram-ux/05-master-implementation-roadmap.md",
-          "sha256": "ef7893b0314290c1201cb3056a8e8b1aa4c0a9ca860caac5d48d9788b76a41b2"
-        },
-        {
-          "path": "apps/docs/src/content/docs/telegram-ux/06-tenant-onboarding-and-provisioning-wizard.md",
-          "sha256": "7117c11cb54b76d16ebaff112dee84404ea22ef35e3bc5decc44c816fdaef908"
-        },
-        {
-          "path": "apps/docs/src/content/docs/telegram-ux/22-telegram-ux-ui-design-system-and-ergonomics.md",
-          "sha256": "be39741540c61852fdf8cdb01ee7382a166b7e518a24904ca48c782939461b07"
-        },
-        {
-          "path": "apps/docs/src/content/docs/telegram-ux/23-autonomous-agent-roster-and-rag.md",
-          "sha256": "86229383c83c788952da77499e8df5be9a1b8f5921a48c2d3320f2c5f636f49d"
-        },
-        {
-          "path": "apps/docs/src/content/docs/telegram-ux/24-enterprise-feature-and-flow-master-specification.md",
-          "sha256": "8583076b8fe2ae3fd6ea0ddc1dd7a7419fa308e8d53104fbf67a8918cc27aec0"
-        },
-        {
-          "path": "apps/docs/src/content/docs/telegram-ux/official-telegram-bot-features-and-formatting-encyclopedia.md",
-          "sha256": "f2f88f0fc89d45717378f84671b071362ac2defc1b40a458a4b16a836c85f64f"
-        },
-        {
-          "path": "apps/docs/src/scripts/mermaid-pan-zoom.ts",
-          "sha256": "6781d9c99d17dd2235d4e5f6c30ac73df43f06bde3425987bf053078764d41f1"
-        },
-        {
-          "path": "apps/docs/src/styles/custom.css",
-          "sha256": "b1f83d80579bec875390abd67ec94008a1524d0480e33e62f78d16ea56046fec"
-        },
-        {
-          "path": "apps/docs/tsconfig.json",
-          "sha256": "3828cda2d820e4115cf1e0fbab58c90d1c237e6884f170b04abac9158e4040b8"
         }
       ]
     },
@@ -8800,6 +8425,381 @@
         {
           "path": "scripts/tests/provision.spec.ts",
           "sha256": "d727fb212b74ad0b56d0f6f67e9928ffc87fa49ed54aa5ec2a879f77896306ff"
+        }
+      ]
+    },
+    "infra:docker": {
+      "id": "infra:docker",
+      "type": "infra",
+      "title": "البنية التحتية والدوكر وقواعد البيانات",
+      "directory": "docker",
+      "lockedAt": "2026-09-25T20:59:05.805Z",
+      "files": [
+        {
+          "path": ".dockerignore",
+          "sha256": "d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a"
+        },
+        {
+          "path": "docker-compose.yml",
+          "sha256": "883964654ff628587b26e9569b730af38fb0f7ffc00d9769cf68ef07a25a39ca"
+        },
+        {
+          "path": "docker/Dockerfile",
+          "sha256": "3e8757c9965db8936c0d19016be05a1b446c4768d7992a5f10a1ed8250843bed"
+        },
+        {
+          "path": "docker/Dockerfile.dashboard",
+          "sha256": "90cc45e50559bc4c4e9fafa96ff9d46795f02d001d97577d857ec27f44d093b2"
+        },
+        {
+          "path": "docker/Dockerfile.docs",
+          "sha256": "5ba5b9da3ce20adfbde07deab5e64ad09cd7380c5cb8c52ae391524575e75437"
+        },
+        {
+          "path": "docker/Dockerfile.studio",
+          "sha256": "de0c2f79740b78fd55eb394c37920e86137cfa327812e55c600daf8f869d94c6"
+        },
+        {
+          "path": "docker/nginx-docs.conf",
+          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
+        },
+        {
+          "path": "docker/postgres/init-scripts/01-init-security.sql",
+          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
+        }
+      ]
+    },
+    "app:docs": {
+      "id": "app:docs",
+      "type": "app",
+      "title": "تطبيق المنظومة: docs",
+      "directory": "apps/docs",
+      "lockedAt": "2026-09-25T20:59:06.631Z",
+      "files": [
+        {
+          "path": "apps/docs/astro.config.mjs",
+          "sha256": "ea3e8a2346c9ff7ac54df9bdd978cf9271b366e55ca84775e28e914f80b18923"
+        },
+        {
+          "path": "apps/docs/package.json",
+          "sha256": "daf696c4fa3f43ff11fc1a3e0b7b834c96904cc0e9ad8803b9880379c4c3bdff"
+        },
+        {
+          "path": "apps/docs/src/assets/hero-logo.svg",
+          "sha256": "c0020c79665637cc3c35fe87024079b70fd5b8414aa885fffeba0b7579170ef6"
+        },
+        {
+          "path": "apps/docs/src/components/Head.astro",
+          "sha256": "bcbec2651fdf158f85fa8ffd054e6a7784464a835c830e55d7e3e31c2f9e7f78"
+        },
+        {
+          "path": "apps/docs/src/content.config.ts",
+          "sha256": "ee756dfba4122d2acc94a39b2555d9f200fff56a87a8c0b10f9cd01df26a8b62"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-001.md",
+          "sha256": "6a2ac7588ab1d655119753cb9c0845e7bcf0c84194669d3a87bcc2f667a5823b"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-002.md",
+          "sha256": "f789d81918366c899e7d9250b49f268015fd6135b7b7de1ad31fe1d917b45916"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-003.md",
+          "sha256": "10ad92fec52e2525ada868f3199533c71f56aaeac5513b6edcae8e5c5f0577bb"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-004.md",
+          "sha256": "100ac0322b472ca6d997dc2336f67b0ef1d11c80440236a2747578b0852a80de"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-005.md",
+          "sha256": "1042fa7e097c79d1f358e1f0b3e045b3fd597702394a06c7a2f7d9cf374b148a"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-006.md",
+          "sha256": "b39605ea694661cc68253c202592982a78edd7ae079628039c5a52a54b0447d3"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-007.md",
+          "sha256": "f0ff379852018bb464e41f72e3a86b6eaa800d9dc167124a16f2f8b58c1dc4d5"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-008.md",
+          "sha256": "f9a9dec18220820cf53be20f9175d74d13c74438346623da1efed2fe700d1b5f"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-009.md",
+          "sha256": "5a4dafd32e1f9af8a09c09525e4c37c969eaf5a825e48e13a59c89ec4993268f"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-010.md",
+          "sha256": "00c0cacd4ebccbe14edfb6537ddde5c5909f8d3c05bf4d9da3f484e3656595bd"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-011.md",
+          "sha256": "642d8e1459199e4589879532275ded5d2e640b976ed5dcb7cfc6995a5fa20edd"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-012.md",
+          "sha256": "092f7f28de6f6ff513fba32dd2266904360f00e5ca3f488fdf5420287982f998"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-013.md",
+          "sha256": "fbed84c093f1c0aa920c3a1b10b40280c8c7e64a018d7cf96d25a45587556485"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-014.md",
+          "sha256": "1e0fecd258fd57a7d83fa8acc93a4564b8965113e8d8625ab59814932805d4e2"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-015.md",
+          "sha256": "4c007e513aff4d48820a1685a643c3c5b9f2ad72ff8d298654421962e770c138"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-016.md",
+          "sha256": "81cec8c93928c14f56656e066198e265fce5743c07cd2931859d3c8b918328b3"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-017.md",
+          "sha256": "8a8cbc07490cfc558e0c4763e39a4a4a0cc5e57f93933ebb1e3fcda22038f555"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-018.md",
+          "sha256": "227016d1c2ba4e22d61dc8292731d1d951fce6a8dfb5811b717aeb0f43162684"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-019.md",
+          "sha256": "32b60e2fd36da5dd3a1cd4a501ca9c436c312e8caa83a4ae03e206de6ed10dd0"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-020.md",
+          "sha256": "eaffba11122f0c34bd113b0247ae9321b48b71bbecf484b9bb583737e6ee9d65"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-021.md",
+          "sha256": "efbfd20209c0fae53ed6084d309c213e9cd8759a85ce3e6f942b8f7c7cb16546"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-022.md",
+          "sha256": "a808983008e4648e07b93c4796a0aebec9ed5a817047cefb0cec9fd8800110b6"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-023.md",
+          "sha256": "931ffdd8a685934c5bb38932e8c74c71000069e87d66b7381bd670b3d02dcabb"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-024.md",
+          "sha256": "8b829d7798279b709570c2ee6d944f263d15e1417923508f9d97db229b71b30a"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-025.md",
+          "sha256": "c26dccd98bd9293d953810f19a67ab81eae81d1deeb86e7b0fc4d82e4f5a5c0f"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-026.md",
+          "sha256": "44b8828c7aa80b2444415f0a09f49a7c1b5e6a8638e491b7e907efa3c73a6ee7"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-027.md",
+          "sha256": "fffd858e360f2610fd117d89ebd95515c72ce57e1545140a6b03a98d4f84f5bd"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-028.md",
+          "sha256": "cb49299a5be3624c3cca9400b20768478dbe625fabbd408b5108ce53b8a23d10"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-029.md",
+          "sha256": "48f828761a992cd29b9b07d4f00904597bdb4a467f6e795b700b3551afa1e817"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-030.md",
+          "sha256": "30442ea56ac17864b7519ad2f79a1083439046d1d5e2a3883798d65a8425d7db"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-031.md",
+          "sha256": "95522f9fc31d28305f52761ed12ec1184995bd512b226f4c9b58f9ab52392c03"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-032.md",
+          "sha256": "8981988eab1500fb1ac89ac042e2f6e2404325218c32928dfaab9e3f13f50f4b"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-033.md",
+          "sha256": "0793f75bbd957978729d5e5f45abb86634e7c09708ed00d244f09046b4c5bc53"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-034.md",
+          "sha256": "e454e2dd27debd07601cd3696659435aa4da181c11f4dba10e73679556b61b50"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-035.md",
+          "sha256": "3974aad2cdb9bb6d69192e920550ddb3bdea0675f1afa70ea1ce885647b1f683"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-036.md",
+          "sha256": "2a770f6ecf5313fa221ac0330c142a28726a14dcd10aca1f4eee654b9f9be047"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/adr-037.md",
+          "sha256": "ffc3e3ba9c9917377e75fbbfb7170b2427ee9d015f9e5d0fe7de73caed3cd00a"
+        },
+        {
+          "path": "apps/docs/src/content/docs/adrs/index.md",
+          "sha256": "4341178eab25e3a6f781feda348749492951c50547316113de8aa7620da123d6"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/02-core-shared-components-catalog.md",
+          "sha256": "5cbbdcf09c2aaae94867095757e72b58bbf263a499d790915ba12d6f4bbd03b6"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/03-ai-vision-invoice-engine.md",
+          "sha256": "bd3f959dfeb41be080f636276311dcb768245991ca13ac84d0371a27d434a35d"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/04-google-sheets-auto-provisioner.md",
+          "sha256": "225e76a030e9a0c5e18f0edaae8fbb9a7fed2f5a5d8bd99e56a77701530aa075"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/07-sheets-topology-and-registry-resolver.md",
+          "sha256": "c5f4720584484c8fc3ee28f61fa8475092eb007e816a6c347a688bf534569c10"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/10-telegram-id-identity-verification.md",
+          "sha256": "49e49c9ccaee42b361c3c9e3fb0c73e80d1ccfb96789dad44393ce8dee6b26ea"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/11-universal-invitation-and-onboarding-engine.md",
+          "sha256": "fa9ec55e65b90811440426f6b325ff6e1c237d78d7e976492d8063d28f884464"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/17-worker-coding-and-silent-alias-resolution.md",
+          "sha256": "92dbe8d1d8335935f7229203668cc6bf6d29f4a3d2d1d0ff7de34188c0e9ba84"
+        },
+        {
+          "path": "apps/docs/src/content/docs/core-architecture/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md",
+          "sha256": "cad0c6a7b32b24276f102d3c0849f0859e43990e85e3890f2701f127e5dd746e"
+        },
+        {
+          "path": "apps/docs/src/content/docs/data-and-migration/18-enterprise-schema-and-entity-relationship-model.md",
+          "sha256": "1a1aa10f62303832b68388c6d21901ee81724cb87020c3d08d7ffd3fe94d8b3e"
+        },
+        {
+          "path": "apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md",
+          "sha256": "0694051aa619056f5d3bbb4a1bf6c78abefec8776a96ae5cd98890da636fcbb7"
+        },
+        {
+          "path": "apps/docs/src/content/docs/en/index.md",
+          "sha256": "1d590738ca35eae6273a95370a380d9e0d2e8f6ed7158c8cb2cb907e4965991a"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/08-universal-rbac-and-executive-role.md",
+          "sha256": "1c16d72947ccaf9eaa9cf7470f374b41271a8cc1944edb91ff8e4eaacf93e5aa"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/09-database-governance-and-superadmin-console.md",
+          "sha256": "02f300ec3a4e195a391303e00462aa7184a7827f3cb281a98248ec1ee63fb131"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/12-system-configuration-and-operational-simplicity.md",
+          "sha256": "bfe58779d6fd1fc2d8bc57746c2fe7c0e43bd97214eb0ffad3693d68e07181d3"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/13-closed-loop-financial-and-pnl-engine.md",
+          "sha256": "1f5ad0872c362bb89558e287334ff0f8b6364d30d0b6f19214392014db9f23f9"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/15-universal-module-and-flow-standard.md",
+          "sha256": "247b6cb2f0af55bca9f51b4f27c508bb3b0ecc04bb7944db8c640f88b8f2965e"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/16-database-security-and-tamper-proof-ledger.md",
+          "sha256": "5bf9aae471841070f0d8436fa55f950632fa288c3ddad4ea2eaab219029cc9de"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/20-super-admin-settings-and-control-hub-guide.md",
+          "sha256": "a19b2a48657f3667bd00f7099bcc4b88010261fe84841dc83b39faafbabb72af"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/21-mandatory-module-architecture-and-gates.md",
+          "sha256": "c7d09ecaeb5468586e7d6dabb09f05b138e56cdaafc6176eddf4b8441296b82b"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/26-locked-flows-and-features-registry.md",
+          "sha256": "931668e479875b306050c2a1f7f90e552cf36a5565174a6eb090869843cfaa3e"
+        },
+        {
+          "path": "apps/docs/src/content/docs/financial-and-governance/27-enterprise-ai-governance-and-quality-gates-constitution.md",
+          "sha256": "9b7cd6d3e462a36bc4bb09675cf186600c291b878c1ed6a98e5846a0ccfc6840"
+        },
+        {
+          "path": "apps/docs/src/content/docs/foundations/00-baseline-and-ssot-charter.md",
+          "sha256": "25bb3f58027ce7b8b6e6a3189b864ce25e61153bafa5a64da266513a4423f8b9"
+        },
+        {
+          "path": "apps/docs/src/content/docs/foundations/01-architecture-and-tempot-synergy.md",
+          "sha256": "3831c0ddf352c92c1d74e3e06076dd8632c62a6057d00bc8dd5575e763e44744"
+        },
+        {
+          "path": "apps/docs/src/content/docs/foundations/14-ai-agent-governance-and-file-rules.md",
+          "sha256": "71c30d303e4c65fd052200f064ca8d9758604cae8f814b26a1b843b9a86d519c"
+        },
+        {
+          "path": "apps/docs/src/content/docs/index.md",
+          "sha256": "5a3499da00db41708b51ca1758bb26cd4a45324fec3f8e4436989f3258b2bb3a"
+        },
+        {
+          "path": "apps/docs/src/content/docs/living-architecture.md",
+          "sha256": "fc499c0e05a5e31011652edd59262298062f2213bdae9d586414dd29cf671c08"
+        },
+        {
+          "path": "apps/docs/src/content/docs/telegram-ux/05-master-implementation-roadmap.md",
+          "sha256": "ef7893b0314290c1201cb3056a8e8b1aa4c0a9ca860caac5d48d9788b76a41b2"
+        },
+        {
+          "path": "apps/docs/src/content/docs/telegram-ux/06-tenant-onboarding-and-provisioning-wizard.md",
+          "sha256": "c26f0c7c1867e6ff16dc165c69a493579c5dc9a88c3d53c44363ba3ef3531365"
+        },
+        {
+          "path": "apps/docs/src/content/docs/telegram-ux/22-telegram-ux-ui-design-system-and-ergonomics.md",
+          "sha256": "be39741540c61852fdf8cdb01ee7382a166b7e518a24904ca48c782939461b07"
+        },
+        {
+          "path": "apps/docs/src/content/docs/telegram-ux/23-autonomous-agent-roster-and-rag.md",
+          "sha256": "86229383c83c788952da77499e8df5be9a1b8f5921a48c2d3320f2c5f636f49d"
+        },
+        {
+          "path": "apps/docs/src/content/docs/telegram-ux/24-enterprise-feature-and-flow-master-specification.md",
+          "sha256": "8583076b8fe2ae3fd6ea0ddc1dd7a7419fa308e8d53104fbf67a8918cc27aec0"
+        },
+        {
+          "path": "apps/docs/src/content/docs/telegram-ux/official-telegram-bot-features-and-formatting-encyclopedia.md",
+          "sha256": "f2f88f0fc89d45717378f84671b071362ac2defc1b40a458a4b16a836c85f64f"
+        },
+        {
+          "path": "apps/docs/src/scripts/mermaid-pan-zoom.ts",
+          "sha256": "6781d9c99d17dd2235d4e5f6c30ac73df43f06bde3425987bf053078764d41f1"
+        },
+        {
+          "path": "apps/docs/src/styles/custom.css",
+          "sha256": "b1f83d80579bec875390abd67ec94008a1524d0480e33e62f78d16ea56046fec"
+        },
+        {
+          "path": "apps/docs/tsconfig.json",
+          "sha256": "3828cda2d820e4115cf1e0fbab58c90d1c237e6884f170b04abac9158e4040b8"
+        }
+      ]
+    },
+    "test:tests/docker-manifest-parity.spec.ts": {
+      "id": "test:tests/docker-manifest-parity.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tests/docker-manifest-parity.spec.ts",
+      "directory": "tests/docker-manifest-parity.spec.ts",
+      "lockedAt": "2026-09-25T20:59:07.336Z",
+      "files": [
+        {
+          "path": "tests/docker-manifest-parity.spec.ts",
+          "sha256": "fcf61ab79e1e505408ad2e8accd9f4fd3aebb8ce20251942e0937489934fb22f"
         }
       ]
     }

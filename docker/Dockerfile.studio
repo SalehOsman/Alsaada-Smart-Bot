@@ -26,11 +26,18 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     git init --bare "$GIT_DIR" \
     && pnpm install --filter @alsaada/database... --frozen-lockfile=true
 
-# Copy Prisma schema and database configuration
+# Copy Prisma schema, composer tool, and module database fragments
+COPY tools/modules/compose-database.ts tools/modules/compose-database.ts
 COPY packages/database/prisma/ packages/database/prisma/
 COPY packages/database/src/ packages/database/src/
 COPY packages/database/tsconfig.json packages/database/
 COPY packages/database/prisma.config.ts packages/database/
+COPY modules/workforce/module.contract.json modules/workforce/
+COPY modules/workforce/database/ modules/workforce/database/
+COPY modules/settings/module.contract.json modules/settings/
+COPY modules/settings/database/ modules/settings/database/
+COPY modules/sandbox/module.contract.json modules/sandbox/
+COPY modules/sandbox/database/ modules/sandbox/database/
 COPY tsconfig.json ./
 
 # Generate Prisma Client
