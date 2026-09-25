@@ -1,14 +1,17 @@
 {
-  "moduleName": "workforce",
-  "displayName": "قطاع الموارد البشرية وشؤون العاملين",
-  "version": "1.0.0",
-  "critical": true,
-  "owner": "HR & Operations Sector",
-  "requiredServices": [
-    "prisma",
-    "redis",
-    "api",
-    "screenFlow"
+  "schemaVersion": "2.0.0",
+  "id": "workforce",
+  "version": "2.0.0",
+  "coreApiRange": "^2.0.0",
+  "titleArabic": "الموارد البشرية وشؤون العاملين",
+  "descriptionArabic": "تسجيل وتعديل وتصفية العمالة ودليل العاملين 360° وإدارة الورديات والرواتب",
+  "category": "operations",
+  "status": "active",
+  "entry": "src/index.ts",
+  "callbackPrefixes": [
+    "workforce:",
+    "action:workforce:",
+    "wizard:workforce:"
   ],
   "navigationPatterns": [
     "🚜 تسجيل منسوب",
@@ -27,16 +30,34 @@
     "🧾 فواتيري ومستخلصاتي",
     "فواتيري ومستخلصاتي"
   ],
+  "requiredCapabilities": [
+    "storage:attachment",
+    "regional:egyptian-national-id",
+    "regional:governorates",
+    "ledger:double-entry"
+  ],
+  "providedCapabilities": [],
   "flows": [
     "01.1-worker-registration",
     "01.2.D-worker-edit",
     "01.4-worker-export",
-    "01.5-worker-directory"
+    "01.5-worker-directory",
+    "01.6-worker-self-edit",
+    "01.7-guest-join-and-linking",
+    "01.8-worker-offboarding",
+    "01.9-worker-commitment-index"
   ],
   "dependencies": [
     "@alsaada/core-components",
     "@alsaada/database",
     "@alsaada/national-id-engine",
     "@alsaada/regional-engine"
-  ]
+  ],
+  "database": {
+    "schemaFiles": [
+      "database/schema.prisma"
+    ],
+    "relationsFile": "database/relations.contract.json",
+    "migrationsDir": "database/migrations"
+  }
 }

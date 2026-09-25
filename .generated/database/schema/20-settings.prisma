@@ -1,0 +1,131 @@
+// =============================================================
+// Module Extension: settings
+// Generated deterministically by compose-database.ts
+// =============================================================
+
+// ==============================================================================
+// Settings Domain Database Schema (Work Plan 112)
+// Models owned by modules/settings
+// ==============================================================================
+
+model BotMenuPermission {
+  id         String   @id @default(uuid())
+  scopeType  String // "ROLE" | "DEPARTMENT" | "JOB_TITLE" | "SITE" | "USER"
+  scopeId    String // Role name (e.g. 'FIELD_ADMIN') or UUID of (Department, JobTitle, Site, User)
+  featureKey String // e.g. "advances.cash.create", "canteen.sale.create"
+  action     String   @default("view") // "view" | "create" | "edit" | "approve" | "export" | "manage"
+  policy     String   @default("ALLOW") // "ALLOW" | "DENY" (Explicit DENY trumps ALLOW)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([scopeType, scopeId, featureKey, action])
+  @@index([scopeType, scopeId])
+  @@index([featureKey, action])
+  @@map("bot_menu_permissions")
+}
+
+model SupervisorLifecycleLog {
+  id              String   @id @default(uuid())
+  userId          String
+  workerId        String?
+  actionType      String // "SITE_TRANSFER" | "LEAVE_START" | "LEAVE_RETURN" | "TERMINATION" | "PROMOTION" | "DEMOTION"
+  previousSiteId  String?
+  newSiteId       String?
+  telegramGroupId BigInt?
+  telegramTopicId Int?
+  telegramAction  String? // "KICKED" | "BANNED" | "INVITE_SENT" | "RESTORED" | "SKIPPED_POLICY" | "FAILED"
+  telegramError   String? // توثيق سبب تعثر استدعاء تيليجرام (مثل CANNOT_REMOVE_ADMIN)
+  notes           String?
+  actorTelegramId BigInt
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, actionType])
+  @@index([createdAt])
+  @@map("supervisor_lifecycle_logs")
+}
+
+model TelegramEnforcementTask {
+  id          String    @id @default(uuid())
+  siteId      String
+  telegramId  BigInt
+  chatId      BigInt
+  topicId     Int?
+  taskType    String // "KICK_MEMBER" | "BAN_MEMBER" | "GENERATE_INVITE" | "VERIFY_MEMBERSHIP"
+  status      String    @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(5)
+  lastError   String?
+  executeAt   DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, executeAt])
+  @@map("telegram_enforcement_tasks")
+}
+
+model WorkerDelegation {
+  id                    String    @id @default(uuid())
+  userId                String
+  workerId              String
+  permissionKey         String    @db.VarChar(100)
+  siteId                String
+  resourceId            String?
+  startsAt              DateTime  @default(now())
+  endsAt                DateTime?
+  status                String    @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
+  requestedByTelegramId BigInt
+  approvedByTelegramId  BigInt
+  revokedByTelegramId   BigInt?
+  reason                String?   @db.VarChar(255)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([workerId, status])
+  @@index([siteId, status])
+  @@index([permissionKey])
+  @@map("worker_delegations")
+}
+
+model BotMenuNode {
+  id                 String           @id @default(uuid())
+  code               String           @unique // e.g. "mod:hr", "sec:workforce", "flow:01.1"
+  parentId           String? // ربط هرمي بالعنصر الأب
+  type               BotNodeType
+  title              String // المسمى العربي على الزر
+  icon               String? // الرمز التعبيري (مثل: 👥, 💰, 🚜)
+  callbackData       String? // كود الكولباك في تليجرام (e.g. "flow:01.1:start")
+  status             BotNodeStatus    @default(ACTIVE)
+  disabledBehavior   DisabledBehavior @default(LOCK_WITH_ALERT)
+  maintenanceMessage String? // نص التنبيه المخصص عند الضغط
+  sortOrder          Int              @default(0)
+  isProtected        Boolean          @default(false) // وظيفة سيادية غير قابلة للإيقاف مطلقاً
+  allowedRoles       String[]         @default(["SUPER_ADMIN", "GENERAL_ADMIN", "FIELD_ADMIN"])
+  metadata           Json? // إعدادات التنسيق، عدد الأعمدة، مسار الشريحة
+
+  parent   BotMenuNode?  @relation("MenuHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children BotMenuNode[] @relation("MenuHierarchy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId, sortOrder])
+  @@index([status])
+  @@map("bot_menu_nodes")
+}
+
+model BotMenuSnapshot {
+  id          String   @id @default(uuid())
+  title       String // e.g. "قبل صيانة رمضان 2026", "الترتيب الافتراضي للمنظومة"
+  data        Json // لقطة كاملة للشجرة
+  createdById String
+  createdAt   DateTime @default(now())
+
+  @@map("bot_menu_snapshots")
+}

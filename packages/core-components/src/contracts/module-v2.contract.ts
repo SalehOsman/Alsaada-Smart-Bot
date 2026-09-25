@@ -25,6 +25,12 @@ export interface ModuleDashboardRoute {
   requiredRole: string;
 }
 
+export interface ModuleDatabaseContract {
+  schemaFiles: readonly string[];
+  relationsFile?: string | undefined;
+  migrationsDir?: string | null | undefined;
+}
+
 export interface ModuleDefinitionV2 {
   schemaVersion: '2.0.0';
   id: ModuleId;
@@ -38,6 +44,8 @@ export interface ModuleDefinitionV2 {
   flows: readonly FlowDefinitionV2[];
   routes?: readonly ModuleDashboardRoute[] | undefined;
   databaseFragments?: readonly string[] | undefined;
+  database?: ModuleDatabaseContract | undefined;
+  isTestOnly?: boolean | undefined;
   callbackPrefixes: readonly string[];
   navigationPatterns?: readonly string[] | undefined;
 }
@@ -131,6 +139,23 @@ export function validateModuleDefinitionV2(raw: unknown): ModuleValidationResult
     errors.push('callbackPrefixes must be a non-empty array of string prefixes.');
   }
 
+  let databaseContract: ModuleDatabaseContract | undefined;
+  if (obj.database && typeof obj.database === 'object') {
+    const rawDb = obj.database as Record<string, unknown>;
+    const schemaFiles: string[] = [];
+    if (Array.isArray(rawDb.schemaFiles)) {
+      schemaFiles.push(...rawDb.schemaFiles.map(String));
+    } else if (rawDb.schemaFile) {
+      schemaFiles.push(String(rawDb.schemaFile));
+    }
+
+    databaseContract = {
+      schemaFiles,
+      relationsFile: rawDb.relationsFile ? String(rawDb.relationsFile) : undefined,
+      migrationsDir: rawDb.migrationsDir !== undefined ? (rawDb.migrationsDir === null ? null : String(rawDb.migrationsDir)) : undefined,
+    };
+  }
+
   if (errors.length > 0 || !moduleId) {
     return { valid: false, errors };
   }
@@ -148,6 +173,8 @@ export function validateModuleDefinitionV2(raw: unknown): ModuleValidationResult
     flows: validatedFlows,
     routes: (obj.routes as ModuleDashboardRoute[]) ?? [],
     databaseFragments: (obj.databaseFragments as string[]) ?? [],
+    database: databaseContract,
+    isTestOnly: Boolean(obj.isTestOnly),
     callbackPrefixes: (obj.callbackPrefixes as string[]) ?? [],
     navigationPatterns: (obj.navigationPatterns as string[]) ?? [],
   };

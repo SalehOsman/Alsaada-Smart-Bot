@@ -93,6 +93,28 @@ export function validateMonorepoCatalog(
         );
       }
     }
+
+    // Database contract boundary verification (WP 112 Task 2)
+    if (mod.database) {
+      if (Array.isArray(mod.database.schemaFiles)) {
+        for (const schemaFile of mod.database.schemaFiles) {
+          const fullSchemaPath = join(physicalDir, schemaFile);
+          if (!existsSync(fullSchemaPath)) {
+            errors.push(
+              `Module "${mod.id}" declares database schemaFile "${schemaFile}" which does not exist at "${fullSchemaPath}".`
+            );
+          }
+        }
+      }
+      if (mod.database.relationsFile) {
+        const fullRelPath = join(physicalDir, mod.database.relationsFile);
+        if (!existsSync(fullRelPath)) {
+          errors.push(
+            `Module "${mod.id}" declares database relationsFile "${mod.database.relationsFile}" which does not exist at "${fullRelPath}".`
+          );
+        }
+      }
+    }
   }
 
   // 3. Validate Flows

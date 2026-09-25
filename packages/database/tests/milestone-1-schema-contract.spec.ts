@@ -81,7 +81,10 @@ function parseSchemaModels(schemaContent: string): SchemaModel[] {
   return models;
 }
 
-const schemaPath = resolve(__dirname, '../prisma/schema.prisma');
+const generatedSchemaPath = resolve(__dirname, '../../../.generated/database/schema.prisma');
+const schemaPath = existsSync(generatedSchemaPath)
+  ? generatedSchemaPath
+  : resolve(__dirname, '../prisma/schema.prisma');
 const schemaContent = readFileSync(schemaPath, 'utf-8');
 const models = parseSchemaModels(schemaContent);
 const getModel = (name: string) => models.find((m) => m.name === name);

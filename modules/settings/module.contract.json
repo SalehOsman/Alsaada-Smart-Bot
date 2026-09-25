@@ -1,13 +1,17 @@
 {
-  "moduleName": "settings",
-  "displayName": "قطاع الإعدادات السيادية والإدارة العامة",
-  "version": "1.0.0",
-  "critical": true,
-  "owner": "Executive & General Administration",
-  "requiredServices": [
-    "prisma",
-    "redis",
-    "screenFlow"
+  "schemaVersion": "2.0.0",
+  "id": "settings",
+  "version": "2.0.0",
+  "coreApiRange": "^2.0.0",
+  "titleArabic": "الإعدادات والتحكم السيادي",
+  "descriptionArabic": "إدارة ملف الشركة والمواقع والمصفوفة الإدارية وقنوات التليجرام والمستخدمين",
+  "category": "operations",
+  "status": "active",
+  "entry": "src/index.ts",
+  "callbackPrefixes": [
+    "settings:",
+    "action:settings:",
+    "wizard:settings:"
   ],
   "navigationPatterns": [
     "⚙️ إعدادات النظام",
@@ -15,6 +19,11 @@
     "👤 ملفي الشخصي",
     "ملفي (الشخصي|وإعداداتي)"
   ],
+  "requiredCapabilities": [
+    "rbac:cascading",
+    "telemetry:error-vault"
+  ],
+  "providedCapabilities": [],
   "flows": [
     "00.1-corporate-profile",
     "00.2-sites-hub",
@@ -27,11 +36,19 @@
     "00.9-emergency-cache",
     "00.10-notification-policies",
     "00.11-telegram-groups",
-    "00.12-user-rbac-management"
+    "00.12-user-rbac-management",
+    "00.13-system-backup-recovery"
   ],
   "dependencies": [
     "@alsaada/core-components",
     "@alsaada/database",
     "@alsaada/regional-engine"
-  ]
+  ],
+  "database": {
+    "schemaFiles": [
+      "database/schema.prisma"
+    ],
+    "relationsFile": "database/relations.contract.json",
+    "migrationsDir": "database/migrations"
+  }
 }

@@ -152,7 +152,7 @@ export async function setupTestDatabase(options: { requireLive?: boolean } = {})
     delete childEnv.ANTIGRAVITY_CSRF_TOKEN;
     delete childEnv.ANTIGRAVITY_LS_ADDRESS;
 
-    execSync('pnpm --filter @alsaada/database exec prisma db push --schema=prisma/schema.prisma --accept-data-loss', {
+    execSync('pnpm --filter @alsaada/database exec prisma db push --accept-data-loss', {
       env: childEnv,
       stdio: 'inherit',
     });

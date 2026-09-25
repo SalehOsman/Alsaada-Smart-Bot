@@ -32,6 +32,31 @@
 
 ---
 
+## 1️⃣.1 معمارية المخطط المعياري متعدد الملفات واكتشاف الموديولات (Work Plan 112: Modular Database Architecture)
+
+وفقاً لميثاق خطة العمل السيادية رقم 112، تم تفكيك المخطط الأحادي القديم إلى بنية معيارية متعددة الملفات تعتمد ميزة `prismaSchemaFolder` الأصلية في Prisma 7، مع الاحتفاظ الكامل بالمطابقة 100% مع `F:\HR` ودون أي فقدان للبيانات:
+
+1. **المجلد التجميعي الحتمي (`.generated/database/schema/`):**
+   - **`00-core.prisma`:** يحتوي على 46 نموذجاً أساسياً (الهيكل التنظيمي، الخزائن، السجلات التشفيرية، التحكم بالوصول RBAC، الاتصالات والملاحظة).
+   - **`10-workforce.prisma`:** يحتوي على 22 نموذجاً خاصاً بموديول القوى العاملة (`modules/workforce/database/schema.prisma`).
+   - **`20-settings.prisma`:** يحتوي على 6 نماذج خاصة بموديول الإعدادات (`modules/settings/database/schema.prisma`).
+   - **`manifest.json`:** بيان رقمي مشفر يسجل بصمة تجزئة SHA-256 لكل ملف على حدة، بالإضافة إلى الهاش التراكمي الشامل `compositeHash` لضمان عدم حدوث أي انحراف (Zero Schema Drift).
+   - **`schema.prisma`:** ملف تجميعي احتياطي موحد متوافق مع الأدوات الخارجية التي لا تدعم المجلدات المتعددة.
+
+2. **عقود الموديولات وقواعد البيانات (`module.contract.json` - V2):**
+   - يعلن كل موديول عن مساهمته في قاعدة البيانات عبر قسم `database`:
+     - `schemaPath`: مسار ملف مخطط النماذج الخاص بالموديول.
+     - `migrationsDir`: مسار ترحيلات الموديول الحتمية.
+     - `models`: مصفوفة بأسماء النماذج المملوكة حصراً للموديول لمنع أي تداخل.
+
+3. **الحصانة المالية المطلقة (Financial Model Immunity):**
+   - تظل النماذج المالية الستة الحساسة (`FinancialLedger`, `CustodyExpenseItem`, `CustodySettlement`, `HospitalityExpense`, `WorkerExpenseClaim`, `SupplierPayment`) محمية ومقفلة داخل نواة النظام الأساسية `00-core.prisma`، ويُحظر قطعيًا نقل ملكيتها لأي موديول طرفي.
+
+4. **سياسة الإيقاف الآمن دون حذف مادي (Safe Deprecation Policy):**
+   - تم جرد 13 نموذجاً غير مستخدم في كود العمليات وعزلها في [`docs/schemas/deprecated-models.json`](file:///f:/Alsaada-Smart-Bot/docs/schemas/deprecated-models.json) وفق سياسة الإيقاف المرحلي الآمن دون حذف فيزيائي من قاعدة البيانات منعاً لأي كسر للعلاقات القديمة.
+
+---
+
 ## 2️⃣ مخطط الكيانات والعلاقات العام (Enterprise Entity-Relationship Diagram)
 
 ```mermaid
