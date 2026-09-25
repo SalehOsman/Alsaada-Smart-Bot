@@ -8549,63 +8549,6 @@
         }
       ]
     },
-    "flow:00.13": {
-      "id": "flow:00.13",
-      "type": "flow",
-      "title": "تدفق البوت: 00.13-system-backup-recovery (00.13)",
-      "directory": "modules/settings/src/flows/00.13-system-backup-recovery",
-      "lockedAt": "2026-09-25T13:11:01.308Z",
-      "files": [
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/backup-engine.ts",
-          "sha256": "b932ab1641a65200383dc7d244626766f444d9ebe8f5fc3ac066cf320ab73044"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.contract.json",
-          "sha256": "96675e3e3b22b762011d386d753c449e7aae4aa40e8035d2793d73417d4bd464"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.docs.md",
-          "sha256": "e6074c26149fa7dca1cff0a23feeab72742e94da8ce45d1349f274483837ffdd"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.handler.ts",
-          "sha256": "65c8517b3bbd5c1b8261f11a2aa2a448337b04026d228543fea6f6981e6cf52a"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.keyboard.ts",
-          "sha256": "5a182243830440f50813589bf7c218a7142b2042d13aa31783b057cbc1ed470c"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.messages.ts",
-          "sha256": "8e8e38e102e10574b22500c317671218ea5b901f18e38c00b91836089f355e50"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.repository.ts",
-          "sha256": "ebeddf6ef53beef4ac8fecc5e38c45e0bd4898cf65a97bb0e17a368c53ccd475"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.service.ts",
-          "sha256": "950fd231b203abc6f8ef22929b1052d6f6bbcf69c1d6a000e8fde7359ede9ac7"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.telemetry.ts",
-          "sha256": "0115a066685535f755752b670dc4643da971d6336751c4036bf969b318c95834"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.types.ts",
-          "sha256": "c8743de876d7e922ac1aef58844bb8af1e72751fd9f119ec94774fb6a438e6f8"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.validators.ts",
-          "sha256": "12711b1248579000a38bdba73de3005105879c7ca0a9eae806f358fe6de0315a"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/index.ts",
-          "sha256": "e20af9de2515a6bca168f3743809177189245c87f018c4bea7f21bf7ad22f70c"
-        }
-      ]
-    },
     "infra:docker": {
       "id": "infra:docker",
       "type": "infra",
@@ -8657,6 +8600,63 @@
         {
           "path": "tools/governance/tests/unified-lock-engine.spec.ts",
           "sha256": "c0a41660da38995c9f4f5716a79ad2f190d1f5dd64e976332d2f1e85d21136db"
+        }
+      ]
+    },
+    "flow:00.13": {
+      "id": "flow:00.13",
+      "type": "flow",
+      "title": "تدفق البوت: 00.13-system-backup-recovery (00.13)",
+      "directory": "modules/settings/src/flows/00.13-system-backup-recovery",
+      "lockedAt": "2026-09-25T13:58:30.811Z",
+      "files": [
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/backup-engine.ts",
+          "sha256": "181dffb7c5cd268af6b5b5339591ba860d70d3806fd6f53cecc06c4c64f5dd73"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.contract.json",
+          "sha256": "96675e3e3b22b762011d386d753c449e7aae4aa40e8035d2793d73417d4bd464"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.docs.md",
+          "sha256": "e6074c26149fa7dca1cff0a23feeab72742e94da8ce45d1349f274483837ffdd"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.handler.ts",
+          "sha256": "65c8517b3bbd5c1b8261f11a2aa2a448337b04026d228543fea6f6981e6cf52a"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.keyboard.ts",
+          "sha256": "5a182243830440f50813589bf7c218a7142b2042d13aa31783b057cbc1ed470c"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.messages.ts",
+          "sha256": "8e8e38e102e10574b22500c317671218ea5b901f18e38c00b91836089f355e50"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.repository.ts",
+          "sha256": "ebeddf6ef53beef4ac8fecc5e38c45e0bd4898cf65a97bb0e17a368c53ccd475"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.service.ts",
+          "sha256": "950fd231b203abc6f8ef22929b1052d6f6bbcf69c1d6a000e8fde7359ede9ac7"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.telemetry.ts",
+          "sha256": "0115a066685535f755752b670dc4643da971d6336751c4036bf969b318c95834"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.types.ts",
+          "sha256": "c8743de876d7e922ac1aef58844bb8af1e72751fd9f119ec94774fb6a438e6f8"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.validators.ts",
+          "sha256": "12711b1248579000a38bdba73de3005105879c7ca0a9eae806f358fe6de0315a"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/index.ts",
+          "sha256": "e20af9de2515a6bca168f3743809177189245c87f018c4bea7f21bf7ad22f70c"
         }
       ]
     }
