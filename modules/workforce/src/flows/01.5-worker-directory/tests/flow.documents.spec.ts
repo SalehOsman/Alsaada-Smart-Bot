@@ -62,9 +62,6 @@ describe('Flow 01.5 — Worker Documents and Attachments Archive', () => {
     companyProfile: {
       findFirst: ReturnType<typeof vi.fn>;
     };
-    tenant: {
-      findFirst: ReturnType<typeof vi.fn>;
-    };
   }
 
   let mockPrisma: MockPrismaInstance;
@@ -97,9 +94,6 @@ describe('Flow 01.5 — Worker Documents and Attachments Archive', () => {
         delete: vi.fn().mockResolvedValue(dummyDoc),
       },
       companyProfile: {
-        findFirst: vi.fn().mockResolvedValue(null),
-      },
-      tenant: {
         findFirst: vi.fn().mockResolvedValue(null),
       },
     };

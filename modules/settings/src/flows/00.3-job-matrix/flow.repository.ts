@@ -507,8 +507,6 @@ export class JobMatrixRepository {
     return this.prisma.$transaction(async (tx) => {
       let deptCount = 0;
       let jobCount = 0;
-      const tenant = await tx.tenant.findFirst({ where: { code: 'ALSAADA' } });
-      const tenantId = tenant ? tenant.id : undefined;
 
       const deptMap = new Map<string, string>();
 
@@ -523,7 +521,6 @@ export class JobMatrixRepository {
             create: {
               code: row.deptCode,
               name: row.deptName,
-              ...(tenantId ? { tenantId } : {}),
               isActive: true,
             },
           });

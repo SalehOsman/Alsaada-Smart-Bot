@@ -1,6 +1,5 @@
 export interface CompanyProfileDto {
   id: string;
-  tenantId: string;
   legalName: string;
   tradeName: string;
   commercialRegistrationNumber: string | null;

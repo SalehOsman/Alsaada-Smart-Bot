@@ -516,9 +516,7 @@ export interface CompanyProfileData {
  */
 export async function getCompanyProfileData(): Promise<CompanyProfileData> {
   try {
-    const profile = await prisma.companyProfile.findFirst({
-      include: { tenant: true },
-    });
+    const profile = await prisma.companyProfile.findFirst();
 
     if (!profile) {
       return {

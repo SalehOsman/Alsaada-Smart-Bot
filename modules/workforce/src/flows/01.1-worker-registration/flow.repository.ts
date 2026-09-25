@@ -28,30 +28,17 @@ export class WorkerRegistrationRepository {
 
   async getCompanyTradeName(): Promise<string> {
     try {
-      const profile = await this.prisma.companyProfile.findFirst({
-        include: { tenant: true },
-      });
+      const profile = await this.prisma.companyProfile.findFirst();
       if (profile?.tradeName && profile.tradeName.trim().length > 0) {
         return profile.tradeName.trim();
       }
       if (profile?.legalName && profile.legalName.trim().length > 0) {
         return profile.legalName.trim();
       }
-      if (profile?.tenant?.name && profile.tenant.name.trim().length > 0) {
-        return profile.tenant.name.trim();
-      }
-      const tenant = await this.prisma.tenant.findFirst({
-        where: { isActive: true },
-        select: { name: true },
-        orderBy: { createdAt: 'asc' },
-      });
-      if (tenant?.name && tenant.name.trim().length > 0) {
-        return tenant.name.trim();
-      }
     } catch {
       // Fallback
     }
-    return 'المنظومة المؤسسية';
+    return 'شركة السعادة للمقاولات العامة';
   }
 
   async findExistingWorkerByBlindIndex(

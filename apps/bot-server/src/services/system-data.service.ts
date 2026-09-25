@@ -81,15 +81,13 @@ export class SystemDataService {
    */
   async getCompanyProfile() {
     return fastCache.rememberSWR('company_profile', 600, async () => {
-      return prisma.companyProfile.findFirst({
-        include: { tenant: true },
-      });
+      return prisma.companyProfile.findFirst();
     });
   }
 
   /**
    * جلب الاسم التجاري الرسمي للمنظومة من قاعدة البيانات مباشرة (L1 RAM < 0.1ms)
-   * يعتمد حصراً على ما هو مسجل في قواعد البيانات ليدعم أي مستأجر/شركة ديناميكياً
+   * يعتمد حصراً على ما هو مسجل في ملف الشركة الفردي (Single Company Profile)
    */
   async getCompanyTradeName(): Promise<string> {
     try {
@@ -100,23 +98,10 @@ export class SystemDataService {
       if (profile?.legalName && profile.legalName.trim().length > 0) {
         return profile.legalName.trim();
       }
-      if (profile?.tenant?.name && profile.tenant.name.trim().length > 0) {
-        return profile.tenant.name.trim();
-      }
 
-      // فحص جدول tenants مباشرة لأول مستأجر نشط مسجل بقواعد البيانات
-      const tenant = await prisma.tenant.findFirst({
-        where: { isActive: true },
-        select: { name: true },
-        orderBy: { createdAt: 'asc' },
-      });
-      if (tenant?.name && tenant.name.trim().length > 0) {
-        return tenant.name.trim();
-      }
-
-      return 'المنظومة المؤسسية';
+      return 'شركة السعادة للمقاولات العامة';
     } catch {
-      return 'المنظومة المؤسسية';
+      return 'شركة السعادة للمقاولات العامة';
     }
   }
 

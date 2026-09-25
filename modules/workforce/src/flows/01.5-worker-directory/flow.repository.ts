@@ -94,30 +94,17 @@ export class WorkerDirectoryRepository {
       return this.cachedTradeName.name;
     }
     try {
-      const profile = await this.prisma.companyProfile.findFirst({
-        include: { tenant: true },
-      });
-      let name = 'المنظومة المؤسسية';
+      const profile = await this.prisma.companyProfile.findFirst();
+      let name = 'شركة السعادة للمقاولات العامة';
       if (profile?.tradeName && profile.tradeName.trim().length > 0) {
         name = profile.tradeName.trim();
       } else if (profile?.legalName && profile.legalName.trim().length > 0) {
         name = profile.legalName.trim();
-      } else if (profile?.tenant?.name && profile.tenant.name.trim().length > 0) {
-        name = profile.tenant.name.trim();
-      } else {
-        const tenant = await this.prisma.tenant.findFirst({
-          where: { isActive: true },
-          select: { name: true },
-          orderBy: { createdAt: 'asc' },
-        });
-        if (tenant?.name && tenant.name.trim().length > 0) {
-          name = tenant.name.trim();
-        }
       }
       this.cachedTradeName = { name, expiresAt: now + 300000 };
       return name;
     } catch {
-      return 'المنظومة المؤسسية';
+      return 'شركة السعادة للمقاولات العامة';
     }
   }
 

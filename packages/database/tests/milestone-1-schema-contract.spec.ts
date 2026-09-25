@@ -295,21 +295,12 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
     let site = await prisma.site.findFirst();
     let createdSiteId: string | null = null;
     let createdProjectId: string | null = null;
-    let createdTenantId: string | null = null;
 
     if (!site) {
-      let tenant = await prisma.tenant.findFirst();
-      if (!tenant) {
-        tenant = await prisma.tenant.create({
-          data: { code: nextTestCode('TNT'), name: 'شركة تجريبية' },
-        });
-        createdTenantId = tenant.id;
-      }
-      let project = await prisma.project.findFirst({ where: { tenantId: tenant.id } });
+      let project = await prisma.project.findFirst();
       if (!project) {
         project = await prisma.project.create({
           data: {
-            tenantId: tenant.id,
             code: nextTestCode('PRJ'),
             name: 'مشروع تجريبي',
           },
@@ -394,7 +385,6 @@ describe('Milestone 1 — Schema Contract & Model Verification', () => {
     await prisma.canteenItem.delete({ where: { id: item.id } });
     if (createdSiteId) await prisma.site.delete({ where: { id: createdSiteId } });
     if (createdProjectId) await prisma.project.delete({ where: { id: createdProjectId } });
-    if (createdTenantId) await prisma.tenant.delete({ where: { id: createdTenantId } });
     await prisma.workerCustomAllowance.deleteMany({ where: { workerId: worker.id } });
     await prisma.worker.delete({ where: { id: worker.id } });
   });

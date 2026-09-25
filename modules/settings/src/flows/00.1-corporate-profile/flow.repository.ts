@@ -11,7 +11,7 @@ export class CorporateProfileRepository {
     if (!profile) return null;
     const settings = (profile.settings && typeof profile.settings === 'object' && !Array.isArray(profile.settings) ? profile.settings : {}) as CompanySettings;
     return {
-      id: profile.id, tenantId: profile.tenantId, legalName: profile.legalName, tradeName: profile.tradeName,
+      id: profile.id, legalName: profile.legalName, tradeName: profile.tradeName,
       commercialRegistrationNumber: profile.commercialRegistrationNumber,
       commercialRegistrationIssueDate: settings.commercialRegistrationIssueDate ?? null,
       commercialRegistrationExpiryDate: settings.commercialRegistrationExpiryDate ?? null,
@@ -41,8 +41,12 @@ export class CorporateProfileRepository {
   private async ensureProfile() {
     const existing = await this.prisma.companyProfile.findFirst({ orderBy: { updatedAt: 'desc' } });
     if (existing) return existing;
-    const tenant = await this.prisma.tenant.findFirst() || await this.prisma.tenant.create({ data: { code: 'ALSAADA_MAIN', name: 'شركة السعادة للمقاولات العامة' } });
-    return this.prisma.companyProfile.create({ data: { tenantId: tenant.id, legalName: '', tradeName: '' } });
+    return this.prisma.companyProfile.create({
+      data: {
+        legalName: 'شركة السعادة للمقاولات العامة',
+        tradeName: 'شركة السعادة للمقاولات العامة',
+      },
+    });
   }
 
   async updateImage(field: 'logoPath' | 'headerImagePath' | 'footerImagePath', path: string, fileId: string): Promise<CompanyProfileDto> {
