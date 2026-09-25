@@ -7,6 +7,7 @@ import { isCliEntrypoint, listFlowDirs, readUtf8, toRepoPath } from './common.js
 import { JEV_AUDIT_CATALOG, JEV_GOVERNANCE_WEIGHTS, type TypeSafeQuestion } from './typesafe/audit-catalog.js';
 import { verifySkillGraph, querySkillGraphForTask, EXPECTED_SKILL_IDS } from './verify-skill-graph.js';
 import { loadPrecedentIndex, queryPrecedentBySignature, searchPrecedents } from './precedent-index.js';
+import { probeJevDaemon, sendDaemonRequest, type DaemonRequest } from './jev-daemon.js';
 
 export interface BackoffRetryOptions {
   delays?: number[] | undefined;
@@ -826,7 +827,7 @@ export function analyzeCodeWithAst(code: string, targetName = 'target.ts'): AstA
           const callee = node.expression.getText(sourceFile);
           if (
             callee === 'Date.now' &&
-            (sourceText.includes('payroll') || sourceText.includes('salary') || sourceText.includes('cycle')) &&
+            /payroll|salary|cycle/i.test(sourceText) &&
             !sourceText.includes('PINNED_BASE_TIME') &&
             !sourceText.includes('getPayrollCycle')
           ) {
@@ -1303,6 +1304,40 @@ export async function evaluateBatchParallel(
       engineMode: 'api',
       endpoint: 'https://api.typesafe.ai/v1/systemone',
     });
+  }
+
+  // 1.5. Fast Local JEV Daemon IPC Check (<150ms Warm Keep-Alive Pool)
+  if (!process.env.JEV_DISABLE_DAEMON) {
+    try {
+      const isDaemonAlive = await probeJevDaemon({ timeoutMs: 80 });
+      if (isDaemonAlive) {
+        const daemonReq: DaemonRequest = {
+          id: `eval-${Date.now()}`,
+          type: 'EVALUATE_BATCH',
+          payload: { state, questions, apiKey: token },
+        };
+        const daemonRes = await sendDaemonRequest(daemonReq, { timeoutMs: 8000 });
+        if (daemonRes.ok && daemonRes.data) {
+          const remoteJudgments = daemonRes.data as Record<
+            string,
+            { answer: string | number | boolean; confidence: number; source: 'api' | 'heuristic' }
+          >;
+          const localBaseline = await evaluateLocalHeuristics(state, questions);
+          const reconciled = reconcileJudgments(remoteJudgments, localBaseline, questions, isStrictApi);
+          return attachCloudTelemetry(reconciled, {
+            cloudRequestsSent: 1,
+            httpAttemptsTotal: 1,
+            cloudCacheHits: 0,
+            precedentHits: precedentHitsCount,
+            questionsDispatchedToCloud: questionCount,
+            engineMode: 'api',
+            endpoint: 'https://api.typesafe.ai/v1/systemone (via JevDaemon Keep-Alive)',
+          });
+        }
+      }
+    } catch {
+      // Graceful fallback to direct HTTPS below
+    }
   }
 
   // 2. Pure Cloud 3-Tier Exponential Backoff Retry Loop

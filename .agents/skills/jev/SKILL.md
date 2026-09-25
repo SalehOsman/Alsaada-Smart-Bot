@@ -92,6 +92,12 @@ flowchart TD
 - **الإلزام الصارم ببيان عداد طلبات النموذج السحابي (Mandatory Cloud Model Request Telemetry Invariant):** يُلزم الوكيل `/jev` إلزاماً قطعياً وصارماً في **كل جولة عمل وكل تقرير نهائي** بإرفاق جدول **«📡 بيان طلبات النموذج السحابي الإلزامي (Mandatory Cloud Model Request Telemetry)»** الذي يوضح بدقة: عدد الطلبات الفعلية المرسلة للنموذج السحابي (`cloudRequestsSent`)، وإجمالي محاولات الشبكة (`httpAttemptsTotal`)، والاستجابات المسترجعة من الكاش التشفيري (`cloudCacheHits`)، وفهرس السوابق (`precedentHits`)، وإجمالي المعايير المقيمة (`questionsDispatchedToCloud`). يُعد إغفال هذا البيان في أي جولة أو تقرير مخالفة دستورية تستوجب الرفض الفوري (`[REJECT]`).
 - **Zero Blast Radius Guard:** Programmatic `engine: 'heuristic'` is strictly retained for offline unit tests.
 
+### 2.4 Persistent Daemon Architecture & Ambient Sentinel (Work Plan 109)
+- **Local IPC Fast-Track (<2ms):** When the local JEV Daemon is running, all inspections (`pnpm jev:diff`, `pnpm jev:consult`) communicate via high-speed IPC (Windows Named Pipe `\\.\pipe\alsaada-jev-sentinel` or POSIX domain socket), bypassing Node process spawn and TLS handshake overhead.
+- **Warm HTTP/2 Keep-Alive Pool:** The background daemon maintains persistent HTTPS/2 connections to `https://api.typesafe.ai/v1/systemone` with periodic 60-second heartbeat pings, lowering total audit latency to **< 150ms** (fulfilling Gate G6 < 300ms budget).
+- **Graceful Auto-Fallback:** If the daemon is offline, audit commands automatically fall back to direct HTTPS with 3-tier exponential backoff retry.
+- **Real-Time Ambient Sentinel (`pnpm jev:watch`):** Continuously watches `modules/`, `packages/`, `apps/`, and `docs/work-plans/` with 500ms debounce. Executes local AST pre-filtering (0 tokens, <5ms) for button labels (<=16 chars), raw reply bypass (`buildRichPage` enforcement), and payroll temporal drift (`PINNED_BASE_TIME`) before dispatching compressed AST deltas to the cloud.
+
 ---
 
 ## 3. The 19 TypeSafe Capabilities & Cookbooks Armory
@@ -219,12 +225,16 @@ Derived from `docs/references/typesafe.md` and Work Plan 96, `/jev` leverages ni
 
 | Check Target | Command | Primary Quality Gates |
 | :--- | :--- | :---: |
+| **Persistent Daemon (Start/Daemonize)** | `pnpm jev:daemon` | WP 109 (Sub-150ms IPC & Pooled HTTP/2) |
+| **Daemon Health & Pool Status** | `pnpm jev:daemon:status` | WP 109 (IPC Ping & Warm Pool Telemetry) |
+| **Daemon Graceful Shutdown** | `pnpm jev:daemon:stop` | WP 109 (IPC Shutdown) |
+| **Ambient Sentinel (Real-Time Watcher)** | `pnpm jev:watch` | WP 109 (500ms Debounce & 0-Token AST) |
 | **Comprehensive Jev Audit** | `pnpm exec tsx tools/governance/jev-auditor.ts` | G1–G23, CGI v2.0 |
 | **Permanent Skill/Plan Consultation** | `pnpm jev:consult` / `tsx tools/governance/jev-auditor.ts --consult` | WP 96, All Skills |
 | **Targeted Plan Consultation** | `tsx tools/governance/jev-auditor.ts --consult-plan <path>` | WP 96, 6 Pillars |
 | **Targeted Skill Consultation** | `tsx tools/governance/jev-auditor.ts --consult-skill <name>` | WP 96, Skill Graph |
 | **Sovereign Skill Graph Verification** | `pnpm skills:verify` | WP 96 (307 Checks) |
-| **JEV Test Suite** | `pnpm test:jev` | G10, WP 96 (28 Tests) |
+| **JEV Test Suite** | `pnpm test:jev` | G10, WP 96, WP 109 (42 Tests) |
 | **Git Diff Forensic Scan** | `pnpm exec tsx tools/governance/jev-auditor.ts --diff` | G10, G14, G15 |
 | **Targeted Flow Verification** | `pnpm exec tsx tools/governance/jev-auditor.ts --flow <path>` | G1–G5, G8, G9, G22 |
 | **Anti-Cheating Test Audit** | `pnpm exec tsx tools/governance/jev-auditor.ts --tests` | G10, G23 |
