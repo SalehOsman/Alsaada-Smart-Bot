@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/governance/tests/unified-lock-engine.spec.ts)
 
-- **تاريخ القفل:** 2026-09-25 (2026-09-25T13:30:22.489Z)
+- **تاريخ القفل:** 2026-09-25 (2026-09-25T18:46:15.105Z)
 - **معرف الكيان:** `test:tools/governance/tests/unified-lock-engine.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts
@@ -12,7 +12,7 @@
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
-| `tools/governance/tests/unified-lock-engine.spec.ts` | `c0a41660da38995c9f4f5716a79ad2f190d1f5dd64e976332d2f1e85d21136db` |
+| `tools/governance/tests/unified-lock-engine.spec.ts` | `2fb5ddd0c4fd0466f7422610245d56504dff804e06bb48c461209f75ec937e81` |
 
 ## بوابات التحقق المعتمدة
 - **CRLF/LF Sanitization:** PASS

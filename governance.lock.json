@@ -409,7 +409,7 @@
     },
     {
       "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "sha256": "c0a41660da38995c9f4f5716a79ad2f190d1f5dd64e976332d2f1e85d21136db"
+      "sha256": "2fb5ddd0c4fd0466f7422610245d56504dff804e06bb48c461209f75ec937e81"
     },
     {
       "path": "tools/governance/tests/unlock-challenge-engine.spec.ts",
@@ -7599,19 +7599,6 @@
         }
       ]
     },
-    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
-      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
-      "type": "test",
-      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
-      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-25T13:30:22.489Z",
-      "files": [
-        {
-          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-          "sha256": "c0a41660da38995c9f4f5716a79ad2f190d1f5dd64e976332d2f1e85d21136db"
-        }
-      ]
-    },
     "flow:00.13": {
       "id": "flow:00.13",
       "type": "flow",
@@ -8984,6 +8971,19 @@
         {
           "path": "tests/wave-2-database-composition-invariants.spec.ts",
           "sha256": "01ca18733cd49ce0b4fc08e5fb708212e9e8a4c81ec4b3799b6319b864433eb2"
+        }
+      ]
+    },
+    "test:tools/governance/tests/unified-lock-engine.spec.ts": {
+      "id": "test:tools/governance/tests/unified-lock-engine.spec.ts",
+      "type": "test",
+      "title": "ملف الاختبار المعتمد: tools/governance/tests/unified-lock-engine.spec.ts",
+      "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
+      "lockedAt": "2026-09-25T18:46:15.105Z",
+      "files": [
+        {
+          "path": "tools/governance/tests/unified-lock-engine.spec.ts",
+          "sha256": "2fb5ddd0c4fd0466f7422610245d56504dff804e06bb48c461209f75ec937e81"
         }
       ]
     }
