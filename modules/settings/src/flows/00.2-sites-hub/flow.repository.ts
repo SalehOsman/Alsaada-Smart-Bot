@@ -101,11 +101,8 @@ export class SitesHubRepository {
       if (defaultProject) {
         projectId = defaultProject.id;
       } else {
-        const tenant = await this.prisma.tenant.findFirst() || await this.prisma.tenant.create({
-          data: { code: 'ALSAADA_MAIN', name: 'شركة السعادة للمقاولات العامة' }
-        });
         const createdProj = await this.prisma.project.create({
-          data: { tenantId: tenant.id, code: 'PRJ-MAIN', name: 'المشروع العام' }
+          data: { code: 'PRJ-MAIN', name: 'المشروع العام' }
         });
         projectId = createdProj.id;
       }

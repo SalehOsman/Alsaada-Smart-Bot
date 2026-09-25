@@ -10,7 +10,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-24+-green?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![grammY](https://img.shields.io/badge/grammY-1.41+-blueviolet?logo=telegram&logoColor=white)](https://grammy.dev/)
 [![Architecture](https://img.shields.io/badge/Architecture-Modular_Monolith-success)](#)
-[![Database](https://img.shields.io/badge/Storage-Hybrid_(DB_%2B_Google_Sheets)-34A853?logo=sqlite&logoColor=white)](#)
+[![Database](https://img.shields.io/badge/Storage-PostgreSQL_16_%2B_Google_Sheets-336791?logo=postgresql&logoColor=white)](#)
 [![AI Powered](https://img.shields.io/badge/AI_Vision-Gemini_2.5_Flash-orange)](#)
 
 </div>
@@ -27,13 +27,13 @@
 
 ## 🌟 الرؤية والأهداف الاستراتيجية (Vision & Core Objectives)
 
-1. **التحول إلى منتج مؤسسي عام (White-Label Multi-Tenant Engine):**
-   * تجريد كافة الثوابت النصية والتشغيلية في ملفات إعدادات مركزية (`company.config.ts`).
-   * قابلية تشغيل المنظومة لأي شركة مقاولات، أو توريدات، أو مصانع خلال دقائق.
+1. **المنظومة المؤسسية المخصصة (Dedicated Enterprise Engine - شركة السعادة):**
+   * معمارية مؤسسية مخصصة بالكامل لشركة السعادة للمقاولات العامة تعتمد ملف الشركة الفردي (Singleton `CompanyProfile`).
+   * تجريد كافة الثوابت التشغيلية في ملفات إعدادات مركزية وقاعدة بيانات PostgreSQL 16 موحدة مع حظر تام لتعدد الشركات.
 2. **محرك التوليد الآلي لقواعد البيانات (Google Sheets Auto-Provisioner):**
-   * توليد كافة ملفات الشيتات (66 شيت)، وتبويباتها، وأعمدتها، وتنسيقاتها، وألوانها، ومعادلاتها الحسابية آلياً مع بداية التشغيل (`npm run system:provision`) دون أي تدخل يدوي.
+   * توليد كافة ملفات الشيتات (66 شيت)، وتبويباتها، وأعمدتها، وتنسيقاتها، وألوانها، ومعادلاتها الحسابية آلياً مع بداية التشغيل (`pnpm system:provision`) دون أي تدخل يدوي.
 3. **النواة المشتركة الشاملة (Core Shared Kernel):**
-   * محركات عامة مجهزة مسبقاً لاستدعائها في أي موديول: محرك اختيار العمال، معالج المبالغ النقدية، حاسبة الكميات، بطاقات الاعتماد، ولوحات أزرار ما بعد الإنجاز.
+   * محركات عامة مجهزة مسبقاً لاستدعائها في أي موديول: محرك اختيار العمال، معالج المبالغ النقدية، حاسبة الكميات، بطاقات الاعتماد، ولوحات أزرار ما بعد الإنجاز، ومحرر الرسائل الغني (`assertRichMessage`).
 4. **الذكاء الاصطناعي لاستخراج وقراءة الفواتير والمستندات (AI Vision Invoice Extractor):**
    * قراءة صور الفواتير، وسندات التحويل البنكي، وبوالص الشحن عبر الذكاء الاصطناعي واستخراج البيانات رقمياً لمنع الأخطاء البشرية والتزوير.
 5. **التحقق من الهوية الوطنية المصرية (Egyptian National ID Engine):**
@@ -47,19 +47,26 @@
 
 ```
 F:\Alsaada-Smart-Bot/
-├── docs/                        # 📚 التوثيق المعماري الشامل والمواصفات القياسية (00 إلى 28)
+├── apps/
+│   ├── admin-dashboard/         # لوحة الإدارة التشغيلية المتطورة (Next.js 15 + Tailwind + SSR/Data Fetchers)
+│   ├── bot-server/              # التطبيق التنفيذي للبوت (grammY Polling Engine + Native Node HTTP Health Server)
+│   └── docs/                    # مركز التوثيق والمواصفات المعتمدة (Astro Documentation Hub)
+│
 ├── packages/                    # 🧱 الحزم التقنية المشتركة والنواة المستقلة (Core Shared Kernel)
-│   ├── core-components/         # مكونات الواجهة والمحركات (Pickers, Clearing, CustodyGate, Installments, Outbox, etc.)
-│   ├── database/                # قاعدة البيانات (Prisma 6.4+ + PostgreSQL + التشفير والهاش التراكمي ونظام التدقيق الجنائي)
+│   ├── ai-vision-engine/        # محرك قراءة الفواتير والمرفقات ونماذج الذكاء الاصطناعي
+│   ├── core-components/         # مكونات الواجهة والمحركات (Pickers, Clearing, RichMessage, Outbox, etc.)
+│   ├── database/                # قاعدة البيانات المركزية (Prisma 7.10.0 + PostgreSQL 16 + التشفير والهاش التراكمي)
+│   ├── google-engine/           # محرك الربط السحابي ومزامنة شيتات جوجل
 │   ├── national-id-engine/      # محرك تحليل الهوية القومية المصرية والتحقق الرياضي والبيانات الديموغرافية
-│   └── regional-engine/         # محرك التوقيت (Africa/Cairo) وتنسيق العملات والأرقام المشرقية
+│   ├── rbac/                    # مصفوفة الصلاحيات السباعية الموحدة وحوكمة الوصول للداشبورد والبوت
+│   ├── regional-engine/         # محرك التوقيت (Africa/Cairo) وتنسيق العملات والأرقام المشرقية
+│   ├── shared/                  # الأدوات المساعدة المشتركة والثوابت العامة
+│   └── telemetry/               # مرصد المراقبة والقياس الجنائي وتسجيل الأعطال وتتبع الأداء
 │
 ├── modules/                     # 📦 موديولات الأعمال المستقلة تماماً (Vertical Slices)
 │   ├── settings/                # موديول إعدادات النظام والتحكم السيادي والرقابة والأداء والمجموعات (12 تدفقاً)
-│   └── workforce/               # موديول شؤون العاملين وسجلات التسكين ودليل 360° واستخراج الإكسيل (7 تدفقات)
-│
-├── apps/
-│   └── bot-server/              # التطبيق التنفيذي الرئيسي (grammY Bot Engine + Hono Webhook Server)
+│   ├── workforce/               # موديول شؤون العاملين وسجلات التسكين ودليل 360° واستخراج الإكسيل (9 تدفقات)
+│   └── sandbox/                 # موديول بيئة الاختبار المعزولة والتجارب الميدانية
 │
 ├── tools/
 │   ├── governance/              # حراس بوابات الحوكمة وفحص المعمارية والعقود وسقف بايتات تليجرام
@@ -70,16 +77,36 @@ F:\Alsaada-Smart-Bot/
 
 ---
 
+## 🚀 دليل البدء السريع للمطورين (Developer Quickstart)
+
+```bash
+# 1. تثبيت كافة الحزم والاعتماديات
+pnpm install
+
+# 2. توليد عميل Prisma Client لقاعدة بيانات PostgreSQL 16
+pnpm db:generate
+
+# 3. تهيئة ملف الشركة الفردي والمشروع الأساسي
+pnpm system:provision
+
+# 4. تشغيل خادم البوت في وضع التطوير
+pnpm --filter @alsaada/bot-server dev
+```
+
+---
+
 ## 🛡️ أوامر التشغيل وبوابات الجودة والحوكمة (Quality & CI Governance Gates)
 
 | الأمر البرمجي | الوصف والهدف الهندسي |
 | :--- | :--- |
 | `pnpm build` | بناء تجميعي كامل لكافة الحزم والموديولات بتصريف TypeScript 5.9+ صارم وخالٍ من الأخطاء |
-| `pnpm test` | تشغيل 562+ اختباراً آلياً عبر 138 جناح اختبار بنسبة نجاح 100% (TDD & Zero-Regression) |
+| `pnpm test` | تشغيل 291 جناح اختبار (291 Spec Suites) و1,900+ اختبار آلي بنسبة نجاح 100% (TDD & Zero-Regression) |
 | `pnpm make:flow` | أداة توليد التدفقات المعيارية بالقوالب النمطية الأربعة لإنشاء شرائح الوثيقة 21 (< 350 سطراً) |
 | `pnpm flow:check` | الفحص الموضعي اللحظي فائق السرعة للتدفق المعدل حصراً في أقل من ثانيتين (< 2s) |
 | `pnpm flow:finish` | أداة الأتمتة للإغلاق والترحيل وسجل الترحيل Doc 19 وملف الإثبات وقفل الحوكمة |
 | `pnpm governance:verify` | تشغيل بوابات الحوكمة الشاملة معاً والتحقق الصارم من استيفاء شروط الاعتماد |
+| `pnpm single-tenant:verify` | حارس النزاهة المؤسسية للتأكد من خلو المشروع تماماً من أي آثار لتعدد الشركات |
+| `pnpm doc-parity:verify` | حارس مطابقة التوثيق للواقع الفيزيائي وفحص صلاحية السكربتات ومحركات قواعد البيانات |
 | `pnpm arch:verify` | التحقق من العزل الموديولي وسقف الأسطر (< 350) وحظر استيراد موديول لموديول آخر |
 | `pnpm migration:verify` | فحص مطابقة سجل الترحيل Master Migration Registry والتحقق من المسارات والـ Commits |
 | `pnpm flow-contracts:verify` | فحص عقود التدفقات ومعالجات الواجهة وتطابق واجهات الإدخال والتنقل |
@@ -99,7 +126,7 @@ F:\Alsaada-Smart-Bot/
 * [03. محرك قراءة الفواتير والمرفقات بالذكاء الاصطناعي](./docs/03-ai-vision-invoice-engine.md)
 * [04. محرك التوليد الآلي لشيتات جوجل (Auto-Provisioner)](./docs/04-google-sheets-auto-provisioner.md)
 * [05. خارطة الطريق التنفيذية للمشروع الجديد](./docs/05-master-implementation-roadmap.md)
-* [06. دليل ومنهجية إعداد وبناء البوت للمنشآت (CLI Provisioning Wizard)](./docs/06-tenant-onboarding-and-provisioning-wizard.md)
+* [06. دليل ومنهجية تهيئة ملف الشركة وإعداد المنظومة (Single-Company Setup)](./docs/06-tenant-onboarding-and-provisioning-wizard.md)
 * [07. طوبولوجيا ملفات جوجل شيت ومحرك التوجيه السحابي](./docs/07-sheets-topology-and-registry-resolver.md)
 * [08. مصفوفة الصلاحيات السباعية ودور الإدارة العليا](./docs/08-universal-rbac-and-executive-role.md)
 * [09. حوكمة وتعديل بيانات قاعدة البيانات ووحدة تحكم السوبر أدمن](./docs/09-database-governance-and-superadmin-console.md)
@@ -145,7 +172,7 @@ F:\Alsaada-Smart-Bot/
    ```bash
    pnpm test
    ```
-   يشغّل محرك `vitest` مركزياً عبر كافة ملفات `*.spec.ts` في المنظومة (235 ملف اختبار، 1,922 اختباراً).
+   يشغّل محرك `vitest` مركزياً عبر كافة ملفات `*.spec.ts` في المنظومة (291 ملف اختبار، 1,900+ اختباراً) بنجاح كامل 100%.
 
 2. **التشغيل التكراري عبر مساحات العمل (Workspace Recursive Runner):**
    ```bash

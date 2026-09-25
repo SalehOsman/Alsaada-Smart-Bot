@@ -22,7 +22,6 @@ describe('Flow 00.1 Unit Tests — CorporateProfile', () => {
 
   const sampleProfile: CompanyProfileDto = {
     id: 'cp-1',
-    tenantId: 'tenant-1',
     legalName: 'شركة السعادة للمقاولات العامة',
     tradeName: 'السعادة للمقاولات',
     commercialRegistrationNumber: '123456',

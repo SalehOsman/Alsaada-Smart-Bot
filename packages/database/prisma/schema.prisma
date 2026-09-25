@@ -13,35 +13,11 @@ datasource db {
 }
 
 // -------------------------------------------------------------
-// 1. Tenant, Corporate Profile & Projects Master Data
+// 1. Corporate Profile & Projects Master Data (Single-Company SSOT)
 // -------------------------------------------------------------
-
-model Tenant {
-  id        String   @id @default(uuid())
-  code      String   @unique
-  name      String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  profiles      CompanyProfile[]
-  projects      Project[]
-  departments   Department[]
-  users         User[]
-  workers       Worker[]
-  treasuries    CompanyTreasury[]
-  suppliers     Supplier[]
-  equipments    Equipment[]
-  payrollRuns   PayrollRun[]
-  documents     CompanyDocument[]
-  expenseClaims WorkerExpenseClaim[]
-
-  @@map("tenants")
-}
 
 model CompanyProfile {
   id                           String   @id @default(uuid())
-  tenantId                     String
   legalName                    String
   tradeName                    String
   taxRegistrationNumber        String?
@@ -54,14 +30,11 @@ model CompanyProfile {
   createdAt                    DateTime @default(now())
   updatedAt                    DateTime @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
   @@map("company_profiles")
 }
 
 model Project {
   id              String    @id @default(uuid())
-  tenantId        String
   code            String    @unique // e.g. PRJ-PHOS-01
   name            String
   clientName      String?
@@ -73,7 +46,6 @@ model Project {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  tenant            Tenant             @relation(fields: [tenantId], references: [id])
   sites             Site[]
   phosphateExtracts PhosphateExtract[]
 
@@ -159,7 +131,6 @@ model SiteAccommodationAssignment {
 
 model CompanyDocument {
   id                    String    @id @default(uuid())
-  tenantId              String
   docNumber             String
   title                 String
   category              String // LEGAL_REGISTRATION, QUARRY_LICENSE, EQUIPMENT_TITLE, LEASE_CONTRACT, TAX_RECORD
@@ -172,8 +143,6 @@ model CompanyDocument {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
   @@map("company_documents")
 }
 
@@ -183,7 +152,6 @@ model CompanyDocument {
 
 model Department {
   id          String   @id @default(uuid())
-  tenantId    String?
   code        String   @unique // e.g. OP, FL, MNT, SEC, ADM
   name        String // e.g. إدارة التشغيل والمعدات
   order       Int      @default(99)
@@ -192,7 +160,6 @@ model Department {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant  Tenant?    @relation(fields: [tenantId], references: [id])
   jobs    JobTitle[]
   workers Worker[]
 
@@ -292,7 +259,6 @@ model ShiftCycleTemplate {
 
 model Worker {
   id                      String    @id @default(uuid())
-  tenantId                String?
   code                    String    @unique // Active structured code (e.g. OP-DRV-0042)
   legacyCode              String? // Historical / legacy code (e.g. "106", "101")
   aliases                 String[] // Historical & legacy codes (e.g. ["106", "101", "OP-HLP-0015"])
@@ -356,7 +322,6 @@ model Worker {
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
-  tenant                 Tenant?                       @relation(fields: [tenantId], references: [id])
   department             Department?                   @relation(fields: [departmentId], references: [id])
   jobRef                 JobTitle?                     @relation(fields: [jobTitleId], references: [id])
   site                   Site?                         @relation(fields: [siteId], references: [id])
@@ -397,7 +362,6 @@ model Worker {
   @@index([isDeleted])
   @@index([legacyCode])
   @@index([idCardExpiryDate])
-  @@index([tenantId, status])
   @@index([siteId, status])
   @@index([jobTitleId])
   @@index([departmentId])
@@ -743,7 +707,6 @@ model SiteTask {
 
 model CompanyTreasury {
   id             String   @id @default(uuid())
-  tenantId       String
   name           String
   accountType    String   @default("MAIN_CASH_VAULT") // MAIN_CASH_VAULT, BANK_ACCOUNT, VODAFONE_CASH_WALLET, INSTAPAY_WALLET
   bankName       String?
@@ -754,7 +717,6 @@ model CompanyTreasury {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  tenant           Tenant             @relation(fields: [tenantId], references: [id])
   fundedCustodies  FinancialCustody[]
   supplierPayments SupplierPayment[]
 
@@ -876,7 +838,6 @@ model HospitalityExpense {
 model WorkerExpenseClaim {
   id                              String    @id @default(uuid())
   claimNumber                     String    @unique // e.g. #CLM-YYYY-XXXX
-  tenantId                        String
   workerId                        String
   siteId                          String
   amount                          Decimal   @db.Decimal(12, 2)
@@ -899,7 +860,6 @@ model WorkerExpenseClaim {
   createdAt                       DateTime  @default(now())
   updatedAt                       DateTime  @updatedAt
 
-  tenant            Tenant            @relation(fields: [tenantId], references: [id])
   worker            Worker            @relation(fields: [workerId], references: [id])
   site              Site              @relation(fields: [siteId], references: [id])
   settlementCustody FinancialCustody? @relation(fields: [settlementCustodyId], references: [id])
@@ -1022,7 +982,6 @@ model AdvanceInstallment {
 
 model Supplier {
   id              String   @id @default(uuid())
-  tenantId        String
   code            String   @unique // e.g. #VND-XXX or #EX-VND-XXX
   name            String
   category        String // WORKSHOPS_MACHINING, SPARE_PARTS, FOOD_CATERING, FUEL_OILS, EQUIPMENT_RENTAL, GENERAL_SUPPLIES
@@ -1041,7 +1000,6 @@ model Supplier {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  tenant        Tenant                 @relation(fields: [tenantId], references: [id])
   user          User?
   invoices      SupplierInvoice[]
   payments      SupplierPayment[]
@@ -1133,7 +1091,6 @@ model SupplierPayment {
 
 model Equipment {
   id                            String    @id @default(uuid())
-  tenantId                      String
   code                          String    @unique // e.g. EQ-01
   name                          String
   type                          String // LOADER, EXCAVATOR, DUMP_TRUCK, BULLDOZER, GENERATOR, WATER_TANKER, PICKUP_TRUCK
@@ -1152,7 +1109,6 @@ model Equipment {
   createdAt                     DateTime  @default(now())
   updatedAt                     DateTime  @updatedAt
 
-  tenant             Tenant                 @relation(fields: [tenantId], references: [id])
   site               Site                   @relation(fields: [siteId], references: [id])
   assignedWorker     Worker?                @relation(fields: [assignedWorkerId], references: [id])
   dutyRosters        DutyRoster[]
@@ -1459,7 +1415,6 @@ model PhosphateExtract {
 
 model PayrollRun {
   id                      String    @id @default(uuid())
-  tenantId                String
   runNumber               String    @unique // e.g. #PAYROLL-YYYY-MM
   year                    Int
   month                   Int
@@ -1474,11 +1429,10 @@ model PayrollRun {
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
-  tenant               Tenant               @relation(fields: [tenantId], references: [id])
   records              PayrollRecord[]
   deductedInstallments AdvanceInstallment[]
 
-  @@unique([tenantId, year, month, siteId])
+  @@unique([year, month, siteId])
   @@map("payroll_runs")
 }
 
@@ -1525,7 +1479,6 @@ model PayrollRecord {
 
 model User {
   id                     String    @id @default(uuid())
-  tenantId               String?
   telegramId             BigInt    @unique
   username               String?
   fullName               String
@@ -1545,7 +1498,6 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  tenant                  Tenant?                  @relation(fields: [tenantId], references: [id])
   worker                  Worker?                  @relation(fields: [workerId], references: [id])
   supplier                Supplier?                @relation(fields: [supplierId], references: [id])
   assignedSite            Site?                    @relation(fields: [assignedSiteId], references: [id])

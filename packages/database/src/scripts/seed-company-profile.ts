@@ -29,32 +29,14 @@ export async function seedCompanyProfile(): Promise<void> {
     const raw = fs.readFileSync(jsonPath, 'utf-8');
     const data = JSON.parse(raw);
 
-    const tenantCode = process.env.TENANT_CODE || data.tenantCode || 'DEFAULT';
-    const tenantName = process.env.TENANT_NAME || data.tenantName || 'المنظومة المؤسسية';
-    const legalName = process.env.COMPANY_LEGAL_NAME || data.profile?.legalName || tenantName;
-    const tradeName = process.env.COMPANY_TRADE_NAME || data.profile?.tradeName || tenantName;
+    const legalName = process.env.COMPANY_LEGAL_NAME || data.profile?.legalName || 'شركة السعادة للمقاولات العامة';
+    const tradeName = process.env.COMPANY_TRADE_NAME || data.profile?.tradeName || 'شركة السعادة للمقاولات العامة';
     const baseCurrency = process.env.COMPANY_BASE_CURRENCY || data.profile?.baseCurrency || 'EGP';
 
-    // 1. Ensure Tenant exists
-    const tenant = await prisma.tenant.upsert({
-      where: { code: tenantCode },
-      update: { name: tenantName },
-      create: {
-        code: tenantCode,
-        name: tenantName,
-        isActive: true,
-      },
-    });
-
-    console.log(`✅ Tenant verified: ${tenant.name} (${tenant.code}) [ID: ${tenant.id}]`);
-
-    // 2. Ensure Company Profile exists
-    const existingProfile = await prisma.companyProfile.findFirst({
-      where: { tenantId: tenant.id },
-    });
+    // Ensure Company Profile exists (Singleton Entity)
+    const existingProfile = await prisma.companyProfile.findFirst();
 
     const profileData = {
-      tenantId: tenant.id,
       legalName,
       tradeName,
       commercialRegistrationNumber: data.profile?.commercialRegistrationNumber || null,
