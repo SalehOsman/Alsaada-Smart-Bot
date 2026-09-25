@@ -20,8 +20,9 @@ describe('Work Plan 89 — Existing Modules Parity & Compatibility Bridges (Phas
     expect(settings).toBeDefined();
     expect(workforce).toBeDefined();
 
-    expect(settings?.isV1Compatible).toBe(true);
-    expect(workforce?.isV1Compatible).toBe(true);
+    // Upgraded to native V2 module contracts in WP 112
+    expect(settings?.isV1Compatible).toBe(false);
+    expect(workforce?.isV1Compatible).toBe(false);
     expect(existsSync(settings!.sourceDirectory)).toBe(true);
     expect(existsSync(workforce!.sourceDirectory)).toBe(true);
   });
