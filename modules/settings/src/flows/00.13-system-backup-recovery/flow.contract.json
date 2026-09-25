@@ -32,7 +32,10 @@
     "bck:drill",
     "bck:list",
     "bck:status",
-    "bck:back"
+    "bck:back",
+    "bck:sel",
+    "bck:rst",
+    "bck:cfr"
   ],
   "inputs": [
     "select:backup_action",
@@ -43,7 +46,11 @@
     "card:backup_in_progress",
     "card:backup_success",
     "card:drill_result",
-    "card:backups_list"
+    "card:backups_list",
+    "card:snapshot_detail",
+    "card:restore_warning",
+    "card:restore_in_progress",
+    "card:restore_success"
   ],
   "dataImpact": {
     "database": [],

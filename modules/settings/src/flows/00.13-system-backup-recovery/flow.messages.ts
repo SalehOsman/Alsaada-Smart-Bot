@@ -11,6 +11,8 @@ import type {
   BackupExecutionResultDto,
   DisasterRecoveryDrillDto,
   BackupListItemDto,
+  SnapshotDetailDto,
+  RestoreExecutionResultDto,
 } from './flow.types.js';
 
 const BACKUP_BREADCRUMBS = formatBreadcrumbs([
@@ -136,10 +138,124 @@ export function formatBackupListCard(items: BackupListItemDto[]): string {
     `━━━━━━━━━━━━━━━━━━━━━\n` +
     listText +
     `━━━━━━━━━━━━━━━━━━━━━\n` +
-    `لاستعادة أي لقطة، يرجى التوجه إلى لوحة التحكم الإدارية (Dashboard) واستخدام كود التأكيد اليومي.`;
+    `اضغط على أي لقطة لعرض تفاصيلها واستعادتها حياً.`;
 
   const richMsg = buildRichPage({
     title: 'سجل اللقطات الاحتياطية',
+    blocks: [richParagraph(cardText)],
+  });
+  assertRichMessage(richMsg);
+
+  return cardText;
+}
+
+export function formatSnapshotDetailCard(detail: SnapshotDetailDto): string {
+  const sizeMb = (detail.totalSizeBytes / (1024 * 1024)).toFixed(2);
+  const dbMb = detail.databaseSize ? (detail.databaseSize / (1024 * 1024)).toFixed(2) : '-';
+  const codeMb = detail.codebaseSize ? (detail.codebaseSize / (1024 * 1024)).toFixed(2) : '-';
+  const integrityBadge = detail.isIntegrityIntact ? '🟢 سليمة 100%' : '🔴 تالفة أو غير متطابقة';
+  const cloudBadge = detail.cloudSyncStatus === 'synced' ? '🟢 مرفوعة ومزامنة' : `⚪ ${detail.cloudSyncStatus}`;
+
+  const cardText =
+    `${BACKUP_BREADCRUMBS}\n\n` +
+    `🔍 *تفاصيل اللقطة الاحتياطية*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `🆔 *المعرف:* \`${detail.backupId}\`\n` +
+    `📅 *تاريخ الإنشاء:* \`${new Date(detail.createdAt).toLocaleString('ar-EG')}\`\n` +
+    `📦 *الملفات المؤرشفة:* \`${detail.artifactsCount}\` ملفات\n` +
+    `💾 *الحجم الكلي:* \`${sizeMb} MB\`\n` +
+    `🗄️ *قاعدة البيانات:* \`${dbMb} MB\`\n` +
+    `💻 *كود وسجلات المشروع:* \`${codeMb} MB\`\n` +
+    `🛡️ *فحص النزاهة التشفيري:* ${integrityBadge}\n` +
+    `☁️ *حالة درايف:* ${cloudBadge}\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `⚡ يمكنك استعادة هذه اللقطة حياً إلى قاعدة البيانات مباشرة.`;
+
+  const richMsg = buildRichPage({
+    title: 'تفاصيل اللقطة الاحتياطية',
+    blocks: [richParagraph(cardText)],
+  });
+  assertRichMessage(richMsg);
+
+  return cardText;
+}
+
+export function formatRestoreWarningCard(backupId: string, createdAt: string): string {
+  const cardText =
+    `${BACKUP_BREADCRUMBS}\n\n` +
+    `⚠️ *تحذير أمني وسيادي: استعادة حية*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `🆔 *اللقطة المستهدفة:* \`${backupId}\`\n` +
+    `📅 *تاريخ اللقطة:* \`${new Date(createdAt).toLocaleString('ar-EG')}\`\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `🚨 *تنبيه حرج:* سيتم استبدال بيانات قاعدة البيانات الحالية بالكامل ببيانات هذه اللقطة.\n\n` +
+    `🛡️ *إجراء الأمان الوقائي:* سيقوم النظام تلقائياً بأخذ لقطة أمان فورية (Safety Snapshot) قبل بدء الاستعادة.\n\n` +
+    `هل تريد بالتأكيد المتابعة وتأكيد الاستعادة الحية الآن؟`;
+
+  const richMsg = buildRichPage({
+    title: 'تحذير استعادة حية',
+    blocks: [richParagraph(cardText)],
+  });
+  assertRichMessage(richMsg);
+
+  return cardText;
+}
+
+export function formatRestoreInProgressCard(backupId: string): string {
+  const cardText =
+    `${BACKUP_BREADCRUMBS}\n\n` +
+    `⏳ *جاري تنفيذ الاستعادة الحية للبيانات...*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `1. 🛡️ أخذ لقطة أمان وقائية فورية...\n` +
+    `2. 🔍 التحقق التشفيري من بصمة SHA-256 للقطة \`${backupId}\`...\n` +
+    `3. 🔐 فك تشفير البيانات بمفتاح AES-256-GCM...\n` +
+    `4. ⚡ استعادة قاعدة البيانات ذرياً (Atomic Restoration)...\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `⚡ العملية جارية في الخلفية؛ سيتم تحديث الرسالة فور الانتهاء.`;
+
+  const richMsg = buildRichPage({
+    title: 'جاري تنفيذ الاستعادة الحية',
+    blocks: [richParagraph(cardText)],
+  });
+  assertRichMessage(richMsg);
+
+  return cardText;
+}
+
+export function formatRestoreSuccessCard(res: RestoreExecutionResultDto): string {
+  if (res.success) {
+    const cardText =
+      `${BACKUP_BREADCRUMBS}\n\n` +
+      `✅ *تمت الاستعادة الحية للبيانات بنجاح!*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `🆔 *اللقطة المستعادة:* \`${res.backupId}\`\n` +
+      `🛡️ *لقطة الأمان الوقائية:* \`${res.safetyBackupId ?? 'تم الحفظ'}\`\n` +
+      `⏱️ *زمن الاستعادة (RTO):* \`${res.rtoSeconds}\` ثواني\n` +
+      `📅 *توقيت الاستعادة:* \`${new Date(res.restoredAt).toLocaleString('ar-EG')}\`\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `🔒 قاعدة البيانات تعمل الآن بكفاءة متطابقة 100% مع لقطة الاستعادة.`;
+
+    const richMsg = buildRichPage({
+      title: 'اكتملت الاستعادة الحية بنجاح',
+      blocks: [richParagraph(cardText)],
+    });
+    assertRichMessage(richMsg);
+
+    return cardText;
+  }
+
+  const cardText =
+    `${BACKUP_BREADCRUMBS}\n\n` +
+    `❌ *فشلت عملية الاستعادة الحية*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `🆔 *اللقطة:* \`${res.backupId}\`\n` +
+    `⚠️ *سبب الفشل:* \`${res.error ?? 'خطأ غير معروف'}\`\n` +
+    `🛡️ *لقطة الأمان:* \`${res.safetyBackupId ?? 'لا توجد'}\`\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `لم تتأثر البيانات الحالية أو تم الحفاظ عليها بلقطة الأمان.`;
+
+  const richMsg = buildRichPage({
+    title: 'فشلت الاستعادة الحية',
     blocks: [richParagraph(cardText)],
   });
   assertRichMessage(richMsg);

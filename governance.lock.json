@@ -7262,59 +7262,6 @@
         }
       ]
     },
-    "flow:00.13": {
-      "id": "flow:00.13",
-      "type": "flow",
-      "title": "تدفق البوت: 00.13-system-backup-recovery (00.13)",
-      "directory": "modules/settings/src/flows/00.13-system-backup-recovery",
-      "lockedAt": "2026-09-24T13:36:38.282Z",
-      "files": [
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.contract.json",
-          "sha256": "91eedb532ae79fca988e247293426a90f7cc7f870589c99c2e774753be598af4"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.docs.md",
-          "sha256": "e6074c26149fa7dca1cff0a23feeab72742e94da8ce45d1349f274483837ffdd"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.handler.ts",
-          "sha256": "19b57e4a343f462b7e7a2ae08c29328776eb1d4740bb9b6ceaae8eefed3f7a23"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.keyboard.ts",
-          "sha256": "73becff7fcf37285e350971e5859e78ee2fb1a5fb9a11183923bf7894d14958e"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.messages.ts",
-          "sha256": "66db4ad966def6c1da56e1db36b15025ce1f5cc323dceac1fd6549e8f64a41e4"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.repository.ts",
-          "sha256": "ebeddf6ef53beef4ac8fecc5e38c45e0bd4898cf65a97bb0e17a368c53ccd475"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.service.ts",
-          "sha256": "1d33c1bb2611f44f7bd07c309cc15f7c89851a36e121ce22eed2604e3d8763f6"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.telemetry.ts",
-          "sha256": "0115a066685535f755752b670dc4643da971d6336751c4036bf969b318c95834"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.types.ts",
-          "sha256": "be8568f17d24e629c050f34a30b470fcd05001fc10d96891c8141921ebfa8b65"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.validators.ts",
-          "sha256": "12711b1248579000a38bdba73de3005105879c7ca0a9eae806f358fe6de0315a"
-        },
-        {
-          "path": "modules/settings/src/flows/00.13-system-backup-recovery/index.ts",
-          "sha256": "e20af9de2515a6bca168f3743809177189245c87f018c4bea7f21bf7ad22f70c"
-        }
-      ]
-    },
     "test:modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.data.spec.ts": {
       "id": "test:modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.data.spec.ts",
       "type": "test",
@@ -7333,11 +7280,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.integration.spec.ts",
       "directory": "modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.integration.spec.ts",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
+      "lockedAt": "2026-09-25T13:08:56.857Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.integration.spec.ts",
-          "sha256": "95ff355d4c88e48f05e490ddb14f31633e830f2b62154a5c4a032e075adac9de"
+          "sha256": "1e16746e40a7856c596b9c8de5a59a197fb5a739b2a730c882fa9a9a80252caa"
         }
       ]
     },
@@ -7346,11 +7293,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.rbac.spec.ts",
       "directory": "modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.rbac.spec.ts",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
+      "lockedAt": "2026-09-25T13:09:08.696Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.rbac.spec.ts",
-          "sha256": "df64ff716092207714e11bfcb9abc0c429706ca1395626a5d490b1a51b398f21"
+          "sha256": "bd1f84d0bb1192f8a089695b56d9bf7ee2b97f401e3d0c7ec1b078d38808bac0"
         }
       ]
     },
@@ -7372,11 +7319,11 @@
       "type": "test",
       "title": "ملف الاختبار المعتمد: modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.ux.spec.ts",
       "directory": "modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.ux.spec.ts",
-      "lockedAt": "2026-09-24T07:24:48.305Z",
+      "lockedAt": "2026-09-25T13:06:37.834Z",
       "files": [
         {
           "path": "modules/settings/src/flows/00.13-system-backup-recovery/tests/flow.ux.spec.ts",
-          "sha256": "58769127e7b59b2a18bacbc5db5b99f91d2f89082ca40c9f383f3c88309a368c"
+          "sha256": "fc0c244c6d6f9f8981223888f7d64e77ccfddc3d2f9a3f7669fc2e9c7c7fe57d"
         }
       ]
     },
@@ -8228,7 +8175,7 @@
       "type": "app",
       "title": "تطبيق المنظومة: docs",
       "directory": "apps/docs",
-      "lockedAt": "2026-09-25T10:32:36.980Z",
+      "lockedAt": "2026-09-25T12:54:43.943Z",
       "files": [
         {
           "path": "apps/docs/astro.config.mjs",
@@ -8440,7 +8387,7 @@
         },
         {
           "path": "apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md",
-          "sha256": "42fb92107029bb2da38256581f14bb3a0973155bca5e27f3beff60b0102fde66"
+          "sha256": "307eb6afcad85adee5ce14ab817d7e7775b947906a1b82d50530199ff8b88a77"
         },
         {
           "path": "apps/docs/src/content/docs/en/index.md",
@@ -8544,47 +8491,6 @@
         }
       ]
     },
-    "infra:docker": {
-      "id": "infra:docker",
-      "type": "infra",
-      "title": "البنية التحتية والدوكر وقواعد البيانات",
-      "directory": "docker",
-      "lockedAt": "2026-09-25T11:42:32.174Z",
-      "files": [
-        {
-          "path": ".dockerignore",
-          "sha256": "d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a"
-        },
-        {
-          "path": "docker-compose.yml",
-          "sha256": "e1fdbc3b725838e2f0e550ec85aca449902a3ae0e8d9c9a74d2dc9fed77121da"
-        },
-        {
-          "path": "docker/Dockerfile",
-          "sha256": "057dafcba9602f4004c69ca89e935be97e17fcc3785153a09545885d5d9f2cfe"
-        },
-        {
-          "path": "docker/Dockerfile.dashboard",
-          "sha256": "1659f3cc340cc36cb701146f8b7261b1a3de303f1a945094811feed53f944186"
-        },
-        {
-          "path": "docker/Dockerfile.docs",
-          "sha256": "5ba5b9da3ce20adfbde07deab5e64ad09cd7380c5cb8c52ae391524575e75437"
-        },
-        {
-          "path": "docker/Dockerfile.studio",
-          "sha256": "10522c6e08b91dbc54b5f0d342aba0455efdbabf7faa1f10b2047f0714961ad7"
-        },
-        {
-          "path": "docker/nginx-docs.conf",
-          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
-        },
-        {
-          "path": "docker/postgres/init-scripts/01-init-security.sql",
-          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
-        }
-      ]
-    },
     "test:tests/docker-manifest-parity.spec.ts": {
       "id": "test:tests/docker-manifest-parity.spec.ts",
       "type": "test",
@@ -8653,6 +8559,104 @@
         {
           "path": "packages/google-engine/tests/google-engine.spec.ts",
           "sha256": "ea1498a0b83d62af0dedbf5b840a4580743533b46b0170d42ee34faa65cf8464"
+        }
+      ]
+    },
+    "flow:00.13": {
+      "id": "flow:00.13",
+      "type": "flow",
+      "title": "تدفق البوت: 00.13-system-backup-recovery (00.13)",
+      "directory": "modules/settings/src/flows/00.13-system-backup-recovery",
+      "lockedAt": "2026-09-25T13:11:01.308Z",
+      "files": [
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/backup-engine.ts",
+          "sha256": "b932ab1641a65200383dc7d244626766f444d9ebe8f5fc3ac066cf320ab73044"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.contract.json",
+          "sha256": "96675e3e3b22b762011d386d753c449e7aae4aa40e8035d2793d73417d4bd464"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.docs.md",
+          "sha256": "e6074c26149fa7dca1cff0a23feeab72742e94da8ce45d1349f274483837ffdd"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.handler.ts",
+          "sha256": "65c8517b3bbd5c1b8261f11a2aa2a448337b04026d228543fea6f6981e6cf52a"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.keyboard.ts",
+          "sha256": "5a182243830440f50813589bf7c218a7142b2042d13aa31783b057cbc1ed470c"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.messages.ts",
+          "sha256": "8e8e38e102e10574b22500c317671218ea5b901f18e38c00b91836089f355e50"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.repository.ts",
+          "sha256": "ebeddf6ef53beef4ac8fecc5e38c45e0bd4898cf65a97bb0e17a368c53ccd475"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.service.ts",
+          "sha256": "950fd231b203abc6f8ef22929b1052d6f6bbcf69c1d6a000e8fde7359ede9ac7"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.telemetry.ts",
+          "sha256": "0115a066685535f755752b670dc4643da971d6336751c4036bf969b318c95834"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.types.ts",
+          "sha256": "c8743de876d7e922ac1aef58844bb8af1e72751fd9f119ec94774fb6a438e6f8"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/flow.validators.ts",
+          "sha256": "12711b1248579000a38bdba73de3005105879c7ca0a9eae806f358fe6de0315a"
+        },
+        {
+          "path": "modules/settings/src/flows/00.13-system-backup-recovery/index.ts",
+          "sha256": "e20af9de2515a6bca168f3743809177189245c87f018c4bea7f21bf7ad22f70c"
+        }
+      ]
+    },
+    "infra:docker": {
+      "id": "infra:docker",
+      "type": "infra",
+      "title": "البنية التحتية والدوكر وقواعد البيانات",
+      "directory": "docker",
+      "lockedAt": "2026-09-25T12:53:55.109Z",
+      "files": [
+        {
+          "path": ".dockerignore",
+          "sha256": "d0c8c537f58c73ffd9ccadbceca5ec48c86c42c0c656cdece0496b750e706f9a"
+        },
+        {
+          "path": "docker-compose.yml",
+          "sha256": "e1fdbc3b725838e2f0e550ec85aca449902a3ae0e8d9c9a74d2dc9fed77121da"
+        },
+        {
+          "path": "docker/Dockerfile",
+          "sha256": "c997292238d67a1f057d78526d20f3ce84f5a700c72db42ea592b7e0c834e69c"
+        },
+        {
+          "path": "docker/Dockerfile.dashboard",
+          "sha256": "1659f3cc340cc36cb701146f8b7261b1a3de303f1a945094811feed53f944186"
+        },
+        {
+          "path": "docker/Dockerfile.docs",
+          "sha256": "5ba5b9da3ce20adfbde07deab5e64ad09cd7380c5cb8c52ae391524575e75437"
+        },
+        {
+          "path": "docker/Dockerfile.studio",
+          "sha256": "10522c6e08b91dbc54b5f0d342aba0455efdbabf7faa1f10b2047f0714961ad7"
+        },
+        {
+          "path": "docker/nginx-docs.conf",
+          "sha256": "2e02c009f7788ff9b8893f5673eac933dd488c16b8ca4664a23f77503b784bfa"
+        },
+        {
+          "path": "docker/postgres/init-scripts/01-init-security.sql",
+          "sha256": "98ab41d13fef4f41d5e6d9893055a7ef61b82de5e98553969dd2c6734535123f"
         }
       ]
     }

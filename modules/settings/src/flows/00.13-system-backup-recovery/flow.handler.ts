@@ -6,6 +6,10 @@ import {
   buildBackupInProgressKeyboard,
   buildBackupCompletionKeyboard,
   buildBackupListKeyboard,
+  buildSnapshotDetailKeyboard,
+  buildRestoreConfirmKeyboard,
+  buildRestoreInProgressKeyboard,
+  buildRestoreCompletedKeyboard,
 } from './flow.keyboard.js';
 import {
   formatBackupStatusCard,
@@ -13,6 +17,10 @@ import {
   formatBackupSuccessCard,
   formatDisasterRecoveryDrillCard,
   formatBackupListCard,
+  formatSnapshotDetailCard,
+  formatRestoreWarningCard,
+  formatRestoreInProgressCard,
+  formatRestoreSuccessCard,
 } from './flow.messages.js';
 import { DISABLED_LINK_PREVIEWS } from '@alsaada/core-components';
 import { logBackupEvent, logBackupError } from './flow.telemetry.js';
@@ -32,6 +40,9 @@ export class SystemBackupRecoveryHandler {
     bot.callbackQuery('bck:drill', (ctx) => this.handleTriggerDrill(ctx));
     bot.callbackQuery('bck:list', (ctx) => this.handleOpenList(ctx));
     bot.callbackQuery('bck:back', (ctx) => this.handleBackToSettings(ctx));
+    bot.callbackQuery(/^bck:sel:(.+)$/, (ctx) => this.handleSelectSnapshot(ctx));
+    bot.callbackQuery(/^bck:rst:(.+)$/, (ctx) => this.handlePromptRestore(ctx));
+    bot.callbackQuery(/^bck:cfr:(.+)$/, (ctx) => this.handleConfirmRestore(ctx));
   }
 
   private isAuthorized(ctx: SettingsModuleContext): boolean {
@@ -141,6 +152,91 @@ export class SystemBackupRecoveryHandler {
     } catch (err) {
       logBackupError('list_snapshots_failed', err);
       await this.renderInPlace(ctx, '⚠️ تعذر قراءة سجل اللقطات.', buildBackupMainMenuKeyboard());
+    }
+  }
+
+  async handleSelectSnapshot(ctx: SettingsModuleContext): Promise<void> {
+    if (!this.isAuthorized(ctx)) {
+      if (ctx.callbackQuery) await ctx.answerCallbackQuery({ text: 'غير مصرح لك بالوصول', show_alert: true });
+      return;
+    }
+
+    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
+
+    const backupId = ctx.match?.[1] || ctx.callbackQuery?.data?.replace('bck:sel:', '');
+    if (!backupId) return;
+
+    try {
+      const detail = await this.service.getSnapshotDetail(backupId);
+      if (!detail) {
+        await this.renderInPlace(ctx, '⚠️ تعذر العثور على بيانات هذه اللقطة.', buildBackupMainMenuKeyboard());
+        return;
+      }
+
+      const text = formatSnapshotDetailCard(detail);
+      const kb = buildSnapshotDetailKeyboard(detail.backupId, detail.cloudUrl);
+      await this.renderInPlace(ctx, text, kb);
+      logBackupEvent('select_snapshot', { backupId });
+    } catch (err) {
+      logBackupError('select_snapshot_failed', err);
+      await this.renderInPlace(ctx, '⚠️ حدث خطأ أثناء فحص اللقطة.', buildBackupMainMenuKeyboard());
+    }
+  }
+
+  async handlePromptRestore(ctx: SettingsModuleContext): Promise<void> {
+    if (!this.isAuthorized(ctx)) {
+      if (ctx.callbackQuery) await ctx.answerCallbackQuery({ text: 'غير مصرح لك بالوصول', show_alert: true });
+      return;
+    }
+
+    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
+
+    const backupId = ctx.match?.[1] || ctx.callbackQuery?.data?.replace('bck:rst:', '');
+    if (!backupId) return;
+
+    try {
+      const detail = await this.service.getSnapshotDetail(backupId);
+      const createdAt = detail?.createdAt ?? new Date().toISOString();
+      const text = formatRestoreWarningCard(backupId, createdAt);
+      const kb = buildRestoreConfirmKeyboard(backupId);
+      await this.renderInPlace(ctx, text, kb);
+      logBackupEvent('prompt_restore', { backupId });
+    } catch (err) {
+      logBackupError('prompt_restore_failed', err);
+      await this.renderInPlace(ctx, '⚠️ تعذر تجهيز بيانات الاستعادة.', buildBackupMainMenuKeyboard());
+    }
+  }
+
+  async handleConfirmRestore(ctx: SettingsModuleContext): Promise<void> {
+    if (!this.isAuthorized(ctx)) {
+      if (ctx.callbackQuery) await ctx.answerCallbackQuery({ text: 'غير مصرح لك بالوصول', show_alert: true });
+      return;
+    }
+
+    // Acknowledge immediately (< 50ms)
+    if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
+
+    const backupId = ctx.match?.[1] || ctx.callbackQuery?.data?.replace('bck:cfr:', '');
+    if (!backupId) return;
+
+    // Show in-progress card (< 500ms)
+    const inProgressText = formatRestoreInProgressCard(backupId);
+    const inProgressKb = buildRestoreInProgressKeyboard();
+    await this.renderInPlace(ctx, inProgressText, inProgressKb);
+
+    logBackupEvent('restore_started_async', { backupId });
+
+    try {
+      const result = await this.service.restoreBackup(backupId);
+      const successText = formatRestoreSuccessCard(result);
+      const completionKb = buildRestoreCompletedKeyboard();
+      await this.renderInPlace(ctx, successText, completionKb);
+      logBackupEvent('restore_completed_async', { backupId, success: result.success });
+    } catch (err: unknown) {
+      logBackupError('restore_failed_async', err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const errorText = `❌ *فشلت عملية الاستعادة الحية*\n\nالخطأ: \`${errMsg}\``;
+      await this.renderInPlace(ctx, errorText, buildBackupMainMenuKeyboard());
     }
   }
 

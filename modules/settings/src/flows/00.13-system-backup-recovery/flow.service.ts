@@ -4,7 +4,14 @@ import type {
   BackupExecutionResultDto,
   DisasterRecoveryDrillDto,
   BackupListItemDto,
+  SnapshotDetailDto,
+  RestoreExecutionResultDto,
 } from './flow.types.js';
+import {
+  executeRealBackup,
+  executeRealRestore,
+  inspectSnapshotDetail,
+} from './backup-engine.js';
 
 export class SystemBackupRecoveryService {
   private readonly defaultRepo = new SystemBackupRecoveryRepository();
@@ -24,7 +31,7 @@ export class SystemBackupRecoveryService {
       latestBackupId: latest?.backupId ?? null,
       latestBackupAt: latest?.createdAt ?? null,
       rpoStatus: latest ? 'HEALTHY' : 'NEEDS_BACKUP',
-      cloudSyncEnabled: Boolean(process.env.GDRIVE_FOLDER_ID),
+      cloudSyncEnabled: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY),
       encryptionType: 'AES-256-GCM',
       zeroBloatLimitMb: 30,
     };
@@ -32,49 +39,22 @@ export class SystemBackupRecoveryService {
 
   async executeBackupNow(): Promise<BackupExecutionResultDto> {
     try {
-      const backupManagerPath = ['..', '..', '..', '..', '..', 'tools', 'backup', 'backup-manager.js'].join('/');
-      const backupModule = (await import(backupManagerPath).catch(() => null)) as {
-        createFullBackup?: (opts: { syncCloud: boolean }) => Promise<{
-          backupId: string;
-          createdAt: string;
-          artifacts: Array<{ sizeBytes: number }>;
-          cloudSyncStatus: 'synced' | 'staged' | 'skipped' | 'failed';
-        }>;
-      } | null;
-
-      if (backupModule && typeof backupModule.createFullBackup === 'function') {
-        const manifest = await backupModule.createFullBackup({
-          syncCloud: Boolean(process.env.GDRIVE_FOLDER_ID),
-        });
-
-        let totalSizeBytes = 0;
-        for (const art of manifest.artifacts ?? []) {
-          totalSizeBytes += art.sizeBytes;
-        }
-
-        return {
-          success: true,
-          backupId: manifest.backupId,
-          createdAt: manifest.createdAt,
-          artifactsCount: (manifest.artifacts ?? []).length,
-          cloudSyncStatus: manifest.cloudSyncStatus,
-          totalSizeBytes,
-        };
-      }
-    } catch {
-      // Fallback if tools/ is unavailable in container
+      const syncCloud = Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY);
+      const res = await executeRealBackup({ syncCloud });
+      return res;
+    } catch (err: unknown) {
+      // If error occurs, fallback gracefully with error details
+      const now = new Date();
+      const backupId = `BCK-${now.toISOString().slice(0, 10).replace(/-/g, '')}-${now.toTimeString().slice(0, 8).replace(/:/g, '')}`;
+      return {
+        success: false,
+        backupId,
+        createdAt: now.toISOString(),
+        artifactsCount: 0,
+        cloudSyncStatus: 'failed',
+        error: err instanceof Error ? err.message : String(err),
+      };
     }
-
-    const now = new Date();
-    const backupId = `BCK-${now.toISOString().slice(0, 10).replace(/-/g, '')}-${now.toTimeString().slice(0, 8).replace(/:/g, '')}`;
-    return {
-      success: true,
-      backupId,
-      createdAt: now.toISOString(),
-      artifactsCount: 2,
-      cloudSyncStatus: 'staged',
-      totalSizeBytes: 1024 * 1024 * 10,
-    };
   }
 
   async runDrill(): Promise<DisasterRecoveryDrillDto> {
@@ -126,24 +106,11 @@ export class SystemBackupRecoveryService {
     return this.listRecentBackups();
   }
 
-  async restoreBackup(backupId: string, passphrase?: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const backupManagerPath = ['..', '..', '..', '..', '..', 'tools', 'backup', 'backup-manager.js'].join('/');
-      const backupModule = (await import(backupManagerPath).catch(() => null)) as {
-        restoreBackup?: (opts: { backupId: string; keyOrPassphrase?: string }) => Promise<{ success: boolean; error?: string }>;
-      } | null;
+  async getSnapshotDetail(backupId: string): Promise<SnapshotDetailDto | null> {
+    return inspectSnapshotDetail(backupId);
+  }
 
-      if (backupModule && typeof backupModule.restoreBackup === 'function') {
-        const payload: { backupId: string; keyOrPassphrase?: string } = { backupId };
-        if (passphrase !== undefined) {
-          payload.keyOrPassphrase = passphrase;
-        }
-        return await backupModule.restoreBackup(payload);
-      }
-    } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
-    }
-
-    return { success: true };
+  async restoreBackup(backupId: string, passphrase?: string): Promise<RestoreExecutionResultDto> {
+    return executeRealRestore(backupId, passphrase);
   }
 }

@@ -96,7 +96,7 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 
 RUN npm install -g pnpm@12.4.2
-RUN apk add --no-cache openssl dumb-init tzdata
+RUN apk add --no-cache openssl dumb-init tzdata postgresql-client git
 
 ARG APP_VERSION=2.0.0-alpha.1
 ARG GIT_COMMIT_SHA=unknown
