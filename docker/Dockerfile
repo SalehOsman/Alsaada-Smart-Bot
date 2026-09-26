@@ -38,7 +38,6 @@ COPY apps/bot-server/package.json apps/bot-server/
 ENV GIT_DIR=/tmp/alsaada-build.git
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     git init --bare "$GIT_DIR" \
-    && pnpm config set package-import-method copy \
     && pnpm config set fetch-retries 5 \
     && pnpm config set fetch-retry-maxtimeout 120000 \
     && pnpm config set network-concurrency 4 \

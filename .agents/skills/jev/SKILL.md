@@ -217,6 +217,14 @@ Derived from `docs/references/typesafe.md` and Work Plan 96, `/jev` leverages ni
   - Evaluates work plans against the 6 pillars (Scope, Data contracts, Telegram UX, Concurrency & Security, Test matrix, Acceptance criteria).
   - Guarantees zero orphan skills and strict alignment with Rulebooks 01–12.
 
+### 20. Anti-Mirage Constitution & Methodology Sentinel (`antiMirageSentinel`)
+- **Reference:** Work Plan 116 (`docs/work-plans/116-plan-ci-ephemeral-db-parity-dynamic-governance-and-agent-methodology-constitution.md`), Rulebook 13 (`.agents/rules/13-ai-agent-methodology-and-anti-mirage-constitution.md`).
+- **Function:** Enforces the 4 Anti-Mirage Invariants across PRs, CI, and agent execution:
+  - Ephemeral Database Parity: Scans Prisma migration configs to ensure explicit schema paths (`--schema=prisma/schema.prisma`) and catches empty ephemeral DB states.
+  - Zero-Mirage Diagnostic Invariant: Flags speculative diagnosis lacking real execution logs (`Terminal Output` / `gh run view --log`).
+  - Container Build Optimization: Flags `package-import-method copy` or slow un-cached Docker build anti-patterns.
+  - Dynamic Set Invariant: Flags hardcoded scalar count assertions (`toBe(N)`) in governance tests.
+
 ---
 
 ## 4. Physical Inspection Tooling & CLI Commands

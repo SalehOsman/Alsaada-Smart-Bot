@@ -91,6 +91,22 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 3. **مسار إصلاح الأعطال والتحقيق الجنائي (Rulebook 08 / WP 93):** تجميد الكود فوراً عند فشل الاختبارات (حظر الترقيع الفوري)، فتح فرع الحادثة المنعزل `fix/inc-*`، تحرير الملف الجنائي المسبق في `docs/code-incidents/`، اعتماد الخطة بصيغة «موافق على خطة الإصلاح»، كتابة اختبار تراجع دائم (Permanent Regression Test)، اجتياز الفحص الآلي `pnpm incident:verify` و `pnpm test:incidents`، وإصدار بطاقة الإقرار الجنائي الإلزامية.
 - **عقوبة المخالفة:** يُسقط عمل الوكيل فوراً بحكم `[REJECT]` قطعي من `/saleh`، ويُمنع دمج الفرع نهائياً.
 
+### 7.2 الإلزام الدستوري الصارم بميثاق منهجية وكلاء الذكاء الاصطناعي وحظر السراب البرمجي (The Anti-Mirage Constitution — Rulebook 13 & WP 116)
+بموجب ميثاق خطة العمل السيادية رقم 116 وكتيب القواعد رقم 13 (`.agents/rules/13-ai-agent-methodology-and-anti-mirage-constitution.md`)، يُلزم كافة وكلاء الذكاء الاصطناعي والمهندسين بالامتثال الصارم والقطعي للمحددات المنهجية الأربعة، مع حظر الوقوع في عيوب الاستنتاج التخميني أو الترقيع السطحي:
+1. **محدد التكافؤ التام لقاعدة البيانات المؤقتة (Zero-Assumption Ephemeral Database Parity Invariant):**
+   - يُحظر قطعياً افتراض صحة قاعدة البيانات بمجرد نجاح أو تخطي أمر `pnpm test` محلياً. بيئة التكامل المستمر (GitHub CI) تعتمد على قاعدة بيانات PostgreSQL خالية تماماً ومؤقتة (`alsaada_db`).
+   - يجب ضمان اكتشاف ونشر كافة الهجرات الـ 10 عبر التحديد الصريح لمسار المخطط (`prisma migrate deploy --schema=prisma/schema.prisma`)، والتحقق الصارم من حالة الهجرات وعدم الاكتفاء برسالة مضللة كـ `No migration found in prisma/migrations`.
+2. **محدد التشخيص الجنائي القاطع المبني على الواقع الفيزيائي (Zero-Mirage Diagnostic Invariant):**
+   - يُحظر قطعياً على أي وكيل صياغة فرضيات أو أسباب لأي عطل أو تقديم حلول تخمينية دون قراءة وفحص سجلات الخطأ الفعلية الكاملة (`Terminal Output` / `gh run view --log`).
+   - يُمنع الخلط بين أعطال الحاويات والبناء (`Docker Build`) وأعطال الاختبارات التشغيلية (`pnpm test`)؛ كل عطل يجب عزله وتوثيقه بدقة جنائية 100%.
+3. **محدد تحسين أداء الحاويات وهندسة البناء السريع (Monorepo Build Optimization Invariant):**
+   - يُحظر قطعياً تعطيل مزايا مديري الحزم المتطورة مثل استبدال الروابط الصلبة بالنسخ البطيء (`package-import-method copy`).
+   - يجب استغلال ذاكرة التخزين المؤقت لبناء الحاويات (`BuildKit Cache Mounts`) مع الحفاظ على مدة بناء تقل عن 60 ثانية، وحظر نسخ المجلدات الزائدة داخل صورة التشغيل النهائية (`runner`).
+4. **محدد الحوكمة الديناميكية للمجموعات وحظر العدادات الصماء (Dynamic Set Governance Invariant):**
+   - يُحظر قطعياً كتابة اختبارات حوكمة تعتمد على أرقام صماء ثابتة ومطلقة (`toBe(367)`) تتسبب في كسر الـ CI عند إضافة أي اختبار تراجع دائم جديد.
+   - يجب صياغة اختبارات الحوكمة دوماً باستخدام محددات المجموعات الديناميكية (`toBeGreaterThanOrEqual(minBaseline)`) مع التحقق الصارم من تغطية 100% من الملفات المكتشفة دون استثناء (`unlockedEntities.length === 0`).
+- **عقوبة المخالفة:** يُسقط عمل الوكيل فوراً بحكم `[REJECT]` قطعي، ويُعد الإخلال بهذه المحددات خرقاً دستورياً موجباً للتراجع الفوري.
+
 ### 8. Telegram Mobile Ergonomics & 10-File Vertical Slice Standard
 1. **Strict 10-File Vertical Slice:** Every bot flow under `modules/<name>/src/flows/<code-slug>/` must contain exactly:
    `flow.contract.json`, `index.ts`, `controller.ts`, `menu.builder.ts`, `action.handler.ts`, `service.ts`, `types.ts`, `validator.ts`, `error.handler.ts`, and test under `<module>/tests/flows/`.

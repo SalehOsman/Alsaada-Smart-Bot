@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tests/docker-build-parity-and-contract-harmonization.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T00:24:29.264Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
 - **معرف الكيان:** `test:tests/docker-build-parity-and-contract-harmonization.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tests/docker-build-parity-and-contract-harmonization.spec.ts

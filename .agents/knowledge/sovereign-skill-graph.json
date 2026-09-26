@@ -16,8 +16,8 @@
         "Triple Guard Arsenal Command (clean-code-guard, test-guard, docs-guard)",
         "Zero Direct Code Modification Invariant"
       ],
-      "linkedRulebooks": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
-      "linkedWorkPlans": ["88", "90", "93", "94", "95", "96"],
+      "linkedRulebooks": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13"],
+      "linkedWorkPlans": ["88", "90", "93", "94", "95", "96", "115", "116"],
       "enforcedQualityGates": [
         "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10",
         "G11", "G12", "G13", "G14", "G15", "G16", "G17", "G18", "G19", "G20",
@@ -52,8 +52,8 @@
         "Permanent Pre-Task Plan & Skill Readiness Consultation",
         "Unified AST Scanning & Autonomous Squad Routing"
       ],
-      "linkedRulebooks": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
-      "linkedWorkPlans": ["90", "91", "93", "94", "95", "96"],
+      "linkedRulebooks": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13"],
+      "linkedWorkPlans": ["90", "91", "93", "94", "95", "96", "115", "116"],
       "enforcedQualityGates": [
         "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10",
         "G11", "G12", "G13", "G14", "G15", "G16", "G17", "G18", "G19", "G20",
