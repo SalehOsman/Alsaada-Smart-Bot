@@ -556,7 +556,7 @@ export async function verifyFinancialIntegrity(
 }
 
 if (isCliEntrypoint(import.meta.url) || process.argv[1]?.includes('verify-financial-integrity')) {
-  console.log('🏛️ [FINANCIAL-INTEGRITY] Running Enterprise Cryptographic Ledger & Custody Invariant Verification...');
+  console.log('🏛️ [FINANCIAL-INTEGRITY] Running Enterprise Cryptographic Ledger Invariant Verification...');
   const result = await verifyFinancialIntegrity();
   printAndExit('financial:verify', result);
 }

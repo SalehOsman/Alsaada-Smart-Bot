@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T13:23:50.700Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T14:12:51.575Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
 - **المسار الأساسي:** `packages/database`
-- **عدد الملفات المقفلة:** 37 ملفاً
+- **عدد الملفات المقفلة:** 36 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-70-Lock`
+- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
@@ -30,17 +30,16 @@
 | `packages/database/prisma/schema.prisma` | `464484856947b552d362fd6762d1a1bf6c01083062b416a0cf7800936f7d0bc3` |
 | `packages/database/prisma/seed-data/company-profile.json` | `fb24b8c44560a7bee5a53d1b1edcb9930fedf254755c40c6675cbd49632ce77a` |
 | `packages/database/prisma/seeds/bot-menu-catalog.seed.ts` | `d34d10481cf6765d7eaf3dcdd3d6ba69719cf722d46cc21f026256241745e115` |
-| `packages/database/src/client.ts` | `5da20d0e2cff368b0ab29194cd47c4e978441b619ada661467dde2026136ee30` |
+| `packages/database/src/client.ts` | `8d97717ae4aa06da2742964b5fc1f11ca5970a6afaddb1cef9049ed3f84238a6` |
 | `packages/database/src/crypto/blind-index.ts` | `2ac9290b9870b11691db875f68c74aa7a77a9b3ba57541ec4c747a9e2457a7c9` |
 | `packages/database/src/crypto/cipher.ts` | `3d0043d35be884e7a90e0ffa4dabe1feda9daaa619a6cbc40d00de08f2c326f5` |
 | `packages/database/src/extensions/soft-delete-metadata.ts` | `fc2a92f8696badc5a2695dc0267918a66d675481402f38e95d9d686b982d3752` |
 | `packages/database/src/extensions/soft-delete.extension.ts` | `dbdbc2813ef3aa19cd00bcf838c3e548a207fbee6383f490a838434a3abdbaac` |
-| `packages/database/src/index.ts` | `087a4378b47e154f9e88f55f0ace8df72e29f08204ad4a349c5ca0ccf95a93f8` |
+| `packages/database/src/index.ts` | `1fefd9559c1f7f29463ad438dd123d7cdea3a403759d1e0297fe3c742df25703` |
 | `packages/database/src/ledger/hash-chain.ts` | `181bebd39b5d387e9ce61642cad8f8a2bf7f369fa2e614c8ef0a62a8412ca280` |
 | `packages/database/src/ledger/hash-ledger.extension.ts` | `5c06c2decceec0ff65707ff91a6b03dff58db6f9f66afeb109ff4d4363cadaf6` |
 | `packages/database/src/ledger/verify-ledger-chain.ts` | `81b5c431166db2ae8d312f30ae554ba432ef387b9b75fff754abdaaf7acc9663` |
-| `packages/database/src/repositories/custody-transaction.repository.ts` | `a7e63e367d2757ba04590435271b6c65bc01e0fa545858359b41a32f6d7292a8` |
-| `packages/database/src/scripts/purge-test-data.ts` | `3313e0a136663baf1e772a243115de0509773a70f9c606fb8dd4c3ea21fa505f` |
+| `packages/database/src/scripts/purge-test-data.ts` | `1123b918bc38945c978bedcb70064c3718d5cd9a445265654bbe2b924a7a9e5e` |
 | `packages/database/src/scripts/remediate-job-matrix-and-cycles.ts` | `c0a2b39570ca0de63ceca49c7cfc95b6965a0eed627b1768b4f2ad29f3b4af0c` |
 | `packages/database/src/scripts/remediate-shift-templates-and-jobs.ts` | `9b798a65b9b0a08395df9eee8bb5a386a6e3c22f2f64b761e6a0c6e7c9d88600` |
 | `packages/database/src/scripts/seed-bot-menu-catalog.ts` | `4a7be35683cd64eccc6ddc90ad7ab783d79c3ae82dab4259f98705b0ed5a83d0` |

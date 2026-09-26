@@ -1,15 +1,15 @@
 # ترخيص فك قفل الحوكمة: (governance:tools/governance/verify-financial-integrity.ts)
 
-- **التاريخ:** 2026-09-26 (2026-09-26T11:16:06.798Z)
+- **التاريخ:** 2026-09-26 (2026-09-26T13:42:18.227Z)
 - **معرف الكيان المفكوك:** `governance:tools/governance/verify-financial-integrity.ts`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-84E05C`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-4F15EF`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T11:15:56Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T13:42:06Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Align Gate G11/G12 financial integrity verifier with Work Plan 117 emancipated schema
+Purge custody dead code residuals and align financial integrity with WP 117
 
 ## نطاق التعديل المرخص
 تم رفع القفل التشفيري عن الكيان `governance:tools/governance/verify-financial-integrity.ts` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).

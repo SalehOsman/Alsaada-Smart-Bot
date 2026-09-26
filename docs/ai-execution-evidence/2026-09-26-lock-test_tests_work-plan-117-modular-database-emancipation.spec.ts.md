@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tests/work-plan-117-modular-database-emancipation.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T14:12:51.575Z)
 - **معرف الكيان:** `test:tests/work-plan-117-modular-database-emancipation.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tests/work-plan-117-modular-database-emancipation.spec.ts

@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tools/scaffold/tests/flow-v2-scaffold.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T14:12:51.575Z)
 - **معرف الكيان:** `test:tools/scaffold/tests/flow-v2-scaffold.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tools/scaffold/tests/flow-v2-scaffold.spec.ts

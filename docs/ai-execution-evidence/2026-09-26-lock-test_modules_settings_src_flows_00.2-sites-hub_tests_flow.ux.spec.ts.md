@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/settings/src/flows/00.2-sites-hub/tests/flow.ux.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T14:12:51.575Z)
 - **معرف الكيان:** `test:modules/settings/src/flows/00.2-sites-hub/tests/flow.ux.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/settings/src/flows/00.2-sites-hub/tests/flow.ux.spec.ts

@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/google-engine/tests/google-engine.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T14:12:51.575Z)
 - **معرف الكيان:** `test:packages/google-engine/tests/google-engine.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/google-engine/tests/google-engine.spec.ts
