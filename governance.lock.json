@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-26T08:36:35.534Z",
+  "generatedAt": "2026-09-26T08:41:03.835Z",
   "approvalPhrase": "موافق على التعديل او الايقاف او الحذف",
   "protectedPaths": {
     "files": [
@@ -6398,7 +6398,7 @@
       "type": "package",
       "title": "حزمة النواة: @alsaada/telemetry",
       "directory": "packages/telemetry",
-      "lockedAt": "2026-09-26T08:36:37.532Z",
+      "lockedAt": "2026-09-26T08:41:03.835Z",
       "files": [
         {
           "path": "packages/telemetry/CHANGELOG.md",
@@ -6687,7 +6687,7 @@
       "type": "infra",
       "title": "الحوكمة والدستور السيادي: .agents/skills",
       "directory": ".agents/skills",
-      "lockedAt": "2026-09-25T14:37:23.741Z",
+      "lockedAt": "2026-09-26T08:41:20.027Z",
       "files": [
         {
           "path": ".agents/skills/chief-arbitrator/SKILL.md",
@@ -6695,7 +6695,7 @@
         },
         {
           "path": ".agents/skills/jev/SKILL.md",
-          "sha256": "8ed9ac16d8454bd108eabe9637d341e89295cbdab273dfb3371f4cab0d49139d"
+          "sha256": "2bf456ccb795832c607a91360e59d3d47c9cee9e8efeaf183dba445e5767fdcd"
         },
         {
           "path": ".agents/skills/open-code-review/SKILL.md",
@@ -8013,11 +8013,11 @@
       "type": "infra",
       "title": "الحوكمة والدستور السيادي: tools/governance/tests/unified-lock-engine.spec.ts",
       "directory": "tools/governance/tests/unified-lock-engine.spec.ts",
-      "lockedAt": "2026-09-25T23:22:45.800Z",
+      "lockedAt": "2026-09-26T08:41:31.728Z",
       "files": [
         {
           "path": "tools/governance/tests/unified-lock-engine.spec.ts",
-          "sha256": "a987bb6cccc695504867010d10e62947e508b4772d1df9ea4376da86752300a0"
+          "sha256": "fc46463bed0a9d6511c84a9e9d7a45da7a831f988befaff84ade4cbca3a73533"
         }
       ]
     },
@@ -8578,7 +8578,7 @@
       "type": "infra",
       "title": "البنية التحتية والدوكر وقواعد البيانات",
       "directory": "docker",
-      "lockedAt": "2026-09-26T08:36:37.532Z",
+      "lockedAt": "2026-09-26T08:41:03.835Z",
       "files": [
         {
           "path": ".dockerignore",
