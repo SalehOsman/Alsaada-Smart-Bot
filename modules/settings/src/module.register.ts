@@ -35,8 +35,8 @@ export function createSettingsAppModule(
     registerRoutes: (bot: Bot<SettingsModuleContext>, rt: ModuleRuntimeContext<SettingsModuleContext>) => {
       handlers = registerSettingsRoutes(bot, {
         prisma: rt.prisma,
-        redis: rt.redis,
-        screenFlow: rt.screenFlow,
+        redis: (rt.redis as SettingsModuleOptions['redis']) ?? undefined,
+        screenFlow: rt.screenFlow as SettingsModuleOptions['screenFlow'],
         ...options,
       });
       appModule.handlers = handlers;
@@ -47,7 +47,7 @@ export function createSettingsAppModule(
       }
       return false;
     },
-    onLocationInput: async (ctx: SettingsModuleContext, _location: any) => {
+    onLocationInput: async (ctx: SettingsModuleContext, _location) => {
       if (handlers?.handleLocationInput) {
         return handlers.handleLocationInput(ctx);
       }
