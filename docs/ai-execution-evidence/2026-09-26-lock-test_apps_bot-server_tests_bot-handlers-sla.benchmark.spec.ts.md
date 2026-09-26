@@ -1,0 +1,20 @@
+# توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts)
+
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
+- **معرف الكيان:** `test:apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts`
+- **نوع الكيان:** `test`
+- **العنوان:** ملف الاختبار المعتمد: apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts
+- **المسار الأساسي:** `apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts`
+- **عدد الملفات المقفلة:** 1 ملفاً
+- **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
+- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+
+## قائمة البصمات الجنائية (SHA-256)
+| المسار | بصمة الهاش (SHA-256) |
+| :--- | :--- |
+| `apps/bot-server/tests/bot-handlers-sla.benchmark.spec.ts` | `7c4984b99c267cf9ca2c7f81e2a68a5f3f43c5f8ea7f23d8f5b3ae37c7710c50` |
+
+## بوابات التحقق المعتمدة
+- **CRLF/LF Sanitization:** PASS
+- **Tamper Protection:** ACTIVE
+- **Zero Blast Radius:** ISOLATED

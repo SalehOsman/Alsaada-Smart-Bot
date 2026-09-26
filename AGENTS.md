@@ -26,9 +26,10 @@ For detailed domain guidelines, consult the specialized modular rulebooks:
 - **AI Discipline & Pre-Flight:** [`.agents/rules/10-ai-agent-discipline-and-preflight.md`](.agents/rules/10-ai-agent-discipline-and-preflight.md)
 - **Modification Lifecycle Standard:** [`.agents/rules/11-modification-lifecycle-standard.md`](.agents/rules/11-modification-lifecycle-standard.md)
 - **Creation Lifecycle Standard:** [`.agents/rules/12-creation-lifecycle-standard.md`](.agents/rules/12-creation-lifecycle-standard.md)
+- **AI Agent Methodology & Anti-Mirage:** [`.agents/rules/13-ai-agent-methodology-and-anti-mirage-constitution.md`](.agents/rules/13-ai-agent-methodology-and-anti-mirage-constitution.md)
 
 ## Sovereign Stakeholder Proxy & Audit Arsenal
 - **Sovereign Auditor (`/saleh`):** Defined in [`.agents/skills/saleh/SKILL.md`](.agents/skills/saleh/SKILL.md). Equipped exclusively with the private **Triple Guard Arsenal** (`clean-code-guard`, `test-guard`, `docs-guard`) in [`.agents/skills/saleh/arsenal/`](.agents/skills/saleh/arsenal/) for deep forensic auditing (`/boost`, `pnpm audit:saleh:boost`).
-- **Sovereign Skill Graph & Permanent JEV Consultant (WP 96):** Authoritative knowledge graph in [`.agents/knowledge/sovereign-skill-graph.json`](.agents/knowledge/sovereign-skill-graph.json) linking all 11 skills across Rulebooks 01–12 and Quality Gates G1–G23, verified via `pnpm skills:verify` and consulted pre-flight via `pnpm jev:consult --plan <path>`.
+- **Sovereign Skill Graph & Permanent JEV Consultant (WP 96):** Authoritative knowledge graph in [`.agents/knowledge/sovereign-skill-graph.json`](.agents/knowledge/sovereign-skill-graph.json) linking all 11 skills across Rulebooks 01–13 and Quality Gates G1–G23, verified via `pnpm skills:verify` and consulted pre-flight via `pnpm jev:consult --plan <path>`.
 
 Legacy Arabic governance documents are preserved with full cryptographic provenance in [`docs/archive/governance-v1-ar/`](docs/archive/governance-v1-ar/).
