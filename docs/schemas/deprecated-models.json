@@ -1,73 +1,212 @@
 {
-  "version": "1.0.0",
-  "description": "Registry of unused/deprecated Prisma models under Safe Deprecation Policy (WP 112). These models MUST NOT be physically dropped from the database to preserve historical data.",
-  "generatedAt": "2026-09-25T17:46:49.466Z",
-  "totalDeprecated": 13,
+  "version": "2.0.0",
+  "description": "Registry of purged and deprecated Prisma models under Sovereign Modular Database Emancipation (Work Plan 117). Models are archived in docs/schemas/future-modules-draft-schemas/ until their respective modules are built.",
+  "generatedAt": "2026-09-26T13:00:00.000Z",
+  "totalPurged": 30,
   "models": [
     {
-      "model": "SiteAccommodation",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "model": "PayrollRun",
+      "category": "payroll",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/payroll-draft.prisma"
     },
     {
-      "model": "SiteAccommodationAssignment",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "model": "PayrollRecord",
+      "category": "payroll",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/payroll-draft.prisma"
     },
     {
-      "model": "CompanyDocument",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "model": "DutyRoster",
+      "category": "payroll",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/payroll-draft.prisma"
+    },
+    {
+      "model": "SiteTask",
+      "category": "payroll",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/payroll-draft.prisma"
+    },
+    {
+      "model": "CompanyTreasury",
+      "category": "custody",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/custody-finance-draft.prisma"
+    },
+    {
+      "model": "FinancialCustody",
+      "category": "custody",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/custody-finance-draft.prisma"
+    },
+    {
+      "model": "CustodyExpenseItem",
+      "category": "custody",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/custody-finance-draft.prisma"
+    },
+    {
+      "model": "CustodySettlement",
+      "category": "custody",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/custody-finance-draft.prisma"
+    },
+    {
+      "model": "HospitalityExpense",
+      "category": "custody",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/custody-finance-draft.prisma"
+    },
+    {
+      "model": "WorkerExpenseClaim",
+      "category": "custody",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/custody-finance-draft.prisma"
+    },
+    {
+      "model": "Supplier",
+      "category": "procurement",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/procurement-draft.prisma"
+    },
+    {
+      "model": "SupplierInvoice",
+      "category": "procurement",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/procurement-draft.prisma"
     },
     {
       "model": "SupplierInvoiceItem",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "procurement",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/procurement-draft.prisma"
+    },
+    {
+      "model": "SupplierPayment",
+      "category": "procurement",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/procurement-draft.prisma"
+    },
+    {
+      "model": "Equipment",
+      "category": "equipment",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/equipment-fuel-draft.prisma"
+    },
+    {
+      "model": "FuelTank",
+      "category": "equipment",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/equipment-fuel-draft.prisma"
+    },
+    {
+      "model": "FuelDispenseLog",
+      "category": "equipment",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/equipment-fuel-draft.prisma"
     },
     {
       "model": "EquipmentMaintenance",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "equipment",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/equipment-fuel-draft.prisma"
     },
     {
       "model": "SparePartsRequest",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "equipment",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/equipment-fuel-draft.prisma"
+    },
+    {
+      "model": "CanteenItem",
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
+    },
+    {
+      "model": "CanteenItemPriceHistory",
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
     },
     {
       "model": "CampFoodItem",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
+    },
+    {
+      "model": "FoodInboundShipment",
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
     },
     {
       "model": "Recipe",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
+    },
+    {
+      "model": "KitchenMealDispense",
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
     },
     {
       "model": "FoodWasteLog",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
     },
     {
       "model": "MealSurvey",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
     },
     {
       "model": "MarketPriceBenchmark",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "canteen",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/canteen-kitchen-draft.prisma"
     },
     {
       "model": "PhosphateProductionSlip",
-      "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "category": "phosphate",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/phosphate-draft.prisma"
     },
     {
       "model": "PhosphateExtract",
+      "category": "phosphate",
+      "reason": "Unimplemented module. Moved to future draft schema.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/phosphate-draft.prisma"
+    },
+    {
+      "model": "SiteAccommodation",
+      "category": "legacy_deprecated",
       "reason": "Zero application references found across modules, apps, and packages.",
-      "lastDeclaredIn": "packages/database/prisma/schema.prisma"
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/deprecated-legacy-draft.prisma"
+    },
+    {
+      "model": "SiteAccommodationAssignment",
+      "category": "legacy_deprecated",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/deprecated-legacy-draft.prisma"
+    },
+    {
+      "model": "CompanyDocument",
+      "category": "legacy_deprecated",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/deprecated-legacy-draft.prisma"
+    },
+    {
+      "model": "DeadLetterEvent",
+      "category": "legacy_deprecated",
+      "reason": "Zero application references found across modules, apps, and packages.",
+      "archivedIn": "docs/schemas/future-modules-draft-schemas/deprecated-legacy-draft.prisma"
     }
   ]
 }

@@ -422,28 +422,39 @@ export async function getDelegationsManagementData(user?: { role: string; assign
     const delegations = await prisma.workerDelegation.findMany({
       where: whereClause,
       include: {
-        worker: true,
         user: true,
         site: true,
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return delegations.map((d) => ({
-      id: d.id,
-      workerName: d.worker?.name || 'غير معروف',
-      workerNickname: d.worker?.nickname || d.worker?.name?.split(' ')[0] || 'عامل',
-      workerCode: d.worker?.code || '-',
-      userName: d.user?.fullName || 'مستخدم',
-      userTelegramId: d.user?.telegramId?.toString() || '-',
-      userRole: d.user?.role || 'WORKER',
+    const workerIds = [...new Set(delegations.map((d) => d.workerId).filter(Boolean))];
+    const workers = workerIds.length > 0
+      ? await prisma.worker.findMany({
+          where: { id: { in: workerIds } },
+          select: { id: true, code: true, name: true, nickname: true },
+        })
+      : [];
+    const workerMap = new Map(workers.map((w) => [w.id, w]));
+
+    return delegations.map((d) => {
+      const worker = workerMap.get(d.workerId);
+      return {
+        id: d.id,
+        workerName: worker?.name || 'غير معروف',
+        workerNickname: worker?.nickname || worker?.name?.split(' ')[0] || 'عامل',
+        workerCode: worker?.code || '-',
+        userName: d.user?.fullName || 'مستخدم',
+        userTelegramId: d.user?.telegramId?.toString() || '-',
+        userRole: d.user?.role || 'WORKER',
       permissionKey: d.permissionKey,
       siteName: d.site?.name || 'غير محدد',
       status: d.status,
       startsAt: d.startsAt.toISOString().replace('T', ' ').substring(0, 16),
       endsAt: d.endsAt ? d.endsAt.toISOString().replace('T', ' ').substring(0, 16) : null,
       reason: d.reason,
-    }));
+    };
+  });
   } catch (err) {
     console.error('Error fetching delegations management data:', err);
     return [];

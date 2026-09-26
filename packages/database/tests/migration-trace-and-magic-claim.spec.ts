@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma, disconnectDatabase } from '../src/client.js';
 
@@ -59,26 +61,11 @@ describe('Audit Traceability, Hash Ledger & Dashboard Auth Claim Contract', () =
       'financial_ledgers.record_hash',
       'financial_ledgers.previous_hash',
       'financial_ledgers.hash_timestamp',
-      'custody_expense_items.record_hash',
-      'custody_expense_items.previous_hash',
-      'custody_expense_items.hash_timestamp',
-      'custody_settlements.record_hash',
-      'custody_settlements.previous_hash',
-      'custody_settlements.hash_timestamp',
-      'hospitality_expenses.record_hash',
-      'hospitality_expenses.previous_hash',
-      'hospitality_expenses.hash_timestamp',
-      'supplier_payments.record_hash',
-      'supplier_payments.previous_hash',
-      'supplier_payments.hash_timestamp',
-      'worker_expense_claims.record_hash',
-      'worker_expense_claims.previous_hash',
-      'worker_expense_claims.hash_timestamp',
     ];
 
     // Act
     const columns = await prisma.$queryRawUnsafe<ColumnRow[]>(
-      "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('audit_logs','system_error_logs','financial_ledgers','custody_expense_items','custody_settlements','hospitality_expenses','supplier_payments','worker_expense_claims')",
+      "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('audit_logs','system_error_logs','financial_ledgers')",
     );
     const actual = new Set(
       columns.map(({ table_name, column_name }) => [table_name, column_name].join('.')),
@@ -89,6 +76,14 @@ describe('Audit Traceability, Hash Ledger & Dashboard Auth Claim Contract', () =
       expect(actual.has(col)).toBe(true);
     }
     expect(actual.has('financial_ledgers.non_existent_column_sentinel')).toBe(false);
+
+    // Verify purged models per Work Plan 117 are archived in deprecated-models registry
+    const deprecatedRegistry = JSON.parse(readFileSync(resolve(process.cwd(), 'docs/schemas/deprecated-models.json'), 'utf-8'));
+    const purgedModels = ['CustodyExpenseItem', 'CustodySettlement', 'HospitalityExpense', 'SupplierPayment', 'WorkerExpenseClaim'];
+    const registeredModelNames = new Set((deprecatedRegistry.models || []).map((m: any) => m.model));
+    for (const model of purgedModels) {
+      expect(registeredModelNames.has(model)).toBe(true);
+    }
   });
 
   it('matches Prisma nullability and defaults for financial ledger hash columns', async () => {
@@ -128,6 +123,7 @@ describe('Audit Traceability, Hash Ledger & Dashboard Auth Claim Contract', () =
         service: 'admin-dashboard',
         errorReference,
         errorHash: createHash('sha256').update(errorReference).digest('hex'),
+        errorClass: 'TestError',
         errorMessage: 'sanitized test incident',
       },
     });

@@ -1,0 +1,119 @@
+// =============================================================================
+// Draft Prisma Schema for Future Module: Fleet, Equipment & Fuel Management
+// Archived per Work Plan 117 (Sovereign Modular Database Emancipation)
+// When implementing this module, review, update and move to modules/equipment/database/
+// =============================================================================
+
+model Equipment {
+  id                            String    @id @default(uuid())
+  code                          String    @unique // e.g. EQ-01
+  name                          String
+  type                          String // LOADER, EXCAVATOR, DUMP_TRUCK, BULLDOZER, GENERATOR, WATER_TANKER, PICKUP_TRUCK
+  brand                         String?
+  modelYear                     Int?
+  plateNumber                   String?
+  chassisNumber                 String?
+  siteId                        String    // Core Loose ID reference
+  assignedWorkerId              String?   // Workforce Loose ID reference
+  snapshotWorkerName            String?   // Immutable Denormalized Snapshot (WP 117)
+  meterType                     String    @default("HOURS") // HOURS, KILOMETERS
+  currentMeterReading           Decimal   @default(0) @db.Decimal(10, 2)
+  currentFuelLevelPercentage    Decimal?  @db.Decimal(5, 2)
+  technicalStatus               String    @default("OPERATIONAL") // OPERATIONAL, NEEDS_MAINTENANCE, BROKEN_DOWN_STOPPED
+  lastMaintenanceDate           DateTime?
+  nextScheduledMaintenanceMeter Decimal?  @db.Decimal(10, 2)
+  createdAt                     DateTime  @default(now())
+  updatedAt                     DateTime  @updatedAt
+
+  fuelLogs           FuelDispenseLog[]
+  maintenances       EquipmentMaintenance[]
+  sparePartsRequests SparePartsRequest[]
+
+  @@index([siteId, technicalStatus])
+  @@map("equipments")
+}
+
+model FuelTank {
+  id                       String   @id @default(uuid())
+  siteId                   String   // Core Loose ID reference
+  code                     String   @unique // e.g. TNK-01
+  name                     String
+  fuelType                 String   @default("DIESEL_SOLAR") // DIESEL_SOLAR, GASOLINE_80, GASOLINE_92
+  totalCapacityLiters      Decimal  @db.Decimal(10, 2)
+  currentStockLiters       Decimal  @db.Decimal(10, 2)
+  minSafetyThresholdLiters Decimal  @db.Decimal(10, 2)
+  supervisorWorkerId       String?  // Workforce Loose ID reference
+  status                   String   @default("ACTIVE") // ACTIVE, MAINTENANCE, DECOMMISSIONED
+  version                  Int      @default(1) // Optimistic locking
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  dispenseLogs FuelDispenseLog[]
+
+  @@index([siteId])
+  @@map("fuel_tanks")
+}
+
+model FuelDispenseLog {
+  id                     String   @id @default(uuid())
+  dispenseNumber         String   @unique // e.g. #FL-YYYY-XXXX
+  tankId                 String
+  equipmentId            String
+  operatorWorkerId       String   // Workforce Loose ID reference
+  snapshotOperatorName   String?  // Immutable Denormalized Snapshot (WP 117)
+  litersDispensed        Decimal  @db.Decimal(10, 2)
+  meterReadingAtDispense Decimal  @db.Decimal(10, 2)
+  unitCostPerLiter       Decimal  @db.Decimal(8, 2)
+  totalCost              Decimal  @db.Decimal(12, 2)
+  latitude               Decimal? @db.Decimal(10, 7)
+  longitude              Decimal? @db.Decimal(10, 7)
+  dispensedByUserId      BigInt?  // Core Loose ID reference
+  timestamp              DateTime @default(now())
+  createdAt              DateTime @default(now())
+
+  tank      FuelTank  @relation(fields: [tankId], references: [id])
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@index([tankId])
+  @@index([equipmentId])
+  @@map("fuel_dispense_logs")
+}
+
+model EquipmentMaintenance {
+  id                  String   @id @default(uuid())
+  maintenanceNumber   String   @unique // e.g. #MNT-YYYY-XXXX
+  equipmentId         String
+  maintenanceType     String // OIL_AND_FILTER_CHANGE, HYDRAULIC_SYSTEM, TIRES_AND_TRACKS, ENGINE_OVERHAUL, ELECTRICAL_SYSTEM, PREVENTIVE_PERIODIC
+  meterReading        Decimal  @db.Decimal(10, 2)
+  supplierId          String?  // Procurement Loose ID reference
+  totalCost           Decimal  @db.Decimal(12, 2)
+  description         String
+  nextDueMeterReading Decimal? @db.Decimal(10, 2)
+  performedAt         DateTime @default(now())
+  approvedByUserId    BigInt?  // Core Loose ID reference
+  createdAt           DateTime @default(now())
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@index([equipmentId])
+  @@map("equipment_maintenances")
+}
+
+model SparePartsRequest {
+  id            String   @id @default(uuid())
+  requestNumber String   @unique // e.g. #SPR-YYYY-XXX
+  equipmentId   String
+  partName      String
+  quantity      Int      @default(1)
+  urgency       String   @default("ROUTINE") // ROUTINE, URGENT_MACHINE_DOWN
+  estimatedCost Decimal? @db.Decimal(12, 2)
+  status        String   @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED, PURCHASED, INSTALLED_ON_MACHINE, REJECTED
+  invoiceId     String?  // Procurement Loose ID reference
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@index([equipmentId])
+  @@map("spare_parts_requests")
+}

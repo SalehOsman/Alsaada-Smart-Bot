@@ -1,15 +1,15 @@
 # ترخيص فك قفل الحوكمة: (module:settings)
 
-- **التاريخ:** 2026-09-26 (2026-09-26T00:10:58.743Z)
+- **التاريخ:** 2026-09-26 (2026-09-26T12:53:46.348Z)
 - **معرف الكيان المفكوك:** `module:settings`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-57FC1D`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-11BEFB`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T00:10:50Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T12:53:29Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Harmonize settings module types for Docker build parity INC-20260925-DOCKER-BUILD-CONTRACT-HARMONIZATION
+Fix BotPerformanceLog model field mismatch in 00.8-apm-telemetry flow.repository.ts
 
 ## نطاق التعديل المرخص
 تم رفع القفل التشفيري عن الكيان `module:settings` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).

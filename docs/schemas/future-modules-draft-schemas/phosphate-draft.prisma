@@ -1,0 +1,48 @@
+// =============================================================================
+// Draft Prisma Schema for Future Module: Phosphate Extraction & Commercial Slips
+// Archived per Work Plan 117 (Sovereign Modular Database Emancipation)
+// When implementing this module, review, update and move to modules/phosphate/database/
+// =============================================================================
+
+model PhosphateProductionSlip {
+  id               String   @id @default(uuid())
+  slipNumber       String   @unique // e.g. #SLP-YYYY-XXXX
+  siteId           String   // Core Loose ID reference
+  truckPlateNumber String
+  driverName       String
+  transportCompany String?
+  oreGrade         String   @default("GRADE_A_CONCENTRATE") // GRADE_A_CONCENTRATE, GRADE_B, RUN_OF_MINE
+  grossWeightTons  Decimal  @db.Decimal(10, 3)
+  tareWeightTons   Decimal  @db.Decimal(10, 3)
+  netWeightTons    Decimal  @db.Decimal(10, 3)
+  destination      String?
+  slipPhotoUri     String?
+  sha256Checksum   String?
+  loadingTimestamp DateTime @default(now())
+  recordedByUserId BigInt?  // Core Loose ID reference
+  createdAt        DateTime @default(now())
+
+  @@index([siteId, loadingTimestamp])
+  @@map("phosphate_production_slips")
+}
+
+model PhosphateExtract {
+  id                      String    @id @default(uuid())
+  extractNumber           String    @unique // e.g. #EXT-YYYY-XXX
+  projectId               String    // Core Loose ID reference
+  clientEntityName        String
+  periodStartDate         DateTime
+  periodEndDate           DateTime
+  totalTonnageDelivered   Decimal   @db.Decimal(12, 3)
+  contractRatePerTon      Decimal   @db.Decimal(10, 2)
+  grossExtractValue       Decimal   @db.Decimal(14, 2)
+  deductionsAndRetentions Decimal   @default(0) @db.Decimal(12, 2)
+  netPayableAmount        Decimal   @db.Decimal(14, 2)
+  paymentStatus           String    @default("SUBMITTED") // SUBMITTED, UNDER_REVIEW, APPROVED_BY_CLIENT, COLLECTED_FULL
+  collectionDate          DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@index([projectId])
+  @@map("phosphate_extracts")
+}

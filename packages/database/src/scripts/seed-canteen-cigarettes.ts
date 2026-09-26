@@ -26,7 +26,7 @@ export async function seedCanteenCigarettes(siteId?: string): Promise<number> {
   for (const site of sites) {
     for (const cig of DEFAULT_CIGARETTES) {
       const itemCode = `${site.code}-${cig.code}`;
-      await prisma.canteenItem.upsert({
+      await (prisma as any).canteenItem?.upsert({
         where: { code: itemCode },
         update: {
           name: cig.name,

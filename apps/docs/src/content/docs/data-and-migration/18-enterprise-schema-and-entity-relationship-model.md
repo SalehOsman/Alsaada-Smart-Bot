@@ -39,76 +39,83 @@ sidebar:
 
 ---
 
-## 1️⃣.1 معمارية المخطط المعياري متعدد الملفات واكتشاف الموديولات (Work Plan 112: Modular Database Architecture)
+## 1️⃣.1 معمارية التطهير الجذري وعزل قواعد بيانات الموديولات (Work Plan 117: Modular Database Emancipation & Ghost Table Purge)
 
-وفقاً لميثاق خطة العمل السيادية رقم 112، تم تفكيك المخطط الأحادي القديم إلى بنية معيارية متعددة الملفات تعتمد ميزة `prismaSchemaFolder` الأصلية في Prisma 7، مع الاحتفاظ الكامل بالمطابقة 100% مع `F:\HR` ودون أي فقدان للبيانات:
+وفقاً لميثاق خطة العمل السيادية رقم 117، تم الانتقال من المخطط الأحادي القديم إلى **الاستقلال والتحرر المعماري التام لقواعد بيانات الموديولات**، وتفكيك العلاقات المتشابكة، وتطهير كافة الجداول الشبحية غير المنشأة موديولاتها بعد:
 
-1. **المجلد التجميعي الحتمي (`.generated/database/schema/`):**
-   - **`00-core.prisma`:** يحتوي على 46 نموذجاً أساسياً (الهيكل التنظيمي، الخزائن، السجلات التشفيرية، التحكم بالوصول RBAC، الاتصالات والملاحظة).
-   - **`10-workforce.prisma`:** يحتوي على 22 نموذجاً خاصاً بموديول القوى العاملة (`modules/workforce/database/schema.prisma`).
-   - **`20-settings.prisma`:** يحتوي على 6 نماذج خاصة بموديول الإعدادات (`modules/settings/database/schema.prisma`).
-   - **`manifest.json`:** بيان رقمي مشفر يسجل بصمة تجزئة SHA-256 لكل ملف على حدة، بالإضافة إلى الهاش التراكمي الشامل `compositeHash` لضمان عدم حدوث أي انحراف (Zero Schema Drift).
-   - **`schema.prisma`:** ملف تجميعي احتياطي موحد متوافق مع الأدوات الخارجية التي لا تدعم المجلدات المتعددة.
+1. **النواة المشتركة المقيدة (`packages/database/prisma/schema.prisma`):**
+   - تقتصر حصراً على **14 نموذجاً سيادياً** للبنية التحتية متعددة المستأجرين وسجلات التدقيق والأخطاء والقيود المالية المزدوجة العامة (`Tenant`, `User`, `RbacSession`, `AuditLog`, `SystemErrorLog`, `FinancialLedger`... إلخ).
+   - تم سحب كافة جداول الأعمال من النواة المركزية ونقلها حصراً إلى الموديولات المعنية.
 
-2. **عقود الموديولات وقواعد البيانات (`module.contract.json` - V2):**
-   - يعلن كل موديول عن مساهمته في قاعدة البيانات عبر قسم `database`:
-     - `schemaPath`: مسار ملف مخطط النماذج الخاص بالموديول.
-     - `migrationsDir`: مسار ترحيلات الموديول الحتمية.
-     - `models`: مصفوفة بأسماء النماذج المملوكة حصراً للموديول لمنع أي تداخل.
+2. **المعمارية الرباعية الإلزامية لكل موديول أعمال (`modules/<name>/database/`):**
+   - كل موديول نشط يمتلك مجلد بيانات مستقل يضم 4 مكونات إلزامية:
+     - `schema.prisma`: النماذج الحصرية للموديول.
+     - `relations.contract.json`: عقد إعلان التبعيات والارتباطات الرخوة.
+     - `erd.mermaid`: المخطط البصري لعلاقات الموديول.
+     - `migrations/`: مسار ترحيلات SQL الحتمية الخاصة بالموديول.
+   - الموديولات النشطة حالياً:
+     - **`modules/workforce/database/`**: 22 نموذجاً خاصاً بالعمال والوثائق والمخالصات والتقييمات.
+     - **`modules/settings/database/`**: 6 نماذج خاصة بالمواقع (`Site`) والإعدادات ومصفوفات المهام.
 
-3. **الحصانة المالية المطلقة (Financial Model Immunity):**
-   - تظل النماذج المالية الستة الحساسة (`FinancialLedger`, `CustodyExpenseItem`, `CustodySettlement`, `HospitalityExpense`, `WorkerExpenseClaim`, `SupplierPayment`) محمية ومقفلة داخل نواة النظام الأساسية `00-core.prisma`، ويُحظر قطعيًا نقل ملكيتها لأي موديول طرفي.
+3. **التطهير الفيزيائي الكامل للجداول الشبحية (Physical Ghost Table Purge):**
+   - تم حذف **30 نموذجاً وجداولها فيزيائياً** من محرك PostgreSQL عبر هجرة سيادية معتمدة (`20260926120000_modular_database_emancipation_and_ghost_table_purge`).
+   - تم تسجيل النماذج الـ 30 في سجل النماذج المهملة [`docs/schemas/deprecated-models.json`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/schemas/deprecated-models.json).
+   - تم حفظ مسوداتها المرجعية المعزولة في [`docs/schemas/future-modules-draft-schemas/`](https://github.com/SalehOsman/Alsaada-Smart-Bot/tree/main/docs/schemas/future-modules-draft-schemas/) (الرواتب، العهد، الكانتين، المعدات، الفوسفات، التوريدات) لحين إنشاء موديولاتها مستقبلاً.
 
-4. **سياسة الإيقاف الآمن دون حذف مادي (Safe Deprecation Policy):**
-   - تم جرد 13 نموذجاً غير مستخدم في كود العمليات وعزلها في [`docs/schemas/deprecated-models.json`](https://github.com/SalehOsman/Alsaada-Smart-Bot/blob/main/docs/schemas/deprecated-models.json) وفق سياسة الإيقاف المرحلي الآمن دون حذف فيزيائي من قاعدة البيانات منعاً لأي كسر للعلاقات القديمة.
+4. **منهجية التفكيك التام والعلاقات الرخوة المفهرسة (Loose ID References):**
+   - حظر قاطع لأي علاقة `@relation` عابرة للموديولات.
+   - الربط بين الموديولات يتم حصراً عبر **معرفات رخوة مفهرسة (Indexed Loose Scalars)** مثل `workerId String @db.Uuid` أو `targetAdminId String? @db.Uuid` مع وضع `@index` لحفظ سرعة الاستعلام.
+   - استعلامات طبقة العرض ولوحة الإدارة تعتمد البحث المنفصل (Separate Loose ID Lookups) لمنع الاقتران الصلب.
+
+5. **المجلد التجميعي الحتمي وتوليد العميل (`.generated/database/schema/`):**
+   - يضم المخططات المجمعة: `00-core.prisma` (14 نموذج)، `10-workforce.prisma` (22 نموذج)، `20-settings.prisma` (6 نماذج)، بإجمالي 42 نموذجاً فعالاً في النظام.
+   - يتم التجميع وتوليد عميل Prisma Client في ثانية واحدة عبر المحرك السيادي:
+     ```bash
+     pnpm db:reconcile
+     ```
+   - يحرس التكافؤ التام صمام بوابة الجودة G20:
+     ```bash
+     pnpm db:parity:verify
+     ```
 
 ---
 
-## 2️⃣ مخطط الكيانات والعلاقات العام (Enterprise Entity-Relationship Diagram)
+## 2️⃣ مخطط الكيانات والعلاقات العام الفعلي (Enterprise Entity-Relationship Diagram)
 
 ```mermaid
 erDiagram
-    TENANT ||--o{ COMPANY_PROFILE : owns
-    TENANT ||--o{ PROJECT : executes
-    PROJECT ||--o{ SITE : contains
-    SITE ||--o{ ACCOMMODATION : houses
-    SITE ||--o{ EQUIPMENT : deploys
-    SITE ||--o{ FUEL_TANK : maintains
-    SITE ||--o{ FINANCIAL_CUSTODY : allocates
+    subgraph CoreDomain["Shared Kernel (packages/database)"]
+        TENANT ||--o{ COMPANY_PROFILE : owns
+        TENANT ||--o{ USER : authorizes
+        USER ||--o{ AUDIT_LOG : audits
+        USER ||--o{ RBAC_SESSION : maintains
+        TENANT ||--o{ FINANCIAL_LEDGER : records
+        FINANCIAL_LEDGER ||--o{ FINANCIAL_LEDGER : chains_hashes
+    end
 
-    DEPARTMENT ||--o{ JOB_TITLE : classifies
-    JOB_TITLE ||--o{ WORKER : designates
-    SITE ||--o{ WORKER : assigns
-    
-    WORKER ||--o{ SALARY_HISTORY : tracks
-    WORKER ||--o{ CUSTOM_ALLOWANCE : receives
-    WORKER ||--o{ PPE_ASSET : holds
-    WORKER ||--o{ LEAVE : logs
-    WORKER ||--o{ FINANCIAL_LEDGER : balances
-    WORKER ||--o{ PAYROLL_RECORD : earns
-    WORKER ||--o{ WORKER_CLEARANCE : terminates
-    WORKER ||--o{ WORKER_BALANCE_SNAPSHOT : materializes
+    subgraph SettingsDomain["Settings Module (modules/settings)"]
+        SITE ||--o{ ACCOMMODATION : houses
+        APP_SETTINGS
+        TASK_SHIFT_LINK
+    end
 
-    FINANCIAL_CUSTODY ||--o{ CUSTODY_EXPENSE_ITEM : details
-    FINANCIAL_CUSTODY ||--o{ FINANCIAL_LEDGER : funds_and_clears
+    subgraph WorkforceDomain["Workforce Module (modules/workforce)"]
+        DEPARTMENT ||--o{ JOB_TITLE : classifies
+        JOB_TITLE ||--o{ WORKER : designates
+        WORKER ||--o{ SALARY_HISTORY : tracks
+        WORKER ||--o{ CUSTOM_ALLOWANCE : receives
+        WORKER ||--o{ PPE_ASSET : holds
+        WORKER ||--o{ LEAVE : logs
+        WORKER ||--o{ WORKER_CLEARANCE : terminates
+        WORKER ||--o{ WORKER_BALANCE_SNAPSHOT : materializes
+        CONTRACTOR ||--o{ WORKER : supplies
+    end
 
-    SUPPLIER ||--o{ SUPPLIER_INVOICE : bills
-    SUPPLIER_INVOICE ||--o{ SUPPLIER_INVOICE_ITEM : items
-    SUPPLIER ||--o{ SUPPLIER_PAYMENT : settles
-    SUPPLIER ||--o{ FINANCIAL_LEDGER : credits
-
-    EQUIPMENT ||--o{ FUEL_DISPENSE : refuels
-    FUEL_TANK ||--o{ FUEL_DISPENSE : dispenses
-    EQUIPMENT ||--o{ EQUIPMENT_MAINTENANCE : repairs
-    EQUIPMENT ||--o{ SPARE_PARTS_REQUEST : requests
-
-    CANTEEN_ITEM ||--o{ FINANCIAL_LEDGER : clears_in_kind
-    CAMP_FOOD_ITEM ||--o{ KITCHEN_DISPENSE : consumes
-    RECIPE ||--o{ KITCHEN_DISPENSE : portions
-
-    PAYROLL_RUN ||--o{ PAYROLL_RECORD : compiles
-    FINANCIAL_LEDGER ||--o{ FINANCIAL_LEDGER : chains_hashes
-    NOTIFICATION_QUEUE ||--o{ USER : delivers
+    %% Loose Cross-Module References (Indexed Scalars, Zero Physical Foreign Keys)
+    WORKER }o..o{ SITE : loose_indexed_siteId
+    WORKER }o..o{ USER : loose_indexed_targetAdminId
+    FINANCIAL_LEDGER }o..o{ WORKER : loose_indexed_workerId
+    FINANCIAL_LEDGER }o..o{ SITE : loose_indexed_siteId
 ```
 
 ---

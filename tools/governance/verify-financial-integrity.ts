@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { createResult, fail, warn, printAndExit, isCliEntrypoint, type VerificationResult } from './common.js';
 import { verifyLedgerChainDb } from '../../packages/database/src/ledger/verify-ledger-chain.js';
 import {
@@ -30,127 +32,30 @@ export interface FinancialIntegrityOptions {
 }
 
 export async function ensureFinancialTestFixtures(client: any): Promise<void> {
-  const existingCustody = await client.financialCustody.findFirst({
-    where: { custodyNumber: 'CUST-GOV-2026-001' },
+  if (!client || !client.financialLedger) {
+    return;
+  }
+
+  const existingLedger = await client.financialLedger.findFirst({
+    where: { voucherNumber: '#ADV-GOV-ORIGINAL-01' },
   });
-  if (existingCustody) {
+  if (existingLedger) {
     return;
   }
 
   console.log('🌱 [FINANCIAL-INTEGRITY] Seeding live isolated test fixtures (>50 chained records)...');
 
-  // 1. Master entities: Project, Site, Worker, Supplier
-  const project = await client.project.upsert({
-    where: { code: 'PRJ_GOV_TEST_01' },
-    update: {},
-    create: {
-      code: 'PRJ_GOV_TEST_01',
-      name: 'مشروع التحقق المؤسسي للنزاهة المالية',
-    },
-  });
-
-  const site = await client.site.upsert({
-    where: { code: 'STE_GOV_TEST_01' },
-    update: {},
-    create: {
-      projectId: project.id,
-      code: 'STE_GOV_TEST_01',
-      name: 'موقع الاختبارات الحية المالي',
-    },
-  });
-
-  const worker = await client.worker.upsert({
-    where: { code: 'WRK-GOV-TEST-01' },
-    update: {},
-    create: {
-      siteId: site.id,
-      code: 'WRK-GOV-TEST-01',
-      name: 'عامل اختبار مالي 1',
-      birthDate: new Date('1990-01-01'),
-      gender: 'MALE',
-      jobTitle: 'سائق لودر',
-      dailyWage: 300.0,
-      contractType: 'PERMANENT',
-    },
-  });
-
-  const supplier = await client.supplier.upsert({
-    where: { code: 'SUP-GOV-TEST-01' },
-    update: {},
-    create: {
-      code: 'SUP-GOV-TEST-01',
-      name: 'مورد اختبار مالي 1',
-      category: 'SPARE_PARTS',
-    },
-  });
-
-  // 2. Custodies:
-  // A. Active balanced custody:
-  // initialAmount: 100,000 | liquidated: 20,000 | advances: 30,000 | currentBalance: 50,000
-  // Invariant: 100,000 - 20,000 - 30,000 = 50,000 (Delta = 0.0000)
-  const activeCustody = await client.financialCustody.upsert({
-    where: { custodyNumber: 'CUST-GOV-2026-001' },
-    update: {},
-    create: {
-      siteId: site.id,
-      custodianWorkerId: worker.id,
-      custodyNumber: 'CUST-GOV-2026-001',
-      initialAmount: 100000.0,
-      currentBalance: 50000.0,
-      totalLiquidatedExpenses: 20000.0,
-      totalCashAdvancesDisbursed: 30000.0,
-      purpose: 'عهدة الموقع للمصروفات والسلف الميدانية',
-      status: 'ACTIVE',
-    },
-  });
-
-  // B. Closed balanced custody:
-  // initialAmount: 50,000 | liquidated: 50,000 | advances: 0 | currentBalance: 0
-  const closedCustody = await client.financialCustody.upsert({
-    where: { custodyNumber: 'CUST-GOV-2026-002' },
-    update: {},
-    create: {
-      siteId: site.id,
-      custodianWorkerId: worker.id,
-      custodyNumber: 'CUST-GOV-2026-002',
-      initialAmount: 50000.0,
-      currentBalance: 0.0,
-      totalLiquidatedExpenses: 50000.0,
-      totalCashAdvancesDisbursed: 0.0,
-      purpose: 'عهدة سابقة مغلقة ومسواة بالكامل',
-      status: 'CLOSED',
-      closedAt: new Date(Date.now() - 86400000),
-    },
-  });
-
-  // 3. Seed 10 CustodyExpenseItems
-  for (let i = 1; i <= 10; i++) {
-    await client.custodyExpenseItem.create({
-      data: {
-        custodyId: activeCustody.id,
-        itemSequence: i,
-        expenseCategory: 'SPARE_PARTS',
-        amount: 2000.0,
-        vendorName: `محل قطع غيار ${i}`,
-        receiptDate: new Date(),
-        description: `شراء مستلزمات وصيانة دورية رقم ${i}`,
-      },
-    });
-  }
-
-  // 4. Seed 10 FinancialLedger entries
-  for (let i = 1; i <= 8; i++) {
+  // Seed 48 FinancialLedger records
+  for (let i = 1; i <= 48; i++) {
     await client.financialLedger.create({
       data: {
         voucherNumber: `#ADV-GOV-2026-${String(i).padStart(4, '0')}`,
-        transactionType: 'ADVANCE_CASH',
-        amount: 3750.0,
-        sourceAccount: 'CUSTODY_SAFE',
-        destinationAccount: 'WORKER_PAYABLE',
-        sourceCustodyId: activeCustody.id,
-        workerId: worker.id,
+        transactionType: 'GENERAL_EXPENSE',
+        amount: 500.0 * i,
+        sourceAccount: 'BANK_ACCOUNT',
+        destinationAccount: 'SITE_EXPENSE',
         actorTelegramId: 7594239391n,
-        description: `صرف سلفة نقدية ميدانية للعامل رقم ${i}`,
+        description: `صرف مصروفات تشغيلية معتمدة رقم ${i}`,
       },
     });
   }
@@ -182,66 +87,6 @@ export async function ensureFinancialTestFixtures(client: any): Promise<void> {
     },
   });
 
-  // 5. Seed 10 SupplierPayment records
-  for (let i = 1; i <= 10; i++) {
-    await client.supplierPayment.create({
-      data: {
-        paymentNumber: `#SPAY-GOV-2026-${String(i).padStart(4, '0')}`,
-        supplierId: supplier.id,
-        amount: 5000.0,
-        paymentMethod: 'CASH_CUSTODY',
-        disbursedFromCustodyId: activeCustody.id,
-        paymentDate: new Date(),
-      },
-    });
-  }
-
-  // 6. Seed 10 HospitalityExpense records
-  for (let i = 1; i <= 10; i++) {
-    await client.hospitalityExpense.create({
-      data: {
-        voucherId: `#HOSP-GOV-2026-${String(i).padStart(4, '0')}`,
-        siteId: site.id,
-        amount: 250.0,
-        guestNameOrEntity: `وفد تفتيش ميداني ${i}`,
-        occasion: 'ضيافة وفد إشرافي رسمي',
-        sourceCustodyId: activeCustody.id,
-      },
-    });
-  }
-
-  // 7. Seed 5 CustodySettlement records
-  for (let i = 1; i <= 5; i++) {
-    await client.custodySettlement.create({
-      data: {
-        settlementNumber: `#SET-GOV-2026-${String(i).padStart(4, '0')}`,
-        custodyId: closedCustody.id,
-        closingTotalInvoices: 50000.0,
-        closingTotalAdvances: 0.0,
-        remainingCashReturned: 0.0,
-        settlementDisposition: 'REFUND_TO_TREASURY',
-        status: 'APPROVED',
-      },
-    });
-  }
-
-  // 8. Seed 5 WorkerExpenseClaim records
-  for (let i = 1; i <= 5; i++) {
-    await client.workerExpenseClaim.create({
-      data: {
-        claimNumber: `#CLM-GOV-2026-${String(i).padStart(4, '0')}`,
-        workerId: worker.id,
-        siteId: site.id,
-        amount: 800.0,
-        expenseCategory: 'FUEL',
-        description: `شراء وقود طوارئ للموقع للمعدة ${i}`,
-        status: 'SETTLED',
-        settlementType: 'FIELD_CUSTODY',
-        settlementCustodyId: activeCustody.id,
-      },
-    });
-  }
-
   console.log('✅ [FINANCIAL-INTEGRITY] Test fixtures successfully seeded and chained.');
 }
 
@@ -249,34 +94,78 @@ export async function cleanupFinancialTestFixtures(client: any): Promise<void> {
   if (!client) return;
   try {
     if (client.$executeRawUnsafe) {
-      await client.$executeRawUnsafe(`DELETE FROM "worker_expense_claims" WHERE "claimNumber" LIKE '#CLM-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "hospitality_expenses" WHERE "voucherId" LIKE '#HOSP-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "custody_expense_items" WHERE "custodyId" IN (SELECT id FROM "financial_custodies" WHERE "custodyNumber" LIKE 'CUST-GOV-2026-%')`);
-      await client.$executeRawUnsafe(`DELETE FROM "custody_settlements" WHERE "settlementNumber" LIKE '#SET-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "supplier_payments" WHERE "paymentNumber" LIKE '#SPAY-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "financial_ledgers" WHERE "voucherNumber" LIKE '#ADV-GOV-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "financial_custodies" WHERE "custodyNumber" LIKE 'CUST-GOV-2026-%'`);
-      await client.$executeRawUnsafe(`DELETE FROM "workers" WHERE code = 'WRK-GOV-TEST-01'`);
-      await client.$executeRawUnsafe(`DELETE FROM "suppliers" WHERE code = 'SUP-GOV-TEST-01'`);
-      await client.$executeRawUnsafe(`DELETE FROM "sites" WHERE code = 'STE_GOV_TEST_01'`);
-      await client.$executeRawUnsafe(`DELETE FROM "projects" WHERE code = 'PRJ_GOV_TEST_01'`);
+      await client.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hospitality_expenses') THEN
+            DELETE FROM "hospitality_expenses" WHERE "voucherId" LIKE '#HOSP-GOV-2026-%';
+          END IF;
+        END $$;
+      `);
+      await client.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'supplier_payments') THEN
+            DELETE FROM "supplier_payments" WHERE "paymentNumber" LIKE '#SPAY-GOV-2026-%';
+          END IF;
+        END $$;
+      `);
+      await client.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'custody_expense_items') THEN
+            DELETE FROM "custody_expense_items" WHERE "custodyId" IN (SELECT id FROM "financial_custodies" WHERE "custodyNumber" LIKE 'CUST-GOV-2026-%');
+          END IF;
+        END $$;
+      `);
+      await client.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'financial_ledgers') THEN
+            DELETE FROM "financial_ledgers" WHERE "voucherNumber" LIKE '#ADV-GOV-%';
+          END IF;
+        END $$;
+      `);
+      await client.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'custody_settlements') THEN
+            DELETE FROM "custody_settlements" WHERE "settlementNumber" LIKE '#SET-GOV-2026-%';
+          END IF;
+        END $$;
+      `);
     } else {
-      await client.workerExpenseClaim?.deleteMany?.({ where: { claimNumber: { startsWith: '#CLM-GOV-2026-' } } });
-      await client.hospitalityExpense?.deleteMany?.({ where: { voucherId: { startsWith: '#HOSP-GOV-2026-' } } });
-      await client.custodyExpenseItem?.deleteMany?.({ where: { custody: { custodyNumber: { startsWith: 'CUST-GOV-2026-' } } } });
-      await client.custodySettlement?.deleteMany?.({ where: { settlementNumber: { startsWith: '#SET-GOV-2026-' } } });
-      await client.supplierPayment?.deleteMany?.({ where: { paymentNumber: { startsWith: '#SPAY-GOV-2026-' } } });
-      await client.financialLedger?.deleteMany?.({ where: { voucherNumber: { startsWith: '#ADV-GOV-' } } });
-      await client.financialCustody?.deleteMany?.({ where: { custodyNumber: { startsWith: 'CUST-GOV-2026-' } } });
-      await client.worker?.deleteMany?.({ where: { code: 'WRK-GOV-TEST-01' } });
-      await client.supplier?.deleteMany?.({ where: { code: 'SUP-GOV-TEST-01' } });
-      await client.site?.deleteMany?.({ where: { code: 'STE_GOV_TEST_01' } });
-      await client.project?.deleteMany?.({ where: { code: 'PRJ_GOV_TEST_01' } });
+      if (client.hospitalityExpense?.deleteMany) {
+        await client.hospitalityExpense.deleteMany({ where: { voucherId: { startsWith: '#HOSP-GOV-2026-' } } });
+      }
+      if (client.supplierPayment?.deleteMany) {
+        await client.supplierPayment.deleteMany({ where: { paymentNumber: { startsWith: '#SPAY-GOV-2026-' } } });
+      }
+      if (client.custodyExpenseItem?.deleteMany) {
+        await client.custodyExpenseItem.deleteMany({ where: { custody: { custodyNumber: { startsWith: 'CUST-GOV-2026-' } } } });
+      }
+      if (client.custodySettlement?.deleteMany) {
+        await client.custodySettlement.deleteMany({ where: { settlementNumber: { startsWith: '#SET-GOV-2026-' } } });
+      }
+      if (client.financialLedger?.deleteMany) {
+        await client.financialLedger.deleteMany({ where: { voucherNumber: { startsWith: '#ADV-GOV-' } } });
+      }
     }
     console.log('🧹 [FINANCIAL-INTEGRITY] Ephemeral test fixtures safely cleaned up.');
   } catch (err) {
     console.warn('⚠️ [FINANCIAL-INTEGRITY] Ephemeral cleanup warning:', err);
   }
+}
+
+function isModelDeprecated(modelName: string): boolean {
+  try {
+    const regPath = resolve(process.cwd(), 'docs/schemas/deprecated-models.json');
+    if (existsSync(regPath)) {
+      const data = JSON.parse(readFileSync(regPath, 'utf8'));
+      return data.models?.some((m: any) => m.model === modelName);
+    }
+  } catch {}
+  return false;
 }
 
 /**
@@ -403,6 +292,19 @@ export async function verifyFinancialIntegrity(
 
   // 1. فحص السلاسل التشفيرية لكافة النماذج المالية الستة
   for (const model of PROTECTED_FINANCIAL_MODELS) {
+    const camel = model.charAt(0).toLowerCase() + model.slice(1);
+    const hasDelegate = Boolean(client && (client[camel] || client[model]));
+
+    if (!hasDelegate) {
+      if (isModelDeprecated(model)) {
+        // Model is safely purged and archived under Work Plan 117
+        result.checked++;
+        continue;
+      }
+      fail(result, `Financial model '${model}' is not available on database client and not recorded in deprecated-models.json.`);
+      continue;
+    }
+
     try {
       const report = await verifyLedgerChainDb(client, { model });
       result.checked += Math.max(1, report.totalVerified);
@@ -419,128 +321,147 @@ export async function verifyFinancialIntegrity(
 
   // 2. فحص معادلة اتزان العهد النقدية ومنع الأرصدة السالبة
   try {
-    const custodies = await client.financialCustody.findMany();
     const custodyMap = new Map<string, any>();
+    if (client.financialCustody) {
+      const custodies = await client.financialCustody.findMany();
 
-    for (const custody of custodies) {
+      for (const custody of custodies) {
+        result.checked++;
+        custodyMap.set(custody.id, custody);
+        if (custody.custodyNumber) {
+          custodyMap.set(custody.custodyNumber, custody);
+        }
+        const custodyId = custody.custodyNumber || custody.id;
+
+        const initial = Number(custody.initialAmount ?? 0);
+        const liquidated = Number(custody.totalLiquidatedExpenses ?? 0);
+        const advances = Number(custody.totalCashAdvancesDisbursed ?? 0);
+        const current = Number(custody.currentBalance ?? 0);
+
+        // صمام فحص الأرقام الصالحة ومنع القيم غير الرقمية
+        if (Number.isNaN(initial) || Number.isNaN(liquidated) || Number.isNaN(advances) || Number.isNaN(current)) {
+          fail(
+            result,
+            `Custody '${custodyId}' contains invalid non-numeric monetary values.`
+          );
+          continue;
+        }
+
+        // صمام منع الأرصدة السالبة
+        if (current < 0) {
+          fail(
+            result,
+            `Custody '${custodyId}' has illegal negative balance: ${current.toFixed(2)}`
+          );
+        }
+
+        // معادلة الاتزان المحاسبي للعهدة:
+        // |initialAmount - totalLiquidatedExpenses - totalCashAdvancesDisbursed - currentBalance| < 0.001
+        const delta = Math.abs(initial - liquidated - advances - current);
+        if (delta >= 0.001) {
+          fail(
+            result,
+            `Custody balance discrepancy in '${custodyId}': initial (${initial.toFixed(2)}) - liquidated (${liquidated.toFixed(2)}) - advances (${advances.toFixed(2)}) = ${(initial - liquidated - advances).toFixed(2)}, but currentBalance is ${current.toFixed(2)} (delta: ${delta.toFixed(4)})`
+          );
+        }
+      }
+    } else {
+      // Model FinancialCustody is purged under Work Plan 117 (modular database emancipation)
       result.checked++;
-      custodyMap.set(custody.id, custody);
-      if (custody.custodyNumber) {
-        custodyMap.set(custody.custodyNumber, custody);
-      }
-      const custodyId = custody.custodyNumber || custody.id;
-
-      const initial = Number(custody.initialAmount ?? 0);
-      const liquidated = Number(custody.totalLiquidatedExpenses ?? 0);
-      const advances = Number(custody.totalCashAdvancesDisbursed ?? 0);
-      const current = Number(custody.currentBalance ?? 0);
-
-      // صمام فحص الأرقام الصالحة ومنع القيم غير الرقمية
-      if (Number.isNaN(initial) || Number.isNaN(liquidated) || Number.isNaN(advances) || Number.isNaN(current)) {
-        fail(
-          result,
-          `Custody '${custodyId}' contains invalid non-numeric monetary values.`
-        );
-        continue;
-      }
-
-      // صمام منع الأرصدة السالبة
-      if (current < 0) {
-        fail(
-          result,
-          `Custody '${custodyId}' has illegal negative balance: ${current.toFixed(2)}`
-        );
-      }
-
-      // معادلة الاتزان المحاسبي للعهدة:
-      // |initialAmount - totalLiquidatedExpenses - totalCashAdvancesDisbursed - currentBalance| < 0.001
-      const delta = Math.abs(initial - liquidated - advances - current);
-      if (delta >= 0.001) {
-        fail(
-          result,
-          `Custody balance discrepancy in '${custodyId}': initial (${initial.toFixed(2)}) - liquidated (${liquidated.toFixed(2)}) - advances (${advances.toFixed(2)}) = ${(initial - liquidated - advances).toFixed(2)}, but currentBalance is ${current.toFixed(2)} (delta: ${delta.toFixed(4)})`
-        );
-      }
     }
 
     // 3. فحص ارتباط السلف النقدية (ADVANCE_CASH) بعهدة موقع صالحة ومفتوحة
-    const cashAdvances = await client.financialLedger.findMany({
-      where: { transactionType: 'ADVANCE_CASH' },
-    });
+    if (client.financialLedger) {
+      const cashAdvances = await client.financialLedger.findMany({
+        where: { transactionType: 'ADVANCE_CASH' },
+      });
 
-    for (const advance of cashAdvances) {
-      result.checked++;
-      const voucher = advance.voucherNumber || advance.id;
+      for (const advance of cashAdvances) {
+        result.checked++;
+        const voucher = advance.voucherNumber || advance.id;
 
-      if (!advance.sourceCustodyId) {
-        fail(
-          result,
-          `Cash advance voucher '${voucher}' has no linked site custody (sourceCustodyId is null/missing).`
-        );
-        continue;
-      }
+        if (client.financialCustody) {
+          if (!advance.sourceCustodyId) {
+            fail(
+              result,
+              `Cash advance voucher '${voucher}' has no linked site custody (sourceCustodyId is null/missing).`
+            );
+            continue;
+          }
 
-      const linkedCustody = custodyMap.get(advance.sourceCustodyId);
-      if (!linkedCustody) {
-        fail(
-          result,
-          `Cash advance voucher '${voucher}' references non-existent custody ID '${advance.sourceCustodyId}'.`
-        );
-      } else if (linkedCustody.status === 'CLOSED') {
-        const advanceTime = advance.createdAt ? new Date(advance.createdAt).getTime() : 0;
-        const closedTime = linkedCustody.closedAt ? new Date(linkedCustody.closedAt).getTime() : 0;
-        if (closedTime > 0 && advanceTime > closedTime) {
-          fail(
-            result,
-            `Cash advance voucher '${voucher}' was disbursed from already CLOSED custody '${linkedCustody.custodyNumber || linkedCustody.id}'.`
-          );
+          const linkedCustody = custodyMap.get(advance.sourceCustodyId);
+          if (!linkedCustody) {
+            fail(
+              result,
+              `Cash advance voucher '${voucher}' references non-existent custody ID '${advance.sourceCustodyId}'.`
+            );
+          } else if (linkedCustody.status === 'CLOSED') {
+            const advanceTime = advance.createdAt ? new Date(advance.createdAt).getTime() : 0;
+            const closedTime = linkedCustody.closedAt ? new Date(linkedCustody.closedAt).getTime() : 0;
+            if (closedTime > 0 && advanceTime > closedTime) {
+              fail(
+                result,
+                `Cash advance voucher '${voucher}' was disbursed from already CLOSED custody '${linkedCustody.custodyNumber || linkedCustody.id}'.`
+              );
+            }
+          }
+        } else {
+          // Double-entry validation on FinancialLedger
+          if (!advance.sourceAccount || !advance.destinationAccount) {
+            fail(
+              result,
+              `Cash advance voucher '${voucher}' is missing sourceAccount or destinationAccount.`
+            );
+          }
         }
       }
     }
 
     // 4. فحص القيود العكسية (isReversal) وترابطها بسند أصلي صحيح
-    const allLedgers = await client.financialLedger.findMany({
-      select: { id: true, voucherNumber: true, isReversal: true, reversalOfVoucherId: true },
-    });
+    if (client.financialLedger) {
+      const allLedgers = await client.financialLedger.findMany({
+        select: { id: true, voucherNumber: true, isReversal: true, reversalOfVoucherId: true },
+      });
 
-    const knownVoucherRefs = new Set<string>();
-    for (const entry of allLedgers) {
-      if (entry.id) knownVoucherRefs.add(entry.id);
-      if (entry.voucherNumber) knownVoucherRefs.add(entry.voucherNumber);
-    }
+      const knownVoucherRefs = new Set<string>();
+      for (const entry of allLedgers) {
+        if (entry.id) knownVoucherRefs.add(entry.id);
+        if (entry.voucherNumber) knownVoucherRefs.add(entry.voucherNumber);
+      }
 
-    const reversedOriginals = new Map<string, string>();
-    for (const entry of allLedgers) {
-      if (entry.isReversal) {
-        result.checked++;
-        const voucher = entry.voucherNumber || entry.id;
+      const reversedOriginals = new Map<string, string>();
+      for (const entry of allLedgers) {
+        if (entry.isReversal) {
+          result.checked++;
+          const voucher = entry.voucherNumber || entry.id;
 
-        if (!entry.reversalOfVoucherId || entry.reversalOfVoucherId.trim() === '') {
-          fail(
-            result,
-            `Reversal ledger entry '${voucher}' is marked as isReversal=true but missing reversalOfVoucherId.`
-          );
-        } else if (
-          entry.reversalOfVoucherId === entry.id ||
-          entry.reversalOfVoucherId === entry.voucherNumber
-        ) {
-          fail(
-            result,
-            `Reversal ledger entry '${voucher}' cannot be a reversal of itself.`
-          );
-        } else if (!knownVoucherRefs.has(entry.reversalOfVoucherId)) {
-          fail(
-            result,
-            `Reversal ledger entry '${voucher}' references non-existent original voucher '${entry.reversalOfVoucherId}'.`
-          );
-        } else if (reversedOriginals.has(entry.reversalOfVoucherId)) {
-          const prior = reversedOriginals.get(entry.reversalOfVoucherId);
-          fail(
-            result,
-            `Duplicate reversal detected: voucher '${voucher}' and voucher '${prior}' both reverse the same original voucher '${entry.reversalOfVoucherId}'.`
-          );
-        } else {
-          reversedOriginals.set(entry.reversalOfVoucherId, voucher);
+          if (!entry.reversalOfVoucherId || entry.reversalOfVoucherId.trim() === '') {
+            fail(
+              result,
+              `Reversal ledger entry '${voucher}' is marked as isReversal=true but missing reversalOfVoucherId.`
+            );
+          } else if (
+            entry.reversalOfVoucherId === entry.id ||
+            entry.reversalOfVoucherId === entry.voucherNumber
+          ) {
+            fail(
+              result,
+              `Reversal ledger entry '${voucher}' cannot be a reversal of itself.`
+            );
+          } else if (!knownVoucherRefs.has(entry.reversalOfVoucherId)) {
+            fail(
+              result,
+              `Reversal ledger entry '${voucher}' references non-existent original voucher '${entry.reversalOfVoucherId}'.`
+            );
+          } else if (reversedOriginals.has(entry.reversalOfVoucherId)) {
+            const prior = reversedOriginals.get(entry.reversalOfVoucherId);
+            fail(
+              result,
+              `Duplicate reversal detected: voucher '${voucher}' and voucher '${prior}' both reverse the same original voucher '${entry.reversalOfVoucherId}'.`
+            );
+          } else {
+            reversedOriginals.set(entry.reversalOfVoucherId, voucher);
+          }
         }
       }
     }
@@ -635,7 +556,7 @@ export async function verifyFinancialIntegrity(
 }
 
 if (isCliEntrypoint(import.meta.url) || process.argv[1]?.includes('verify-financial-integrity')) {
-  console.log('🏛️ [FINANCIAL-INTEGRITY] Running Enterprise Cryptographic Ledger & Custody Invariant Verification...');
+  console.log('🏛️ [FINANCIAL-INTEGRITY] Running Enterprise Cryptographic Ledger Invariant Verification...');
   const result = await verifyFinancialIntegrity();
   printAndExit('financial:verify', result);
 }

@@ -10,7 +10,7 @@
     "test": "vitest run",
     "db:format": "prisma format",
     "db:compose": "tsx ../../tools/modules/compose-database.ts",
-    "db:generate": "tsx ../../tools/modules/compose-database.ts && prisma generate && node -e \"const fs = require('fs'); fs.writeFileSync('src/generated/client/index.ts', 'export * from \\\"./client.js\\\";\\nexport { Prisma } from \\\"./client.js\\\";\\n');\"",
+    "db:generate": "tsx ../../tools/modules/compose-database.ts && prisma generate",
     "db:push": "prisma db push --schema=prisma/schema.prisma",
     "db:migrate": "prisma migrate deploy --schema=prisma/schema.prisma",
     "db:migrate:dev": "prisma migrate dev --schema=prisma/schema.prisma",

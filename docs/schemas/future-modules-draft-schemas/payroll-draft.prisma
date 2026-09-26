@@ -1,0 +1,107 @@
+// =============================================================================
+// Draft Prisma Schema for Future Module: Payroll & Duty Scheduling
+// Archived per Work Plan 117 (Sovereign Modular Database Emancipation)
+// When implementing this module, review, update and move to modules/payroll/database/
+// =============================================================================
+
+model DutyRoster {
+  id               String   @id @default(uuid())
+  dutyDate         DateTime
+  siteId           String   // Core Loose ID reference
+  workerId         String   // Workforce Loose ID reference
+  equipmentId      String?  // Equipment Loose ID reference
+  shiftType        String   @default("DAY_SHIFT") // DAY_SHIFT, NIGHT_SHIFT
+  hoursWorked      Decimal  @default(10) @db.Decimal(5, 2)
+  status           String   @default("PRESENT") // PRESENT, ABSENT_UNEXCUSED, REST_DAY, ON_DUTY_MISSION
+  latitude         Decimal? @db.Decimal(10, 7)
+  longitude        Decimal? @db.Decimal(10, 7)
+  recordedByUserId BigInt?
+  createdAt        DateTime @default(now())
+
+  @@unique([dutyDate, workerId])
+  @@index([siteId, dutyDate])
+  @@map("duty_rosters")
+}
+
+model SiteTask {
+  id                 String    @id @default(uuid())
+  taskNumber         String    @unique // e.g. #TSK-YYYY-XXX
+  siteId             String    // Core Loose ID reference
+  title              String
+  description        String?
+  assignedToWorkerId String?   // Workforce Loose ID reference
+  priority           String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT_SAFETY
+  status             String    @default("OPEN") // OPEN, IN_PROGRESS, COMPLETED, CANCELLED
+  dueDate            DateTime?
+  completedAt        DateTime?
+  attachmentUri      String?
+  sha256Checksum     String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([siteId, status])
+  @@map("site_tasks")
+}
+
+model PayrollRun {
+  id                      String    @id @default(uuid())
+  runNumber               String    @unique // e.g. #PAYROLL-YYYY-MM
+  year                    Int
+  month                   Int
+  siteId                  String?   // Core Loose ID reference
+  totalContractedPayroll  Decimal   @default(0) @db.Decimal(14, 2)
+  totalGrossEarnings      Decimal   @default(0) @db.Decimal(14, 2)
+  totalDeductions         Decimal   @default(0) @db.Decimal(14, 2)
+  totalNetSalariesPayable Decimal   @default(0) @db.Decimal(14, 2)
+  status                  String    @default("DRAFT_CALCULATING") // DRAFT_CALCULATING, AUDITED_BY_HR, APPROVED_BY_EXECUTIVE, DISBURSED_CLOSED
+  approvedByUserId        BigInt?
+  disbursedAt             DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  records PayrollRecord[]
+
+  @@unique([year, month, siteId])
+  @@map("payroll_runs")
+}
+
+model PayrollRecord {
+  id                            String    @id @default(uuid())
+  payrollRunId                  String
+  workerId                      String    // Workforce Loose ID reference
+  daysWorked                    Decimal   @db.Decimal(5, 2)
+  daysAbsent                    Decimal   @default(0) @db.Decimal(5, 2)
+  daysOnLeave                   Decimal   @default(0) @db.Decimal(5, 2)
+  baseDailyWage                 Decimal   @db.Decimal(12, 2)
+  earnedBasicSalary             Decimal   @db.Decimal(12, 2)
+  overtimeAmount                Decimal   @default(0) @db.Decimal(12, 2)
+  bonusesAmount                 Decimal   @default(0) @db.Decimal(12, 2)
+  customAllowancesAmount        Decimal   @default(0) @db.Decimal(12, 2)
+  reimbursementsAmount          Decimal   @default(0) @db.Decimal(12, 2)
+  grossEarnings                 Decimal   @db.Decimal(14, 2)
+  cashAdvancesDeduction         Decimal   @default(0) @db.Decimal(12, 2)
+  cigaretteWithdrawalsDeduction Decimal   @default(0) @db.Decimal(12, 2)
+  purchaseWithdrawalsDeduction  Decimal   @default(0) @db.Decimal(12, 2)
+  penaltiesDeduction            Decimal   @default(0) @db.Decimal(12, 2)
+  loanInstallmentDeduction      Decimal   @default(0) @db.Decimal(12, 2)
+  otherDeductions               Decimal   @default(0) @db.Decimal(12, 2)
+  totalDeductions               Decimal   @db.Decimal(14, 2)
+  netSalaryPayable              Decimal   @db.Decimal(14, 2)
+  paymentStatus                 String    @default("PENDING") // PENDING, DISBURSED, HELD_DISPUTED
+  payoutMethod                  String    @default("CASH_ENVELOPE") // CASH_ENVELOPE, VODAFONE_CASH, INSTAPAY, BANK_DEPOSIT
+  payoutReference               String?
+  paidAt                        DateTime?
+  recordHash                    String    @default("") @map("record_hash")
+  previousHash                  String?   @map("previous_hash")
+  hashTimestamp                 DateTime  @default(now()) @map("hash_timestamp")
+  createdAt                     DateTime  @default(now())
+  updatedAt                     DateTime  @updatedAt
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id])
+
+  @@index([payrollRunId])
+  @@index([workerId])
+  @@index([recordHash])
+  @@index([previousHash])
+  @@map("payroll_records")
+}

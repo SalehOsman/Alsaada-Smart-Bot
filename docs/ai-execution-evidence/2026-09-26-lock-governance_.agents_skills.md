@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (governance:.agents/skills)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:41:20.027Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T12:25:07.617Z)
 - **معرف الكيان:** `governance:.agents/skills`
 - **نوع الكيان:** `infra`
 - **العنوان:** الحوكمة والدستور السيادي: .agents/skills
@@ -13,7 +13,7 @@
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
 | `.agents/skills/chief-arbitrator/SKILL.md` | `1cfc894d3c55736c1b48ef5c924df2db19204607d744c13b2d3b23608f5b5771` |
-| `.agents/skills/jev/SKILL.md` | `2bf456ccb795832c607a91360e59d3d47c9cee9e8efeaf183dba445e5767fdcd` |
+| `.agents/skills/jev/SKILL.md` | `1f829f433d51ba4afde14c18e2dd6d6ce68923a311f70b74350f2032d5733818` |
 | `.agents/skills/open-code-review/SKILL.md` | `3dd08f1ab21519eb35149f09c0b870bb68c2b570f3f6c4bcd774bae833825db2` |
 | `.agents/skills/saleh/arsenal/clean-code-guard/references/ai-failure-modes.md` | `dbcf40639df0f6ace948d80a33d355e131accbc2d4a0c6cdbb810f951d76da1b` |
 | `.agents/skills/saleh/arsenal/clean-code-guard/references/comments-and-formatting.md` | `27de70078f516d988b9633499561003e1ddd0edfd5cda86fa530f2eaa22f300c` |
@@ -33,7 +33,7 @@
 | `.agents/skills/saleh/arsenal/test-guard/references/review-checklist.md` | `97f07dc92fb5bb4345c20c06323100b68d7556f540839f5af5bbb2a508f506d3` |
 | `.agents/skills/saleh/arsenal/test-guard/references/vitest.md` | `b6e9d152c9608638f90aa92c3f910feabadf10ae58e19aeaf939535a38051885` |
 | `.agents/skills/saleh/arsenal/test-guard/rules.md` | `2d427dac101697868fc96ead22c609d8d2fd2ea40417d7a1af553629348c13ba` |
-| `.agents/skills/saleh/SKILL.md` | `26d9980dad75d384009cd682bba200d37cbbf13459b0831a8ad6d04f5c02b9c2` |
+| `.agents/skills/saleh/SKILL.md` | `d7a33f2da163ddc2b5560cca7ada19207a8040fc7e1a0f5ab17f30c68029b97f` |
 | `.agents/skills/squad-architecture-devops/SKILL.md` | `9fba4d72f934a85ab884dc60f00f8a567ba1790676909b7afb8e0a6440e044a3` |
 | `.agents/skills/squad-finance-security/SKILL.md` | `88cafdaaf2a14c81e2eeedf9daa48ee573336e7bc7d5a77f8ba0774327862025` |
 | `.agents/skills/squad-implementation-ux/SKILL.md` | `923737f2a306c79aff704e748a9b80dabb15a3f30b37757800b8527873e3fbf0` |

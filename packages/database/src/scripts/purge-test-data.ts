@@ -25,41 +25,18 @@ export async function purgeTestData(confirm: boolean = false): Promise<void> {
   console.log('================================================================');
 
   try {
-    // 1. Tables to completely truncate and reset
+    // 1. Tables to completely truncate and reset (active @alsaada/database tables)
     const tablesToPurge = [
       'outbox_events',
+      'notification_queues',
+      'system_error_logs',
+      'bot_performance_logs',
       'audit_logs',
-      'worker_expense_claims',
       'financial_ledgers',
-      'advance_installments',
-      'advance_requests',
-      'disciplinary_and_bonuses',
-      'leaves',
-      'leave_allowances',
-      'duty_rosters',
-      'site_tasks',
-      'payroll_records',
-      'payroll_runs',
-      'custody_settlements',
-      'custody_expense_items',
-      'financial_custodies',
-      'hospitality_expenses',
-      'supplier_invoice_items',
-      'supplier_invoices',
-      'supplier_payments',
-      'fuel_dispense_logs',
-      'equipment_maintenances',
-      'spare_parts_requests',
-      'kitchen_meal_dispenses',
-      'food_waste_logs',
-      'phosphate_production_slips',
-      'phosphate_extracts',
-      'salary_histories',
-      'worker_custom_allowances',
-      'ppe_assets',
-      'worker_clearances',
-      'worker_balance_snapshots',
-      'workers',
+      'approval_tickets',
+      'user_wizard_drafts',
+      'dashboard_auth_links',
+      'dashboard_sessions',
     ];
 
     console.log('📋 Truncating transactional test tables...');

@@ -1,20 +1,22 @@
-// ==============================================================================
-// Al-Saada Smart Bot Enterprise Database Schema (PostgreSQL 16)
-// Complete 12-Domain Enterprise Relational Architecture (Replacing 66 Sheets)
-// ==============================================================================
-
-generator client {
-  previewFeatures = ["prismaSchemaFolder"]
-  provider = "prisma-client"
-  output   = "../../../packages/database/src/generated/client"
-}
+// =============================================================
+// Sovereign Core Database Schema (Single Source of Truth)
+// Packages: @alsaada/database
+// Governed by Work Plan 117 (Sovereign Modular Database Emancipation)
+// Contains strictly Core Shared Kernel models (Zero Ghost Models)
+// =============================================================
 
 datasource db {
   provider = "postgresql"
 }
 
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+  output   = "../../../packages/database/src/generated/client"
+}
+
 // -------------------------------------------------------------
-// 1. Corporate Profile & Projects Master Data (Single-Company SSOT)
+// 1. Core Enterprise Entities (Company, Projects, Sites)
 // -------------------------------------------------------------
 
 model CompanyProfile {
@@ -47,8 +49,7 @@ model Project {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  sites             Site[]
-  phosphateExtracts PhosphateExtract[]
+  sites Site[]
 
   @@map("projects")
 }
@@ -68,333 +69,21 @@ model Site {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  project           Project                   @relation(fields: [projectId], references: [id])
-  workers           Worker[]
-  accommodations    SiteAccommodation[]
-  custodies         FinancialCustody[]
-  equipments        Equipment[]
-  fuelTanks         FuelTank[]
-  canteenItems      CanteenItem[]
-  campFoodItems     CampFoodItem[]
-  foodShipments     FoodInboundShipment[]
-  kitchenDispenses  KitchenMealDispense[]
-  foodWasteLogs     FoodWasteLog[]
-  mealSurveys       MealSurvey[]
-  phosphateSlips    PhosphateProductionSlip[]
-  leaves            Leave[]
-  dutyRosters       DutyRoster[]
-  tasks             SiteTask[]
-  hospitality       HospitalityExpense[]
-  supplierInvoices  SupplierInvoice[]
+  project           Project                 @relation(fields: [projectId], references: [id])
   users             User[]
-  expenseClaims     WorkerExpenseClaim[]
-  workerDelegations WorkerDelegation[]
+  workers           Worker[]
+  leaves            Leave[]
   advanceRequests   AdvanceRequest[]
   ppeAssets         PPEAsset[]
   commitmentScores  WorkerCommitmentScore[]
+  workerDelegations WorkerDelegation[]
 
   @@map("sites")
 }
 
-model SiteAccommodation {
-  id               String   @id @default(uuid())
-  siteId           String
-  unitNumber       String // e.g. CRV-04
-  unitType         String   @default("WORKER_BARRACKS") // ENGINEER_CABIN, WORKER_BARRACKS, VIP_GUEST
-  capacity         Int      @default(4)
-  currentOccupancy Int      @default(0)
-  supervisorName   String?
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  site        Site                          @relation(fields: [siteId], references: [id])
-  assignments SiteAccommodationAssignment[]
-
-  @@map("site_accommodations")
-}
-
-model SiteAccommodationAssignment {
-  id              String    @id @default(uuid())
-  accommodationId String
-  workerId        String
-  bedNumber       String?
-  checkInDate     DateTime  @default(now())
-  checkOutDate    DateTime?
-  status          String    @default("ACTIVE") // ACTIVE, CHECKED_OUT
-  notes           String?
-
-  accommodation SiteAccommodation @relation(fields: [accommodationId], references: [id])
-  worker        Worker            @relation(fields: [workerId], references: [id])
-
-  @@map("site_accommodation_assignments")
-}
-
-model CompanyDocument {
-  id                    String    @id @default(uuid())
-  docNumber             String
-  title                 String
-  category              String // LEGAL_REGISTRATION, QUARRY_LICENSE, EQUIPMENT_TITLE, LEASE_CONTRACT, TAX_RECORD
-  issueDate             DateTime?
-  expiryDate            DateTime?
-  fileUri               String
-  sha256Checksum        String?
-  fileSizeBytes         BigInt?
-  alertDaysBeforeExpiry Int       @default(30)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  @@map("company_documents")
-}
-
 // -------------------------------------------------------------
-// 2. Organizational Hierarchy & Workforce 360 Registry
+// 2. Financial Ledger & Cumulative Hash Chain
 // -------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// -------------------------------------------------------------
-// 3. Leaves & Field Operations
-// -------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-// -------------------------------------------------------------
-// 4. Treasury, Custodies & Site Expenses
-// -------------------------------------------------------------
-
-model CompanyTreasury {
-  id             String   @id @default(uuid())
-  name           String
-  accountType    String   @default("MAIN_CASH_VAULT") // MAIN_CASH_VAULT, BANK_ACCOUNT, VODAFONE_CASH_WALLET, INSTAPAY_WALLET
-  bankName       String?
-  accountNumber  String?
-  currentBalance Decimal  @default(0) @db.Decimal(14, 2)
-  version        Int      @default(1) // Optimistic locking
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  fundedCustodies  FinancialCustody[]
-  supplierPayments SupplierPayment[]
-
-  @@map("company_treasuries")
-}
-
-model FinancialCustody {
-  id                         String    @id @default(uuid())
-  custodyNumber              String    @unique // e.g. #FC-YYYY-XXX or #EX-YYYY-XXX
-  siteId                     String
-  custodianWorkerId          String
-  initialAmount              Decimal   @db.Decimal(14, 2)
-  currentBalance             Decimal   @db.Decimal(14, 2)
-  totalLiquidatedExpenses    Decimal   @default(0) @db.Decimal(14, 2)
-  totalCashAdvancesDisbursed Decimal   @default(0) @db.Decimal(14, 2)
-  purpose                    String
-  status                     String    @default("ACTIVE") // ACTIVE, SETTLEMENT_PENDING, CLOSED
-  disbursedAt                DateTime  @default(now())
-  closedAt                   DateTime?
-  disbursedFromTreasuryId    String?
-  version                    Int       @default(1) // Optimistic locking
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
-
-  site                 Site                 @relation(fields: [siteId], references: [id])
-  custodian            Worker               @relation(fields: [custodianWorkerId], references: [id])
-  treasury             CompanyTreasury?     @relation(fields: [disbursedFromTreasuryId], references: [id])
-  expenseItems         CustodyExpenseItem[]
-  settlements          CustodySettlement[]
-  ledgers              FinancialLedger[]
-  leaveAllowances      LeaveAllowance[]
-  hospitalityExpenses  HospitalityExpense[]
-  supplierPayments     SupplierPayment[]
-  settledExpenseClaims WorkerExpenseClaim[]
-
-  @@index([siteId, status])
-  @@index([custodianWorkerId, status])
-  @@map("financial_custodies")
-}
-
-model CustodyExpenseItem {
-  id               String   @id @default(uuid())
-  custodyId        String
-  itemSequence     Int
-  expenseCategory  String
-  amount           Decimal  @db.Decimal(12, 2)
-  vendorName       String?
-  receiptDate      DateTime
-  description      String
-  receiptImageUri  String?
-  sha256Checksum   String?
-  ocrExtractedData Json?
-  isApproved       Boolean  @default(true)
-  recordHash       String   @default("") @map("record_hash")
-  previousHash     String?  @map("previous_hash")
-  hashTimestamp    DateTime @default(now()) @map("hash_timestamp")
-  createdAt        DateTime @default(now())
-
-  custody FinancialCustody @relation(fields: [custodyId], references: [id])
-
-  @@index([recordHash])
-  @@index([previousHash])
-  @@index([hashTimestamp])
-  @@map("custody_expense_items")
-}
-
-model CustodySettlement {
-  id                      String    @id @default(uuid())
-  settlementNumber        String    @unique // e.g. #SET-YYYY-XXX
-  custodyId               String
-  closingTotalInvoices    Decimal   @db.Decimal(14, 2)
-  closingTotalAdvances    Decimal   @db.Decimal(14, 2)
-  remainingCashReturned   Decimal   @db.Decimal(14, 2)
-  settlementDisposition   String    @default("REFUND_TO_TREASURY") // REFUND_TO_TREASURY, ROLLOVER_NEW_CUSTODY, DEDUCT_AS_ADVANCE_ON_CUSTODIAN
-  settlementSheetPhotoUri String?
-  status                  String    @default("PENDING_AUDIT") // PENDING_AUDIT, APPROVED, REJECTED
-  auditedByUserId         BigInt?
-  settledAt               DateTime?
-  recordHash              String    @default("") @map("record_hash")
-  previousHash            String?   @map("previous_hash")
-  hashTimestamp           DateTime  @default(now()) @map("hash_timestamp")
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  custody FinancialCustody @relation(fields: [custodyId], references: [id])
-
-  @@index([recordHash])
-  @@index([previousHash])
-  @@index([hashTimestamp])
-  @@map("custody_settlements")
-}
-
-model HospitalityExpense {
-  id                  String   @id @default(uuid())
-  voucherId           String   @unique // e.g. #HOSP-YYYY-XXX
-  siteId              String
-  amount              Decimal  @db.Decimal(10, 2)
-  guestNameOrEntity   String
-  occasion            String
-  sourceCustodyId     String?
-  disbursedByWorkerId String?
-  receiptPhotoUri     String?
-  sha256Checksum      String?
-  recordHash          String   @default("") @map("record_hash")
-  previousHash        String?  @map("previous_hash")
-  hashTimestamp       DateTime @default(now()) @map("hash_timestamp")
-  createdAt           DateTime @default(now())
-
-  site    Site              @relation(fields: [siteId], references: [id])
-  custody FinancialCustody? @relation(fields: [sourceCustodyId], references: [id])
-  worker  Worker?           @relation(fields: [disbursedByWorkerId], references: [id])
-
-  @@index([recordHash])
-  @@index([previousHash])
-  @@index([hashTimestamp])
-  @@map("hospitality_expenses")
-}
-
-model WorkerExpenseClaim {
-  id                              String    @id @default(uuid())
-  claimNumber                     String    @unique // e.g. #CLM-YYYY-XXXX
-  workerId                        String
-  siteId                          String
-  amount                          Decimal   @db.Decimal(12, 2)
-  expenseCategory                 String // FUEL, MAINTENANCE, SPARE_PARTS, EMERGENCY_SUPPLIES, HOSPITALITY, OTHER
-  description                     String
-  receiptImageUri                 String?
-  receiptSha256                   String?
-  settlementType                  String? // FIELD_CUSTODY, MAIN_TREASURY, PAYROLL_ACCRUAL
-  settlementCustodyId             String?
-  settlementTreasuryTransactionId String?
-  payrollRecordId                 String?
-  status                          String    @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED_PENDING_SETTLEMENT, SETTLED, REJECTED
-  rejectionReason                 String?
-  approvedByUserId                BigInt?
-  settledAt                       DateTime?
-  recordHash                      String    @default("") @map("record_hash")
-  previousHash                    String?   @map("previous_hash")
-  hashTimestamp                   DateTime  @default(now()) @map("hash_timestamp")
-  notes                           String?
-  createdAt                       DateTime  @default(now())
-  updatedAt                       DateTime  @updatedAt
-
-  worker            Worker            @relation(fields: [workerId], references: [id])
-  site              Site              @relation(fields: [siteId], references: [id])
-  settlementCustody FinancialCustody? @relation(fields: [settlementCustodyId], references: [id])
-  payrollRecord     PayrollRecord?    @relation(fields: [payrollRecordId], references: [id])
-
-  @@index([workerId])
-  @@index([siteId])
-  @@index([status])
-  @@index([settlementType])
-  @@index([recordHash])
-  @@index([previousHash])
-  @@index([hashTimestamp])
-  @@map("worker_expense_claims")
-}
-
-// -------------------------------------------------------------
-// 5. Closed-Loop Cryptographic Financial Ledger (SHA-256 Chained)
-// -------------------------------------------------------------
-
-model AdvanceRequest {
-  id                String   @id @default(uuid())
-  requestNumber     String   @unique // e.g. #ARQ-YYYY-XXXX
-  workerId          String
-  amountRequested   Decimal  @db.Decimal(12, 2)
-  purpose           String
-  installmentMonths Int      @default(1)
-  status            String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  rejectionReason   String?
-  approvedAmount    Decimal? @db.Decimal(12, 2)
-  approvedByUserId  BigInt?
-  siteId            String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  worker Worker @relation(fields: [workerId], references: [id])
-  site   Site?  @relation(fields: [siteId], references: [id])
-
-  @@index([workerId, status])
-  @@index([siteId, createdAt])
-  @@map("advance_requests")
-}
 
 model FinancialLedger {
   id                  String    @id @default(uuid())
@@ -407,10 +96,10 @@ model FinancialLedger {
   currency            String    @default("EGP")
   sourceAccount       String
   destinationAccount  String
-  sourceCustodyId     String? // Populated for cash advances disbursed from a site custody
+  sourceCustodyId     String? // Loose ID reference
   workerId            String?
-  supplierId          String?
-  canteenItemId       String?
+  supplierId          String? // Loose ID reference
+  canteenItemId       String? // Loose ID reference
   inKindDetails       Json? // In-kind purchase/cigarette item breakdown
   description         String?
   accountingMonth     String? // YYYY-MM
@@ -430,11 +119,8 @@ model FinancialLedger {
   hmacKid             String    @default("v1-2026-q1") @map("hmac_kid")
   hmacSignature       String    @default("") @map("hmac_signature")
 
-  worker        Worker?              @relation(fields: [workerId], references: [id])
-  sourceCustody FinancialCustody?    @relation(fields: [sourceCustodyId], references: [id])
-  supplier      Supplier?            @relation(fields: [supplierId], references: [id])
-  canteenItem   CanteenItem?         @relation(fields: [canteenItemId], references: [id])
-  installments  AdvanceInstallment[]
+  worker       Worker?              @relation(fields: [workerId], references: [id])
+  installments AdvanceInstallment[]
 
   @@index([transactionType])
   @@index([sourceAccount])
@@ -451,468 +137,8 @@ model FinancialLedger {
   @@map("financial_ledgers")
 }
 
-model AdvanceInstallment {
-  id                     String   @id @default(uuid())
-  workerId               String
-  originalVoucherNumber  String
-  installmentSequence    Int
-  dueMonth               String // YYYY-MM
-  installmentAmount      Decimal  @db.Decimal(12, 2)
-  status                 String   @default("PENDING") // PENDING, DEDUCTED_FROM_PAYROLL, WAIVED_BY_ADMIN
-  deductedInPayrollRunId String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
-  worker     Worker          @relation(fields: [workerId], references: [id])
-  ledger     FinancialLedger @relation(fields: [originalVoucherNumber], references: [voucherNumber])
-  payrollRun PayrollRun?     @relation(fields: [deductedInPayrollRunId], references: [id])
-
-  @@map("advance_installments")
-}
-
 // -------------------------------------------------------------
-// 6. Suppliers, Procurement & Work Orders
-// -------------------------------------------------------------
-
-model Supplier {
-  id              String   @id @default(uuid())
-  code            String   @unique // e.g. #VND-XXX or #EX-VND-XXX
-  name            String
-  category        String // WORKSHOPS_MACHINING, SPARE_PARTS, FOOD_CATERING, FUEL_OILS, EQUIPMENT_RENTAL, GENERAL_SUPPLIES
-  phoneEncrypted  String?
-  phoneBlindIndex String?
-  taxNumber       String?
-  openingBalance  Decimal  @default(0) @db.Decimal(14, 2)
-  totalInvoiced   Decimal  @default(0) @db.Decimal(14, 2)
-  totalPaid       Decimal  @default(0) @db.Decimal(14, 2)
-  currentBalance  Decimal  @default(0) @db.Decimal(14, 2)
-  scope           String   @default("FIELD") // FIELD, EXECUTIVE
-  siteId          String?
-  telegramId      BigInt?  @unique
-  status          String   @default("ACTIVE") // ACTIVE, SUSPENDED
-  version         Int      @default(1) // Optimistic locking
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user          User?
-  invoices      SupplierInvoice[]
-  payments      SupplierPayment[]
-  foodShipments FoodInboundShipment[]
-  maintenances  EquipmentMaintenance[]
-  ledgers       FinancialLedger[]
-
-  @@index([phoneBlindIndex])
-  @@map("suppliers")
-}
-
-model SupplierInvoice {
-  id               String   @id @default(uuid())
-  invoiceNumber    String   @unique // e.g. #WO-YYYY-XXXX
-  supplierId       String
-  siteId           String
-  equipmentId      String?
-  invoiceDate      DateTime
-  subtotalAmount   Decimal  @db.Decimal(14, 2)
-  taxAmount        Decimal  @default(0) @db.Decimal(12, 2)
-  totalAmount      Decimal  @db.Decimal(14, 2)
-  paidAmount       Decimal  @default(0) @db.Decimal(14, 2)
-  remainingBalance Decimal  @db.Decimal(14, 2)
-  paymentStatus    String   @default("UNPAID") // UNPAID, PARTIALLY_PAID, PAID_FULL
-  description      String?
-  invoicePhotoUri  String?
-  sha256Checksum   String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  supplier           Supplier              @relation(fields: [supplierId], references: [id])
-  site               Site                  @relation(fields: [siteId], references: [id])
-  equipment          Equipment?            @relation(fields: [equipmentId], references: [id])
-  items              SupplierInvoiceItem[]
-  payments           SupplierPayment[]
-  sparePartsRequests SparePartsRequest[]
-
-  @@map("supplier_invoices")
-}
-
-model SupplierInvoiceItem {
-  id              String   @id @default(uuid())
-  invoiceId       String
-  itemSequence    Int
-  itemDescription String
-  quantity        Decimal  @db.Decimal(10, 2)
-  unit            String   @default("UNIT")
-  unitPrice       Decimal  @db.Decimal(12, 2)
-  totalPrice      Decimal  @db.Decimal(12, 2)
-  createdAt       DateTime @default(now())
-
-  invoice SupplierInvoice @relation(fields: [invoiceId], references: [id])
-
-  @@map("supplier_invoice_items")
-}
-
-model SupplierPayment {
-  id                      String   @id @default(uuid())
-  paymentNumber           String   @unique // e.g. #SPAY-YYYY-XXXX
-  supplierId              String
-  invoiceId               String?
-  amount                  Decimal  @db.Decimal(14, 2)
-  paymentMethod           String   @default("CASH_CUSTODY") // CASH_CUSTODY, BANK_TRANSFER, CHEQUE, TREASURY_CASH
-  disbursedFromTreasuryId String?
-  disbursedFromCustodyId  String?
-  transactionReference    String?
-  receiptPhotoUri         String?
-  sha256Checksum          String?
-  recordHash              String   @default("") @map("record_hash")
-  previousHash            String?  @map("previous_hash")
-  hashTimestamp           DateTime @default(now()) @map("hash_timestamp")
-  paymentDate             DateTime @default(now())
-  createdAt               DateTime @default(now())
-
-  supplier Supplier          @relation(fields: [supplierId], references: [id])
-  invoice  SupplierInvoice?  @relation(fields: [invoiceId], references: [id])
-  treasury CompanyTreasury?  @relation(fields: [disbursedFromTreasuryId], references: [id])
-  custody  FinancialCustody? @relation(fields: [disbursedFromCustodyId], references: [id])
-
-  @@index([recordHash])
-  @@index([previousHash])
-  @@index([hashTimestamp])
-  @@map("supplier_payments")
-}
-
-// -------------------------------------------------------------
-// 7. Fleet, Equipment & Fuel Management
-// -------------------------------------------------------------
-
-model Equipment {
-  id                            String    @id @default(uuid())
-  code                          String    @unique // e.g. EQ-01
-  name                          String
-  type                          String // LOADER, EXCAVATOR, DUMP_TRUCK, BULLDOZER, GENERATOR, WATER_TANKER, PICKUP_TRUCK
-  brand                         String?
-  modelYear                     Int?
-  plateNumber                   String?
-  chassisNumber                 String?
-  siteId                        String
-  assignedWorkerId              String?
-  meterType                     String    @default("HOURS") // HOURS, KILOMETERS
-  currentMeterReading           Decimal   @default(0) @db.Decimal(10, 2)
-  currentFuelLevelPercentage    Decimal?  @db.Decimal(5, 2)
-  technicalStatus               String    @default("OPERATIONAL") // OPERATIONAL, NEEDS_MAINTENANCE, BROKEN_DOWN_STOPPED
-  lastMaintenanceDate           DateTime?
-  nextScheduledMaintenanceMeter Decimal?  @db.Decimal(10, 2)
-  createdAt                     DateTime  @default(now())
-  updatedAt                     DateTime  @updatedAt
-
-  site               Site                   @relation(fields: [siteId], references: [id])
-  assignedWorker     Worker?                @relation(fields: [assignedWorkerId], references: [id])
-  dutyRosters        DutyRoster[]
-  fuelLogs           FuelDispenseLog[]
-  maintenances       EquipmentMaintenance[]
-  sparePartsRequests SparePartsRequest[]
-  supplierInvoices   SupplierInvoice[]
-
-  @@map("equipments")
-}
-
-model FuelTank {
-  id                       String   @id @default(uuid())
-  siteId                   String
-  code                     String   @unique // e.g. TNK-01
-  name                     String
-  fuelType                 String   @default("DIESEL_SOLAR") // DIESEL_SOLAR, GASOLINE_80, GASOLINE_92
-  totalCapacityLiters      Decimal  @db.Decimal(10, 2)
-  currentStockLiters       Decimal  @db.Decimal(10, 2)
-  minSafetyThresholdLiters Decimal  @db.Decimal(10, 2)
-  supervisorWorkerId       String?
-  status                   String   @default("ACTIVE") // ACTIVE, MAINTENANCE, DECOMMISSIONED
-  version                  Int      @default(1) // Optimistic locking
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-
-  site         Site              @relation(fields: [siteId], references: [id])
-  supervisor   Worker?           @relation(fields: [supervisorWorkerId], references: [id])
-  dispenseLogs FuelDispenseLog[]
-
-  @@map("fuel_tanks")
-}
-
-model FuelDispenseLog {
-  id                     String   @id @default(uuid())
-  dispenseNumber         String   @unique // e.g. #FL-YYYY-XXXX
-  tankId                 String
-  equipmentId            String
-  operatorWorkerId       String
-  litersDispensed        Decimal  @db.Decimal(10, 2)
-  meterReadingAtDispense Decimal  @db.Decimal(10, 2)
-  unitCostPerLiter       Decimal  @db.Decimal(8, 2)
-  totalCost              Decimal  @db.Decimal(12, 2)
-  latitude               Decimal? @db.Decimal(10, 7)
-  longitude              Decimal? @db.Decimal(10, 7)
-  dispensedByUserId      BigInt?
-  timestamp              DateTime @default(now())
-  createdAt              DateTime @default(now())
-
-  tank      FuelTank  @relation(fields: [tankId], references: [id])
-  equipment Equipment @relation(fields: [equipmentId], references: [id])
-  operator  Worker    @relation(fields: [operatorWorkerId], references: [id])
-
-  @@map("fuel_dispense_logs")
-}
-
-model EquipmentMaintenance {
-  id                  String   @id @default(uuid())
-  maintenanceNumber   String   @unique // e.g. #MNT-YYYY-XXXX
-  equipmentId         String
-  maintenanceType     String // OIL_AND_FILTER_CHANGE, HYDRAULIC_SYSTEM, TIRES_AND_TRACKS, ENGINE_OVERHAUL, ELECTRICAL_SYSTEM, PREVENTIVE_PERIODIC
-  meterReading        Decimal  @db.Decimal(10, 2)
-  supplierId          String?
-  totalCost           Decimal  @db.Decimal(12, 2)
-  description         String
-  nextDueMeterReading Decimal? @db.Decimal(10, 2)
-  performedAt         DateTime @default(now())
-  approvedByUserId    BigInt?
-  createdAt           DateTime @default(now())
-
-  equipment Equipment @relation(fields: [equipmentId], references: [id])
-  supplier  Supplier? @relation(fields: [supplierId], references: [id])
-
-  @@map("equipment_maintenances")
-}
-
-model SparePartsRequest {
-  id            String   @id @default(uuid())
-  requestNumber String   @unique // e.g. #SPR-YYYY-XXX
-  equipmentId   String
-  partName      String
-  quantity      Int      @default(1)
-  urgency       String   @default("ROUTINE") // ROUTINE, URGENT_MACHINE_DOWN
-  estimatedCost Decimal? @db.Decimal(12, 2)
-  status        String   @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED, PURCHASED, INSTALLED_ON_MACHINE, REJECTED
-  invoiceId     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  equipment Equipment        @relation(fields: [equipmentId], references: [id])
-  invoice   SupplierInvoice? @relation(fields: [invoiceId], references: [id])
-
-  @@map("spare_parts_requests")
-}
-
-// -------------------------------------------------------------
-// 8. Camp, Catering & Canteen
-// -------------------------------------------------------------
-
-model CanteenItem {
-  id               String   @id @default(uuid())
-  siteId           String
-  code             String   @unique // e.g. CAN-CIG-01
-  name             String
-  category         String // CIGARETTES, SNACKS_AND_FOOD, BEVERAGES, PERSONAL_CARE
-  costPrice        Decimal  @db.Decimal(10, 2)
-  sellingPrice     Decimal  @db.Decimal(10, 2)
-  currentStock     Decimal  @default(0) @db.Decimal(10, 2)
-  reorderThreshold Decimal  @default(5) @db.Decimal(10, 2)
-  isActive         Boolean  @default(true)
-  version          Int      @default(1) // Optimistic locking
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  site           Site                      @relation(fields: [siteId], references: [id])
-  ledgers        FinancialLedger[]
-  workers        Worker[]                  @relation("WorkerCigaretteItem")
-  priceHistories CanteenItemPriceHistory[]
-
-  @@index([siteId, isActive])
-  @@map("canteen_items")
-}
-
-model CanteenItemPriceHistory {
-  id            String   @id @default(uuid())
-  canteenItemId String
-  costPrice     Decimal  @db.Decimal(10, 2)
-  sellingPrice  Decimal  @db.Decimal(10, 2)
-  effectiveDate DateTime @default(now())
-  changedBy     BigInt?
-  reason        String?
-  createdAt     DateTime @default(now())
-
-  canteenItem CanteenItem @relation(fields: [canteenItemId], references: [id], onDelete: Cascade)
-
-  @@index([canteenItemId, effectiveDate])
-  @@map("canteen_item_price_histories")
-}
-
-model CampFoodItem {
-  id                  String   @id @default(uuid())
-  siteId              String
-  code                String   @unique // e.g. FOD-RICE
-  name                String
-  unit                String   @default("KG") // KG, LITER, CARTON, BAG
-  currentStock        Decimal  @default(0) @db.Decimal(10, 2)
-  weightedAverageCost Decimal  @default(0) @db.Decimal(10, 2)
-  reorderThreshold    Decimal  @default(20) @db.Decimal(10, 2)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  site Site @relation(fields: [siteId], references: [id])
-
-  @@map("camp_food_items")
-}
-
-model FoodInboundShipment {
-  id                      String   @id @default(uuid())
-  shipmentNumber          String   @unique // e.g. #FSH-YYYY-XXX
-  siteId                  String
-  supplierId              String
-  deliveryDate            DateTime @default(now())
-  totalInvoiceAmount      Decimal  @db.Decimal(12, 2)
-  qualityInspectionStatus String   @default("ACCEPTED_FULL") // ACCEPTED_FULL, PARTIAL_REJECTION, REJECTED
-  receivedByWorkerId      String?
-  createdAt               DateTime @default(now())
-
-  site       Site     @relation(fields: [siteId], references: [id])
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-  receivedBy Worker?  @relation(fields: [receivedByWorkerId], references: [id])
-
-  @@map("food_inbound_shipments")
-}
-
-model Recipe {
-  id                   String   @id @default(uuid())
-  name                 String
-  mealCategory         String // BREAKFAST, LUNCH, DINNER, NIGHT_SHIFT_MEAL
-  standardPortionGrams Int      @default(400)
-  ingredientsBreakdown Json
-  targetCostPerMeal    Decimal  @db.Decimal(8, 2)
-  isActive             Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  dispenses KitchenMealDispense[]
-
-  @@map("recipes")
-}
-
-model KitchenMealDispense {
-  id                   String   @id @default(uuid())
-  dispenseDate         DateTime
-  siteId               String
-  recipeId             String
-  mealType             String // BREAKFAST, LUNCH, DINNER
-  servingsCount        Int
-  totalIngredientsCost Decimal  @db.Decimal(12, 2)
-  actualCostPerServing Decimal  @db.Decimal(8, 2)
-  chefWorkerId         String?
-  createdAt            DateTime @default(now())
-
-  site   Site    @relation(fields: [siteId], references: [id])
-  recipe Recipe  @relation(fields: [recipeId], references: [id])
-  chef   Worker? @relation(fields: [chefWorkerId], references: [id])
-
-  @@map("kitchen_meal_dispenses")
-}
-
-model FoodWasteLog {
-  id                String   @id @default(uuid())
-  siteId            String
-  logDate           DateTime @default(now())
-  foodItemCode      String
-  wasteQuantityKg   Decimal  @db.Decimal(8, 2)
-  wasteReason       String // EXPIRED_SPOILAGE, PREPARATION_WASTE, LEFTOVER_DISPOSAL, STORAGE_FAILURE
-  estimatedLossCost Decimal  @db.Decimal(10, 2)
-  supervisorNotes   String?
-  createdAt         DateTime @default(now())
-
-  site Site @relation(fields: [siteId], references: [id])
-
-  @@map("food_waste_logs")
-}
-
-model MealSurvey {
-  id         String   @id @default(uuid())
-  siteId     String
-  workerId   String
-  surveyDate DateTime @default(now())
-  rating     Int // 1 to 5
-  comment    String?
-  createdAt  DateTime @default(now())
-
-  site   Site   @relation(fields: [siteId], references: [id])
-  worker Worker @relation(fields: [workerId], references: [id])
-
-  @@map("meal_surveys")
-}
-
-model MarketPriceBenchmark {
-  id             String   @id @default(uuid())
-  itemName       String
-  unit           String
-  benchmarkPrice Decimal  @db.Decimal(10, 2)
-  surveyDate     DateTime @default(now())
-  createdAt      DateTime @default(now())
-
-  @@map("market_price_benchmarks")
-}
-
-// -------------------------------------------------------------
-// 9. Phosphate Operations & Commercial Extracts
-// -------------------------------------------------------------
-
-model PhosphateProductionSlip {
-  id               String   @id @default(uuid())
-  slipNumber       String   @unique // e.g. #SLP-YYYY-XXXX
-  siteId           String
-  truckPlateNumber String
-  driverName       String
-  transportCompany String?
-  oreGrade         String   @default("GRADE_A_CONCENTRATE") // GRADE_A_CONCENTRATE, GRADE_B, RUN_OF_MINE
-  grossWeightTons  Decimal  @db.Decimal(10, 3)
-  tareWeightTons   Decimal  @db.Decimal(10, 3)
-  netWeightTons    Decimal  @db.Decimal(10, 3)
-  destination      String?
-  slipPhotoUri     String?
-  sha256Checksum   String?
-  loadingTimestamp DateTime @default(now())
-  recordedByUserId BigInt?
-  createdAt        DateTime @default(now())
-
-  site Site @relation(fields: [siteId], references: [id])
-
-  @@map("phosphate_production_slips")
-}
-
-model PhosphateExtract {
-  id                      String    @id @default(uuid())
-  extractNumber           String    @unique // e.g. #EXT-YYYY-XXX
-  projectId               String
-  clientEntityName        String
-  periodStartDate         DateTime
-  periodEndDate           DateTime
-  totalTonnageDelivered   Decimal   @db.Decimal(12, 3)
-  contractRatePerTon      Decimal   @db.Decimal(10, 2)
-  grossExtractValue       Decimal   @db.Decimal(14, 2)
-  deductionsAndRetentions Decimal   @default(0) @db.Decimal(12, 2)
-  netPayableAmount        Decimal   @db.Decimal(14, 2)
-  paymentStatus           String    @default("SUBMITTED") // SUBMITTED, UNDER_REVIEW, APPROVED_BY_CLIENT, COLLECTED_FULL
-  collectionDate          DateTime?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  project Project @relation(fields: [projectId], references: [id])
-
-  @@map("phosphate_extracts")
-}
-
-// -------------------------------------------------------------
-// 10. Payroll & Financial Settlements
-// -------------------------------------------------------------
-
-
-
-
-
-// -------------------------------------------------------------
-// 11. RBAC, Identity, Audit, APM & Drafts
+// 3. RBAC, Identity, Audit, APM & Drafts
 // -------------------------------------------------------------
 
 model User {
@@ -922,7 +148,7 @@ model User {
   fullName               String
   role                   String // SUPER_ADMIN, EXECUTIVE, FIELD_ADMIN, ACCOUNTANT, SITE_ENGINEER, WORKER, SUPPLIER, GUEST
   workerId               String?   @unique
-  supplierId             String?   @unique
+  supplierId             String?   @unique // Loose ID reference
   assignedSiteId         String?
   phoneEncrypted         String?
   phoneBlindIndex        String?
@@ -937,7 +163,6 @@ model User {
   updatedAt              DateTime  @updatedAt
 
   worker                  Worker?                  @relation(fields: [workerId], references: [id])
-  supplier                Supplier?                @relation(fields: [supplierId], references: [id])
   assignedSite            Site?                    @relation(fields: [assignedSiteId], references: [id])
   notifications           NotificationQueue[]
   dashboardSessions       DashboardSession[]
@@ -949,26 +174,23 @@ model User {
   @@map("users")
 }
 
-
-
-
-
-
-
 model AuditLog {
   id              String   @id @default(uuid())
   traceId         String?  @db.VarChar(36)
   actorTelegramId BigInt
-  action          String
-  entityType      String
-  entityId        String
+  actorRole       String
+  actionCategory  String // AUTH, USER_MGMT, FINANCIAL, SYSTEM_CONFIG, EXPORT
+  targetEntity    String // USER, ADVANCE_REQUEST, SETTING, MIGRATION
+  targetEntityId  String?
+  changeSummary   String
   beforePayload   Json?
   afterPayload    Json?
   ipAddress       String?
-  timestamp       DateTime @default(now())
+  performedAt     DateTime @default(now())
 
-  @@index([entityType, entityId])
-  @@index([actorTelegramId, timestamp])
+  @@index([actorTelegramId, performedAt])
+  @@index([actionCategory, performedAt])
+  @@index([targetEntity, targetEntityId])
   @@map("audit_logs")
 }
 
@@ -995,57 +217,61 @@ model BotPerformanceLog {
 }
 
 model ApprovalTicket {
-  id                    String    @id @default(uuid())
-  ticketNumber          String    @unique // e.g. #TCK-YYYY-XXXX
-  ticketType            String // LEAVE_REQUEST, ADVANCE_REQUEST, TRANSACTION_MODIFICATION, WORKER_EDIT, PPE_REPLACEMENT, SPARE_PARTS_PURCHASE, CUSTODY_LIQUIDATION, END_OF_SERVICE_CLEARANCE
-  entityId              String
-  requestedByTelegramId BigInt
-  status                String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  reviewDecisionNotes   String?
-  reviewedByTelegramId  BigInt?
-  reviewedAt            DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  ticketNumber      String    @unique
+  workflowType      String // WORKER_ONBOARDING, ADVANCE_REQUEST, EXPENSE_CLAIM, LEAVE_REQUEST
+  sourceEntity      String
+  sourceEntityId    String
+  requestedByUserId BigInt
+  requiredRole      String
+  status            String    @default("PENDING") // PENDING, APPROVED, REJECTED, EXPIRED
+  decisionReason    String?
+  decidedByUserId   BigInt?
+  decidedAt         DateTime?
+  metadata          Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  @@index([status, ticketType])
+  @@index([status, requiredRole])
+  @@index([sourceEntity, sourceEntityId])
   @@map("approval_tickets")
 }
 
 model UserWizardDraft {
-  id          String   @id @default(uuid())
-  telegramId  BigInt   @unique
-  wizardName  String
-  currentStep String
-  draftData   Json
-  expiresAt   DateTime
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  actorTelegramId BigInt
+  flowIdentifier  String // e.g. "flow:01.1:worker-onboarding"
+  wizardState     Json
+  lastStepIndex   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
+  @@unique([actorTelegramId, flowIdentifier])
   @@map("user_wizard_drafts")
 }
 
 model NotificationQueue {
-  id                  String    @id @default(uuid())
-  recipientTelegramId BigInt
-  userId              String?
-  priority            String    @default("GENERAL_ALERT") // CRITICAL_SECURITY, FINANCIAL_RECEIPT, GENERAL_ALERT
-  messageText         String
-  inlineKeyboard      Json?
-  status              String    @default("PENDING") // PENDING, DISPATCHING, DELIVERED, FAILED_RETRYING, EXHAUSTED
-  retryCount          Int       @default(0)
-  scheduledFor        DateTime  @default(now())
-  deliveredAt         DateTime?
-  errorMessage        String?
-  createdAt           DateTime  @default(now())
+  id                   String    @id @default(uuid())
+  recipientTelegramId  BigInt
+  recipientUserId      String?
+  notificationCategory String // SALARY_NOTICE, ADVANCE_STATUS, SHIFT_ALERT, SYSTEM_BROADCAST
+  title                String
+  bodyMarkdown         String
+  callToActionUrl      String?
+  priority             String    @default("NORMAL") // URGENT, HIGH, NORMAL, LOW
+  scheduledFor         DateTime  @default(now())
+  sentAt               DateTime?
+  deliveryStatus       String    @default("QUEUED") // QUEUED, DELIVERED, FAILED, CANCELLED
+  retryCount           Int       @default(0)
+  failureReason        String?
+  createdAt            DateTime  @default(now())
 
-  user User? @relation(fields: [userId], references: [id])
+  recipient User? @relation(fields: [recipientUserId], references: [id])
 
-  @@index([status, scheduledFor, priority])
-  @@map("notification_dispatch_queues")
+  @@index([deliveryStatus, scheduledFor])
+  @@index([recipientTelegramId])
+  @@map("notification_queues")
 }
-
-// -------------------------------------------------------------
-// 12. Transactional Outbox (Reliable Hybrid Sync)
-// -------------------------------------------------------------
 
 model OutboxEvent {
   id             String    @id @default(uuid())
@@ -1068,24 +294,8 @@ model OutboxEvent {
   @@map("outbox_events")
 }
 
-model DeadLetterEvent {
-  id          String   @id @default(uuid())
-  eventId     String   @unique @map("event_id")
-  eventType   String   @map("event_type")
-  aggregateId String?  @map("aggregate_id")
-  payload     Json
-  retryCount  Int      @map("retry_count")
-  lastError   String?  @map("last_error")
-  createdAt   DateTime @default(now()) @map("created_at")
-  movedAt     DateTime @default(now()) @map("moved_at")
-
-  @@index([eventType])
-  @@index([movedAt])
-  @@map("dead_letter_events")
-}
-
 // -------------------------------------------------------------
-// 13. System Error Logs & Incident Tracking (Enterprise Crash Vault)
+// 4. System Error Logs & Incident Tracking (Enterprise Crash Vault)
 // -------------------------------------------------------------
 
 model SystemErrorLog {
@@ -1098,25 +308,26 @@ model SystemErrorLog {
   actorTelegramId BigInt?
   actorRole       String?
   actionTrigger   String? // Command or CallbackData e.g. menu:domain:hr
-  sourceLocation  String? // Module / Handler / Function
+  errorClass      String
   errorMessage    String
   stackTrace      String?
-  breadcrumbs     Json? // Array of last 5 user interaction steps
-  severity        String    @default("ERROR") // WARNING, ERROR, CRITICAL, FATAL
-  isResolved      Boolean   @default(false)
+  contextPayload  Json?
+  severity        String    @default("CRITICAL") // CRITICAL, WARNING, INFO
+  resolved        Boolean   @default(false)
   resolvedAt      DateTime?
-  resolvedById    BigInt?
-  createdAt       DateTime  @default(now())
+  resolvedBy      BigInt?
+  resolutionNotes String?
+  firstSeenAt     DateTime  @default(now())
   lastSeenAt      DateTime  @default(now())
 
-  @@index([severity, createdAt])
-  @@index([errorHash, isResolved])
-  @@index([actorTelegramId, createdAt])
+  @@index([errorHash, resolved])
+  @@index([firstSeenAt])
+  @@index([severity, resolved])
   @@map("system_error_logs")
 }
 
 // -------------------------------------------------------------
-// 14. Dashboard Authentication, Sessions & RBAC Delegations
+// 5. Dashboard Authentication & Session Security (SSOT)
 // -------------------------------------------------------------
 
 model DashboardAuthLink {
@@ -1166,31 +377,24 @@ model DashboardSession {
   @@map("dashboard_sessions")
 }
 
-
-
 // -------------------------------------------------------------
-// 13. Dynamic Bot Modules, Flows & Menu Hierarchy (Plan-71)
+// 6. Dynamic Bot Menus & Hierarchy Enums
 // -------------------------------------------------------------
 
 enum BotNodeType {
-  MODULE // النطاق العام (الموارد البشرية، المالية، التشغيل، اللوجستيات، الحوكمة)
-  SECTION // القسم الرئيسي (شؤون العاملين، السلف، العهد...)
-  SUBSECTION // القسم الفرعي (إن وجد)
-  FLOW // زر التدفق الإجرائي المباشر (مثل: تسجيل عامل 01.1)
+  MODULE
+  SECTION
+  SUBSECTION
+  FLOW
 }
 
 enum BotNodeStatus {
-  ACTIVE // مفعل ويعمل بكفاءة
-  DISABLED // موقوف
-  MAINTENANCE // تحت الصيانة والتحديث
+  ACTIVE
+  DISABLED
+  MAINTENANCE
 }
 
 enum DisabledBehavior {
-  HIDE // إخفاء الزر تماماً من لوحة مفاتيح البوت
-  LOCK_WITH_ALERT // إبقاء الزر مع رمز قفل 🔒 ورسالة تنبيه منبثقة Modal Alert
+  HIDE
+  LOCK_WITH_ALERT
 }
-
-
-
-// سجل لقطات النسخ الاحتياطي للقوائم واستعادة التكوينات
-

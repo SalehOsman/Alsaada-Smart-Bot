@@ -8,7 +8,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -497,6 +497,19 @@ export function composeDatabaseSchema(options: DatabaseCompositionOptions = {}):
       writeFileSync(manifestPath, newManifestJson, 'utf8');
     }
     generatedFiles.push(manifestPath);
+
+    // Ensure @prisma/client is resolvable by Prisma CLI for .generated/database/schema
+    try {
+      const dbClientPkg = join(root, 'packages', 'database', 'node_modules', '@prisma', 'client');
+      const genClientPkgDir = join(root, '.generated', 'database', 'node_modules', '@prisma');
+      const genClientPkg = join(genClientPkgDir, 'client');
+      if (existsSync(dbClientPkg) && !existsSync(genClientPkg)) {
+        mkdirSync(genClientPkgDir, { recursive: true });
+        symlinkSync(dbClientPkg, genClientPkg, 'junction');
+      }
+    } catch {
+      // Ignored if exists or restricted
+    }
 
     // Synchronize migrations
     mkdirSync(migrationsOutputDir, { recursive: true });

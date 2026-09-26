@@ -23,14 +23,23 @@ export async function GET(req: NextRequest) {
     where: whereClause,
     include: {
       user: { select: { id: true, fullName: true, telegramId: true, role: true } },
-      worker: { select: { id: true, code: true, name: true, nickname: true } },
       site: { select: { id: true, name: true, code: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
 
+  const workerIds = [...new Set(delegations.map((d) => d.workerId).filter(Boolean))];
+  const workers = workerIds.length > 0
+    ? await prisma.worker.findMany({
+        where: { id: { in: workerIds } },
+        select: { id: true, code: true, name: true, nickname: true },
+      })
+    : [];
+  const workerMap = new Map(workers.map((w) => [w.id, w]));
+
   const serialized = delegations.map((d) => ({
     ...d,
+    worker: workerMap.get(d.workerId) || null,
     requestedByTelegramId: d.requestedByTelegramId ? d.requestedByTelegramId.toString() : null,
     approvedByTelegramId: d.approvedByTelegramId ? d.approvedByTelegramId.toString() : null,
     revokedByTelegramId: d.revokedByTelegramId ? d.revokedByTelegramId.toString() : null,

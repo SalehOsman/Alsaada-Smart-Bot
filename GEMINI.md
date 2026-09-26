@@ -168,6 +168,33 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
 5. **بوابة الفحص النحوي الشامل (Gate G2 Universal FCIS AST Sentinel):**
    - يفحص `pnpm arch:verify` (`tools/governance/verify-architecture.ts`) شجرة الكود (`TypeScript AST`) لجميع التدفقات والملفات، ويُسقط أي مخالفة فوراً بـ `Exit Code 1`.
 
+### 8.6 المعيار الرباعي السيادي لقواعد بيانات الموديولات وحظر المفاتيح الأجنبية الصلبة (Work Plan 117 Modular DB Invariant)
+بموجب ميثاق خطة العمل السيادية رقم 117 (`docs/work-plans/117-plan-sovereign-modular-database-emancipation-and-ghost-table-purge.md`)، يُلزم كافة وكلاء الذكاء الاصطناعي والمطورين بالامتثال الصارم والقطعي للمحددات الهندسية لقواعد البيانات:
+1. **المعمارية الرباعية الإلزامية لكل موديول أعمال (`modules/<name>/database/`):**
+   - كل موديول يتطلب استبقاء بيانات يجب أن يحتوي حصراً واستقلالاً على 4 مكونات معمارية:
+     - `schema.prisma`: النماذج والتعدادات الحصرية للموديول.
+     - `relations.contract.json`: عقد إعلان التبعيات والعلاقات الرخوة المفهرسة.
+     - `erd.mermaid`: مخطط علاقات الكيانات البصري التفاعلي الخاص بالموديول.
+     - `migrations/`: مسار ترحيلات SQL الحتمية الخاصة بالموديول.
+2. **محدد التفكيك التام وحظر المفاتيح الأجنبية الصلبة (Strict Loose ID Coupling Invariant):**
+   - **يُحظر قطعياً** على أي وكيل ذكاء اصطناعي صياغة علاقات مفاتيح أجنبية فيزيائية عابرة للموديولات باستخدام `@relation`.
+   - يتم الربط بين الموديولات حصراً عبر **معرفات رخوة مفهرسة (Indexed Loose Scalars)**، مثل `workerId String @db.Uuid` أو `targetAdminId String? @db.Uuid` مع وضع `@index` صريح.
+   - استعلامات طبقة التطبيق ولوحة الإدارة تعتمد البحث المنفصل (Separate Loose ID Lookups)، ويُمنع الـ Nested Include العابر للموديولات.
+3. **حصانة النواة المشتركة وتطهير الجداول الشبحية (Central Core Immunity):**
+   - تقتصر نواة قاعدة البيانات المركزية في `packages/database/prisma/schema.prisma` حصراً على **14 نموذجاً سيادياً** للبنية التحتية والقيود المالية العامة.
+   - يُحظر تماماً إضافة أي جدول أعمال داخل النواة المشتركة. الجداول المستقبلية تحفظ كمسودات في `docs/schemas/future-modules-draft-schemas/` وتسجل في `docs/schemas/deprecated-models.json`.
+4. **التجميع السيادي وصمام التكافؤ (Gate G20 Sentinel):**
+   - يتم تجميع المخططات آلياً وتوليد عميل Prisma Client الموحد عبر المحرك السيادي:
+     ```bash
+     pnpm db:reconcile
+     ```
+   - اجتياز صمام حراسة بوابة الجودة G20 (`pnpm db:parity:verify`) شرط قطعي غير قابل للاستثناء لأي دمج أو اعتماد.
+
+### 8.7 محددات سلامة خطافات الالتزام ومزامنة التوثيق المشفر (Pre-Commit & Docs Sync Invariants)
+1. **إلزامية إعادة قفل بوابة التوثيق بعد المزامنة (Docs Sync Auto-Relock):** تشغيل أمر `pnpm docs:sync` يقوم آلياً بتحديث محتوى `apps/docs/src/content/docs/`. يُلزم الوكيل فوراً بتنفيذ `pnpm lock app:docs` لختم الكيان المشفر ومنع كسر `pnpm lock:verify`.
+2. **صيانة بيئة خطافات الالتزام السريع (Pre-Commit Environment Guard):** عند ارتكاب أي Commit يتضمن تعديلات في المخططات أو النواة المالية، يجب ضمان تمرير متغير `DATABASE_URL` صراحة أو الاعتماد على وضع الفحص التشفيري الذاكراتي الخفيف (`memoryOnly: true`) لتفادي تجويع حلقة الأحداث الناتج عن التوازي الكثيف.
+3. **التسلسل الإلزامي لفك الأقفال المشفرة (Sequential OTP Challenge Invariant):** ملف التحدي `.governance-cache/pending-unlock.json` ذو سعة أحادية؛ يُحظر طلب فك أقفال متعددة بالتوازي، ويلتزم الوكيل ببروتوكول الخطوات الخمس تسلسلياً (طلب -> اعتماد -> تأكيد -> تعديل -> إعادة قفل).
+
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.
 2. **Zod Runtime Deserialization:** Zero untyped `JSON.parse` across boundaries.

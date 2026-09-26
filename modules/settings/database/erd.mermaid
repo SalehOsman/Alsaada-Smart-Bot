@@ -1,0 +1,62 @@
+erDiagram
+    %% Settings Module Entity Relationship Diagram (Work Plan 117)
+    %% Strict Modular Sovereign Architecture
+
+    BotMenuNode ||--o{ BotMenuNode : "parent_child_hierarchy"
+
+    BotMenuNode {
+        string id PK
+        string code UK
+        string parentId FK
+        string type
+        string title
+        string icon
+        string callbackData
+        string status
+        boolean isProtected
+    }
+
+    BotMenuPermission {
+        string id PK
+        string scopeType
+        string scopeId
+        string featureKey
+        string action
+        string policy
+    }
+
+    SupervisorLifecycleLog {
+        string id PK
+        string userId FK
+        string workerId "Loose ID Reference"
+        string actionType
+        string previousSiteId
+        string newSiteId
+        bigint actorTelegramId
+    }
+
+    TelegramEnforcementTask {
+        string id PK
+        string siteId
+        bigint telegramId
+        bigint chatId
+        string taskType
+        string status
+        int retryCount
+    }
+
+    WorkerDelegation {
+        string id PK
+        string userId FK
+        string workerId "Loose ID Reference"
+        string permissionKey
+        string siteId FK
+        string status
+    }
+
+    BotMenuSnapshot {
+        string id PK
+        string title
+        json data
+        string createdById
+    }

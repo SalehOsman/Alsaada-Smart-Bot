@@ -4,6 +4,10 @@ import { PrismaClient } from './generated/client/index.js';
 import { createSoftDeleteExtension } from './extensions/soft-delete.extension.js';
 import { hashLedgerExtension } from './ledger/hash-ledger.extension.js';
 
+try {
+  process.loadEnvFile('.env');
+} catch {}
+
 const globalForPrisma = globalThis as unknown as {
   prismaInstance?: ReturnType<typeof createExtendedPrismaClient> | undefined;
   pgPoolInstance?: Pool | undefined;
@@ -16,7 +20,7 @@ export function getPgPool(): Pool {
       : (process.env.NODE_ENV === 'test' ? 3 : 15);
 
     globalForPrisma.pgPoolInstance = new Pool({
-      connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/alsaada_enterprise_postgres',
+      connectionString: process.env.DATABASE_URL || 'postgresql://alsaada_admin:alsaada_secure_pass_2026@127.0.0.1:5432/alsaada_db?schema=public',
       max: poolMax,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

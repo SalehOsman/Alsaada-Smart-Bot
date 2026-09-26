@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:packages/rbac/tests/dashboard-auth.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T14:12:51.575Z)
 - **معرف الكيان:** `test:packages/rbac/tests/dashboard-auth.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: packages/rbac/tests/dashboard-auth.spec.ts

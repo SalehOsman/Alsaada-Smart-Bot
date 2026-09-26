@@ -225,6 +225,14 @@ Derived from `docs/references/typesafe.md` and Work Plan 96, `/jev` leverages ni
   - Container Build Optimization: Flags `package-import-method copy` or slow un-cached Docker build anti-patterns.
   - Dynamic Set Invariant: Flags hardcoded scalar count assertions (`toBe(N)`) in governance tests.
 
+### 21. Modular Database Emancipation & Schema Parity Sentinel (`modularDbAndGhostPurgeSentinel`)
+- **Reference:** Work Plan 117 (`docs/work-plans/117-plan-sovereign-modular-database-emancipation-and-ghost-table-purge.md`), Rulebook 12 Invariants 9 & 10, Gate G20.
+- **Function:** Enforces the 4-component database architecture and ghost table purge:
+  - Verifies that all modules with database models strictly implement the 4 components: `schema.prisma`, `relations.contract.json`, `erd.mermaid`, `migrations/`.
+  - Flags any cross-module `@relation` or tight foreign key coupling, mandating indexed loose ID scalars (`Indexed Loose ID Scalars`).
+  - Verifies that zero ghost or deprecated models exist in the active PostgreSQL database, and that all purged models are documented in `deprecated-models.json` and drafted in `docs/schemas/future-modules-draft-schemas/`.
+  - Audits documentation parity across `docs/18`, `docs/21`, and physical schema reality, rejecting any documentation drift.
+
 ---
 
 ## 4. Physical Inspection Tooling & CLI Commands
