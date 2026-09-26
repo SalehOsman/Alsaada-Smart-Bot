@@ -4,16 +4,18 @@ import type { PrismaClient } from '@alsaada/database';
 export interface TypedRedisClient {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, ...args: unknown[]): Promise<unknown>;
-  del(key: string | string[]): Promise<number>;
   ping(): Promise<string>;
-  [method: string]: unknown;
 }
 
 export interface TypedTelemetryLogger {
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
-  [method: string]: unknown;
+  info?(message: string, meta?: Record<string, unknown>): void;
+  warn?(message: string, meta?: Record<string, unknown>): void;
+  error?(message: string, meta?: Record<string, unknown>): void;
+  recordPerformance?(...args: unknown[]): unknown;
+}
+
+export interface TypedScreenFlowService {
+  ensurePersistentKeyboard?(ctx: unknown, customText?: string, forceRefresh?: boolean): Promise<void>;
 }
 
 export interface ModuleRuntimeContext<C extends Context = Context> {
@@ -21,7 +23,7 @@ export interface ModuleRuntimeContext<C extends Context = Context> {
   redis: TypedRedisClient | null; // Strictly typed Redis client instance
   api: Bot<C>['api'];
   telemetry?: TypedTelemetryLogger;
-  screenFlow?: unknown;
+  screenFlow?: TypedScreenFlowService | unknown;
   [key: string]: unknown;
 }
 
