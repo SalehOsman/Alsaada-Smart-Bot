@@ -195,25 +195,24 @@ model AuditLog {
 }
 
 model BotPerformanceLog {
-  id                    String   @id @default(uuid())
-  traceId               String   @db.VarChar(36)
-  flowId                String
-  stepId                String
-  actorTelegramId       BigInt
-  networkLatencyMs      Int      @default(0)
-  dbQueryDurationMs     Int      @default(0)
-  totalExecutionMs      Int      @default(0)
-  memoryDeltaKb         Int      @default(0)
-  slaThresholdMs        Int      @default(1500)
-  slaBreached           Boolean  @default(false)
-  isThrottled           Boolean  @default(false)
-  isCacheHit            Boolean  @default(false)
-  concurrencyLockWaitMs Int      @default(0)
-  timestamp             DateTime @default(now())
+  id                      String   @id @default(uuid())
+  actorTelegramId         BigInt
+  callbackQueryOrCommand  String
+  executionTimeMs         Int
+  internalExecutionTimeMs Int?
+  telegramNetworkTimeMs   Int?
+  traceId                 String?  @db.VarChar(36)
+  module                  String?  @db.VarChar(50)
+  flowId                  String?  @db.VarChar(50)
+  cacheSource             String?  @default("DB_QUERY") @db.VarChar(20)
+  dbQueryCount            Int      @default(0)
+  performanceTier         String   @default("GREEN_FAST") // GREEN_FAST, YELLOW_ACCEPTABLE, RED_SLOW
+  memoryUsageMb           Decimal? @db.Decimal(8, 2)
+  errorMessage            String?
+  timestamp               DateTime @default(now())
 
-  @@index([flowId, timestamp])
-  @@index([actorTelegramId, timestamp])
-  @@index([slaBreached])
+  @@index([module, timestamp])
+  @@index([performanceTier, timestamp])
   @@map("bot_performance_logs")
 }
 

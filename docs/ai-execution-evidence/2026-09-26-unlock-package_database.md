@@ -1,15 +1,15 @@
 # ترخيص فك قفل الحوكمة: (package:database)
 
-- **التاريخ:** 2026-09-26 (2026-09-26T10:03:00.794Z)
+- **التاريخ:** 2026-09-26 (2026-09-26T13:16:31.429Z)
 - **معرف الكيان المفكوك:** `package:database`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-405276`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-C7F873`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T10:02:50Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T13:16:18Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Purge ghost tables and reduce core schema to 13 models per Work Plan 117
+Restore BotPerformanceLog schema in packages/database/prisma/schema.prisma to match migrations and runtime reality
 
 ## نطاق التعديل المرخص
 تم رفع القفل التشفيري عن الكيان `package:database` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).

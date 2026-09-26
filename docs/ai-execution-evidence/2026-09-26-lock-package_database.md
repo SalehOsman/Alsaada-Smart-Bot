@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (package:database)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T13:23:50.700Z)
 - **معرف الكيان:** `package:database`
 - **نوع الكيان:** `package`
 - **العنوان:** حزمة النواة: @alsaada/database
 - **المسار الأساسي:** `packages/database`
 - **عدد الملفات المقفلة:** 37 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+- **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
@@ -27,7 +27,7 @@
 | `packages/database/prisma/migrations/20260925210000_single_company_nullable_tenant/migration.sql` | `4cc02faccbfa751c523e484b29a772aaef112bff672f2152a6c4779078b476ce` |
 | `packages/database/prisma/migrations/20260926120000_modular_database_emancipation_and_ghost_table_purge/migration.sql` | `398ab9fd7aa09e2c0dbf1e3a26547fb63247517ab1ae4c2e14890b2fbab04846` |
 | `packages/database/prisma/migrations/migration_lock.toml` | `162ff5818ed32b5113b4fb76482715281a9f8809c6ebd1b72dd604de469f1746` |
-| `packages/database/prisma/schema.prisma` | `7babe9c30c34bc2077c07774c550eb813d06b7a00ee5957ba2226348c9893150` |
+| `packages/database/prisma/schema.prisma` | `464484856947b552d362fd6762d1a1bf6c01083062b416a0cf7800936f7d0bc3` |
 | `packages/database/prisma/seed-data/company-profile.json` | `fb24b8c44560a7bee5a53d1b1edcb9930fedf254755c40c6675cbd49632ce77a` |
 | `packages/database/prisma/seeds/bot-menu-catalog.seed.ts` | `d34d10481cf6765d7eaf3dcdd3d6ba69719cf722d46cc21f026256241745e115` |
 | `packages/database/src/client.ts` | `5da20d0e2cff368b0ab29194cd47c4e978441b619ada661467dde2026136ee30` |

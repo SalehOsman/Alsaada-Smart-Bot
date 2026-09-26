@@ -1,8 +1,8 @@
 {
   "version": "2.0.0",
   "description": "Sovereign Multi-File Database Schema Manifest (Work Plan 112)",
-  "generatedAt": "2026-09-26T10:17:10.650Z",
-  "compositeHash": "99e6cd7106603dfb99470b2a36dd57a42083f6422b3bf91cb256ca1091ba1a5b",
+  "generatedAt": "2026-09-26T13:17:05.488Z",
+  "compositeHash": "7ed35432ca74afe812af5ad5d6563e8a916bac418f5089ff03aea56ec19cba20",
   "totalModels": 40,
   "coreModelsCount": 14,
   "moduleModelsCount": 26,
@@ -10,7 +10,7 @@
     {
       "filename": "00-core.prisma",
       "sourceModule": "core",
-      "sha256": "37816ef2134ccba300ce7a8cf8fa7a258714601d6ae9087d7ad6346c9cef71c3",
+      "sha256": "88613e3888a9f85315db518313509be404e04e371da5c27fdb90014ea996331d",
       "models": [
         "CompanyProfile",
         "Project",

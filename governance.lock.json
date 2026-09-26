@@ -8345,83 +8345,6 @@
         }
       ]
     },
-    "module:settings": {
-      "id": "module:settings",
-      "type": "module",
-      "title": "موديول المنظومة: settings",
-      "directory": "modules/settings",
-      "lockedAt": "2026-09-26T11:12:36.707Z",
-      "files": [
-        {
-          "path": "modules/settings/CHANGELOG.md",
-          "sha256": "efeec2190251a446763faa53f3073020857f3d5fcbf3f41101d41077152f9992"
-        },
-        {
-          "path": "modules/settings/database/erd.mermaid",
-          "sha256": "451b925593db099bc58bfcb8df622b5e27223c72e21381bc4c439fe28ce1704f"
-        },
-        {
-          "path": "modules/settings/database/migrations/.gitkeep",
-          "sha256": "143863fba7a336096c344177d27bca321c51039907fcb6c809ab5d3f8dae848c"
-        },
-        {
-          "path": "modules/settings/database/relations.contract.json",
-          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
-        },
-        {
-          "path": "modules/settings/database/schema.prisma",
-          "sha256": "b9e048297965d4d943a7c2a293622c381adbbb3dad242febc9ec788421244125"
-        },
-        {
-          "path": "modules/settings/index.ts",
-          "sha256": "31d05deea3ee1778f4feaed2d07e432a9599ec37d2abeea0e4d1a248199f45c0"
-        },
-        {
-          "path": "modules/settings/module.contract.json",
-          "sha256": "91bb0980f6cf870fd3cfb327dc4201e76cdd23b43829b20fddf7e24cf20059e2"
-        },
-        {
-          "path": "modules/settings/package.json",
-          "sha256": "b6728534bf99e8be947d33f92cab3eb85a57ac14835c814d9f4900fec1780b65"
-        },
-        {
-          "path": "modules/settings/README.md",
-          "sha256": "78a9c880555155da5b5e1679aad44645a0d6e2ac4c7cb693791a4259880b4fd2"
-        },
-        {
-          "path": "modules/settings/src/index.ts",
-          "sha256": "e14a577847370185d00132461c8b7339e643d98335fe06bc2e9b3eae09d5415c"
-        },
-        {
-          "path": "modules/settings/src/module.register.ts",
-          "sha256": "e4a68bd7d7e65b48e072da40b3ac3d5d244ad20192845b40443c66d785a2fa15"
-        },
-        {
-          "path": "modules/settings/src/module.routes.ts",
-          "sha256": "47bf8307a8dd71c50f11aed6566f2e12bb2c4b234219e8d866ff56f2c807159a"
-        },
-        {
-          "path": "modules/settings/src/shared/module.constants.ts",
-          "sha256": "10444776d15784e7e77371dcbe0e8e619a60c07fc42db13c84e288aa11c321d6"
-        },
-        {
-          "path": "modules/settings/src/shared/module.types.ts",
-          "sha256": "580aafeb8509ee93b0f792c8c49d28db4c1d3c42d2f547707c50c08d8e42dbb6"
-        },
-        {
-          "path": "modules/settings/src/shared/settings-hub.ts",
-          "sha256": "005b0fd45a761a0b3fdcd62c51d2d4b75f6ecf564b96f120649a53dcff75944f"
-        },
-        {
-          "path": "modules/settings/src/shared/supplier-portal.handler.ts",
-          "sha256": "9ff3401f4fb3ffb859e22efdaa1b487b369d7b9d3218a348be965a13f20acfec"
-        },
-        {
-          "path": "modules/settings/tsconfig.json",
-          "sha256": "a95f48424ac5a495c1bb010253c399908f8fe010eae9a90c7ea54174d551ea48"
-        }
-      ]
-    },
     "module:workforce": {
       "id": "module:workforce",
       "type": "module",
@@ -8540,163 +8463,6 @@
         {
           "path": "modules/workforce/tsconfig.json",
           "sha256": "a95f48424ac5a495c1bb010253c399908f8fe010eae9a90c7ea54174d551ea48"
-        }
-      ]
-    },
-    "package:database": {
-      "id": "package:database",
-      "type": "package",
-      "title": "حزمة النواة: @alsaada/database",
-      "directory": "packages/database",
-      "lockedAt": "2026-09-26T11:12:36.707Z",
-      "files": [
-        {
-          "path": "packages/database/CHANGELOG.md",
-          "sha256": "9306c7957c1fa2e1ee9fa80ab06abe82e9a43b195e707736e801e6f094a92148"
-        },
-        {
-          "path": "packages/database/package.json",
-          "sha256": "6b2de90119dcf6beb859dbd6d992f914707664fc065331c17282b16de174fe0f"
-        },
-        {
-          "path": "packages/database/prisma.config.ts",
-          "sha256": "d8bb7c86917ef2734f1443c6e96618c9c051b082468746ff0304aa67ebfa7f5b"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260911000000_init_enterprise_hash_ledger/migration.sql",
-          "sha256": "30ca6a54b21f14cc6233e8e667b69c437522f77453ebe2cd9e4b45e9c7cecaee"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260912090000_add_trace_incidents_and_magic_claim/migration.sql",
-          "sha256": "dc6fcabbc939db2b4f9e3a55a359e975da821101425cf50fbc749b990a232118"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260913010000_align_financial_ledger_hash_defaults/migration.sql",
-          "sha256": "4871d26a537ecee548e54aa2ce493ed386ea84e42e7e48830f20ff4b5fe243b7"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260913100000_unified_rbac_auth_links_and_sessions/migration.sql",
-          "sha256": "ff1c5591d936b5dc4f3cfbb1e794acf96565586f7b8a7e480f377e0b8d027686"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260913210000_dashboard_auth_hardening_ssot/migration.sql",
-          "sha256": "56f88bc023701ec3d9966918705e9a11fa0a21919522d56c19695b6f9aae1f88"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260914120000_workforce_parity_and_canteen_price_history/migration.sql",
-          "sha256": "09f6367807c58f73e4af9633649f55b181ca42f84526d86fe6c44f655ceeabb7"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260916000000_telemetry_bot_performance_columns/migration.sql",
-          "sha256": "18b421ef4dfbdeb21274cbaebe079d90de5b4ae83c16ad436080483c05dae191"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260917010000_add_ppe_site_and_worker_commitment_scores/migration.sql",
-          "sha256": "5fa03cdbcb8db1bd694e56404c896231b0610f57fd333a54f0b29c7d3f7e8f9c"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260918_immutable_financial_ledger_triggers/migration.sql",
-          "sha256": "aae5ec466141299c6d58742c6674e6ba3518a417a5440f375256793dd81a8e5a"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260925210000_single_company_nullable_tenant/migration.sql",
-          "sha256": "4cc02faccbfa751c523e484b29a772aaef112bff672f2152a6c4779078b476ce"
-        },
-        {
-          "path": "packages/database/prisma/migrations/20260926120000_modular_database_emancipation_and_ghost_table_purge/migration.sql",
-          "sha256": "398ab9fd7aa09e2c0dbf1e3a26547fb63247517ab1ae4c2e14890b2fbab04846"
-        },
-        {
-          "path": "packages/database/prisma/migrations/migration_lock.toml",
-          "sha256": "162ff5818ed32b5113b4fb76482715281a9f8809c6ebd1b72dd604de469f1746"
-        },
-        {
-          "path": "packages/database/prisma/schema.prisma",
-          "sha256": "7babe9c30c34bc2077c07774c550eb813d06b7a00ee5957ba2226348c9893150"
-        },
-        {
-          "path": "packages/database/prisma/seed-data/company-profile.json",
-          "sha256": "fb24b8c44560a7bee5a53d1b1edcb9930fedf254755c40c6675cbd49632ce77a"
-        },
-        {
-          "path": "packages/database/prisma/seeds/bot-menu-catalog.seed.ts",
-          "sha256": "d34d10481cf6765d7eaf3dcdd3d6ba69719cf722d46cc21f026256241745e115"
-        },
-        {
-          "path": "packages/database/src/client.ts",
-          "sha256": "5da20d0e2cff368b0ab29194cd47c4e978441b619ada661467dde2026136ee30"
-        },
-        {
-          "path": "packages/database/src/crypto/blind-index.ts",
-          "sha256": "2ac9290b9870b11691db875f68c74aa7a77a9b3ba57541ec4c747a9e2457a7c9"
-        },
-        {
-          "path": "packages/database/src/crypto/cipher.ts",
-          "sha256": "3d0043d35be884e7a90e0ffa4dabe1feda9daaa619a6cbc40d00de08f2c326f5"
-        },
-        {
-          "path": "packages/database/src/extensions/soft-delete-metadata.ts",
-          "sha256": "fc2a92f8696badc5a2695dc0267918a66d675481402f38e95d9d686b982d3752"
-        },
-        {
-          "path": "packages/database/src/extensions/soft-delete.extension.ts",
-          "sha256": "dbdbc2813ef3aa19cd00bcf838c3e548a207fbee6383f490a838434a3abdbaac"
-        },
-        {
-          "path": "packages/database/src/index.ts",
-          "sha256": "087a4378b47e154f9e88f55f0ace8df72e29f08204ad4a349c5ca0ccf95a93f8"
-        },
-        {
-          "path": "packages/database/src/ledger/hash-chain.ts",
-          "sha256": "181bebd39b5d387e9ce61642cad8f8a2bf7f369fa2e614c8ef0a62a8412ca280"
-        },
-        {
-          "path": "packages/database/src/ledger/hash-ledger.extension.ts",
-          "sha256": "5c06c2decceec0ff65707ff91a6b03dff58db6f9f66afeb109ff4d4363cadaf6"
-        },
-        {
-          "path": "packages/database/src/ledger/verify-ledger-chain.ts",
-          "sha256": "81b5c431166db2ae8d312f30ae554ba432ef387b9b75fff754abdaaf7acc9663"
-        },
-        {
-          "path": "packages/database/src/repositories/custody-transaction.repository.ts",
-          "sha256": "a7e63e367d2757ba04590435271b6c65bc01e0fa545858359b41a32f6d7292a8"
-        },
-        {
-          "path": "packages/database/src/scripts/purge-test-data.ts",
-          "sha256": "3313e0a136663baf1e772a243115de0509773a70f9c606fb8dd4c3ea21fa505f"
-        },
-        {
-          "path": "packages/database/src/scripts/remediate-job-matrix-and-cycles.ts",
-          "sha256": "c0a2b39570ca0de63ceca49c7cfc95b6965a0eed627b1768b4f2ad29f3b4af0c"
-        },
-        {
-          "path": "packages/database/src/scripts/remediate-shift-templates-and-jobs.ts",
-          "sha256": "9b798a65b9b0a08395df9eee8bb5a386a6e3c22f2f64b761e6a0c6e7c9d88600"
-        },
-        {
-          "path": "packages/database/src/scripts/seed-bot-menu-catalog.ts",
-          "sha256": "4a7be35683cd64eccc6ddc90ad7ab783d79c3ae82dab4259f98705b0ed5a83d0"
-        },
-        {
-          "path": "packages/database/src/scripts/seed-canteen-cigarettes.ts",
-          "sha256": "2b5f1c0fec856feafcfd8812e8d13bb5067d476b9d0d3ab624639b4586b9dc2b"
-        },
-        {
-          "path": "packages/database/src/scripts/seed-company-profile.ts",
-          "sha256": "449f6ee4dfda0393304ac0e2ee5a03bf876b418aca5d76c7f3cbd49c0f35fa0f"
-        },
-        {
-          "path": "packages/database/src/scripts/seed-hq-site.ts",
-          "sha256": "c2f1682fb7c267a1177f953e825697013ce67b6da75faaa9ef3b975618c399dc"
-        },
-        {
-          "path": "packages/database/src/scripts/studio-bridge.mjs",
-          "sha256": "be69d461ed600413a0c7f4c117cf99b31509c03eea9efc3551af902bd05444ea"
-        },
-        {
-          "path": "packages/database/tsconfig.json",
-          "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
         }
       ]
     },
@@ -8923,6 +8689,240 @@
         {
           "path": "GEMINI.md",
           "sha256": "8dea67bbe30fe749254c02e39bf1aa9d86bc9b91ea2f79babf0e6778cde7424f"
+        }
+      ]
+    },
+    "package:database": {
+      "id": "package:database",
+      "type": "package",
+      "title": "حزمة النواة: @alsaada/database",
+      "directory": "packages/database",
+      "lockedAt": "2026-09-26T13:23:50.700Z",
+      "files": [
+        {
+          "path": "packages/database/CHANGELOG.md",
+          "sha256": "9306c7957c1fa2e1ee9fa80ab06abe82e9a43b195e707736e801e6f094a92148"
+        },
+        {
+          "path": "packages/database/package.json",
+          "sha256": "6b2de90119dcf6beb859dbd6d992f914707664fc065331c17282b16de174fe0f"
+        },
+        {
+          "path": "packages/database/prisma.config.ts",
+          "sha256": "d8bb7c86917ef2734f1443c6e96618c9c051b082468746ff0304aa67ebfa7f5b"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260911000000_init_enterprise_hash_ledger/migration.sql",
+          "sha256": "30ca6a54b21f14cc6233e8e667b69c437522f77453ebe2cd9e4b45e9c7cecaee"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260912090000_add_trace_incidents_and_magic_claim/migration.sql",
+          "sha256": "dc6fcabbc939db2b4f9e3a55a359e975da821101425cf50fbc749b990a232118"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260913010000_align_financial_ledger_hash_defaults/migration.sql",
+          "sha256": "4871d26a537ecee548e54aa2ce493ed386ea84e42e7e48830f20ff4b5fe243b7"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260913100000_unified_rbac_auth_links_and_sessions/migration.sql",
+          "sha256": "ff1c5591d936b5dc4f3cfbb1e794acf96565586f7b8a7e480f377e0b8d027686"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260913210000_dashboard_auth_hardening_ssot/migration.sql",
+          "sha256": "56f88bc023701ec3d9966918705e9a11fa0a21919522d56c19695b6f9aae1f88"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260914120000_workforce_parity_and_canteen_price_history/migration.sql",
+          "sha256": "09f6367807c58f73e4af9633649f55b181ca42f84526d86fe6c44f655ceeabb7"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260916000000_telemetry_bot_performance_columns/migration.sql",
+          "sha256": "18b421ef4dfbdeb21274cbaebe079d90de5b4ae83c16ad436080483c05dae191"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260917010000_add_ppe_site_and_worker_commitment_scores/migration.sql",
+          "sha256": "5fa03cdbcb8db1bd694e56404c896231b0610f57fd333a54f0b29c7d3f7e8f9c"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260918_immutable_financial_ledger_triggers/migration.sql",
+          "sha256": "aae5ec466141299c6d58742c6674e6ba3518a417a5440f375256793dd81a8e5a"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260925210000_single_company_nullable_tenant/migration.sql",
+          "sha256": "4cc02faccbfa751c523e484b29a772aaef112bff672f2152a6c4779078b476ce"
+        },
+        {
+          "path": "packages/database/prisma/migrations/20260926120000_modular_database_emancipation_and_ghost_table_purge/migration.sql",
+          "sha256": "398ab9fd7aa09e2c0dbf1e3a26547fb63247517ab1ae4c2e14890b2fbab04846"
+        },
+        {
+          "path": "packages/database/prisma/migrations/migration_lock.toml",
+          "sha256": "162ff5818ed32b5113b4fb76482715281a9f8809c6ebd1b72dd604de469f1746"
+        },
+        {
+          "path": "packages/database/prisma/schema.prisma",
+          "sha256": "464484856947b552d362fd6762d1a1bf6c01083062b416a0cf7800936f7d0bc3"
+        },
+        {
+          "path": "packages/database/prisma/seed-data/company-profile.json",
+          "sha256": "fb24b8c44560a7bee5a53d1b1edcb9930fedf254755c40c6675cbd49632ce77a"
+        },
+        {
+          "path": "packages/database/prisma/seeds/bot-menu-catalog.seed.ts",
+          "sha256": "d34d10481cf6765d7eaf3dcdd3d6ba69719cf722d46cc21f026256241745e115"
+        },
+        {
+          "path": "packages/database/src/client.ts",
+          "sha256": "5da20d0e2cff368b0ab29194cd47c4e978441b619ada661467dde2026136ee30"
+        },
+        {
+          "path": "packages/database/src/crypto/blind-index.ts",
+          "sha256": "2ac9290b9870b11691db875f68c74aa7a77a9b3ba57541ec4c747a9e2457a7c9"
+        },
+        {
+          "path": "packages/database/src/crypto/cipher.ts",
+          "sha256": "3d0043d35be884e7a90e0ffa4dabe1feda9daaa619a6cbc40d00de08f2c326f5"
+        },
+        {
+          "path": "packages/database/src/extensions/soft-delete-metadata.ts",
+          "sha256": "fc2a92f8696badc5a2695dc0267918a66d675481402f38e95d9d686b982d3752"
+        },
+        {
+          "path": "packages/database/src/extensions/soft-delete.extension.ts",
+          "sha256": "dbdbc2813ef3aa19cd00bcf838c3e548a207fbee6383f490a838434a3abdbaac"
+        },
+        {
+          "path": "packages/database/src/index.ts",
+          "sha256": "087a4378b47e154f9e88f55f0ace8df72e29f08204ad4a349c5ca0ccf95a93f8"
+        },
+        {
+          "path": "packages/database/src/ledger/hash-chain.ts",
+          "sha256": "181bebd39b5d387e9ce61642cad8f8a2bf7f369fa2e614c8ef0a62a8412ca280"
+        },
+        {
+          "path": "packages/database/src/ledger/hash-ledger.extension.ts",
+          "sha256": "5c06c2decceec0ff65707ff91a6b03dff58db6f9f66afeb109ff4d4363cadaf6"
+        },
+        {
+          "path": "packages/database/src/ledger/verify-ledger-chain.ts",
+          "sha256": "81b5c431166db2ae8d312f30ae554ba432ef387b9b75fff754abdaaf7acc9663"
+        },
+        {
+          "path": "packages/database/src/repositories/custody-transaction.repository.ts",
+          "sha256": "a7e63e367d2757ba04590435271b6c65bc01e0fa545858359b41a32f6d7292a8"
+        },
+        {
+          "path": "packages/database/src/scripts/purge-test-data.ts",
+          "sha256": "3313e0a136663baf1e772a243115de0509773a70f9c606fb8dd4c3ea21fa505f"
+        },
+        {
+          "path": "packages/database/src/scripts/remediate-job-matrix-and-cycles.ts",
+          "sha256": "c0a2b39570ca0de63ceca49c7cfc95b6965a0eed627b1768b4f2ad29f3b4af0c"
+        },
+        {
+          "path": "packages/database/src/scripts/remediate-shift-templates-and-jobs.ts",
+          "sha256": "9b798a65b9b0a08395df9eee8bb5a386a6e3c22f2f64b761e6a0c6e7c9d88600"
+        },
+        {
+          "path": "packages/database/src/scripts/seed-bot-menu-catalog.ts",
+          "sha256": "4a7be35683cd64eccc6ddc90ad7ab783d79c3ae82dab4259f98705b0ed5a83d0"
+        },
+        {
+          "path": "packages/database/src/scripts/seed-canteen-cigarettes.ts",
+          "sha256": "2b5f1c0fec856feafcfd8812e8d13bb5067d476b9d0d3ab624639b4586b9dc2b"
+        },
+        {
+          "path": "packages/database/src/scripts/seed-company-profile.ts",
+          "sha256": "449f6ee4dfda0393304ac0e2ee5a03bf876b418aca5d76c7f3cbd49c0f35fa0f"
+        },
+        {
+          "path": "packages/database/src/scripts/seed-hq-site.ts",
+          "sha256": "c2f1682fb7c267a1177f953e825697013ce67b6da75faaa9ef3b975618c399dc"
+        },
+        {
+          "path": "packages/database/src/scripts/studio-bridge.mjs",
+          "sha256": "be69d461ed600413a0c7f4c117cf99b31509c03eea9efc3551af902bd05444ea"
+        },
+        {
+          "path": "packages/database/tsconfig.json",
+          "sha256": "c4742ea95afd3be1738d8eda846345306033639c933d46d9b763577dd8845280"
+        }
+      ]
+    },
+    "module:settings": {
+      "id": "module:settings",
+      "type": "module",
+      "title": "موديول المنظومة: settings",
+      "directory": "modules/settings",
+      "lockedAt": "2026-09-26T13:24:28.133Z",
+      "files": [
+        {
+          "path": "modules/settings/CHANGELOG.md",
+          "sha256": "efeec2190251a446763faa53f3073020857f3d5fcbf3f41101d41077152f9992"
+        },
+        {
+          "path": "modules/settings/database/erd.mermaid",
+          "sha256": "451b925593db099bc58bfcb8df622b5e27223c72e21381bc4c439fe28ce1704f"
+        },
+        {
+          "path": "modules/settings/database/migrations/.gitkeep",
+          "sha256": "143863fba7a336096c344177d27bca321c51039907fcb6c809ab5d3f8dae848c"
+        },
+        {
+          "path": "modules/settings/database/relations.contract.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "path": "modules/settings/database/schema.prisma",
+          "sha256": "b9e048297965d4d943a7c2a293622c381adbbb3dad242febc9ec788421244125"
+        },
+        {
+          "path": "modules/settings/index.ts",
+          "sha256": "31d05deea3ee1778f4feaed2d07e432a9599ec37d2abeea0e4d1a248199f45c0"
+        },
+        {
+          "path": "modules/settings/module.contract.json",
+          "sha256": "91bb0980f6cf870fd3cfb327dc4201e76cdd23b43829b20fddf7e24cf20059e2"
+        },
+        {
+          "path": "modules/settings/package.json",
+          "sha256": "b6728534bf99e8be947d33f92cab3eb85a57ac14835c814d9f4900fec1780b65"
+        },
+        {
+          "path": "modules/settings/README.md",
+          "sha256": "78a9c880555155da5b5e1679aad44645a0d6e2ac4c7cb693791a4259880b4fd2"
+        },
+        {
+          "path": "modules/settings/src/index.ts",
+          "sha256": "e14a577847370185d00132461c8b7339e643d98335fe06bc2e9b3eae09d5415c"
+        },
+        {
+          "path": "modules/settings/src/module.register.ts",
+          "sha256": "e4a68bd7d7e65b48e072da40b3ac3d5d244ad20192845b40443c66d785a2fa15"
+        },
+        {
+          "path": "modules/settings/src/module.routes.ts",
+          "sha256": "47bf8307a8dd71c50f11aed6566f2e12bb2c4b234219e8d866ff56f2c807159a"
+        },
+        {
+          "path": "modules/settings/src/shared/module.constants.ts",
+          "sha256": "10444776d15784e7e77371dcbe0e8e619a60c07fc42db13c84e288aa11c321d6"
+        },
+        {
+          "path": "modules/settings/src/shared/module.types.ts",
+          "sha256": "580aafeb8509ee93b0f792c8c49d28db4c1d3c42d2f547707c50c08d8e42dbb6"
+        },
+        {
+          "path": "modules/settings/src/shared/settings-hub.ts",
+          "sha256": "005b0fd45a761a0b3fdcd62c51d2d4b75f6ecf564b96f120649a53dcff75944f"
+        },
+        {
+          "path": "modules/settings/src/shared/supplier-portal.handler.ts",
+          "sha256": "9ff3401f4fb3ffb859e22efdaa1b487b369d7b9d3218a348be965a13f20acfec"
+        },
+        {
+          "path": "modules/settings/tsconfig.json",
+          "sha256": "a95f48424ac5a495c1bb010253c399908f8fe010eae9a90c7ea54174d551ea48"
         }
       ]
     }
