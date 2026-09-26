@@ -190,6 +190,11 @@ All code and flows must pass the 23 Quality Gates defined in [`docs/27`](docs/27
      ```
    - اجتياز صمام حراسة بوابة الجودة G20 (`pnpm db:parity:verify`) شرط قطعي غير قابل للاستثناء لأي دمج أو اعتماد.
 
+### 8.7 محددات سلامة خطافات الالتزام ومزامنة التوثيق المشفر (Pre-Commit & Docs Sync Invariants)
+1. **إلزامية إعادة قفل بوابة التوثيق بعد المزامنة (Docs Sync Auto-Relock):** تشغيل أمر `pnpm docs:sync` يقوم آلياً بتحديث محتوى `apps/docs/src/content/docs/`. يُلزم الوكيل فوراً بتنفيذ `pnpm lock app:docs` لختم الكيان المشفر ومنع كسر `pnpm lock:verify`.
+2. **صيانة بيئة خطافات الالتزام السريع (Pre-Commit Environment Guard):** عند ارتكاب أي Commit يتضمن تعديلات في المخططات أو النواة المالية، يجب ضمان تمرير متغير `DATABASE_URL` صراحة أو الاعتماد على وضع الفحص التشفيري الذاكراتي الخفيف (`memoryOnly: true`) لتفادي تجويع حلقة الأحداث الناتج عن التوازي الكثيف.
+3. **التسلسل الإلزامي لفك الأقفال المشفرة (Sequential OTP Challenge Invariant):** ملف التحدي `.governance-cache/pending-unlock.json` ذو سعة أحادية؛ يُحظر طلب فك أقفال متعددة بالتوازي، ويلتزم الوكيل ببروتوكول الخطوات الخمس تسلسلياً (طلب -> اعتماد -> تأكيد -> تعديل -> إعادة قفل).
+
 ### 9. Novel Enterprise Reliability Suite
 1. **Strict Idempotency:** Every state transition and financial action must use idempotency keys.
 2. **Zod Runtime Deserialization:** Zero untyped `JSON.parse` across boundaries.

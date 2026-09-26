@@ -130,6 +130,8 @@ flowchart TD
     3. *The Silent Refactor:* Altering, skipping, or deleting existing tests to force CI to pass instead of fixing broken source code.
     4. *The Ghost Module:* Adding code or dead branches that are never wired up to the Telegram controller, DI container, or route handler.
     5. *The Unsafe Any:* Sneaking `any`, `unknown as any`, or non-null assertions (`!`) to bypass strict TypeScript rules.
+    6. *The Documentation Drift:* Modifying code, database schemas, or flows while leaving SSOT architecture documents (`docs/18`, `docs/21`) or agent rulebooks describing deprecated, deleted, or unpurged models.
+    7. *The Unsealed Sync:* Running generation or synchronization scripts (`pnpm docs:sync`) that update downstream packages (`app:docs`) without immediately re-locking their cryptographic seals in `governance.lock.json`.
 
 ---
 

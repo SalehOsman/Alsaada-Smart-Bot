@@ -1,18 +1,18 @@
-# ترخيص فك قفل الحوكمة: (governance:GEMINI.md)
+# ترخيص فك قفل الحوكمة: (governance:.agents/skills)
 
-- **التاريخ:** 2026-09-26 (2026-09-26T12:26:07.766Z)
-- **معرف الكيان المفكوك:** `governance:GEMINI.md`
+- **التاريخ:** 2026-09-26 (2026-09-26T12:24:00.298Z)
+- **معرف الكيان المفكوك:** `governance:.agents/skills`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-C4708A`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-C83433`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T12:25:56Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T12:23:32Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Add Section 8.7 Pre-Commit and Docs Sync Invariants from WP 117 learnings
+Update jev and saleh skills with WP 117 learnings and documentation drift watchdogs
 
 ## نطاق التعديل المرخص
-تم رفع القفل التشفيري عن الكيان `governance:GEMINI.md` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).
+تم رفع القفل التشفيري عن الكيان `governance:.agents/skills` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).
 يُحظر تماماً تعديل أي ملف خارج نطاق هذا الكيان، وأي مساس بملف آخر سيسقط فوراً عند الـ Git Commit.
 فور الانتهاء من العمل واجتياز الاختبارات، يلزم إعادة ختم الكيان عبر:
-`pnpm lock governance:GEMINI.md`
+`pnpm lock governance:.agents/skills`
