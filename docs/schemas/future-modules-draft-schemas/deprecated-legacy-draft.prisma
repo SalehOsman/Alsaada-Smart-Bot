@@ -1,0 +1,69 @@
+// =============================================================================
+// Draft Prisma Schema for Deprecated Legacy Models
+// Archived per Work Plan 117 (Sovereign Modular Database Emancipation)
+// =============================================================================
+
+model SiteAccommodation {
+  id               String   @id @default(uuid())
+  siteId           String
+  unitNumber       String // e.g. CRV-04
+  unitType         String   @default("WORKER_BARRACKS") // ENGINEER_CABIN, WORKER_BARRACKS, VIP_GUEST
+  capacity         Int      @default(4)
+  currentOccupancy Int      @default(0)
+  supervisorName   String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  assignments SiteAccommodationAssignment[]
+
+  @@map("site_accommodations")
+}
+
+model SiteAccommodationAssignment {
+  id              String    @id @default(uuid())
+  accommodationId String
+  workerId        String
+  bedNumber       String?
+  checkInDate     DateTime  @default(now())
+  checkOutDate    DateTime?
+  status          String    @default("ACTIVE") // ACTIVE, CHECKED_OUT
+  notes           String?
+
+  accommodation SiteAccommodation @relation(fields: [accommodationId], references: [id])
+
+  @@map("site_accommodation_assignments")
+}
+
+model CompanyDocument {
+  id                    String    @id @default(uuid())
+  docNumber             String
+  title                 String
+  category              String // LEGAL_REGISTRATION, QUARRY_LICENSE, EQUIPMENT_TITLE, LEASE_CONTRACT, TAX_RECORD
+  issueDate             DateTime?
+  expiryDate            DateTime?
+  fileUri               String
+  sha256Checksum        String?
+  fileSizeBytes         BigInt?
+  alertDaysBeforeExpiry Int       @default(30)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("company_documents")
+}
+
+model DeadLetterEvent {
+  id          String   @id @default(uuid())
+  eventId     String   @unique @map("event_id")
+  eventType   String   @map("event_type")
+  aggregateId String?  @map("aggregate_id")
+  payload     Json
+  retryCount  Int      @map("retry_count")
+  lastError   String?  @map("last_error")
+  createdAt   DateTime @default(now()) @map("created_at")
+  movedAt     DateTime @default(now()) @map("moved_at")
+
+  @@index([eventType])
+  @@index([movedAt])
+  @@map("dead_letter_events")
+}

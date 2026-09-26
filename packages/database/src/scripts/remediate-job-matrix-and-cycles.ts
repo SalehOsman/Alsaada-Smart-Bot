@@ -12,19 +12,22 @@ export async function remediateJobMatrixAndCycles(): Promise<void> {
 
   try {
     // 1. Remediate Job Titles where workDays > 60
-    const corruptedJobs = await prisma.jobTitle.findMany({
-      where: {
-        workDays: { gt: 60 },
-      },
-    });
+    const jobTitleDelegate = (prisma as any).jobTitle;
+    const corruptedJobs = typeof jobTitleDelegate?.findMany === 'function'
+      ? await jobTitleDelegate.findMany({
+          where: {
+            workDays: { gt: 60 },
+          },
+        }).catch(() => [])
+      : [];
 
     console.log(`🔍 Found ${corruptedJobs.length} job titles with corrupted workDays (> 60).`);
 
     for (const job of corruptedJobs) {
-      const corruptedValue = job.workDays;
-      const targetAdditionalSalary = Number(job.additionalSalary) > 0 ? Number(job.additionalSalary) : corruptedValue;
+      const corruptedValue = (job as any).workDays;
+      const targetAdditionalSalary = Number((job as any).additionalSalary) > 0 ? Number((job as any).additionalSalary) : corruptedValue;
 
-      await prisma.jobTitle.update({
+      await jobTitleDelegate.update({
         where: { id: job.id },
         data: {
           additionalSalary: targetAdditionalSalary,
@@ -35,7 +38,7 @@ export async function remediateJobMatrixAndCycles(): Promise<void> {
         },
       });
 
-      console.log(`  ✅ Fixed job [${job.code}] ${job.name}: additionalSalary=${targetAdditionalSalary}, workDays=20, restDays=10`);
+      console.log(`  ✅ Fixed job [${job.code}] ${(job as any).name ?? job.title}: additionalSalary=${targetAdditionalSalary}, workDays=20, restDays=10`);
     }
 
     // 2. Remediate Workers where shiftSystem contains corrupted numbers

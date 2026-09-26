@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:tests/work-plan-116-ci-ephemeral-db-parity-and-anti-mirage.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
 - **معرف الكيان:** `test:tests/work-plan-116-ci-ephemeral-db-parity-and-anti-mirage.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: tests/work-plan-116-ci-ephemeral-db-parity-and-anti-mirage.spec.ts

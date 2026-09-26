@@ -1,15 +1,15 @@
 # ترخيص فك قفل الحوكمة: (governance:GEMINI.md)
 
-- **التاريخ:** 2026-09-26 (2026-09-26T08:24:58.207Z)
+- **التاريخ:** 2026-09-26 (2026-09-26T11:58:49.145Z)
 - **معرف الكيان المفكوك:** `governance:GEMINI.md`
 - **عبارة الاعتماد الصريحة المعتمدة:** **موافق على الفتح**
-- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-AEEF48`
+- **رمز التحدي لمرة واحدة (OTP Nonce):** `UNLOCK-A87FCE`
 - **مصدر الاعتماد والتحقق الجنائي:** `USER_EXPLICIT`
-- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T08:24:49Z`
+- **التوقيع الزمني لمدخل المستخدم:** `2026-09-26T11:58:24Z`
 - **مبدأ العزل:** 🔒 **Zero Blast Radius** (سائر الكيانات الأخرى في المنظومة لا تزال مقفلة ومحصنة تشفيرياً 100%).
 
 ## المبرر وأسباب التعديل (Justification & Reason)
-Codify Rulebook 13 and Anti-Mirage Invariants into supreme micro-kernel (WP 116 Pillar 1)
+Add Work Plan 117 Modular Database Architecture and Loose Coupling Invariant to SSOT charter
 
 ## نطاق التعديل المرخص
 تم رفع القفل التشفيري عن الكيان `governance:GEMINI.md` حصراً لإجراء التعديلات المطلوبة بموجب بروتوكول التحدي والاستجابة المتغير (Work Plan 90).

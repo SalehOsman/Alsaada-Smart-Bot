@@ -1,0 +1,164 @@
+// =============================================================================
+// Draft Prisma Schema for Future Module: Custody, Site Expenses & Field Treasury
+// Archived per Work Plan 117 (Sovereign Modular Database Emancipation)
+// When implementing this module, review, update and move to modules/custody/database/
+// =============================================================================
+
+model CompanyTreasury {
+  id             String   @id @default(uuid())
+  name           String
+  accountType    String   @default("MAIN_CASH_VAULT") // MAIN_CASH_VAULT, BANK_ACCOUNT, VODAFONE_CASH_WALLET, INSTAPAY_WALLET
+  bankName       String?
+  accountNumber  String?
+  currentBalance Decimal  @default(0) @db.Decimal(14, 2)
+  version        Int      @default(1) // Optimistic locking
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  fundedCustodies FinancialCustody[]
+
+  @@map("company_treasuries")
+}
+
+model FinancialCustody {
+  id                         String    @id @default(uuid())
+  custodyNumber              String    @unique // e.g. #FC-YYYY-XXX or #EX-YYYY-XXX
+  siteId                     String    // Core Loose ID reference
+  custodianWorkerId          String    // Workforce Loose ID reference
+  snapshotWorkerName         String?   // Immutable Denormalized Snapshot (WP 117)
+  snapshotWorkerNationalId   String?   // Immutable Denormalized Snapshot (WP 117)
+  initialAmount              Decimal   @db.Decimal(14, 2)
+  currentBalance             Decimal   @db.Decimal(14, 2)
+  totalLiquidatedExpenses    Decimal   @default(0) @db.Decimal(14, 2)
+  totalCashAdvancesDisbursed Decimal   @default(0) @db.Decimal(14, 2)
+  purpose                    String
+  status                     String    @default("ACTIVE") // ACTIVE, SETTLEMENT_PENDING, CLOSED
+  disbursedAt                DateTime  @default(now())
+  closedAt                   DateTime?
+  disbursedFromTreasuryId    String?
+  version                    Int       @default(1) // Optimistic locking
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  treasury            CompanyTreasury?     @relation(fields: [disbursedFromTreasuryId], references: [id])
+  expenseItems        CustodyExpenseItem[]
+  settlements         CustodySettlement[]
+  hospitalityExpenses HospitalityExpense[]
+
+  @@index([siteId, status])
+  @@index([custodianWorkerId, status])
+  @@map("financial_custodies")
+}
+
+model CustodyExpenseItem {
+  id               String   @id @default(uuid())
+  custodyId        String
+  itemSequence     Int
+  expenseCategory  String
+  amount           Decimal  @db.Decimal(12, 2)
+  vendorName       String?
+  receiptDate      DateTime
+  description      String
+  receiptImageUri  String?
+  sha256Checksum   String?
+  ocrExtractedData Json?
+  isApproved       Boolean  @default(true)
+  recordHash       String   @default("") @map("record_hash")
+  previousHash     String?  @map("previous_hash")
+  hashTimestamp    DateTime @default(now()) @map("hash_timestamp")
+  createdAt        DateTime @default(now())
+
+  custody FinancialCustody @relation(fields: [custodyId], references: [id])
+
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
+  @@map("custody_expense_items")
+}
+
+model CustodySettlement {
+  id                      String    @id @default(uuid())
+  settlementNumber        String    @unique // e.g. #SET-YYYY-XXX
+  custodyId               String
+  closingTotalInvoices    Decimal   @db.Decimal(14, 2)
+  closingTotalAdvances    Decimal   @db.Decimal(14, 2)
+  remainingCashReturned   Decimal   @db.Decimal(14, 2)
+  settlementDisposition   String    @default("REFUND_TO_TREASURY") // REFUND_TO_TREASURY, ROLLOVER_NEW_CUSTODY, DEDUCT_AS_ADVANCE_ON_CUSTODIAN
+  settlementSheetPhotoUri String?
+  status                  String    @default("PENDING_AUDIT") // PENDING_AUDIT, APPROVED, REJECTED
+  auditedByUserId         BigInt?
+  settledAt               DateTime?
+  recordHash              String    @default("") @map("record_hash")
+  previousHash            String?   @map("previous_hash")
+  hashTimestamp           DateTime  @default(now()) @map("hash_timestamp")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  custody FinancialCustody @relation(fields: [custodyId], references: [id])
+
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
+  @@map("custody_settlements")
+}
+
+model HospitalityExpense {
+  id                  String   @id @default(uuid())
+  voucherId           String   @unique // e.g. #HOSP-YYYY-XXX
+  siteId              String   // Core Loose ID reference
+  amount              Decimal  @db.Decimal(10, 2)
+  guestNameOrEntity   String
+  occasion            String
+  sourceCustodyId     String?
+  disbursedByWorkerId String?  // Workforce Loose ID reference
+  receiptPhotoUri     String?
+  sha256Checksum      String?
+  recordHash          String   @default("") @map("record_hash")
+  previousHash        String?  @map("previous_hash")
+  hashTimestamp       DateTime @default(now()) @map("hash_timestamp")
+  createdAt           DateTime @default(now())
+
+  custody FinancialCustody? @relation(fields: [sourceCustodyId], references: [id])
+
+  @@index([siteId])
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
+  @@map("hospitality_expenses")
+}
+
+model WorkerExpenseClaim {
+  id                              String    @id @default(uuid())
+  claimNumber                     String    @unique // e.g. #CLM-YYYY-XXXX
+  workerId                        String    // Workforce Loose ID reference
+  snapshotWorkerName              String?   // Immutable Denormalized Snapshot (WP 117)
+  siteId                          String    // Core Loose ID reference
+  amount                          Decimal   @db.Decimal(12, 2)
+  expenseCategory                 String // FUEL, MAINTENANCE, SPARE_PARTS, EMERGENCY_SUPPLIES, HOSPITALITY, OTHER
+  description                     String
+  receiptImageUri                 String?
+  receiptSha256                   String?
+  settlementType                  String? // FIELD_CUSTODY, MAIN_TREASURY, PAYROLL_ACCRUAL
+  settlementCustodyId             String?
+  settlementTreasuryTransactionId String?
+  payrollRecordId                 String?
+  status                          String    @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED_PENDING_SETTLEMENT, SETTLED, REJECTED
+  rejectionReason                 String?
+  approvedByUserId                BigInt?
+  settledAt                       DateTime?
+  recordHash                      String    @default("") @map("record_hash")
+  previousHash                    String?   @map("previous_hash")
+  hashTimestamp                   DateTime  @default(now()) @map("hash_timestamp")
+  notes                           String?
+  createdAt                       DateTime  @default(now())
+  updatedAt                       DateTime  @updatedAt
+
+  @@index([workerId])
+  @@index([siteId])
+  @@index([status])
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
+  @@map("worker_expense_claims")
+}

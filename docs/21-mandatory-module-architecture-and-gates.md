@@ -17,6 +17,11 @@ modules/<module-name>/
   README.md
   module.contract.json
   index.ts
+  database/
+    schema.prisma
+    relations.contract.json
+    erd.mermaid
+    migrations/
   src/
     module.register.ts
     module.routes.ts
@@ -47,10 +52,46 @@ modules/<module-name>/
           flow.data.spec.ts
 ```
 
+## 2.1 المعمارية الرباعية الإلزامية لقواعد بيانات الموديولات (Work Plan 117 Modular DB Invariant)
+
+وفقاً لميثاق خطة العمل السيادية رقم 117، يخضع أي موديول أعمال يتطلب تخزين بيانات للمحددات الهندسية الصارمة التالية:
+
+1. **المكونات الأربعة الإلزامية (`modules/<name>/database/`):**
+   * **`schema.prisma`:** يحتوي حصراً على النماذج (`models`) والتعدادات (`enums`) المملوكة للموديول. يُحظر تعريف نماذج لموديولات أخرى.
+   * **`relations.contract.json`:** وثيقة إعلان التبعيات والعلاقات الرخوة المصادق عليها، وتوضح الجداول المرتبطة نوعياً والمفاتيح المفهرسة.
+   * **`erd.mermaid`:** مخطط علاقات الكيانات البصري التفاعلي للموديول بتنسيق Mermaid.
+   * **`migrations/`:** مسار ترحيلات SQL الحتمية الخاصة بالموديول، متوافقة مع تسلسل هجرات المستودع.
+
+2. **محدد التفكيك التام وحظر المفاتيح الأجنبية الصلبة (Loose ID Coupling Invariant):**
+   * **يُحظر قطعياً** على أي وكيل ذكاء اصطناعي أو مطور صياغة علاقات مفاتيح أجنبية فيزيائية عابرة للموديولات باستخدام `@relation`.
+   * **الارتباط الحتمي:** يتم الربط حصراً عبر **معرفات رخوة مفهرسة (Indexed Loose Scalars)**، مثل `workerId String @db.Uuid` أو `targetAdminId String? @db.Uuid` مع وضع `@index` صريح.
+   * **الاستعلام في طبقة التطبيق:** يتم جلب البيانات العابرة للموديولات عبر استعلامين منفصلين (Separate Loose ID Lookups)، ويُمنع الـ Nested Include العابر للموديولات.
+
+3. **حصانة النواة المشتركة وحظر الجداول الشبحية (Central Core Immunity):**
+   * تقتصر نواة قاعدة البيانات المركزية في `packages/database/prisma/schema.prisma` حصراً على **14 نموذجاً سيادياً** للبنية التحتية متعددة المستأجرين وسجلات التدقيق والأخطاء والقيود المالية المزدوجة العامة (`Tenant`, `User`, `AuditLog`, `SystemErrorLog`, `FinancialLedger`... إلخ).
+   * يُحظر تماماً كتابة أو إضافة أي جدول أعمال أو جدول ليس له موديول فعلي داخل النواة المشتركة. الجداول المستقبلية تحفظ كمسودات في `docs/schemas/future-modules-draft-schemas/` وتسجل في `docs/schemas/deprecated-models.json`.
+
+4. **التجميع الآلي والتوليد السيادي (Reconciliation & Generation Engine):**
+   * يتم تجميع مخططات الموديولات مع النواة المشتركة بواسطة المحرك السيادي المعتمد:
+     ```bash
+     pnpm db:reconcile
+     ```
+   * يُحظر التعديل اليدوي في المجلد المولد `.generated/database/`.
+
+5. **صمام الحراسة والتكافؤ الحتمي (Gate G20 Sentinel):**
+   * يفحص صمام `pnpm db:parity:verify` آلياً:
+     1. التزام كل موديول بالمكونات الأربعة.
+     2. خلو الموديولات من أي علاقة `@relation` عابرة للموديولات.
+     3. خلو النواة والمخططات من أي جدول شبحي مسجل في `deprecated-models.json`.
+     4. تطابق التجزئة التشفيرية لبيان المخططات `manifest.json`.
+
 ## 3. مسؤولية كل طبقة داخل الوظيفة
 
 | الملف | المسؤولية | محظورات |
 |---|---|---|
+| `database/schema.prisma` | تعريف نماذج البيانات الحصرية للموديول | ممنوع كتابة نماذج مشتركة أو مفاتيح `@relation` عابرة للموديول |
+| `database/relations.contract.json` | إعلان الارتباطات الرخوة وحقول الفهرسة | ممنوع الاعتماد على علاقات غير موثقة |
+| `database/erd.mermaid` | الرسم البياني لعلاقات نماذج الموديول | ممنوع إهمال المخطط أو عدم تحديثه عند تعديل النماذج |
 | `flow.contract.json` | تعريف كود التدفق، الدور المصرح، المسار، الأزرار، المدخلات، المخرجات، أثر البيانات، SLA | ممنوع ترك أي حقل فارغ أو عام |
 | `flow.handler.ts` | استقبال أحداث Telegram واستدعاء الخدمة والكيبورد | ممنوع وضع حسابات مالية أو كتابة مباشرة في قاعدة البيانات |
 | `flow.keyboard.ts` | بناء الأزرار فقط عبر مكونات النواة المشتركة | ممنوع بناء بدائل يدوية لمكون موجود في `packages/*` |
@@ -112,6 +153,7 @@ modules/<module-name>/
 | G8 - بوابة الاختبارات | unit + integration + ux + rbac + data حسب العقد | `TEST_FAIL` |
 | G9 - بوابة التوثيق | تحديث docs وسجل الترحيل وتقرير الوظيفة | `DOCS_FAIL` |
 | G10 - بوابة Git والحالة النهائية | لا توجد تعديلات معلقة أو ملفات غير متتبعة، وCommit موثق | `GIT_FAIL` |
+| G20 - بوابة تكافؤ قواعد البيانات (WP 117) | اكتمال المعمارية الرباعية، صفر جداول شبحية، وصفر علاقات @relation متقاطعة | `DB_PARITY_FAIL` |
 
 ## 6. أوامر التحقق الإلزامية
 
@@ -124,6 +166,8 @@ pnpm lint
 pnpm arch:verify
 pnpm migration:verify
 pnpm flow-contracts:verify
+pnpm db:parity:verify
+pnpm db:reconcile
 pnpm docs:audit
 pnpm docs:parity
 pnpm ai-compliance:verify

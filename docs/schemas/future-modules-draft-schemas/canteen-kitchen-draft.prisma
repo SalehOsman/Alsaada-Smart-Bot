@@ -1,0 +1,146 @@
+// =============================================================================
+// Draft Prisma Schema for Future Module: Camp Catering, Kitchen & Canteen
+// Archived per Work Plan 117 (Sovereign Modular Database Emancipation)
+// When implementing this module, review, update and move to modules/canteen/database/
+// =============================================================================
+
+model CanteenItem {
+  id               String   @id @default(uuid())
+  siteId           String   // Core Loose ID reference
+  code             String   @unique // e.g. CAN-CIG-01
+  name             String
+  category         String // CIGARETTES, SNACKS_AND_FOOD, BEVERAGES, PERSONAL_CARE
+  costPrice        Decimal  @db.Decimal(10, 2)
+  sellingPrice     Decimal  @db.Decimal(10, 2)
+  currentStock     Decimal  @default(0) @db.Decimal(10, 2)
+  reorderThreshold Decimal  @default(5) @db.Decimal(10, 2)
+  isActive         Boolean  @default(true)
+  version          Int      @default(1) // Optimistic locking
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  priceHistories CanteenItemPriceHistory[]
+
+  @@index([siteId, isActive])
+  @@map("canteen_items")
+}
+
+model CanteenItemPriceHistory {
+  id            String   @id @default(uuid())
+  canteenItemId String
+  costPrice     Decimal  @db.Decimal(10, 2)
+  sellingPrice  Decimal  @db.Decimal(10, 2)
+  effectiveDate DateTime @default(now())
+  changedBy     BigInt?  // Core Loose ID reference
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  canteenItem CanteenItem @relation(fields: [canteenItemId], references: [id], onDelete: Cascade)
+
+  @@index([canteenItemId, effectiveDate])
+  @@map("canteen_item_price_histories")
+}
+
+model CampFoodItem {
+  id                  String   @id @default(uuid())
+  siteId              String   // Core Loose ID reference
+  code                String   @unique // e.g. FOD-RICE
+  name                String
+  unit                String   @default("KG") // KG, LITER, CARTON, BAG
+  currentStock        Decimal  @default(0) @db.Decimal(10, 2)
+  weightedAverageCost Decimal  @default(0) @db.Decimal(10, 2)
+  reorderThreshold    Decimal  @default(20) @db.Decimal(10, 2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([siteId])
+  @@map("camp_food_items")
+}
+
+model FoodInboundShipment {
+  id                      String   @id @default(uuid())
+  shipmentNumber          String   @unique // e.g. #FSH-YYYY-XXX
+  siteId                  String   // Core Loose ID reference
+  supplierId              String   // Procurement Loose ID reference
+  deliveryDate            DateTime @default(now())
+  totalInvoiceAmount      Decimal  @db.Decimal(12, 2)
+  qualityInspectionStatus String   @default("ACCEPTED_FULL") // ACCEPTED_FULL, PARTIAL_REJECTION, REJECTED
+  receivedByWorkerId      String?  // Workforce Loose ID reference
+  createdAt               DateTime @default(now())
+
+  @@index([siteId])
+  @@map("food_inbound_shipments")
+}
+
+model Recipe {
+  id                   String   @id @default(uuid())
+  name                 String
+  mealCategory         String // BREAKFAST, LUNCH, DINNER, NIGHT_SHIFT_MEAL
+  standardPortionGrams Int      @default(400)
+  ingredientsBreakdown Json
+  targetCostPerMeal    Decimal  @db.Decimal(8, 2)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  dispenses KitchenMealDispense[]
+
+  @@map("recipes")
+}
+
+model KitchenMealDispense {
+  id                   String   @id @default(uuid())
+  dispenseDate         DateTime
+  siteId               String   // Core Loose ID reference
+  recipeId             String
+  mealType             String // BREAKFAST, LUNCH, DINNER
+  servingsCount        Int
+  totalIngredientsCost Decimal  @db.Decimal(12, 2)
+  actualCostPerServing Decimal  @db.Decimal(8, 2)
+  chefWorkerId         String?  // Workforce Loose ID reference
+  createdAt            DateTime @default(now())
+
+  recipe Recipe @relation(fields: [recipeId], references: [id])
+
+  @@index([siteId, dispenseDate])
+  @@map("kitchen_meal_dispenses")
+}
+
+model FoodWasteLog {
+  id                String   @id @default(uuid())
+  siteId            String   // Core Loose ID reference
+  logDate           DateTime @default(now())
+  foodItemCode      String
+  wasteQuantityKg   Decimal  @db.Decimal(8, 2)
+  wasteReason       String // EXPIRED_SPOILAGE, PREPARATION_WASTE, LEFTOVER_DISPOSAL, STORAGE_FAILURE
+  estimatedLossCost Decimal  @db.Decimal(10, 2)
+  supervisorNotes   String?
+  createdAt         DateTime @default(now())
+
+  @@index([siteId])
+  @@map("food_waste_logs")
+}
+
+model MealSurvey {
+  id         String   @id @default(uuid())
+  siteId     String   // Core Loose ID reference
+  workerId   String   // Workforce Loose ID reference
+  surveyDate DateTime @default(now())
+  rating     Int // 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@index([siteId])
+  @@map("meal_surveys")
+}
+
+model MarketPriceBenchmark {
+  id             String   @id @default(uuid())
+  itemName       String
+  unit           String
+  benchmarkPrice Decimal  @db.Decimal(10, 2)
+  surveyDate     DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@map("market_price_benchmarks")
+}

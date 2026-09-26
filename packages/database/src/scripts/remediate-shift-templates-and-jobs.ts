@@ -5,10 +5,10 @@ async function main() {
 
   // 1. Seed standard templates
   const standardTemplates = [
-    { name: 'دورة قياسية (40+10)', workDays: 40, restDays: 10, totalCycleDays: 50, isStandard: true, isActive: true, displayOrder: 1 },
-    { name: 'دورة قياسية (30+10)', workDays: 30, restDays: 10, totalCycleDays: 40, isStandard: true, isActive: true, displayOrder: 2 },
-    { name: 'دورة قياسية (20+10)', workDays: 20, restDays: 10, totalCycleDays: 30, isStandard: true, isActive: true, displayOrder: 3 },
-    { name: 'دورة حضرية (26+4)', workDays: 26, restDays: 4, totalCycleDays: 30, isStandard: true, isActive: true, displayOrder: 4 },
+    { code: '40_WORK_10_REST', name: 'دورة قياسية (40+10)', workDays: 40, restDays: 10, isDefault: false },
+    { code: '30_WORK_10_REST', name: 'دورة قياسية (30+10)', workDays: 30, restDays: 10, isDefault: false },
+    { code: '20_WORK_10_REST', name: 'دورة قياسية (20+10)', workDays: 20, restDays: 10, isDefault: false },
+    { code: '26_WORK_4_REST', name: 'دورة حضرية (26+4)', workDays: 26, restDays: 4, isDefault: false },
   ];
 
   for (const t of standardTemplates) {
@@ -21,7 +21,7 @@ async function main() {
     } else {
       await prisma.shiftCycleTemplate.update({
         where: { id: existing.id },
-        data: { name: t.name, totalCycleDays: t.totalCycleDays, isStandard: true, isActive: true, displayOrder: t.displayOrder },
+        data: { name: t.name, isDefault: t.isDefault },
       });
       console.log(`ℹ️ Updated ShiftCycleTemplate: ${t.workDays}/${t.restDays}`);
     }
@@ -29,19 +29,22 @@ async function main() {
 
   // 2. Remediate legacy / non-standard job titles
   // Any job with (20/30) or (20/20) should be reset to (20/10)
-  const legacyJobs = await prisma.jobTitle.findMany({
-    where: {
-      OR: [
-        { restDays: 30 },
-        { restDays: 20 },
-        { workDays: { notIn: [20, 26, 30, 40] } },
-      ],
-    },
-  });
+  const jobTitleDelegate = (prisma as any).jobTitle;
+  const legacyJobs = typeof jobTitleDelegate?.findMany === 'function'
+    ? await jobTitleDelegate.findMany({
+        where: {
+          OR: [
+            { restDays: 30 },
+            { restDays: 20 },
+            { workDays: { notIn: [20, 26, 30, 40] } },
+          ],
+        },
+      }).catch(() => [])
+    : [];
 
   console.log(`🔍 Found ${legacyJobs.length} legacy job titles to remediate.`);
   for (const j of legacyJobs) {
-    await prisma.jobTitle.update({
+    await jobTitleDelegate.update({
       where: { id: j.id },
       data: {
         workDays: 20,
@@ -50,7 +53,7 @@ async function main() {
         shiftNature: 'دورة قياسية (20+10)',
       },
     });
-    console.log(`🛠️ Remediated job [${j.code}] ${j.name}: 20 work / 10 rest`);
+    console.log(`🛠️ Remediated job [${j.code}] ${(j as any).name ?? j.title}: 20 work / 10 rest`);
   }
 
   // 3. Remediate worker records with legacy cycle

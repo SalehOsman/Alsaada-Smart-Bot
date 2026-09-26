@@ -1,11 +1,11 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (module:workforce)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
 - **معرف الكيان:** `module:workforce`
 - **نوع الكيان:** `module`
 - **العنوان:** موديول المنظومة: workforce
 - **المسار الأساسي:** `modules/workforce`
-- **عدد الملفات المقفلة:** 26 ملفاً
+- **عدد الملفات المقفلة:** 28 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
 - **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
 
@@ -13,8 +13,10 @@
 | المسار | بصمة الهاش (SHA-256) |
 | :--- | :--- |
 | `modules/workforce/CHANGELOG.md` | `155fecc4c35392d716d95cff144e6a4b1b4124119f89ff1aaf3d752a625cbb81` |
+| `modules/workforce/database/erd.mermaid` | `0a3cef4cf3b8d4681ce9ba75e77d18df16f7fbc34cad78ddd4663b40eb56347b` |
+| `modules/workforce/database/migrations/.gitkeep` | `829e104e4dd4b271464130db03f0972797e3af07f726e5f36c200f04e3588123` |
 | `modules/workforce/database/relations.contract.json` | `37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570` |
-| `modules/workforce/database/schema.prisma` | `c42e96668aaf2a27666694669f8e234510ab6a052d6097343dfedc1072d0463d` |
+| `modules/workforce/database/schema.prisma` | `29e87a1d801ec490a19409db0bc5ef961cb9810439bf2f6077c6545c078b422f` |
 | `modules/workforce/index.ts` | `31d05deea3ee1778f4feaed2d07e432a9599ec37d2abeea0e4d1a248199f45c0` |
 | `modules/workforce/module.contract.json` | `7cc3555e7d15bc1d50099b6fa45f7938589a0b5ad8acee7f173c6dcedd0ca317` |
 | `modules/workforce/package.json` | `5fcd79a7f0e33c3c60267969f6d4725d7a4e0356566ebc499c436976c9eb44f1` |

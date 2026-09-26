@@ -1,0 +1,83 @@
+erDiagram
+    %% Workforce Module Entity Relationship Diagram (Work Plan 117)
+    %% Strict Modular Sovereign Architecture
+
+    Department ||--o{ JobTitle : "defines"
+    Department ||--o{ Worker : "employs"
+    JobTitle ||--o{ JobSalaryHistory : "tracks_salary_range"
+    JobTitle ||--o{ Worker : "assigns"
+
+    Worker ||--o{ SalaryHistory : "tracks_wage_changes"
+    Worker ||--o{ WorkerChangeLog : "audit_field_modifications"
+    Worker ||--o{ WorkerCustomAllowance : "assigns_custom_allowances"
+    Worker ||--o{ PPEAsset : "issues_protective_gear"
+    Worker ||--o{ DisciplinaryAndBonus : "records_penalties_and_rewards"
+    Worker ||--o{ WorkerDocument : "archives_official_identity_docs"
+    Worker ||--o{ WorkerEditRequest : "submits_correction_requests"
+    Worker ||--o| WorkerClearance : "final_settlement"
+    Worker ||--o| WorkerBalanceSnapshot : "caches_financial_position"
+    Worker ||--o{ Leave : "takes_leaves"
+    Worker ||--o{ LeaveAllowance : "claims_leave_compensation"
+    Worker ||--o{ DailyMealEntitlement : "entitled_to_meals"
+    Worker ||--o{ AttendanceRecord : "logs_biometric_shifts"
+    Worker ||--o{ WorkerCommitmentScore : "scored_for_punctuality"
+    Worker ||--o{ WorkerFlag : "flagged_for_monitoring"
+    Worker ||--o{ AdvanceRequest : "requests_cash_advances"
+    Worker ||--o{ AdvanceInstallment : "repays_installments"
+
+    Leave ||--o{ LeaveAllowance : "entitles_allowances"
+    AdvanceRequest ||--o{ AdvanceInstallment : "divided_into_installments"
+
+    Department {
+        string id PK
+        string code UK
+        string name
+        boolean isActive
+    }
+
+    JobTitle {
+        string id PK
+        string departmentId FK
+        string code UK
+        string title
+        string category
+        decimal standardWorkingHours
+    }
+
+    Worker {
+        string id PK
+        string code UK
+        string name
+        string nationalIdBlindIndex
+        string jobTitle
+        decimal dailyWage
+        string status
+        string siteId "Loose ID / FK to Site"
+    }
+
+    AdvanceRequest {
+        string id PK
+        string voucherNumber UK
+        string workerId FK
+        decimal amount
+        string status
+        string advanceType
+    }
+
+    AdvanceInstallment {
+        string id PK
+        string advanceRequestId FK
+        string workerId FK
+        decimal amount
+        string status
+        string deductionMonth
+    }
+
+    Leave {
+        string id PK
+        string workerId FK
+        string leaveType
+        date startDate
+        date endDate
+        string status
+    }

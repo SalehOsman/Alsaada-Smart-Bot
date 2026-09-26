@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:admin-dashboard)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
 - **معرف الكيان:** `app:admin-dashboard`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: admin-dashboard
@@ -30,7 +30,7 @@
 | `apps/admin-dashboard/src/app/api/auth/claim/route.ts` | `67042a8cc6b5fc9e8e63f660b0ed724f02998a9d67b9b8c091b8f893d7cc029e` |
 | `apps/admin-dashboard/src/app/api/auth/logout/route.ts` | `89744517610779a72eb72c3764759fd42993d0c9355aad172586929b4ca97e22` |
 | `apps/admin-dashboard/src/app/api/delegations/[id]/route.ts` | `66736b13a372fe6520ef2b7834fa10eab504b0cc127e41ba86753248ad3eea13` |
-| `apps/admin-dashboard/src/app/api/delegations/route.ts` | `2fd028c45841fa4af420fa3cc85f192f9ab92f8847691f25e743a1d5bf134a4d` |
+| `apps/admin-dashboard/src/app/api/delegations/route.ts` | `6b0a437f143f6e13442ba10750dc54646a6a8af4e7c8d0a74e91c42b3d3e3e03` |
 | `apps/admin-dashboard/src/app/api/export/excel/route.ts` | `ccc89122f028a010d03341cf00347fe394bd49bead6afea4567f3488ed5ae497` |
 | `apps/admin-dashboard/src/app/api/export/pdf/route.ts` | `92c2cca4161edf1bb7a20c3222e22a7b1ad8178438856957f334d20aaf79bd7c` |
 | `apps/admin-dashboard/src/app/api/extensions/[module]/[[...path]]/route.ts` | `c71ae08642653b506c53678c5cc326d08d1b9c8c272b4b5dc6d6d54ea2569656` |
@@ -70,7 +70,7 @@
 | `apps/admin-dashboard/src/dashboard.manifest.ts` | `f92065dfb82893f14beefed3e5f75c74eff0d89afd10b14e2f101fd7fff81c77` |
 | `apps/admin-dashboard/src/lib/analytics-registry.ts` | `934cc89b01c29a6fd1ac622b9f0cacd2ca8cd1a329ad7f14d454b2a2bced05d2` |
 | `apps/admin-dashboard/src/lib/auth.ts` | `5000a048e125c9d200efdb5ae1fe7381e8e58030b896289ec99b9d077e0236ed` |
-| `apps/admin-dashboard/src/lib/data-fetchers.ts` | `aeb5bacb495c8e8b989e997126230c0b2162cdc0a4eaa685b755453edd025444` |
+| `apps/admin-dashboard/src/lib/data-fetchers.ts` | `850b5d75f969a012982c74317fb580a49af08fc594580e599026116cdd00f9ec` |
 | `apps/admin-dashboard/src/lib/env.ts` | `a1879340351cf893aba2450b98c2a2be1997b7ef019c21c8a731adf777aa1eef` |
 | `apps/admin-dashboard/src/lib/excel-utils.ts` | `4bc9b4fca4f272f390ecfbc14bbaccaf82d4fc6437708e41178c476c78792f52` |
 | `apps/admin-dashboard/src/lib/formatters.ts` | `e1ad15ee6a880f29b1fba8d4eac967ed596873850611dc81bd0d5c86a3a6406e` |

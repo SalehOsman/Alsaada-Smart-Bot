@@ -1,111 +1,90 @@
-// ==============================================================================
-// Workforce Domain Database Schema (Work Plan 112)
-// Models owned by modules/workforce
-// ==============================================================================
+// =============================================================
+// Sovereign Workforce Database Schema Fragment (Single Source of Truth)
+// Module: @alsaada/module-workforce
+// Governed by Work Plan 117 (Sovereign Modular Database Emancipation)
+// =============================================================
 
 model Department {
   id          String   @id @default(uuid())
-  code        String   @unique // e.g. OP, FL, MNT, SEC, ADM
-  name        String // e.g. إدارة التشغيل والمعدات
-  order       Int      @default(99)
+  code        String   @unique // e.g. DEP-OPS, DEP-SEC, DEP-MNT
+  name        String
   description String?
   isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  jobs    JobTitle[]
-  workers Worker[]
+  jobTitles JobTitle[]
+  workers   Worker[]
 
   @@map("departments")
 }
 
 model JobTitle {
-  id                String   @id @default(uuid())
-  departmentId      String
-  code              String // e.g. DRV, HLP, TEC, OPR, ENG
-  name              String // e.g. سائق لودر
-  baseSalary        Decimal  @default(0) @db.Decimal(12, 2)
-  additionalSalary  Decimal  @default(0) @db.Decimal(12, 2)
-  baseWageGuideline Decimal? @db.Decimal(12, 2)
-  workDays          Int      @default(20)
-  restDays          Int      @default(10)
-  totalCycleDays    Int      @default(30)
-  shiftNature       String   @default("دورة قياسية (20+10)")
-  minHeadcount      Int      @default(1)
-  order             Int      @default(99)
-  notes             String?
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                    String   @id @default(uuid())
+  departmentId          String
+  code                  String   @unique // e.g. JOB-DRV, JOB-HLP, JOB-ENG
+  title                 String
+  category              String // ADMINISTRATIVE, TECHNICAL, OPERATIONAL, SECURITY, LOGISTICS
+  standardWorkingHours  Decimal  @default(10) @db.Decimal(5, 2)
+  overtimeHourRateRatio Decimal  @default(1.5) @db.Decimal(4, 2)
+  sortOrder             Int      @default(0)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  department      Department         @relation(fields: [departmentId], references: [id])
-  workers         Worker[]
-  salaryHistories JobSalaryHistory[]
+  department    Department         @relation(fields: [departmentId], references: [id])
+  salaryHistory JobSalaryHistory[]
+  workers       Worker[]
 
-  @@unique([departmentId, code])
+  @@index([departmentId])
   @@map("job_titles")
 }
 
 model JobSalaryHistory {
-  id                       String   @id @default(uuid())
-  jobTitleId               String
-  previousBaseSalary       Decimal  @db.Decimal(12, 2)
-  previousAdditionalSalary Decimal  @db.Decimal(12, 2)
-  newBaseSalary            Decimal  @db.Decimal(12, 2)
-  newAdditionalSalary      Decimal  @db.Decimal(12, 2)
-  scope                    String // "NEW_HIRES_ONLY" | "ALL_ACTIVE_WORKERS"
-  affectedWorkersCount     Int      @default(0)
-  effectiveDate            DateTime
-  changedByTelegramId      BigInt
-  notes                    String?
-  createdAt                DateTime @default(now())
+  id            String   @id @default(uuid())
+  jobTitleId    String
+  minDailyWage  Decimal  @db.Decimal(12, 2)
+  maxDailyWage  Decimal  @db.Decimal(12, 2)
+  effectiveDate DateTime @default(now())
+  changedBy     BigInt?
+  reason        String?
+  createdAt     DateTime @default(now())
 
-  jobTitle JobTitle @relation(fields: [jobTitleId], references: [id])
+  jobTitle JobTitle @relation(fields: [jobTitleId], references: [id], onDelete: Cascade)
 
+  @@index([jobTitleId, effectiveDate])
   @@map("job_salary_histories")
 }
 
 model CycleTransitionHistory {
-  id         String  @id @default(uuid())
-  targetType String // "JOB_TITLE" | "SITE" | "WORKER"
-  targetId   String // ID of JobTitle or Site or Worker
-  targetCode String? // Code e.g. DRV, STE-01, OP-DRV-0042
-  targetName String? // Name e.g. سائق لودر
+  id           String    @id @default(uuid())
+  workerId     String
+  fromCycle    String
+  toCycle      String
+  transferDate DateTime  @default(now())
+  authorizedBy BigInt?
+  notes        String?
+  isHistorical Boolean   @default(false)
+  restDaysDue  Int       @default(0)
+  resumedAt    DateTime?
+  createdAt    DateTime  @default(now())
 
-  // Previous cycle
-  previousWorkDays Int
-  previousRestDays Int
-  previousRatio    Decimal @db.Decimal(6, 4) // e.g. 0.5000
-
-  // New cycle
-  newWorkDays Int
-  newRestDays Int
-  newRatio    Decimal @db.Decimal(6, 4) // e.g. 0.2500
-
-  // Transition policy & Effective date
-  transitionPolicy String   @default("IMMEDIATE_PRORATED") // "IMMEDIATE_PRORATED" | "NEXT_CYCLE" | "NEW_HIRES_ONLY" | "CUSTOM_DATE"
-  effectiveDate    DateTime @default(now())
-  appliedByAdminId BigInt?
-  notes            String?
-
-  createdAt DateTime @default(now())
-
-  @@index([targetType, targetId, effectiveDate])
-  @@index([effectiveDate])
-  @@map("cycle_transition_history")
+  @@index([workerId, transferDate])
+  @@map("cycle_transition_histories")
 }
 
 model ShiftCycleTemplate {
-  id             String   @id @default(uuid())
-  name           String
-  workDays       Int      @map("work_days")
-  restDays       Int      @map("rest_days")
-  totalCycleDays Int      @map("total_cycle_days")
-  isStandard     Boolean  @default(true) @map("is_standard")
-  isActive       Boolean  @default(true) @map("is_active")
-  displayOrder   Int      @default(0) @map("display_order")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  code                String   @unique // e.g. 24_WORK_6_REST
+  name                String
+  workDays            Int      @default(24)
+  restDays            Int      @default(6)
+  travelDaysAllowance Int      @default(2)
+  dailyWorkHours      Decimal  @default(10) @db.Decimal(4, 2)
+  isDefault           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@map("shift_cycle_templates")
 }
@@ -141,30 +120,30 @@ model Worker {
   accountNumberEncrypted  String?
   walletType              String? // e.g. "محفظة فودافون كاش", "إنستاباي"
   canteenCigarettePolicy  String    @default("NONE") // ONE_PACK_DAILY, FULL_COVERAGE, NONE, CUSTOM
-  cigaretteBrand          String? // نوع / صنف السجائر المعتمد للعامل
-  canteenItemId           String? // معرف صنف السجائر من جدول مخزن الكانتين
-  walletOwnerName         String? // اسم صاحب المحفظة
-  instaPayHandle          String? // معرف إنستاباي
-  insuranceNumber         String? // الرقم التأميني المكون من 8-10 أرقام
-  insuranceStatus         String? // الموقف من التأمينات (مؤمن عليه حالياً، مؤمن سابقاً، غير مؤمن، متفرغ)
-  ppeShoeSize             String? // مقاس حذاء السلامة السيفتي (41-46)
-  ppeUniformSize          String? // مقاس الأفرول / الزي الميداني (M-4XL)
-  medicalNotes            String? // الأمراض المزمنة، الحساسية، الملاحظات الطبية
-  barracksUnit            String? // مقر السكن / رقم الكرفان أو العنبر بالموقع
-  bedNumber               String? // رقم السرير المخصص
+  cigaretteBrand          String?
+  canteenItemId           String? // Loose ID reference to Canteen
+  walletOwnerName         String?
+  instaPayHandle          String?
+  insuranceNumber         String?
+  insuranceStatus         String?
+  ppeShoeSize             String?
+  ppeUniformSize          String?
+  medicalNotes            String?
+  barracksUnit            String?
+  bedNumber               String?
   phoneEncrypted          String?
   phoneBlindIndex         String?
   emergencyContactName    String?
   emergencyPhoneEncrypted String?
-  drivingLicense          String? // لا توجد رخصة، خاصة، مهنية 1، 2، 3، معدات ثقيلة
-  militaryStatus          String? // أدى الخدمة، إعفاء نهائي، إعفاء مؤقت، إلخ
-  maritalStatus           String? // أعزب، متزوج، متزوج ويعول، إلخ
-  previousInsuranceStatus String? // غير مؤمن، مؤمن سابقاً، متفرغ
-  idCardFrontPath         String? // صورة وجه البطاقة / الجواز
-  idCardBackPath          String? // صورة ظهر البطاقة
-  idCardExpiryDate        DateTime? // تاريخ انتهاء سريان البطاقة (مستخرج بالذكاء الاصطناعي من ظهر البطاقة)
-  idCardExpiryAlertSentAt DateTime? // تاريخ إرسال إشعار التنبيه قبل الانتهاء بشهر
-  address                 String? // محل الإقامة / العنوان المستخرج بالذكاء الاصطناعي أو المسجل يدوياً
+  drivingLicense          String?
+  militaryStatus          String?
+  maritalStatus           String?
+  previousInsuranceStatus String?
+  idCardFrontPath         String?
+  idCardBackPath          String?
+  idCardExpiryDate        DateTime?
+  idCardExpiryAlertSentAt DateTime?
+  address                 String?
   telegramId              BigInt?   @unique
   status                  String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RESIGNED
   terminationDate         DateTime?
@@ -175,10 +154,9 @@ model Worker {
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
-  department             Department?                   @relation(fields: [departmentId], references: [id])
-  jobRef                 JobTitle?                     @relation(fields: [jobTitleId], references: [id])
-  site                   Site?                         @relation(fields: [siteId], references: [id])
-  canteenItem            CanteenItem?                  @relation("WorkerCigaretteItem", fields: [canteenItemId], references: [id])
+  department             Department?             @relation(fields: [departmentId], references: [id])
+  jobRef                 JobTitle?               @relation(fields: [jobTitleId], references: [id])
+  site                   Site?                   @relation(fields: [siteId], references: [id])
   user                   User?
   salaryHistories        SalaryHistory[]
   changeLogs             WorkerChangeLog[]
@@ -186,26 +164,12 @@ model Worker {
   ppeAssets              PPEAsset[]
   disciplinaryAndBonuses DisciplinaryAndBonus[]
   clearance              WorkerClearance?
-  delegations            WorkerDelegation[]
   balanceSnapshot        WorkerBalanceSnapshot?
   leaves                 Leave[]
   leaveAllowances        LeaveAllowance[]
-  dutyRosters            DutyRoster[]
-  assignedTasks          SiteTask[]
-  managedCustodies       FinancialCustody[]
   ledgers                FinancialLedger[]
   advanceRequests        AdvanceRequest[]
   advanceInstallments    AdvanceInstallment[]
-  accommodations         SiteAccommodationAssignment[]
-  payrollRecords         PayrollRecord[]
-  mealSurveys            MealSurvey[]
-  fuelLogs               FuelDispenseLog[]
-  operatedEquipments     Equipment[]
-  fuelTanksSupervised    FuelTank[]
-  hospitalityDisbursed   HospitalityExpense[]
-  kitchenDispenses       KitchenMealDispense[]
-  foodShipmentsReceived  FoodInboundShipment[]
-  expenseClaims          WorkerExpenseClaim[]
   editRequests           WorkerEditRequest[]
   documents              WorkerDocument[]
   commitmentScores       WorkerCommitmentScore[]
@@ -222,240 +186,222 @@ model Worker {
 }
 
 model WorkerDocument {
-  id            String   @id @default(uuid())
-  workerId      String
-  title         String // e.g. "عقد عمل", "شهادة صحية", "فيش وتشبيه", "مؤهل دراسي"
-  category      String   @default("OTHER") // NATIONAL_ID, PASSPORT, WORK_PERMIT, CONTRACT, HEALTH_CERTIFICATE, CRIMINAL_RECORD, DRIVING_LICENSE, EDUCATION, OTHER
-  fileName      String
-  fileType      String // "image/jpeg", "application/pdf", etc.
-  fileUri       String // المسار المحلي: attachments/workers/OP-DRV-001/filename.pdf
-  driveFileId   String? // معرف الملف على Google Drive إن وُجد
-  fileSizeBytes BigInt?
-  uploadedBy    BigInt? // Telegram ID لمن قام برفع المستند
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    String    @id @default(uuid())
+  workerId              String
+  docType               String // ID_CARD_FRONT, ID_CARD_BACK, DRIVING_LICENSE, CRIMINAL_RECORD, DRUG_TEST, CONTRACT, MEDICAL_REPORT, RESIGNATION_FORM, OTHER
+  title                 String
+  fileUri               String
+  sha256Checksum        String?
+  fileSizeBytes         BigInt?
+  mimeType              String?
+  issueDate             DateTime?
+  expiryDate            DateTime?
+  alertDaysBeforeExpiry Int       @default(30)
+  verifiedByUserId      BigInt?
+  isVerified            Boolean   @default(false)
+  notes                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
-  @@index([workerId])
+  @@index([workerId, docType])
+  @@index([expiryDate])
   @@map("worker_documents")
 }
 
 model WorkerEditRequest {
-  id                  String    @id @default(uuid())
-  requestId           String    @unique // EDT-260907-001
-  workerId            String
-  workerCode          String
-  workerName          String
-  requesterTelegramId BigInt
-  requesterName       String
-  requesterRole       String // FIELD_ADMIN, WORKER
-  fieldKey            String // legacyCode, phone, walletNumber, jobTitle, siteId, drivingLicense, etc.
-  fieldName           String // اسم الحقل بالعربية
-  oldValue            String?
-  newValue            String
-  reason              String?
-  status              String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  reviewedByAdminId   BigInt?
-  reviewedAt          DateTime?
-  reviewNotes         String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id               String    @id @default(uuid())
+  workerId         String
+  field            String
+  oldValue         String?
+  newValue         String
+  reason           String?
+  status           String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  requestedBy      BigInt
+  reviewedBy       BigInt?
+  reviewedAt       DateTime?
+  rejectionReason  String?
+  evidencePhotoUri String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  worker Worker @relation(fields: [workerId], references: [id])
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
+  @@index([workerId, status])
   @@index([status])
-  @@index([workerId])
-  @@index([workerCode])
   @@map("worker_edit_requests")
 }
 
 model SalaryHistory {
-  id                       String   @id @default(uuid())
-  changeId                 String   @unique // e.g. SAL-2609-0042
-  workerId                 String
-  previousBasicSalary      Decimal  @default(0) @db.Decimal(12, 2)
-  previousAdditionalSalary Decimal  @default(0) @db.Decimal(12, 2)
-  previousGrossSalary      Decimal  @default(0) @db.Decimal(12, 2)
-  newBasicSalary           Decimal  @db.Decimal(12, 2)
-  newAdditionalSalary      Decimal  @db.Decimal(12, 2)
-  newGrossSalary           Decimal  @db.Decimal(12, 2)
-  effectiveMonth           String // YYYY-MM
-  effectiveDate            DateTime
-  reason                   String // مبرر الزيادة/التعديل
-  approvedByTelegramId     BigInt?
-  approvedByName           String?
-  notes                    String?
-  createdAt                DateTime @default(now())
+  id                   String    @id @default(uuid())
+  workerId             String
+  previousDailyWage    Decimal   @db.Decimal(12, 2)
+  newDailyWage         Decimal   @db.Decimal(12, 2)
+  previousBasicSalary  Decimal   @default(0) @db.Decimal(12, 2)
+  newBasicSalary       Decimal   @default(0) @db.Decimal(12, 2)
+  previousAdditional   Decimal   @default(0) @db.Decimal(12, 2)
+  newAdditional        Decimal   @default(0) @db.Decimal(12, 2)
+  effectiveDate        DateTime  @default(now())
+  reason               String // ANNUAL_INCREASE, PROMOTION, EVALUATION_ADJUSTMENT, PENALTY_DEMOTION, CONTRACT_RENEWAL
+  notes                String?
+  authorizedByUserId   BigInt?
+  letterApprovalDocUri String?
+  isApproved           Boolean   @default(true)
+  approvedAt           DateTime?
+  createdAt            DateTime  @default(now())
 
   worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
   @@index([workerId, effectiveDate])
-  @@index([effectiveMonth])
   @@map("salary_histories")
 }
 
 model WorkerChangeLog {
-  id              String   @id @default(uuid())
-  changeId        String   @unique // e.g. WCL-260910-001
-  workerId        String
-  workerCode      String
-  category        String // STRUCTURAL, PERSONAL, CONTACT_PAYOUT, STATUS
-  fieldKey        String // siteId, jobTitle, phone, contractType, status, etc.
-  fieldNameAr     String // "الموقع الميداني", "المسمى الوظيفي", "رقم الهاتف", إلخ
-  oldValue        String? // القيمة السابقة الصريحة
-  newValue        String? // القيمة الجديدة المحدثة
-  oldDisplayValue String? // الاسم المقروء السابق
-  newDisplayValue String? // الاسم المقروء الجديد
-  reason          String? // مبرر التعديل
-  actorTelegramId BigInt // هوية المسؤول المعدل
-  actorName       String? // اسم السوبر أدمن
-  actorRole       String // SUPER_ADMIN
-  createdAt       DateTime @default(now())
+  id          String   @id @default(uuid())
+  workerId    String
+  changeType  String // STATUS_CHANGE, SHIFT_SYSTEM, DAILY_WAGE, DEPARTMENT, JOB_TITLE, SITE_TRANSFER
+  fieldName   String
+  oldValue    String?
+  newValue    String?
+  changedBy   BigInt
+  reason      String?
+  effectiveAt DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
-  @@index([workerId, createdAt])
-  @@index([category])
-  @@index([fieldKey])
+  @@index([workerId, changeType])
+  @@index([effectiveAt])
   @@map("worker_change_logs")
 }
 
 model WorkerCustomAllowance {
-  id            String    @id @default(uuid())
-  workerId      String
-  title         String
-  allowanceType String // HARDSHIP_ALLOWANCE, RISK_ALLOWANCE, NIGHT_SHIFT, HOUSING_STIPEND
-  amount        Decimal   @db.Decimal(12, 2)
-  isRecurring   Boolean   @default(true)
-  startDate     DateTime
-  endDate       DateTime?
-  isActive      Boolean   @default(true)
-  notes         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  workerId    String
+  name        String
+  amount      Decimal   @db.Decimal(10, 2)
+  isRecurring Boolean   @default(true)
+  effectiveAt DateTime  @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
 
-  worker Worker @relation(fields: [workerId], references: [id])
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
   @@index([workerId])
   @@map("worker_custom_allowances")
 }
 
 model PPEAsset {
-  id                       String    @id @default(uuid())
-  voucherId                String    @unique // e.g. #PPE-YYYY-XXX
-  workerId                 String
-  assetType                String // SAFETY_HELMET, SAFETY_SHOES, HI_VIS_VEST, SAFETY_GOGGLES, HARNESS
-  brandModel               String?
-  issueDate                DateTime  @default(now())
-  scheduledReplacementDate DateTime?
-  costPrice                Decimal   @db.Decimal(10, 2)
-  condition                String    @default("NEW") // NEW, GOOD, DAMAGED_NATURAL, LOST_NEGLIGENT
-  returnDate               DateTime?
-  isDeductedFromWorker     Boolean   @default(false)
-  siteId                   String?
-  status                   String    @default("ACTIVE") // ACTIVE, RETIRED, LOST, DAMAGED
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime  @updatedAt
+  id               String    @id @default(uuid())
+  workerId         String
+  siteId           String
+  itemType         String // VEST, HELMET, BOOTS, GLOVES, GLASSES, HARNESS
+  serialNumber     String?
+  condition        String    @default("NEW") // NEW, GOOD, DAMAGED, LOST
+  assignedAt       DateTime  @default(now())
+  returnedAt       DateTime?
+  deductionApplied Decimal   @default(0) @db.Decimal(10, 2)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   worker Worker @relation(fields: [workerId], references: [id])
-  site   Site?  @relation(fields: [siteId], references: [id])
+  site   Site   @relation(fields: [siteId], references: [id])
 
-  @@index([workerId, status])
-  @@index([siteId, assetType])
+  @@index([workerId])
+  @@index([siteId])
   @@map("ppe_assets")
 }
 
 model DisciplinaryAndBonus {
-  id               String   @id @default(uuid())
-  recordNumber     String   @unique // e.g. #DISC-YYYY-XXX or #BON-YYYY-XXX
-  workerId         String
-  type             String // BONUS_CASH, BONUS_DAYS, PENALTY_CASH, PENALTY_DAYS
-  amount           Decimal? @db.Decimal(12, 2)
-  daysEquivalent   Decimal? @db.Decimal(6, 2)
-  reason           String
-  decisionDate     DateTime @default(now())
-  appliedToMonth   String? // YYYY-MM
-  approvedByUserId BigInt?
-  createdAt        DateTime @default(now())
+  id                 String    @id @default(uuid())
+  workerId           String
+  type               String // BONUS, PENALTY_DAYS, WARNING, DEDUCTION_AMOUNT
+  category           String // ATTENDANCE_ABSENCE, SAFETY_VIOLATION, PERFORMANCE, EXCEPTIONAL_WORK, DAMAGE_TO_EQUIPMENT
+  amountOrDays       Decimal   @db.Decimal(10, 2)
+  description        String
+  incidentDate       DateTime
+  authorizedByUserId BigInt
+  payrollMonth       String?
+  isAppliedToPayroll Boolean   @default(false)
+  appliedAt          DateTime?
+  createdAt          DateTime  @default(now())
 
   worker Worker @relation(fields: [workerId], references: [id])
 
+  @@index([workerId, isAppliedToPayroll])
+  @@index([incidentDate])
   @@map("disciplinary_and_bonuses")
 }
 
 model WorkerClearance {
-  id                       String   @id @default(uuid())
-  clearanceNumber          String   @unique // e.g. #CLR-YYYY-XXX
-  workerId                 String   @unique
-  terminationDate          DateTime
-  serviceDurationDays      Int
-  accruedLeaveDays         Decimal  @default(0) @db.Decimal(6, 2)
-  endOfServiceGratuity     Decimal  @default(0) @db.Decimal(12, 2)
-  totalUnpaidSalaries      Decimal  @default(0) @db.Decimal(12, 2)
-  totalOutstandingAdvances Decimal  @default(0) @db.Decimal(12, 2)
-  custodiesReturned        Boolean  @default(true)
-  ppeReturned              Boolean  @default(true)
-  netSettlementAmount      Decimal  @db.Decimal(12, 2)
-  paymentVoucherNumber     String?
-  receiptPhotoUri          String?
-  sha256Checksum           String?
-  status                   String   @default("APPROVED") // DRAFT, AUDITED, APPROVED, EXECUTED
-  settledAt                DateTime @default(now())
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  id                 String    @id @default(uuid())
+  clearanceNumber    String    @unique // e.g. #CLR-YYYY-XXXX
+  workerId           String    @unique
+  reason             String // RESIGNATION, TERMINATION, CONTRACT_END, MEDICAL_INCAPACITY, ABANDONMENT_AWOL
+  terminationDate    DateTime
+  finalWorkDay       DateTime
+  remainingDaysWage  Decimal   @default(0) @db.Decimal(12, 2)
+  leaveBalanceRefund Decimal   @default(0) @db.Decimal(12, 2)
+  unpaidAdvancesDue  Decimal   @default(0) @db.Decimal(12, 2)
+  canteenDebtDue     Decimal   @default(0) @db.Decimal(12, 2)
+  damagePenaltiesDue Decimal   @default(0) @db.Decimal(12, 2)
+  endOfServiceBonus  Decimal   @default(0) @db.Decimal(12, 2)
+  netSettlementTotal Decimal   @db.Decimal(12, 2)
+  status             String    @default("PENDING_DEPARTMENT_SIGNS") // PENDING_DEPARTMENT_SIGNS, APPROVED_BY_MANAGEMENT, DISBURSED, ARCHIVED
+  settledAt          DateTime?
+  disbursedByUserId  BigInt?
+  payoutMethod       String    @default("CASH_ENVELOPE")
+  payoutReference    String?
+  clearanceSheetUri  String?
+  sha256Checksum     String?
+  recordHash         String    @default("") @map("record_hash")
+  previousHash       String?   @map("previous_hash")
+  hashTimestamp      DateTime  @default(now()) @map("hash_timestamp")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   worker Worker @relation(fields: [workerId], references: [id])
 
+  @@index([recordHash])
+  @@index([previousHash])
+  @@index([hashTimestamp])
   @@map("worker_clearances")
 }
 
 model WorkerBalanceSnapshot {
-  id                      String   @id @default(uuid())
-  workerId                String   @unique
-  totalEarnedAllTime      Decimal  @default(0) @db.Decimal(14, 2)
-  totalPaidAllTime        Decimal  @default(0) @db.Decimal(14, 2)
-  currentMonthAdvances    Decimal  @default(0) @db.Decimal(12, 2)
-  outstandingLoansBalance Decimal  @default(0) @db.Decimal(12, 2)
-  lastUpdatedLedgerHash   String?
-  updatedAt               DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  workerId             String   @unique
+  outstandingAdvances  Decimal  @default(0) @db.Decimal(12, 2)
+  canteenUnsettledDebt Decimal  @default(0) @db.Decimal(12, 2)
+  netAccruedEarnings   Decimal  @default(0) @db.Decimal(12, 2)
+  unsettledCustodyDebt Decimal  @default(0) @db.Decimal(12, 2)
+  lastCalculatedAt     DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  worker Worker @relation(fields: [workerId], references: [id])
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
+  @@index([lastCalculatedAt])
   @@map("worker_balance_snapshots")
 }
 
 model WorkerCommitmentScore {
-  id                    String   @id @default(uuid())
-  scoreNumber           String   @unique // e.g. #WCS-YYYYMM-XXXX
-  workerId              String
-  siteId                String?
-  evaluationDate        DateTime @default(now())
-  periodStart           DateTime
-  periodEnd             DateTime
-  totalScore            Int      @default(100) // 0 - 100
-  tier                  String   @default("COMMITTED") // COMMITTED (80-100), MODERATE (60-79), UNDER_REVIEW (<60), PROBATION (new hire)
-  contractTypeEvaluated String   @default("PERMANENT") // PERMANENT, DAILY_LABOR, SEASONAL
-  leaveShiftScore       Decimal  @default(40) @db.Decimal(5, 2) // max 40
-  disciplinaryScore     Decimal  @default(30) @db.Decimal(5, 2) // max 30
-  ppeScore              Decimal  @default(15) @db.Decimal(5, 2) // max 15
-  financialScore        Decimal  @default(15) @db.Decimal(5, 2) // max 15
-  breakdown             Json? // Detailed statistics (leaves, penalties, bonuses, PPE loss, advance compliance)
-  recoveryGuidance      String? // Actionable advice for improving the score
-  sha256Checksum        String? // Cryptographic forensic audit hash
-  snapshotKey           String? // e.g. "2026-09" for monthly snapshot, null for live
-  calculatedBy          String?  @default("SYSTEM") // SYSTEM or Admin TelegramId
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id               String   @id @default(uuid())
+  workerId         String
+  siteId           String
+  monthYear        String // YYYY-MM
+  attendanceRatio  Decimal  @db.Decimal(5, 2)
+  safetyScore      Decimal  @db.Decimal(5, 2)
+  supervisorsScore Decimal  @db.Decimal(5, 2)
+  compositeIndex   Decimal  @db.Decimal(5, 2)
+  isEligibleBonus  Boolean  @default(false)
+  createdAt        DateTime @default(now())
 
   worker Worker @relation(fields: [workerId], references: [id])
-  site   Site?  @relation(fields: [siteId], references: [id])
+  site   Site   @relation(fields: [siteId], references: [id])
 
-  @@unique([workerId, snapshotKey])
-  @@index([workerId, evaluationDate])
-  @@index([siteId, tier])
-  @@index([tier])
-  @@index([evaluationDate])
+  @@unique([workerId, monthYear])
+  @@index([siteId, monthYear])
   @@map("worker_commitment_scores")
 }
 
@@ -494,118 +440,62 @@ model LeaveAllowance {
   leaveId                String
   workerId               String
   travelStipend          Decimal  @db.Decimal(10, 2)
-  disbursedFromCustodyId String?
+  disbursedFromCustodyId String?  // Loose ID reference to Custody
   disbursementDate       DateTime @default(now())
   voucherNumber          String?
   createdAt              DateTime @default(now())
 
-  leave   Leave             @relation(fields: [leaveId], references: [id])
-  worker  Worker            @relation(fields: [workerId], references: [id])
-  custody FinancialCustody? @relation(fields: [disbursedFromCustodyId], references: [id])
+  leave  Leave  @relation(fields: [leaveId], references: [id])
+  worker Worker @relation(fields: [workerId], references: [id])
 
   @@map("leave_allowances")
 }
 
-model DutyRoster {
-  id               String   @id @default(uuid())
-  dutyDate         DateTime
-  siteId           String
-  workerId         String
-  equipmentId      String?
-  shiftType        String   @default("DAY_SHIFT") // DAY_SHIFT, NIGHT_SHIFT
-  hoursWorked      Decimal  @default(10) @db.Decimal(5, 2)
-  status           String   @default("PRESENT") // PRESENT, ABSENT_UNEXCUSED, REST_DAY, ON_DUTY_MISSION
-  latitude         Decimal? @db.Decimal(10, 7)
-  longitude        Decimal? @db.Decimal(10, 7)
-  recordedByUserId BigInt?
-  createdAt        DateTime @default(now())
-
-  site      Site       @relation(fields: [siteId], references: [id])
-  worker    Worker     @relation(fields: [workerId], references: [id])
-  equipment Equipment? @relation(fields: [equipmentId], references: [id])
-
-  @@unique([dutyDate, workerId])
-  @@map("duty_rosters")
-}
-
-model SiteTask {
+model AdvanceRequest {
   id                 String    @id @default(uuid())
-  taskNumber         String    @unique // e.g. #TSK-YYYY-XXX
-  siteId             String
-  title              String
-  description        String?
-  assignedToWorkerId String?
-  priority           String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT_SAFETY
-  status             String    @default("OPEN") // OPEN, IN_PROGRESS, COMPLETED, CANCELLED
-  dueDate            DateTime?
-  completedAt        DateTime?
-  attachmentUri      String?
-  sha256Checksum     String?
+  requestNumber      String    @unique // e.g. #ADV-YYYY-XXXX
+  workerId           String
+  siteId             String?
+  amountRequested    Decimal   @db.Decimal(12, 2)
+  amountApproved     Decimal?  @db.Decimal(12, 2)
+  purpose            String
+  status             String    @default("PENDING") // PENDING, APPROVED, REJECTED, DISBURSED, CANCELLED
+  rejectionReason    String?
+  approvedByUserId   BigInt?
+  disbursedAt        DateTime?
+  monthlyInstallment Decimal?  @db.Decimal(10, 2)
+  installmentCount   Int       @default(1)
+  remainingBalance   Decimal   @default(0) @db.Decimal(12, 2)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  site   Site    @relation(fields: [siteId], references: [id])
-  worker Worker? @relation(fields: [assignedToWorkerId], references: [id])
+  worker Worker @relation(fields: [workerId], references: [id])
+  site   Site?  @relation(fields: [siteId], references: [id])
 
-  @@map("site_tasks")
+  @@index([workerId, status])
+  @@index([siteId, createdAt])
+  @@map("advance_requests")
 }
 
-model PayrollRun {
-  id                      String    @id @default(uuid())
-  runNumber               String    @unique // e.g. #PAYROLL-YYYY-MM
-  year                    Int
-  month                   Int
-  siteId                  String?
-  totalContractedPayroll  Decimal   @default(0) @db.Decimal(14, 2)
-  totalGrossEarnings      Decimal   @default(0) @db.Decimal(14, 2)
-  totalDeductions         Decimal   @default(0) @db.Decimal(14, 2)
-  totalNetSalariesPayable Decimal   @default(0) @db.Decimal(14, 2)
-  status                  String    @default("DRAFT_CALCULATING") // DRAFT_CALCULATING, AUDITED_BY_HR, APPROVED_BY_EXECUTIVE, DISBURSED_CLOSED
-  approvedByUserId        BigInt?
-  disbursedAt             DateTime?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+model AdvanceInstallment {
+  id                    String    @id @default(uuid())
+  workerId              String
+  originalVoucherNumber String
+  installmentSequence   Int
+  dueMonth              String // YYYY-MM
+  installmentAmount     Decimal   @db.Decimal(12, 2)
+  actualDeductedAmount  Decimal   @default(0) @db.Decimal(12, 2)
+  status                String    @default("SCHEDULED") // SCHEDULED, DEDUCTED_FULL, DEDUCTED_PARTIAL, POSTPONED, WAIVED
+  payrollRunId          String?   // Loose ID reference to Payroll
+  deductedAt            DateTime?
+  notes                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  records              PayrollRecord[]
-  deductedInstallments AdvanceInstallment[]
+  worker          Worker           @relation(fields: [workerId], references: [id])
+  financialLedger FinancialLedger? @relation(fields: [originalVoucherNumber], references: [voucherNumber])
 
-  @@unique([year, month, siteId])
-  @@map("payroll_runs")
-}
-
-model PayrollRecord {
-  id                            String    @id @default(uuid())
-  payrollRunId                  String
-  workerId                      String
-  daysWorked                    Decimal   @db.Decimal(5, 2)
-  daysAbsent                    Decimal   @default(0) @db.Decimal(5, 2)
-  daysOnLeave                   Decimal   @default(0) @db.Decimal(5, 2)
-  baseDailyWage                 Decimal   @db.Decimal(12, 2)
-  earnedBasicSalary             Decimal   @db.Decimal(12, 2)
-  overtimeAmount                Decimal   @default(0) @db.Decimal(12, 2)
-  bonusesAmount                 Decimal   @default(0) @db.Decimal(12, 2)
-  customAllowancesAmount        Decimal   @default(0) @db.Decimal(12, 2)
-  reimbursementsAmount          Decimal   @default(0) @db.Decimal(12, 2)
-  grossEarnings                 Decimal   @db.Decimal(14, 2)
-  cashAdvancesDeduction         Decimal   @default(0) @db.Decimal(12, 2)
-  cigaretteWithdrawalsDeduction Decimal   @default(0) @db.Decimal(12, 2)
-  purchaseWithdrawalsDeduction  Decimal   @default(0) @db.Decimal(12, 2)
-  penaltiesDeduction            Decimal   @default(0) @db.Decimal(12, 2)
-  loanInstallmentDeduction      Decimal   @default(0) @db.Decimal(12, 2)
-  otherDeductions               Decimal   @default(0) @db.Decimal(12, 2)
-  totalDeductions               Decimal   @db.Decimal(14, 2)
-  netSalaryPayable              Decimal   @db.Decimal(14, 2)
-  paymentStatus                 String    @default("PENDING") // PENDING, DISBURSED, HELD_DISPUTED
-  payoutMethod                  String    @default("CASH_ENVELOPE") // CASH_ENVELOPE, VODAFONE_CASH, INSTAPAY, BANK_DEPOSIT
-  payoutReference               String?
-  disbursedAt                   DateTime?
-  createdAt                     DateTime  @default(now())
-  updatedAt                     DateTime  @updatedAt
-
-  payrollRun           PayrollRun           @relation(fields: [payrollRunId], references: [id])
-  worker               Worker               @relation(fields: [workerId], references: [id])
-  settledExpenseClaims WorkerExpenseClaim[]
-
-  @@unique([payrollRunId, workerId])
-  @@map("payroll_records")
+  @@index([workerId, dueMonth])
+  @@index([status])
+  @@map("advance_installments")
 }

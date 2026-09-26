@@ -1,6 +1,6 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (test:modules/settings/tests/flows/00.13-system-backup-recovery.spec.ts)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T11:12:36.707Z)
 - **معرف الكيان:** `test:modules/settings/tests/flows/00.13-system-backup-recovery.spec.ts`
 - **نوع الكيان:** `test`
 - **العنوان:** ملف الاختبار المعتمد: modules/settings/tests/flows/00.13-system-backup-recovery.spec.ts

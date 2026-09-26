@@ -18,6 +18,8 @@ Every new creation request (flow, module, or package) must strictly adhere to:
 6. **Zero Raw Text Policy:** Telegram messages must strictly use `@alsaada/core-components/rich-message` and pass `assertRichMessage(msg)`.
 7. **First-Time Sealing Invariant:** Every new component must be cryptographically sealed in `governance.lock.json` with SHA-256 upon completion before requesting merge.
 8. **Master Migration Registry Sync:** Every flow must be logged in [`docs/19`](../../docs/19-legacy-to-enterprise-master-feature-migration-registry.md) with `🟢 مكتمل وموثق 100%`.
+9. **Mandatory 4-Component Module Database Standard (Work Plan 117):** Every module requiring persistent storage must maintain a dedicated `modules/<name>/database/` containing all 4 canonical components: `schema.prisma`, `relations.contract.json`, `erd.mermaid`, and `migrations/`.
+10. **Strict Loose Coupling & Zero Physical Cross-Module Foreign Keys:** AI agents are strictly forbidden from writing cross-module `@relation` foreign keys between models of different modules. All inter-module references must strictly use Indexed Loose Scalars (e.g. `workerId String @db.Uuid`, `targetAdminId String? @db.Uuid` with `@index`). Central shared kernel (`packages/database/prisma/schema.prisma`) is permanently restricted to 14 core infrastructure entities; zero business domain tables may be added to core. Agents must run `pnpm db:reconcile` and pass Gate G20 (`pnpm db:parity:verify`).
 
 ---
 
@@ -124,5 +126,9 @@ An automatic `[REJECT]` verdict is issued if:
 - Missing any of the 10 vertical slice files.
 - Bypassing rich message formatters with raw text `ctx.reply("string")`.
 - Exceeding Telegram ergonomics budget (36 bytes callback, 16 chars label, 7 rows, 3 cols).
+- Adding business domain models to `packages/database/prisma/schema.prisma` instead of module's `database/schema.prisma`.
+- Writing cross-module physical `@relation` foreign keys instead of Indexed Loose ID References.
+- Creating a module database lacking any of the 4 canonical components (`schema.prisma`, `relations.contract.json`, `erd.mermaid`, `migrations/`).
+- Failing Gate G20 `pnpm db:parity:verify` or skipping reconciliation `pnpm db:reconcile`.
 - Omitting first-time sealing in `governance.lock.json`.
 - Omitting registry update in `docs/19`.

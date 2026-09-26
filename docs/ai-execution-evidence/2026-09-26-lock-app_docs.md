@@ -1,13 +1,13 @@
 # توثيق الحوكمة: قفل وحماية الكيان تشفيرياً (app:docs)
 
-- **تاريخ القفل:** 2026-09-26 (2026-09-26T08:36:37.532Z)
+- **تاريخ القفل:** 2026-09-26 (2026-09-26T12:00:39.077Z)
 - **معرف الكيان:** `app:docs`
 - **نوع الكيان:** `app`
 - **العنوان:** تطبيق المنظومة: docs
 - **المسار الأساسي:** `apps/docs`
 - **عدد الملفات المقفلة:** 78 ملفاً
 - **الحالة:** 🟢 مقفل ومحصن تشفيرياً 100% (Zero Blast Radius)
-- **مرجع الالتزام (Commit):** `Plan-Cryptographic-Lock-100`
+- **مرجع الالتزام (Commit):** `Plan-70-Lock`
 
 ## قائمة البصمات الجنائية (SHA-256)
 | المسار | بصمة الهاش (SHA-256) |
@@ -63,7 +63,7 @@
 | `apps/docs/src/content/docs/core-architecture/11-universal-invitation-and-onboarding-engine.md` | `fa9ec55e65b90811440426f6b325ff6e1c237d78d7e976492d8063d28f884464` |
 | `apps/docs/src/content/docs/core-architecture/17-worker-coding-and-silent-alias-resolution.md` | `92dbe8d1d8335935f7229203668cc6bf6d29f4a3d2d1d0ff7de34188c0e9ba84` |
 | `apps/docs/src/content/docs/core-architecture/25-optimal-high-performance-bot-architecture-and-speed-blueprint.md` | `cad0c6a7b32b24276f102d3c0849f0859e43990e85e3890f2701f127e5dd746e` |
-| `apps/docs/src/content/docs/data-and-migration/18-enterprise-schema-and-entity-relationship-model.md` | `1a1aa10f62303832b68388c6d21901ee81724cb87020c3d08d7ffd3fe94d8b3e` |
+| `apps/docs/src/content/docs/data-and-migration/18-enterprise-schema-and-entity-relationship-model.md` | `9389c0e5d47b3357ec7117b6a1e912edcff454d2c42563f2ddea8264de3a9f6f` |
 | `apps/docs/src/content/docs/data-and-migration/19-legacy-to-enterprise-master-feature-migration-registry.md` | `0694051aa619056f5d3bbb4a1bf6c78abefec8776a96ae5cd98890da636fcbb7` |
 | `apps/docs/src/content/docs/en/index.md` | `1d590738ca35eae6273a95370a380d9e0d2e8f6ed7158c8cb2cb907e4965991a` |
 | `apps/docs/src/content/docs/financial-and-governance/08-universal-rbac-and-executive-role.md` | `1c16d72947ccaf9eaa9cf7470f374b41271a8cc1944edb91ff8e4eaacf93e5aa` |
@@ -73,7 +73,7 @@
 | `apps/docs/src/content/docs/financial-and-governance/15-universal-module-and-flow-standard.md` | `247b6cb2f0af55bca9f51b4f27c508bb3b0ecc04bb7944db8c640f88b8f2965e` |
 | `apps/docs/src/content/docs/financial-and-governance/16-database-security-and-tamper-proof-ledger.md` | `5bf9aae471841070f0d8436fa55f950632fa288c3ddad4ea2eaab219029cc9de` |
 | `apps/docs/src/content/docs/financial-and-governance/20-super-admin-settings-and-control-hub-guide.md` | `a19b2a48657f3667bd00f7099bcc4b88010261fe84841dc83b39faafbabb72af` |
-| `apps/docs/src/content/docs/financial-and-governance/21-mandatory-module-architecture-and-gates.md` | `c7d09ecaeb5468586e7d6dabb09f05b138e56cdaafc6176eddf4b8441296b82b` |
+| `apps/docs/src/content/docs/financial-and-governance/21-mandatory-module-architecture-and-gates.md` | `55e82b041ed326b94231142819811684d82b32f46aa9e3bf92f3255244949729` |
 | `apps/docs/src/content/docs/financial-and-governance/26-locked-flows-and-features-registry.md` | `931668e479875b306050c2a1f7f90e552cf36a5565174a6eb090869843cfaa3e` |
 | `apps/docs/src/content/docs/financial-and-governance/27-enterprise-ai-governance-and-quality-gates-constitution.md` | `9b7cd6d3e462a36bc4bb09675cf186600c291b878c1ed6a98e5846a0ccfc6840` |
 | `apps/docs/src/content/docs/foundations/00-baseline-and-ssot-charter.md` | `25bb3f58027ce7b8b6e6a3189b864ce25e61153bafa5a64da266513a4423f8b9` |
